@@ -38,7 +38,7 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   if (["warmup", "mobility", "recovery", "arm_care"].includes(modality)) {
     const counted = reps ?? firstNumber(text, /^(\d+)\s*(?:per|each|slow)/);
     const fields: LegacyLogField[] = [];
-    if (counted != null) fields.push({ key: "reps", label: /steps.*each way/.test(text) ? "Steps each way" : /steps/.test(text) ? "Steps" : /contacts/.test(text) ? "Contacts" : /per (?:leg|side)|each (?:leg|side)/.test(text) ? "Reps per leg" : /breaths/.test(text) ? "Breaths" : "Reps", prefill: counted });
+    if (counted != null) fields.push({ key: "reps", label: /steps.*each way/.test(text) ? "Steps each way" : /steps/.test(text) ? "Steps" : /contacts/.test(text) ? "Contacts" : /each direction|per direction/.test(text) ? "Reps each direction" : /per arm|each arm/.test(text) ? "Reps per arm" : /per leg|each leg/.test(text) ? "Reps per leg" : /per side|each side/.test(text) ? /shoulder|arm|wrist|elbow/.test(name.toLowerCase()) ? "Reps per arm" : "Reps per side" : /breaths/.test(text) ? "Breaths" : "Reps", prefill: counted });
     if (distance != null) fields.push({ key: "distance", label: "Distance", unit: yards != null ? "yd" : "ft", prefill: distance });
     if (seconds != null || minutes != null) fields.push({ key: "time", label: "Time", unit: "s", prefill: seconds ?? (minutes == null ? null : minutes * 60) });
     if (fields.length) return { rows: Math.max(1, sets), completion: true, fields };

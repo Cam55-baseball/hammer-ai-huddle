@@ -1,5 +1,26 @@
 # Hammers — final publish checklist
 
+## October 27 urgent run — current status
+
+| Priority | Result | Remaining proof or implementation |
+|---|---|---|
+| P0 upload | Original iPhone MOV ran through real owner UI at 390×844: converted, uploaded, analyzed, saved and displayed. Blanket outage not reproduced. Private bucket signing and self insert policy confirmed. | Other five sport/module combinations and embedded upload are not proven. |
+| P0 persistence | analyze-video redeployed; final report write retries once after 750 ms without another AI call, returns actual computed coaching with saved:false if exhausted. Partial tracking failures now retain diagnostics when FPS is measured. | Persistent storage failure cannot honestly guarantee a saved report; terminal provider failures must never switch models/retry. Canary and cron SQL remain unbuilt. |
+| P0 context/results | Shared server context reads saved position; catcher/infield/outfield/pitcher field throws distinguished. Softball no longer receives duplicate baseball pitching tile calculation. Real improvements now shown as What to work on cards. | Separate fielding/catching/bunting analysis contracts not added; cannot feed unsupported module enums. |
+| P1 assessment | Next replaces Mark complete, saves drafts and moves forward; final control Save & exit. Back and Skip preserve season/movement drafts. Expanded subscription/sport-specific season fields and ordered subscribed performance list. | Nested body/equipment/goal drafts, full bilateral movement screen and plan/coach/analysis consumers, save/reload phone proof remain open. |
+| P1 focus | Nonfunctional top Start hidden after beginning; Finished saves before automatic prescribed rest; unknown rest persists across reload. Add set hidden while guided. Fielding/bunting practice buttons added. Royal/Tex links removed from unrelated exercise tools. Body-part labels separate arms/legs/sides/directions. Warm-up fallback rest 30s; declared safety rest unchanged. | Editable tracking metadata, extra activity timer control, warm-up placeholder, throwing primer integration, full cut-short semantics, baserunning coverage and affected-player phone proof remain open. |
+| Verification | Full suite: 569 files / 4,759 tests passed across eight bounded groups after correcting obsolete per-side expectation; final affected run 27 files / 151 tests PASS. Automatic preview build OK. Final original fixture upload PASS after tracking edits. | Tracking failure-path UI proof and complete cross-sport/role flows remain open. |
+
+### By-role guide — urgent changes
+- Players: use Next to save each optional assessment step; Skip retains entered answers. Last step offers Save & exit. Existing test submissions remain canonical; navigation never invents test results.
+- Players: Finished records entered exercise work then starts declared rest automatically; an unspecified rest stays pending across reload. Practice-session links now include fielding and bunting.
+- Coaches: saved legacy goal choices remain readable; new pickers offer Clean hands, Improve footwork, Routine plays, Arm health and Improve throw carry.
+- Owner: original upload fixture test is `e2e/analysis-upload.py`; provide an original clip through ANALYSIS_FIXTURE and mint your own session. Real provider calls incur usage. No cron SQL or canary is delivered yet.
+
+**Ready to publish: NO.** Exact reason: urgent list remains partially implemented and the required cross-sport/embedded/affected-player save/reload proofs are incomplete. No publish, cron or iOS changes. Only analyze-video redeployed. Original owner clips are retained; no TEST athlete training records were fabricated.
+
+Evidence: `/tmp/browser/urgent-suite/`, `/tmp/browser/urgent-check/`, `/tmp/browser/analysis-fixture/result.json`. The final upload test confirms saved/displayed through the real response and DOM; inspected final screenshot shows the original clip and Estimated / What to work on report, with the recommendation modal dismissed. Independent saved-row readback confirms completed status and readable feedback.
+
 Updated October 26, 2026, academy continuation.
 
 ## October 26 07:33 final batch (4) — authoritative status

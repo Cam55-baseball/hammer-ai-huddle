@@ -13,7 +13,7 @@ import { VaultPerformanceTestCard } from "@/components/vault/VaultPerformanceTes
 import { useVault } from "@/hooks/useVault";
 import { AssessmentMode } from "./AssessmentMode";
 import { AssessmentProfileReview } from "./AssessmentProfileReview";
-import { parseSeasonStats } from "@/lib/assessment/seasonStats";
+import { parseSeasonStats, seasonStatGroups } from "@/lib/assessment/seasonStats";
 import { assessmentModules, assessmentSteps, requiredAnalyses, shouldFinalizeAssessment, type AnalysisModule, type StepId, type StepProgress } from "@/lib/assessment/initialAssessment";
 const EmbeddedAnalysis = lazy(() => import("@/pages/AnalyzeVideo"));
 const MOVES = [
@@ -107,7 +107,21 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
   const input = { onboardingDone: false, lastSeasonDoneOrSkipped: !!(data.row?.last_season_saved_at || data.row?.last_season_skipped_at), movementScreenDone: !!data.row?.movement_done_at, s2Done: data.s2, analysesDone: data.analyses, sixWeekTestDone: data.tests, modules: sportModules, progress };
   const steps = assessmentSteps(input);
   const count = Object.values(steps).filter(s => s === "done").length;
-  const navigateStep = (id: StepId) => { if (steps[id] === "locked") return; setAnalysisModule(null); setStep(id); void save({ current_step: id }); };
+  const enteredPatch = (): Record<string, unknown> | null => {
+    const parsed = parseSeasonStats(stats);
+    if (!parsed) { setSaveError("Use zero or a positive number, or leave the answer blank."); return null; }
+    return { last_season_stats: parsed, movement_screen: answers, ...(Object.values(answers).includes("pain") ? { pain_flag: true } : {}) };
+  };
+  const navigateStep = (id: StepId) => {
+    if (saving || steps[id] === "locked") return;
+    const patch = enteredPatch();
+    if (!patch) return;
+    void (async () => {
+      const { error } = await supabase.from("profiles").update({ full_name: profile.full_name || null, position: profile.position || null }).eq("id", user.id);
+      if (error) { setSaveError("Couldn't save your profile. Try again."); return; }
+      if (await save({ ...patch, current_step: id })) { setAnalysisModule(null); setStep(id); }
+    })();
+  };
   // Only a successful embedded submission (or explicit navigation action)
   // records these steps. Pre-existing results remain available, not completion.
   const embeddedSaved = async (id: 4 | 6) => {
@@ -117,13 +131,14 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
   const record = async (state: "done" | "skipped") => {
     if (saving) return;
     const at = new Date().toISOString();
-    const patch: Record<string, unknown> = {};
+    const patch = enteredPatch();
+    if (!patch) return;
     const seasonStats = parseSeasonStats(stats);
     if (state === "done" && step === 2 && !seasonStats) {
       setSaveError("Use zero or a positive number, or leave the answer blank.");
       return;
     }
-    if (state === "done" && step === 1) {
+    if (step === 1) {
       const { error } = await supabase.from("profiles").update({ full_name: profile.full_name || null, position: profile.position || null }).eq("id", user.id);
       if (error) { setSaveError("Couldn't save your profile. Try again."); return; }
     }
@@ -141,11 +156,11 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
     const updated = { ...progress, [step]: state };
     const after = assessmentSteps({ ...input, progress: updated });
     const finished = Object.values(after).every(s => s === "done");
-    const next = ([1,2,3,4,5,6] as StepId[]).find(id => after[id] === "open") ?? step;
+    const next = Math.min(6, step + 1) as StepId;
     const saved = await save({ ...patch, step_progress: updated, current_step: next, ...(finished ? { completed_at: at } : {}) });
     if (!saved) return;
     if (step === 3 && anyPain) setPainOpen(true);
-    if (finished) close(); else { setStep(next); setAnalysisModule(null); }
+    if (finished || step === 6) close(); else { setStep(next); setAnalysisModule(null); }
   };
   return <>
     <Card className="flex flex-wrap items-center gap-4 border-primary/30 p-4">
@@ -155,11 +170,11 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
     </Card>
     <AssessmentMode open={open} onClose={close} step={step} steps={steps} busy={saving} error={saveError} onNavigate={navigateStep} onRecord={state => { void record(state); }}>
       {step === 1 && <AssessmentProfileReview profile={profile} onChange={setProfile} />}
-      {step === 2 && <div className="space-y-5"><p className="text-sm text-muted-foreground">Player-reported · last season. Leave anything you don't know blank.</p>{[["games", "Games played"],["at_bats", "At-bats"],["hits", "Hits"],["innings_pitched", "Innings pitched"]].map(([key,label]) => <div key={key} className="space-y-2"><Label htmlFor={`assessment-${key}`}>{label}</Label><Input id={`assessment-${key}`} type="number" min="0" step="any" value={stats[key] ?? ""} onChange={e => setStats({ ...stats, [key]: e.target.value })} /></div>)}</div>}
+      {step === 2 && <div className="space-y-5"><p className="text-sm text-muted-foreground">Player-reported · last season. Leave anything you don't know blank.</p>{seasonStatGroups(sport, sportModules).map(group => <section key={group.category} className="space-y-4 border-t border-border pt-4"><h3 className="font-semibold">{group.category}</h3>{group.category === "Fielding" && <label className="block space-y-2">Positions played<Input value={profile.position} onChange={e => setProfile({ ...profile, position: e.target.value })} /></label>}{group.fields.map(({key,label}) => <div key={key} className="space-y-2"><Label htmlFor={`assessment-${key}`}>{label}</Label><Input id={`assessment-${key}`} type="number" min="0" step="any" value={stats[key] ?? ""} onChange={e => setStats({ ...stats, [key]: e.target.value })} /></div>)}</section>)}</div>}
       {step === 3 && <div className="space-y-6"><p className="text-sm text-muted-foreground">Move slowly. Stop if it hurts.</p>{MOVES.map(m => <div key={m.key} className="space-y-3"><p className="font-medium">{m.label}</p><div className="flex flex-wrap gap-2">{(["easy", "hard", "pain"] as Answer[]).map(a => <Button key={a} variant={answers[m.key] === a ? "default" : "outline"} onClick={() => { setAnswers({ ...answers, [m.key]: a }); if (a === "pain") setPainOpen(true); }}>{a === "easy" ? "Easy" : a === "hard" ? "Hard / tight" : "It hurt"}</Button>)}</div></div>)}</div>}
       {step === 4 && <S2CognitionDiagnostics sport={sport} embedded onSaved={() => { void embeddedSaved(4); }} />}
       {step === 5 && <div className="space-y-5"><div className="flex flex-wrap gap-3">{need.map(module => <Button key={module} variant={analysisModule === module ? "default" : "outline"} onClick={() => setAnalysisModule(module)}>Record {module}</Button>)}</div>{!need.length && <p className="text-sm text-muted-foreground">No analysis modules are included in this sport's subscription.</p>}{analysisModule && <Suspense fallback={<p>Opening your analysis…</p>}><EmbeddedAnalysis key={`${sport}-${analysisModule}`} assessment={{ module: analysisModule, sport, onDone: () => { setAnalysisModule(null); void qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] }); } }} /></Suspense>}</div>}
-      {step === 6 && <VaultPerformanceTestCard tests={vault.performanceTests.filter(t => t.sport === sport)} subscribedModules={need} sport={sport} userProfile={{ throwing_hand: data.profile?.throwing_hand ?? undefined, batting_side: data.profile?.batting_side ?? undefined, primary_position: data.profile?.position ?? undefined, date_of_birth: data.profile?.date_of_birth ?? undefined }} autoOpen onSave={async (type, results, sides) => { const result = await vault.savePerformanceTest(type, results, sides, sport); if (result.success) await embeddedSaved(6); return result; }} />}
+      {step === 6 && <VaultPerformanceTestCard tests={vault.performanceTests.filter(t => t.sport === sport)} subscribedModules={need} allowedModules={need} sport={sport} userProfile={{ throwing_hand: data.profile?.throwing_hand ?? undefined, batting_side: data.profile?.batting_side ?? undefined, primary_position: data.profile?.position ?? undefined, date_of_birth: data.profile?.date_of_birth ?? undefined }} autoOpen onSave={async (type, results, sides) => { const result = await vault.savePerformanceTest(type, results, sides, sport); if (result.success) await embeddedSaved(6); return result; }} />}
     </AssessmentMode>
     <ReportInjuryDialog assessment open={painOpen} onOpenChange={setPainOpen} />
   </>;

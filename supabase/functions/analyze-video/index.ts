@@ -25,6 +25,8 @@ import { doctrineContextBlock } from "./doctrineContext.ts";
 import { scrubFootageClaims } from "./honestyCheck.ts";
 import { analysesLastHour, overHourlyLimit, logAiUsage, HOURLY_LIMIT_MESSAGE, hourlyResumeAt } from "../_shared/aiUsage.ts";
 import { runStoredThrowPitchCards, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
+import { saveAnalysisReport } from "../_shared/saveAnalysisReport.ts";
+import { analysisPositionContext } from "../_shared/analysisPosition.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1756,6 +1758,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Video access denied" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     authorizedClip = true;
+    const { data: savedProfile, error: positionError } = await supabase.from("profiles").select("position").eq("id", userId).maybeSingle();
+    const positionContext = analysisPositionContext(module, sport, positionError ? null : savedProfile?.position ?? null);
     if (await isAccountPaused(supabase, userId)) {
       await recordRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: "rejected:account_paused", cache_hit: false, outcome: "rejected", outcome_reason: "account_paused" });
       return pausedResponse(corsHeaders);
@@ -2066,6 +2070,7 @@ These flags must be accurate — the system applies graded deductions from them:
 CURRENT VIDEO ANALYSIS - VISUAL FRAME ANALYSIS:
 
 You are analyzing ${frames.length} sequential frames from a ${sport} ${module} motion.
+${positionContext}
 ${landingInstruction}
 ${alignmentChecksInstruction}
 
@@ -2577,7 +2582,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     };
 
     // Update video with analysis results
-    const { error: updateError } = await supabase
+    const reportSave = await saveAnalysisReport(() => supabase
       .from("videos")
       .update({
         status: "completed",
@@ -2585,7 +2590,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         mocap_data,
         ai_analysis,
       })
-      .eq("id", videoId);
+      .eq("id", videoId).eq("user_id", userId));
+    const updateError = reportSave.error ? { message: reportSave.error } : null;
 
     if (updateError) {
       console.error("Error updating video:", updateError);
@@ -2602,7 +2608,12 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         outcome: "failed",
         outcome_reason: `videos_update_failed:${updateError.message}`,
       });
-      throw updateError;
+      // Never replace real computed coaching with a generic missingness report.
+      const allowed = await canSeeScoredGrading(supabase, userId);
+      const unsaved = { ...ai_analysis, efficiency_score, saved: false, save_error: "Report is shown here but could not be saved. Retry your saved clip.", audit_persistence: auditPersistence };
+      return new Response(JSON.stringify(allowed ? unsaved : stripScoredGrading(unsaved)), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Phase 0 audit row — successful analysis.
@@ -2843,6 +2854,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       // fault rows did NOT land — the surface says so rather than pretending.
       fault_persistence: faultPersistence,
       audit_persistence: auditPersistence,
+      saved: true,
     };
 
 

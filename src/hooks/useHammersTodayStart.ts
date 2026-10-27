@@ -57,7 +57,7 @@ export function useHammersTodayStart() {
 
   const start = useCallback(async () => {
     if (starting || startedAt) return;
-    if (!assessmentReady) { setError("Tap Completed on your initial assessment first."); return; }
+    if (!assessmentReady) { setError("Save or skip each assessment step first."); return; }
     setStarting(true);
     setError(null);
     const { data, error: rpcErr } = await (supabase as any).rpc("start_hammers_today");

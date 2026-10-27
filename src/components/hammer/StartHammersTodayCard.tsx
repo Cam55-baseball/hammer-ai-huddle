@@ -62,7 +62,7 @@ export function StartHammersTodayCardView({ onStart, starting, error, locked, po
         >
           {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Play className="h-5 w-5 fill-current" /> Start Hammers Today Plan</>}
         </Button>
-        {locked && <p className="text-sm text-muted-foreground">Tap Completed on your initial assessment above to unlock Start.</p>}
+        {locked && <p className="text-sm text-muted-foreground">Save or skip each assessment step above to unlock Start.</p>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         {growth?.active && <GrowthModeCardView state={growth} />}
 

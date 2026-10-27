@@ -132,6 +132,16 @@ export function AnalysisResultsPanel({
 
   return (
     <div className="space-y-5">
+      <p className="flex items-center gap-2 text-xs text-muted-foreground"><Camera className="h-4 w-4" />{notMeasured ? "Not measured" : "Estimated · visual coaching from this clip"}</p>
+      {!notMeasured && analysis.improvements && analysis.improvements.length > 0 && <section className="space-y-3">
+        <h3 className="flex items-center gap-2 font-semibold"><Wrench className="h-4 w-4 text-primary" />What to work on</h3>
+        {analysis.improvements.map((finding, index) => <Card key={`${finding.phase}-${index}`} className="space-y-2 border-l-4 border-l-primary p-4">
+          <p className="text-xs text-muted-foreground">{finding.phase}</p>
+          <h4 className="font-semibold">{withoutMeasurementNotation(finding.fault)}</h4>
+          <p className="text-sm text-muted-foreground">{withoutMeasurementNotation(finding.why)}</p>
+          <p className="text-sm"><strong>Work on:</strong> {withoutMeasurementNotation(finding.fix)}</p>
+        </Card>)}
+      </section>}
       {/* ── 2 · KEY FINDINGS ─────────────────────────────────────────── */}
       {(summary.length > 0 || crossDomainSlot) && (
         <RevealSection order={1}>
