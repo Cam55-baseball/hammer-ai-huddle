@@ -73,15 +73,10 @@ export async function reliableAnalysis<T extends { ok: boolean; status: number; 
     await recordSafely(result);
     if (result.ok && hasFullCoaching(result.data)) return result;
     if (!best && result.ok && hasStructuredAnalysis(result.data)) best = result;
-    // A refusal ends the request. Account/billing denials on one route never
-    // retry the same route, but a backup route with its own access may still run.
+    // Refusals and account/billing/access denials end the request: never retried or rerouted.
     if (analysisRefused(result.data)) return best ?? result;
-    if (!result.ok && result.status !== 429 && result.status < 500 && !(i === 0 && isRouteLocalFailure(result.status))) return best ?? result;
+    if (!result.ok && result.status !== 429 && result.status < 500) return best ?? result;
   }
   return best ?? (result as T);
 }
 
-/** Classic-route failures that today's direct route can still answer (its own credentials). */
-function isRouteLocalFailure(status: number): boolean {
-  return status === 401 || status === 402 || status === 403 || status === 404;
-}
