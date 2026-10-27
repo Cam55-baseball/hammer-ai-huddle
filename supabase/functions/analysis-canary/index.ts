@@ -9,10 +9,22 @@ Deno.serve(async req => {
   const json = (body: unknown, status=200) => new Response(JSON.stringify(body),{status,headers:{...corsHeaders,"Content-Type":"application/json"}});
   if(req.method==="OPTIONS")return new Response("ok",{headers:corsHeaders});
   if(req.method!=="POST")return json({error:"POST required"},405);
-  if(!await validAnalysisJobToken(req.headers.get("x-job-token")))return json({error:"Unauthorized"},401);
   const url=Deno.env.get("SUPABASE_URL");const key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if(!url||!key)return json({error:"Canary configuration unavailable"},500);
   const sb=createClient(url,key,{auth:{persistSession:false}});
+  const jobAuthorized = await validAnalysisJobToken(req.headers.get("x-job-token"));
+  const authorization = req.headers.get("Authorization");
+  let manualOwner: string | null = null;
+  if (!jobAuthorized && authorization) {
+    const caller = await sb.auth.getUser(authorization.replace(/^Bearer\s+/i, ""));
+    const id = caller.data.user?.id;
+    if (id && await hasActiveRole(sb as any, id, "owner")) manualOwner = id;
+  }
+  if (!jobAuthorized && !manualOwner) return json({error:"Unauthorized"},401);
+  if (manualOwner) {
+    const registered = await sb.from("analysis_canary_config").select("owner_id").eq("id",1).maybeSingle();
+    if (registered.data?.owner_id !== manualOwner) return json({error:"Your TEST fixture must be registered first"},403);
+  }
   const lease=crypto.randomUUID();
   const claimed=await sb.rpc("claim_analysis_canary",{p_lease:lease});
   if(claimed.error)return json({error:"Canary lease unavailable"},500);
@@ -23,7 +35,7 @@ Deno.serve(async req => {
     const body=config.request_json;
     if(!body)throw new Error("fixture_unreadable");
     if(body.videoId!==config.video_id||body.userId!==config.owner_id)throw new Error("fixture_identity_mismatch");
-    const response=await fetch(`${url}/functions/v1/analyze-video`,{method:"POST",headers:{"Content-Type":"application/json",apikey:Deno.env.get("SUPABASE_ANON_KEY")??"","x-job-token":req.headers.get("x-job-token")??"","x-analysis-canary-lease":lease},body:JSON.stringify(body)});
+    const response=await fetch(`${url}/functions/v1/analyze-video`,{method:"POST",headers:{"Content-Type":"application/json",apikey:Deno.env.get("SUPABASE_ANON_KEY")??"","x-job-token":req.headers.get("x-job-token")??"","x-analysis-canary-lease":lease,...(manualOwner && authorization ? {Authorization:authorization} : {})},body:JSON.stringify(body)});
     const result=await response.json();
     const report=result.ai_analysis??result;
     const readback=await sb.from("videos").select("status,ai_analysis").eq("id",config.video_id).eq("user_id",config.owner_id).maybeSingle();

@@ -29,6 +29,7 @@ import { saveAnalysisReport } from "../_shared/saveAnalysisReport.ts";
 import { analysisPositionContext } from "../_shared/analysisPosition.ts";
 import { validAnalysisJobToken, canaryDelegationAllowed } from "../_shared/analysisCanaryAuth.ts";
 import { ANALYSIS_TYPES, dispatchAnalysisType } from "../_shared/analysisTypes.ts";
+import { hasActiveRole } from "../_shared/authGuards.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1758,7 +1759,8 @@ Deno.serve(async (req) => {
     const { data: caller, error: callerError } = token ? await supabase.auth.getUser(token) : { data: null, error: null };
     const canaryLease = req.headers.get("x-analysis-canary-lease");
     let canaryAuthorized = false;
-    if (canaryLease && await validAnalysisJobToken(req.headers.get("x-job-token"))) {
+    if (canaryLease && (await validAnalysisJobToken(req.headers.get("x-job-token")) ||
+      (caller?.user?.id === userId && await hasActiveRole(supabase as any, userId, "owner")))) {
       const config = await supabase.from("analysis_canary_config").select("video_id,owner_id,enabled,paused_reason,lease_id,lease_until").eq("id",1).maybeSingle();
       canaryAuthorized = canaryDelegationAllowed(config.data, {videoId,userId,leaseId:canaryLease});
     }
