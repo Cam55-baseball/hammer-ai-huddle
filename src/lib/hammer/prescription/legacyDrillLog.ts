@@ -1,6 +1,6 @@
 import { jumpMeasure } from "@/lib/logging/measureType";
 export type LegacyLogField = {
-  key: "reps" | "throws" | "distance" | "time" | "attempts" | "successes";
+  key: "reps" | "throws" | "distance" | "time" | "attempts" | "successes" | `reps_${number}`;
   label: string;
   unit?: string;
   prefill: number | null;
@@ -50,6 +50,12 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   }
   // A throwing card includes non-throwing preparation. Card category cannot turn band reps into throws.
   if ((modality === "throwing" || modality === "pitching") && /band series|band activation|band prep|neural prep|mobility flush|lat \+ hip opener|wrist snap \+ forearm/.test(name.toLowerCase()) && !/\bthrows?\b/.test(targetText)) {
+    const parts = targetText.split(",").map(part => part.trim().replace(/^full activation set:\s*/, ""));
+    const components = parts.map(part => part.match(/^(.+?)\s+(\d+)\s*x\s*(\d+(?:\.\d+)?)(.*)$/));
+    // Only expand fully declared, equal-set circuits; mixed time/rep sequences need explicit row metadata.
+    if (components.length > 1 && components.every(part => part && Number(part[2]) === Number(components[0]?.[2]))) {
+      return { rows: Number(components[0]?.[2]), completion: false, fields: components.flatMap((part, index) => part ? [{ key: `reps_${index}` as const, label: `${part[1]}${/each direction/.test(part[4]) ? " · each direction" : /per side/.test(part[4]) ? " · per side" : ""} reps`, prefill: Number(part[3]) }] : []) };
+    }
     return { rows: sets, completion: false, fields: [{ key: "reps", label: "Reps", prefill: reps }] };
   }
   if (modality === "throwing" || modality === "pitching" || /throw|pitch|bullpen|catch play|plyo ball/.test(activity)) {
