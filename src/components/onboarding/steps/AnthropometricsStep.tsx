@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import { writeDraftSlot, readDraftSlot } from "@/lib/onboarding/draftStore";
+import type { RegisterDraftFlush } from "@/lib/assessment/draftFlush";
 
 interface Anthro {
   height_in?: number | null;
@@ -26,6 +27,7 @@ interface Anthro {
 interface Props {
   onContinue: () => void;
   onBack: () => void;
+  registerFlush?: RegisterDraftFlush;
 }
 
 const num = (s: string): number | null => {
@@ -33,7 +35,7 @@ const num = (s: string): number | null => {
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 
-export function AnthropometricsStep({ onContinue, onBack }: Props) {
+export function AnthropometricsStep({ onContinue, onBack, registerFlush }: Props) {
   const { user } = useAuth();
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
@@ -84,8 +86,8 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
     });
   };
 
-  const handleSaveAndNext = async () => {
-    if (!user?.id) return onContinue();
+  const saveAnswers = async (): Promise<boolean> => {
+    if (!user?.id) return false;
     setSaving(true);
     try {
       const payload: Anthro = {
@@ -99,15 +101,17 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
       if (hasAny) {
         await persistContextAnswer(user.id, "anthropometrics", payload, "onboarding.anthropometrics");
       }
-      onContinue();
+      return true;
     } catch (e) {
       console.warn("[onboarding] anthropometrics save failed", e);
       toast.warning("Couldn't save anthropometrics — you can update later in Profile.");
-      onContinue();
+      return false;
     } finally {
       setSaving(false);
     }
   };
+  useEffect(() => { registerFlush?.(saveAnswers); return () => registerFlush?.(null); }, [registerFlush, user?.id, height, weight, wingspan, bodyFat, footLength]);
+  const handleSaveAndNext = async () => { if (await saveAnswers()) onContinue(); };
 
   return (
     <section className="space-y-4">
