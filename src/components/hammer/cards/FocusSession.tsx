@@ -5,9 +5,9 @@ import { ExerciseTimer } from "./ExerciseTimer";
 import { useConditioningRest } from "./ConditioningRestContext";
 import type { BaseRep } from "../../../../supabase/functions/_shared/wic/runRest";
 
-type Exercise = { id: string; name: string; rows: number; ready: boolean[]; restSeconds: number | null; bases?: BaseRep | null; enabled?: boolean; save: (row: number) => Promise<void> };
-type Cursor = { exercise: number; exerciseId: string | null; row: number; restingUntil: number | null; restStartedAt: number | null; restSeconds: number | null; conditioningBases: number | null; awaitingManualRest: boolean };
-const INITIAL: Cursor = { exercise: 0, exerciseId: null, row: 0, restingUntil: null, restStartedAt: null, restSeconds: null, conditioningBases: null, awaitingManualRest: false };
+type Exercise = { id: string; name: string; rows: number; ready: boolean[]; restSeconds: number | null; bases?: BaseRep | null; enabled?: boolean; afterExerciseId?: string; beforeSeconds?: number; available?: (row: number) => boolean; save: (row: number) => Promise<void> };
+type Cursor = { exercise: number; exerciseId: string | null; row: number; restingUntil: number | null; restStartedAt: number | null; restSeconds: number | null; conditioningBases: number | null; awaitingManualRest: boolean; phase: "work" | "action" };
+const INITIAL: Cursor = { exercise: 0, exerciseId: null, row: 0, restingUntil: null, restStartedAt: null, restSeconds: null, conditioningBases: null, awaitingManualRest: false, phase: "work" };
 const Context = createContext<{
   active: boolean; cursor: Cursor; currentId?: string; register: (entry: Exercise) => () => void; refresh: () => void;
 } | null>(null);
@@ -26,11 +26,13 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
   const awaitingManualRest = cursor.awaitingManualRest;
   const setAwaitingManualRest = (value: boolean) => setCursor(prior => ({ ...prior, awaitingManualRest: value }));
   const conditioning = useConditioningRest();
-  const all = [...entries.current.values()];
-  const current = cursor.exerciseId ? all.find(entry => entry.id === cursor.exerciseId) : all[cursor.exercise];
+  const all = [...entries.current.values()].filter(entry => !entry.afterExerciseId);
+  const base = cursor.exerciseId ? all.find(entry => entry.id === cursor.exerciseId) : all[cursor.exercise];
+  const continuation = [...entries.current.values()].find(entry => entry.afterExerciseId === base?.id);
+  const current = cursor.phase === "action" ? continuation : base;
   useEffect(() => {
-    if (current && cursor.exerciseId == null) setCursor(prior => ({ ...prior, exerciseId: current.id }));
-  }, [current?.id, cursor.exerciseId]);
+    if (base && cursor.exerciseId == null) setCursor(prior => ({ ...prior, exerciseId: base.id }));
+  }, [base?.id, cursor.exerciseId]);
   useEffect(() => {
     if (!cursor.exerciseId || current || all.length === 0 || cursor.restingUntil != null) return;
     // An obsolete saved activity is not completion. Reconcile only after mounted rows have registered.
@@ -38,10 +40,12 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
     setCursor({ ...INITIAL, exercise: index, exerciseId: all[index]?.id ?? null });
   }, [revision, cursor.exerciseId, current?.id, cursor.restingUntil]);
   const advance = useCallback(() => setCursor(prior => {
-    const all = [...entries.current.values()];
+    const all = [...entries.current.values()].filter(entry => !entry.afterExerciseId);
     const index = prior.exerciseId ? all.findIndex(entry => entry.id === prior.exerciseId) : prior.exercise;
     const exercise = all[index];
     if (!exercise) return prior;
+    const action = [...entries.current.values()].find(entry => entry.afterExerciseId === exercise.id);
+    if (prior.phase !== "action" && action?.available?.(prior.row)) return { ...INITIAL, conditioningBases: prior.conditioningBases, exercise: index, exerciseId: exercise.id, row: prior.row, phase: "action" };
     const moreRows = prior.row + 1 < exercise.rows;
     const nextIndex = moreRows ? index : index + 1;
     return { ...INITIAL, conditioningBases: prior.conditioningBases, exercise: nextIndex, exerciseId: all[nextIndex]?.id ?? null, row: moreRows ? prior.row + 1 : 0 };
@@ -61,7 +65,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
     setBusy(true); setError(null); setAwaitingManualRest(false);
     try {
       await current.save(cursor.row);
-      let seconds = current.restSeconds;
+      let seconds = cursor.phase !== "action" && continuation?.available?.(cursor.row) ? continuation.beforeSeconds ?? current.restSeconds : current.restSeconds;
       if (current.bases) {
         const { conditioningRestAfterRep } = await import("../../../../supabase/functions/_shared/wic/runRest");
         const next = conditioningRestAfterRep(cursor.conditioningBases ?? conditioning.state.bases, current.bases);
@@ -117,9 +121,9 @@ export function useFocusExercise(entry: Exercise) {
   const register = context?.register;
   useEffect(() => {
     if (!register || entry.enabled === false) return;
-    const proxy = { ...entry, get ready() { return latest.current.ready; }, save: (row: number) => latest.current.save(row) };
+    const proxy = { ...entry, get ready() { return latest.current.ready; }, available: (row: number) => latest.current.available?.(row) ?? true, save: (row: number) => latest.current.save(row) };
     return register(proxy);
-  }, [register, entry.id, entry.rows, entry.restSeconds, entry.bases, entry.name, entry.enabled]);
+  }, [register, entry.id, entry.rows, entry.restSeconds, entry.bases, entry.name, entry.enabled, entry.afterExerciseId, entry.beforeSeconds]);
   const signature = entry.ready.join(",");
   const refresh = context?.refresh;
   useEffect(() => { refresh?.(); }, [signature, refresh]);
