@@ -106,6 +106,7 @@ const GROUPS: SidebarGroup[] = [
     label: "Engine & System",
     items: [
       { id: "engine-settings", label: "Engine Settings", icon: Settings },
+      { id: "engine-settings" as OwnerSection, label: "Training Intelligence", icon: Settings, href: "/admin/training-intelligence" },
       { id: "settings", label: "Settings", icon: Settings },
       { id: "settings", label: 'Do you agree?', icon: UserCog, href: "/owner/rating-agreement" },
       { id: "settings", label: "Coaching Console", icon: UserCog, href: "/owner/coaching-console" },
