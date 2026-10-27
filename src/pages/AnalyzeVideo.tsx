@@ -34,6 +34,7 @@ import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { isAnalysisVideoFile } from "@/lib/upload/analysisVideoFile";
 import { prepareAnalysisVideo } from "@/lib/upload/prepareAnalysisVideo";
 import { unavailableAnalysis } from "../../supabase/functions/_shared/analysisReliability";
+import { normalizeAnalysisResponse, analysisErrorDetails } from "@/lib/upload/analysisResponse";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
@@ -85,12 +86,6 @@ import type { MeasuredClipTiles } from "@/lib/reportCard/measuredClipSpec";
  * metrics are in the same place either way — video suggestions and prescriptions
  * read those keys directly.
  */
-function normalizeAnalysisResponse(data: any) {
-  if (data && data.replay_cache && data.ai_analysis) {
-    return { ...data.ai_analysis, efficiency_score: data.efficiency_score ?? data.ai_analysis.efficiency_score };
-  }
-  return data;
-}
 
 
 export default function AnalyzeVideo({ assessment }: { assessment?: { module: "hitting" | "throwing" | "pitching"; sport: "baseball" | "softball"; onDone: () => void } } = {}) {
@@ -1180,67 +1175,13 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       );
 
       if (analysisError) {
-        console.error("Analysis error:", analysisError);
-        setAnalysisError(analysisError);
-
-        // Try to extract the structured rejection payload the edge function
-        // returns (e.g. { error: "reject_low_resolution", detail: "..." }).
-        // supabase-js stuffs the raw Response on `error.context`.
-        let rejectReason: string | null = null;
-        let rejectDetail: string | null = null;
-        try {
-          const resp = (analysisError as any)?.context;
-          if (resp && typeof resp.json === "function") {
-            const body = await resp.clone().json();
-            if (body && typeof body.error === "string") {
-              rejectReason = body.error;
-              rejectDetail = typeof body.detail === "string" ? body.detail : null;
-            }
-          }
-        } catch { /* ignore parse failures, fall through to generic */ }
-
-        const friendly = friendlyRejectReason(rejectReason);
-
-        // Fair use: over 30 analyses this hour → the saved video waits and runs itself at the next opening.
-        let hourly: { resume_at?: string; error?: string } | null = null;
-        try {
-          const resp = (analysisError as any)?.context;
-          if (resp && typeof resp.json === "function") {
-            const b = await resp.clone().json();
-            if (b?.code === "hourly_limit") hourly = b;
-          }
-        } catch { /* ignore */ }
-        if (hourly) {
-          const at = hourly.resume_at ? new Date(hourly.resume_at) : new Date(Date.now() + 3600_000);
-          const when = at.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-          toast.info(`${hourly.error ?? "Analysis paused for this hour."} Starts at about ${when} if this page stays open.`, { duration: 15000 });
-          const body = { videoId: videoData.id, module, sport, userId: user.id, language: i18n.language, frames, frameExtractions, ...(landingFrameIndex !== null && { landingFrameIndex }) };
-          window.setTimeout(async () => {
-            setAnalyzing(true);
-            const { data: d2, error: e2 } = await supabase.functions.invoke("analyze-video", { body });
-            setAnalyzing(false);
-            if (e2) { showUnavailableReport("scheduled_retry"); toast.error(t('videoAnalysis.genericAnalysisError')); return; }
-            setAnalysis(normalizeAnalysisResponse(d2));
-            setAnalysisError(null);
-            toast.success("Your paused analysis is ready.");
-          }, Math.max(1000, at.getTime() - Date.now() + 2000));
-          missingReport("hourly_limit", `Your clip is saved. Analysis is waiting until about ${when}. Keep this page open for the retry.`);
-          return;
-        }
-
-        if (analysisError.message?.includes('429') || analysisData?.status === 429) {
-          toast.error(t('videoAnalysis.rateLimitError'));
-        } else if (analysisError.message?.includes('402') || analysisData?.status === 402) {
-          toast.error(t('videoAnalysis.paymentRequiredError'));
-        } else if (friendly) {
-          toast.error(friendly);
-          // Attach the friendly reason so the in-page failure card shows it too.
-          setAnalysisError({ ...(analysisError as any), friendlyMessage: friendly, rejectReason, rejectDetail });
-        } else {
-          toast.error(t('videoAnalysis.genericAnalysisError'));
-        }
-        missingReport("analysis_request", friendly ?? "This check did not finish. Retry your saved clip.");
+        const safeError = await analysisErrorDetails(analysisError);
+        if (safeError.report) setAnalysis(safeError.report);
+        setAnalysisError({ ...safeError, terminal: safeError.status !== 429 && safeError.status < 500 });
+        setAnalyzing(false);
+        toast.error(safeError.message);
         return;
+
       }
 
       const normalized = normalizeAnalysisResponse(analysisData);
@@ -1250,7 +1191,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
       fireAnalysisVideoMoment(normalized);
 
-      toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
+      if (normalized?.saved === false) toast.error(normalized.save_error ?? "Your report is shown, but could not be saved.");
+      else if (normalized?.report_status === "not_measured") toast.info(normalized.feedback);
+      else toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
       setAnalyzing(false);
 
     } catch (error: any) {
@@ -1373,16 +1316,12 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
       if (analysisError) {
         console.error("Retry analysis error:", analysisError);
-        showUnavailableReport("retry_request");
-        
-        if (analysisError.message?.includes('429') || analysisData?.status === 429) {
-          toast.error(t('videoAnalysis.rateLimitError'));
-        } else if (analysisError.message?.includes('402') || analysisData?.status === 402) {
-          toast.error(t('videoAnalysis.paymentRequiredError'));
-        } else {
-          toast.error(t('videoAnalysis.genericAnalysisError'));
-        }
+        const safeError = await analysisErrorDetails(analysisError);
+        if (safeError.report) setAnalysis(safeError.report);
+        setAnalysisError({ ...safeError, terminal: safeError.status !== 429 && safeError.status < 500 });
+        toast.error(safeError.message);
         return;
+
       }
 
       const normalizedRetry = normalizeAnalysisResponse(analysisData);
@@ -1392,7 +1331,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
       fireAnalysisVideoMoment(normalizedRetry);
 
-      toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
+      if (normalizedRetry?.saved === false) toast.error(normalizedRetry.save_error ?? "Your report is shown, but could not be saved.");
+      else if (normalizedRetry?.report_status === "not_measured") toast.info(normalizedRetry.feedback);
+      else toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
     } catch (error: any) {
       console.error("Retry error:", error);
       showUnavailableReport("retry_request");
@@ -1435,7 +1376,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
             lives in DelayCam. */}
         {!videoPreview && (
           <div className="space-y-4">
-            {assessment && <HighFpsCapture module={assessment.module} sport={assessment.sport} />}
+            {assessment && <HighFpsCapture module={assessment.module} sport={assessment.sport} onAnalysis={(report, videoId) => { setCurrentVideoId(videoId); setAnalysis(normalizeAnalysisResponse(report)); setAnalysisError(null); }} />}
             <PitchingFilmingGuide />
             <Card data-tour="upload" className="mx-auto max-w-xl p-6 sm:p-8 text-center border-dashed border-2">
               <div className="flex flex-col items-center space-y-3">
@@ -1712,11 +1653,11 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
               <Card className="p-6 border-destructive">
                 <h3 className="text-xl font-semibold text-destructive mb-2">{t('videoAnalysis.analysisFailed')}</h3>
                 <p className="text-muted-foreground mb-3">
-                  {analysisError.message?.includes('429') || analysisError.status === 429
+                  {analysisError.message || (analysisError.status === 429
                     ? t('videoAnalysis.rateLimitError')
                     : analysisError.message?.includes('402') || analysisError.status === 402
                     ? t('videoAnalysis.paymentRequiredError')
-                    : t('videoAnalysis.genericAnalysisError', "The analysis run did not complete. No score was produced. This is shown as failed instead of as a partial result.")}
+                    : t('videoAnalysis.genericAnalysisError', "The analysis run did not complete. No score was produced. This is shown as failed instead of as a partial result."))}
                 </p>
                 {analysisError.message && (
                   <details className="mb-4 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs">
@@ -1724,9 +1665,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
                     <pre className="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] text-muted-foreground">{String(analysisError.message)}</pre>
                   </details>
                 )}
-                <Button onClick={handleRetryAnalysis} className="w-full">
+                {!analysisError.terminal && <Button onClick={handleRetryAnalysis} className="w-full">
                   {t('videoAnalysis.retryAnalysis')}
-                </Button>
+                </Button>}
               </Card>
             )}
 

@@ -30,13 +30,23 @@ describe("analysis completion", () => {
     expect(logs).toHaveLength(3); expect(hasStructuredAnalysis(result.data)).toBe(true);
   });
   it("does not retry authorization or billing failures", async () => {
-    for (const status of [401, 402, 403]) {
+    for (const status of [400, 401, 402, 403, 404, 422]) {
       let calls = 0; await reliableAnalysis(async () => { calls++; return { ok: false, status, data: {} }; }, async () => {});
       expect(calls).toBe(1);
     }
   });
   it("does not accept malformed report JSON as a successful report", () => {
     expect(hasStructuredAnalysis({ choices: [{ message: { tool_calls: [{ function: { arguments: "not json" } }] } }] })).toBe(false);
+  });
+  it("never retries provider refusals even with HTTP 200", async () => {
+    let calls = 0;
+    await reliableAnalysis(async () => { calls++; return { ok: true, status: 200, data: { choices: [{ finish_reason: "safety", message: { content: "" } }] } }; }, async () => {});
+    expect(calls).toBe(1);
+  });
+  it("waits before transient retries and retains the existing backup", async () => {
+    const events: string[] = [];
+    await reliableAnalysis(async model => { events.push(model); return { ok: false, status: 429, data: {} }; }, async () => {}, async () => { events.push("wait"); });
+    expect(events).toEqual(["google/gemini-2.5-flash", "wait", "google/gemini-2.5-flash", "wait", "openai/gpt-4o-mini"]);
   });
   it("still retries and returns the backup report when diagnostic storage fails", async () => {
     const models: string[] = [];

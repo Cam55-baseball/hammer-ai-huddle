@@ -28,8 +28,14 @@ export function hasStructuredAnalysis(data: unknown): boolean {
   } catch { return false; }
 }
 
-export async function reliableAnalysis<T extends { ok: boolean; status: number; data: unknown }>(
+export function analysisRefused(data: unknown): boolean {
+  const value = data as { choices?: Array<{ finish_reason?: string; message?: { refusal?: string; content?: string; tool_calls?: unknown[] } }> } | null;
+  return value?.choices?.some(choice => /safety|content_filter|recitation|prohibited|blocklist/i.test(choice.finish_reason ?? "") || !!choice.message?.refusal) ?? false;
+}
+
+export async function reliableAnalysis<T extends { ok: boolean; status: number; data: unknown; errorBody?: string }>(
   call: (model: string) => Promise<T>, record: (result: T) => Promise<void>,
+  wait: () => Promise<void> = () => new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 500)),
 ): Promise<T> {
   let result = await call("google/gemini-2.5-flash");
   const recordSafely = async (attempt: T) => {
@@ -37,11 +43,13 @@ export async function reliableAnalysis<T extends { ok: boolean; status: number; 
   };
   await recordSafely(result);
   if (result.ok && hasStructuredAnalysis(result.data)) return result;
-  if ([400, 401, 402, 403].includes(result.status)) return result;
+  if (analysisRefused(result.data) || (!result.ok && result.status !== 429 && result.status < 500)) return result;
+  await wait();
   result = await call("google/gemini-2.5-flash");
   await recordSafely(result);
   if (result.ok && hasStructuredAnalysis(result.data)) return result;
-  if ([400, 401, 402, 403].includes(result.status)) return result;
+  if (analysisRefused(result.data) || (!result.ok && result.status !== 429 && result.status < 500)) return result;
+  await wait();
   result = await call("openai/gpt-4o-mini");
   await recordSafely(result);
   return result;

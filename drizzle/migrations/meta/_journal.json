@@ -932,6 +932,20 @@
       "when": 1793046266329,
       "tag": "0132_pitching_line_entry",
       "breakpoints": true
+    },
+    {
+      "idx": 133,
+      "version": "7",
+      "when": 1793071822110,
+      "tag": "0133_analysis_canary",
+      "breakpoints": true
+    },
+    {
+      "idx": 134,
+      "version": "7",
+      "when": 1793072340783,
+      "tag": "0134_analysis_canary_request_fixture",
+      "breakpoints": true
     }
   ]
 }

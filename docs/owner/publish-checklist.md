@@ -2,10 +2,21 @@
 
 ## October 27 urgent run — current status
 
+### October 27 continuation, 04:00 UTC
+- LIVE: analyze-video, analysis-canary and analysis-canary-configure deployed. Terminal provider errors/refusals stop without model switching; transient attempts wait; upload/camera display the server's saved Not measured report instead of hiding it. Cache replay confirms saved:true.
+- REAL UI: owner original hitting and pitching MOV clips converted/uploaded/analyzed/saved/displayed/replayed at 390×844. Saved feedback matched replay. Screenshots inspected; transient toasts partly obscure result cards, so report visibility is also asserted from the rendered page.
+- CANARY: one explicitly designated owner-owned TEST fixture, actual extracted frames, exact clip/user + five-minute single-flight lease, once per UTC day, pause on terminal provider/configuration failures. Initial authentication failure produced an owner alert; repaired in-code authentication deployment then fresh canary PASS with completed saved report readback. Never stores a user session. Retain only its registered fixture for the requested future daily check.
+- SCHEDULE: `docs/owner/analysis-canary-cron.sql` delivered for owner application; **not executed**, existing schedules untouched. It proposes once daily at 00:10 UTC. No claim of an installed scheduled check.
+- FULL SUITE: **572 files / 4,770 tests PASS**, eight bounded groups (final interrupted group rerun only). Automatic preview build OK at 03:55:52 UTC.
+- OPEN: softball hitting/pitching/throwing and baseball throwing original-clip proof, embedded assessment upload + affected-player proof, complete P1 movement/editable tracking/timer/primer/baserunning requirements. Do not relabel baseball footage as softball to manufacture proof.
+- CLEANUP OPEN: two exact duplicate proof uploads remain (baseball pitching and first hitting attempt); owner-session direct row read returned 403, so no deletion or cleanup success is claimed. Registered canary TEST fixture intentionally retained; original clips untouched.
+
+**Ready to publish: NO.** P0 cross-sport/embedded proofs and substantial P1 requirements remain unfinished; publishing, cron execution and iOS untouched.
+
 | Priority | Result | Remaining proof or implementation |
 |---|---|---|
 | P0 upload | Original iPhone MOV ran through real owner UI at 390×844: converted, uploaded, analyzed, saved and displayed. Blanket outage not reproduced. Private bucket signing and self insert policy confirmed. | Other five sport/module combinations and embedded upload are not proven. |
-| P0 persistence | analyze-video redeployed; final report write retries once after 750 ms without another AI call, returns actual computed coaching with saved:false if exhausted. Partial tracking failures now retain diagnostics when FPS is measured. | Persistent storage failure cannot honestly guarantee a saved report; terminal provider failures must never switch models/retry. Canary and cron SQL remain unbuilt. |
+| P0 persistence | analyze-video redeployed; final report write retries once after 750 ms without another AI call, returns actual computed coaching with saved:false if exhausted. Partial tracking failures now retain diagnostics when FPS is measured. Canary real inference/readback passed; owner-only daily cron SQL delivered, not applied. | Persistent storage failure cannot honestly guarantee a saved report; terminal provider failures never switch models/retry. |
 | P0 context/results | Shared server context reads saved position; catcher/infield/outfield/pitcher field throws distinguished. Softball no longer receives duplicate baseball pitching tile calculation. Real improvements now shown as What to work on cards. | Separate fielding/catching/bunting analysis contracts not added; cannot feed unsupported module enums. |
 | P1 assessment | Next replaces Mark complete, saves drafts and moves forward; final control Save & exit. Back and Skip preserve season/movement drafts. Expanded subscription/sport-specific season fields and ordered subscribed performance list. | Nested body/equipment/goal drafts, full bilateral movement screen and plan/coach/analysis consumers, save/reload phone proof remain open. |
 | P1 focus | Nonfunctional top Start hidden after beginning; Finished saves before automatic prescribed rest; unknown rest persists across reload. Add set hidden while guided. Fielding/bunting practice buttons added. Royal/Tex links removed from unrelated exercise tools. Body-part labels separate arms/legs/sides/directions. Warm-up fallback rest 30s; declared safety rest unchanged. | Editable tracking metadata, extra activity timer control, warm-up placeholder, throwing primer integration, full cut-short semantics, baserunning coverage and affected-player phone proof remain open. |
@@ -15,7 +26,7 @@
 - Players: use Next to save each optional assessment step; Skip retains entered answers. Last step offers Save & exit. Existing test submissions remain canonical; navigation never invents test results.
 - Players: Finished records entered exercise work then starts declared rest automatically; an unspecified rest stays pending across reload. Practice-session links now include fielding and bunting.
 - Coaches: saved legacy goal choices remain readable; new pickers offer Clean hands, Improve footwork, Routine plays, Arm health and Improve throw carry.
-- Owner: original upload fixture test is `e2e/analysis-upload.py`; provide an original clip through ANALYSIS_FIXTURE and mint your own session. Real provider calls incur usage. No cron SQL or canary is delivered yet.
+- Owner: original upload fixture test is `e2e/analysis-upload.py`; provide an original clip through ANALYSIS_FIXTURE and mint your own session. ANALYSIS_MODULE/ANALYSIS_SPORT choose the real clip's activity/sport; REGISTER_ANALYSIS_CANARY=1 explicitly registers a TEST fixture. Real provider calls incur usage. Daily canary is deployed and manually passed; apply `docs/owner/analysis-canary-cron.sql` yourself to schedule it.
 
 **Ready to publish: NO.** Exact reason: urgent list remains partially implemented and the required cross-sport/embedded/affected-player save/reload proofs are incomplete. No publish, cron or iOS changes. Only analyze-video redeployed. Original owner clips are retained; no TEST athlete training records were fabricated.
 

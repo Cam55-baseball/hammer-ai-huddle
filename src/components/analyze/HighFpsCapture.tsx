@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import fixWebmDuration from "fix-webm-duration";
 import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { UPLOAD_ERRORS } from "@/lib/upload/uploadErrorCopy";
+import { analysisErrorDetails, normalizeAnalysisResponse } from "@/lib/upload/analysisResponse";
 import {
   analysisScopeForFps,
   describeCaptureFps,
@@ -49,6 +50,7 @@ type Facing = "user" | "environment";
 interface HighFpsCaptureProps {
   module?: ClipModule;
   sport?: ClipSport;
+  onAnalysis?: (report: any, videoId: string) => void;
 }
 
 const MAX_RECORD_SEC = 30;
@@ -80,7 +82,7 @@ function pickRecorderMime(): string {
   return "video/webm";
 }
 
-export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFpsCaptureProps = {}) {
+export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysis }: HighFpsCaptureProps = {}) {
   const { user } = useOptionalAuth();
   const resolvedModule: ClipModule = moduleProp ?? "hitting";
   const resolvedSport: ClipSport =
@@ -472,7 +474,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
       console.info("[HighFpsCapture] timings", { ...timings, bytes: file.size });
 
       toast.loading("Hammer is analyzing your clip…", { id: toastId });
-      const { error: fnError } = await supabase.functions.invoke("analyze-video", {
+      const { data: report, error: fnError } = await supabase.functions.invoke("analyze-video", {
         body: {
           videoId: (videoRow as { id: string }).id,
           module: resolvedModule,
@@ -490,8 +492,17 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
           ballTrackingEligible: scope.ballTracking,
         },
       });
-      if (fnError) throw fnError;
-      toast.success(`Analysis complete. ${scope.note}`, { id: toastId });
+      if (fnError) {
+        const failure = await analysisErrorDetails(fnError);
+        if (failure.report) onAnalysis?.(failure.report, (videoRow as { id: string }).id);
+        toast.error(failure.message, { id: toastId });
+        return;
+      }
+      const normalized = normalizeAnalysisResponse(report);
+      onAnalysis?.(normalized, (videoRow as { id: string }).id);
+      if (normalized?.saved === false) toast.error(normalized.save_error ?? "Your clip is saved; the report could not be saved.", { id: toastId });
+      else if (normalized?.report_status === "not_measured") toast.info(normalized.feedback, { id: toastId });
+      else toast.success(`Analysis complete. ${scope.note}`, { id: toastId });
     } catch (e: any) {
       console.error("[HighFpsCapture] save failed", e);
       toast.error(

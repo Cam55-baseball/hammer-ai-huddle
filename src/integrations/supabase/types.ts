@@ -2048,6 +2048,51 @@ export type Database = {
         }
         Relationships: []
       }
+      analysis_canary_config: {
+        Row: {
+          enabled: boolean
+          id: number
+          last_run_day: string | null
+          last_status: string | null
+          lease_id: string | null
+          lease_until: string | null
+          owner_id: string
+          paused_reason: string | null
+          request_json: Json | null
+          request_path: string
+          updated_at: string
+          video_id: string
+        }
+        Insert: {
+          enabled?: boolean
+          id?: number
+          last_run_day?: string | null
+          last_status?: string | null
+          lease_id?: string | null
+          lease_until?: string | null
+          owner_id: string
+          paused_reason?: string | null
+          request_json?: Json | null
+          request_path: string
+          updated_at?: string
+          video_id: string
+        }
+        Update: {
+          enabled?: boolean
+          id?: number
+          last_run_day?: string | null
+          last_status?: string | null
+          lease_id?: string | null
+          lease_until?: string | null
+          owner_id?: string
+          paused_reason?: string | null
+          request_json?: Json | null
+          request_path?: string
+          updated_at?: string
+          video_id?: string
+        }
+        Relationships: []
+      }
       analysis_fault_findings: {
         Row: {
           correction_key: string | null
@@ -23471,6 +23516,29 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "live_ab_links"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      claim_analysis_canary: {
+        Args: { p_lease: string }
+        Returns: {
+          enabled: boolean
+          id: number
+          last_run_day: string | null
+          last_status: string | null
+          lease_id: string | null
+          lease_until: string | null
+          owner_id: string
+          paused_reason: string | null
+          request_json: Json | null
+          request_path: string
+          updated_at: string
+          video_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "analysis_canary_config"
           isOneToOne: false
           isSetofReturn: true
         }

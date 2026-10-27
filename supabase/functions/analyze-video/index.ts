@@ -17,7 +17,7 @@ import {
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
-import { hasReadableReport, hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../_shared/analysisReliability.ts";
+import { analysisRefused, hasReadableReport, hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../_shared/analysisReliability.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
 import { constructiveCriticismBlock, improvementsSchema } from "./constructiveCriticism.ts";
@@ -27,6 +27,7 @@ import { analysesLastHour, overHourlyLimit, logAiUsage, HOURLY_LIMIT_MESSAGE, ho
 import { runStoredThrowPitchCards, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
 import { saveAnalysisReport } from "../_shared/saveAnalysisReport.ts";
 import { analysisPositionContext } from "../_shared/analysisPosition.ts";
+import { validAnalysisJobToken, canaryDelegationAllowed } from "../_shared/analysisCanaryAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1754,7 +1755,13 @@ Deno.serve(async (req) => {
     // the real caller and the persisted clip, never the body-provided user ID.
     const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
     const { data: caller, error: callerError } = token ? await supabase.auth.getUser(token) : { data: null, error: null };
-    if (callerError || !caller?.user || !videoRow || caller.user.id !== userId || videoRow.user_id !== userId || videoRow.module !== module || videoRow.sport !== sport) {
+    const canaryLease = req.headers.get("x-analysis-canary-lease");
+    let canaryAuthorized = false;
+    if (canaryLease && await validAnalysisJobToken(req.headers.get("x-job-token"))) {
+      const config = await supabase.from("analysis_canary_config").select("video_id,owner_id,enabled,paused_reason,lease_id,lease_until").eq("id",1).maybeSingle();
+      canaryAuthorized = canaryDelegationAllowed(config.data, {videoId,userId,leaseId:canaryLease});
+    }
+    if ((!canaryAuthorized && (callerError || !caller?.user || caller.user.id !== userId)) || !videoRow || videoRow.user_id !== userId || videoRow.module !== module || videoRow.sport !== sport) {
       return new Response(JSON.stringify({ error: "Video access denied" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     authorizedClip = true;
@@ -1901,7 +1908,7 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
       const cachedAi = (videoRow?.ai_analysis ?? null) as Record<string, unknown> | null;
-      if (prior && hasReadableReport(cachedAi) && videoRow?.status === "completed") {
+      if (!canaryAuthorized && prior && hasReadableReport(cachedAi) && videoRow?.status === "completed") {
         await recordRun(supabase, {
           video_id: videoId,
           requested_by: userId,
@@ -1918,6 +1925,7 @@ Deno.serve(async (req) => {
         console.log(`[ANALYZE-VIDEO] cache HIT for ${videoId}`);
         const cachedPayload: Record<string, unknown> = {
           success: true,
+          saved: true,
           replay_cache: true,
           audit_persistence: auditPersistence,
           cache_fingerprint_hex: cacheFingerprintHex,
@@ -2270,31 +2278,20 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         provider: aiResult.provider,
       };
 
-      await supabase
-        .from("videos")
-        .update({
-          status: "failed",
-          ai_analysis: { error: errorData }
-        })
-        .eq("id", videoId);
-
-      const truncatedBody = errorText.slice(0, 500);
-      if (aiResult.status === 429) {
-        throw new Error(
-          `ai_gateway_rate_limited: provider=${aiResult.provider} upstream_status=429 body=${truncatedBody}`
-        );
-      }
-      if (aiResult.status === 402) {
-        throw new Error(
-          `ai_gateway_payment_required: provider=${aiResult.provider} upstream_status=402 body=${truncatedBody}`
-        );
-      }
-      throw new Error(
-        `ai_gateway_error: provider=${aiResult.provider} upstream_status=${aiResult.status} body=${truncatedBody}`
-      );
+      const safeMessage = aiResult.status === 403 ? "Analysis provider access is denied. The owner must restore access before a fresh analysis." : aiResult.status === 402 ? "Analysis credits are unavailable. The owner must restore credits before a fresh analysis." : aiResult.status === 401 ? "Analysis credentials need the owner's attention." : aiResult.status === 404 ? "The configured analysis model is unavailable." : aiResult.status === 429 ? "Analysis is busy. Your clip is saved; wait before starting a fresh request." : "The analysis service did not finish. Your clip is saved.";
+      const failedReport = { ...unavailableAnalysis(module, "provider"), feedback: safeMessage, failure_status: aiResult.status, retry_allowed: aiResult.status === 429 || aiResult.status >= 500 };
+      const savedFailure = await saveAnalysisReport(() => supabase.from("videos").update({ status: "failed", ai_analysis: failedReport }).eq("id", videoId).eq("user_id", userId));
+      await recordRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: cacheFingerprintHex, cache_hit: false, outcome: "failed", outcome_reason: `provider_status:${aiResult.status}` });
+      return new Response(JSON.stringify({ error: safeMessage, message: safeMessage, report: failedReport, saved: savedFailure.saved }), { status: aiResult.status >= 400 && aiResult.status <= 599 ? aiResult.status : 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const data = aiResult.data;
+    if (analysisRefused(data)) {
+      const message = "The analysis provider declined this clip. No findings were generated.";
+      await saveAnalysisReport(() => supabase.from("videos").update({ status: "failed", ai_analysis: { ...unavailableAnalysis(module, "refusal"), feedback: message, retry_allowed: false } }).eq("id", videoId).eq("user_id", userId));
+      await recordRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: cacheFingerprintHex, cache_hit: false, outcome: "failed", outcome_reason: "provider_refusal" });
+      return new Response(JSON.stringify({ message, error: message }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     if (!hasStructuredAnalysis(data)) throw new Error("coaching_output_unreadable");
     console.log(`[ANALYZE-VIDEO] AI provider=${aiResult.provider}`);
 
