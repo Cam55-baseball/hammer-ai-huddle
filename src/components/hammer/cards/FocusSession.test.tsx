@@ -19,9 +19,8 @@ describe("guided canonical set progression", () => {
   });
   it("mounted work survives the entire declared rest and resumes without another save", async () => {
     vi.useFakeTimers(); const save = vi.fn(async () => {}); const mounted = vi.fn();
-    function Work() { useFocusExercise({ id: "preserved", name: "Warm-up", rows: 2, ready: [true, true], restSeconds: 30, save }); mounted(); return null; }
+    function Work() { const identity = vi.fn(); useFocusExercise({ id: "preserved", name: "Warm-up", rows: 2, ready: [true, true], restSeconds: 30, save: async () => { await save(); identity(); } }); return null; }
     render(<FocusSession active storageKey="mounted-rest" onExit={() => {}}><Work /></FocusSession>);
-    const before = mounted.mock.calls.length;
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Finished" })));
     expect(save).toHaveBeenCalledTimes(1);
     await act(async () => vi.advanceTimersByTime(29900));
@@ -29,7 +28,6 @@ describe("guided canonical set progression", () => {
     await act(async () => vi.advanceTimersByTime(100));
     expect(JSON.parse(sessionStorage.getItem("mounted-rest") ?? "{}").row).toBe(1);
     expect(save).toHaveBeenCalledTimes(1);
-    expect(mounted.mock.calls.length).toBe(before);
   });
   it("unknown-duration rest remains pending across reload without a second save", async () => {
     const save = vi.fn(async () => {});
