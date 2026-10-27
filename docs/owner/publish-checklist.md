@@ -1,5 +1,14 @@
 # Hammers — final publish checklist
 
+## October 27 06:11 continuation (2) — latest delta
+
+- **Coach movement positive phone proof PASS:** restored owner `--self` access, then kept adult TEST College Outfielder enabled health-only sharing through its own `/athlete/recruiting-consent` switches. As its existing connected TEST coach, Development → on-the-spot check saved TEST-only bilateral status inputs through the normal form/server writer; all numeric measurements stayed blank. Saved summary displayed observations, not diagnosis, explicit Not measured values and unchanged prescribed work. Reload retained the summary at 390×844. This proves coach-entered observation save/readback, not a player-entered complete assessment. Screenshots inspected.
+- **Exact cleanup PASS:** before/after assessment and sharing history privately snapshotted; original movement/pain/provenance fields restored by exact TEST user ID with readback equality; original health and visibility switches restored through the app and read back equal. Consent change audit retained. No real player's consent or observations changed.
+- **Mixed timer FIXED:** standalone component timer now resets when the next timed component becomes eligible; manual-entry protection belongs to that component, not any earlier timed row. Regression typed first time=30 seconds then stopped second timer=1 second, preserving distinct row values and resetting the timer for its next identity. Changed logging group **12 files / 67 tests PASS**; focused regression **8 tests PASS**. No dose, rest or prescription change.
+- **Remaining generated-card proofs:** existing TEST pitcher session inspected without reseeding; its 13 saved prescription rows are dated September 25, not today's edited TEST item. Its Today requires a check-in. Existing adult TEST throwing card was opened at 390×844: equal-set band components are visible; no mixed/unequal circuit exists in that inspected card. No exercise performance or check-in invented to claim either proof.
+- **Full suite:** bounded fresh run in progress; final result will be recorded here before closeout. Automatic preview **OK 06:14:53 UTC** after timer changes.
+- **Ready to publish: NO:** generated TEST live-tracking/card and real mixed-circuit card/focus proofs still open, along with entitled embedded analysis proof. Four original clip combinations remain owner's human checks and nonblocking. Canary, baserunning matrix and real-owner Finished/rest/reload proofs retained without repetition. No publish, deployment, migration, cron, schedule or iOS changes this run.
+
 ## October 27 05:58 continuation — latest delta
 
 - **Built and regression-tested:** mixed/unequal circuit rows start blank, so focusing an untouched target cannot record performed work. Add-set is suppressed for those fully declared component rows; a standalone circuit timer selects only the timed component, never an earlier rep row.
@@ -50,7 +59,7 @@ Counts are ready baserunning days from the existing builder's tested cohort, not
 | 8 | Subscription test/category/order | Built/tested previously; entitled screen proof outstanding. |
 | 9 | Sport/subscription season stats | Built/tested previously; populated cross-sport reload proof outstanding. |
 | 10 | Fielding/throwing goal corrections | Built/tested previously; historical choices remain readable. |
-| 11 | Saved movement coach/Today/analysis view | Consent-scoped reader built/applied; positive connected-coach saved-observation proof open. |
+| 11 | Saved movement coach/Today/analysis view | Consent-scoped reader built/applied; adult TEST connected-coach form save → shared observations → reload phone PASS; numeric measurements unknown, no dose effects. |
 | 12 | Effective Vault edits and coach per-side tracking | Built/tested; existing TEST-only Vault edit/readback passed; generated TEST plan/card proof open. |
 | 13 | Three timer controls | Previously built/tested/phone-checked. |
 | 14 | Empty warm-up Drills area | Previously removed/phone-checked. |
@@ -66,6 +75,7 @@ Counts are ready baserunning days from the existing builder's tested cohort, not
 
 - **Owner:** canary is active and manually passing; apply the daily schedule yourself. Vault tracking edits apply from the saved live effective date, not retroactively to a saved day's dose. TEST-only items stay TEST-only; the isolated proof item is parked.
 - **Coach:** per-arm, per-leg and each-side choices describe how reps are recorded, not permission to change a player's dose. Saved movement observations require both connected training access and current health consent; unshared data remains unavailable.
+- **Coach movement:** Development shows the connected player's shared saved observations; each side's entered value and control score remain separate. Blank measurements say Not measured. The on-the-spot form is for an in-person check; never fill it with assumed measurements. The successful closeout example used explicitly authorized TEST-only status inputs and was restored afterward.
 - **Player:** read the full report immediately after a supported analysis upload, optionally save the clip with its report to Players Club, then use View to reopen it. Finished saves your entered work before automatic recovery starts; reload retains saved completion. Baserunning mental-work buttons open the available practice log, not unreleased IQ content.
 
 ## October 27 urgent run — current status
