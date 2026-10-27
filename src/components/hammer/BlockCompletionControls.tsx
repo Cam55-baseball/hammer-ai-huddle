@@ -51,6 +51,7 @@ export function BlockCompletionControls({
   const [current, setCurrent] = useState<CompletionState | null>(() =>
     todayCompletion(loadEngagement(user?.id), modality, side),
   );
+  const [saving, setSaving] = useState(false);
   const date = planDate ?? new Date().toISOString().slice(0, 10);
   const tasks = useHammerDailyTasks(date);
   const encouragement = useMemo(() => {
@@ -64,18 +65,18 @@ export function BlockCompletionControls({
     return bank[Math.floor(Math.random() * bank.length)];
   }, []);
 
-  function mark(status: CompletionState) {
+  async function mark(status: CompletionState) {
+    if (saving) return;
     // A card with nothing prescribed can't be completed — marking it done
     // would record work that never existed.
     if (drills && drills.length === 0) {
       toast("Nothing is prescribed here yet, so there's nothing to mark done.");
       return;
     }
-    recordCompletion(user?.id, modality, status, side);
-    setCurrent(status);
-    onChanged();
     // Bulk-sync every drill task in this card so checkboxes reflect the
     // card-level Done/Skip in real time (bidirectional sync).
+    setSaving(true);
+    try {
     if (drills && drills.length > 0) {
       const seeds: TaskSeed[] = drills.map((d) => ({
         taskId: makeBlockTaskId(String(modality), d.slug ?? d.name),
@@ -84,13 +85,19 @@ export function BlockCompletionControls({
         side,
         payload: drillTaskPayload(d, sport === 'softball' ? 'softball' : 'baseball', String(modality), side),
       }));
-      void tasks.bulkSet(seeds, status === "done");
+      await tasks.bulkSet(seeds, status === "done");
     }
+    recordCompletion(user?.id, modality, status, side);
+    setCurrent(status);
+    onChanged();
     if (status === "done") {
       toast.success(`${modalityLabel} — done. ${encouragement}`);
     } else {
       toast(`${modalityLabel} skipped — Hammer will adjust the rest of today.`);
     }
+    } catch {
+      toast.error("Couldn't save this block — try again.");
+    } finally { setSaving(false); }
   }
 
   return (
@@ -99,6 +106,7 @@ export function BlockCompletionControls({
         size="sm"
         variant={current === "done" ? "default" : "outline"}
         onClick={() => mark("done")}
+        disabled={saving}
         className="h-7 text-[11px] gap-1"
         title="Mark this block done — feeds streaks + tomorrow's plan"
       >
@@ -109,6 +117,7 @@ export function BlockCompletionControls({
         size="sm"
         variant={current === "skipped" ? "secondary" : "ghost"}
         onClick={() => mark("skipped")}
+        disabled={saving}
         className="h-7 text-[11px] gap-1"
         title="Skip — Hammer trims remaining volume so today still finishes clean"
       >
