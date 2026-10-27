@@ -152,6 +152,11 @@ export default function History() {
             </Link>
             .
           </p>
+          <p className="mt-1 text-sm">
+            <Link to="/defense/plays" className="text-primary hover:underline">
+              My defensive plays
+            </Link>
+          </p>
         </header>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

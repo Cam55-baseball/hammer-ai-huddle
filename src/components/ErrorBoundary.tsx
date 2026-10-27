@@ -28,9 +28,19 @@ export class ErrorBoundary extends Component<Props, State> {
     // Lineage-visible: surface the real stack to the console so we can
     // pinpoint the thrower without a guess-and-check loop.
     console.error(`[ErrorBoundary${this.props.label ? ` ${this.props.label}` : ""}]`, error, info);
+    // Newer build: reload automatically once per tab; never loop.
+    if (isChunkError(error)) {
+      try {
+        if (!sessionStorage.getItem('__eb_auto_reload_once')) {
+          sessionStorage.setItem('__eb_auto_reload_once', '1');
+          this.hardReload(false);
+        }
+      } catch { /* ignore */ }
+    }
   }
 
   reset = () => this.setState({ error: null });
+  dismiss = () => this.setState({ error: null, dismissed: true });
 
   hardReload = () => {
     try {
