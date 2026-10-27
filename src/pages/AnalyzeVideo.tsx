@@ -625,6 +625,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     let denseRun: Awaited<ReturnType<typeof captureDenseLandmarkSeries>> | null = null;
     let poseRows: PoseFrameRow[] = [];
     let tempoRun: Awaited<ReturnType<typeof runTempoPipeline>> | null = null;
+    let trackingFailure: { reason: string; emitted_by: string | null } | null = null;
     // Movement gate — decided from the persisted-format landmark series before
     // any analysis output. No series (pose failed) = cannot confirm movement.
     let movementGate: MovementGateResult = evaluateMovementGate(null);
@@ -760,6 +761,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
           tempo: tempoRun,
         };
       } catch (poseErr: any) {
+        trackingFailure = { reason: poseErr instanceof WindowSelectionFailure ? poseErr.missingness.missing_reason : "pose_inference_failed", emitted_by: poseErr instanceof WindowSelectionFailure ? poseErr.missingness.emitted_by : null };
         // STEP 4 — a window-selection failure is not an inference crash: the
         // scout pass found no athlete anywhere in the clip, so there is no
         // honest window to analyse. Logged with its canonical missingness
@@ -944,6 +946,25 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
           ? runPitchingTiles(denseRun.series, { throwing_side: sideResolution.side })
           : null,
       );
+      // A failed tempo calculation must not discard a successfully captured series.
+      // Unknown FPS remains unknown: the landmark table requires a measured rate.
+      if (!tempoRun && (denseRun || trackingFailure) && probed.fps_true != null) {
+        try {
+          const stored = denseRun ? await writeLandmarkSeries(user.id, videoData.id, denseRun.series) : null;
+          const result = await supabase.from("video_landmark_runs").insert({
+            video_id: videoData.id,
+            landmark_model_id: denseRun?.series.header.landmark_model_id ?? "unavailable",
+            landmark_model_version: denseRun?.series.header.landmark_model_version ?? "not_run",
+            fps_true: probed.fps_true,
+            frame_count: denseRun?.frames_processed ?? 0,
+            landmarks_storage_path: stored?.path ?? null,
+            landmarks_sha256_hex: stored?.series_sha256_hex ?? probed.sha256_hex,
+            mean_visibility: denseRun?.mean_visibility ?? null,
+            diagnostics: { tracking_failure: trackingFailure, tempo_status: "not_measured", frames_with_pose: denseRun?.frames_with_pose ?? 0, video_sha256_hex: probed.sha256_hex, hash_source: stored ? "landmark_series" : "video_only_no_landmarks" },
+          });
+          if (result.error) console.error("[D-POSE] tracking diagnostic save failed:", result.error.message);
+        } catch (error) { console.error("[D-POSE] partial tracking persistence failed:", error); }
+      }
       if (denseRun && tempoRun) {
         // STEP 1 — persist the FULL landmark series before the lineage row, so
         // `landmarks_storage_path` records a real, readable object key. If the
