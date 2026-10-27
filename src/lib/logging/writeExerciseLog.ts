@@ -22,7 +22,7 @@ export interface ExerciseLogPayload {
 const REWRITTEN = new Set(["rounds", "template_id", "field_schema", "one_tap_outcome", "cut_short", "did_more", "per_side"]);
 
 export function buildExerciseLogRow(userId: string, p: ExerciseLogPayload) {
-  const repsCompleted = p.rounds.map((r) => (r.reps ?? r.throws ?? r.contacts ?? null)).filter((v): v is number => typeof v === "number");
+  const repsCompleted = p.rounds.map((r) => (r.reps ?? r.steps ?? r.throws ?? r.contacts ?? null)).filter((v): v is number => typeof v === "number");
   const weights = p.rounds.map((r) => r.weight).filter((v): v is number => typeof v === "number");
   const durationTotal = p.rounds.map((r) => r.duration ?? r.time ?? null).filter((v): v is number => typeof v === "number").reduce((a, b) => a + b, 0) || null;
   const d = p.rounds.map((r) => r.distance).filter((v): v is number => typeof v === "number");

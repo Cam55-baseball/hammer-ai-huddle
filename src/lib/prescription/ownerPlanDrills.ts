@@ -103,13 +103,21 @@ export function ownerDrillsForSlot(slots: PlanSlot[], ctx: MergeContext): OwnerD
   return rows.filter((r) => eligibleFor(r, slots, ctx));
 }
 
-interface StepLike { name: string; dosage?: string; cue?: string }
+interface StepLike { name: string; dosage?: string; cue?: string; stage?: string; prescriptionOrigin?: string }
 
 /** Swap one drill (the last) for today's owner drill. Count unchanged. */
 export function mergeOwnerSlotDrills<T extends StepLike>(drills: T[], slots: PlanSlot[], ctxOrSport: MergeContext | string, day = new Date()): T[] {
   const ctx: MergeContext = typeof ctxOrSport === "string" ? { sport: ctxOrSport, day } : ctxOrSport;
   const pool = ownerDrillsForSlot(slots, ctx).sort((a, b) => a.id.localeCompare(b.id));
   if (pool.length === 0 || drills.length === 0) return drills;
+  // Catalog tags cannot replace preparation, live execution, logging, or
+  // another owner's already chosen slot. Legacy unstaged slots remain eligible.
+  let target = -1;
+  for (let i = drills.length - 1; i >= 0; i--) {
+    const drill = drills[i];
+    if (drill.prescriptionOrigin !== 'owner' && (drill.stage === undefined || drill.stage === 'drills')) { target = i; break; }
+  }
+  if (target < 0) return drills;
   const dayIndex = Math.floor((ctx.day ?? day).getTime() / 86_400_000);
   const pick = pool[dayIndex % pool.length];
   // Replace the slot wholesale so no built-in set-up, guide or slug leaks onto his drill.
@@ -127,7 +135,7 @@ export function mergeOwnerSlotDrills<T extends StepLike>(drills: T[], slots: Pla
     ...(clean(pick.setup) ? { setup: pick.setup } : {}),
     ...(pick.equipment.length ? { equipmentNote: pick.equipment.join(", ") } : {}),
   } as unknown as T;
-  return [...drills.slice(0, -1), owned];
+  return drills.map((drill, index) => index === target ? owned : drill);
 }
 
 if (typeof window !== "undefined" && import.meta.env.MODE !== "test") void loadOwnerPlanDrills();

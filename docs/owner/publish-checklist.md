@@ -1,5 +1,13 @@
 # Publish checklist — consolidated (Oct 27, 2026)
 
+## Run5 additions (supersede earlier partial statuses only where stated)
+- FULL607 unique files/4914 tests PASS; all20 bounded groups exit0, zero omitted files. Final four changed-rule files/18 tests PASS. Preview build OK22:59:11 UTC. Ready to publish: NO; open items below remain open except the explicitly proved legacy video-save capability.
+- B: Canonical steps now reach count totals; original rounds and hundredth-second time are unchanged. Positive athlete time/steps readback remains open.
+- A: Beginner receiving/blocking instructions no longer add catches or remove protective gear. Six actual-builder 56-day simulations cover both sports/catcher/infield/outfield with missing gear; they prove no unauthorized work, NOT subscription completeness or increased beginner volume. Six-week generator comparison: it is AI strength/conditioning scheduling, not a canonical purchased-skill coverage contract; importing its days/doses is not authorized.
+- C: Owner insertion now preserves prep/full-go/log and existing owner rows, replacing only an ordinary/legacy unstaged non-owner slot. Dose-equivalence certification, exact skill separation and comparable pre/post owner-drill outcomes remain missing; routine locking/challenge NOT implemented or claimed.
+- D: Legacy editor uses canonical video-library choice, existing video_url save and shared platform-aware player. Owner390×844 choice→save→reload→reopen exact URL PASS/no overflow/page errors. Selected library sources displayed honest playback failure; playback and affected-athlete legacy viewer remain NOT proven.
+- Two exact temporary unpublished legacy drafts were privately snapshotted before deletion; fixed-ID absence confirmed for each. No athlete workout/check-in records created. Named wk-generate-daily and plan-swap redeployed with 69-source shared bundle; no migration/publish/cron/iOS changes. Finished proofs and restored P0 untouched.
+
 Latest run4: **605 unique files / 4,904 tests passed; zero omitted files.** Eighteen bounded groups exited 0; two timeout groups printed all passes and their slow render files were isolated successfully (source render 156.59s; warm-up render 13.22s). Final six changed-rule files / 15 tests passed. Four parallel investigations completed. Preview **passed**, observed October 27, 22:31:10 UTC. Prior finished proofs preserved.
 Nothing published; no cron or iOS changes. No new hosted athlete/test records were created. One existing parked TEST drill's tag/video fields were privately snapshotted, edited through the real owner UI, restored and read back equal (automatic audit timestamp retained). Prior canary proof preserved, not repeated.
 

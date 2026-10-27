@@ -16,6 +16,8 @@ import { Separator } from '@/components/ui/separator';
 import { Loader2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useVideoLibrary } from '@/hooks/useVideoLibrary';
+import { VideoPlayer } from '@/components/video-library/VideoPlayer';
 
 const POSITIONS = ['infield', 'outfield', 'catcher', 'pitcher_fielding', 'first_base', 'shortstop', 'second_base', 'third_base'];
 const DIFFICULTY_LEVELS = ['beginner', 'intermediate', 'advanced', 'elite'];
@@ -51,6 +53,8 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
   // Form state
   const [name, setName] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const [videoSearch, setVideoSearch] = useState('');
+  const { videos, loading: videosLoading, hasMore, loadMore } = useVideoLibrary({ search: videoSearch, limit: 20 });
   const [sport, setSport] = useState('baseball');
   const [module, setModule] = useState('fielding');
   const [skillTarget, setSkillTarget] = useState('');
@@ -218,12 +222,13 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
       }
 
       if (!finalDrillId) throw new Error('No drill ID');
+      const savedDrillId = finalDrillId;
 
       // Update positions
       await supabase.from('drill_positions').delete().eq('drill_id', finalDrillId);
       if (selectedPositions.length > 0) {
         await supabase.from('drill_positions').insert(
-          selectedPositions.map(p => ({ drill_id: finalDrillId!, position: p })),
+          selectedPositions.map(p => ({ drill_id: savedDrillId, position: p })),
         );
       }
 
@@ -232,7 +237,7 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
       const selectedTags = tagSelections.filter(t => t.selected);
       if (selectedTags.length > 0) {
         await supabase.from('drill_tag_map').insert(
-          selectedTags.map(t => ({ drill_id: finalDrillId!, tag_id: t.tagId, weight: t.weight })),
+          selectedTags.map(t => ({ drill_id: savedDrillId, tag_id: t.tagId, weight: t.weight })),
         );
       }
 
@@ -280,8 +285,18 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
                 <Input value={name} onChange={e => setName(e.target.value)} placeholder="Quick Transfer Drill" />
               </div>
               <div className="space-y-2">
-                <Label>Video URL</Label>
-                <Input value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://..." />
+                <Label htmlFor="legacy-video-search">Video library</Label>
+                <Input id="legacy-video-search" value={videoSearch} onChange={e => setVideoSearch(e.target.value)} placeholder="Search library videos" />
+                <div className="max-h-40 space-y-1 overflow-y-auto">
+                  {videos.filter(video => video.video_url).map(video => (
+                    <Button key={video.id} type="button" variant={videoUrl === video.video_url ? 'default' : 'outline'} className="h-auto w-full justify-start whitespace-normal break-words text-left" onClick={() => setVideoUrl(video.video_url ?? '')}>{video.title}</Button>
+                  ))}
+                </div>
+                {videosLoading && <p role="status" className="text-xs text-muted-foreground">Loading videos…</p>}
+                {hasMore && <Button type="button" variant="ghost" disabled={videosLoading} onClick={loadMore}>More videos</Button>}
+                <Label htmlFor="legacy-video-url">Video URL</Label>
+                <Input id="legacy-video-url" value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://..." />
+                {videoUrl.trim() && <VideoPlayer key={videoUrl} videoUrl={videoUrl.trim()} videoType="upload" title={name || 'Drill preview'} />}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
