@@ -153,7 +153,7 @@ import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitchin
 import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 
 import { PlanStreakStrip } from "@/components/hammer/cards/PlanStreakStrip";
-import { prescribedToday, visiblePlanCard, splitBaserunning, groupPhysicalBaserunning } from "@/components/hammer/cards/todayPresentation";
+import { prescribedToday, visiblePlanCard, splitBaserunning, groupPhysicalBaserunning, splitBunting } from "@/components/hammer/cards/todayPresentation";
 import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure";
 import { ExerciseInstructions } from "@/components/hammer/cards/ExerciseInstructions";
 import { ActivityBasics } from "@/components/hammer/cards/ActivityBasics";
@@ -327,7 +327,7 @@ function DrillRow({
           completed={checked}
           taskSync={{ planDate, seed }}
         />
-        <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={displayDose} changes={"swapReason" in d && typeof d.swapReason === "string" ? [d.swapReason] : undefined} repair={d.speedMix?.length ? undefined : legacyRepair(d.dosage, modality)} expanded />
+        <ExerciseInstructions name={d.name} slug={d.slug} videoUrl={d.videoUrl} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={displayDose} changes={"swapReason" in d && typeof d.swapReason === "string" ? [d.swapReason] : undefined} repair={d.speedMix?.length ? undefined : legacyRepair(d.dosage, modality)} expanded />
         {adjustApi && <Button type="button" variant="outline" size="sm" disabled={checked || (swapV2.enabled && !savedLocation)} onClick={() => setAdjustOpen(true)} aria-label={`Swap or skip ${d.name}`}><Repeat className="mr-1 h-3 w-3" />{swapV2.enabled ? "Swap" : "Can't do it"}</Button>}
         {swapV2.enabled && savedLocation && adjustOpen ? <LiveSwapSheet open={adjustOpen} onOpenChange={setAdjustOpen}
           rx={{ id: savedLocation.row.id, plan_date: planDate, movement_name: d.name }}
@@ -1149,7 +1149,7 @@ function HammerDailyPlanBody({
           // Step 21B — skill work runs before practice / conditioning / lift;
           // the recovery flow is the last thing in the day.
           const RECOVERY_LAST = new Set(["recovery", "regeneration", "mobility", "sleep"]);
-          const otherBlocks = allOtherBlocks.filter((b) => !RECOVERY_LAST.has(b.modality));
+          const otherBlocks = splitBunting(allOtherBlocks.filter((b) => !RECOVERY_LAST.has(b.modality)));
           const recoveryBlocks = allOtherBlocks.filter((b) => RECOVERY_LAST.has(b.modality));
           const coachCards = (categories: string[]) => {
             const rows = (wkRx.grouped.coach ?? []).filter(rx => categories.includes(rx.slot));
@@ -1278,6 +1278,9 @@ function HammerDailyPlanBody({
               )}
               {otherBlocks.map((b) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
+                const isBunting = b.modality === 'hitting' && b.drills.length > 0 && b.drills.every(drill => !!drill.bunt);
+                const cardKey = `${isBunting ? 'bunting' : b.modality}_${b.side ?? 'x'}`;
+                const category = isBunting ? 'Bunting' : BLOCK_CATEGORY[b.modality] ?? b.title;
                 if (b.status === 'awaiting-input') return <BlockCard
                   key={`${b.modality}-${b.side ?? 'x'}`}
                   block={b}
@@ -1285,10 +1288,10 @@ function HammerDailyPlanBody({
                 />;
                 return (
                   <PocketCard
-                    key={`${b.modality}-${b.side ?? "x"}`}
-                    id={`block_${b.modality}_${b.side ?? "x"}`}
-                    category={BLOCK_CATEGORY[b.modality] ?? b.title}
-                    focus={blockFocus(b.title, BLOCK_CATEGORY[b.modality] ?? b.title, b.side)}
+                    key={cardKey}
+                    id={`block_${cardKey}`}
+                    category={category}
+                    focus={blockFocus(b.title, category, b.side)}
                     tone="bg-muted-foreground"
                     planDate={pocketDate}
                     practiceLogging={logPractice && (b.modality === "throwing" || b.modality === "hitting")}

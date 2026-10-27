@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { prescribedToday, visiblePlanCard, splitBaserunning, groupPhysicalBaserunning } from "./todayPresentation";
+import { prescribedToday, visiblePlanCard, splitBaserunning, groupPhysicalBaserunning, splitBunting } from "./todayPresentation";
 import { rulesForCard } from "./CardRules";
 import type { PrescribedBlock } from "@/lib/hammer/prescription/dailyPlan";
 import { buildHammerDailyPlan } from "@/lib/hammer/prescription/dailyPlan";
@@ -14,6 +14,22 @@ const block = (status: PrescribedBlock["status"] = "ready") => ({
 } as PrescribedBlock);
 
 describe("Today presentation — no prescription bleed", () => {
+  it('separates bunts in both sports without changing hitting task identities or volume', () => {
+    for (const sport of ['baseball', 'softball']) {
+      const swing = { name: 'Tee swings', slug: `${sport}-tee`, dosage: '10 swings' };
+      const bunt = { name: 'Sacrifice bunt', slug: `${sport}-bunt`, dosage: '7 attempts', bunt: { side: 'L' as const, type: 'sac_3b' as const, attempts: 7, sourceAttempts: 10, sourceSuccesses: 5 } };
+      const original = { ...block(), modality: 'hitting', drills: [swing, bunt] } as PrescribedBlock;
+      const before = JSON.stringify(original);
+      const parts = splitBunting([original]);
+      expect(parts).toHaveLength(2);
+      expect(parts.map(part => part.modality)).toEqual(['hitting', 'hitting']);
+      expect(parts[0].drills[0]).toBe(swing);
+      expect(parts[1].drills[0]).toBe(bunt);
+      expect(parts.flatMap(part => part.drills)).toHaveLength(2);
+      expect(parts[1].drills[0].dosage).toBe('7 attempts');
+      expect(JSON.stringify(original)).toBe(before);
+    }
+  });
   it('keeps equipment confirmation visible without granting training or completion', () => {
     const waiting = { ...block('awaiting-input'), drills: [] };
     expect(visiblePlanCard(waiting)).toBe(true);

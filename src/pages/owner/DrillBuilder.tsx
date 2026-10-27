@@ -22,6 +22,7 @@ import { planReadiness, type PlanSlot } from "@/lib/prescription/ownerPlanDrills
 import { validateVideoFile } from "@/data/videoLimits";
 import { VideoPlayer } from "@/components/video-library/VideoPlayer";
 import { useVideoLibrary } from '@/hooks/useVideoLibrary';
+import { BuilderLibraryLink } from '@/components/owner/BuilderLibraryLink';
 import { SKILL_AREAS, ROUTINE_ROLES, BAT_SPEED_KINDS, validDrillRoleTags } from '@/lib/prescription/drillRoleTags';
 
 const SLOT_LABEL: Record<PlanSlot, string> = {
@@ -237,6 +238,7 @@ export default function DrillBuilder() {
             <p className="text-sm text-muted-foreground">Create and edit drills for every place they appear. Usage counts show how often drills are used, not whether they work.</p>
           </div>
           <div className="flex gap-2">
+            <BuilderLibraryLink />
             <Button variant="outline" onClick={() => setRequestOpen(true)}>Request a new fault</Button>
             <Button onClick={() => setDraft({ ...EMPTY, steps: [""] })}><Plus className="mr-1 h-4 w-4" />New drill</Button>
           </div>

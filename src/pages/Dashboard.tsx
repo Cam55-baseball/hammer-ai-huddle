@@ -33,6 +33,7 @@ import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
 import { CommunicationAI } from "@/components/dashboard/CommunicationAI";
 import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
+import { DevelopThisWeek } from "@/components/dashboard/DevelopThisWeek";
 import { TodaysHammerPick } from "@/components/dashboard/TodaysHammerPick";
 import { HammerDailyPlan } from "@/components/hammer/HammerDailyPlan";
 // HumanPerformanceCard now rendered inside HammerDailyPlan itself.
@@ -645,7 +646,7 @@ export default function Dashboard() {
         {/* My Daily Game Plan lives on its own page (side menu). */}
 
         {/* Long-term Hammer video picks — athletes only */}
-        {hasPlayerAccess && <LongTermVideoSuggestions />}
+        {hasPlayerAccess && <><DevelopThisWeek /><LongTermVideoSuggestions /></>}
 
         {/* Sport Switch Confirmation Dialog */}
         <AlertDialog open={showSportSwitchDialog} onOpenChange={setShowSportSwitchDialog}>

@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { MovementGuide } from "@/lib/hammer/prescription/movementGuide";
 import { activityBasics } from "./ActivityBasics";
 import { ExerciseVideo } from "./ExerciseVideo";
+import { VideoPlayer } from '@/components/video-library/VideoPlayer';
 
 type LiveText = { how_to_one_rep?: string; setup?: string; steps?: string; cue?: string; why?: string; stop_if?: string; movements?: string[] };
 
@@ -28,8 +29,8 @@ function useLiveExerciseText(slug: string | null | undefined, needed: boolean) {
 }
 
 /** The movement's existing guide, shown inline; never invents or changes a dose. */
-export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, stopIf, dosage, why, changes, repair, expanded = false }: {
-  name: string; slug?: string | null; guideOverride?: MovementGuide | null;
+export function ExerciseInstructions({ name, slug, videoUrl, guideOverride, setup, cue, stopIf, dosage, why, changes, repair, expanded = false }: {
+  name: string; slug?: string | null; videoUrl?: string | null; guideOverride?: MovementGuide | null;
   setup?: string | null; cue?: string | null; stopIf?: string | null; dosage?: string | null;
   expanded?: boolean; why?: string | null; changes?: ReadonlyArray<string>; repair?: (t: string) => string;
 }) {
@@ -43,7 +44,7 @@ export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, st
   const steps = guide?.goodRep ?? fallback?.steps ?? liveSteps;
   const content = <>
 
-      {slug && <ExerciseVideo slug={slug} />}
+      {videoUrl ? <VideoPlayer videoUrl={videoUrl} videoType={/\.(mp4|mov|webm|avi|m4v)(\?|$)/i.test(videoUrl) ? 'upload' : 'external'} title={name} /> : slug ? <ExerciseVideo slug={slug} /> : null}
       {live?.how_to_one_rep && <p className="text-muted-foreground"><span className="font-medium text-foreground">How to do one rep: </span>{R(live.how_to_one_rep)}</p>}
       <p className="text-muted-foreground"><span className="font-medium text-foreground">Setup: </span>{R(setup ?? guide?.setup ?? fallback?.setup ?? live?.setup)}</p>
       {steps.length > 0 && <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">{steps.map((step, i) => <li key={i}>{R(step)}</li>)}</ol>}

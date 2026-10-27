@@ -22,6 +22,7 @@ import { baseballDrills } from '@/data/baseball/drillDefinitions';
 import { softballDrills } from '@/data/softball/drillDefinitions';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { BuilderLibraryLink } from '@/components/owner/BuilderLibraryLink';
 import { buntingVaultContent } from '../../../supabase/functions/_shared/vault/buntingContent';
 const BUNT_CONTENT = buntingVaultContent();
 
@@ -126,6 +127,7 @@ export default function ExerciseVault() {
             <h1 className="text-2xl font-bold">Exercise Vault</h1>
             <p className="text-sm text-muted-foreground">Every exercise that can appear on a card. Owner and admin only.</p>
           </div>
+          {!adding && !selected && <BuilderLibraryLink />}
           <button
             type="button"
             data-vault-add

@@ -9,6 +9,22 @@ export function visiblePlanCard(block: PrescribedBlock): boolean {
   return prescribedToday(block) || block.status === 'awaiting-input';
 }
 
+/** Bunting remains hitting for dose, Swap and task identity; only its card is separate. */
+export function splitBunting(blocks: readonly PrescribedBlock[]): PrescribedBlock[] {
+  return blocks.flatMap(block => {
+    if (block.modality !== 'hitting' || !prescribedToday(block)) return [block];
+    const bunts = block.drills.filter(drill => !!drill.bunt);
+    if (!bunts.length) return [block];
+    const hitting = block.drills.filter(drill => !drill.bunt);
+    const part = (drills: typeof block.drills, title: string): PrescribedBlock => ({
+      ...block, title, drills, steps: drills.map(drill => `${drill.name}: ${drill.dosage}`),
+      // A partial card cannot recreate the combined block or claim its full duration.
+      durationMin: 0, gamePlanTemplate: null,
+    });
+    return [...(hitting.length ? [part(hitting, block.title)] : []), part(bunts, 'Bunting')];
+  });
+}
+
 /** Partition existing drills without changing a single instruction, dose or task key. */
 export function splitBaserunning(blocks: readonly PrescribedBlock[]) {
   const mental: PrescribedBlock[] = [];

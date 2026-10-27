@@ -1,0 +1,1 @@
+- Video-manager shortcuts use the existing shared library from builder headers, outside exercise drafts. Why: opening a new signed-in tab may remount access wrappers; drafts must not be put at risk or catalogs duplicated.
