@@ -296,6 +296,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysi
   }, [clip]);
 
   const save = useCallback(async (opts: { analyze: boolean }) => {
+    if (!isAnalysisType(resolvedModule)) { toast.error("This analysis is coming soon"); return; }
     if (!user) { toast.error("Sign in to save this clip."); return; }
     if (!clip) { toast.error("Record a clip first."); return; }
     if (requiresSideConfirmation && !activeSide) {

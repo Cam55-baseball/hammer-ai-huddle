@@ -1993,7 +1993,11 @@ Every fault you surface in feedback/drill recommendations MUST be expressed as a
     // Hammer Report Card: per-discipline structured metrics block (additive).
     const reportCardContract = getContractFor(module, sport);
     const metricsPromptBlock = reportCardContract ? buildMetricsPromptBlock(reportCardContract) : "";
-    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock + constructiveCriticismBlock(module, sport) + doctrineContextBlock(module, sport);
+    const systemPrompt = dispatchAnalysisType(module, {
+      hitting: () => getSystemPrompt("hitting", sport),
+      pitching: () => getSystemPrompt("pitching", sport),
+      throwing: () => getSystemPrompt("throwing", sport),
+    }) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock + constructiveCriticismBlock(module, sport) + doctrineContextBlock(module, sport);
 
     // ===== BUILD MULTIMODAL USER CONTENT WITH FRAMES =====
     const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [];

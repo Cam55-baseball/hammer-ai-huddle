@@ -427,7 +427,6 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     setClipTiles(null);
     setAnalysisError(null);
     setCurrentVideoId(null);
-    setAnalysisEnabled(true);
     setLandingTime(null);
     setCaptureMode("choose");
     toast.success(t('videoAnalysis.videoRemoved', "Video removed. Select a new video to analyze."));
