@@ -664,7 +664,7 @@ function StartGate({ beforeStartPortalTarget }: { beforeStartPortalTarget?: HTML
     );
   }
   if (start.needsStart) {
-    return <div className="space-y-4"><InitialAssessmentCard sport={localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball"} /><StartHammersTodayCard onStart={start.start} starting={start.starting} error={start.error} locked={!start.assessmentReady} /></div>;
+    return <div className="space-y-4"><InitialAssessmentCard sport={localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball"} /><StartHammersTodayCard onStart={start.start} starting={start.starting} error={start.error} locked={!start.assessmentReady} missing={start.missing} missingError={start.missingError} /></div>;
   }
   return (
     <HammersTodayProvider>
