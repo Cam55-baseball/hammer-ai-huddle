@@ -20,7 +20,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.analyze-video]
-verify_jwt = true
+verify_jwt = false
 
 [functions.initialize-owner]
 verify_jwt = false

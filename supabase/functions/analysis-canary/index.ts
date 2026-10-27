@@ -23,7 +23,7 @@ Deno.serve(async req => {
     const body=config.request_json;
     if(!body)throw new Error("fixture_unreadable");
     if(body.videoId!==config.video_id||body.userId!==config.owner_id)throw new Error("fixture_identity_mismatch");
-    const response=await fetch(`${url}/functions/v1/analyze-video`,{method:"POST",headers:{"Content-Type":"application/json",apikey:key,"x-job-token":req.headers.get("x-job-token")??"","x-analysis-canary-lease":lease},body:JSON.stringify(body)});
+    const response=await fetch(`${url}/functions/v1/analyze-video`,{method:"POST",headers:{"Content-Type":"application/json",apikey:Deno.env.get("SUPABASE_ANON_KEY")??"","x-job-token":req.headers.get("x-job-token")??"","x-analysis-canary-lease":lease},body:JSON.stringify(body)});
     const result=await response.json();
     const report=result.ai_analysis??result;
     const readback=await sb.from("videos").select("status,ai_analysis").eq("id",config.video_id).eq("user_id",config.owner_id).maybeSingle();
