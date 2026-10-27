@@ -44,7 +44,7 @@ describe("LegacyDrillInlineLog return from background", () => {
     vi.advanceTimersByTime(1000);
     fireEvent.click(screen.getByRole("button", {name: "Stop timer"}));
     expect(saved.mock.lastCall?.[0].rounds).toEqual([{set:3,time:30},{set:4,time:1}]);
-    expect(screen.getByText("Cut short")).toBeVisible();
+    expect(screen.getByLabelText("Remaining seconds")).toHaveTextContent("30.00 s");
     expect(screen.getByRole("button", {name: "Start timer"})).toBeEnabled();
   });
   it("guided circuits require every component entered before Next can save the existing set", () => {
