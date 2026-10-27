@@ -200,7 +200,7 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
           <header data-pocket-header className="sticky top-0 z-10 flex shrink-0 items-center gap-2 border-b border-border bg-background pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground" aria-hidden><DomainGlyph domain={domain} className="h-5 w-5" /></span>
             <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{category}{progress && progress.total > 0 ? <span className="tabular-nums"> · {progress.done}/{progress.total} done</span> : null}</p><h2 className="break-words text-base font-bold leading-tight text-foreground">{heading}</h2></div>
-            <Button size="sm" aria-pressed={locked} className="h-10 shrink-0 px-3" onClick={() => setLocked(true)}>Start</Button>
+            {!locked && <Button size="sm" className="h-10 shrink-0 px-3" onClick={() => setLocked(true)}>Start</Button>}
             <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" aria-label={locked ? "Exit focus" : "Close"} onClick={() => locked ? window.dispatchEvent(new Event(`hm:focus-exit:hm-focus:${planDate}:${id}`)) : close(true)}><X className="h-4 w-4" /></Button>
           </header>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">

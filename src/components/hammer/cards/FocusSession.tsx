@@ -6,8 +6,8 @@ import { useConditioningRest } from "./ConditioningRestContext";
 import type { BaseRep } from "../../../../supabase/functions/_shared/wic/runRest";
 
 type Exercise = { id: string; name: string; rows: number; ready: boolean[]; restSeconds: number | null; bases?: BaseRep | null; enabled?: boolean; save: (row: number) => Promise<void> };
-type Cursor = { exercise: number; exerciseId: string | null; row: number; restingUntil: number | null; restStartedAt: number | null; restSeconds: number | null; conditioningBases: number | null };
-const INITIAL: Cursor = { exercise: 0, exerciseId: null, row: 0, restingUntil: null, restStartedAt: null, restSeconds: null, conditioningBases: null };
+type Cursor = { exercise: number; exerciseId: string | null; row: number; restingUntil: number | null; restStartedAt: number | null; restSeconds: number | null; conditioningBases: number | null; awaitingManualRest: boolean };
+const INITIAL: Cursor = { exercise: 0, exerciseId: null, row: 0, restingUntil: null, restStartedAt: null, restSeconds: null, conditioningBases: null, awaitingManualRest: false };
 const Context = createContext<{
   active: boolean; cursor: Cursor; currentId?: string; register: (entry: Exercise) => () => void; refresh: () => void;
 } | null>(null);
@@ -23,7 +23,8 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [awaitingManualRest, setAwaitingManualRest] = useState(false);
+  const awaitingManualRest = cursor.awaitingManualRest;
+  const setAwaitingManualRest = (value: boolean) => setCursor(prior => ({ ...prior, awaitingManualRest: value }));
   const conditioning = useConditioningRest();
   const all = [...entries.current.values()];
   const current = cursor.exerciseId ? all.find(entry => entry.id === cursor.exerciseId) : all[cursor.exercise];
@@ -55,7 +56,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
   const save = async (exit: boolean) => {
     if (busy) return;
     // Leaving an already-saved rest interval must not save the set twice or shorten rest.
-    if (exit && cursor.restingUntil != null) { onExit(); return; }
+    if (exit && (cursor.restingUntil != null || awaitingManualRest)) { onExit(); return; }
     if (!current) { if (exit) onExit(); return; }
     setBusy(true); setError(null); setAwaitingManualRest(false);
     try {
@@ -79,6 +80,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
   };
   const skip = async () => {
     if (!current || busy) return;
+    if (current.ready[cursor.row]) { await save(false); return; }
     setBusy(true); setError(null); setAwaitingManualRest(false);
     try { await current.save(cursor.row); advance(); }
     catch { setError("Couldn't save your entries. Try again before skipping."); }
@@ -97,11 +99,12 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
       {cursor.restingUntil != null && <RestTimer key={cursor.restStartedAt} label="Rest before the next set" seconds={cursor.restSeconds} initialStartedAt={cursor.restStartedAt} managed />}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="flex flex-wrap gap-2">
-        {current && cursor.restingUntil == null && <>
+        {current && cursor.restingUntil == null && !awaitingManualRest && <>
           <Button size="sm" disabled={busy || !current.ready[cursor.row]} onClick={() => void save(false)}>Next</Button>
+          <Button size="sm" disabled={busy || !current.ready[cursor.row]} onClick={() => void save(false)}>Finished</Button>
           <Button size="sm" variant="outline" disabled={busy} onClick={() => void skip()}>Skip</Button>
-          {awaitingManualRest && <Button size="sm" variant="outline" onClick={() => { setError(null); setAwaitingManualRest(false); advance(); }}>Rest finished</Button>}
         </>}
+        {awaitingManualRest && <Button size="sm" variant="outline" onClick={() => { setError(null); setAwaitingManualRest(false); advance(); }}>Rest finished</Button>}
         <Button size="sm" variant="outline" disabled={busy} onClick={() => void save(true)}>Save &amp; exit</Button>
       </div>
     </section>}

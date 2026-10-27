@@ -5,6 +5,7 @@ import { ActivityBasics } from "../cards/ActivityBasics";
 import { ExerciseTools } from "../cards/ExerciseTools";
 import { DistanceField } from "./DistanceField";
 import { ToolSessionWindow } from "../cards/ToolSessionWindow";
+import { PRACTICE_MODULES } from "@/lib/hammer/practiceWindow";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RestTimer, sprintRestSeconds, liftRestBand } from "../cards/RestTimer";
@@ -294,14 +295,14 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     </div>)}
     {focus.active && <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} cue={rx.why_payload?.cue} />}
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <Button type="button" size="sm" variant="outline" className="h-9" onClick={addSet}><Plus className="mr-1 h-3.5 w-3.5" />Add set</Button>
+      {!focus.active && <Button type="button" size="sm" variant="outline" className="h-9" onClick={addSet}><Plus className="mr-1 h-3.5 w-3.5" />Add set</Button>}
       {status && <span data-auto-status={status} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status === "cut_short" || status === "missed" ? "bg-muted text-foreground" : "bg-primary/15 text-primary"}`}>{AUTO_STATUS_LABEL[status]}</span>}
     </div>
     {entered.length > 0 && <p data-prescribed-vs-done className="text-[11px] text-muted-foreground">Prescribed: {spec.rows} {spec.rows === 1 ? "set" : "sets"}{primary.prefill ? ` × ${fmt(primary.prefill)}${unitWord}` : ""} · Done: {entered.length} {entered.length === 1 ? "set" : "sets"}{showDone && doneTotal ? `, ${fmt(doneTotal)}${unitWord} total` : ""}</p>}
     <SavedIndicator state={autosave.state} />
     </div>
     <ExerciseTools module={rx.slot} exerciseId={rx.id} planDate={rx.plan_date} />
-    {focus.active && ["throwing", "pitching", "hitting", "baserunning"].includes(rx.slot) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${rx.slot}&drill_type=${encodeURIComponent(rx.movement_slug)}`} kind="practice" onPracticeSaved={count => {
+    {focus.active && PRACTICE_MODULES.some(module => module === rx.slot) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${rx.slot}&drill_type=${encodeURIComponent(rx.movement_slug)}`} kind="practice" onPracticeSaved={count => {
       const field = spec.fields.find(f => ["throws", "swings", "reps"].includes(f.key));
       if (field) edit(focus.row, field.key, String(count), 0);
     }} />}

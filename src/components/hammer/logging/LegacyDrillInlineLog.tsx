@@ -22,6 +22,7 @@ import { ExerciseTools } from "../cards/ExerciseTools";
 import { pendingFor } from "@/lib/logging/logOutbox";
 import { DistanceField } from "./DistanceField";
 import { ToolSessionWindow } from "../cards/ToolSessionWindow";
+import { PRACTICE_MODULES } from "@/lib/hammer/practiceWindow";
 import { ExerciseTimer } from "../cards/ExerciseTimer";
 import { displayDistance, storeDistance } from "@/lib/logging/measureType";
 
@@ -146,7 +147,7 @@ export function LegacyDrillInlineLog({
       </div>
     ))}
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <Button type="button" size="sm" variant="outline" className="h-9" onClick={addSet}><Plus className="mr-1 h-3.5 w-3.5" />Add set</Button>
+      {!focus.active && <Button type="button" size="sm" variant="outline" className="h-9" onClick={addSet}><Plus className="mr-1 h-3.5 w-3.5" />Add set</Button>}
       {status && <span data-auto-status={status} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status === "cut_short" ? "bg-muted text-foreground" : "bg-primary/15 text-primary"}`}>{AUTO_STATUS_LABEL[status]}</span>}
     </div>
     {logged.length > 0 && primary && <p data-prescribed-vs-done className="text-[11px] text-muted-foreground">Prescribed: {spec.rows} {spec.rows === 1 ? "set" : "sets"}{primary.prefill ? ` × ${primary.key === "time" ? formatTime(kindFor(primary.prefill), primary.prefill) : `${primary.prefill} ${primary.label.toLowerCase()}`}` : ""} · Done: {logged.length} {logged.length === 1 ? "set" : "sets"}</p>}
@@ -154,7 +155,7 @@ export function LegacyDrillInlineLog({
     {focus.active && <ActivityBasics name={name} dosage={dosage} setup={setup} cue={cue} stopIf={stopIf} />}
     </div>
     <ExerciseTools module={modality} exerciseId={storageKey} planDate={taskSync?.planDate ?? new Date().toLocaleDateString("en-CA")} />
-    {focus.active && ["throwing", "pitching", "hitting", "baserunning"].includes(modality) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${modality}&drill_type=${encodeURIComponent(name)}`} kind="practice" onPracticeSaved={count => {
+    {focus.active && PRACTICE_MODULES.some(module => module === modality) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${modality}&drill_type=${encodeURIComponent(name)}`} kind="practice" onPracticeSaved={count => {
       const field = spec.fields.find(f => f.key === "throws" || f.key === "reps");
       if (field) edit(focus.row, field.key, String(count), 0);
     }} />}
