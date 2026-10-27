@@ -11,12 +11,13 @@ export function trackingProjection(payload: Record<string, unknown>) {
 }
 export function applyLiveTracking<T extends { slug: string }>(catalog: readonly T[], versions: readonly { slug: string; version: number; effective_from: string; payload: unknown; undone_at?: string | null }[], date: string) {
   const live = new Map<string, typeof versions[number]>();
+  const versioned = new Set(versions.map(version => version.slug));
   for (const version of versions) {
     if (version.undone_at || version.effective_from > date) continue;
     if ((live.get(version.slug)?.version ?? -1) < version.version) live.set(version.slug, version);
   }
   return catalog.map(row => {
     const payload = live.get(row.slug)?.payload;
-    return payload && typeof payload === 'object' ? { ...row, tracking_measure_type: trackingProjection(payload as Record<string, unknown>).tracking_measure_type } : row;
+    return payload && typeof payload === 'object' ? { ...row, tracking_measure_type: trackingProjection(payload as Record<string, unknown>).tracking_measure_type } : versioned.has(row.slug) ? { ...row, tracking_measure_type: null } : row;
   });
 }
