@@ -17,6 +17,9 @@ it.each(['reps per arm','reps per leg','reps each side'])('accepts coach custom 
   const rx={movement_slug:'',movement_name:'TEST own item',slot:'warmup',dosage_unit,sets:2,reps:8,why_payload:{}} as WkRx;
   expect(inlineLogSpec(rx).fields[0].label.toLowerCase()).toBe(dosage_unit);
   expect(resolveTemplateForRx(rx,new Set()).template.fields[0].key).toBe('side');
+  const savedRx={...rx,dosage_unit:'reps',why_payload:{tracking_measure_type:dosage_unit}} as WkRx;
+  expect(inlineLogSpec(savedRx).fields[0].label.toLowerCase()).toBe(dosage_unit);
+  expect(resolveTemplateForRx(savedRx,new Set()).template.fields[0].key).toBe('side');
 });
 it('the live non-bunt measure reaches both card and log sheet without reinterpreting count as seconds',()=>{
   const rx={movement_slug:'test_band',movement_name:'TEST band',slot:'lift',dosage_unit:'reps',sets:2,reps:12,duration_seconds:null,why_payload:{tracking_measure_type:'hold_seconds'}} as WkRx;
