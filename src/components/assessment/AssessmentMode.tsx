@@ -10,7 +10,6 @@ export function AssessmentMode({ open, onClose, step, steps, busy, error, onNavi
   onRecord: (state: "done" | "skipped") => void; children: ReactNode;
 }) {
   const done = Object.values(steps).filter(s => s === "done").length;
-  const next = Math.min(step + 1, 6) as StepId;
   const previous = previousAssessmentStep(step, steps);
   const content = useRef<HTMLElement | null>(null);
   useEffect(() => { if (open) content.current?.scrollTo({ top: 0 }); }, [step, open]);

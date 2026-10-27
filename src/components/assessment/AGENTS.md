@@ -3,3 +3,4 @@
 - S2/Vault progress is recorded only by a successful embedded submission or explicit done/skip, never pre-existing result presence; step-5 modules come from the saved active sport-scoped subscription. Why: unvisited steps and role bypasses cannot substitute for an athlete's assessment choice.
 - Confirmed player purchases enter AssessmentEntry before the dashboard; mode_opened_at and completed_at govern once-only presentation. Why: return URLs cannot grant access or reopen finished assessments.
 - Coach/org writes must retain existing connected-athlete, parent-presence and sharing checks. Why: embedding a form never authorizes cross-athlete access.
+- Back/Skip/Next save entered drafts before navigating; final Next is Save & exit, and navigation progress never fabricates embedded test results. Why: optional steps must not strand entered answers behind a separate completion button.

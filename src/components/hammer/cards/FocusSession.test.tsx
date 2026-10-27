@@ -8,6 +8,27 @@ function Entry({ save, rest, bases }: { save: () => Promise<void>; rest: number 
   return null;
 }
 describe("guided canonical set progression", () => {
+  it("Finished saves once and automatically starts declared rest", async () => {
+    const save = vi.fn(async () => {});
+    render(<FocusSession active storageKey="finished-proof" onExit={() => {}}><Entry save={save} rest={30} /></FocusSession>);
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Finished" })));
+    expect(save).toHaveBeenCalledTimes(1);
+    const cursor = JSON.parse(sessionStorage.getItem("finished-proof") ?? "{}");
+    expect(cursor.restingUntil - cursor.restStartedAt).toBe(30000);
+    expect(cursor.row).toBe(0);
+  });
+  it("unknown-duration rest remains pending across reload without a second save", async () => {
+    const save = vi.fn(async () => {});
+    const view = render(<FocusSession active storageKey="unknown-rest" onExit={() => {}}><Entry save={save} rest={null} /></FocusSession>);
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Next" })));
+    view.unmount();
+    render(<FocusSession active storageKey="unknown-rest" onExit={() => {}}><Entry save={save} rest={null} /></FocusSession>);
+    expect(JSON.parse(sessionStorage.getItem("unknown-rest") ?? "{}").awaitingManualRest).toBe(true);
+    expect(screen.queryByRole("button", { name: "Next" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Rest finished" }));
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(sessionStorage.getItem("unknown-rest") ?? "{}").row).toBe(1);
+  });
   it("save and exit starts the same 60-second rest before leaving and resumes without a second save", async () => {
     vi.useFakeTimers(); const save = vi.fn(async () => {}); const exit = vi.fn();
     const view = render(<FocusSession active storageKey="focus-exit" onExit={exit}><Entry save={save} rest={60} /></FocusSession>);
