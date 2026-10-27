@@ -974,6 +974,13 @@
       "when": 1793081047967,
       "tag": "0138_swap_target_dated_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 139,
+      "version": "7",
+      "when": 1793130308769,
+      "tag": "0139_start_hammers_today_full_readiness",
+      "breakpoints": true
     }
   ]
 }

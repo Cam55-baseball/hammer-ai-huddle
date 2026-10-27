@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { isSwitchOnFor } from "../../supabase/functions/_shared/wic/flags/featureSwitches";
 import { useQuery } from "@tanstack/react-query";
 import { assessmentStartAllowed } from "@/lib/assessment/startGate";
+import { startMissing, type StartMissingItem } from "../../supabase/functions/_shared/startReadiness";
 
 /**
  * Once-per-account "Start Hammers Today Plan" state.
@@ -31,7 +32,30 @@ export function useHammersTodayStart() {
       return data?.completed_at ?? null;
     },
   });
-  const assessmentReady = assessmentStartAllowed(startedAt, assessment.data ?? null);
+  const details = useQuery({
+    queryKey: ["start-readiness", user?.id], enabled: !!user?.id && !startedAt, staleTime: 5_000,
+    queryFn: async (): Promise<StartMissingItem[]> => {
+      const uid = user!.id;
+      const [p, c, m, e] = await Promise.all([
+        supabase.from("profiles").select("date_of_birth").eq("id", uid).maybeSingle(),
+        supabase.from("athlete_context").select("sport_primary, position_primary, competition_level, category_goals, goal_summary, goal_priority_rank, weekly_availability_days").eq("user_id", uid).maybeSingle(),
+        supabase.from("athlete_mpi_settings").select("sport, season_status").eq("user_id", uid),
+        supabase.from("athlete_equipment_context").select("equipment").eq("user_id", uid).eq("scope", "persistent").maybeSingle(),
+      ]);
+      for (const r of [p, c, m, e]) if (r.error) throw r.error;
+      const ctx = (c.data ?? {}) as Record<string, any>;
+      const mpi = ((m.data ?? []) as Array<{ sport: string | null; season_status: string | null }>);
+      const season = (mpi.find((r) => r.sport === ctx.sport_primary) ?? mpi[0])?.season_status ?? null;
+      const eq = (e.data as { equipment?: unknown } | null)?.equipment;
+      return startMissing({
+        ...ctx, date_of_birth: (p.data as any)?.date_of_birth ?? null, season_status: season,
+        equipment_saved: Array.isArray(eq) && eq.length > 0,
+        assessment_completed: !!assessment.data,
+      });
+    },
+  });
+  const missing = details.data ?? [];
+  const assessmentReady = assessmentStartAllowed(startedAt, assessment.data ?? null) && details.isSuccess && missing.length === 0;
 
   useEffect(() => {
     let alive = true;
@@ -57,13 +81,14 @@ export function useHammersTodayStart() {
 
   const start = useCallback(async () => {
     if (starting || startedAt) return;
-    if (!assessmentReady) { setError("Save or skip each assessment step first."); return; }
+    if (!assessmentReady) { setError("Finish the missing details below first."); return; }
     setStarting(true);
     setError(null);
     const { data, error: rpcErr } = await (supabase as any).rpc("start_hammers_today");
     setStarting(false);
     if (rpcErr) {
-      setError("Couldn't start your plan. Check your connection and tap again.");
+      const msg = String(rpcErr.message ?? "");
+      setError(msg.startsWith("Missing:") ? `Still missing — ${msg.slice(8).trim()}` : "Couldn't start your plan. Check your connection and tap again.");
       return;
     }
     const at = String(data ?? new Date().toISOString());
@@ -71,5 +96,5 @@ export function useHammersTodayStart() {
     try { if (user?.id) localStorage.setItem(`hm.htstart.${user.id}`, at); } catch { /* storage blocked */ }
   }, [starting, startedAt, user?.id, assessmentReady]);
 
-  return { loading, gateOn, startedAt, needsStart: gateOn && !startedAt, start, starting, error, assessmentReady };
+  return { loading, gateOn, startedAt, needsStart: gateOn && !startedAt, start, starting, error, assessmentReady, missing, missingLoading: details.isLoading, missingError: details.isError };
 }

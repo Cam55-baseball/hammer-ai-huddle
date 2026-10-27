@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Check, Loader2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,12 +16,14 @@ interface Props {
   starting: boolean;
   error: string | null;
   locked?: boolean;
+  missing?: ReadonlyArray<{ key: string; label: string; to: string }>;
+  missingError?: boolean;
 }
 
 const ROLE_LABEL = { pitcher: "Pitcher", position: "Position player", two_way: "2-Way player" } as const;
 
 /** Shown once per account, where the Hammers Today plan normally appears. */
-export function StartHammersTodayCard({ onStart, starting, error, locked }: Props) {
+export function StartHammersTodayCard({ onStart, starting, error, locked, missing, missingError }: Props) {
   const { user } = useAuth();
   const { positions } = useAthletePositions();
   const [sport, setSport] = useState<string | null>(null);
@@ -42,11 +45,11 @@ export function StartHammersTodayCard({ onStart, starting, error, locked }: Prop
   }, [user?.id]);
 
   const growth = useGrowthMode().data ?? null;
-  return <StartHammersTodayCardView onStart={onStart} starting={starting} error={error} locked={locked} positions={positions} sport={sport} age={age} growth={growth} />;
+  return <StartHammersTodayCardView onStart={onStart} starting={starting} error={error} locked={locked} missing={missing} missingError={missingError} positions={positions} sport={sport} age={age} growth={growth} />;
 }
 
 /** Presentational card — the same view the player sees, from explicit player facts. */
-export function StartHammersTodayCardView({ onStart, starting, error, locked, positions, sport, age, growth = null }: Props & { positions: readonly string[]; sport: string | null; age: number | null; growth?: GrowthModeState | null }) {
+export function StartHammersTodayCardView({ onStart, starting, error, locked, missing = [], missingError = false, positions, sport, age, growth = null }: Props & { positions: readonly string[]; sport: string | null; age: number | null; growth?: GrowthModeState | null }) {
   const items = startPlanItems({ positions, sport, age, growthActive: !!growth?.active });
   const role = playerRole(positions);
   const sportLabel = sport ? sport.charAt(0).toUpperCase() + sport.slice(1) : null;
@@ -62,7 +65,16 @@ export function StartHammersTodayCardView({ onStart, starting, error, locked, po
         >
           {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Play className="h-5 w-5 fill-current" /> Start Hammers Today Plan</>}
         </Button>
-        {locked && <p className="text-sm text-muted-foreground">Save or skip each assessment step above to unlock Start.</p>}
+        {missingError && <p role="alert" className="text-sm text-destructive">We couldn't check your details. Check your connection and reload.</p>}
+        {missing.length > 0 && (
+          <div className="rounded-lg border border-warning/50 bg-warning/5 p-3">
+            <p className="text-sm font-semibold">What's missing before you can start</p>
+            <p className="text-xs text-muted-foreground">Your plan is built from these. Add each one so you get a full plan, not a thin one.</p>
+            <ul className="mt-2 space-y-1">
+              {missing.map((m) => <li key={m.key}><Link to={m.to} className="text-sm font-medium text-primary underline underline-offset-2">{m.label}</Link></li>)}
+            </ul>
+          </div>
+        )}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         {growth?.active && <GrowthModeCardView state={growth} />}
 
