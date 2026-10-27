@@ -4,3 +4,5 @@
 - Confirmed player purchases enter AssessmentEntry before the dashboard; mode_opened_at and completed_at govern once-only presentation. Why: return URLs cannot grant access or reopen finished assessments.
 - Coach/org writes must retain existing connected-athlete, parent-presence and sharing checks. Why: embedding a form never authorizes cross-athlete access.
 - Back/Skip/Next save entered drafts before navigating; final Next is Save & exit, and navigation progress never fabricates embedded test results. Why: optional steps must not strand entered answers behind a separate completion button.
+- Upload/camera saved-report hints refresh canonical sport-scoped analysis evidence; active subscriptions are unioned without single-row assumptions. Why: one clip cannot complete other required modules and multiple purchases must not break assessment entry.
+- Nested profile forms register their existing canonical save as a flush; Back/Skip/Next await it and stay on save failure. Why: local drafts must not be mistaken for saved body, equipment or goal answers.

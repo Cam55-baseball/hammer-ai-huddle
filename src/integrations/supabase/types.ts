@@ -1442,6 +1442,24 @@ export type Database = {
         }
         Relationships: []
       }
+      _snapshot_urgent_run2_assessment_20261027: {
+        Row: {
+          captured_at: string
+          row_data: Json
+          user_id: string
+        }
+        Insert: {
+          captured_at?: string
+          row_data: Json
+          user_id: string
+        }
+        Update: {
+          captured_at?: string
+          row_data?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       _snapshot_videos_acl_20261003: {
         Row: {
           relacl: string

@@ -1,0 +1,1 @@
+CREATE TABLE public._snapshot_urgent_run2_assessment_20261027 (user_id uuid PRIMARY KEY, row_data jsonb NOT NULL, captured_at timestamptz NOT NULL DEFAULT now()); GRANT ALL ON public._snapshot_urgent_run2_assessment_20261027 TO service_role; ALTER TABLE public._snapshot_urgent_run2_assessment_20261027 ENABLE ROW LEVEL SECURITY;

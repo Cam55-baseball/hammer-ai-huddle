@@ -16,10 +16,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { writePersistentEquipment } from "@/lib/hammer/context/equipment";
+import type { RegisterDraftFlush } from "@/lib/assessment/draftFlush";
 
 interface Props {
   onContinue: () => void;
   onBack: () => void;
+  registerFlush?: RegisterDraftFlush;
 }
 
 /** Tokens match `wk_movement_catalog.equipment_requirements`. */
@@ -103,7 +105,7 @@ function technicalDetail(err: Error & { code?: string; details?: string }): stri
     .join(" — ");
 }
 
-export function EquipmentStep({ onContinue, onBack }: Props) {
+export function EquipmentStep({ onContinue, onBack, registerFlush }: Props) {
   const { user } = useAuth();
   const { isOwner } = useOwnerAccess();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -111,6 +113,7 @@ export function EquipmentStep({ onContinue, onBack }: Props) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<SaveError | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
 
 
   useEffect(() => {
@@ -142,6 +145,7 @@ export function EquipmentStep({ onContinue, onBack }: Props) {
   );
 
   const toggle = (token: string) => {
+    setDirty(true);
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(token)) next.delete(token);
@@ -151,27 +155,34 @@ export function EquipmentStep({ onContinue, onBack }: Props) {
     });
   };
 
-  const save = async (tokens: string[]) => {
+  const save = async (tokens: string[], advance = true): Promise<boolean> => {
     if (!user?.id) {
       setSaveError({
         plain: "You're signed out, so there's nothing to save this to. Sign back in and try again.",
       });
-      return;
+      return false;
     }
     setSaving(true);
     setSaveError(null);
     try {
       await writePersistentEquipment(user.id, tokens, null, "onboarding_self_report");
       toast.success("Equipment saved. Your plans will use it from the next one.");
-      onContinue();
+      setDirty(false);
+      if (advance) onContinue();
+      return true;
     } catch (e) {
       const err = e as Error & { code?: string; details?: string };
       console.error("[EquipmentStep] save failed", err);
       setSaveError({ plain: plainSaveError(err), technical: technicalDetail(err) });
+      return false;
     } finally {
       setSaving(false);
     }
   };
+  useEffect(() => {
+    registerFlush?.(async () => !dirty || await save([...selected], false));
+    return () => registerFlush?.(null);
+  }, [registerFlush, dirty, selected, user?.id]);
 
 
   return (

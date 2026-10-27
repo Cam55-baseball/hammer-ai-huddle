@@ -49,12 +49,14 @@ import {
   clearDraftSlot,
 } from "@/lib/onboarding/draftStore";
 import { SaveAndExitBar } from "@/components/common/SaveAndExitBar";
+import type { RegisterDraftFlush } from "@/lib/assessment/draftFlush";
 
 interface Props {
   readonly onContinue: () => void;
   readonly onBack?: () => void;
   /** Hide the inner save bar (e.g. when used inside a Profile dialog). */
   readonly embedded?: boolean;
+  readonly registerFlush?: RegisterDraftFlush;
 }
 
 interface PaneId {
@@ -79,7 +81,7 @@ interface DraftShape {
   picks: Record<string, DisciplineGoals>;
 }
 
-export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
+export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush }: Props) {
   const { user } = useAuth();
   const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
   const [panes, setPanes] = useState<PaneId[]>([]);
@@ -190,7 +192,8 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
       delete next[key];
       return next;
     });
-    setActivePane((cur) => (cur === key ? (panes.find((x) => paneKey(x) !== key) ? paneKey(panes.find((x) => paneKey(x) !== key)!) : null) : cur));
+    const remaining = panes.find(x => paneKey(x) !== key);
+    setActivePane(cur => cur === key ? (remaining ? paneKey(remaining) : null) : cur);
   };
 
   // ── Pick toggling (primary → secondary → off) ────────────────────────────
@@ -261,11 +264,11 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
     [picksByPane],
   );
 
-  const handleSave = async () => {
-    if (!user?.id) return;
+  const handleSave = async (advance = true): Promise<boolean> => {
+    if (!user?.id) return false;
     if (totalPicks === 0) {
       toast.error("Pick at least one sub-goal before saving.");
-      return;
+      return false;
     }
     setSaving(true);
     try {
@@ -282,7 +285,8 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
       if (error) throw error;
       clearDraftSlot(user.id, "category-goals-wizard");
       toast.success("Goals saved. Hammer will plan around them.");
-      onContinue();
+      if (advance) onContinue();
+      return true;
     } catch (e) {
       console.error("[CategoryGoalsStep] save failed", e);
       const err = e as { message?: string; details?: string; hint?: string; code?: string };
@@ -294,11 +298,13 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
         (err?.code ? `code ${err.code}` : "") ||
         (typeof e === "string" ? e : JSON.stringify(e));
       toast.error(`Couldn't save goals — ${msg}`);
+      return false;
 
     } finally {
       setSaving(false);
     }
   };
+  useEffect(() => { registerFlush?.(async () => totalPicks === 0 || await handleSave(false)); return () => registerFlush?.(null); }, [registerFlush, loaded, payload, totalPicks, user?.id]);
 
   const handleSaveDraft = async () => {
     if (!user?.id) return;
@@ -472,7 +478,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
 
       {!embedded && (
         <SaveAndExitBar
-          onContinue={handleSave}
+          onContinue={() => { void handleSave(); }}
           onBack={onBack}
           onSaveAndExit={handleSaveDraft}
           continueLabel="Save & continue"
@@ -485,7 +491,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
           {onBack && (
             <Button variant="ghost" onClick={onBack}>Back</Button>
           )}
-          <Button onClick={handleSave} disabled={saving || totalPicks === 0}>
+          <Button onClick={() => { void handleSave(); }} disabled={saving || totalPicks === 0}>
             {saving ? "Saving…" : "Save"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
