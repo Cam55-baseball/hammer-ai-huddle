@@ -2288,9 +2288,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     const data = aiResult.data;
     if (analysisRefused(data)) {
       const message = "The analysis provider declined this clip. No findings were generated.";
-      await saveAnalysisReport(() => supabase.from("videos").update({ status: "failed", ai_analysis: { ...unavailableAnalysis(module, "refusal"), feedback: message, retry_allowed: false } }).eq("id", videoId).eq("user_id", userId));
+      const report = { ...unavailableAnalysis(module, "refusal"), feedback: message, retry_allowed: false };
+      const persisted = await saveAnalysisReport(() => supabase.from("videos").update({ status: "failed", ai_analysis: report }).eq("id", videoId).eq("user_id", userId));
       await recordRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: cacheFingerprintHex, cache_hit: false, outcome: "failed", outcome_reason: "provider_refusal" });
-      return new Response(JSON.stringify({ message, error: message }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ message, error: message, report, saved: persisted.saved }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (!hasStructuredAnalysis(data)) throw new Error("coaching_output_unreadable");
     console.log(`[ANALYZE-VIDEO] AI provider=${aiResult.provider}`);
