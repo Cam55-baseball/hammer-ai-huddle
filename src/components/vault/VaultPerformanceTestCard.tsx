@@ -49,6 +49,7 @@ interface VaultPerformanceTestCardProps {
   onSave: (testType: string, results: Record<string, number>, handedness?: { throwing?: string; batting?: string }) => Promise<{ success: boolean }>;
   sport?: 'baseball' | 'softball';
   subscribedModules?: string[];
+  allowedModules?: string[];
   autoOpen?: boolean;
   recapUnlockedAt?: Date | null;
   userProfile?: { throwing_hand?: string; batting_side?: string; primary_position?: string; date_of_birth?: string };
@@ -95,6 +96,7 @@ export function VaultPerformanceTestCard({
   onSave,
   sport = 'baseball',
   subscribedModules = [],
+  allowedModules,
   autoOpen = false,
   recapUnlockedAt = null,
   userProfile
@@ -118,6 +120,7 @@ export function VaultPerformanceTestCard({
 
   // Filter modules to only show those the user has access to
   const availableModules = ['hitting', 'pitching', 'throwing'].filter(module => {
+    if (allowedModules) return allowedModules.includes(module);
     if (subscribedModules.length === 0) return true;
     return subscribedModules.some(sub => sub.toLowerCase().includes(module));
   });
@@ -349,6 +352,14 @@ export function VaultPerformanceTestCard({
 
         <CollapsibleContent>
           <CardContent className="space-y-4">
+            {allowedModules && <section className="space-y-3 border-b border-border pb-4">
+              <h3 className="font-semibold">Your testing order</h3>
+              <ol className="list-decimal space-y-2 pl-5 text-sm">
+                {[...new Map(allowedModules.flatMap(module => [...getMetricsForContext(sport, module, densityLevel), ...getMetricsForContext(sport, 'general', densityLevel)]).map(metric => [metric.key, metric])).values()]
+                  .sort((a,b) => ['mobility','body_control','quickness','power_lower','power_upper','speed','exit_velocity','throwing_velocity','fielding','energy_system'].indexOf(a.category) - ['mobility','body_control','quickness','power_lower','power_upper','speed','exit_velocity','throwing_velocity','fielding','energy_system'].indexOf(b.category))
+                  .map(metric => <li key={metric.key}><span className="font-medium">{metric.label}</span><span className="block text-xs text-muted-foreground">{CATEGORY_LABELS[metric.category as MetricCategory] ?? metric.category}</span></li>)}
+              </ol>
+            </section>}
             {/* Lock Period Info */}
             <Alert className="bg-amber-500/10 border-amber-500/30">
               <AlertCircle className="h-4 w-4 text-amber-500" />
