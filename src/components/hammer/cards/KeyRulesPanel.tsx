@@ -28,7 +28,7 @@ export function keyRulesFor(i: KeyRulesInput): string[] {
     "Big jump days: at least one full day off between.",
     "Heavy and light bat work: never two days in a row.",
     "A missed lift is never made up or moved to another day.",
-    "Mark each card Done, Cut short or Missed. You can change it for 7 days.",
+    "Enter the work you did or skip it. Your entries set the card's status; you can correct them for 7 days.",
   ];
   if (has("5tool") || has("golden2way")) {
     rules.push(has("golden2way")
