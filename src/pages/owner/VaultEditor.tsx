@@ -20,6 +20,7 @@ import { ownerGear, ownerIdentity, OWNER_DEFAULTS } from "../../../supabase/func
 import { Checkbox } from "@/components/ui/checkbox";
 import { catalogMeasure } from "@/lib/vault/catalogMeasure";
 import { useVideoLibrary } from "@/hooks/useVideoLibrary";
+import { BuilderLibraryLink } from '@/components/owner/BuilderLibraryLink';
 
 const CARD_TYPES = ["lift", "primer", "conditioning", "recovery", "speed", "warmup", "bat_speed", "hitting", "throwing", "pitching", "windmill", "defense", "baserunning", "cross_sport", "mobility", "arm_care"];
 const SPORTS = ["baseball", "softball"];
@@ -256,6 +257,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
           </div>
         </Field>
         <section className="min-w-0 space-y-2" aria-label="Exercise video library">
+          <BuilderLibraryLink />
           <Field label="Search video library"><Input value={videoSearch} onChange={ev => setVideoSearch(ev.target.value)} placeholder="Search videos" /></Field>
           <div className="max-h-48 space-y-1 overflow-y-auto">
             {videos.filter(video => video.video_url).map(video => <Button key={video.id} type="button" variant={e.video_url === video.video_url ? "default" : "outline"} className="h-auto w-full justify-start whitespace-normal break-words text-left" onClick={() => set("video_url", video.video_url)}>{video.title}</Button>)}

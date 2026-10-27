@@ -22,6 +22,7 @@ import { planReadiness, type PlanSlot } from "@/lib/prescription/ownerPlanDrills
 import { validateVideoFile } from "@/data/videoLimits";
 import { VideoPlayer } from "@/components/video-library/VideoPlayer";
 import { useVideoLibrary } from '@/hooks/useVideoLibrary';
+import { BuilderLibraryLink } from '@/components/owner/BuilderLibraryLink';
 import { SKILL_AREAS, ROUTINE_ROLES, BAT_SPEED_KINDS, validDrillRoleTags } from '@/lib/prescription/drillRoleTags';
 
 const SLOT_LABEL: Record<PlanSlot, string> = {
@@ -435,6 +436,7 @@ export default function DrillBuilder() {
                 {draft.skill_area === 'bat_speed' && <div><Label>Bat-speed kind</Label><Select value={draft.bat_speed_kind ?? 'none'} onValueChange={value => set('bat_speed_kind', value === 'none' ? null : value)}><SelectTrigger aria-label="Bat-speed kind"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem>{BAT_SPEED_KINDS.map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select></div>}
               </div>
               <div className="space-y-2"><Label htmlFor="drill-library-search">Video library</Label><Input id="drill-library-search" placeholder="Search library videos" value={videoSearch} onChange={e => setVideoSearch(e.target.value)} /><div className="max-h-48 space-y-1 overflow-y-auto">{libraryVideos.filter(video => video.video_url).map(video => <Button key={video.id} type="button" variant={draft.library_video_id === video.id ? 'default' : 'outline'} className="h-auto w-full justify-start whitespace-normal break-words text-left" onClick={() => { setDraft(d => d && ({ ...d, library_video_id: video.id, video_url: video.video_url })); setVideoFile(null); }}>{video.title}</Button>)}</div>{videosLoading && <p role="status" className="text-xs text-muted-foreground">Loading videos…</p>}{moreVideos && <Button type="button" variant="ghost" disabled={videosLoading} onClick={loadMoreVideos}>More videos</Button>}</div>
+              <BuilderLibraryLink />
               <div><Label>Video link</Label><Input value={draft.video_url ?? ""} onChange={(e) => setDraft(d => d && ({ ...d, video_url: e.target.value, library_video_id: null }))} placeholder="Paste your drill video link" /></div>
               <div><Label htmlFor="drill-video-file">Or upload a video</Label><Input id="drill-video-file" type="file" accept="video/mp4,video/quicktime,video/webm,video/x-msvideo,video/x-m4v" onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)} />{videoFile && <p className="text-xs text-muted-foreground">{videoFile.name} will be attached when you save.</p>}</div>
               {(draft.video_url || localVideoUrl) && <VideoPlayer videoUrl={localVideoUrl || draft.video_url} videoType={localVideoUrl || /\.(mp4|mov|webm|avi|m4v)(\?|$)/i.test(draft.video_url ?? "") ? "upload" : "external"} title={draft.name || "Drill preview"} />}
