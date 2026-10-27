@@ -12,7 +12,10 @@ async def main():
     sport = os.environ.get("ANALYSIS_SPORT", "baseball")
     output = Path(f"/tmp/browser/analysis-fixture-{sport}-{module}")
     output.mkdir(parents=True, exist_ok=True)
-    session = json.loads(Path.home().joinpath(".cache/lovable-auth/session.json").read_text())
+    if os.environ.get("LOVABLE_BROWSER_AUTH_STATUS") == "injected":
+        session = {"storage_key": os.environ["LOVABLE_BROWSER_SUPABASE_STORAGE_KEY"], "session": json.loads(os.environ["LOVABLE_BROWSER_SUPABASE_SESSION_JSON"])}
+    else:
+        session = json.loads(Path.home().joinpath(".cache/lovable-auth/session.json").read_text())
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(viewport={"width": 390, "height": 844})
@@ -45,18 +48,35 @@ async def main():
         await page.screenshot(path=str(output / "saved-displayed.png"))
         request_body = response.request.post_data_json
         output.joinpath("result.json").write_text(json.dumps({"video_id": request_body["videoId"], "saved": True, "displayed": True}))
-        replay = await page.request.post(response.url, headers={"Authorization": f"Bearer {session['session']['access_token']}", "apikey": response.request.headers.get('apikey', ''), "Content-Type": "application/json"}, data=json.dumps(request_body))
-        replay_data = await replay.json()
-        assert replay.ok and replay_data.get("saved") is True, "Saved report could not be read back"
-        assert (replay_data.get("ai_analysis") or replay_data).get("feedback") == report["feedback"], "Saved coaching changed on replay"
+        # Saving is optional and only happens AFTER the full report appeared.
+        output.joinpath("result.json").write_text(json.dumps({"video_id": request_body["videoId"], "saved": True, "displayed": True, "club_saved": False}))
+        await page.get_by_role("button", name="Save to Players Club", exact=False).first.click()
+        dialog = page.get_by_role("dialog")
+        await dialog.locator("#title").fill(f"TEST P0 {sport} {module} {request_body['videoId']}")
+        async with page.expect_response(lambda r: "/functions/v1/update-library-session" in r.url and r.request.method == "POST") as library_pending:
+            await dialog.get_by_role("button", name="Upload to Library", exact=False).click()
+        library_response = await library_pending.value
+        assert library_response.ok, f"Optional library save returned HTTP {library_response.status}"
+        title = f"TEST P0 {sport} {module} {request_body['videoId']}"
+        for reload in [False, True]:
+            if reload: await page.reload()
+            else: await page.goto("http://localhost:8080/players-club")
+            await page.get_by_text(title, exact=True).wait_for(timeout=30000)
+            card = page.locator('div').filter(has=page.get_by_text(title, exact=True)).filter(has=page.get_by_role('button', name='View', exact=True))
+            await card.last.get_by_role('button', name='View', exact=True).click()
+            saved_report = page.get_by_role("region", name="Saved analysis report")
+            await saved_report.wait_for(timeout=30000)
+            assert report["feedback"] in await saved_report.inner_text(), "Saved report changed or disappeared"
+            await saved_report.scroll_into_view_if_needed()
+            await page.screenshot(path=str(output / ("club-reload.png" if reload else "club-open.png")))
+        output.joinpath("result.json").write_text(json.dumps({"video_id": request_body["videoId"], "saved": True, "displayed": True, "club_saved": True, "club_reloaded": True}))
         if os.environ.get("REGISTER_ANALYSIS_CANARY") == "1":
             owner = session['session']['user']['id']
             origin = response.url.split('/functions/v1/')[0]
             headers = {"Authorization": f"Bearer {session['session']['access_token']}", "apikey": response.request.headers.get('apikey', '')}
             registered = await page.request.post(f"{origin}/functions/v1/analysis-canary-configure", headers={**headers,"Content-Type":"application/json"}, data=json.dumps({"videoId":request_body['videoId'],"request":request_body,"testFixture":True}))
             assert registered.ok, "Canary TEST fixture registration failed"
-        output.joinpath("result.json").write_text(json.dumps({"video_id": request_body["videoId"], "saved": True, "displayed": True}))
-        print(f"PASS: {sport} {module} original fixture converted, uploaded, analyzed, saved, displayed and replayed")
+        print(f"PASS: {sport} {module} original uploaded, full report shown, optional Players Club save opened with report and survived reload")
         await browser.close()
 
 asyncio.run(main())

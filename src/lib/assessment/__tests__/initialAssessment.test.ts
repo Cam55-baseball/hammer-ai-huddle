@@ -21,6 +21,9 @@ describe("optional initial assessment", () => {
   });
 });
 describe("only subscribed analyses", () => {
+  it("unsupported categories never create required analyzer steps", () => {
+    expect(requiredAnalyses(["baseball_fielding", "softball_catching", "baseball_bunting"])).toEqual([]);
+  });
   for (const sport of ["baseball", "softball"]) {
     it(`${sport} 5Tool includes both analyses`, () => expect(requiredAnalyses([`${sport}_5tool`])).toEqual(["hitting", "throwing"]));
     it(`${sport} Complete Pitcher includes pitching`, () => expect(requiredAnalyses([`${sport}_pitcher`])).toEqual(["pitching"]));

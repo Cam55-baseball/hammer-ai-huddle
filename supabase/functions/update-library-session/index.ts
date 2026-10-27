@@ -1,5 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 import { hasActiveSubscription, isPlatformStaff, forbidden } from '../_shared/authGuards.ts';
+import { recruitingGate } from '../_shared/recruitingGate.ts';
+import { canSaveLibraryPair } from '../_shared/libraryAnalysisPair.ts';
 
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
@@ -14,6 +16,8 @@ const requestSchema = z.object({
   notes: z.string().trim().max(5000, "Notes must be less than 5000 characters").optional(),
   sharedWithScouts: z.boolean().optional(),
   analysisPublic: z.boolean().optional(),
+  saveToLibrary: z.boolean().optional(),
+  requireAnalysis: z.boolean().optional(),
 });
 
 Deno.serve(async (req) => {
@@ -42,7 +46,7 @@ Deno.serve(async (req) => {
 
     // Validate input
     const body = await req.json();
-    const { sessionId, title, notes, sharedWithScouts, analysisPublic } = requestSchema.parse(body);
+    const { sessionId, title, notes, sharedWithScouts, analysisPublic, saveToLibrary, requireAnalysis } = requestSchema.parse(body);
 
     console.log('[update-library-session] Request:', { sessionId, userId: user.id });
 
@@ -64,6 +68,10 @@ Deno.serve(async (req) => {
     if (!isSessionOwner && !isPlatformOwner) {
       return forbidden('Unauthorized to update this session', corsHeaders);
     }
+    if (!isSessionOwner) {
+      const scope = await recruitingGate(supabase, user.id, [session.user_id], 'video');
+      if (scope.get(session.user_id) !== 'visible') return forbidden('This video is not shared with you', corsHeaders);
+    }
 
     // Paid feature: an active subscription is required (owner exempt).
     if (!isPlatformOwner && !(await hasActiveSubscription(supabase, user.id))) {
@@ -74,6 +82,16 @@ Deno.serve(async (req) => {
     const updates: any = {
       updated_at: new Date().toISOString(),
     };
+    if (saveToLibrary) {
+      const { data: clip, error: clipError } = await supabase.from('videos')
+        .select('video_url,module,ai_analysis').eq('id', sessionId).eq('user_id', session.user_id).single();
+      if (clipError || !canSaveLibraryPair(clip, requireAnalysis === true)) {
+        return new Response(JSON.stringify({ error: 'Your video and report could not both be confirmed. Nothing was added to Players Club.' }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      updates.saved_to_library = true;
+      updates.session_date = new Date().toISOString();
+    }
 
     if (title !== undefined) updates.library_title = title;
     if (notes !== undefined) updates.library_notes = notes;
@@ -86,7 +104,7 @@ Deno.serve(async (req) => {
       .eq('id', sessionId)
       .eq('user_id', session.user_id)
 
-      .select()
+      .select('id,saved_to_library')
       .single();
 
     if (error) {

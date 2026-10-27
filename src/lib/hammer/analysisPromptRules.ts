@@ -1,4 +1,5 @@
 import type { AnalysisModule } from '@/lib/assessment/initialAssessment';
+import { isAnalysisType } from '../../../supabase/functions/_shared/analysisTypes';
 
 export interface AnalysisPromptInput {
   enabled: boolean;
@@ -28,7 +29,7 @@ const daysBetween = (from: string, to: string) => Math.floor((Date.parse(to) - D
  */
 export function analysesDueToday(input: AnalysisPromptInput): AnalysisModule[] {
   if (!input.enabled) return [];
-  const included = input.included;
+  const included = input.included.filter(isAnalysisType);
   const valid = (m: AnalysisModule) => {
     const v = input.latest[m];
     return v && Number.isFinite(Date.parse(v)) ? v.slice(0, 10) : null;

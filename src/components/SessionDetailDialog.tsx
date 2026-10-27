@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { Upload, X, Download, Play, Heart } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { EnhancedVideoPlayer } from '@/components/EnhancedVideoPlayer';
+import { SavedAnalysisReport } from '@/components/analyze/SavedAnalysisReport';
 // Phase 49: HammerReportCard + RecomputeReportCardButton imports removed.
 
 interface SessionDetailDialogProps {
@@ -535,12 +536,7 @@ export function SessionDetailDialog({
               {/* Phase 49: HammerReportCard + RecomputeReportCardButton removed (no truthful measured outputs). */}
 
 
-              {aiAnalysis.feedback && (
-                <div className="space-y-2">
-                  <Label>{t('sessionDetail.feedback')}</Label>
-                  <p className="text-sm">{aiAnalysis.feedback}</p>
-                </div>
-              )}
+              <SavedAnalysisReport report={aiAnalysis} module={session.module} />
 
               {aiAnalysis.drills && aiAnalysis.drills.length > 0 && (
                 <div className="space-y-3">

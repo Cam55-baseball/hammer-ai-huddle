@@ -28,6 +28,7 @@ import { runStoredThrowPitchCards, runAndWritePoseTileFindings } from "../_share
 import { saveAnalysisReport } from "../_shared/saveAnalysisReport.ts";
 import { analysisPositionContext } from "../_shared/analysisPosition.ts";
 import { validAnalysisJobToken, canaryDelegationAllowed } from "../_shared/analysisCanaryAuth.ts";
+import { ANALYSIS_TYPES, dispatchAnalysisType } from "../_shared/analysisTypes.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,7 +45,7 @@ const frameExtractionSchema = z.object({
 
 const requestSchema = z.object({
   videoId: z.string().uuid("Invalid video ID format"),
-  module: z.enum(["hitting", "pitching", "throwing"], { errorMap: () => ({ message: "Invalid module" }) }),
+  module: z.enum(ANALYSIS_TYPES, { errorMap: () => ({ message: "This analysis is coming soon" }) }),
   sport: z.enum(["baseball", "softball"], { errorMap: () => ({ message: "Invalid sport" }) }),
   userId: z.string().uuid("Invalid user ID format"),
   language: z.string().optional(),
@@ -1992,7 +1993,11 @@ Every fault you surface in feedback/drill recommendations MUST be expressed as a
     // Hammer Report Card: per-discipline structured metrics block (additive).
     const reportCardContract = getContractFor(module, sport);
     const metricsPromptBlock = reportCardContract ? buildMetricsPromptBlock(reportCardContract) : "";
-    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock + constructiveCriticismBlock(module, sport) + doctrineContextBlock(module, sport);
+    const systemPrompt = dispatchAnalysisType(module, {
+      hitting: () => getSystemPrompt("hitting", sport),
+      pitching: () => getSystemPrompt("pitching", sport),
+      throwing: () => getSystemPrompt("throwing", sport),
+    }) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock + constructiveCriticismBlock(module, sport) + doctrineContextBlock(module, sport);
 
     // ===== BUILD MULTIMODAL USER CONTENT WITH FRAMES =====
     const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [];

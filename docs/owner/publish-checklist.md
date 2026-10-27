@@ -2,6 +2,18 @@
 
 ## October 27 urgent run — current status
 
+### October 27 04:44 owner P0 clarification — supersedes conflicting earlier video requirements
+
+- **Root cause:** camera callbacks supplied a report without `videoPreview`, but report rendering required `videoPreview`; analysis-off uploads bypassed inference; Players Club showed feedback/drills but omitted the report's summary, positives and corrections. Library save did not check that a readable report accompanied the video.
+- **Built:** full camera-returned report renders immediately; analysis uploads cannot disable analysis; camera analysis no longer adds the clip to Players Club automatically; optional save atomically verifies the stored video/report pair before exposing it in Players Club. Missing reports fail honestly without inventing coaching or rerunning inference.
+- **Routing:** one shared hitting/pitching/throwing allowlist with exact dispatch, server enum, upload/camera runtime guards, assessment evidence filtering and Today reminder filtering. Unsupported routes show **This analysis is coming soon**, with no upload. Existing position context differentiates catcher/infield/outfield throwing and baseball/softball pitching; no new analysis types.
+- **Real phone proof:** 390×844 original baseball hitting and pitching: upload → immediate full report → optional Players Club save → View → report → reload → report. Hitting's first automated reopen clicked the title rather than View; corrected reopening proved the same saved row without another inference. Pitching passed in one complete run. This is Test Dummyplayer's available signed-in session, **not an independent entitled assessment/coach-role proof**.
+- **Missing footage:** reviewed every uploaded `copy_*.mov`; they show document/presentation recordings, not the four needed athlete actions. Baseball throwing and softball hitting/pitching/throwing remain unproven; never relabeled hitting footage as another action/sport.
+- **Checks:** 6 files/65 routing/pair/assessment/position/reminder tests PASS; 3 files/17 report persistence/reliability tests PASS. Live fielding/catching/bunting calls return 400; phone routes have zero uploads and the required message. Preview build OK 04:54:09 UTC. Prior full-suite result predates these edits, not a new full-suite claim.
+- **Live/pending:** authorized `analyze-video` and `update-library-session` redeployed; frontend stays preview-only. No publish, migration, cron or iOS change. Both exact new TEST rows privately snapshotted, removed by fixed ID and read back absent; originals/canary preserved.
+- **Guide:** choose the correct hitting/pitching/throwing type and sport, upload and confirm the clip's side, then read the report in the same flow. Saving to Players Club is optional afterward. Use **View** to open the saved clip and full report; reload retains both. Other analysis types show the coming-soon message without upload. Report Card numeric grading remains internal-only.
+- **Ready to publish: NO.** Four original action/sport flows and entitled embedded/affected-role proofs remain unavailable; the other urgent-list gaps recorded below remain unresolved.
+
 ### October 27 run (6), final batch — current verdict
 
 **Ready to publish: NO.** The urgent list is not fully implemented or fully proven. Exact blockers: four remaining original sport/module clip paths and entitled embedded upload; gated coach movement readback/integration and populated athlete observations; effective existing-item Vault tracking plus coach per-side tracking; mixed/unequal preparation circuits; real Finished → save → rest → reload; and program/sport baserunning generation proof. No additional live functions, migrations, publish, cron, schedules or iOS changes this run.

@@ -17,6 +17,7 @@ import { MovementScreenForm } from "./MovementScreenForm";
 import { movementHasPain, movementScreenComplete, type MovementScreen } from "@/lib/assessment/movementScreen";
 import { parseSeasonStats, seasonStatGroups } from "@/lib/assessment/seasonStats";
 import { assessmentAnalysisSaved } from "@/lib/assessment/analysisSaved";
+import { isAnalysisType } from "../../../supabase/functions/_shared/analysisTypes";
 import { saveBeforeAssessmentNavigation, type DraftFlush } from "@/lib/assessment/draftFlush";
 import { assessmentModules, assessmentSteps, requiredAnalyses, shouldFinalizeAssessment, type AnalysisModule, type StepId, type StepProgress } from "@/lib/assessment/initialAssessment";
 const EmbeddedAnalysis = lazy(() => import("@/pages/AnalyzeVideo"));
@@ -52,7 +53,7 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
       ]);
       for (const result of [row, s2, vids, tests, prof, subscription]) if (result.error) throw result.error;
       const modules = [...new Set((subscription.data ?? []).flatMap(sub => assessmentModules(sub, sport)))];
-      return { row: row.data, s2: (s2.count ?? 0) > 0, analyses: [...new Set((vids.data ?? []).map(v => v.module))] as AnalysisModule[], tests: (tests.count ?? 0) > 0, profile: prof.data, modules };
+      return { row: row.data, s2: (s2.count ?? 0) > 0, analyses: [...new Set((vids.data ?? []).map(v => v.module).filter(isAnalysisType))], tests: (tests.count ?? 0) > 0, profile: prof.data, modules };
     },
   });
   useEffect(() => {
