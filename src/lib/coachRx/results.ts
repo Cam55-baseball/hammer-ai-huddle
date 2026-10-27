@@ -16,10 +16,14 @@ export interface WorkoutActual {
 export function actualResultText(log: WorkoutActual): string {
   const values: string[] = [];
   if (log.sets_completed != null) values.push(`Sets: ${log.sets_completed}`);
-  const reps = log.reps_completed?.length ? log.reps_completed.join(" / ") : log.total_reps_completed;
-  if (reps != null) values.push(`${log.prescription?.dosage_unit === "throws" ? "Throws" : "Reps"}: ${reps}`);
   const rounds = log.metrics?.rounds ?? [];
   const entered = (key: string) => rounds.map(round => round[key]).filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  const steps = entered("steps");
+  const roundReps = entered("reps");
+  const reps = steps.length ? (roundReps.length ? roundReps.join(" / ") : null)
+    : log.reps_completed?.length ? log.reps_completed.join(" / ") : log.total_reps_completed;
+  if (reps != null) values.push(`${log.prescription?.dosage_unit === "throws" ? "Throws" : "Reps"}: ${reps}`);
+  if (steps.length) values.push(`Steps: ${steps.join(" / ")}`);
   const throws = entered("throws");
   const swings = entered("swings");
   if (log.prescription?.dosage_unit !== "throws" && throws.length) values.push(`Throws: ${throws.join(" / ")}`);

@@ -23,4 +23,20 @@ describe("canonical workout actuals", () => {
   it("shows each actual distance rather than presenting the maximum as every round", () => {
     expect(actualResultText({ ...base, distance_feet_completed: 45, metrics: { rounds: [{ distance: 30 }, { distance: 45 }] } })).toContain("Round distances: 30 / 45 ft");
   });
+  it("reads conditioning steps separately from canonical count projections and keeps precise time and feet", () => {
+    const result = actualResultText({ ...base, reps_completed: [14, 16], total_reps_completed: 30,
+      duration_seconds_precise: 3.05, duration_seconds_completed: 3, distance_feet_completed: 45,
+      metrics: { rounds: [{ steps: 14, time: 1.47 }, { steps: 16, time: 1.58 }] } });
+    expect(result).toContain("Steps: 14 / 16");
+    expect(result).not.toContain("Reps:");
+    expect(result).toContain("Round times: 1.47 / 1.58 s");
+    expect(result).toContain("Time: 3.05 s");
+    expect(result).toContain("Distance: 45 ft");
+  });
+  it("keeps explicit reps alongside steps in mixed recorded work", () => {
+    const result = actualResultText({ ...base, reps_completed: [6, 10], metrics: { rounds: [{ reps: 6 }, { steps: 10 }] } });
+    expect(result).toContain("Reps: 6");
+    expect(result).toContain("Steps: 10");
+    expect(result).not.toContain("Reps: 6 / 10");
+  });
 });
