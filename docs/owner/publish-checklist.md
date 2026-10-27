@@ -9,7 +9,7 @@
 | P0 context/results | Shared server context reads saved position; catcher/infield/outfield/pitcher field throws distinguished. Softball no longer receives duplicate baseball pitching tile calculation. Real improvements now shown as What to work on cards. | Separate fielding/catching/bunting analysis contracts not added; cannot feed unsupported module enums. |
 | P1 assessment | Next replaces Mark complete, saves drafts and moves forward; final control Save & exit. Back and Skip preserve season/movement drafts. Expanded subscription/sport-specific season fields and ordered subscribed performance list. | Nested body/equipment/goal drafts, full bilateral movement screen and plan/coach/analysis consumers, save/reload phone proof remain open. |
 | P1 focus | Nonfunctional top Start hidden after beginning; Finished saves before automatic prescribed rest; unknown rest persists across reload. Add set hidden while guided. Fielding/bunting practice buttons added. Royal/Tex links removed from unrelated exercise tools. Body-part labels separate arms/legs/sides/directions. Warm-up fallback rest 30s; declared safety rest unchanged. | Editable tracking metadata, extra activity timer control, warm-up placeholder, throwing primer integration, full cut-short semantics, baserunning coverage and affected-player phone proof remain open. |
-| Verification | Full suite: 569 files / 4,759 tests passed across eight bounded groups after correcting obsolete per-side expectation; subsequent affected tests pass separately. Automatic preview build OK. | Final tracking edits have compile evidence but no new upload failure-path UI proof. |
+| Verification | Full suite: 569 files / 4,759 tests passed across eight bounded groups after correcting obsolete per-side expectation; final affected run 27 files / 151 tests PASS. Automatic preview build OK. Final original fixture upload PASS after tracking edits. | Tracking failure-path UI proof and complete cross-sport/role flows remain open. |
 
 ### By-role guide — urgent changes
 - Players: use Next to save each optional assessment step; Skip retains entered answers. Last step offers Save & exit. Existing test submissions remain canonical; navigation never invents test results.
@@ -19,7 +19,7 @@
 
 **Ready to publish: NO.** Exact reason: urgent list remains partially implemented and the required cross-sport/embedded/affected-player save/reload proofs are incomplete. No publish, cron or iOS changes. Only analyze-video redeployed. Original owner clips are retained; no TEST athlete training records were fabricated.
 
-Evidence: `/tmp/browser/urgent-suite/`, `/tmp/browser/urgent-check/`, `/tmp/browser/analysis-fixture/result.json`. The upload test confirms saved/displayed through the real response and DOM; its initial screenshot is obscured by the existing recommendation modal and is not clean report visual proof.
+Evidence: `/tmp/browser/urgent-suite/`, `/tmp/browser/urgent-check/`, `/tmp/browser/analysis-fixture/result.json`. The final upload test confirms saved/displayed through the real response and DOM; inspected final screenshot shows the original clip and Estimated / What to work on report, with the recommendation modal dismissed. Independent saved-row readback confirms completed status and readable feedback.
 
 Updated October 26, 2026, academy continuation.
 
