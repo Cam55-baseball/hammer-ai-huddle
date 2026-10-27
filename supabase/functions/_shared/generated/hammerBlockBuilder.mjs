@@ -9397,6 +9397,13 @@ function masteryGuidance(facts) {
 
 // supabase/functions/_shared/wic/masteryStandards.ts
 var IDENTITY_SOURCE = "Camryn Williams \xB7 October 26, 2026 \xB7 Coaching Console settings";
+var SOFTBALL_HITTING_SOURCE = "Camryn Williams \xB7 October 27, 2026 \xB7 softball starting standard (whiff and zone contact to be calibrated from Hammers softball data)";
+var SOFTBALL_POWER_DEFAULTS = { pro: { elite: 0.067, leftPower: 0.033, lacking: 0.017 }, college: { elite: 0.125, leftPower: 0.063, lacking: 0.031 }, high_school: { elite: 0.1, leftPower: 0.05, lacking: 0.025 }, youth: { elite: 0.1, leftPower: 0.05, lacking: 0.025 } };
+function hittingStandardsFor(sport, level, settings) {
+  if (sport !== "softball") return settings;
+  const p = level ? SOFTBALL_POWER_DEFAULTS[level] : null;
+  return { ...settings, elite_hr_rate: p?.elite ?? null, left_power_hr_rate: p?.leftPower ?? null, lacking_power_hr_rate: p?.lacking ?? null };
+}
 var swings = /* @__PURE__ */ new Set(["swinging_strike", "foul", "in_play", "bunt_foul", "bunt_in_play"]);
 var misses = /* @__PURE__ */ new Set(["swinging_strike"]);
 var takes = /* @__PURE__ */ new Set(["ball", "called_strike", "hbp"]);
@@ -9826,9 +9833,10 @@ function projectMasterySources(raw, sport, settings) {
     counts.set(key2, set);
   }
   const speed = speedIdentity(speedEvidence.map((e) => ({ ...e, sample: counts.get(`${e.source}:${e.measure}:${e.unit}`)?.size ?? 0 })), settings?.elite_grade ?? 65);
-  const standards = settings ?? {};
+  const standards = hittingStandardsFor(sport, level, settings ?? {});
   const eliteGrade = settings?.elite_grade ?? 65;
   const power = powerIdentity(batting.latest, standards);
+  if (sport === "softball") power.source = SOFTBALL_HITTING_SOURCE;
   const hrRate = power.rate;
   const goals = record(context.goals);
   const sportGoals = record(goals[sport]);
@@ -9837,6 +9845,7 @@ function projectMasterySources(raw, sport, settings) {
   const traits = { speedy: speed.elite === true, lacksPower: hrRate !== null && standards.lacking_power_hr_rate != null && hrRate < standards.lacking_power_hr_rate, leftPower: context.bats === "L" && hrRate !== null && standards.left_power_hr_rate != null && hrRate >= standards.left_power_hr_rate, powerGoal: ["L", "S"].includes(String(context.bats)) && powerGoal, powerStatus: power.status, power: power.status === "Need more data" ? null : power.status === "Elite", battingWindow: batting.latest, lowAverage: standards.bunt_low_average ?? 0.3 };
   const defense = fieldingIdentity(list(source.defense).map((e, i) => ({ id: String(e.id ?? ""), date: String(e.date ?? ""), order: i, source: typeof e.source === "string" ? e.source : null, position: typeof e.position === "string" ? e.position : null, error: typeof e.error === "boolean" ? e.error : null, assist: typeof e.assist === "boolean" ? e.assist : null, putout: typeof e.putout === "boolean" ? e.putout : null })), areaWindowPolicy(settings, "defense"));
   const contact = contactIdentity(batting.latest, list(source.contactPitches).map((p) => ({ id: String(p.id ?? ""), atBatId: typeof p.atBatId === "string" ? p.atBatId : null, result: typeof p.result === "string" ? p.result : null, strikes: typeof p.strikes === "number" ? p.strikes : null, zone: typeof p.zone === "number" ? p.zone : null, outZone: typeof p.outZone === "string" ? p.outZone : null })), level, standards);
+  if (sport === "softball") contact.source = SOFTBALL_HITTING_SOURCE;
   const position = String(context.position ?? "").toUpperCase();
   const normalizedPosition = ["P", "PITCHER"].includes(position) ? "pitcher" : ["C", "CATCHER"].includes(position) ? "catcher" : ["LF", "CF", "RF", "OF", "OUTFIELD"].includes(position) ? "outfield" : ["1B", "2B", "3B", "SS", "IF", "INFIELD"].includes(position) ? "infield" : null;
   const human = sportRows(source.humanGrades, sport).filter((g) => g.evaluator && ["coach_evaluated", "scout_evaluated"].includes(String(g.source)) && String(g.position ?? "").toUpperCase() === position);
