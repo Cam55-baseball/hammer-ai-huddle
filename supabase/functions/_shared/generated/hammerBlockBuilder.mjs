@@ -345,9 +345,11 @@ var POWER_PITCHER = [
 var THROWING_POSITION = [
   { id: "arm_strength", label: "Arm strength", helpText: "Carry the ball longer with less effort \u2014 outfield throws, infield gun.", weightHints: { throwing_velocity: 0.6, throwing_long_toss: 0.4 } },
   { id: "on_line_accuracy", label: "On-line accuracy", helpText: "Hit the chest, every throw, every base.", weightHints: { throwing_accuracy: 0.8, throwing_footwork: 0.2 } },
-  { id: "transfer_exchange", label: "Glove-to-hand transfer", helpText: "Cleaner, faster exchange so runners don't beat the throw.", weightHints: { throwing_transfer: 0.8, fielding_hands: 0.2 } },
+  { id: "transfer_exchange", label: "Glove-to-hand transfer", helpText: "Cleaner, faster exchange so runners don't beat the throw.", weightHints: { throwing_transfer: 0.8, fielding_hands: 0.2 }, retired: true },
   { id: "footwork", label: "Footwork into the throw", helpText: "Get your feet right so the throw is online before the arm tries to save it.", weightHints: { throwing_footwork: 0.7, throwing_accuracy: 0.3 } },
-  { id: "long_toss_capacity", label: "Long-toss capacity", helpText: "Build a durable, healthy arm with progressive distance.", weightHints: { throwing_long_toss: 0.7, recovery_arm_care: 0.3 } }
+  { id: "long_toss_capacity", label: "Long-toss capacity", helpText: "Build a durable, healthy arm with progressive distance.", weightHints: { throwing_long_toss: 0.7, recovery_arm_care: 0.3 }, retired: true },
+  { id: "arm_health", label: "Arm health", helpText: "Keep your throwing arm comfortable and ready for the work you do.", weightHints: { recovery_arm_care: 1 } },
+  { id: "throw_carry", label: "Improve throw carry", helpText: "Keep your throws carrying to the target without extra effort.", weightHints: { throwing_velocity: 0.6, throwing_accuracy: 0.4 } }
 ];
 var HITTING = [
   { id: "barrel_control", label: "Barrel control", helpText: "Square up more pitches \u2014 get the barrel to the ball more often.", weightHints: { hitting_contact: 0.7, hitting_bat_speed: 0.3 } },
@@ -358,9 +360,11 @@ var HITTING = [
 ];
 var FIELDING = [
   { id: "range", label: "Expand range", helpText: "Get to more balls \u2014 lateral and back-pedal coverage.", weightHints: { fielding_range: 0.7, fielding_first_step: 0.3 } },
-  { id: "hands", label: "Cleaner hands", helpText: "Stop kicking balls \u2014 soft, quiet, repeatable glove work.", weightHints: { fielding_hands: 0.9 } },
+  { id: "hands", label: "Clean hands (incl. glove-to-hand transfer)", helpText: "Receive the ball cleanly and move it smoothly from glove to hand.", weightHints: { fielding_hands: 0.8, throwing_transfer: 0.2 } },
   { id: "first_step", label: "First-step read", helpText: "Read the ball off the bat one step faster.", weightHints: { fielding_first_step: 0.8, fielding_pre_pitch: 0.2 } },
-  { id: "double_play", label: "Double-play turn", helpText: "Cleaner pivot, faster feed \u2014 middle-infield specialty.", weightHints: { fielding_double_play: 0.8, throwing_transfer: 0.2 } },
+  { id: "double_play", label: "Double-play turn", helpText: "Cleaner pivot, faster feed \u2014 middle-infield specialty.", weightHints: { fielding_double_play: 0.8, throwing_transfer: 0.2 }, retired: true },
+  { id: "footwork", label: "Improve footwork", helpText: "Arrive balanced and put your feet in position for the play.", weightHints: { fielding_first_step: 0.6, fielding_range: 0.4 } },
+  { id: "routine_plays", label: "Routine plays", helpText: "Make the everyday plays cleanly and consistently.", weightHints: { fielding_hands: 0.6, fielding_pre_pitch: 0.4 } },
   { id: "pre_pitch_routine", label: "Pre-pitch routine", helpText: "Set up early so the play is half-won before contact.", weightHints: { fielding_pre_pitch: 0.9 } }
 ];
 var PITCHING_BASEBALL = [
@@ -1257,10 +1261,13 @@ function hasFeatureAccess(modules, feature) {
   });
 }
 
+// supabase/functions/_shared/analysisTypes.ts
+var ANALYSIS_TYPES = ["hitting", "pitching", "throwing"];
+
 // src/lib/assessment/initialAssessment.ts
 function requiredAnalyses(modules) {
   const m = [...modules];
-  return ["hitting", "pitching", "throwing"].filter((f) => hasFeatureAccess(m, f));
+  return ANALYSIS_TYPES.filter((f) => hasFeatureAccess(m, f));
 }
 
 // src/lib/hammer/priorityAccess.ts
@@ -6677,8 +6684,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           cues: ["Decision speed beats foot speed."],
           stopRules: ["Any leg pain \u2014 stop."],
           durationMin: 10,
-          route: "/baserunning-iq",
-          ctaLabel: "Open baserunning IQ",
+          route: "/practice?module=baserunning",
+          ctaLabel: "Open practice log",
           status: "ready",
           missing: [],
           missingContextKeys: [],
