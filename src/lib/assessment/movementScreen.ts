@@ -14,12 +14,13 @@ export const movementGroups = [
   { name: "Stability & control", items: [
     { key: "single_squat", name: "Single-leg squat control", unit: "controlled reps / 5", how: "Stand beside a support. Make five shallow single-leg squats each side. Count only reps with a level pelvis, steady knee and no loss of balance.", legacy: "balance" },
     { key: "reach", name: "Three-direction balance reach", unit: "cm (front / back-in / back-out)", how: "Stand on one leg beside a support. Reach the other foot lightly forward, back-in and back-out without shifting the standing foot. Record each reach separately, separated by slashes.", legacy: "balance" },
+    { key: "sl_balance_eyes_closed", name: "Single-leg balance, eyes closed", unit: "seconds", how: "Stand beside a support on one leg and close your eyes. Record how long you stay steady each side without touching down. Stop if you feel unsafe.", legacy: undefined },
     { key: "trunk", name: "Trunk control", unit: "controlled reps / 5", how: "From hands and knees, slowly reach one arm and the opposite leg five times. Compare the two arm-leg pairs. Count reps without trunk rotation or back arching.", legacy: undefined },
   ] },
   { name: "Movement patterns", items: [
     { key: "overhead_squat", name: "Overhead squat", unit: "controlled reps / 5", how: "Without weight, raise both arms and make five comfortable squats. Compare each side for heel lift, knee drift or trunk shift. Never force depth.", legacy: undefined },
     { key: "split_squat", name: "Split squat / lunge", unit: "controlled reps / 5", how: "Use a split stance beside a support. Lower slowly five times each side. Count stable reps with the knee tracking over the foot and no trunk shift.", legacy: undefined },
-    { key: "step_over", name: "Step-over control", unit: "controlled reps / 5", how: "Step over a low marker five times each side, then return. Count reps with a steady pelvis, upright trunk and no loss of balance. Use a safe low height.", legacy: undefined },
+    { key: "step_over", name: "Step-over control", unit: "controlled reps / 5", how: "Set a marker at knee height. Keep your standing foot flat on the ground and step over the marker five times each side, then return. Count reps with a steady pelvis, upright trunk and no loss of balance.", legacy: undefined },
   ] },
   { name: "Rotation & strength", items: [
     { key: "separation", name: "Hip and trunk turn control", unit: "measured degrees (optional)", how: "Stand with soft knees and arms crossed. Keep the chest facing forward while gently turning the hips, then reverse. Compare directions. Record only measured angles; there is no ideal angle for everyone.", legacy: undefined },
