@@ -20,9 +20,8 @@ Deno.serve(async req => {
   if(!config)return json({status:"idle_or_paused"});
   try{
     if(!await hasActiveRole(sb as any,config.owner_id,"owner"))throw new Error("configured_owner_invalid");
-    const stored=await sb.storage.from("videos").download(config.request_path);
-    if(stored.error||!stored.data)throw new Error("fixture_unreadable");
-    const body=JSON.parse(await stored.data.text());
+    const body=config.request_json;
+    if(!body)throw new Error("fixture_unreadable");
     if(body.videoId!==config.video_id||body.userId!==config.owner_id)throw new Error("fixture_identity_mismatch");
     const response=await fetch(`${url}/functions/v1/analyze-video`,{method:"POST",headers:{"Content-Type":"application/json",apikey:key,"x-job-token":req.headers.get("x-job-token")??"","x-analysis-canary-lease":lease},body:JSON.stringify(body)});
     const result=await response.json();

@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 import { hasActiveRole } from "../_shared/authGuards.ts";
-const schema=z.object({videoId:z.string().uuid(),requestPath:z.string().max(200),testFixture:z.literal(true)});
+const schema=z.object({videoId:z.string().uuid(),request:z.object({videoId:z.string().uuid(),userId:z.string().uuid(),module:z.enum(["hitting","pitching","throwing"]),sport:z.enum(["baseball","softball"]),frames:z.array(z.string().max(2000000)).min(1).max(120)}).passthrough(),testFixture:z.literal(true)});
 Deno.serve(async req=>{
   const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{...corsHeaders,"Content-Type":"application/json"}});
   if(req.method==="OPTIONS")return new Response("ok",{headers:corsHeaders});
@@ -14,9 +14,9 @@ Deno.serve(async req=>{
   if(!owner||!await hasActiveRole(sb as any,owner,"owner"))return json({error:"Owner access required"},403);
   const parsed=schema.safeParse(await req.json().catch(()=>null));
   if(!parsed.success)return json({error:"Valid TEST fixture registration required"},400);
-  if(!parsed.data.requestPath.startsWith(`${owner}/analysis-canary/`))return json({error:"Fixture must be in your private canary folder"},400);
+  if(parsed.data.request.userId!==owner||parsed.data.request.videoId!==parsed.data.videoId)return json({error:"Fixture identity mismatch"},400);
   const clip=await sb.from("videos").select("id,user_id").eq("id",parsed.data.videoId).eq("user_id",owner).maybeSingle();
   if(!clip.data)return json({error:"Your saved TEST clip was not found"},404);
-  const saved=await sb.from("analysis_canary_config").upsert({id:1,owner_id:owner,video_id:parsed.data.videoId,request_path:parsed.data.requestPath,enabled:true,paused_reason:null,lease_id:null,lease_until:null,last_run_day:null,last_status:"registered",updated_at:new Date().toISOString()});
+  const saved=await sb.from("analysis_canary_config").upsert({id:1,owner_id:owner,video_id:parsed.data.videoId,request_path:"private-database-fixture",request_json:parsed.data.request,enabled:true,paused_reason:null,lease_id:null,lease_until:null,last_run_day:null,last_status:"registered",updated_at:new Date().toISOString()});
   return saved.error?json({error:"Could not register fixture"},500):json({registered:true});
 });

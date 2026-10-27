@@ -44,18 +44,16 @@ async def main():
         if await finding.count(): await finding.scroll_into_view_if_needed()
         await page.screenshot(path=str(output / "saved-displayed.png"))
         request_body = response.request.post_data_json
+        output.joinpath("result.json").write_text(json.dumps({"video_id": request_body["videoId"], "saved": True, "displayed": True}))
         replay = await page.request.post(response.url, headers={"Authorization": f"Bearer {session['session']['access_token']}", "apikey": response.request.headers.get('apikey', ''), "Content-Type": "application/json"}, data=json.dumps(request_body))
         replay_data = await replay.json()
         assert replay.ok and replay_data.get("saved") is True, "Saved report could not be read back"
         assert (replay_data.get("ai_analysis") or replay_data).get("feedback") == report["feedback"], "Saved coaching changed on replay"
         if os.environ.get("REGISTER_ANALYSIS_CANARY") == "1":
             owner = session['session']['user']['id']
-            request_path = f"{owner}/analysis-canary/test-fixture.json"
             origin = response.url.split('/functions/v1/')[0]
             headers = {"Authorization": f"Bearer {session['session']['access_token']}", "apikey": response.request.headers.get('apikey', '')}
-            stored = await page.request.post(f"{origin}/storage/v1/object/videos/{request_path}", headers={**headers,"Content-Type":"application/json","x-upsert":"true"}, data=json.dumps(request_body))
-            assert stored.ok, "TEST request fixture could not be stored"
-            registered = await page.request.post(f"{origin}/functions/v1/analysis-canary-configure", headers={**headers,"Content-Type":"application/json"}, data=json.dumps({"videoId":request_body['videoId'],"requestPath":request_path,"testFixture":True}))
+            registered = await page.request.post(f"{origin}/functions/v1/analysis-canary-configure", headers={**headers,"Content-Type":"application/json"}, data=json.dumps({"videoId":request_body['videoId'],"request":request_body,"testFixture":True}))
             assert registered.ok, "Canary TEST fixture registration failed"
         output.joinpath("result.json").write_text(json.dumps({"video_id": request_body["videoId"], "saved": True, "displayed": True}))
         print(f"PASS: {sport} {module} original fixture converted, uploaded, analyzed, saved, displayed and replayed")
