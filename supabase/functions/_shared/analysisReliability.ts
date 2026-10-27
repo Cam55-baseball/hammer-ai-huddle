@@ -54,28 +54,34 @@ export function analysisRefused(data: unknown): boolean {
   return value?.choices?.some(choice => /safety|content_filter|recitation|prohibited|blocklist/i.test(choice.finish_reason ?? "") || !!choice.message?.refusal) ?? false;
 }
 
+/** Attempt order: classic engine first, then today's direct route, then the backup. */
+export const ANALYSIS_ROUTES = ["classic:google/gemini-2.5-flash", "google/gemini-2.5-flash", "openai/gpt-4o-mini"] as const;
+
 export async function reliableAnalysis<T extends { ok: boolean; status: number; data: unknown; errorBody?: string }>(
   call: (model: string) => Promise<T>, record: (result: T) => Promise<void>,
   wait: () => Promise<void> = () => new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 500)),
 ): Promise<T> {
-  let result = await call("google/gemini-2.5-flash");
   const recordSafely = async (attempt: T) => {
     try { await record(attempt); } catch { console.warn("[analysis] usage logging failed; report retry continues"); }
   };
-  await recordSafely(result);
   // Keep the best readable attempt: a thin report is retried, never thrown away.
-  let best: T | null = result.ok && hasStructuredAnalysis(result.data) ? result : null;
-  if (result.ok && hasFullCoaching(result.data)) return result;
-  if (analysisRefused(result.data) || (!result.ok && result.status !== 429 && result.status < 500)) return best ?? result;
-  await wait();
-  result = await call("google/gemini-2.5-flash");
-  await recordSafely(result);
-  if (result.ok && hasFullCoaching(result.data)) return result;
-  if (!best && result.ok && hasStructuredAnalysis(result.data)) best = result;
-  if (analysisRefused(result.data) || (!result.ok && result.status !== 429 && result.status < 500)) return best ?? result;
-  await wait();
-  result = await call("openai/gpt-4o-mini");
-  await recordSafely(result);
-  if (result.ok && hasFullCoaching(result.data)) return result;
-  return best ?? result;
+  let best: T | null = null;
+  let result: T | null = null;
+  for (let i = 0; i < ANALYSIS_ROUTES.length; i++) {
+    if (i > 0) await wait();
+    result = await call(ANALYSIS_ROUTES[i]);
+    await recordSafely(result);
+    if (result.ok && hasFullCoaching(result.data)) return result;
+    if (!best && result.ok && hasStructuredAnalysis(result.data)) best = result;
+    // A refusal ends the request. Account/billing denials on one route never
+    // retry the same route, but a backup route with its own access may still run.
+    if (analysisRefused(result.data)) return best ?? result;
+    if (!result.ok && result.status !== 429 && result.status < 500 && !(i === 0 && isRouteLocalFailure(result.status))) return best ?? result;
+  }
+  return best ?? (result as T);
+}
+
+/** Classic-route failures that today's direct route can still answer (its own credentials). */
+function isRouteLocalFailure(status: number): boolean {
+  return status === 401 || status === 402 || status === 403 || status === 404;
 }
