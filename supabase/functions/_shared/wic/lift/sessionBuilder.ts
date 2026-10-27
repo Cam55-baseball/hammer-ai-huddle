@@ -199,7 +199,9 @@ export function certifyLift(input: CertifyLiftInput): CertifyLiftResult {
     const { complete, score } = ladderCompleteness(ladder, familySize);
     ladderScores.push(score);
     if (!complete && familySize > 0) {
-      fatal.push({
+      // A thin swap ladder (alternates filtered by gear/phase/age) never fails
+      // a legal prescribed movement; it is reported, not fatal.
+      warn.push({
         code: "lift_unresolved_substitution",
         message: `${rx.movement_slug} has ${familySize} known alternates but resolver produced <2 rungs.`,
         slug: rx.movement_slug,
