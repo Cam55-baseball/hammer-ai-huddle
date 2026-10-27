@@ -1,0 +1,22 @@
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { measuredTotalArc, movementGroups, movementHasPain, movementScore, setMovementObservation, type MovementScreen, type MovementStatus } from "@/lib/assessment/movementScreen";
+
+export function MovementScreenForm({ value, onChange, throwingHand, onPain, source = "Player-reported" }: { value: MovementScreen; onChange: (value: MovementScreen) => void; throwingHand?: string | null; onPain: () => void; source?: string }) {
+  const updateHistory = (key: string, answer: string) => onChange({ ...value, version: 2, history: { ...value.history, [key]: answer } });
+  return <div className="space-y-6">
+    <div className="border-l-4 border-primary pl-4"><h3 className="font-semibold">Movement & arm history</h3><p className="mt-2 text-sm text-muted-foreground">{source} observations, not a diagnosis. Move slowly; stop if it hurts. Leave unmeasured values blank.</p><p className="mt-2 text-sm">Throwing arm: {throwingHand || "Not recorded"}</p></div>
+    {movementHasPain(value) && <p role="alert" className="border-l-4 border-destructive pl-4 text-sm text-destructive">Stop painful checks. Talk to a professional before continuing painful activity.</p>}
+    <section className="space-y-3 border-t border-border pt-4"><h3 className="font-semibold">Pain & injury history</h3><p className="text-sm">Do you have pain now?</p><div className="flex gap-2">{["yes", "no"].map(answer => <Button key={answer} variant={value.history?.current_pain === answer ? "default" : "outline"} onClick={() => { updateHistory("current_pain", answer); if (answer === "yes") onPain(); }}>{answer === "yes" ? "Yes" : "No"}</Button>)}</div>{[{ key: "injury", label: "Previous injuries, side & approximate date" }, { key: "throwing_arm", label: "Throwing-arm pain, injury, surgery or current professional guidance" }].map(item => <div key={item.key} className="space-y-2"><Label htmlFor={`history-${item.key}`}>{item.label}</Label><Textarea id={`history-${item.key}`} value={value.history?.[item.key] ?? ""} onChange={e => updateHistory(item.key, e.target.value)} /></div>)}</section>
+    <p className="text-sm text-muted-foreground">Control score · 2: steady and comfortable · 1: tight or difficult to control · 0: pain, stop. No answer means not checked.</p>
+    <Accordion type="multiple" defaultValue={["Joint range"]}>
+      {movementGroups.map(group => <AccordionItem key={group.name} value={group.name}><AccordionTrigger>{group.name}</AccordionTrigger><AccordionContent><div className="space-y-6">{group.items.map(item => {
+        const observation = value.observations?.[item.key] ?? {};
+        return <section key={item.key} className="space-y-3 border-t border-border pt-4"><h4 className="font-semibold">{item.name}</h4><p className="text-sm text-muted-foreground">{item.how}</p><div className="grid grid-cols-2 gap-3">{(["left", "right"] as const).map(side => <div key={side} className="min-w-0 space-y-2"><Label htmlFor={`${item.key}-${side}`}>{side === "left" ? "Left" : "Right"} · {item.unit}</Label><Input id={`${item.key}-${side}`} value={observation[side] ?? ""} onChange={e => onChange(setMovementObservation(value, item.key, { ...observation, [side]: e.target.value }))} /><div className="flex flex-col gap-1">{(["controlled", "limited", "pain"] as MovementStatus[]).map(status => <Button key={status} size="sm" variant={observation[`${side}Status`] === status ? "default" : "outline"} onClick={() => { onChange(setMovementObservation(value, item.key, { ...observation, [`${side}Status`]: status })); if (status === "pain") onPain(); }}>{movementScore(status)} · {status === "controlled" ? "Controlled" : status === "limited" ? "Tight / unsteady" : "Pain — stop"}</Button>)}</div></div>)}</div>{item.key === "shoulder_er" && <div className="text-sm">{(["left", "right"] as const).map(side => { const arc = measuredTotalArc(value.observations?.shoulder_ir?.[side], observation[side]); return <p key={side}>{side === "left" ? "Left" : "Right"} shoulder total arc: {arc === null ? "Not measured" : `${arc}° · entered IR + ER`}</p>; })}</div>}</section>;
+      })}</div></AccordionContent></AccordionItem>)}
+    </Accordion>
+  </div>;
+}
