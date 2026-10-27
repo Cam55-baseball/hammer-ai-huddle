@@ -2545,8 +2545,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       analyzed_at: new Date().toISOString(),
     };
 
-    const MODEL_ID = "google/gemini-2.5-flash";
-    const MODEL_VERSION = "2.5-flash";
+    // Honest provenance: which route actually wrote this report.
+    const MODEL_ID = aiResult.provider === "openai" ? "openai/gpt-4o-mini" : aiResult.provider === "google" ? "google/gemini-3.6-flash" : "google/gemini-2.5-flash";
+    const MODEL_VERSION = MODEL_ID.split("/")[1];
+    const ANALYSIS_ENGINE = aiResult.provider === "lovable" ? "classic" : `backup:${aiResult.provider}`;
     const prompt_hash = await sha256Hex(systemPrompt);
 
     const ai_analysis = {
@@ -2562,6 +2564,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       score_adjusted: scoreWasAdjusted,
       original_ai_score: originalAiScore,
       model_used: MODEL_ID,
+      analysis_engine: ANALYSIS_ENGINE,
       // Hammer Report Card structured measurements (additive).
       metrics: metrics ?? null,
       report_card_contract_id: reportCardContract?.id ?? null,
