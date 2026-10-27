@@ -37,7 +37,6 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
           .from('hie_snapshots')
           .select('weakness_clusters, sport')
           .eq('user_id', user.id)
-          .is('deleted_at', null)
           .order('computed_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
@@ -45,6 +44,7 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
           .from('performance_sessions')
           .select('sport, module, session_type, drill_blocks, detected_issues, throwing_hand_used, batting_side_used')
           .eq('user_id', user.id)
+          .is('deleted_at', null)
           .gte('session_date', since)
           .order('session_date', { ascending: false })
           .limit(20),
