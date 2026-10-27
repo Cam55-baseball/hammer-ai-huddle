@@ -21,6 +21,14 @@ export interface SubscriptionData {
   discount_percent?: number | null;
 }
 
+const SHARED_TTL_MS = 5000;
+let sharedCheck: {
+  key: string;
+  at: number;
+  pending: boolean;
+  promise: Promise<{ data: any; error: any }>;
+} | null = null;
+
 export const useSubscription = () => {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
     subscribed: false,
@@ -77,12 +85,28 @@ export const useSubscription = () => {
       // Always send the signed-in player's own token. Without it the call can
       // go out with the public key only, which the backend rejects
       // ("missing sub claim").
-      const invokeCheck = async () => {
+      // Many screens use this hook at once; share one request (and a short
+      // cached answer) across all of them so we never flood the backend.
+      const invokeCheck = async (): Promise<{ data: any; error: any }> => {
         const { data: { session: s } } = await supabase.auth.getSession();
         if (!s?.access_token) return { data: null, error: Object.assign(new Error('401 no session'), { status: 401 }) as any };
-        return supabase.functions.invoke('check-subscription', {
-          headers: { Authorization: `Bearer ${s.access_token}` },
+        const key = s.user.id;
+        const now = Date.now();
+        if (sharedCheck && sharedCheck.key === key && (sharedCheck.pending || now - sharedCheck.at < SHARED_TTL_MS)) {
+          return sharedCheck.promise;
+        }
+        const promise = supabase.functions
+          .invoke('check-subscription', { headers: { Authorization: `Bearer ${s.access_token}` } })
+          .then((r) => ({ data: r.data, error: r.error }));
+        const entry = { key, at: now, pending: true, promise };
+        sharedCheck = entry;
+        promise.then((r) => {
+          entry.pending = false;
+          entry.at = Date.now();
+          // Never cache failures — the next caller may retry.
+          if (r.error && sharedCheck === entry) sharedCheck = null;
         });
+        return promise;
       };
       const isAuthError = (e: any) =>
         !!e && (e.status === 401 || e.context?.status === 401 ||
