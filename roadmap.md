@@ -4453,3 +4453,4 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - Oct 26 20:30 run (2): pitching line entry on game sheet + gated reader (0132), pitching judgments on identity panel, strategy in coach six-week summary; TEST session mint unavailable. Ready to publish: NO.
 - [x] Oct 26 level map + single pitching cutoffs
 - [x] Oct 26 23:24 run: plan builder redeployed + TEST pitcher build OK; cross-sport audit (1 bleed fixed), 17-test matrix, suite 4,716+28 PASS. Ready: YES.
+- Oct 27 run 3: General newer-version prompt now auto-reloads once and is dismissible; My defensive plays moved to History; hitting goals updated (Contact Rate + 4 new), Pre-pitch routine/First-step read retired. Open: routine/fix-it drills (19), Training Intelligence move (21), coach dashboard (23), library merge (24), assessment stat/screen changes (25).

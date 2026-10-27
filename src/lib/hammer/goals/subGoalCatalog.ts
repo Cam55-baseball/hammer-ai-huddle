@@ -107,19 +107,23 @@ const THROWING_POSITION: ReadonlyArray<SubGoal> = [
 const HITTING: ReadonlyArray<SubGoal> = [
   { id: "barrel_control", label: "Barrel control", helpText: "Square up more pitches — get the barrel to the ball more often.", weightHints: { hitting_contact: 0.7, hitting_bat_speed: 0.3 } },
   { id: "plate_discipline", label: "Plate discipline", helpText: "Swing at strikes, take balls — own the zone.", weightHints: { hitting_plate_discipline: 0.9 } },
-  { id: "two_strike_approach", label: "Two-strike approach", helpText: "Survive and damage with two strikes — no easy at-bats given up.", weightHints: { hitting_two_strike: 0.8, hitting_contact: 0.2 } },
-  { id: "oppo_power", label: "Oppo / all-fields power", helpText: "Drive the ball to all fields, not just pull side.", weightHints: { hitting_oppo_power: 0.7, hitting_bat_speed: 0.3 } },
-  { id: "launch_consistency", label: "Consistent launch", helpText: "Quit hitting the top of the ball — line drives and lift, not chops.", weightHints: { hitting_contact: 0.5, hitting_bat_speed: 0.5 } },
+  { id: "two_strike_approach", label: "Contact Rate", helpText: "Put the ball in play more often — fewer swings and misses.", weightHints: { hitting_two_strike: 0.8, hitting_contact: 0.2 } },
+  { id: "oppo_power", label: "Oppo / all-fields power", helpText: "Drive the ball to all fields, not just pull side.", weightHints: { hitting_oppo_power: 0.7, hitting_bat_speed: 0.3 }, retired: true },
+  { id: "launch_consistency", label: "Consistent launch", helpText: "Quit hitting the top of the ball — line drives and lift, not chops.", weightHints: { hitting_contact: 0.5, hitting_bat_speed: 0.5 }, retired: true },
+  { id: "in_game_power", label: "In-game power hitting", helpText: "Hit the ball hard in real games, not just in practice.", weightHints: { hitting_bat_speed: 0.6, hitting_contact: 0.4 } },
+  { id: "all_fields", label: "Hitting to all fields", helpText: "Hit the ball where it's pitched — pull, middle and the other way.", weightHints: { hitting_oppo_power: 0.6, hitting_contact: 0.4 } },
+  { id: "situational_hitting", label: "Situational hitting", helpText: "Do the job the moment needs — move runners, get them in.", weightHints: { hitting_contact: 0.6, hitting_plate_discipline: 0.4 } },
+  { id: "plate_confidence", label: "Confidence at the plate", helpText: "Step in calm and ready to compete every at-bat.", weightHints: { hitting_plate_discipline: 0.5, hitting_contact: 0.5 } },
 ];
 
 const FIELDING: ReadonlyArray<SubGoal> = [
   { id: "range", label: "Expand range", helpText: "Get to more balls — lateral and back-pedal coverage.", weightHints: { fielding_range: 0.7, fielding_first_step: 0.3 } },
   { id: "hands", label: "Clean hands (incl. glove-to-hand transfer)", helpText: "Receive the ball cleanly and move it smoothly from glove to hand.", weightHints: { fielding_hands: 0.8, throwing_transfer: 0.2 } },
-  { id: "first_step", label: "First-step read", helpText: "Read the ball off the bat one step faster.", weightHints: { fielding_first_step: 0.8, fielding_pre_pitch: 0.2 } },
+  { id: "first_step", label: "First-step read", helpText: "Read the ball off the bat one step faster.", weightHints: { fielding_first_step: 0.8, fielding_pre_pitch: 0.2 }, retired: true },
   { id: "double_play", label: "Double-play turn", helpText: "Cleaner pivot, faster feed — middle-infield specialty.", weightHints: { fielding_double_play: 0.8, throwing_transfer: 0.2 }, retired: true },
   { id: "footwork", label: "Improve footwork", helpText: "Arrive balanced and put your feet in position for the play.", weightHints: { fielding_first_step: 0.6, fielding_range: 0.4 } },
   { id: "routine_plays", label: "Routine plays", helpText: "Make the everyday plays cleanly and consistently.", weightHints: { fielding_hands: 0.6, fielding_pre_pitch: 0.4 } },
-  { id: "pre_pitch_routine", label: "Pre-pitch routine", helpText: "Set up early so the play is half-won before contact.", weightHints: { fielding_pre_pitch: 0.9 } },
+  { id: "pre_pitch_routine", label: "Pre-pitch routine", helpText: "Set up early so the play is half-won before contact.", weightHints: { fielding_pre_pitch: 0.9 }, retired: true },
 ];
 
 const PITCHING_BASEBALL: ReadonlyArray<SubGoal> = [
