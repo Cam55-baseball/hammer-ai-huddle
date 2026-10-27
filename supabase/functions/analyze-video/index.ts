@@ -17,7 +17,7 @@ import {
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
-import { analysisRefused, hasReadableReport, hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../_shared/analysisReliability.ts";
+import { analysisRefused, hasFullCoachingReport, hasReadableReport, hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../_shared/analysisReliability.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
 import { constructiveCriticismBlock, improvementsSchema } from "./constructiveCriticism.ts";
@@ -1909,7 +1909,7 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
       const cachedAi = (videoRow?.ai_analysis ?? null) as Record<string, unknown> | null;
-      if (!canaryAuthorized && prior && hasReadableReport(cachedAi) && videoRow?.status === "completed") {
+      if (!canaryAuthorized && prior && hasFullCoachingReport(cachedAi) && videoRow?.status === "completed") {
         await recordRun(supabase, {
           video_id: videoId,
           requested_by: userId,
@@ -2180,7 +2180,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                 },
                 positives: {
                   type: "array",
-                  description: "0-3 positives, only what the clip clearly shows. Optional — never pad with praise.",
+                  description: "1-3 real strengths the frames show (what went well). Never invented.",
                   items: { type: "string" }
                 },
                 improvements: improvementsSchema(module, sport),
