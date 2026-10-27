@@ -122,7 +122,13 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
     ready: rounds.map(round => round.rating != null), beforeSeconds: pp.rest_s[0],
     restSeconds: pp.stop.kind === "sprint" ? sprintRestSeconds(sprintFeet) : 0,
     available: row => !savedRounds.error && !savedRounds.isLoading && !locked && !stopReason && row < rules.max_sets && rounds[row]?.rating === null,
-    save: async row => { const pending = saves.current.get(row); if (!pending || rounds[row]?.rating == null) throw new Error("Rating not saved"); await pending; },
+    save: async row => {
+      // Explicit Skip without a rating records no performed explosive work.
+      if (rounds[row]?.rating == null) return;
+      const pending = saves.current.get(row);
+      if (!pending) throw new Error("Rating not saved");
+      await pending;
+    },
   });
 
   function rate(i: number, rating: number) {
