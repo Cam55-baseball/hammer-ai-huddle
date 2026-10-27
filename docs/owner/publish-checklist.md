@@ -1,30 +1,42 @@
 # Publish checklist — consolidated (Oct 27, 2026)
 
-Full suite: 589 files / 4,851 tests passed. Preview build: passed.
-Nothing published; no cron or iOS changes. Redeploys/data changes this batch were authorized and are listed below.
+Full current suite: **593 files / 4,861 tests passed**. Sixteen bounded groups; one timed-out group was split into four and all four exited successfully. The two subsequently added test files passed separately. Preview build: **passed**, latest observed entry October 27, 20:43:54 UTC.
+Nothing published; no cron or iOS changes. No new hosted athlete/test records were created. Existing owner TEST canary retained; its daily claim was reset for the requested manual run.
 
 | # | Item | Status |
 |---|------|--------|
-| 1–5 | P0 video analysis (full coaching report, lenient gates, first-try save, Players Club, canary) | Done; baseball hitting + pitching proven on phone (original + compressed). Baseball throwing and softball = owner's human checks |
+| 1 | Analysis regression deep dive | Done; findings retained in analysis-regression.md |
+| 2 | Vision-based full coaching report | Done; prior original/compressed hitting and pitching proofs retained |
+| 3 | Lenient gates; no athlete numeric grades | Done; no new analysis changes |
+| 4 | First-try report/Players Club save | Done for available owner clips; prior reopen/reload proofs retained |
+| 5 | Phone clip proofs and full-report canary | Fresh manual canary HTTP 200 passed, not paused; response AND saved readback require full coaching. Remaining clips are owner human checks |
 | 6 | Start gate (full readiness list) | Built + tested; affected-player phone proof open |
-| 7 | Prescription sanity validator + 8-week sims | Not started |
-| 8 | Power Primer own focus step with real numbers | Not started |
-| 9 | Conditioning card rest/time/steps | Not started |
-| 10 | Beginner defense volume | Not started |
-| 11 | Unprescribed work counts; skipped check-ins block "full complete" | Not started |
-| 12 | 12-week movement re-screen prompts | Not started |
-| 13 | "Offseason is beginning" everywhere + restructure | Not started |
+| 7 | Prescription sanity validator + 8-week sims | Open: existing six-cohort eight-week builder regressions pass, but they do not prove the requested new validator or weekly completeness |
+| 8 | Power Primer own focus step with real numbers | Open: existing numerical primer remains; separate focus sequencing not built |
+| 9 | Conditioning card rest/time/steps | Partial: removed athlete base-count explanation/count display; internal four-base rest retained and tests pass. Time/steps end-to-end coverage open |
+| 10 | Beginner defense volume | Open: invalid infinite experience now cannot grant elite tier; requested volume scaling not implemented |
+| 11 | Unprescribed work counts; skipped check-ins block "full complete" | Partial: canonical practices added to General records; day-complete presentation requires morning/night and applicable pre-lift checks, four regressions pass. Full Discipline/learning-loop audit and phone proof open |
+| 12 | 12-week movement re-screen prompts | Partial: canonical movement_done_at drives 84-calendar-day prompt in saved movement summary; complete bilateral re-entry saves/readbacks same assessment, pain retained. Real due/save/reload phone proof open |
+| 13 | "Offseason is beginning" everywhere + restructure | Partial: added to Update Hammer, schedule strip and Tell Hammers; quick season success now waits for save. Existing phase-change restructure traced; all three real save/restructure proofs open |
 | 14 | Identity card days vs logs | Not started |
-| 15 | "Do in this order" only prescribed items | Not started |
+| 15 | "Do in this order" only prescribed items | Built: projects mounted prescribed card categories in their displayed sequence; real populated phone proof open |
 | 16 | Separate bunting cards on schedule | Not started |
 | 17 | Recovery items audit | Not started |
 | 18 | Develop This Week audit | Not started |
 | 19 | Routine + fix-it drills all skills | Not started |
 | 20 | The General newer-version prompt | Done (auto-reload once, dismissible); phone proof open |
-| 21 | Training Intelligence in owner dashboard; Cossack <14; sled alternate | Done (Cossack min age 13→14; thin ladder warns, wk-generate-daily redeployed). 42 lift-frequency warnings not reviewed |
-| 22 | My defensive plays moved to History | Done; phone proof open |
-| 23 | Coach dashboard fixes | Not started |
-| 24 | Owner library merge + videos | Not started |
+| 21 | Training Intelligence in owner dashboard; Cossack <14; sled alternate; warnings | Prior placement/Cossack/sled fixes retained. Latest 42 warnings reviewed: 35 frequency, seven gaps; two frequency notes unsupported by current history. Seven-day/future-plan counting defect fixed/tested/deployed. 33 supported high-frequency plans still need safety-context review; see lift-frequency-review.md |
+| 22 | My defensive plays moved to History | Phone PASS: visible link opens populated /defense/plays at 390×844, no overflow |
+| 23 | Coach dashboard fixes | Partial: My Players moved immediately below heading; sent-item wrapping and organization tab layout improved; Both selection phone PASS without saving an organization. Actual coach roster proof blocked: current session redirects to staff application. Player received-message path exists; positive send/readback proof open |
+| 24 | Owner library merge + videos | Partial: builder navigation labels updated; existing drill video upload preserved. Full library merge/intertwined video workflow not built |
 | 25 | Assessment goal/stat/screen changes | Done (Contact Rate, 4 new goals, 4 retired; HBP→RBI/LOB/bunt hits/attempts; knee-height step-over; eyes-closed balance in screen); phone proof open |
 
-**Ready to publish: no** — items 7–19, 23, 24 are not built, and items 6, 20, 22, 25 lack phone proof.
+## Hosted changes and phone evidence
+
+- Named analysis services deployed: analyze-video, analysis-canary, analysis-canary-configure, update-library-session. Fresh manual full-report canary passed HTTP 200.
+- ti-watchdog redeployed for warning arithmetic only; no scan invoked and no schedule changed.
+- Phone: History → My defensive plays → populated play log PASS; General normal reload returned without a blocking dialog PASS. Simulated stale-chunk auto-reload/dismissal is still not phone-proven.
+- Owner overview and organization registration loaded with no overflow or page errors. Both selected without submitting or creating data.
+- Start-gate and assessment changed-flow proofs remain open; owner screenshots do not certify a gated athlete flow.
+
+**Ready to publish: no** — requested validator/completeness, separate primer, beginner scaling, identity audit, separate bunting/upcoming cards, recovery audit, Develop This Week, routine/fix-it evidence lifecycle and full library merge remain incomplete. Conditioning/unity/re-screen/offseason/coach paths and start/assessment/stale-chunk behavior still need positive affected-role phone proof. Supported lift-frequency warnings still require full safety-context review. Missing owner clips are not blockers.
