@@ -5378,6 +5378,15 @@ function mergeOwnerSlotDrills(drills, slots, ctxOrSport, day = /* @__PURE__ */ n
   const ctx = typeof ctxOrSport === "string" ? { sport: ctxOrSport, day } : ctxOrSport;
   const pool = ownerDrillsForSlot(slots, ctx).sort((a, b) => a.id.localeCompare(b.id));
   if (pool.length === 0 || drills.length === 0) return drills;
+  let target = -1;
+  for (let i = drills.length - 1; i >= 0; i--) {
+    const drill = drills[i];
+    if (drill.prescriptionOrigin !== "owner" && (drill.stage === void 0 || drill.stage === "drills")) {
+      target = i;
+      break;
+    }
+  }
+  if (target < 0) return drills;
   const dayIndex = Math.floor((ctx.day ?? day).getTime() / 864e5);
   const pick = pool[dayIndex % pool.length];
   const owned = {
@@ -5394,7 +5403,7 @@ function mergeOwnerSlotDrills(drills, slots, ctxOrSport, day = /* @__PURE__ */ n
     ...clean(pick.setup) ? { setup: pick.setup } : {},
     ...pick.equipment.length ? { equipmentNote: pick.equipment.join(", ") } : {}
   };
-  return [...drills.slice(0, -1), owned];
+  return drills.map((drill, index) => index === target ? owned : drill);
 }
 if (false) void loadOwnerPlanDrills();
 
