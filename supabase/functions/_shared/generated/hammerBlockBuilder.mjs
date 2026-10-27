@@ -6923,7 +6923,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         drills,
         cues: ["Recovery is a skill. Do it like a workout."],
         stopRules: ["Sharp pain during mobility \u2014 back off."],
-        durationMin: elevated ? 30 : 20,
+        durationMin: elevated ? 25 : 15,
         route: "/bounce-back-bay",
         ctaLabel: "Open recovery",
         status: "ready",
@@ -6934,7 +6934,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           activityType: "recovery",
           icon: "heart",
           color: "#f43f5e",
-          durationMinutes: elevated ? 30 : 20,
+          durationMinutes: elevated ? 25 : 15,
           description: "Recovery block.",
           checklist: drillsToChecklist(drills),
           source: "internal"
