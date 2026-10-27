@@ -369,7 +369,7 @@ export function AppSidebar() {
       { title: t('navigation.ownerDashboard'), url: "/owner", icon: Shield },
     ] : []),
     ...(isAdmin ? [{ title: t('navigation.adminDashboard'), url: "/admin", icon: Users }] : []),
-    ...(isAdmin || isOwner ? [{ title: "Training Intelligence", url: "/admin/training-intelligence", icon: Activity }] : []),
+    ...(isAdmin && !isOwner ? [{ title: "Training Intelligence", url: "/admin/training-intelligence", icon: Activity }] : []),
   ];
 
   const handleSignOut = async () => {
