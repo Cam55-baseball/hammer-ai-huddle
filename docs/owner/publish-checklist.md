@@ -2,6 +2,15 @@
 
 ## October 27 urgent run — current status
 
+### October 27 run (5), 04:27 UTC
+- BUILT: fully declared equal-set band/activation circuits now retain a separate rep target for each movement in the existing task log. Baseball example retains 12/12/12/10/10; windmill example retains 10 each direction/12/12/10. Compound inputs are stacked for phone width; targets are not treated as entered work until that individual field is edited or confirmed on blur.
+- TESTS: 3 affected files/29 tests PASS across bounded runs (the entry-prescription file passed 15 tests separately; final parser/logger run passed 14). Component save payload and local reload preserve edited values and leave untouched components null. This is not hosted player save/readback or a fresh full-suite result.
+- PHONE: signed-in 390×844 throwing focus shows the separate component targets, no horizontal overflow or page errors. Screenshot inspected. It remains the available demo-associated owner session; no training values were entered and no hosted rows were created. Found an unresolved guided header discrepancy: circuit inputs retain two declared rows but header shows Set 1 of 1, indicating another mounted registration; do not certify complete compound focus yet.
+- EDITABLE TRACKING AUDIT: Vault already offers tracking selection and coach custom-item editor already has unit selection. Existing catalog item initialization can fall back to reps; coach-selected catalog tracking is intentionally locked. These require guarded follow-up, not new permissions or a blind selector expansion.
+- GUIDE: each circuit movement has its own target and entry; changing one movement does not record its neighbors. Mixed time/rep or unequal-set circuits remain unexpanded pending explicit row metadata.
+
+**Ready to publish: NO.** Remaining P0 original cross-sport/position footage and entitled embedded-player proof, movement consumers/role readback, editable tracking, mixed circuits/guided registration, cut-short/baserunning, full suite and real Finished/rest/readback remain open. Preview-only edits; no publish, redeploy, migration, cron, schedule or iOS changes.
+
 ### October 27 run (4), 04:28 UTC
 - BUILT: exercise timer now has three controls: Start/Pause/Resume, Stop, and one state-aware Reset/Restart. Removed duplicate fourth play/restart control; active hundredths and pause exclusion unchanged.
 - BUILT: focus rest hides the mounted work surface until canonical rest ends; rows and drafts remain registered. Warm-up Drills shell/empty-work text is hidden in focus, without deleting prescription rows or changing completion.
