@@ -279,7 +279,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     <h4 className="text-sm font-semibold break-words">{rx.movement_name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>
     {spec.fields.some(f => f.key === "time") && <ExerciseTimer key={focus.active ? focus.row : "regular"}
       target={stopwatch ? undefined : spec.fields.find(f => f.key === "time")?.prefill ?? undefined}
-      hasEnteredValue={rounds.some(r => Number(r._manual_time) > 0)} onRecord={value => { const i = focus.active ? focus.row : rounds.findIndex(r => r._t !== "1" || !r.time); if (i >= 0) edit(i, "time", String(value), 0, true); }} />}
+      hasEnteredValue={rounds.some(r => Number(r._manual_time) > 0)} onRecord={value => { const i = focus.active ? focus.row : rounds.findIndex(r => r._t !== "1" || !r.time); if (i >= 0 && !(Number(rounds[i]?._manual_time) > 0)) edit(i, "time", String(value), 0, true); }} />}
     {!focus.active && !isSprint && (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank/.test(rx.movement_slug)) && <RestTimer label="Rest between sets" seconds={restBand.min} maxSeconds={restBand.max} />}
     {isSprint && <>{!focus.active && <RestTimer label="Rest after each run set" seconds={sprintSeconds} />}<p className="text-xs text-muted-foreground">{sprintRestWhy(rx.distance_feet) ?? "Run distance not entered — rest time is not yet set."}</p></>}
     {!focus.active && basesPerRep && <ConditioningBaseRest basesPerRep={basesPerRep} />}

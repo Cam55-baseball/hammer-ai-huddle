@@ -131,7 +131,7 @@ export function LegacyDrillInlineLog({
     <div hidden={focus.active && focus.resting} className="space-y-2">
     {logHost && <h4 className="text-sm font-semibold">{name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>}
     {spec.fields.some(f => f.key === "time") && <ExerciseTimer key={focus.active ? focus.row : "regular"} target={stopwatch ? undefined : spec.fields.find(f => f.key === "time")?.prefill ?? undefined} hasEnteredValue={rounds.some(r => Number(r._manual_time) > 0)}
-      onRecord={value => { const next = focus.active ? focus.row : rounds.findIndex(r => r._t !== "1" || !r.time); if (next >= 0) edit(next, "time", String(value), 0, true); }} />}
+      onRecord={value => { const next = focus.active ? focus.row : rounds.findIndex(r => r._t !== "1" || !r.time); if (next >= 0 && !(Number(rounds[next]?._manual_time) > 0)) edit(next, "time", String(value), 0, true); }} />}
     {!focus.active && (modality === "speed" || modality === "conditioning") && <RestTimer label="Rest between repeats" seconds={modality === "speed" ? sprintRestSeconds(spec.fields.find(f => f.key === "distance")?.prefill) : null} />}
     <div className={spec.fields.length > 2 ? "hidden" : "grid gap-1.5 px-1 text-[10px] uppercase text-muted-foreground"} style={{ gridTemplateColumns: cols }}>
       <span>Set</span>
