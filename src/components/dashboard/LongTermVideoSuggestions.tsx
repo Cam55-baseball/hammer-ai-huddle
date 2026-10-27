@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSportTheme } from '@/contexts/SportThemeContext';
 import {
   aggregateWeaknessClustersToTaxonomy,
   moduleToSkillDomain,
@@ -23,9 +24,10 @@ interface Props {
  */
 export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
   const { user } = useAuth();
+  const { sport } = useSportTheme();
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['long-term-video-signals', user?.id, domainProp],
+    queryKey: ['long-term-video-signals', user?.id, sport, domainProp],
     enabled: !!user,
     staleTime: 60_000,
     queryFn: async () => {
@@ -37,6 +39,7 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
           .from('hie_snapshots')
           .select('weakness_clusters, sport')
           .eq('user_id', user.id)
+          .eq('sport', sport)
           .order('computed_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
@@ -44,6 +47,7 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
           .from('performance_sessions')
           .select('sport, module, session_type, drill_blocks, detected_issues, throwing_hand_used, batting_side_used')
           .eq('user_id', user.id)
+          .eq('sport', sport)
           .is('deleted_at', null)
           .gte('session_date', since)
           .order('session_date', { ascending: false })
@@ -54,7 +58,7 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
       if (sessionResult.error) throw sessionResult.error;
       const snap = snapshotResult.data;
       // A different sport's practice must not drive this sport's picks.
-      const sessions = (sessionResult.data ?? []).filter(session => session.sport === snap?.sport);
+      const sessions = (sessionResult.data ?? []).filter(session => session.sport === sport);
 
       // Infer skill domain from most recent session module if not provided
       const inferred =
