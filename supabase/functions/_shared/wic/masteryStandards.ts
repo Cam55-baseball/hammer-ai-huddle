@@ -1,7 +1,7 @@
 /** Owner policy, October 26. Ratios are not converted into invented scouting grades. */
 export type MasteryLevel='pro'|'college'|'high_school'|'youth';
 export type MasteryStatus='Elite'|'Building'|'Need more data';
-export const IDENTITY_SOURCE='Camryn Williams · October 26, 2026 · Coaching Console settings';
+export const IDENTITY_SOURCE:string='Camryn Williams · October 26, 2026 · Coaching Console settings';
 export const CONTACT_PRINCIPLE='Take a strike rather than swing and miss early in the count. Never strike out. With two strikes, protect the plate. This is the owner’s coaching principle, not a promise of results.';
 export const CONTACT_DEFAULTS={pro:{k:.10,whiff:.08,zone:.92},college:{k:.08,whiff:.06,zone:.94},high_school:{k:.05,whiff:.04,zone:.96},youth:{k:.05,whiff:.04,zone:.96}} as const;
 /** Owner softball hitting starting standards, October 27, 2026. Whiff% and zone contact are starting values to calibrate from Hammers softball data (no public softball league data). */
