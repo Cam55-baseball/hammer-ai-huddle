@@ -192,7 +192,8 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
       delete next[key];
       return next;
     });
-    setActivePane((cur) => (cur === key ? (panes.find((x) => paneKey(x) !== key) ? paneKey(panes.find((x) => paneKey(x) !== key)!) : null) : cur));
+    const remaining = panes.find(x => paneKey(x) !== key);
+    setActivePane(cur => cur === key ? (remaining ? paneKey(remaining) : null) : cur);
   };
 
   // ── Pick toggling (primary → secondary → off) ────────────────────────────
