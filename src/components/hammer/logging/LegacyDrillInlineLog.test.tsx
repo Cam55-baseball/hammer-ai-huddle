@@ -36,6 +36,17 @@ describe("LegacyDrillInlineLog return from background", () => {
     expect(screen.queryByRole("button", {name:"Add set"})).not.toBeInTheDocument();
     expect(saved.mock.lastCall?.[0].components).toHaveLength(6);
   });
+  it("each timed component starts a fresh timer even when a previous component was typed", () => {
+    const saved = vi.fn();
+    render(<LegacyDrillInlineLog modality="throwing" name="Preparation" dosage="ER 2x12 per arm, opener 2x30 seconds, scap pulls 3x10" storageKey="mixed-timers-proof" completed={false} onSave={saved} />);
+    fireEvent.change(screen.getByLabelText("Time 3 seconds"), {target: {value: "30"}});
+    fireEvent.click(screen.getByRole("button", {name: "Start timer"}));
+    vi.advanceTimersByTime(1000);
+    fireEvent.click(screen.getByRole("button", {name: "Stop timer"}));
+    expect(saved.mock.lastCall?.[0].rounds).toEqual([{set:3,time:30},{set:4,time:1}]);
+    expect(screen.getByText("Cut short")).toBeVisible();
+    expect(screen.getByRole("button", {name: "Start timer"})).toBeEnabled();
+  });
   it("guided circuits require every component entered before Next can save the existing set", () => {
     render(<FocusSession active storageKey="compound-focus" onExit={() => {}}><LegacyDrillInlineLog modality="throwing" name="Band series" dosage="ER 1x12, IR 1x12, retractions 1x10" storageKey="compound-focused" completed={false} onSave={vi.fn()} /></FocusSession>);
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
