@@ -173,6 +173,7 @@ import type { DrillStep } from "@/lib/hammer/prescription/dailyPlan";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useHammerDailyTasks, makeBlockTaskId } from "@/hooks/useHammerDailyTasks";
 import { LegacyDrillInlineLog } from "@/components/hammer/logging/LegacyDrillInlineLog";
+import { SavedMovementSummary } from "@/components/assessment/SavedMovementSummary";
 import { HammerCheckInCard } from "@/components/hammer/HammerCheckInCard";
 import { useVaultQuizzesForDate, type VaultQuizType } from "@/hooks/useVaultQuizzesForDate";
 import { VaultFocusQuizDialog } from "@/components/vault/VaultFocusQuizDialog";
@@ -667,6 +668,7 @@ function StartGate({ beforeStartPortalTarget }: { beforeStartPortalTarget?: HTML
   }
   return (
     <HammersTodayProvider>
+      <SavedMovementSummary />
       <HammerDailyPlanBody beforeStartPortalTarget={beforeStartPortalTarget} />
     </HammersTodayProvider>
   );
