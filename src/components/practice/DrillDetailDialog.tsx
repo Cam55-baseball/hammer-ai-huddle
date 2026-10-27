@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { getSideFor } from '@/lib/side/getSideFor';
 import { usePurchaseAvailability } from '@/hooks/usePurchaseAvailability';
+import { VideoPlayer } from '@/components/video-library/VideoPlayer';
 
 interface DrillInstructions {
   purpose?: string;
@@ -89,13 +90,8 @@ export function DrillDetailDialog({ open, onOpenChange, scoredDrill }: DrillDeta
               </div>
             </div>
           ) : hasVideo ? (
-            <div className="aspect-video rounded-lg overflow-hidden bg-black">
-              <video
-                src={drill.video_url!}
-                controls
-                className="w-full h-full object-contain"
-                onPlay={handleTrackUsage}
-              />
+            <div onPlayCapture={handleTrackUsage}>
+              <VideoPlayer key={drill.video_url} videoUrl={drill.video_url} videoType="upload" title={drill.name} />
             </div>
           ) : null}
 

@@ -24,6 +24,17 @@ const SPORTS: DefenseSport[] = ["baseball", "softball"];
 const PHASES = ["off", "pre", "in"] as const;
 
 describe("defense guides — full drill-name coverage", () => {
+  it("beginner receiving and blocking retain the card dose and required protective gear", () => {
+    const rx = selectDefenseDrills({ position: "C", sport: "baseball", seasonPhase: "off", tier: "beginner" });
+    expect(rx).not.toBeNull();
+    const receiving = guideForDefense("One-knee receiving");
+    const blocking = guideForDefense("Blocking short-hop");
+    expect(receiving).toBeTruthy();
+    expect(blocking).toBeTruthy();
+    expect(receiving?.tierNotes.beginner).not.toMatch(/20 catches|tennis balls/);
+    expect(blocking?.tierNotes.beginner).not.toContain("no gear needed");
+    expect(blocking?.tierNotes.beginner).toContain("required protective gear");
+  });
   it("every drill emitted by the catalog has a MovementGuide", () => {
     const uncovered: string[] = [];
     for (const pos of POSITIONS) {
