@@ -88,7 +88,7 @@ import type { MeasuredClipTiles } from "@/lib/reportCard/measuredClipSpec";
  */
 
 
-export default function AnalyzeVideo({ assessment }: { assessment?: { module: "hitting" | "throwing" | "pitching"; sport: "baseball" | "softball"; onDone: () => void } } = {}) {
+export default function AnalyzeVideo({ assessment }: { assessment?: { module: "hitting" | "throwing" | "pitching"; sport: "baseball" | "softball"; onDone: () => void; onSaved?: (report: unknown) => void } } = {}) {
   const { t } = useTranslation();
   const { module: routeModule } = useParams<{ module: string }>();
   const module = assessment?.module ?? routeModule;
@@ -1187,6 +1187,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       const normalized = normalizeAnalysisResponse(analysisData);
       setAnalysis(normalized);
       setAnalysisError(null);
+      assessment?.onSaved?.(normalized);
       void queryClient.invalidateQueries({ queryKey: ["back-leg-finding", user?.id, videoData.id] });
       void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
       fireAnalysisVideoMoment(normalized);
@@ -1327,6 +1328,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       const normalizedRetry = normalizeAnalysisResponse(analysisData);
       setAnalysis(normalizedRetry);
       setAnalysisError(null);
+      assessment?.onSaved?.(normalizedRetry);
       void queryClient.invalidateQueries({ queryKey: ["back-leg-finding", user?.id, currentVideoId] });
       void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
       fireAnalysisVideoMoment(normalizedRetry);
@@ -1376,7 +1378,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
             lives in DelayCam. */}
         {!videoPreview && (
           <div className="space-y-4">
-            {assessment && <HighFpsCapture module={assessment.module} sport={assessment.sport} onAnalysis={(report, videoId) => { setCurrentVideoId(videoId); setAnalysis(normalizeAnalysisResponse(report)); setAnalysisError(null); }} />}
+            {assessment && <HighFpsCapture module={assessment.module} sport={assessment.sport} onAnalysis={(report, videoId) => { const normalized = normalizeAnalysisResponse(report); setCurrentVideoId(videoId); setAnalysis(normalized); setAnalysisError(null); assessment.onSaved?.(normalized); }} />}
             <PitchingFilmingGuide />
             <Card data-tour="upload" className="mx-auto max-w-xl p-6 sm:p-8 text-center border-dashed border-2">
               <div className="flex flex-col items-center space-y-3">

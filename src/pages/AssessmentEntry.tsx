@@ -17,10 +17,10 @@ export default function AssessmentEntry() {
     const [assessment, profile, sub] = await Promise.all([
       supabase.from("initial_assessments").select("completed_at,mode_opened_at").eq("user_id", user.id).maybeSingle(),
       supabase.from("profiles").select("hammers_today_started_at").eq("id", user.id).maybeSingle(),
-      supabase.from("subscriptions").select("status,subscribed_modules").eq("user_id", user.id).maybeSingle(),
+      supabase.from("subscriptions").select("status,subscribed_modules").eq("user_id", user.id).eq("status", "active"),
     ]);
     if (assessment.error || profile.error || sub.error) throw assessment.error ?? profile.error ?? sub.error;
-    return { assessment: assessment.data, started: profile.data?.hammers_today_started_at, paid: sub.data?.status === "active" && (sub.data.subscribed_modules?.length ?? 0) > 0 };
+    return { assessment: assessment.data, started: profile.data?.hammers_today_started_at, paid: (sub.data ?? []).some(subscription => (subscription.subscribed_modules?.length ?? 0) > 0) };
   }});
   useEffect(() => {
     if (!q.data || admitted) return;

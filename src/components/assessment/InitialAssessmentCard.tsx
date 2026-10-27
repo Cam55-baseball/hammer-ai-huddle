@@ -14,6 +14,7 @@ import { useVault } from "@/hooks/useVault";
 import { AssessmentMode } from "./AssessmentMode";
 import { AssessmentProfileReview } from "./AssessmentProfileReview";
 import { parseSeasonStats, seasonStatGroups } from "@/lib/assessment/seasonStats";
+import { assessmentAnalysisSaved } from "@/lib/assessment/analysisSaved";
 import { assessmentModules, assessmentSteps, requiredAnalyses, shouldFinalizeAssessment, type AnalysisModule, type StepId, type StepProgress } from "@/lib/assessment/initialAssessment";
 const EmbeddedAnalysis = lazy(() => import("@/pages/AnalyzeVideo"));
 const MOVES = [
@@ -50,10 +51,11 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
         supabase.from("videos").select("module").eq("user_id", uid).eq("sport", sport).not("analysis_public", "is", null).limit(200),
         supabase.from("vault_performance_tests").select("user_id", { count: "exact", head: true }).eq("user_id", uid).eq("sport", sport),
         supabase.from("profiles").select("full_name,position,hammers_today_started_at,throwing_hand,batting_side,date_of_birth").eq("id", uid).maybeSingle(),
-        supabase.from("subscriptions").select("status,subscribed_modules").eq("user_id", uid).maybeSingle(),
+        supabase.from("subscriptions").select("status,subscribed_modules").eq("user_id", uid).eq("status", "active"),
       ]);
       for (const result of [row, s2, vids, tests, prof, subscription]) if (result.error) throw result.error;
-      return { row: row.data, s2: (s2.count ?? 0) > 0, analyses: [...new Set((vids.data ?? []).map(v => v.module))] as AnalysisModule[], tests: (tests.count ?? 0) > 0, profile: prof.data, modules: assessmentModules(subscription.data, sport) };
+      const modules = [...new Set((subscription.data ?? []).flatMap(sub => assessmentModules(sub, sport)))];
+      return { row: row.data, s2: (s2.count ?? 0) > 0, analyses: [...new Set((vids.data ?? []).map(v => v.module))] as AnalysisModule[], tests: (tests.count ?? 0) > 0, profile: prof.data, modules };
     },
   });
   useEffect(() => {
@@ -173,7 +175,7 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
       {step === 2 && <div className="space-y-5"><p className="text-sm text-muted-foreground">Player-reported · last season. Leave anything you don't know blank.</p>{seasonStatGroups(sport, sportModules).map(group => <section key={group.category} className="space-y-4 border-t border-border pt-4"><h3 className="font-semibold">{group.category}</h3>{group.category === "Fielding" && <label className="block space-y-2">Positions played<Input value={profile.position} onChange={e => setProfile({ ...profile, position: e.target.value })} /></label>}{group.fields.map(({key,label}) => <div key={key} className="space-y-2"><Label htmlFor={`assessment-${key}`}>{label}</Label><Input id={`assessment-${key}`} type="number" min="0" step="any" value={stats[key] ?? ""} onChange={e => setStats({ ...stats, [key]: e.target.value })} /></div>)}</section>)}</div>}
       {step === 3 && <div className="space-y-6"><p className="text-sm text-muted-foreground">Move slowly. Stop if it hurts.</p>{MOVES.map(m => <div key={m.key} className="space-y-3"><p className="font-medium">{m.label}</p><div className="flex flex-wrap gap-2">{(["easy", "hard", "pain"] as Answer[]).map(a => <Button key={a} variant={answers[m.key] === a ? "default" : "outline"} onClick={() => { setAnswers({ ...answers, [m.key]: a }); if (a === "pain") setPainOpen(true); }}>{a === "easy" ? "Easy" : a === "hard" ? "Hard / tight" : "It hurt"}</Button>)}</div></div>)}</div>}
       {step === 4 && <S2CognitionDiagnostics sport={sport} embedded onSaved={() => { void embeddedSaved(4); }} />}
-      {step === 5 && <div className="space-y-5"><div className="flex flex-wrap gap-3">{need.map(module => <Button key={module} variant={analysisModule === module ? "default" : "outline"} onClick={() => setAnalysisModule(module)}>Record {module}</Button>)}</div>{!need.length && <p className="text-sm text-muted-foreground">No analysis modules are included in this sport's subscription.</p>}{analysisModule && <Suspense fallback={<p>Opening your analysis…</p>}><EmbeddedAnalysis key={`${sport}-${analysisModule}`} assessment={{ module: analysisModule, sport, onDone: () => { setAnalysisModule(null); void qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] }); } }} /></Suspense>}</div>}
+      {step === 5 && <div className="space-y-5"><div className="flex flex-wrap gap-3">{need.map(module => <Button key={module} variant={analysisModule === module ? "default" : "outline"} onClick={() => setAnalysisModule(module)}>Record {module}</Button>)}</div>{!need.length && <p className="text-sm text-muted-foreground">No analysis modules are included in this sport's subscription.</p>}{analysisModule && <Suspense fallback={<p>Opening your analysis…</p>}><EmbeddedAnalysis key={`${sport}-${analysisModule}`} assessment={{ module: analysisModule, sport, onSaved: report => { if (assessmentAnalysisSaved(report)) void qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] }); }, onDone: () => { setAnalysisModule(null); void qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] }); } }} /></Suspense>}</div>}
       {step === 6 && <VaultPerformanceTestCard tests={vault.performanceTests.filter(t => t.sport === sport)} subscribedModules={need} allowedModules={need} sport={sport} userProfile={{ throwing_hand: data.profile?.throwing_hand ?? undefined, batting_side: data.profile?.batting_side ?? undefined, primary_position: data.profile?.position ?? undefined, date_of_birth: data.profile?.date_of_birth ?? undefined }} autoOpen onSave={async (type, results, sides) => { const result = await vault.savePerformanceTest(type, results, sides, sport); if (result.success) await embeddedSaved(6); return result; }} />}
     </AssessmentMode>
     <ReportInjuryDialog assessment open={painOpen} onOpenChange={setPainOpen} />
