@@ -1,7 +1,7 @@
 # Publish checklist — consolidated (Oct 27, 2026)
 
-Full current suite: **593 files / 4,861 tests passed**. Sixteen bounded groups; one timed-out group was split into four and all four exited successfully. The two subsequently added test files passed separately. Preview build: **passed**, latest observed entry October 27, 20:43:54 UTC.
-Nothing published; no cron or iOS changes. No new hosted athlete/test records were created. Existing owner TEST canary retained; its daily claim was reset for the requested manual run.
+Full current suite: **596 files / 4,876 tests passed**. Twenty bounded groups; two slow groups split into smaller batches, with four render/safety files run individually. Every final coverage batch exited 0; refreshed changed logging/evidence tests also passed. Preview build: **passed**, latest observed entry October 27, 21:15:48 UTC.
+Nothing published; no cron or iOS changes. No new hosted athlete/test records were created. One existing parked TEST drill's tag/video fields were privately snapshotted, edited through the real owner UI, restored and read back equal (automatic audit timestamp retained). Prior canary proof preserved, not repeated.
 
 | # | Item | Status |
 |---|------|--------|
@@ -42,4 +42,4 @@ Nothing published; no cron or iOS changes. No new hosted athlete/test records we
 - Owner overview and organization registration loaded with no overflow or page errors. Both selected without submitting or creating data.
 - Start-gate and assessment changed-flow proofs remain open; owner screenshots do not certify a gated athlete flow.
 
-**Ready to publish: no** — requested validator/completeness, separate primer, beginner scaling, identity audit, separate bunting/upcoming cards, recovery audit, Develop This Week, routine/fix-it evidence lifecycle and full library merge remain incomplete. Conditioning/unity/re-screen/offseason/coach paths and start/assessment/stale-chunk behavior still need positive affected-role phone proof. Supported lift-frequency warnings still require full safety-context review. Missing owner clips are not blockers.
+**Ready to publish: no** — requested validator/completeness, separate primer, beginner scaling, positive identity arithmetic proof, separate bunting/upcoming cards, wider recovery audit, saved weekly-development integration, routine/fix-it selection/evidence lifecycle and full library merge remain incomplete. Conditioning/unity/re-screen/offseason/coach paths and start/assessment/stale-chunk behavior still need positive affected-role phone proof. Supported lift-frequency warnings still require full safety-context review. Missing owner clips are not blockers.
