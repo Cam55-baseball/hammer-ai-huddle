@@ -21799,6 +21799,7 @@ export type Database = {
           surface_hint: string | null
           throw_compatible: boolean | null
           throwing_phase: string | null
+          tracking_measure_type: string | null
           training_age_legality: Json | null
           transfer_group: string | null
           travel_friendly: boolean | null
@@ -21909,6 +21910,7 @@ export type Database = {
           surface_hint?: string | null
           throw_compatible?: boolean | null
           throwing_phase?: string | null
+          tracking_measure_type?: string | null
           training_age_legality?: Json | null
           transfer_group?: string | null
           travel_friendly?: boolean | null
@@ -22019,6 +22021,7 @@ export type Database = {
           surface_hint?: string | null
           throw_compatible?: boolean | null
           throwing_phase?: string | null
+          tracking_measure_type?: string | null
           training_age_legality?: Json | null
           transfer_group?: string | null
           travel_friendly?: boolean | null
