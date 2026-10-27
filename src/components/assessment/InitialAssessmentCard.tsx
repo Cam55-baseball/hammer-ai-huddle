@@ -107,7 +107,21 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
   const input = { onboardingDone: false, lastSeasonDoneOrSkipped: !!(data.row?.last_season_saved_at || data.row?.last_season_skipped_at), movementScreenDone: !!data.row?.movement_done_at, s2Done: data.s2, analysesDone: data.analyses, sixWeekTestDone: data.tests, modules: sportModules, progress };
   const steps = assessmentSteps(input);
   const count = Object.values(steps).filter(s => s === "done").length;
-  const navigateStep = (id: StepId) => { if (steps[id] === "locked") return; setAnalysisModule(null); setStep(id); void save({ current_step: id }); };
+  const enteredPatch = (): Record<string, unknown> | null => {
+    const parsed = parseSeasonStats(stats);
+    if (!parsed) { setSaveError("Use zero or a positive number, or leave the answer blank."); return null; }
+    return { last_season_stats: parsed, movement_screen: answers, ...(Object.values(answers).includes("pain") ? { pain_flag: true } : {}) };
+  };
+  const navigateStep = (id: StepId) => {
+    if (saving || steps[id] === "locked") return;
+    const patch = enteredPatch();
+    if (!patch) return;
+    void (async () => {
+      const { error } = await supabase.from("profiles").update({ full_name: profile.full_name || null, position: profile.position || null }).eq("id", user.id);
+      if (error) { setSaveError("Couldn't save your profile. Try again."); return; }
+      if (await save({ ...patch, current_step: id })) { setAnalysisModule(null); setStep(id); }
+    })();
+  };
   // Only a successful embedded submission (or explicit navigation action)
   // records these steps. Pre-existing results remain available, not completion.
   const embeddedSaved = async (id: 4 | 6) => {
@@ -117,13 +131,14 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
   const record = async (state: "done" | "skipped") => {
     if (saving) return;
     const at = new Date().toISOString();
-    const patch: Record<string, unknown> = {};
+    const patch = enteredPatch();
+    if (!patch) return;
     const seasonStats = parseSeasonStats(stats);
     if (state === "done" && step === 2 && !seasonStats) {
       setSaveError("Use zero or a positive number, or leave the answer blank.");
       return;
     }
-    if (state === "done" && step === 1) {
+    if (step === 1) {
       const { error } = await supabase.from("profiles").update({ full_name: profile.full_name || null, position: profile.position || null }).eq("id", user.id);
       if (error) { setSaveError("Couldn't save your profile. Try again."); return; }
     }
@@ -141,11 +156,11 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
     const updated = { ...progress, [step]: state };
     const after = assessmentSteps({ ...input, progress: updated });
     const finished = Object.values(after).every(s => s === "done");
-    const next = ([1,2,3,4,5,6] as StepId[]).find(id => after[id] === "open") ?? step;
+    const next = Math.min(6, step + 1) as StepId;
     const saved = await save({ ...patch, step_progress: updated, current_step: next, ...(finished ? { completed_at: at } : {}) });
     if (!saved) return;
     if (step === 3 && anyPain) setPainOpen(true);
-    if (finished) close(); else { setStep(next); setAnalysisModule(null); }
+    if (finished || step === 6) close(); else { setStep(next); setAnalysisModule(null); }
   };
   return <>
     <Card className="flex flex-wrap items-center gap-4 border-primary/30 p-4">
