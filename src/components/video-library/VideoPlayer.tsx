@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ExternalLink, AlertTriangle, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { getEmbedInfo } from "@/lib/videoEmbed";
+import { getEmbedInfo, isDirectVideoFile } from "@/lib/videoEmbed";
 
 interface VideoPlayerProps {
   videoUrl: string | null;
@@ -18,8 +18,10 @@ export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlay
   const [failed, setFailed] = useState(false);
   /** Self-hosted clips only download once the viewer taps the cover. */
   const [started, setStarted] = useState(false);
-
-
+  useEffect(() => {
+    setFailed(false);
+    setStarted(false);
+  }, [videoUrl]);
 
   if (!videoUrl) {
     return (
@@ -31,11 +33,11 @@ export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlay
 
   // Auto-detected platform takes priority over the stored video_type so existing
   // rows tagged 'external' for X / TikTok start playing immediately.
-  if (info.platform === 'youtube' || info.platform === 'vimeo') {
+  if ((info.platform === 'youtube' || info.platform === 'vimeo') && info.embedUrl) {
     return (
       <div className="aspect-video rounded-lg overflow-hidden">
         <iframe
-          src={info.embedUrl!}
+          src={info.embedUrl}
           title={title}
           className="w-full h-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -45,12 +47,12 @@ export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlay
     );
   }
 
-  if (info.platform === 'twitter' || info.platform === 'tiktok') {
+  if ((info.platform === 'twitter' || info.platform === 'tiktok') && info.embedUrl) {
     return (
       <div className="space-y-2">
         <div className="aspect-video rounded-lg overflow-hidden bg-muted">
           <iframe
-            src={info.embedUrl!}
+            src={info.embedUrl}
             title={title}
             className="w-full h-full"
             allow="autoplay; encrypted-media; picture-in-picture; clipboard-write"
@@ -74,20 +76,20 @@ export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlay
   }
 
   // Stored as upload — direct video file
-  if (videoType === 'upload') {
+  if (videoType === 'upload' || isDirectVideoFile(videoUrl)) {
     // With a cover set we never download the clip until the athlete asks for it:
     // the poster paints instantly and phone data is only spent on a real tap.
     if (posterUrl && (!started || failed)) {
       return (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           data-testid="video-poster-play"
           aria-label={`Play ${title}`}
           onClick={() => {
             setFailed(false);
             setStarted(true);
           }}
-          className="relative block w-full aspect-video rounded-lg overflow-hidden bg-black group"
+          className="relative block h-auto p-0 w-full aspect-video rounded-lg overflow-hidden bg-muted group"
         >
           <img src={posterUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
           <span className="absolute inset-0 flex items-center justify-center">
@@ -95,7 +97,7 @@ export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlay
               <Play className="h-7 w-7 text-foreground" />
             </span>
           </span>
-        </button>
+        </Button>
       );
     }
     if (failed) {
@@ -128,12 +130,13 @@ export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlay
       );
     }
     return (
-      <div className="aspect-video rounded-lg overflow-hidden bg-black">
+      <div className="aspect-video rounded-lg overflow-hidden bg-muted">
         <video
           key={videoUrl}
           src={videoUrl}
           poster={posterUrl ?? undefined}
           controls
+          playsInline
           autoPlay={started}
           className="w-full h-full object-contain"
           // With a cover set we don't need to pull frames just to fill the box.

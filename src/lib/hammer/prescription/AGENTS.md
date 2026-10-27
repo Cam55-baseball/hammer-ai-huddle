@@ -1,6 +1,7 @@
 # Prescription rules
 - Final skill ordering uses only complete declared prep/drills/full-go/log stages and never moves owner slots or changes doses. Why: game-speed work must follow preparation without inferred intensity or new training.
 - Beginner defense guidance cannot remove required protective gear or add a competing receiving dose. Why: a tier note must not contradict the legal card's setup and volume.
+- Catcher framing declares four sets, one per zone, in the existing sets/reps syntax so the existing tier multiplier applies only to reps. Why: spatial-zone wording must not bypass beginner dose scaling.
 - Recovery exercise rows contain only timed mobility and breathing with their own setup/stop guidance; hydration, wake-time and injury-note reminders never become exercise results. Why: untracked advice must not create fake performed work or unrelated how-to text.
 - Whole-day rest uses shared explicit softRecovery identities at final-block and final-save boundaries, distinct from lift-spacing removals; recovery warmups bypass training anchors. Why: mobility labels and defense overrides cannot certify training as rest.
 - Bunting uses sourced evidence and active Vault catalog identities inside existing legal hitting slots; attempts replace swings one-for-one, owner/prep/full-go slots remain protected, whole off-season eligibility requires all four permitted quarters. Why: bunting may not create days, borrow unknown traits, bypass phase eligibility or add volume.

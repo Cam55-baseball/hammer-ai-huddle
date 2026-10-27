@@ -1,0 +1,1 @@
+- Shared playback resets failure/start state on source changes and detects direct media independently of legacy type, with inline phone playback. Why: one unsupported source must not prevent the next saved video from playing; this does not certify its codec.
