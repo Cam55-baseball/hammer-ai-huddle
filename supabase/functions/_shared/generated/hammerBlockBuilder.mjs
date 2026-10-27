@@ -4937,7 +4937,7 @@ var CATALOG = {
   // ================================================================ CATCHER
   "C:baseball:off": [
     d("Driveline one-knee receiving", "3\xD715 reps", "quiet glove, thumb up, catch the ball into the strike zone"),
-    d("Framing ladder \u2014 4 corners", "4 zones \xD7 8", "load the glove early, freeze on the catch"),
+    d("Framing ladder \u2014 4 corners", "4\xD78 reps (one set per zone)", "load the glove early, freeze on the catch"),
     d("Short-hop blocking angles", "3\xD710 (L/M/R)", "chin to chest, block ball down, keep it in front", "kneel on turf, coach short-hops from 20 ft"),
     d("Pop-time footwork \u2014 jab-replace to 2B", "3\xD78 dry, 2\xD75 with ball", "replace back foot, throw over front hip"),
     d("Foul-pop turn-and-find", "20 reps", "flip mask off away from ball, find it late")
@@ -4959,7 +4959,7 @@ var CATALOG = {
     d("Short-hop blocking angles", "3\xD710 (L/M/R)", "chin down, block down, redirect in front"),
     d("Pop-time to 2B \u2014 slapper timing", "3\xD78 dry + 2\xD75 live", "quick exchange, four-seam grip"),
     d("Slap-bunt read + barehand", "10 reps", "read runner speed, throw on the run"),
-    d("Framing ladder \u2014 4 corners", "4 zones \xD7 8", "quiet glove, freeze on catch")
+    d("Framing ladder \u2014 4 corners", "4\xD78 reps (one set per zone)", "quiet glove, freeze on catch")
   ],
   "C:softball:pre": [
     d("Receiving vs rise-ball", "3\xD710", "get on top of the ball \u2014 glove stays above the hand"),
