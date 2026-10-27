@@ -1176,74 +1176,11 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
       if (analysisError) {
         const safeError = await analysisErrorDetails(analysisError);
-        setAnalysisError({ ...safeError, terminal: [400,401,402,403,404].includes(safeError.status) });
+        setAnalysisError({ ...safeError, terminal: safeError.status !== 429 && safeError.status < 500 });
         setAnalyzing(false);
         toast.error(safeError.message);
         return;
-        /* Legacy scheduled retry is disabled: a provider failure must never
-           become canned coaching or queue another request after denial.
-        console.error("Analysis error:", analysisError);
-        setAnalysisError(analysisError);
 
-        // Try to extract the structured rejection payload the edge function
-        // returns (e.g. { error: "reject_low_resolution", detail: "..." }).
-        // supabase-js stuffs the raw Response on `error.context`.
-        let rejectReason: string | null = null;
-        let rejectDetail: string | null = null;
-        try {
-          const resp = (analysisError as any)?.context;
-          if (resp && typeof resp.json === "function") {
-            const body = await resp.clone().json();
-            if (body && typeof body.error === "string") {
-              rejectReason = body.error;
-              rejectDetail = typeof body.detail === "string" ? body.detail : null;
-            }
-          }
-        } catch { /* ignore parse failures, fall through to generic */ }
-
-        const friendly = friendlyRejectReason(rejectReason);
-
-        // Fair use: over 30 analyses this hour → the saved video waits and runs itself at the next opening.
-        let hourly: { resume_at?: string; error?: string } | null = null;
-        try {
-          const resp = (analysisError as any)?.context;
-          if (resp && typeof resp.json === "function") {
-            const b = await resp.clone().json();
-            if (b?.code === "hourly_limit") hourly = b;
-          }
-        } catch { /* ignore */ }
-        if (hourly) {
-          const at = hourly.resume_at ? new Date(hourly.resume_at) : new Date(Date.now() + 3600_000);
-          const when = at.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-          toast.info(`${hourly.error ?? "Analysis paused for this hour."} Starts at about ${when} if this page stays open.`, { duration: 15000 });
-          const body = { videoId: videoData.id, module, sport, userId: user.id, language: i18n.language, frames, frameExtractions, ...(landingFrameIndex !== null && { landingFrameIndex }) };
-          window.setTimeout(async () => {
-            setAnalyzing(true);
-            const { data: d2, error: e2 } = await supabase.functions.invoke("analyze-video", { body });
-            setAnalyzing(false);
-            if (e2) { showUnavailableReport("scheduled_retry"); toast.error(t('videoAnalysis.genericAnalysisError')); return; }
-            setAnalysis(normalizeAnalysisResponse(d2));
-            setAnalysisError(null);
-            toast.success("Your paused analysis is ready.");
-          }, Math.max(1000, at.getTime() - Date.now() + 2000));
-          missingReport("hourly_limit", `Your clip is saved. Analysis is waiting until about ${when}. Keep this page open for the retry.`);
-          return;
-        }
-
-        if (analysisError.message?.includes('429') || analysisData?.status === 429) {
-          toast.error(t('videoAnalysis.rateLimitError'));
-        } else if (analysisError.message?.includes('402') || analysisData?.status === 402) {
-          toast.error(t('videoAnalysis.paymentRequiredError'));
-        } else if (friendly) {
-          toast.error(friendly);
-          // Attach the friendly reason so the in-page failure card shows it too.
-          setAnalysisError({ ...(analysisError as any), friendlyMessage: friendly, rejectReason, rejectDetail });
-        } else {
-          toast.error(t('videoAnalysis.genericAnalysisError'));
-        }
-        missingReport("analysis_request", friendly ?? "This check did not finish. Retry your saved clip.");
-        return;
-        */
       }
 
       const normalized = normalizeAnalysisResponse(analysisData);
@@ -1379,20 +1316,10 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       if (analysisError) {
         console.error("Retry analysis error:", analysisError);
         const safeError = await analysisErrorDetails(analysisError);
-        setAnalysisError({ ...safeError, terminal: [400,401,402,403,404].includes(safeError.status) });
+        setAnalysisError({ ...safeError, terminal: safeError.status !== 429 && safeError.status < 500 });
         toast.error(safeError.message);
         return;
-        /*
-        
-        if (analysisError.message?.includes('429') || analysisData?.status === 429) {
-          toast.error(t('videoAnalysis.rateLimitError'));
-        } else if (analysisError.message?.includes('402') || analysisData?.status === 402) {
-          toast.error(t('videoAnalysis.paymentRequiredError'));
-        } else {
-          toast.error(t('videoAnalysis.genericAnalysisError'));
-        }
-        return;
-        */
+
       }
 
       const normalizedRetry = normalizeAnalysisResponse(analysisData);
