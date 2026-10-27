@@ -13,7 +13,7 @@ export function CoachExerciseAuthoring({ exercises, onChange }: { exercises: Exe
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState("");
   const items = (catalog.data ?? []).filter(item => item.name.toLowerCase().includes(search.toLowerCase()));
-  const units = (unit?: string) => [...new Set(["reps", "throws", "seconds", "feet", ...(unit ? [unit] : [])])];
+  const units = (unit?: string) => [...new Set(["reps", "reps per arm", "reps per leg", "reps each side", "throws", "seconds", "feet", ...(unit ? [unit] : [])])];
   const update = (id: string, values: Partial<Exercise>) => onChange(exercises.map(e => e.id === id ? { ...e, ...values } : e));
   const addCatalog = () => {
     const row = items.find(item => item.slug === selected);

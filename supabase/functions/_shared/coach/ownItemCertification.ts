@@ -14,7 +14,7 @@ import { ownerGear } from "../vault/ownerDefaults.ts";
 
 /** Measure units the existing judges already govern. Innings stay excluded:
  *  they have no exact count, so the arm ledger could never check them. */
-export const COACH_OWN_MEASURE_UNITS = ["reps", "total_reps", "throws", "pitches", "seconds", "feet"] as const;
+export const COACH_OWN_MEASURE_UNITS = ["reps", "reps per arm", "reps per leg", "reps each side", "total_reps", "throws", "pitches", "seconds", "feet"] as const;
 export type CoachOwnMeasure = (typeof COACH_OWN_MEASURE_UNITS)[number];
 
 export interface OwnItemInput {

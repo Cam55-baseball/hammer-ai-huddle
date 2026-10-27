@@ -1,4 +1,5 @@
 // supabase/functions/wk-generate-daily/index.ts
+import { applyLiveTracking } from "../_shared/vault/tracking.ts";
 // Hammer Workout & Speed — elite daily prescription generator.
 //
 // v2 rewrite:
@@ -1162,7 +1163,10 @@ const handler = async (req: Request): Promise<Response> => {
     if (blocksErr) throw blocksErr;
     if (catErr) throw catErr;
     // TEST-only Vault items reach only their listed accounts; Swap-only sprints are never built in.
-    const catalog = (catalogRaw ?? []).filter((m: any) => !String(m.slug ?? "").startsWith("swap_")
+    const { data: trackingVersions, error: trackingReadError } = await admin.from("exercise_vault_versions")
+      .select("slug,version,effective_from,payload,undone_at").is("undone_at", null).lte("effective_from", planDate);
+    if (trackingReadError) throw trackingReadError;
+    const catalog = applyLiveTracking(catalogRaw ?? [], trackingVersions ?? [], planDate).filter((m: any) => !String(m.slug ?? "").startsWith("swap_")
       && (!Array.isArray(m.visible_to) || m.visible_to.includes(user.id)));
     // Wave rebuild gate. Anything other than a literal `true` reads as off, so
     // a missing row, a null or a malformed value can never turn a dose change on.
@@ -2509,6 +2513,7 @@ const handler = async (req: Request): Promise<Response> => {
           why: movementWhy || slotContext || null,
           session_context: slotContext || null,
           cue: s.movement.cue,
+          tracking_measure_type: (s.movement as any).tracking_measure_type ?? null,
           ...(slot === "speed" && typeof distanceFeet === "number" && !/jump|bound|hop|pogo|landing/i.test(s.movement.slug) ? {
             run_rest: { version: "owner_20261021", seconds: sprintRestSeconds(distanceFeet), why: sprintRestWhy(distanceFeet) },
           } : {}),

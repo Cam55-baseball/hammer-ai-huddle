@@ -39,6 +39,14 @@ type Draft = Record<string, string>[];
 export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   const slug = `${rx.movement_slug} ${rx.movement_name}`.toLowerCase();
   const rows = Math.max(1, rx.sets ?? rx.total_reps ?? 1);
+  const liveMeasure = rx.why_payload?.tracking_measure_type;
+  if (liveMeasure && !['bunt_attempts'].includes(liveMeasure)) {
+    const aliases: Record<string, string> = { throw_count: 'throws', check_off: 'checkoff' };
+    const fields = fieldsForMeasure((aliases[liveMeasure] ?? liveMeasure) as Parameters<typeof fieldsForMeasure>[0]);
+    if (fields) return { rows: Math.max(1, rx.sets ?? 1), fields: fields.map(field => ({ ...field,
+      prefill: field.key === 'time' ? rx.duration_seconds : field.key === 'distance' ? rx.distance_feet : field.key === 'weight' ? null : declaredCount(rx),
+    })) };
+  }
   const decided = ownerExerciseMeasure(rx.movement_slug ?? "");
   if (decided) return { rows: Math.max(1, rx.sets ?? 1), fields: fieldsForMeasure(decided).map(field => ({ ...field,
     prefill: field.key === "distance" ? rx.distance_feet : declaredCount(rx),
