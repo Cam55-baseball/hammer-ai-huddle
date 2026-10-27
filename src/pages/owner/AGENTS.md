@@ -1,0 +1,1 @@
+- Builder video-manager shortcuts open the existing shared library in a separate tab, retaining unsaved editor state. Why: skill and exercise attachments must use one library without losing draft work or merging distinct catalogs.
