@@ -60,4 +60,4 @@
 - Stray TEST cleanup snapshots exact identities privately; fixed-ID readback and job/list/stat exclusions certify parking, never a shrinking name query. Why: hidden flags alone cannot prove zero stray data.
 - Exact exercise measurement decisions are shared by the library, inline logger and log-sheet resolver; yard entry converts only at the display boundary, keeping canonical distance in feet. Why: ambiguous names must not diverge between logging paths or change existing distance readers.
 - Mastery: gated judges, weekly boost, JWT-only new days; saved sport, no backfill. Why: provenance.
-- Read nested AGENTS.md for scoped rules, including owner builders.
+- Read nested AGENTS.md for owner, logging and other scoped rules.

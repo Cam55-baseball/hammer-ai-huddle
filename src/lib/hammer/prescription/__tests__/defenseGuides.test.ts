@@ -27,8 +27,8 @@ describe("defense guides — full drill-name coverage", () => {
   it("beginner receiving and blocking retain the card dose and required protective gear", () => {
     const rx = selectDefenseDrills({ position: "C", sport: "baseball", seasonPhase: "off", tier: "beginner" });
     expect(rx).not.toBeNull();
-    const receiving = guideForDefense("One-knee receiving");
-    const blocking = guideForDefense("Blocking short-hop");
+    const receiving = guideForDefense("Receiving primer — bottom of zone");
+    const blocking = guideForDefense("Short-hop blocking angles");
     expect(receiving).toBeTruthy();
     expect(blocking).toBeTruthy();
     expect(receiving?.tierNotes.beginner).not.toMatch(/20 catches|tennis balls/);
