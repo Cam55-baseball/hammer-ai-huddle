@@ -33,7 +33,7 @@ describe("autosave + automatic completion (no Save log, no Completed button)", (
     expect(document.querySelector("[data-auto-status]")).toBeNull();
   });
 
-  it.each([[1, "cut_short", "Cut short"], [4, "completed", "Done"]])("%i timed repeats autosave as %s with the automatic label", async (count, outcome, label) => {
+  it.each([[1, "cut_short", "Work recorded"], [4, "completed", "Done"]])("%i timed repeats autosave as %s with the automatic label", async (count, outcome, label) => {
     render(<InlinePrescriptionLog rx={rx} />);
     for (let i = 1; i <= Number(count); i++) typeSeconds(i, "12", "34");
     expect(screen.getByText(label)).toBeInTheDocument();

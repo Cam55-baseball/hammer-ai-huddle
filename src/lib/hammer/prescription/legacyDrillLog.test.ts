@@ -41,6 +41,9 @@ describe("legacy drill visible log rows", () => {
       { key: "reps_0", label: "hip-to-release path · each direction reps", prefill: 10 }, { key: "reps_1", prefill: 12 }, { key: "reps_2", prefill: 12 }, { key: "reps_3", prefill: 10 },
     ] });
   });
+  it("uses the saved recovery dose, not the catalog's usual two sets", () => {
+    expect(legacyDrillLogSpec("throwing", "Band series", "ER 1x12, IR 1x12, retractions 1x10")).toMatchObject({ rows: 1, fields: [{ prefill: 12 }, { prefill: 12 }, { prefill: 10 }] });
+  });
 
   it("times warm-up and recovery work in seconds, never decimal minutes", () => {
     expect(legacyDrillLogSpec("warmup", "Tissue prep", "5 minutes total")).toEqual({

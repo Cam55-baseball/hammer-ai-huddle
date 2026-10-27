@@ -77,7 +77,7 @@ export function CardOutcomeLog({ rx, disabled }: { rx: WkRx; disabled?: boolean 
     <div className="space-y-2" data-card-outcome-log>
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[11px] font-medium">Status:</span>
-        <span data-auto-status={status ?? "none"} className="text-[11px] font-semibold">{status ? AUTO_STATUS_LABEL[status] : "Not logged yet — enter your work above"}</span>
+        <span data-auto-status={status ?? "none"} className="text-[11px] font-semibold">{status === "cut_short" ? "Work recorded" : status ? AUTO_STATUS_LABEL[status] : "Not logged yet — enter your work above"}</span>
         <Button type="button" size="sm" variant={status === "skipped" ? "default" : "outline"} className="ml-auto h-9 text-xs" disabled={saving || disabled} onClick={toggleSkip}>
           {status === "skipped" ? "Undo skip" : "Skip"}
         </Button>

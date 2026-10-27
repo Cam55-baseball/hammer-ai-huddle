@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LegacyDrillInlineLog } from "./LegacyDrillInlineLog";
+import { FocusSession } from "../cards/FocusSession";
 
 describe("LegacyDrillInlineLog return from background", () => {
   beforeEach(() => {
@@ -18,6 +19,15 @@ describe("LegacyDrillInlineLog return from background", () => {
     fireEvent.change(screen.getByLabelText("ir reps 1"), { target: { value: "12" } });
     fireEvent.blur(screen.getByLabelText("ir reps 1"));
     expect(saved.mock.lastCall?.[0].rounds).toEqual([{ set: 1, reps_0: 11, reps_1: 12, reps_2: null }]);
+  });
+  it("guided circuits require every component entered before Next can save the existing set", () => {
+    render(<FocusSession active storageKey="compound-focus" onExit={() => {}}><LegacyDrillInlineLog modality="throwing" name="Band series" dosage="ER 1x12, IR 1x12, retractions 1x10" storageKey="compound-focused" completed={false} onSave={vi.fn()} /></FocusSession>);
+    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("er reps 1"), { target: { value: "11" } });
+    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+    fireEvent.blur(screen.getByLabelText("ir reps 1"));
+    fireEvent.blur(screen.getByLabelText("retractions reps 1"));
+    expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
   });
 
   it.each([

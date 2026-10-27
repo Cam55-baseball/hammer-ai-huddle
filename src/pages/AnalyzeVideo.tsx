@@ -1,4 +1,5 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
+import { SavedMovementSummary } from "@/components/assessment/SavedMovementSummary";
 import { Fragment, useEffect, useState, useRef } from "react";
 import { runClipPreflight, type PreflightVerdict } from "@/lib/biomech/pose/clipPreflight";
 import { ClipPreflightCard } from "@/components/analyze/ClipPreflightCard";
@@ -1376,6 +1377,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
         {/* Analysis is upload-only: one clip, deeply analysed. Live recording
             lives in DelayCam. */}
+        <SavedMovementSummary />
         {!videoPreview && (
           <div className="space-y-4">
             {assessment && <HighFpsCapture module={assessment.module} sport={assessment.sport} onAnalysis={(report, videoId) => { const normalized = normalizeAnalysisResponse(report); setCurrentVideoId(videoId); setAnalysis(normalized); setAnalysisError(null); assessment.onSaved?.(normalized); }} />}

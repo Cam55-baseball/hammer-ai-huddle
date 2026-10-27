@@ -106,8 +106,8 @@ export function LegacyDrillInlineLog({
       if (outcome) onOutcome?.(outcome, how_hard);
     }
   };
-  const edit = (row: number, key: string, value: string, delay?: number) =>
-    persist(rounds.map((r, i) => i === row ? { ...r, [key]: value.replace(/[^\d.]/g, ""), [TOUCHED]: "1", ...(key.startsWith("reps_") ? { [`_entered_${key}`]: "1" } : {}) } : r), { delay });
+  const edit = (row: number, key: string, value: string, delay?: number, fromTimer = false) =>
+    persist(rounds.map((r, i) => i === row ? { ...r, [key]: value.replace(/[^\d.]/g, ""), [TOUCHED]: "1", ...(key === "time" && !fromTimer ? { _manual_time: value } : {}), ...(key.startsWith("reps_") ? { [`_entered_${key}`]: "1" } : {}) } : r), { delay });
   const touch = (row: number) => {
     if (rounds[row]?.[TOUCHED] === "1") { void autosave.flush(); return; }
     persist(rounds.map((r, i) => i === row ? { ...r, [TOUCHED]: "1" } : r), { delay: 0 });
@@ -120,8 +120,8 @@ export function LegacyDrillInlineLog({
   const kindFor = (target: number | null) => timeKindFor({ stopwatch, targetSeconds: target });
   const distance = spec.fields.find(f => f.key === "distance")?.prefill;
   const explicitRest = dosage.match(/rest\s*:?\s*(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?)/i);
-  const rest = explicitRest ? Number(explicitRest[1]) * (/min/i.test(explicitRest[2]) ? 60 : 1) : modality === "warmup" ? 30 : null;
-  const focus = useFocusExercise({ id: storageKey, name, rows: spec.rows, ready: rounds.map(row => entered([row]).length > 0),
+  const rest = explicitRest ? Number(explicitRest[1]) * (/min/i.test(explicitRest[2]) ? 60 : 1) : modality === "warmup" || spec.fields.some(f => f.key.startsWith("reps_")) ? 30 : null;
+  const focus = useFocusExercise({ id: storageKey, name, rows: spec.rows, ready: rounds.map(row => entered([row]).length > 0 && spec.fields.filter(f => f.key.startsWith("reps_")).every(f => row[`_entered_${f.key}`] === "1" && Number(row[f.key]) > 0)),
     restSeconds: modality === "speed" && stopwatch ? sprintRestSeconds(distance) : rest,
     bases: modality === "conditioning" ? prescribedBases(name, distance) : null,
     save: async () => { if (!(await autosave.flush())) throw new Error("Save pending"); },
@@ -130,8 +130,8 @@ export function LegacyDrillInlineLog({
     <div hidden={!focus.visible} className="space-y-2">
     <div hidden={focus.active && focus.resting} className="space-y-2">
     {logHost && <h4 className="text-sm font-semibold">{name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>}
-    {spec.fields.some(f => f.key === "time") && <ExerciseTimer key={focus.active ? focus.row : "regular"} target={stopwatch ? undefined : spec.fields.find(f => f.key === "time")?.prefill ?? undefined}
-      onRecord={value => { const next = focus.active ? focus.row : rounds.findIndex(r => r._t !== "1" || !r.time); if (next >= 0) edit(next, "time", String(value), 0); }} />}
+    {spec.fields.some(f => f.key === "time") && <ExerciseTimer key={focus.active ? focus.row : "regular"} target={stopwatch ? undefined : spec.fields.find(f => f.key === "time")?.prefill ?? undefined} hasEnteredValue={rounds.some(r => Number(r._manual_time) > 0)}
+      onRecord={value => { const next = focus.active ? focus.row : rounds.findIndex(r => r._t !== "1" || !r.time); if (next >= 0 && !(Number(rounds[next]?._manual_time) > 0)) edit(next, "time", String(value), 0, true); }} />}
     {!focus.active && (modality === "speed" || modality === "conditioning") && <RestTimer label="Rest between repeats" seconds={modality === "speed" ? sprintRestSeconds(spec.fields.find(f => f.key === "distance")?.prefill) : null} />}
     <div className={spec.fields.length > 2 ? "hidden" : "grid gap-1.5 px-1 text-[10px] uppercase text-muted-foreground"} style={{ gridTemplateColumns: cols }}>
       <span>Set</span>
@@ -148,7 +148,7 @@ export function LegacyDrillInlineLog({
     ))}
     <div className="flex flex-wrap items-center justify-between gap-2">
       {!focus.active && <Button type="button" size="sm" variant="outline" className="h-9" onClick={addSet}><Plus className="mr-1 h-3.5 w-3.5" />Add set</Button>}
-      {status && <span data-auto-status={status} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status === "cut_short" ? "bg-muted text-foreground" : "bg-primary/15 text-primary"}`}>{AUTO_STATUS_LABEL[status]}</span>}
+      {status && <span data-auto-status={status} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status === "cut_short" ? "bg-muted text-foreground" : "bg-primary/15 text-primary"}`}>{status === "cut_short" ? "Work recorded" : AUTO_STATUS_LABEL[status]}</span>}
     </div>
     {logged.length > 0 && primary && <p data-prescribed-vs-done className="text-[11px] text-muted-foreground">Prescribed: {spec.rows} {spec.rows === 1 ? "set" : "sets"}{primary.prefill ? ` × ${primary.key === "time" ? formatTime(kindFor(primary.prefill), primary.prefill) : `${primary.prefill} ${primary.label.toLowerCase()}`}` : ""} · Done: {logged.length} {logged.length === 1 ? "set" : "sets"}</p>}
     <SavedIndicator state={autosave.state} />
@@ -167,7 +167,7 @@ export function LegacyDrillInlineLog({
       <div className="space-y-2" data-card-outcome-log>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[11px] font-medium">Status:</span>
-          <span data-auto-status={status ?? "none"} className="text-[11px] font-semibold">{status ? AUTO_STATUS_LABEL[status] : "Not logged yet — enter your work above"}</span>
+          <span data-auto-status={status ?? "none"} className="text-[11px] font-semibold">{status === "cut_short" ? "Work recorded" : status ? AUTO_STATUS_LABEL[status] : "Not logged yet — enter your work above"}</span>
           <Button type="button" size="sm" variant={skipped ? "default" : "outline"} className="ml-auto h-9 text-xs" onClick={() => { const s = !skipped; setSkipped(s); persist(rounds, { skip: s, delay: 0 }); }}>{skipped ? "Undo skip" : "Skip"}</Button>
         </div>
         <label className="flex items-center gap-2 text-[11px]">
