@@ -13,3 +13,4 @@
 - Unknown-duration guided rest persists its pending state; Finished flushes canonical entries before declared rest starts. Why: reloads and additional navigation buttons must not replay a save or bypass recovery.
 - Guided rest hides the mounted work surface without unmounting canonical rows; one timer reset/restart control changes with timer state. Why: recovery is a distinct page and removing duplicate controls must preserve drafts and active elapsed time.
 - Cut-short presentation belongs to a known-target early stopped timer without a manual value; partial numeric rows say Work recorded without changing canonical completion outcomes. Why: UI wording must not recalculate performed work or mislabel typed entries.
+- Component timers reset by canonical row identity and use only that row's manual-time flag. Why: an earlier circuit component must not supply elapsed time or suppress another component's timer outcome.
