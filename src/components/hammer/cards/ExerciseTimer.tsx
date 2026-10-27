@@ -43,8 +43,10 @@ export function ExerciseTimer({ target, onRecord }: { target?: number; onRecord:
     <div className="flex flex-wrap gap-2">
       <Button size="sm" variant="outline" onClick={running ? pause : () => start()} aria-label={running ? "Pause timer" : elapsed > 0 && !stopped ? "Resume timer" : "Start timer"} title={running ? "Pause timer" : elapsed > 0 && !stopped ? "Resume timer" : "Start timer"}>{running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}</Button>
       <Button size="sm" variant="outline" disabled={stopped || elapsed === 0 && !running} onClick={record} aria-label="Stop timer" title="Stop timer"><Square className="h-4 w-4" /></Button>
-      <Button size="sm" variant="outline" onClick={() => { pause(); accumulated.current = 0; setElapsed(0); setStopped(false); }} aria-label="Reset timer" title="Reset timer"><RotateCcw className="h-4 w-4" /></Button>
-      <Button size="sm" variant="outline" onClick={() => start(true)} aria-label="Restart timer" title="Restart timer"><RotateCcw className="h-4 w-4" /><Play className="ml-1 h-3 w-3" /></Button>
+      <Button size="sm" variant="outline" onClick={() => {
+        if (running || elapsed > 0 && !stopped) { start(true); return; }
+        pause(); accumulated.current = 0; setElapsed(0); setStopped(false);
+      }} aria-label={running || elapsed > 0 && !stopped ? "Restart timer" : "Reset timer"} title={running || elapsed > 0 && !stopped ? "Restart timer" : "Reset timer"}><RotateCcw className="h-4 w-4" /></Button>
     </div>
   </div>;
 }
