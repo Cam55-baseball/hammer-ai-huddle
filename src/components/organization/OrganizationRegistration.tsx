@@ -53,6 +53,7 @@ export function OrganizationRegistration({ existingOrg }: OrganizationRegistrati
             <SelectContent>
               <SelectItem value="baseball">Baseball</SelectItem>
               <SelectItem value="softball">Softball</SelectItem>
+              <SelectItem value="both">Both</SelectItem>
             </SelectContent>
           </Select>
         </div>

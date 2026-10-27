@@ -53,7 +53,7 @@ export default function OrganizationDashboard() {
           <>
           <SendAthleteRequest organizationId={activeOrg.id} inviteCode={activeOrg.invite_code} orgName={activeOrg.name} />
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="players">Players</TabsTrigger>
               <TabsTrigger value="compare">Compare</TabsTrigger>

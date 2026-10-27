@@ -28,9 +28,11 @@ export function RecordsShowCard() {
     queryKey: ["records-show", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const id = user!.id;
-      const [games, checkins, clips, lifts, pairsRes] = await Promise.all([
+      if (!user) throw new Error("Sign in first");
+      const id = user.id;
+      const [games, practices, checkins, clips, lifts, pairsRes] = await Promise.all([
         span("gp_games", "game_date", id, (q) => q.in("status", ["final", "draft"]).is("deleted_at", null)),
+        span("performance_sessions", "session_date", id, (q) => q.in("session_type", ["solo_work", "team_session", "lesson", "live_abs"]).is("deleted_at", null)),
         span("vault_focus_quizzes", "created_at", id),
         span("videos", "created_at", id, (q) => q.eq("status", "completed")),
         span("wk_session_logs", "plan_date", id),
@@ -38,8 +40,9 @@ export function RecordsShowCard() {
       ]);
       const kinds: RecordKind[] = [
         { key: "games", label: "Games logged", ...games, unlocks: "Log your games so your plan can see what each one took out of you." },
+        { key: "practices", label: "Practices logged", ...practices, unlocks: "Log your practice so Hammer can learn from your saved work." },
         { key: "checkins", label: "Check-ins", ...checkins, unlocks: "Do your morning and night check-ins so your plan knows how you're feeling." },
-        { key: "clips", label: "Clips analysed", ...clips, unlocks: "Upload a clip to get your swing or throw measured." },
+        { key: "clips", label: "Clips analysed", ...clips, unlocks: "Upload a hitting, pitching or throwing clip for coaching." },
         { key: "lifts", label: "Lifts logged", ...lifts, unlocks: "Log your lifts so your plan can match your last sessions." },
       ];
       return { show: buildRecordsShow({ kinds, pairs: (pairsRes.data ?? []) as any }), pairsFailed: !!pairsRes.error };

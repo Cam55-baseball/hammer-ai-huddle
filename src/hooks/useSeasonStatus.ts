@@ -164,6 +164,7 @@ export function useSeasonStatus() {
       if (suggestedPhase) mutation.mutate({ season_status: suggestedPhase });
     },
     updateSeasonStatus: mutation.mutate,
+    updateSeasonStatusAsync: mutation.mutateAsync,
     phaseState,
   };
 }

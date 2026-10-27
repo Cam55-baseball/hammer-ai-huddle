@@ -95,7 +95,6 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
   return <Context.Provider value={{ active, cursor, currentId: current?.id, register, refresh }}>
     {active && <section data-focus-session className="mb-3 space-y-2 border-b border-border pb-3">
       <h3 className="text-base font-semibold">{current ? `${current.name} · Set ${cursor.row + 1} of ${current.rows}` : "End of guided sets"}</h3>
-      {current?.bases && <p className="text-xs text-muted-foreground">Base count: {cursor.conditioningBases ?? conditioning.state.bases} of 4</p>}
       {cursor.restingUntil != null && <RestTimer key={cursor.restStartedAt} label="Rest before the next set" seconds={cursor.restSeconds} initialStartedAt={cursor.restStartedAt} managed />}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="flex flex-wrap gap-2">

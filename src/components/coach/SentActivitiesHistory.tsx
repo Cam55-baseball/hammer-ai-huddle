@@ -117,11 +117,11 @@ export function SentActivitiesHistory() {
                     {/* Content */}
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-start justify-between gap-2 flex-wrap">
-                        <div>
-                          <h4 className="font-semibold truncate">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold break-words">
                             {activity.template_snapshot.title}
                           </h4>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
                             <span>→</span>
                             <Avatar className="h-5 w-5">
                               <AvatarImage src={activity.recipient?.avatar_url || undefined} />
@@ -146,7 +146,7 @@ export function SentActivitiesHistory() {
                       )}
 
                       {/* Dates */}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                         <span>
                           {t('sentActivity.sentOn', 'Sent')}: {format(new Date(activity.sent_at), 'MMM d, yyyy')}
                         </span>

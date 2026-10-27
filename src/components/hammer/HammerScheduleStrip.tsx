@@ -79,6 +79,9 @@ export function HammerScheduleStrip() {
                 Mark in-season
               </Button>
             )}
+            <Button size="sm" variant="outline" className="min-h-11 h-auto whitespace-normal text-xs" onClick={() => updateSeasonStatus({ season_status: "off_season" })}>
+              Offseason is beginning
+            </Button>
             <Button
               size="sm"
               variant="outline"

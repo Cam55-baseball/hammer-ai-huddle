@@ -525,7 +525,7 @@ export function resolveDefenseTier(
   trainingAgeYears: number | null | undefined,
   phase: DefensePhase | "post" | "unknown" | string | null | undefined,
 ): DefenseTier {
-  const age = typeof trainingAgeYears === "number" && trainingAgeYears >= 0 ? trainingAgeYears : 1;
+  const age = typeof trainingAgeYears === "number" && Number.isFinite(trainingAgeYears) && trainingAgeYears >= 0 ? trainingAgeYears : 1;
   let base: DefenseTier =
     age < 1 ? "beginner" : age < 3 ? "developing" : age < 6 ? "advanced" : "elite";
   const p = (phase ?? "").toString().toLowerCase();
