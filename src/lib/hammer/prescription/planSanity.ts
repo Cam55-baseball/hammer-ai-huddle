@@ -7,6 +7,6 @@ export function enforceSkillStageOrder(blocks: readonly PrescribedBlock[]): Pres
       block.drills.some(drill => !drill.stage || drill.ownerDrillId || drill.prescriptionOrigin === 'owner')) return block;
     const drills = [...block.drills].sort((a,b) => (a.stage ? ORDER[a.stage] : 0) - (b.stage ? ORDER[b.stage] : 0));
     if (drills.every((drill,index) => drill === block.drills[index])) return block;
-    return { ...block, drills };
+    return { ...block, drills, steps: drills.map(d => d.setup ? `${d.name} — ${d.dosage} (${d.setup})` : `${d.name} — ${d.dosage}`) };
   });
 }

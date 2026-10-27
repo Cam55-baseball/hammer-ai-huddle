@@ -143,7 +143,7 @@ export function DrillCmsManager() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Drill CMS</h2>
+      <h2 className="text-lg font-semibold">Legacy drill library</h2>
       <p className="text-sm text-muted-foreground">Activity types: fielding, hitting, pitching, throwing and baserunning. Library drills, positions, tags and pending reviews.</p>
       <Tabs defaultValue="library">
         <TabsList>

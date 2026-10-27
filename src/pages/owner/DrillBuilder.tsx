@@ -239,7 +239,7 @@ export default function DrillBuilder() {
             <p className="text-sm text-muted-foreground">Activity types: baseball and softball hitting, pitching, throwing, fielding and baserunning; Hammers Today skill, warm-up and defense; defensive library.</p>
             <p className="text-sm text-muted-foreground">Create and edit drills for every place they appear. Usage counts show how often drills are used, not whether they work.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <BuilderLibraryLink />
             <Button variant="outline" onClick={() => setRequestOpen(true)}>Request a new fault</Button>
             <Button onClick={() => setDraft({ ...EMPTY, steps: [""] })}><Plus className="mr-1 h-4 w-4" />New drill</Button>

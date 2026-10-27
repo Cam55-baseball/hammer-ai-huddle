@@ -130,7 +130,7 @@ export function certifyConditioning(input: CertifyConditioningInput): CertifyCon
   const hardCategories = new Set(['alactic_power', 'repeated_sprint', 'lactic_capacity']);
   const hasRecovery = categorized.some(c => c.conditioning_category === 'recovery_flush');
   for (const movement of categorized) {
-    if (movement.conditioning_category && hardCategories.has(movement.conditioning_category) && (recoveryOnly || hasRecovery && rxs.some(rx => rx.movement_slug === 'rc_breathing_reset'))) {
+    if (movement.conditioning_category && hardCategories.has(movement.conditioning_category) && (recoveryOnly || hasRecovery)) {
       fatal.push({code:'cond_incompatible_recovery',message:'A breathing reset or recovery-only card cannot include high-intent conditioning.',slug:movement.slug});
     }
   }
