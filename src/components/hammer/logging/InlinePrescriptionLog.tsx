@@ -154,7 +154,7 @@ export function enteredPrescriptionRounds(rounds: Draft, spec: ReturnType<typeof
   const timedRepeat = spec.fields.some(f => f.key === "distance") && spec.fields.some(f => f.key === "time");
   return rounds.map((r, i) => ({ r, i }))
     .filter(({ r }) => !opts.requireTouch || r[TOUCHED] === "1")
-    .map(({ r, i }) => ({ set: i + 1, ...Object.fromEntries(Object.entries(r).filter(([k]) => k !== TOUCHED).map(([k, v]) => [k, v === "" ? null : Number(v)])) }) as Record<string, number | null>)
+    .map(({ r, i }) => ({ set: i + 1, ...Object.fromEntries(Object.entries(r).filter(([k]) => !k.startsWith("_")).map(([k, v]) => [k, v === "" ? null : Number(v)])) }) as Record<string, number | null>)
     .filter(r => timedRepeat ? typeof r.time === "number" && r.time > 0 : Object.entries(r).some(([k, v]) => k !== "set" && typeof v === "number" && Number.isFinite(v) && v > 0));
 }
 
