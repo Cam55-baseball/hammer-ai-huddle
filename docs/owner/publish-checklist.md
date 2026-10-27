@@ -2,6 +2,50 @@
 
 ## October 27 urgent run — current status
 
+### October 27 run (6), final batch — current verdict
+
+**Ready to publish: NO.** The urgent list is not fully implemented or fully proven. Exact blockers: four remaining original sport/module clip paths and entitled embedded upload; gated coach movement readback/integration and populated athlete observations; effective existing-item Vault tracking plus coach per-side tracking; mixed/unequal preparation circuits; real Finished → save → rest → reload; and program/sport baserunning generation proof. No additional live functions, migrations, publish, cron, schedules or iOS changes this run.
+
+- Added narrow **self-only** saved movement observations on Today and the analysis page. Missing sides remain Not measured; scores retain their kind; no diagnosis, causal explanation or dose changes. No direct coach health read was added; its scoped server read remains open.
+- Existing Vault editor initializes tracking from the catalog rather than always reps; saved drafts/versions still win. Audit found existing non-bunt version tracking is not applied by the generator: the catalog update branch only handles new/bunt rows. This remains a real implementation gap, not a completed tracking fix.
+- Partial numeric logs now read **Work recorded** without changing existing canonical completion outcomes. A known-target timer stopped early without a manually entered time shows **Cut short**; typed time is retained rather than overwritten by a later timer stop. Rest counters and saved dose rules are unchanged.
+- Equal-set rep circuits require each component entered/confirmed before Next; default preparation rest is 30 seconds unless a rest is declared. The run-5 header concern is **resolved without changing training**: the actual saved day's dose is `1x`, so Set 1 of 1 is correct; the usual catalog `2x` was not today's prescription.
+- Phone checks: 390×844 throwing focus and fully loaded hitting analysis inspected; zero page errors or horizontal overflow. Available session is **Test Dummyplayer**, not owner or independent coach proof. Owner Vault visit redirects to dashboard; no owner-edit UI proof is claimed. Saved movement summary correctly absent with no populated observations; populated UI remains unverified. No workout values, assessment values, hosted TEST additions or cleanup targets were created.
+- Full-suite and final preview results are recorded below after all bounded groups finish. Prior completed paid clip/canary proofs were not repeated.
+
+#### 21-item status
+“Built” means implementation exists, not that every requested role/sport path is certified.
+
+| # | Owner item | Status and exact remaining gap |
+|---|---|---|
+| 1 | Original clips, both sports, normal + embedded | **Partial proof:** original baseball hitting/pitching normal upload/save/display/replay passed previously. Baseball throwing, softball hitting/pitching/throwing and entitled embedded paths need original clips/access. |
+| 2 | Private media, insert access, enum, switch, conversion, embed audit | **Built/audited:** signing/self insert, conversion and allowed analysis modules checked; embedded subscription union/saved-refresh repaired. No universal outage reproduced; other paths remain unproven. |
+| 3 | Every upload ends with honest saved/displayed report | **Partial:** saved terminal/refusal reports and report-write retry built/live from earlier runs. Persistent storage failure honestly returns saved:false; pre-upload failure cannot claim a saved clip report. No terminal-provider model switching. |
+| 4 | Sport/position-specific analysis | **Built, partial proof:** canonical catcher/infield/outfield/pitcher throwing context; separate softball pitching path. Unsupported standalone fielding/catching/bunting analysis contract not added; full role/video matrix open. |
+| 5 | Fixture E2E + daily owner canary + SQL | **Built/proven previously:** real fixture save/display/readback and manual canary pass; owner alert path. Cron SQL delivered, intentionally unapplied; cross-sport fixture matrix open. |
+| 6 | Rich embedded analysis results | **Built, proof open:** existing rich report cards and saved feedback mounted; subscribed-player embedded result UI not exercised. |
+| 7 | Optional assessment Back/Skip/Next, final Save & exit | **Built/partial proof:** all nested flushes await canonical saves; failure stays. Prior real body Next pass; complete populated six-step role reload open. |
+| 8 | Subscription-required tests, categories/order | **Built/tested:** active matching-sport module union, categorized preferred order; actual entitled-player full list proof open. |
+| 9 | In-depth sport/subscription season stats | **Built/tested:** pitching/hitting/defense/running group fields; populated cross-sport module UI save/reload open. |
+| 10 | Fielding/throwing goal corrections | **Built/tested:** Clean hands, Improve footwork, Routine plays, Arm health, Improve throw carry; retired throwing transfer/long-toss choices, legacy saves readable. |
+| 11 | Bilateral professional movement + plan/coach/analysis | **Partial:** 15 observations/how-to/scores/history/arc, existing coach writer, self-only Today/analysis summary. Coach scoped reader, causal-safe explanation integration and populated role save/readback remain open; no dose effects claimed. |
+| 12 | Editable tracking + body-part labels | **Partial:** Vault selection/init and coach custom-unit controls, explicit limb labels/tests. Existing non-bunt Vault tracking propagation and full coach per-side semantics remain unimplemented/unproven. |
+| 13 | Remove fourth timer control | **Built/tested/phone inspected previously:** three state-aware timer controls; active hundredths retained. |
+| 14 | Remove empty warm-up Drills shell after Start | **Built/tested/phone inspected previously:** hidden during focus, canonical work retained. |
+| 15 | Remove nonfunctional top Start after beginning | **Built/tested/phone inspected:** top control removed once focus begins. |
+| 16 | Typed value enables Next; Finished auto-rest; cut-short rule | **Partial:** individual typed entries ready immediately; circuit readiness requires every component; saves precede managed rest; timer-only cut-short presentation. Full real athlete save/rest/reload and all specialized logger paths open. |
+| 17 | Efficient rest, warm-up about 30 s | **Built/tested within safety:** warm-up/rep circuit fallback 30 s, declared rest and sprint/four-base recovery preserved. No global shortening or schedule change. |
+| 18 | Royal/Tex only on their prescribed items | **Built/tested previously:** unrelated exercise links removed; prescribed tool identity retained. |
+| 19 | Throw primer included in workout/focus | **Partial:** saved preparation mounted first, separate component reps phone-visible and equal-set readiness tested. Mixed duration/unequal-set circuits still need explicit component rows. |
+| 20 | All sport skill practice-log buttons | **Built/tested, role proof open:** fielding/hitting/pitching/throwing/baserunning and bunting paths; matching canonical session readback retained. Complete affected-role both-sport save/return not certified. |
+| 21 | Legal baserunning per program/sport | **Audit incomplete:** builder has legal baseball/softball read/footwork/scenario work; pitcher-only has no baserunning weekly-goal boost, 5Tool/Golden 2Way do. Conditioning recognizes declared sport/base routes only. No universal absence reproduced or dose added; actual program generation matrix and inaccessible leg-protected IQ destination remain open. |
+
+#### Updated player/coach/owner guide
+- **Players:** Back, Skip and Next save your entered assessment answers; failed saves keep you there. Final step is Save & exit. Leave unmeasured movement values blank. Saved observations appear separately on Today/analysis and do not explain a cause or change your workout.
+- **Players:** enter each prescribed circuit movement separately. Next/Finished need the current row's entered work, then save before rest; use each declared recovery interval. A partial number says Work recorded; Cut short refers only to an early stopped known-target timer with no manually entered time. Do not repeat performed work to create a log.
+- **Coaches:** on-the-spot movement recording keeps existing connection and parent checks. Your custom items retain existing measure controls; do not assume per-side expansion or saved movement readback is released.
+- **Owner:** Vault tracking initialization preserves current catalog kind, but existing non-bunt tracking changes are **not yet certified effective in generated plans**. Do not treat a saved version as proof of changed logging. Canary cron SQL remains yours to apply; no schedule installed in this batch.
+
 ### October 27 run (5), 04:27 UTC
 - BUILT: fully declared equal-set band/activation circuits now retain a separate rep target for each movement in the existing task log. Baseball example retains 12/12/12/10/10; windmill example retains 10 each direction/12/12/10. Compound inputs are stacked for phone width; targets are not treated as entered work until that individual field is edited or confirmed on blur.
 - TESTS: 3 affected files/29 tests PASS across bounded runs (the entry-prescription file passed 15 tests separately; final parser/logger run passed 14). Component save payload and local reload preserve edited values and leave untouched components null. This is not hosted player save/readback or a fresh full-suite result.
