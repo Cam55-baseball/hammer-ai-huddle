@@ -1,0 +1,2 @@
+ALTER TABLE public.analysis_canary_config ADD COLUMN request_json jsonb;
+COMMENT ON COLUMN public.analysis_canary_config.request_json IS 'Owner-registered TEST request with actual extracted image frames; never contains session tokens.';

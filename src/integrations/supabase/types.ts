@@ -2058,6 +2058,7 @@ export type Database = {
           lease_until: string | null
           owner_id: string
           paused_reason: string | null
+          request_json: Json | null
           request_path: string
           updated_at: string
           video_id: string
@@ -2071,6 +2072,7 @@ export type Database = {
           lease_until?: string | null
           owner_id: string
           paused_reason?: string | null
+          request_json?: Json | null
           request_path: string
           updated_at?: string
           video_id: string
@@ -2084,6 +2086,7 @@ export type Database = {
           lease_until?: string | null
           owner_id?: string
           paused_reason?: string | null
+          request_json?: Json | null
           request_path?: string
           updated_at?: string
           video_id?: string
@@ -23528,6 +23531,7 @@ export type Database = {
           lease_until: string | null
           owner_id: string
           paused_reason: string | null
+          request_json: Json | null
           request_path: string
           updated_at: string
           video_id: string
