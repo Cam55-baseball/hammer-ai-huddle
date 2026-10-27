@@ -18,8 +18,8 @@ describe("guided canonical set progression", () => {
     expect(cursor.row).toBe(0);
   });
   it("mounted work survives the entire declared rest and resumes without another save", async () => {
-    vi.useFakeTimers(); const save = vi.fn(async () => {}); const mounted = vi.fn();
-    function Work() { const identity = vi.fn(); useFocusExercise({ id: "preserved", name: "Warm-up", rows: 2, ready: [true, true], restSeconds: 30, save: async () => { await save(); identity(); } }); return null; }
+    vi.useFakeTimers(); const save = vi.fn(async () => {});
+    function Work() { useFocusExercise({ id: "preserved", name: "Warm-up", rows: 2, ready: [true, true], restSeconds: 30, save }); return null; }
     render(<FocusSession active storageKey="mounted-rest" onExit={() => {}}><Work /></FocusSession>);
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Finished" })));
     expect(save).toHaveBeenCalledTimes(1);
