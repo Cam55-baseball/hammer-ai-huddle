@@ -8,7 +8,9 @@ from playwright.async_api import async_playwright
 
 async def main():
     fixture = Path(os.environ["ANALYSIS_FIXTURE"])
-    output = Path("/tmp/browser/analysis-fixture")
+    module = os.environ.get("ANALYSIS_MODULE", "hitting")
+    sport = os.environ.get("ANALYSIS_SPORT", "baseball")
+    output = Path(f"/tmp/browser/analysis-fixture-{sport}-{module}")
     output.mkdir(parents=True, exist_ok=True)
     session = json.loads(Path.home().joinpath(".cache/lovable-auth/session.json").read_text())
     async with async_playwright() as p:
@@ -17,7 +19,7 @@ async def main():
         page = await context.new_page()
         await page.goto("http://localhost:8080")
         await page.evaluate("([k,v])=>localStorage.setItem(k,v)", [session["storage_key"], json.dumps(session["session"])])
-        await page.goto("http://localhost:8080/analyze/hitting?sport=baseball")
+        await page.goto(f"http://localhost:8080/analyze/{module}?sport={sport}")
         await page.locator("#video-upload").set_input_files({"name": fixture.name, "mimeType": "video/quicktime" if fixture.suffix.lower() == ".mov" else "video/mp4", "buffer": fixture.read_bytes()}, timeout=120000)
         await page.get_by_role("button", name="Right", exact=True).wait_for(timeout=120000)
         await page.get_by_role("button", name="Right", exact=True).click()
@@ -41,8 +43,21 @@ async def main():
         if await finding.count(): await finding.scroll_into_view_if_needed()
         await page.screenshot(path=str(output / "saved-displayed.png"))
         request_body = response.request.post_data_json
+        replay = await page.request.post(response.url, headers={"Authorization": f"Bearer {session['session']['access_token']}", "apikey": response.request.headers.get('apikey', ''), "Content-Type": "application/json"}, data=json.dumps(request_body))
+        replay_data = await replay.json()
+        assert replay.ok and replay_data.get("saved") is True, "Saved report could not be read back"
+        assert (replay_data.get("ai_analysis") or replay_data).get("feedback") == report["feedback"], "Saved coaching changed on replay"
+        if os.environ.get("REGISTER_ANALYSIS_CANARY") == "1":
+            owner = session['session']['user']['id']
+            request_path = f"{owner}/analysis-canary/test-fixture.json"
+            origin = response.url.split('/functions/v1/')[0]
+            headers = {"Authorization": f"Bearer {session['session']['access_token']}", "apikey": response.request.headers.get('apikey', '')}
+            stored = await page.request.post(f"{origin}/storage/v1/object/videos/{request_path}", headers={**headers,"Content-Type":"application/json","x-upsert":"true"}, data=json.dumps(request_body))
+            assert stored.ok, "TEST request fixture could not be stored"
+            registered = await page.request.post(f"{origin}/functions/v1/analysis-canary-configure", headers={**headers,"Content-Type":"application/json"}, data=json.dumps({"videoId":request_body['videoId'],"requestPath":request_path,"testFixture":True}))
+            assert registered.ok, "Canary TEST fixture registration failed"
         output.joinpath("result.json").write_text(json.dumps({"video_id": request_body["videoId"], "saved": True, "displayed": True}))
-        print("PASS: original fixture converted, uploaded, analyzed, saved and displayed")
+        print(f"PASS: {sport} {module} original fixture converted, uploaded, analyzed, saved, displayed and replayed")
         await browser.close()
 
 asyncio.run(main())
