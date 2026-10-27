@@ -33,9 +33,10 @@ export function useHammersTodayStart() {
     },
   });
   const details = useQuery({
-    queryKey: ["start-readiness", user?.id], enabled: !!user?.id && !startedAt, staleTime: 5_000,
+    queryKey: ["start-readiness", user?.id, !!assessment.data], enabled: !!user?.id && !startedAt, staleTime: 5_000,
     queryFn: async (): Promise<StartMissingItem[]> => {
-      const uid = user!.id;
+      if (!user) throw new Error("Sign in before checking plan details.");
+      const uid = user.id;
       const [p, c, m, e] = await Promise.all([
         supabase.from("profiles").select("date_of_birth").eq("id", uid).maybeSingle(),
         supabase.from("athlete_context").select("sport_primary, position_primary, competition_level, category_goals, goal_summary, goal_priority_rank, weekly_availability_days").eq("user_id", uid).maybeSingle(),

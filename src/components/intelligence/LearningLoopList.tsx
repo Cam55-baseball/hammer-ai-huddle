@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
@@ -12,17 +12,21 @@ import { COMPARABLE_OUTCOME_LABEL } from "@/lib/intelligence/comparableOutcome";
 /** "Your Do-this list": did you do it, and what happened when we re-checked. */
 export function LearningLoopList() {
   const { user } = useAuth();
+  const [recheckFailed, setRecheckFailed] = useState(false);
   const qc = useQueryClient();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const staff = isOwner || isAdmin;
   const key = ["intel-recs", user?.id, staff];
   useEffect(() => {
+    setRecheckFailed(false);
     if (!user?.id) return;
     let active = true;
     void supabase.functions.invoke("intel-recheck").then(({ error }) => {
-      if (active && !error) void qc.invalidateQueries({ queryKey: ["intel-recs", user.id] });
-    }).catch(() => undefined);
+      if (!active) return;
+      if (error) { setRecheckFailed(true); return; }
+      void qc.invalidateQueries({ queryKey: ["intel-recs", user.id] });
+    }).catch(() => { if (active) setRecheckFailed(true); });
     return () => { active = false; };
   }, [user?.id, qc]);
   const { data = [], isLoading, isError } = useQuery({
@@ -50,7 +54,7 @@ export function LearningLoopList() {
       <p role="status" className="text-sm text-muted-foreground">We couldn't load your saved advice. Please try again later.</p>
     </section>
   );
-  if (!data.length) return null;
+  if (!data.length && !recheckFailed) return null;
   const mark = async (id: string, followed: boolean) => {
     await supabase.from("intelligence_recommendations")
       .update({ followed, followed_at: new Date().toISOString() }).eq("id", id);
@@ -59,6 +63,7 @@ export function LearningLoopList() {
   return (
     <section className="space-y-2" aria-label="Your Do-this list">
       <h3 className="text-sm font-semibold">Your "Do this" list</h3>
+      {recheckFailed && <p role="status" className="text-sm text-muted-foreground">We couldn't re-check your advice. Your saved results are unchanged. Please try again later.</p>}
       {data.map((r) => (
         <Card key={r.id} className="space-y-2 p-3">
           <p className="text-xs text-muted-foreground">Area: {r.area}</p>

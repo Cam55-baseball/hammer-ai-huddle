@@ -125,6 +125,15 @@ function findDayWith(
 }
 
 describe("every card renders for every day type and context state", () => {
+  for (const [phase, minutes] of [['off', 15], ['in', 25]] as const) {
+    it(`${phase} recovery duration matches only the two prescribed timed activities`, () => {
+      const block = findDayWith(ctx({ ...BASE, season_phase: phase, equipment_effective: OWNER_EQUIPMENT }), 'recovery');
+      expect(block.durationMin).toBe(minutes);
+      expect(block.gamePlanTemplate?.durationMinutes).toBe(minutes);
+      expect(block.drills).toHaveLength(2);
+      expect(block.drills?.map(d => d.dosage)).toEqual(phase === 'off' ? ['10 min focus areas', '5 min'] : ['15 min full body', '10 min']);
+    });
+  }
   for (const [ctxName, context] of CONTEXTS) {
     for (const [dayName, signal, day] of DAY_TYPES) {
       it(`${dayName} / ${ctxName}`, () => {

@@ -1,4 +1,4 @@
-import { judgeComparableOutcome } from '../_shared/intelligence/comparableOutcome.ts';
+import { judgeComparableOutcome } from './comparableOutcome.ts';
 
 export interface ClipMeasure { id: string; user_id: string; sport: string; module: string; created_at: string; efficiency_score: number | null }
 export interface Advice { id: string; user_id: string; area: string; created_at: string; followed_at: string | null; baseline_value: number | null }

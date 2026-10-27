@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2.118.0/cors";
-import { recheckComparablePlayer } from "./comparableRecheck.ts";
+import { recheckComparablePlayer } from "../_shared/intelligence/comparableRecheck.ts";
 
 // Same Vault credential as the existing plan job. Never store or log the raw token.
 const TOKEN_DIGEST = "92a0d7f956decec62aeaf2c309a150a936afda73572d8755f9b3999fc91325c9";

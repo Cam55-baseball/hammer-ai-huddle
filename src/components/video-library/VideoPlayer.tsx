@@ -79,7 +79,7 @@ export function VideoPlayer({ videoUrl, videoType, title, posterUrl }: VideoPlay
   if (videoType === 'upload' || isDirectVideoFile(videoUrl)) {
     // With a cover set we never download the clip until the athlete asks for it:
     // the poster paints instantly and phone data is only spent on a real tap.
-    if (posterUrl && (!started || failed)) {
+    if (posterUrl && !started && !failed) {
       return (
         <Button
           variant="ghost"

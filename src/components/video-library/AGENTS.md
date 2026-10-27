@@ -1,1 +1,2 @@
 - Shared playback resets failure/start state on source changes and detects direct media independently of legacy type, with inline phone playback. Why: one unsupported source must not prevent the next saved video from playing; this does not certify its codec.
+- A started poster video exposes its existing failure/retry controls instead of returning silently to the poster. Why: a download or decode failure must stay visible until explicit retry.

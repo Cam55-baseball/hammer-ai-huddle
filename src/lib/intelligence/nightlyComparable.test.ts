@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { comparableClipPair, recheckComparablePlayer, type ClipMeasure } from '../../../supabase/functions/intel-recheck-job/comparableRecheck';
+import { comparableClipPair, recheckComparablePlayer, type ClipMeasure } from '../../../supabase/functions/_shared/intelligence/comparableRecheck';
 const rec = { id: 'r', user_id: 'test', area: 'hitting', created_at: '2026-09-01T12:00:00Z', followed_at: '2026-09-01T12:00:00Z', baseline_value: 60 };
 const clip = (id: string, date: string, score: number): ClipMeasure => ({ id, user_id: 'test', sport: 'baseball', module: 'hitting', created_at: date, efficiency_score: score });
 const before = clip('b', '2026-09-01T11:00:00Z', 60);
