@@ -9,6 +9,7 @@ import { getLocalDateString } from "@/utils/dateUtils";
 import { MovementScreenForm } from "./MovementScreenForm";
 import { Button } from "@/components/ui/button";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
+import type { Json } from "@/integrations/supabase/types";
 
 /** Self-owned observations only; never authors a plan, finding, or clinical interpretation. */
 export function SavedMovementSummary({ athleteId }: { athleteId?: string } = {}) {
@@ -40,7 +41,7 @@ export function SavedMovementSummary({ athleteId }: { athleteId?: string } = {})
     setSaving(true); setSaveError(false);
     try {
       const at = new Date().toISOString();
-      const result = await supabase.from('initial_assessments').update({ movement_screen: draft, movement_done_at: at, updated_at: at, ...(movementHasPain(draft) ? { pain_flag: true } : {}) }).eq('user_id', user.id).select('movement_done_at').single();
+      const result = await supabase.from('initial_assessments').update({ movement_screen: draft as Json, movement_done_at: at, updated_at: at, ...(movementHasPain(draft) ? { pain_flag: true } : {}) }).eq('user_id', user.id).select('movement_done_at').single();
       if (result.error || !result.data?.movement_done_at || Date.parse(result.data.movement_done_at) !== Date.parse(at)) throw new Error('Unconfirmed screen');
       await qc.invalidateQueries({ queryKey: ['saved-movement-summary', user.id] });
       await qc.invalidateQueries({ queryKey: ['initial-assessment', user.id] });
