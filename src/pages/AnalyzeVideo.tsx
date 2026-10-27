@@ -34,6 +34,7 @@ import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { isAnalysisVideoFile } from "@/lib/upload/analysisVideoFile";
 import { prepareAnalysisVideo } from "@/lib/upload/prepareAnalysisVideo";
 import { unavailableAnalysis } from "../../supabase/functions/_shared/analysisReliability";
+import { normalizeAnalysisResponse, analysisErrorDetails } from "@/lib/upload/analysisResponse";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
@@ -85,12 +86,6 @@ import type { MeasuredClipTiles } from "@/lib/reportCard/measuredClipSpec";
  * metrics are in the same place either way — video suggestions and prescriptions
  * read those keys directly.
  */
-function normalizeAnalysisResponse(data: any) {
-  if (data && data.replay_cache && data.ai_analysis) {
-    return { ...data.ai_analysis, efficiency_score: data.efficiency_score ?? data.ai_analysis.efficiency_score };
-  }
-  return data;
-}
 
 
 export default function AnalyzeVideo({ assessment }: { assessment?: { module: "hitting" | "throwing" | "pitching"; sport: "baseball" | "softball"; onDone: () => void } } = {}) {
@@ -1180,6 +1175,13 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       );
 
       if (analysisError) {
+        const safeError = await analysisErrorDetails(analysisError);
+        setAnalysisError({ ...safeError, terminal: [400,401,402,403,404].includes(safeError.status) });
+        setAnalyzing(false);
+        toast.error(safeError.message);
+        return;
+        /* Legacy scheduled retry is disabled: a provider failure must never
+           become canned coaching or queue another request after denial.
         console.error("Analysis error:", analysisError);
         setAnalysisError(analysisError);
 
@@ -1241,6 +1243,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
         }
         missingReport("analysis_request", friendly ?? "This check did not finish. Retry your saved clip.");
         return;
+        */
       }
 
       const normalized = normalizeAnalysisResponse(analysisData);
@@ -1250,7 +1253,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
       fireAnalysisVideoMoment(normalized);
 
-      toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
+      if (normalized?.saved === false) toast.error(normalized.save_error ?? "Your report is shown, but could not be saved.");
+      else if (normalized?.report_status === "not_measured") toast.info(normalized.feedback);
+      else toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
       setAnalyzing(false);
 
     } catch (error: any) {
@@ -1373,7 +1378,11 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
       if (analysisError) {
         console.error("Retry analysis error:", analysisError);
-        showUnavailableReport("retry_request");
+        const safeError = await analysisErrorDetails(analysisError);
+        setAnalysisError({ ...safeError, terminal: [400,401,402,403,404].includes(safeError.status) });
+        toast.error(safeError.message);
+        return;
+        /*
         
         if (analysisError.message?.includes('429') || analysisData?.status === 429) {
           toast.error(t('videoAnalysis.rateLimitError'));
@@ -1383,6 +1392,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
           toast.error(t('videoAnalysis.genericAnalysisError'));
         }
         return;
+        */
       }
 
       const normalizedRetry = normalizeAnalysisResponse(analysisData);
@@ -1392,7 +1402,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
       fireAnalysisVideoMoment(normalizedRetry);
 
-      toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
+      if (normalizedRetry?.saved === false) toast.error(normalizedRetry.save_error ?? "Your report is shown, but could not be saved.");
+      else if (normalizedRetry?.report_status === "not_measured") toast.info(normalizedRetry.feedback);
+      else toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
     } catch (error: any) {
       console.error("Retry error:", error);
       showUnavailableReport("retry_request");
@@ -1435,7 +1447,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
             lives in DelayCam. */}
         {!videoPreview && (
           <div className="space-y-4">
-            {assessment && <HighFpsCapture module={assessment.module} sport={assessment.sport} />}
+            {assessment && <HighFpsCapture module={assessment.module} sport={assessment.sport} onAnalysis={(report, videoId) => { setCurrentVideoId(videoId); setAnalysis(normalizeAnalysisResponse(report)); setAnalysisError(null); }} />}
             <PitchingFilmingGuide />
             <Card data-tour="upload" className="mx-auto max-w-xl p-6 sm:p-8 text-center border-dashed border-2">
               <div className="flex flex-col items-center space-y-3">
@@ -1712,11 +1724,11 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
               <Card className="p-6 border-destructive">
                 <h3 className="text-xl font-semibold text-destructive mb-2">{t('videoAnalysis.analysisFailed')}</h3>
                 <p className="text-muted-foreground mb-3">
-                  {analysisError.message?.includes('429') || analysisError.status === 429
+                  {analysisError.message || (analysisError.status === 429
                     ? t('videoAnalysis.rateLimitError')
                     : analysisError.message?.includes('402') || analysisError.status === 402
                     ? t('videoAnalysis.paymentRequiredError')
-                    : t('videoAnalysis.genericAnalysisError', "The analysis run did not complete. No score was produced. This is shown as failed instead of as a partial result.")}
+                    : t('videoAnalysis.genericAnalysisError', "The analysis run did not complete. No score was produced. This is shown as failed instead of as a partial result."))}
                 </p>
                 {analysisError.message && (
                   <details className="mb-4 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs">
@@ -1724,9 +1736,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
                     <pre className="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] text-muted-foreground">{String(analysisError.message)}</pre>
                   </details>
                 )}
-                <Button onClick={handleRetryAnalysis} className="w-full">
+                {!analysisError.terminal && <Button onClick={handleRetryAnalysis} className="w-full">
                   {t('videoAnalysis.retryAnalysis')}
-                </Button>
+                </Button>}
               </Card>
             )}
 
