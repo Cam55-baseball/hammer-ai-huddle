@@ -30,6 +30,10 @@ describe("legacy drill visible log rows", () => {
       rows: 2, completion: false, fields: [{ key: "throws", label: "Throws", prefill: 12 }],
     });
   });
+  it("throwing-card band prep records reps rather than inventing arm throws", () => {
+    expect(legacyDrillLogSpec("throwing", "Band series — ER / IR / scap pulls / retractions", "ER 2x12, IR 2x12, scap pulls 2x12, retractions 2x10").fields).toEqual([{ key: "reps", label: "Reps", prefill: 12 }]);
+    expect(legacyDrillLogSpec("pitching", "Band activation series", "2x10").fields[0].key).toBe("reps");
+  });
 
   it("times warm-up and recovery work in seconds, never decimal minutes", () => {
     expect(legacyDrillLogSpec("warmup", "Tissue prep", "5 minutes total")).toEqual({

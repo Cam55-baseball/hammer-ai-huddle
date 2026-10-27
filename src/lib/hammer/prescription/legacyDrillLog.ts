@@ -48,6 +48,10 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   if (/pop[_ -]?time|pop to (2b|second)/.test(name.toLowerCase())) {
     return { rows: sets, completion: false, fields: [{ key: "time", label: "Pop time", unit: "ss.hh", prefill: seconds }] };
   }
+  // A throwing card includes non-throwing preparation. Card category cannot turn band reps into throws.
+  if ((modality === "throwing" || modality === "pitching") && /band series|band activation|band prep|neural prep|mobility flush|lat \+ hip opener|wrist snap \+ forearm/.test(name.toLowerCase()) && !/\bthrows?\b/.test(targetText)) {
+    return { rows: sets, completion: false, fields: [{ key: "reps", label: "Reps", prefill: reps }] };
+  }
   if (modality === "throwing" || modality === "pitching" || /throw|pitch|bullpen|catch play|plyo ball/.test(activity)) {
     return { rows: sets, completion: false, fields: [{ key: "throws", label: "Throws", prefill: reps }] };
   }
