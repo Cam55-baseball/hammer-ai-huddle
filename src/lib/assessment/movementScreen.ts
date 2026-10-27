@@ -38,7 +38,9 @@ export function setMovementObservation(screen: MovementScreen, key: string, obse
   if (item?.legacy) {
     const related = movementGroups.flatMap(g => [...g.items]).filter(i => i.legacy === item.legacy);
     const statuses = related.flatMap(i => [next.observations?.[i.key]?.leftStatus, next.observations?.[i.key]?.rightStatus]).filter(Boolean);
-    if (statuses.length) next[item.legacy] = statuses.includes("pain") ? "pain" : statuses.includes("limited") ? "hard" : "easy";
+    if (screen[item.legacy] === "pain" || statuses.includes("pain")) next[item.legacy] = "pain";
+    else if (statuses.includes("limited")) next[item.legacy] = "hard";
+    else if (statuses.length === related.length * 2) next[item.legacy] = "easy";
   }
   return next;
 }

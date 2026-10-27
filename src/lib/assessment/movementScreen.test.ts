@@ -10,6 +10,8 @@ it("missing observations never mean a completed or painless screen", () => {
   expect(movementScreenComplete({ hip: "easy", shoulder: "easy", ankle: "easy", balance: "easy" })).toBe(false);
   expect(movementScore(undefined)).toBe(null);
   expect(setMovementObservation({}, "hip_ir", { left: "30" }).hip).toBeUndefined();
+  expect(setMovementObservation({}, "hip_ir", { leftStatus: "controlled" }).hip).toBeUndefined();
+  expect(setMovementObservation({ shoulder: "pain" }, "shoulder_ir", { leftStatus: "controlled", rightStatus: "controlled" }).shoulder).toBe("pain");
 });
 it("total shoulder arc adds actual measurements only", () => {
   expect(measuredTotalArc("40", "90")).toBe(130);
