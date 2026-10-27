@@ -1,7 +1,7 @@
 // Learning-loop re-check for the signed-in player only (self data; no other viewer).
 // Scores stay on the server: the response carries outcome labels only.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
-import { recheckComparablePlayer } from "../intel-recheck-job/comparableRecheck.ts";
+import { recheckComparablePlayer } from "../_shared/intelligence/comparableRecheck.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
