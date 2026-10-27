@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { validateVideoFile, VIDEO_LIMITS } from '@/data/videoLimits';
+import { prepareLibraryVideo } from '@/lib/upload/prepareLibraryVideo';
 
 interface UploadVideoPayload {
   title: string;
@@ -44,6 +45,7 @@ export function useVideoLibraryAdmin() {
     setUploading(true);
     try {
       let videoUrl = payload.externalUrl?.trim() || '';
+      if (payload.videoType === 'upload' && !payload.videoFile) throw new Error('Choose a video file before saving.');
 
       if (payload.videoType === 'upload' && payload.videoFile) {
         const validation = validateVideoFile(payload.videoFile);
@@ -52,13 +54,14 @@ export function useVideoLibraryAdmin() {
           return null;
         }
 
-        const ext = payload.videoFile.name.split('.').pop()?.toLowerCase() || 'mp4';
+        const playable = await prepareLibraryVideo(payload.videoFile);
+        const ext = 'mp4';
         const id = crypto.randomUUID();
         const path = `${user.id}/library/${id}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
           .from('videos')
-          .upload(path, payload.videoFile, { upsert: true });
+          .upload(path, playable, { upsert: false, contentType: 'video/mp4' });
 
         if (uploadError) throw uploadError;
 
@@ -169,13 +172,14 @@ export function useVideoLibraryAdmin() {
         return null;
       }
 
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+      const playable = await prepareLibraryVideo(file);
+      const ext = 'mp4';
       const ts = Date.now();
       const path = `${user.id}/library/${videoId}_v${ts}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from('videos')
-        .upload(path, file, { upsert: false });
+        .upload(path, playable, { upsert: false, contentType: 'video/mp4' });
 
       if (uploadError) throw uploadError;
 
@@ -186,7 +190,7 @@ export function useVideoLibraryAdmin() {
         p_video_id: videoId,
         p_new_url: newUrl,
         p_video_type: 'upload',
-        p_file_size: file.size,
+        p_file_size: playable.size,
       } as any);
 
       if (error) throw error;
