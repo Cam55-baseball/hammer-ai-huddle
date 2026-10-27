@@ -2,7 +2,7 @@ import {battingIdentity,areaWindowPolicy,fieldingIdentity,speedIdentity,masteryB
 import {rawToGrade} from '@/lib/gradeEngine';
 import {PERFORMANCE_METRICS} from '@/data/performanceTestRegistry';
 import {masteryGuidance} from '../../../supabase/functions/_shared/wic/masteryGuidance';
-import {contactIdentity,powerIdentity,steerIdentity,validHumanGrade,IDENTITY_SOURCE,type IdentitySettings,type MasteryLevel,type MasteryStatus} from '../../../supabase/functions/_shared/wic/masteryStandards';
+import {contactIdentity,powerIdentity,steerIdentity,validHumanGrade,hittingStandardsFor,SOFTBALL_HITTING_SOURCE,IDENTITY_SOURCE,type IdentitySettings,type MasteryLevel,type MasteryStatus} from '../../../supabase/functions/_shared/wic/masteryStandards';
 import {developmentStrategy,chosenGoalPillar} from '../../../supabase/functions/_shared/wic/goals/developmentStrategy';
 import {pitchingIdentity} from '../../../supabase/functions/_shared/wic/masteryPitching';
 import {computeHomeToFirstGrade,type ScaleReferenceRow} from '@/lib/baserunning/homeToFirstGrade';
@@ -41,15 +41,15 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  for(const row of list(source.royal))for(const key of ['timer1','timer2','master']){const timer=record(record(row.timers)[key]);const elapsed=timer.elapsed;if(typeof elapsed==='number')add(row,`royal:${row.id}:${key}`,`Royal timing · ${timer.wasSynced===true?'video synced':'manual timer'}`,key,'seconds',elapsed/1000,null);}
  const counts=new Map<string,Set<string>>();for(const e of speedEvidence){const key=`${e.source}:${e.measure}:${e.unit}`;const set=counts.get(key)??new Set<string>();set.add(e.id);counts.set(key,set);}
  const speed=speedIdentity(speedEvidence.map(e=>({...e,sample:counts.get(`${e.source}:${e.measure}:${e.unit}`)?.size??0})),settings?.elite_grade??65);
- const standards:IdentitySettings=settings??{};const eliteGrade=settings?.elite_grade??65;
- const power=powerIdentity(batting.latest,standards);
+ const standards:IdentitySettings=hittingStandardsFor(sport,level,settings??{});const eliteGrade=settings?.elite_grade??65;
+ const power=powerIdentity(batting.latest,standards);if(sport==='softball')power.source=SOFTBALL_HITTING_SOURCE;
  const hrRate=power.rate;
  const goals=record(context.goals);const sportGoals=record(goals[sport]);
  const hittingRows=list(record(sportGoals.position).hitting);
  const powerGoal=hittingRows.some(g=>g.id==='oppo_power'||g.intent==='power_hitting')||list(goals.goals).some(g=>g.category==='hitting'&&g.intent==='power_hitting');
  const traits={speedy:speed.elite===true,lacksPower:hrRate!==null&&standards.lacking_power_hr_rate!=null&&hrRate<standards.lacking_power_hr_rate,leftPower:context.bats==='L'&&hrRate!==null&&standards.left_power_hr_rate!=null&&hrRate>=standards.left_power_hr_rate,powerGoal:['L','S'].includes(String(context.bats))&&powerGoal,powerStatus:power.status,power:power.status==='Need more data'?null:power.status==='Elite',battingWindow:batting.latest,lowAverage:standards.bunt_low_average??.300};
  const defense=fieldingIdentity(list(source.defense).map((e,i)=>({id:String(e.id??''),date:String(e.date??''),order:i,source:typeof e.source==='string'?e.source:null,position:typeof e.position==='string'?e.position:null,error:typeof e.error==='boolean'?e.error:null,assist:typeof e.assist==='boolean'?e.assist:null,putout:typeof e.putout==='boolean'?e.putout:null})),areaWindowPolicy(settings,'defense'));
- const contact=contactIdentity(batting.latest,list(source.contactPitches).map(p=>({id:String(p.id??''),atBatId:typeof p.atBatId==='string'?p.atBatId:null,result:typeof p.result==='string'?p.result:null,strikes:typeof p.strikes==='number'?p.strikes:null,zone:typeof p.zone==='number'?p.zone:null,outZone:typeof p.outZone==='string'?p.outZone:null})),level,standards);
+ const contact=contactIdentity(batting.latest,list(source.contactPitches).map(p=>({id:String(p.id??''),atBatId:typeof p.atBatId==='string'?p.atBatId:null,result:typeof p.result==='string'?p.result:null,strikes:typeof p.strikes==='number'?p.strikes:null,zone:typeof p.zone==='number'?p.zone:null,outZone:typeof p.outZone==='string'?p.outZone:null})),level,standards);if(sport==='softball')contact.source=SOFTBALL_HITTING_SOURCE;
  const position=String(context.position??'').toUpperCase();
  const normalizedPosition=['P','PITCHER'].includes(position)?'pitcher':['C','CATCHER'].includes(position)?'catcher':['LF','CF','RF','OF','OUTFIELD'].includes(position)?'outfield':['1B','2B','3B','SS','IF','INFIELD'].includes(position)?'infield':null;
  const human=sportRows(source.humanGrades,sport).filter(g=>g.evaluator&&['coach_evaluated','scout_evaluated'].includes(String(g.source))&&(String(g.position??'').toUpperCase()===position));

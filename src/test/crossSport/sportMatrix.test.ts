@@ -189,3 +189,44 @@ describe("catalog sport filter (generator rule)", () => {
     expect(filter("softball").map((r) => r.slug)).toEqual(["b", "c"]);
   });
 });
+
+import {hittingStandardsFor,SOFTBALL_CONTACT_DEFAULTS,SOFTBALL_POWER_DEFAULTS,CONTACT_DEFAULTS,powerIdentity,contactIdentity} from '../../../supabase/functions/_shared/wic/masteryStandards';
+describe('hitting standards by sport and level', () => {
+  const baseballSaved = {elite_hr_rate:.100,left_power_hr_rate:.050,lacking_power_hr_rate:.025,power_chase_ratio:1};
+  const softballPower = {pro:[.067,.033,.017],college:[.125,.063,.031],high_school:[.100,.050,.025],youth:[.100,.050,.025]} as const;
+  for (const level of ['pro','college','high_school','youth'] as const) {
+    it(`softball ${level} reads the softball power table`, () => {
+      const s = hittingStandardsFor('softball', level, baseballSaved);
+      expect([s.elite_hr_rate,s.left_power_hr_rate,s.lacking_power_hr_rate]).toEqual([...softballPower[level]]);
+      expect(s.power_chase_ratio).toBe(1);
+    });
+    it(`baseball ${level} keeps the baseball table`, () => {
+      expect(hittingStandardsFor('baseball', level, baseballSaved)).toEqual(baseballSaved);
+    });
+  }
+  it('softball contact table matches owner values; baseball unchanged', () => {
+    expect(SOFTBALL_CONTACT_DEFAULTS.college).toEqual({k:.07,whiff:.06,zone:.94});
+    expect(SOFTBALL_CONTACT_DEFAULTS.pro).toEqual({k:.10,whiff:.08,zone:.92});
+    expect(SOFTBALL_CONTACT_DEFAULTS.high_school).toEqual({k:.05,whiff:.04,zone:.96});
+    expect(CONTACT_DEFAULTS.college).toEqual({k:.08,whiff:.06,zone:.94});
+  });
+  it('1 HR in 14 AB is elite for softball pro but not baseball pro', () => {
+    const w = {homeRuns:1,atBats:14,sourceIds:['x']};
+    expect(powerIdentity(w, hittingStandardsFor('softball','pro',baseballSaved)).status).toBe('Elite');
+    expect(powerIdentity(w, hittingStandardsFor('baseball','pro',baseballSaved)).status).toBe('Building');
+  });
+  it('1 HR in 9 AB is building for softball college', () => {
+    expect(powerIdentity({homeRuns:1,atBats:9,sourceIds:['x']}, hittingStandardsFor('softball','college',baseballSaved)).status).toBe('Building');
+  });
+  it('unknown softball level gives Need more data for power', () => {
+    expect(powerIdentity({homeRuns:5,atBats:20,sourceIds:['x']}, hittingStandardsFor('softball',null,baseballSaved)).status).toBe('Need more data');
+  });
+  it('7.5% K is Building for softball college at 0.07, Elite for baseball college at 0.08', () => {
+    const w = {atBats:37,strikeouts:3,plateAppearances:40,paIds:['a'],sourceIds:['a']};
+    expect(contactIdentity(w,[],'college',{contact_college_k:SOFTBALL_CONTACT_DEFAULTS.college.k}).parts.k.status).toBe('Building');
+    expect(contactIdentity(w,[],'college',{contact_college_k:CONTACT_DEFAULTS.college.k}).parts.k.status).toBe('Elite');
+  });
+  it('lefty power half and lacking quarter of elite', () => {
+    for (const v of Object.values(SOFTBALL_POWER_DEFAULTS)) { expect(Math.abs(v.leftPower - v.elite/2)).toBeLessThan(.001); expect(Math.abs(v.lacking - v.elite/4)).toBeLessThan(.001); }
+  });
+});
