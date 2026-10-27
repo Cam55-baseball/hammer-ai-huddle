@@ -28,6 +28,9 @@ import { displayDistance, storeDistance } from "@/lib/logging/measureType";
 
 type Draft = Record<string, string>[];
 const TOUCHED = "_t";
+export function focusTimedRow(rounds: Draft, fieldsAt: (row: number) => {key: string}[]) {
+  return rounds.findIndex((row,index) => fieldsAt(index).some(field => field.key === 'time') && (row._t !== '1' || !row.time));
+}
 
 /**
  * Legacy plan-block drill log. Entries autosave (device first, then sync);

@@ -1,9 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LegacyDrillInlineLog } from "./LegacyDrillInlineLog";
+import { LegacyDrillInlineLog, focusTimedRow } from "./LegacyDrillInlineLog";
 import { FocusSession } from "../cards/FocusSession";
 
 describe("LegacyDrillInlineLog return from background", () => {
+  it('a mixed circuit timer records only its timed component, never an earlier rep row',()=>{
+    const fieldsAt=(row:number)=>[{key:row===2?'time':'reps'}];
+    expect(focusTimedRow([{reps:'12'},{reps:''},{time:''},{reps:''}],fieldsAt)).toBe(2);
+    expect(focusTimedRow([{reps:'12'},{reps:''},{time:'30',_t:'1'},{reps:''}],fieldsAt)).toBe(-1);
+  });
   beforeEach(() => {
     sessionStorage.clear(); localStorage.clear();
     vi.useFakeTimers();
