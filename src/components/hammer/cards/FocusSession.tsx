@@ -108,7 +108,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
         <Button size="sm" variant="outline" disabled={busy} onClick={() => void save(true)}>Save &amp; exit</Button>
       </div>
     </section>}
-    {children}
+    <div hidden={active && (cursor.restingUntil != null || awaitingManualRest)} data-focus-work>{children}</div>
   </Context.Provider>;
 }
 

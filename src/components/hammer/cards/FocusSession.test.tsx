@@ -17,6 +17,18 @@ describe("guided canonical set progression", () => {
     expect(cursor.restingUntil - cursor.restStartedAt).toBe(30000);
     expect(cursor.row).toBe(0);
   });
+  it("mounted work survives the entire declared rest and resumes without another save", async () => {
+    vi.useFakeTimers(); const save = vi.fn(async () => {});
+    function Work() { useFocusExercise({ id: "preserved", name: "Warm-up", rows: 2, ready: [true, true], restSeconds: 30, save }); return null; }
+    render(<FocusSession active storageKey="mounted-rest" onExit={() => {}}><Work /></FocusSession>);
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Finished" })));
+    expect(save).toHaveBeenCalledTimes(1);
+    await act(async () => vi.advanceTimersByTime(29900));
+    expect(JSON.parse(sessionStorage.getItem("mounted-rest") ?? "{}").row).toBe(0);
+    await act(async () => vi.advanceTimersByTime(100));
+    expect(JSON.parse(sessionStorage.getItem("mounted-rest") ?? "{}").row).toBe(1);
+    expect(save).toHaveBeenCalledTimes(1);
+  });
   it("unknown-duration rest remains pending across reload without a second save", async () => {
     const save = vi.fn(async () => {});
     const view = render(<FocusSession active storageKey="unknown-rest" onExit={() => {}}><Entry save={save} rest={null} /></FocusSession>);

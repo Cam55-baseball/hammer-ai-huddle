@@ -15,6 +15,7 @@ describe("actual exercise time", () => {
     expect(record).toHaveBeenCalledTimes(1);
     expect(record).toHaveBeenCalledWith(1.47);
     fireEvent.click(screen.getByRole("button", { name: "Reset timer" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
     fireEvent.click(screen.getByRole("button", { name: "Restart timer" }));
     expect(record).toHaveBeenCalledTimes(1);
   });

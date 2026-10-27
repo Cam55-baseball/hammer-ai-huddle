@@ -2,6 +2,16 @@
 
 ## October 27 urgent run — current status
 
+### October 27 run (4), 04:28 UTC
+- BUILT: exercise timer now has three controls: Start/Pause/Resume, Stop, and one state-aware Reset/Restart. Removed duplicate fourth play/restart control; active hundredths and pause exclusion unchanged.
+- BUILT: focus rest hides the mounted work surface until canonical rest ends; rows and drafts remain registered. Warm-up Drills shell/empty-work text is hidden in focus, without deleting prescription rows or changing completion.
+- FOUND/FIXED: throwing-card band preparation was already the first registered guided activity but its entry was incorrectly labeled Throws solely because of its card category. Non-throwing band/activation prep now uses reps, preserving actual throwing fields elsewhere. Mixed multi-movement band-series dose still needs a complete per-movement entry audit; no claim that one row represents the whole circuit.
+- PHONE: 390×844 signed-in preview warm-up and throwing focus inspected after dismissing Demo overlay. Three timer controls, no top Start, no visible Drills placeholder, band prep first with Reps; zero page errors/overflow. Session is demo-associated, not an independently certified TEST-player flow. No work values or training logs entered; no test rows created this run.
+- TESTS: final focused 3 files/26 tests PASS; preceding six sport/phase drawer cases and nesting tests PASS. Preview build OK. This continuation did not run a fresh full suite or real Finished/save/rest/reload flow.
+- GUIDE: reset/restart shares one arrow control; Stop records only active elapsed time. Guided rest retains the exact saved interval. Throwing prep uses reps rather than counting band movement as throws.
+
+**Ready to publish: NO.** Remaining P0 original-clip/entitled embedded-player proofs, movement consumers/role readback, editable tracking, complete compound entries/cut-short semantics and legal baserunning audit remain unfinished. No publish, redeploy, schedule or iOS changes this run.
+
 ### October 27 run (3), 04:19 UTC
 - P0 FIX: provider refusal now returns the actual persisted Not measured report and saved flag, rather than dropping it from the response. Only analyze-video redeployed successfully; fresh empty request returns expected 400 validation, not a startup error. Refusal response parser test passes; no deliberate provider refusal or paid repeat of completed upload proofs.
 - P1 BUILT: shared athlete/coach movement capture covers 15 bilateral observations across range, stability, patterns, rotation and strength; includes arm/injury history, how-to text, observational 0/1/2 scoring and measured shoulder total arc. Missing sides remain unknown; legacy pain cannot be erased by a new controlled observation. No normative-angle cutoffs, diagnosis or invented safe result.

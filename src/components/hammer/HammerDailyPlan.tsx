@@ -18,6 +18,7 @@ import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
 import { FinishProfileCard } from "@/components/hammer/FinishProfileCard";
 import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
+import { useFocusState } from "@/components/hammer/cards/FocusSession";
 import { repairInstruction, doseFeet } from "../../../supabase/functions/_shared/wic/integrity/doseIntegrity";
 import { ReleaseCountdown } from "@/components/hammer/cards/ReleaseCountdown";
 import { DayCommandCenter, TodayRhythmProvider } from "@/components/hammer/cards/todayRhythm";
@@ -1471,6 +1472,7 @@ function BlockCard({
   adaptiveNote?: string;
 }) {
   const pocketDetails = usePocketDetails();
+  const focusState = useFocusState();
   const [open, setOpen] = useState(pocketDetails);
   const [chatOpen, setChatOpen] = useState(false);
   const [gapsOpen, setGapsOpen] = useState(false);
@@ -1729,7 +1731,7 @@ function BlockCard({
           {block.modality === "throwing" && <ThrowPacingGuide />}
 
           {block.drills.length > 0 && (
-            <div className="space-y-1.5">
+            <div className="space-y-1.5" hidden={focusState.active}>
               <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Drills
               </div>
@@ -1861,11 +1863,11 @@ function BlockCard({
                 <span className="text-[11px] text-muted-foreground italic">
                   Held for review — nothing to mark done yet.
                 </span>
-              ) : block.drills.length === 0 ? (
+              ) : block.drills.length === 0 && !(focusState.active && block.modality === "warmup") ? (
                 <span className="text-[11px] text-muted-foreground italic">
                   Nothing to mark done — there's no work prescribed here yet.
                 </span>
-              ) : pocketDetails || (block.modality === "baserunning" && block.gamePlanTemplate === null) ? null : (
+              ) : block.drills.length === 0 || pocketDetails || (block.modality === "baserunning" && block.gamePlanTemplate === null) ? null : (
                 <BlockCompletionControls
                   modality={block.modality}
                   modalityLabel={block.title}
