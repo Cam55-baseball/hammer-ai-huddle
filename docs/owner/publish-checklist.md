@@ -1,5 +1,23 @@
 # Hammers — final publish checklist
 
+## October 27 06:27 continuation (3) — final batch result
+
+**Ready to publish: NO.** Exact remaining blockers: (1) existing live Vault tracking edit → generated TEST prescription → new card entry type, (2) genuinely mixed/unequal preparation circuit in a real TEST card and focus flow, and (3) entitled-player embedded upload → immediate report → optional Players Club save/reopen/reload. These are positive UI verification gaps, not completed proofs. The four missing original action/sport combinations remain the owner's human checks and do **not** block readiness.
+
+- **Full suite PASS:** 585 test files / **4,834 tests**, zero failures, twelve bounded groups. Group 7 rerun after the new test was added, replacing its earlier result. Reports: `/tmp/browser/closeout-run3-suite/summary.json` and `group-0.json` through `group-11.json`.
+- **Additional mixed-circuit regression PASS:** actual mounted logging and focus components, ER 2×12 per arm + opener 1×30 seconds + scap pulls 3×10. Distinct entered reps/time remain separate through automatic 30-second rest, next row and remount; six authored component rows remain intact and untouched scap rows remain blank. This is a component test, **not hosted athlete or phone proof**. Nine tests pass in the changed file.
+- **Preview PASS:** automatic preview build OK at **06:33:51 UTC** after the test edit; no duplicate manual build. New phone checks had zero page errors/overflow where inspected.
+- **Additional real TEST phone inspection:** existing Back-From-Break pitcher at 390×844 opens its real throwing card; band components have two equal rep sets, not mixed measures/unequal sets. Softball catcher dashboard did not expose an affected card during the check. Neither can certify the requested mixed proof. No saved prescription, readiness check-in, dose or performance was altered to force a result.
+- **Embedded blocker identified:** existing adult TEST New Player Check-In has active baseball hitting/throwing modules and no assessment, but its canonical `account_paused_at` is set. At 390×844 `/assessment?sport=baseball` shows the parent-signature screen. Its pause reason readback is null; no claim is made that its stored birthdate explains the pause. Did not sign, pay, clear the pause, reset a completed player, or simulate access. No clip was submitted. Assessment and video readbacks both returned zero rows. Existing college player is already started and cannot reopen this once-only assessment.
+- **Cleanup:** session-only access to existing TEST accounts; no new hosted assessment, clip, workout or catalog proof records. Zero assessment/video rows confirmed for the blocked attempt. Earlier parked TEST item and completed cleanup retained.
+- **Scope:** no publish, backend redeploy, migration, cron/schedule or iOS changes. Canary, baserunning matrix, coach shared-observation save/reload and owner Finished/rest/reload proofs retained without repeating them.
+
+### Final batch guide
+
+- **Owner:** remaining workout proof needs an eligible TEST plan naturally containing the live-edited item and genuinely mixed circuit. Do not convert doses, inject prescriptions, invent check-ins or clear account pauses for a screenshot. Canary schedule remains yours to apply.
+- **Player:** the supported embedded flow still requires an eligible, unpaused, entitled account that has not finished or started past Assessment Mode. Completed assessments are not reset for testing. Parent signature/payment is never supplied by automation.
+- **Coach:** shared movement proof from the previous run remains valid; consent and observation wording are unchanged. Mixed component tests establish row isolation, not real athlete performance.
+
 ## October 27 06:11 continuation (2) — latest delta
 
 - **Coach movement positive phone proof PASS:** restored owner `--self` access, then kept adult TEST College Outfielder enabled health-only sharing through its own `/athlete/recruiting-consent` switches. As its existing connected TEST coach, Development → on-the-spot check saved TEST-only bilateral status inputs through the normal form/server writer; all numeric measurements stayed blank. Saved summary displayed observations, not diagnosis, explicit Not measured values and unchanged prescribed work. Reload retained the summary at 390×844. This proves coach-entered observation save/readback, not a player-entered complete assessment. Screenshots inspected.
@@ -54,20 +72,20 @@ Counts are ready baserunning days from the existing builder's tested cohort, not
 | 3 | Immediate full report, optional paired Club save/reload | Built; original baseball hitting/pitching complete phone flow passed previously. Persistent storage failures remain honest failures. |
 | 4 | Existing-type sport/position context | Built/tested; only hitting/pitching/throwing supported; no new analyses. |
 | 5 | Fixture, active canary, prepared schedule | ACTIVE/manual PASS; daily schedule owner applies. |
-| 6 | Embedded rich results | Built; entitled phone proof open. |
+| 6 | Embedded rich results | Built; positive entitled phone proof open. Existing unopened TEST account is paused; existing college account already started. No access bypass. |
 | 7 | Optional assessment navigation/autosave | Built/tested; owner skipped optional steps this run; complete populated six-step proof not claimed. |
 | 8 | Subscription test/category/order | Built/tested previously; entitled screen proof outstanding. |
 | 9 | Sport/subscription season stats | Built/tested previously; populated cross-sport reload proof outstanding. |
 | 10 | Fielding/throwing goal corrections | Built/tested previously; historical choices remain readable. |
 | 11 | Saved movement coach/Today/analysis view | Consent-scoped reader built/applied; adult TEST connected-coach form save → shared observations → reload phone PASS; numeric measurements unknown, no dose effects. |
-| 12 | Effective Vault edits and coach per-side tracking | Built/tested; existing TEST-only Vault edit/readback passed; generated TEST plan/card proof open. |
+| 12 | Effective Vault edits and coach per-side tracking | Built/tested; TEST-only Vault edit/readback passed; generated TEST plan/card positive proof still open. |
 | 13 | Three timer controls | Previously built/tested/phone-checked. |
 | 14 | Empty warm-up Drills area | Previously removed/phone-checked. |
 | 15 | Inactive top Start | Previously removed/phone-checked. |
 | 16 | Type → Finished → save → rest → next → reload | Real owner flow PASS; canonical 181-second save/readback and 30-second rest. |
 | 17 | Efficient recovery, default prep rest | Built/tested; real automatic 30-second rest observed; declared safety recovery preserved. |
 | 18 | Royal/Tex only when prescribed | Previously built/tested. |
-| 19 | Mixed/unequal preparation components | Built/tested; real affected-card and focus phone proof open. |
+| 19 | Mixed/unequal preparation components | Built/tested; new mixed reps/time unequal-set rest/remount regression PASS; real affected-card/focus phone proof still open. |
 | 20 | Practice logging across categories/sports | Previously built; full affected-player save/return proof remains outstanding. |
 | 21 | Program/sport baserunning and dead IQ link | Six combinations × four weeks builder tests PASS; available practice destination replaces unreleased link. |
 
