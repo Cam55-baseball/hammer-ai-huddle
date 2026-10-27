@@ -27,6 +27,7 @@ import { analysesLastHour, overHourlyLimit, logAiUsage, HOURLY_LIMIT_MESSAGE, ho
 import { runStoredThrowPitchCards, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
 import { saveAnalysisReport } from "../_shared/saveAnalysisReport.ts";
 import { analysisPositionContext } from "../_shared/analysisPosition.ts";
+import { validAnalysisJobToken, canaryDelegationAllowed } from "../_shared/analysisCanaryAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1754,7 +1755,13 @@ Deno.serve(async (req) => {
     // the real caller and the persisted clip, never the body-provided user ID.
     const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
     const { data: caller, error: callerError } = token ? await supabase.auth.getUser(token) : { data: null, error: null };
-    if (callerError || !caller?.user || !videoRow || caller.user.id !== userId || videoRow.user_id !== userId || videoRow.module !== module || videoRow.sport !== sport) {
+    const canaryLease = req.headers.get("x-analysis-canary-lease");
+    let canaryAuthorized = false;
+    if (canaryLease && await validAnalysisJobToken(req.headers.get("x-job-token"))) {
+      const config = await supabase.from("analysis_canary_config").select("video_id,owner_id,enabled,paused_reason,lease_id,lease_until").eq("id",1).maybeSingle();
+      canaryAuthorized = canaryDelegationAllowed(config.data, {videoId,userId,leaseId:canaryLease});
+    }
+    if ((!canaryAuthorized && (callerError || !caller?.user || caller.user.id !== userId)) || !videoRow || videoRow.user_id !== userId || videoRow.module !== module || videoRow.sport !== sport) {
       return new Response(JSON.stringify({ error: "Video access denied" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     authorizedClip = true;
@@ -1901,7 +1908,7 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
       const cachedAi = (videoRow?.ai_analysis ?? null) as Record<string, unknown> | null;
-      if (prior && hasReadableReport(cachedAi) && videoRow?.status === "completed") {
+      if (!canaryAuthorized && prior && hasReadableReport(cachedAi) && videoRow?.status === "completed") {
         await recordRun(supabase, {
           video_id: videoId,
           requested_by: userId,

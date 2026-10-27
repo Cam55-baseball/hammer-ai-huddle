@@ -2,3 +2,4 @@
 - Shared audit writes retry once, confirm duplicate IDs by read-back and return persistent failures without stopping report delivery. Why: recover logging without costing the athlete a report.
 - Replay only stored reports with readable feedback, at least one meaningful summary entry and a drills array; do not require a score. Why: empty legacy objects must rerun while missing measurements never erase readable coaching.
 - Computed report persistence uses saveAnalysisReport; exhausted writes return the actual report with saved:false. Why: database failure must never erase already-generated coaching or bill another inference.
+- Canary delegation requires the owner-registered exact clip and an unpaused live database lease plus existing job token; it bypasses cache only for that fixture. Why: daily health checks need real inference without forging athlete sessions or opening general service-role analysis.
