@@ -4,6 +4,17 @@ export type MasteryStatus='Elite'|'Building'|'Need more data';
 export const IDENTITY_SOURCE='Camryn Williams · October 26, 2026 · Coaching Console settings';
 export const CONTACT_PRINCIPLE='Take a strike rather than swing and miss early in the count. Never strike out. With two strikes, protect the plate. This is the owner’s coaching principle, not a promise of results.';
 export const CONTACT_DEFAULTS={pro:{k:.10,whiff:.08,zone:.92},college:{k:.08,whiff:.06,zone:.94},high_school:{k:.05,whiff:.04,zone:.96},youth:{k:.05,whiff:.04,zone:.96}} as const;
+/** Owner softball hitting starting standards, October 27, 2026. Whiff% and zone contact are starting values to calibrate from Hammers softball data (no public softball league data). */
+export const SOFTBALL_HITTING_SOURCE='Camryn Williams · October 27, 2026 · softball starting standard (whiff and zone contact to be calibrated from Hammers softball data)';
+export const SOFTBALL_CONTACT_DEFAULTS={pro:{k:.10,whiff:.08,zone:.92},college:{k:.07,whiff:.06,zone:.94},high_school:{k:.05,whiff:.04,zone:.96},youth:{k:.05,whiff:.04,zone:.96}} as const;
+/** Elite HR/AB by level; lefty power = half, lacking power = below a quarter (owner-rounded). */
+export const SOFTBALL_POWER_DEFAULTS={pro:{elite:.067,leftPower:.033,lacking:.017},college:{elite:.125,leftPower:.063,lacking:.031},high_school:{elite:.100,leftPower:.050,lacking:.025},youth:{elite:.100,leftPower:.050,lacking:.025}} as const;
+/** Softball reads its own per-level power/bunting table; baseball keeps its saved settings unchanged. */
+export function hittingStandardsFor(sport:'baseball'|'softball',level:MasteryLevel|null,settings:IdentitySettings):IdentitySettings{
+ if(sport!=='softball')return settings;
+ const p=level?SOFTBALL_POWER_DEFAULTS[level]:null;
+ return {...settings,elite_hr_rate:p?.elite??null,left_power_hr_rate:p?.leftPower??null,lacking_power_hr_rate:p?.lacking??null};
+}
 export interface IdentitySettings {
  elite_hr_rate?:number|null;left_power_hr_rate?:number|null;lacking_power_hr_rate?:number|null;bunt_low_average?:number|null;elite_grade?:number|null;power_chase_ratio?:number|null;
  contact_pro_k?:number|null;contact_pro_whiff?:number|null;contact_pro_zone?:number|null;
