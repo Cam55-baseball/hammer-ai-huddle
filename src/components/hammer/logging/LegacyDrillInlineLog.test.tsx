@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LegacyDrillInlineLog, focusTimedRow } from "./LegacyDrillInlineLog";
 import { FocusSession } from "../cards/FocusSession";
@@ -46,6 +46,28 @@ describe("LegacyDrillInlineLog return from background", () => {
     expect(saved.mock.lastCall?.[0].rounds).toEqual([{set:3,time:30},{set:4,time:1}]);
     expect(screen.getByLabelText("Elapsed seconds")).toHaveTextContent("0.00 s");
     expect(screen.getByRole("button", {name: "Start timer"})).toBeEnabled();
+  });
+  it("guided mixed preparation retains distinct measures and unequal sets through rest and remount", async () => {
+    const saved = vi.fn();
+    const content = <FocusSession active storageKey="mixed-guided-cursor" onExit={() => {}}><LegacyDrillInlineLog modality="throwing" name="Band prep" dosage="ER 2x12 per arm, opener 1x30 seconds, scap pulls 3x10" storageKey="mixed-guided-log" completed={false} onSave={saved} /></FocusSession>;
+    const view = render(content);
+    fireEvent.change(screen.getByLabelText("Reps per arm 1"), { target: { value: "12" } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Finished" })));
+    expect(JSON.parse(sessionStorage.getItem("mixed-guided-cursor") ?? "{}")).toMatchObject({ row: 0, restSeconds: 30 });
+    await act(async () => vi.advanceTimersByTime(30000));
+    expect(JSON.parse(sessionStorage.getItem("mixed-guided-cursor") ?? "{}").row).toBe(1);
+    fireEvent.change(screen.getByLabelText("Reps per arm 2"), { target: { value: "11" } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Finished" })));
+    await act(async () => vi.advanceTimersByTime(30000));
+    fireEvent.change(screen.getByLabelText("Time 3 seconds"), { target: { value: "31" } });
+    expect(saved.mock.lastCall?.[0].rounds).toEqual([{ set: 1, reps: 12 }, { set: 2, reps: 11 }, { set: 3, time: 31 }]);
+    expect(saved.mock.lastCall?.[0].components).toHaveLength(6);
+    view.unmount(); render(content);
+    expect(JSON.parse(sessionStorage.getItem("mixed-guided-cursor") ?? "{}").row).toBe(2);
+    expect(screen.getByLabelText("Time 3 seconds")).toHaveValue("31");
+    expect(screen.getByLabelText("Reps 4")).toHaveValue("");
+    expect(screen.getByLabelText("Reps 5")).toHaveValue("");
+    expect(screen.getByLabelText("Reps 6")).toHaveValue("");
   });
   it("guided circuits require every component entered before Next can save the existing set", () => {
     render(<FocusSession active storageKey="compound-focus" onExit={() => {}}><LegacyDrillInlineLog modality="throwing" name="Band series" dosage="ER 1x12, IR 1x12, retractions 1x10" storageKey="compound-focused" completed={false} onSave={vi.fn()} /></FocusSession>);
