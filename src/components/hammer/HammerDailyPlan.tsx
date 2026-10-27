@@ -21,7 +21,7 @@ import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { useFocusState } from "@/components/hammer/cards/FocusSession";
 import { repairInstruction, doseFeet } from "../../../supabase/functions/_shared/wic/integrity/doseIntegrity";
 import { ReleaseCountdown } from "@/components/hammer/cards/ReleaseCountdown";
-import { DayCommandCenter, TodayRhythmProvider } from "@/components/hammer/cards/todayRhythm";
+import { DayCommandCenter, PrescribedOrderLine, TodayRhythmProvider } from "@/components/hammer/cards/todayRhythm";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -1133,12 +1133,6 @@ function HammerDailyPlanBody({
 
         {/* All day-change reasons live once in the closed Before you start drawer. */}
 
-        <div className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px] text-muted-foreground">
-          <span className="font-medium text-foreground">Do in this order:</span>{" "}
-          {gpSig.gameToday
-            ? DAY_ORDER_GAME_DAY.join(" \u2192 ")
-            : DAY_ORDER_DEFAULT.join(" \u2192 ")}
-        </div>
         {(() => {
           const warmupBlocks = plan.blocks.filter((b) => b.modality === "warmup" && prescribedToday(b));
           const baseWork = splitBaserunning(plan.blocks);
@@ -1184,7 +1178,8 @@ function HammerDailyPlanBody({
              <TodayRhythmProvider planDate={pocketDate}>
               <WkSafePlanNotice />
               <TrendDeloadNotice />
-              <DayCommandCenter />
+              <PrescribedOrderLine />
+              <DayCommandCenter checkIns={{ morning: vaultQuizzes.hasCompleted('morning'), night: vaultQuizzes.hasCompleted('night'), preLift: vaultQuizzes.hasCompleted('pre_lift'), requiresPreLift: wkRx.grouped.lifts.length > 0 }} />
               <WkSomethingOffRow />
               <HammerCheckInCard
                 quizType="morning"
