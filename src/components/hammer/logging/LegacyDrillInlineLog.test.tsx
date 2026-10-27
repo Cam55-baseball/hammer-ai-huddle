@@ -38,7 +38,7 @@ describe("LegacyDrillInlineLog return from background", () => {
   });
   it("each timed component starts a fresh timer even when a previous component was typed", () => {
     const saved = vi.fn();
-    render(<LegacyDrillInlineLog modality="throwing" name="Preparation" dosage="ER 2x12 per arm, opener 2x30 seconds, scap pulls 3x10" storageKey="mixed-timers-proof" completed={false} onSave={saved} />);
+    render(<LegacyDrillInlineLog modality="throwing" name="Band prep" dosage="ER 2x12 per arm, opener 2x30 seconds, scap pulls 3x10" storageKey="mixed-timers-proof" completed={false} onSave={saved} />);
     fireEvent.change(screen.getByLabelText("Time 3 seconds"), {target: {value: "30"}});
     fireEvent.click(screen.getByRole("button", {name: "Start timer"}));
     vi.advanceTimersByTime(1000);
