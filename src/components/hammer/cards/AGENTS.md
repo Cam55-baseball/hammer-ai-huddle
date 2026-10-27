@@ -10,3 +10,4 @@
 - Input-confirmation plan cards remain visible separately from prescribedToday; reminders, counts and completion still require ready drill work. Why: an equipment gate must be actionable without becoming a training prescription.
 - Embedded practice messages are same-origin, frame-checked refetch hints; only matching self/sport/module/token canonical session readback supplies entered set counts. Why: video or a child window must never manufacture completion or bypass readiness.
 - Guided cursors persist exercise identity and own their rest clock; editable standalone timers cannot change guided advancement. Why: remounts and timer controls must not move the player to another exercise or shorten saved rest.
+- Unknown-duration guided rest persists its pending state; Finished flushes canonical entries before declared rest starts. Why: reloads and additional navigation buttons must not replay a save or bypass recovery.

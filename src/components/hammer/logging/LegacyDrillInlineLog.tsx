@@ -120,7 +120,7 @@ export function LegacyDrillInlineLog({
   const kindFor = (target: number | null) => timeKindFor({ stopwatch, targetSeconds: target });
   const distance = spec.fields.find(f => f.key === "distance")?.prefill;
   const explicitRest = dosage.match(/rest\s*:?\s*(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?)/i);
-  const rest = explicitRest ? Number(explicitRest[1]) * (/min/i.test(explicitRest[2]) ? 60 : 1) : null;
+  const rest = explicitRest ? Number(explicitRest[1]) * (/min/i.test(explicitRest[2]) ? 60 : 1) : modality === "warmup" ? 30 : null;
   const focus = useFocusExercise({ id: storageKey, name, rows: spec.rows, ready: rounds.map(row => entered([row]).length > 0),
     restSeconds: modality === "speed" && stopwatch ? sprintRestSeconds(distance) : rest,
     bases: modality === "conditioning" ? prescribedBases(name, distance) : null,

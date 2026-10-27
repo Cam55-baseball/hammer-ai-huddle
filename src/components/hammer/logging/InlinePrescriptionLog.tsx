@@ -265,7 +265,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   const basesPerRep = rx.slot === "conditioning" ? prescribedBases(rx.movement_slug, rx.distance_feet) : null;
   const focus = useFocusExercise({ id: `rx:${rx.id}`, name: rx.movement_name, rows: spec.rows,
     ready: rounds.map((round, i) => enteredPrescriptionRounds([round], spec, { requireTouch: true }).length > 0 && i < spec.rows),
-    restSeconds: isSprint ? sprintSeconds : rx.rest_seconds != null ? rx.rest_seconds : (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank|throw|pitch/.test(rx.movement_slug)) ? restBand.min : null,
+    restSeconds: isSprint ? sprintSeconds : rx.rest_seconds != null ? rx.rest_seconds : rx.slot === "warmup" ? 30 : (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank|throw|pitch/.test(rx.movement_slug)) ? restBand.min : null,
     bases: basesPerRep,
     save: async () => { if (!(await autosave.flush())) throw new Error("Save pending"); },
   });
