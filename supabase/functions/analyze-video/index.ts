@@ -2870,6 +2870,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       fault_persistence: faultPersistence,
       audit_persistence: auditPersistence,
       saved: true,
+      analysis_engine: ANALYSIS_ENGINE,
+      model_used: MODEL_ID,
     };
 
 
