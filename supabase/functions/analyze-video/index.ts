@@ -59,23 +59,27 @@ const requestSchema = z.object({
   module: z.enum(ANALYSIS_TYPES, { errorMap: () => ({ message: "This analysis is coming soon" }) }),
   sport: z.enum(["baseball", "softball"], { errorMap: () => ({ message: "Invalid sport" }) }),
   userId: z.string().uuid("Invalid user ID format"),
-  language: z.string().optional(),
-  frames: z.array(z.string()).min(3, "At least 3 frames required for accurate analysis"),
-  landingFrameIndex: z.number().optional(),
+  // Every published and iPhone client shape is accepted: optional extras that an
+  // older client sends malformed are dropped, never a refusal. Only "no picture
+  // at all" can stop a report.
+  language: z.string().optional().catch(undefined),
+  frames: z.array(z.string()).min(1, "No readable picture in this clip"),
+  landingFrameIndex: z.number().optional().catch(undefined),
   /**
    * Phase 1 — deterministic frame extraction audit. One entry per extracted
    * frame, in the same order as `frames`. Persisted to video_frame_extractions
    * keyed on the resulting video_analysis_runs.id.
    */
-  frameExtractions: z.array(frameExtractionSchema).optional(),
+  frameExtractions: z.array(z.unknown()).optional().catch(undefined)
+    .transform((rows) => rows?.flatMap((row) => { const ok = frameExtractionSchema.safeParse(row); return ok.success ? [ok.data] : []; })),
   /**
    * Capture-honesty inputs. `captureFps` is the frame rate the recorder
    * actually achieved (measured, not requested). `ballTrackingEligible` is the
    * client's own verdict — advisory, and it can only ever close the gate,
    * never open it (see _shared/ballTrackingGate.ts).
    */
-  captureFps: z.number().positive().optional(),
-  ballTrackingEligible: z.boolean().optional(),
+  captureFps: z.number().positive().optional().catch(undefined),
+  ballTrackingEligible: z.boolean().optional().catch(undefined),
 });
 
 /**
