@@ -40,6 +40,9 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   const slug = `${rx.movement_slug} ${rx.movement_name}`.toLowerCase();
   const rows = Math.max(1, rx.sets ?? rx.total_reps ?? 1);
   const liveMeasure = rx.why_payload?.tracking_measure_type;
+  if (liveMeasure && ['reps per arm','reps per leg','reps each side'].includes(liveMeasure)) return {
+    rows: Math.max(1,rx.sets ?? 1), fields:[{key:'reps',label:liveMeasure[0].toUpperCase()+liveMeasure.slice(1),prefill:rx.reps}],
+  };
   if (liveMeasure && !['bunt_attempts'].includes(liveMeasure)) {
     const aliases: Record<string, string> = { throw_count: 'throws', check_off: 'checkoff' };
     const fields = fieldsForMeasure((aliases[liveMeasure] ?? liveMeasure) as Parameters<typeof fieldsForMeasure>[0]);

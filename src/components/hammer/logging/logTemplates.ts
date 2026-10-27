@@ -507,6 +507,6 @@ export function resolveTemplateForRx(
   catalogUnilateral: ReadonlySet<string> | null,
 ): { template: LogTemplate; unilateral: boolean } {
   const base = resolveTemplate(rx);
-  const unilateral = ['reps per arm','reps per leg','reps each side'].includes(rx.dosage_unit ?? '') || isUnilateralRx(rx, catalogUnilateral);
+  const unilateral = ['reps per arm','reps per leg','reps each side'].includes(rx.why_payload?.tracking_measure_type ?? rx.dosage_unit ?? '') || isUnilateralRx(rx, catalogUnilateral);
   return { template: unilateral ? withSideField(base) : base, unilateral };
 }
