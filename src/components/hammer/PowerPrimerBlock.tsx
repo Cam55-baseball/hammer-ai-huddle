@@ -64,6 +64,7 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
   const [manualStop, setManualStop] = useState<string | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
   const saves = useRef(new Map<number, Promise<void>>());
+  const recordedRatings = useRef(new Set<number>());
   const { user } = useOptionalAuth();
   const qc = useQueryClient();
   const lowerIsBetter = pp.target === "first_step";
@@ -114,12 +115,14 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
     }
     if (!user) { saves.current.set(i, Promise.resolve()); return; }
     // Every rating is saved for trends (record-only row; speed optional).
-    const pending = (async () => { const { error } = await supabase.from("wk_session_logs" as any).insert({
+    const pending = (async () => { if (!recordedRatings.current.has(i)) { const { error } = await supabase.from("wk_session_logs" as any).insert({
       user_id: user.id, plan_date: date, prescription_id: null,
       movement_slug: pp.action.slug ?? `pap_${pp.target}`, load_used: null,
       metrics: { kind: "pap_speed", target: pp.target, round: i + 1, rating, rating_label: label, value, unit: UNIT[pp.target] || null, lift: liftName ?? null },
     });
     if (error) { setSaveFailed(true); throw error; }
+    recordedRatings.current.add(i);
+    }
     setSaveFailed(false); qc.invalidateQueries({ queryKey: ["pap-best", user.id, pp.target] });
     if (pp.action.real_throw) {
       const id = `arm:${user.id}:${date}:pap_max_throws`;
