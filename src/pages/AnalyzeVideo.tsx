@@ -940,7 +940,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       // if D-POSE produced no usable anchors, the canonical missingness
       // reason is what gets persisted and rendered.
       setPitchingTilesDet(
-        denseRun && module === 'pitching' && sideResolution.status === 'known'
+        denseRun && module === 'pitching' && sport === 'baseball' && sideResolution.status === 'known'
           ? runPitchingTiles(denseRun.series, { throwing_side: sideResolution.side })
           : null,
       );

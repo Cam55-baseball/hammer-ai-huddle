@@ -26,6 +26,7 @@ import { scrubFootageClaims } from "./honestyCheck.ts";
 import { analysesLastHour, overHourlyLimit, logAiUsage, HOURLY_LIMIT_MESSAGE, hourlyResumeAt } from "../_shared/aiUsage.ts";
 import { runStoredThrowPitchCards, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
 import { saveAnalysisReport } from "../_shared/saveAnalysisReport.ts";
+import { analysisPositionContext } from "../_shared/analysisPosition.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1757,6 +1758,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Video access denied" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     authorizedClip = true;
+    const { data: savedProfile, error: positionError } = await supabase.from("profiles").select("position").eq("id", userId).maybeSingle();
+    const positionContext = analysisPositionContext(module, sport, positionError ? null : savedProfile?.position ?? null);
     if (await isAccountPaused(supabase, userId)) {
       await recordRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: "rejected:account_paused", cache_hit: false, outcome: "rejected", outcome_reason: "account_paused" });
       return pausedResponse(corsHeaders);
@@ -2067,6 +2070,7 @@ These flags must be accurate — the system applies graded deductions from them:
 CURRENT VIDEO ANALYSIS - VISUAL FRAME ANALYSIS:
 
 You are analyzing ${frames.length} sequential frames from a ${sport} ${module} motion.
+${positionContext}
 ${landingInstruction}
 ${alignmentChecksInstruction}
 
