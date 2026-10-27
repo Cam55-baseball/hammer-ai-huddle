@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { HeartPulse } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useSeasonStatus } from "@/hooks/useSeasonStatus";
+import { useSeasonStatus, type SeasonStatus } from "@/hooks/useSeasonStatus";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
@@ -37,17 +37,18 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-const QUICK_SEASON: Array<{ value: "in_season" | "preseason" | "post_season"; label: string }> = [
+const QUICK_SEASON: Array<{ value: SeasonStatus; label: string }> = [
   { value: "preseason", label: "Pre-season" },
   { value: "in_season", label: "In-season" },
   { value: "post_season", label: "Post-season" },
+  { value: "off_season", label: "Offseason is beginning" },
 ];
 
 
 export function TellHammerDialog({ open, onOpenChange }: Props) {
   const { user } = useAuth();
   const { sport } = useSportTheme();
-  const { updateSeasonStatus } = useSeasonStatus();
+  const { updateSeasonStatusAsync } = useSeasonStatus();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [level, setLevelState] = useState<string>("");
@@ -83,9 +84,14 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
     }
   }
 
-  async function setSeason(v: "in_season" | "preseason" | "post_season") {
-    updateSeasonStatus({ season_status: v });
-    toast.success(`Season set to ${v.replace("_", "-")}.`);
+  async function setSeason(v: SeasonStatus) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await updateSeasonStatusAsync({ season_status: v });
+      toast.success(`Season set to ${v.replace("_", "-")}.`);
+    } catch { /* The canonical season save displays its error. */ }
+    finally { setBusy(false); }
   }
 
   async function setLevel(v: string) {
@@ -119,7 +125,8 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
                   key={s.value}
                   size="sm"
                   variant="outline"
-                  className="h-7 text-[11px]"
+                  className="min-h-11 h-auto whitespace-normal text-xs"
+                  disabled={busy}
                   onClick={() => setSeason(s.value)}
                 >
                   {s.label}

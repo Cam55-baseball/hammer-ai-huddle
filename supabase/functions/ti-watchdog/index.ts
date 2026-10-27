@@ -24,6 +24,7 @@ import {
 } from "../_shared/wic/watch/rules.ts";
 import { writeNotes } from "../_shared/wic/watch/write.ts";
 import { checkIsGreen, countGreenNights } from "../_shared/wic/flags/rollout.ts";
+import { liftFrequencyWindow } from "../_shared/wic/watch/liftWindow.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -86,20 +87,23 @@ async function scan(admin: any) {
     if (f) notes.push(f);
   }
 
-  // 2. Lift frequency per athlete over the last 10 days.
-  const { data: lifts } = await admin
+  // 2. Distinct planned lift days; never count future plans or eight dates as seven.
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: lifts, error: liftError } = await admin
     .from("wk_prescriptions")
     .select("user_id, plan_date")
     .eq("slot", "lift")
     .gte("plan_date", dateDaysAgo(30))
+    .lte("plan_date", today)
     .limit(50000);
+  if (liftError || (lifts?.length ?? 0) >= 50000) throw new Error("Lift warning history unavailable or incomplete");
   const byAthlete = new Map<string, Set<string>>();
   for (const r of lifts ?? []) {
     const id = String((r as any).user_id);
-    (byAthlete.get(id) ?? byAthlete.set(id, new Set()).get(id)!).add(String((r as any).plan_date));
+    let dates = byAthlete.get(id);
+    if (!dates) { dates = new Set(); byAthlete.set(id, dates); }
+    dates.add(String((r as any).plan_date));
   }
-  const today = new Date().toISOString().slice(0, 10);
-  const cutoff7 = dateDaysAgo(7);
   // Step 24 item 9 — lift frequency is only meaningful for athletes who are
   // actually training. An athlete with nothing in the last 14 days is dormant,
   // not behind, and must not raise a note.
@@ -110,6 +114,7 @@ async function scan(admin: any) {
       .from("wk_prescriptions")
       .select("user_id")
       .gte("plan_date", since14)
+      .lte("plan_date", today)
       .limit(50000);
     for (const r of recentRx ?? []) activeIds.add(String((r as any).user_id));
     const { data: recentLogs } = await admin
@@ -120,15 +125,9 @@ async function scan(admin: any) {
     for (const r of recentLogs ?? []) activeIds.add(String((r as any).user_id));
   }
   const freq = [...byAthlete.entries()].filter(([id]) => activeIds.has(id)).map(([userId, dates]) => {
-    const all = [...dates].sort();
-    const last = all[all.length - 1];
-    const daysSince = last
-      ? Math.floor((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${last}T00:00:00Z`)) / 86400000)
-      : null;
     return {
       userId,
-      liftsLast7Days: all.filter((d) => d >= cutoff7).length,
-      daysSinceLastLift: daysSince,
+      ...liftFrequencyWindow([...dates], today),
     };
   });
   notes.push(...liftFrequencyNotes(freq));

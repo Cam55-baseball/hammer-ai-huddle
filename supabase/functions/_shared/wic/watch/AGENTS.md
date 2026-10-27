@@ -1,0 +1,1 @@
+- Lift-frequency warnings use distinct past-or-today plan dates and a seven-inclusive-day window from liftWindow; capped/error reads cannot certify history. Why: future prescriptions and eight-date windows must not inflate warnings.

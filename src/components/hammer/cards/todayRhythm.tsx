@@ -8,6 +8,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { dayFullyDone } from "./dayCompletion";
 
 export type Stage = "prepare" | "prime" | "explode" | "perform" | "recover";
 export const STAGES: ReadonlyArray<{ id: Stage; label: string }> = [
@@ -128,14 +129,21 @@ export function DomainGlyph({ domain, className = "" }: { readonly domain: Domai
 const DAY_DONE_KEY = "hm_day_complete_seen";
 
 /** The day's command center: progress ring, Next up, and the session story. */
-export function DayCommandCenter() {
+export function PrescribedOrderLine() {
+  const view = useContext(ViewCtx);
+  const categories = [...new Set((view?.entries ?? []).map(entry => entry.category))];
+  if (!categories.length) return null;
+  return <p className="border-y border-border py-2 text-xs text-muted-foreground"><span className="font-medium text-foreground">Do in this order:</span> {categories.join(' → ')}</p>;
+}
+
+export function DayCommandCenter({ checkIns = { morning: false, night: false, preLift: false, requiresPreLift: false } }: { checkIns?: { morning: boolean; night: boolean; preLift: boolean; requiresPreLift: boolean } }) {
   const view = useContext(ViewCtx);
   const tracked = (view?.entries ?? []).filter((e) => e.progress && e.progress.total > 0);
   const done = tracked.reduce((s, e) => s + (e.progress!.done >= e.progress!.total ? 1 : 0), 0);
   const items = tracked.reduce((s, e) => s + Math.min(e.progress!.done, e.progress!.total), 0);
   const totalItems = tracked.reduce((s, e) => s + e.progress!.total, 0);
   const next = view?.entries.find((e) => e.id === view.nextId) ?? null;
-  const dayDone = tracked.length > 0 && done === tracked.length;
+  const dayDone = dayFullyDone(tracked.flatMap(entry => entry.progress ? [entry.progress] : []), checkIns);
   const planDate = view?.planDate ?? "";
 
   useEffect(() => {

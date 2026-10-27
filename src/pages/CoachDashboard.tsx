@@ -269,79 +269,6 @@ export default function CoachDashboard() {
             Who needs help · Why · What to run today
           </p>
         </div>
-        <SendAthleteRequest />
-        <CoachProgramCard />
-        <CoachWeeklySummary />
-        <CoachPrescriptionStatus />
-        <TeamDisciplineSummary />
-        <Link to="/coach/lineup" className="text-sm underline underline-offset-2">Lineup mode — log a game for several players</Link>
-        <Link to="/coach/guest" className="text-sm underline underline-offset-2">Guest analysis — a player without an account (nothing saved)</Link>
-
-        <StaffGettingStarted role="coach" />
-
-        <TeamsCard />
-
-        {/* Hammer Progress Reports Inbox */}
-        <div data-tour="coach-reports"><FollowerReportsInbox role="coach" /></div>
-
-        {/* HIE: Team Overview */}
-        <TeamOverviewCard />
-
-        {/* HIE: Alert System */}
-        <div data-tour="coach-alerts"><CoachAlertPanel playerNames={playerNameMap} /></div>
-
-        {/* HIE: Actionable Player Cards */}
-        {playerSnapshots.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Player Intelligence</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {playerSnapshots.map(snap => (
-                <CoachPlayerCard
-                  key={snap.user_id}
-                  snapshot={snap}
-                  playerName={playerNameMap[snap.user_id]}
-                />
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* HIE: Team Weakness Engine */}
-        <TeamWeaknessEngine />
-
-        {/* HIE: Player Comparison Tool */}
-        <PlayerComparisonTool playerNames={playerNameMap} />
-
-        {/* Organization Quick Link */}
-        {activeOrg ? (
-          <Card className="border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors" onClick={() => navigate('/organization')}>
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <Building2 className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-semibold text-sm">Your Organization: <span className="text-primary">{activeOrg.name}</span></p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Users className="h-3 w-3" /> {memberCount} player{memberCount !== 1 ? 's' : ''}
-                  </p>
-                </div>
-              </div>
-              <Button size="sm" variant="outline" className="gap-1">
-                View Roster <ArrowRight className="h-3 w-3" />
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="border-dashed cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => navigate('/organization')}>
-            <CardContent className="flex items-center gap-3 p-4">
-              <Building2 className="h-5 w-5 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Create an Organization to manage your team roster and invite players</p>
-              <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto" />
-            </CardContent>
-          </Card>
-        )}
-
         <Tabs value={sportFilter} onValueChange={(value) => setSportFilter(value as 'all' | 'baseball' | 'softball')} className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-3 mx-auto">
             <TabsTrigger value="all">{t('common.allSports')}</TabsTrigger>
@@ -432,6 +359,80 @@ export default function CoachDashboard() {
             )}
           </CardContent>
         </Card>
+
+        <SendAthleteRequest />
+        <CoachProgramCard />
+        <CoachWeeklySummary />
+        <CoachPrescriptionStatus />
+        <TeamDisciplineSummary />
+        <Link to="/coach/lineup" className="text-sm underline underline-offset-2">Lineup mode — log a game for several players</Link>
+        <Link to="/coach/guest" className="text-sm underline underline-offset-2">Guest analysis — a player without an account (nothing saved)</Link>
+
+        <StaffGettingStarted role="coach" />
+
+        <TeamsCard />
+
+        {/* Hammer Progress Reports Inbox */}
+        <div data-tour="coach-reports"><FollowerReportsInbox role="coach" /></div>
+
+        {/* HIE: Team Overview */}
+        <TeamOverviewCard />
+
+        {/* HIE: Alert System */}
+        <div data-tour="coach-alerts"><CoachAlertPanel playerNames={playerNameMap} /></div>
+
+        {/* HIE: Actionable Player Cards */}
+        {playerSnapshots.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Player Intelligence</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {playerSnapshots.map(snap => (
+                <CoachPlayerCard
+                  key={snap.user_id}
+                  snapshot={snap}
+                  playerName={playerNameMap[snap.user_id]}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* HIE: Team Weakness Engine */}
+        <TeamWeaknessEngine />
+
+        {/* HIE: Player Comparison Tool */}
+        <PlayerComparisonTool playerNames={playerNameMap} />
+
+        {/* Organization Quick Link */}
+        {activeOrg ? (
+          <Card className="border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors" onClick={() => navigate('/organization')}>
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <Building2 className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold text-sm">Your Organization: <span className="text-primary">{activeOrg.name}</span></p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Users className="h-3 w-3" /> {memberCount} player{memberCount !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" className="gap-1">
+                View Roster <ArrowRight className="h-3 w-3" />
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-dashed cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => navigate('/organization')}>
+            <CardContent className="flex items-center gap-3 p-4">
+              <Building2 className="h-5 w-5 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Create an Organization to manage your team roster and invite players</p>
+              <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto" />
+            </CardContent>
+          </Card>
+        )}
+
 
         <PlayerNotesSection players={following} />
 

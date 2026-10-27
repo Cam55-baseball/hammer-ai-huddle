@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { validAnalysisJobToken } from "../_shared/analysisCanaryAuth.ts";
 import { dispatch } from "../_shared/notificationAdapters.ts";
-import { hasFullCoachingReport, hasReadableReport } from "../_shared/analysisReliability.ts";
+import { hasFullCoachingReport } from "../_shared/analysisReliability.ts";
 import { hasActiveRole } from "../_shared/authGuards.ts";
 
 Deno.serve(async req => {
@@ -39,7 +39,7 @@ Deno.serve(async req => {
     const result=await response.json();
     const report=result.ai_analysis??result;
     const readback=await sb.from("videos").select("status,ai_analysis").eq("id",config.video_id).eq("user_id",config.owner_id).maybeSingle();
-    const ok=response.ok&&result.saved===true&&hasFullCoachingReport(report)&&readback.data?.status==="completed"&&hasReadableReport(readback.data.ai_analysis);
+    const ok=response.ok&&result.saved===true&&hasFullCoachingReport(report)&&readback.data?.status==="completed"&&hasFullCoachingReport(readback.data.ai_analysis);
     const paused=[401,402,403,404,422].includes(response.status) ? `terminal_http_${response.status}` : null;
     const persisted=await sb.from("analysis_canary_config").update({last_status:ok?"passed":`failed_http_${response.status}`,paused_reason:paused,lease_until:null,lease_id:null,updated_at:new Date().toISOString()}).eq("id",1).eq("lease_id",lease);
     if(persisted.error)throw new Error("canary_status_save_failed");
