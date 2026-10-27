@@ -8,6 +8,26 @@ function Entry({ save, rest, bases }: { save: () => Promise<void>; rest: number 
   return null;
 }
 describe("guided canonical set progression", () => {
+  it("interleaves a prescribed action after 120s lift rest and retains 60s sprint recovery before lift row 2", async () => {
+    vi.useFakeTimers(); const liftSave = vi.fn(async () => {}); const actionSave = vi.fn(async () => {});
+    function Lift() { useFocusExercise({ id: "lift", name: "Lift", rows: 2, ready: [true, true], restSeconds: 180, save: liftSave }); return null; }
+    function Action() { useFocusExercise({ id: "pap:lift", afterExerciseId: "lift", name: "Power Primer: 1 sprint", rows: 2, ready: [true, true], restSeconds: 60, beforeSeconds: 120, available: row => row === 0, save: actionSave }); return null; }
+    const work = <><Lift /><Action /></>;
+    const view = render(<FocusSession active storageKey="pap-sequence" onExit={() => {}}>{work}</FocusSession>);
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Finished" })));
+    expect(liftSave).toHaveBeenCalledTimes(1);
+    await act(async () => vi.advanceTimersByTime(120000));
+    expect(screen.getByRole("heading").textContent).toContain("Power Primer: 1 sprint");
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Finished" })));
+    view.unmount();
+    render(<FocusSession active storageKey="pap-sequence" onExit={() => {}}>{work}</FocusSession>);
+    await act(async () => vi.advanceTimersByTime(59900));
+    expect(JSON.parse(sessionStorage.getItem("pap-sequence") ?? "{}")).toMatchObject({ phase: "action", row: 0, restSeconds: 60 });
+    await act(async () => vi.advanceTimersByTime(100));
+    expect(JSON.parse(sessionStorage.getItem("pap-sequence") ?? "{}")).toMatchObject({ phase: "work", row: 1 });
+    expect(liftSave).toHaveBeenCalledTimes(1);
+    expect(actionSave).toHaveBeenCalledTimes(1);
+  });
   it("Finished saves once and automatically starts declared rest", async () => {
     const save = vi.fn(async () => {});
     render(<FocusSession active storageKey="finished-proof" onExit={() => {}}><Entry save={save} rest={30} /></FocusSession>);
@@ -16,6 +36,16 @@ describe("guided canonical set progression", () => {
     const cursor = JSON.parse(sessionStorage.getItem("finished-proof") ?? "{}");
     expect(cursor.restingUntil - cursor.restStartedAt).toBe(30000);
     expect(cursor.row).toBe(0);
+  });
+  it("a locked or stopped continuation never changes the lift rest or row count", async () => {
+    vi.useFakeTimers(); const actionSave = vi.fn(async () => {});
+    function Action() { useFocusExercise({ id: "pap:exercise", afterExerciseId: "exercise", name: "Power Primer", rows: 2, ready: [false, false], restSeconds: 60, beforeSeconds: 120, available: () => false, save: actionSave }); return null; }
+    render(<FocusSession active storageKey="locked-primer" onExit={() => {}}><Entry save={async () => {}} rest={180} /><Action /></FocusSession>);
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Finished" })));
+    expect(JSON.parse(sessionStorage.getItem("locked-primer") ?? "{}").restSeconds).toBe(180);
+    await act(async () => vi.advanceTimersByTime(180000));
+    expect(JSON.parse(sessionStorage.getItem("locked-primer") ?? "{}")).toMatchObject({ phase: "work", row: 1 });
+    expect(actionSave).not.toHaveBeenCalled();
   });
   it("mounted work survives the entire declared rest and resumes without another save", async () => {
     vi.useFakeTimers(); const save = vi.fn(async () => {});

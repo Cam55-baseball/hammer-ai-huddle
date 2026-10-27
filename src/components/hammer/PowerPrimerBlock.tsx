@@ -6,7 +6,7 @@
  * (src/lib/prescription/primerRounds.ts). The lift always continues. Gates and
  * caps come from the builder payload; sets, reps and % of the lift never change.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,7 @@ import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure
 import { papAlternatives } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
 import { QUALITY, primerState, type PrimerRound } from "@/lib/prescription/primerRounds";
 import { enqueue, sendJob } from "@/lib/logging/logOutbox";
-import { useFocusState } from "@/components/hammer/cards/FocusSession";
+import { useFocusExercise } from "@/components/hammer/cards/FocusSession";
 
 export type PowerPrimerPayload = {
   target: "throw" | "bat_speed" | "first_step" | "jump";
@@ -48,9 +48,8 @@ export const PRIMER_EXPLAINER = [
   "If it felt excellent or good (5 or 4), you get another explosive set after your next lift set. At 3 or lower, or when your speed drops or you reach today's limit, that was the last one — explosive work only helps while it's crisp. Always finish the rest of the lift.",
 ];
 
-export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets }: { pp: PowerPrimerPayload; planDate?: string | null; liftName?: string; liftSets?: number }) {
+export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, prescriptionId }: { pp: PowerPrimerPayload; planDate?: string | null; liftName?: string; liftSets?: number; prescriptionId?: string }) {
   const logHost = usePocketLogHost();
-  const focus = useFocusState();
   const [actionIdx, setActionIdx] = useState(0);
   const actionAlts = useMemo(() => base.action.slug ? papAlternatives(base.action.slug, base.target) : [], [base]);
   const pp: PowerPrimerPayload = useMemo(() => {
@@ -64,13 +63,39 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets }: { p
   const [entry, setEntry] = useState("");
   const [manualStop, setManualStop] = useState<string | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
+  const saves = useRef(new Map<number, Promise<void>>());
+  const recordedRatings = useRef(new Set<number>());
   const { user } = useOptionalAuth();
   const qc = useQueryClient();
+  const savedRounds = useQuery({
+    queryKey: ["pap-rounds", user?.id, date, liftName, pp.action.slug, pp.target], enabled: !!user && !!prescriptionId,
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase.from("wk_session_logs" as any).select("metrics")
+        .eq("user_id", user.id).eq("plan_date", date).eq("movement_slug", pp.action.slug ?? `pap_${pp.target}`)
+        .eq("metrics->>kind", "pap_speed").eq("metrics->>lift", liftName ?? "").order("created_at");
+      if (error) throw error;
+      return (data ?? []) as unknown as Array<{ metrics: { round: number; rating: number; value: number | null } }>;
+    },
+  });
   const lowerIsBetter = pp.target === "first_step";
   const sets = Math.max(liftSets ?? 0, 1);
   const rules = { max_sets: Math.min(pp.max_sets, sets), max_total_reps: pp.max_total_reps, stop: pp.stop, actionReps: pp.action.reps[1], realThrow: !!pp.action.real_throw };
   const st = primerState(rules, rounds);
   const stopReason = manualStop ?? st.stopReason;
+  useEffect(() => {
+    if (!savedRounds.data?.length) return;
+    const found: PrimerRound[] = [];
+    for (const item of savedRounds.data) {
+      const index = item.metrics.round - 1;
+      if (!Number.isInteger(index) || index < 0 || index >= rules.max_sets || !QUALITY.some(q => q.value === item.metrics.rating)) continue;
+      found[index] = { rating: item.metrics.rating, value: item.metrics.value };
+      recordedRatings.current.add(index); saves.current.set(index, Promise.resolve());
+    }
+    if (!found.length || Array.from(found).some(round => !round)) return;
+    const state = primerState(rules, found);
+    setRounds(state.next ? [...found, { rating: null, value: null }] : found);
+  }, [savedRounds.data]);
 
   const { data: accountBest } = useQuery({
     queryKey: ["pap-best", user?.id, pp.target],
@@ -92,6 +117,19 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets }: { p
   const locked = pp.requires_throwing_warmup && !warm;
   // rest_s stays the lift-to-action interval. Sprint recovery is separate.
   const sprintFeet = pp.stop.kind === "sprint" ? pp.action.distance_feet ?? (pp.action.slug === "pap_a_10yd_steal" || pp.action.slug === "pap_a_10yd_infield" ? 30 : null) : null;
+  const focus = useFocusExercise({ id: `pap:${prescriptionId ?? liftName ?? pp.primer.name}`, afterExerciseId: prescriptionId ? `rx:${prescriptionId}` : undefined,
+    enabled: !!prescriptionId, name: `Power Primer: ${pp.action.name} — ${pp.action.reps[1]} reps`, rows: rules.max_sets,
+    ready: rounds.map(round => round.rating != null), beforeSeconds: pp.rest_s[0],
+    restSeconds: pp.stop.kind === "sprint" ? sprintRestSeconds(sprintFeet) : 0,
+    available: row => !savedRounds.error && !savedRounds.isLoading && !locked && !stopReason && row < rules.max_sets && rounds[row]?.rating === null,
+    save: async row => {
+      // Explicit Skip without a rating records no performed explosive work.
+      if (rounds[row]?.rating == null) return;
+      const pending = saves.current.get(row);
+      if (!pending) throw new Error("Rating not saved");
+      await pending;
+    },
+  });
 
   function rate(i: number, rating: number) {
     const v = Number(entry);
@@ -105,54 +143,63 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets }: { p
       const top = value;
       if (best == null || (lowerIsBetter ? top < best : top > best)) localStorage.setItem(pbKey(pp.target), String(top));
     }
-    if (!user) return;
+    if (!user) { saves.current.set(i, Promise.resolve()); return; }
     // Every rating is saved for trends (record-only row; speed optional).
-    void supabase.from("wk_session_logs" as any).insert({
+    const pending = (async () => { if (!recordedRatings.current.has(i)) { const { error } = await supabase.from("wk_session_logs" as any).insert({
       user_id: user.id, plan_date: date, prescription_id: null,
       movement_slug: pp.action.slug ?? `pap_${pp.target}`, load_used: null,
       metrics: { kind: "pap_speed", target: pp.target, round: i + 1, rating, rating_label: label, value, unit: UNIT[pp.target] || null, lift: liftName ?? null },
-    }).then(({ error }) => { setSaveFailed(!!error); if (!error) qc.invalidateQueries({ queryKey: ["pap-best", user.id, pp.target] }); });
+    });
+    if (error) { setSaveFailed(true); throw error; }
+    recordedRatings.current.add(i);
+    }
+    setSaveFailed(false); qc.invalidateQueries({ queryKey: ["pap-best", user.id, pp.target] });
     if (pp.action.real_throw) {
       const id = `arm:${user.id}:${date}:pap_max_throws`;
       enqueue({ kind: "arm", id, userId: user.id, at: Date.now(), row: { entry_date: date, source: "pitching", throw_type: "pap_max_throws", count: s2.realThrows, prescribed: pp.max_total_reps, status: "done" } });
-      void sendJob(id).then((ok) => { if (!ok) setSaveFailed(true); });
+      if (!(await sendJob(id))) { setSaveFailed(true); throw new Error("Throw count pending"); }
     }
+    })(); saves.current.set(i, pending); void pending.catch(() => {});
   }
 
   const ratedCount = st.done;
   const rows: JSX.Element[] = [];
   for (let i = 0; i < sets; i++) {
-    rows.push(<li key={`l${i}`} data-primer-lift-set={i + 1} className="text-xs"><span className="font-medium">Lift set {i + 1}</span> — {liftName ?? pp.primer.name} (log it above)</li>);
-    const showExplosive = i < rounds.length && !(stopReason && i >= ratedCount) && i < rules.max_sets;
+    if (focus.active && i !== focus.row) continue;
+    if (!focus.active) rows.push(<li key={`l${i}`} data-primer-lift-set={i + 1} className="text-xs"><span className="font-medium">Lift set {i + 1}</span> — {liftName ?? pp.primer.name} (log it above)</li>);
+    const showExplosive = i < rounds.length && (focus.active || !(stopReason && i >= ratedCount)) && i < rules.max_sets;
     if (!showExplosive) continue;
     const r = rounds[i];
     rows.push(<li key={`e${i}`} data-primer-explosive={i + 1} className="space-y-1 rounded-md border border-primary/40 bg-primary/5 p-2">
       <p className="text-xs font-semibold"><Zap className="mr-1 inline h-3 w-3 text-primary" />{pp.action.name} — {pp.action.reps[1]} rep{pp.action.reps[1] === 1 ? "" : "s"}</p>
       <p data-primer-measured className="text-[11px] font-semibold text-primary">All-out effort — this is what we measure</p>
       {r.rating == null ? <>
-        <RestTimer label="Rest after the lift set" seconds={pp.rest_s[0]} maxSeconds={pp.rest_s[1]} />
+        {!focus.active && <RestTimer label="Rest after the lift set" seconds={pp.rest_s[0]} maxSeconds={pp.rest_s[1]} />}
         {UNIT[pp.target] && <Input inputMode="decimal" className="h-8 w-36 text-xs" placeholder={`${MEASURE[pp.target]} (${UNIT[pp.target]}, optional)`} value={entry} onChange={(e) => setEntry(e.target.value)} aria-label={`${MEASURE[pp.target]} (${UNIT[pp.target]})`} />}
         <p className="text-[11px] font-medium">How did that explosive set feel? (required)</p>
         <div role="group" aria-label={`Rate explosive set ${i + 1}`} className="flex flex-wrap gap-1">
           {QUALITY.map((q) => <Button key={q.value} size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => rate(i, q.value)}>{q.value}/5 {q.label}</Button>)}
         </div>
-      </> : <><p data-primer-rating={r.rating} className="text-[11px]">Rated {r.rating}/5 — {QUALITY.find((q) => q.value === r.rating)?.label}{r.value != null ? ` · ${r.value} ${UNIT[pp.target]}` : ""}</p>{pp.stop.kind === "sprint" && <RestTimer label="Rest after this run set" seconds={sprintRestSeconds(sprintFeet)} />}</>}
+      </> : <><p data-primer-rating={r.rating} className="text-[11px]">Rated {r.rating}/5 — {QUALITY.find((q) => q.value === r.rating)?.label}{r.value != null ? ` · ${r.value} ${UNIT[pp.target]}` : ""}</p>{!focus.active && pp.stop.kind === "sprint" && <RestTimer label="Rest after this run set" seconds={sprintRestSeconds(sprintFeet)} />}</>}
       {pp.stop.kind === "sprint" && <p className="text-xs text-muted-foreground">{sprintRestWhy(sprintFeet) ?? "Run distance not entered — rest time is not yet set."}</p>}
     </li>);
   }
 
-  const entries = <section data-power-primer-entries className="space-y-2">
+  const entries = <section hidden={!focus.visible} data-power-primer-entries className="space-y-2">
     <h4 className="flex items-center gap-2 text-sm font-semibold"><Zap className="h-4 w-4 text-primary" />{liftName ?? pp.primer.name}: heavy set + all-out effort</h4>
     {locked ? (
       <p className="flex items-center gap-1 text-xs text-muted-foreground"><Lock className="h-3 w-3" /> All-out throws unlock after your throwing warm-up (in the drop-down below). Your lift sets go ahead now.</p>
     ) : <ol className="space-y-1">{rows}</ol>}
     {stopReason && !locked && <p data-pap-stopped className="text-xs font-medium">{stopReason}</p>}
     {pp.action.real_throw && <p data-primer-arm className="text-[11px] text-muted-foreground">Arm count: {st.realThrows} real throws = {st.armUnits} arm units (each counts 1.5).</p>}
-    {saveFailed && <p role="status" className="text-[11px] text-amber-700 dark:text-amber-300">Couldn't save your rating yet — it will retry.</p>}
+    {savedRounds.error && <p role="alert" className="text-xs text-destructive">Couldn't load your saved primer rounds. Your lift stays available.</p>}
+    {saveFailed && <p role="alert" className="text-xs text-destructive">Couldn't save your rating. Rate this set again to retry.</p>}
+    {saveFailed && <div className="flex flex-wrap gap-1">{QUALITY.map(q => <Button key={q.value} size="sm" variant="outline" onClick={() => rate(focus.active ? focus.row : Math.max(0, ratedCount - 1), q.value)}>{q.value}/5 {q.label}</Button>)}</div>}
+    {focus.active && !locked && !stopReason && <div className="flex flex-wrap gap-1">{pp.stop_buttons.map(button => <Button key={button} size="sm" variant="outline" onClick={() => setManualStop(`${button} — no more all-out sets today. Finish your lift.`)}>{button}</Button>)}</div>}
   </section>;
 
   return (
-    <section data-power-primer className="border-b border-border py-2">
+    <section hidden={!focus.visible} data-power-primer className="border-b border-border py-2">
       {logHost && createPortal(entries, logHost)}
       <ExerciseDisclosure name={`${liftName ?? "Lift"}: how the heavy set + all-out effort works`}>
         {PRIMER_EXPLAINER.map((t) => <p key={t} className="text-xs text-muted-foreground">{t}</p>)}

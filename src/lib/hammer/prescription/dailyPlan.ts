@@ -114,6 +114,13 @@ export type BlockStatus = "ready" | "awaiting-input" | "suppressed" | "off-day";
 export type BlockPhase = "build" | "sharpen" | "maintain" | "deload" | "recover" | "skill";
 
 export interface DrillStep {
+  /** Owner-declared metadata only; never proof of efficacy or dose authority. */
+  readonly ownerDrillId?: string;
+  readonly routineRole?: string | null;
+  readonly skillArea?: string | null;
+  readonly batSpeedKind?: string | null;
+  readonly videoUrl?: string | null;
+  readonly libraryVideoId?: string | null;
   readonly bunt?: {side:'R'|'L';type:import('../../../../supabase/functions/_shared/wic/buntingProgram').BuntType;attempts:number;sourceAttempts:number;sourceSuccesses:number};
   readonly name: string;
   readonly slug?: string;
