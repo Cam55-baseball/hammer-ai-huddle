@@ -17,7 +17,7 @@ describe("Today presentation — no prescription bleed", () => {
   it('separates bunts in both sports without changing hitting task identities or volume', () => {
     for (const sport of ['baseball', 'softball']) {
       const swing = { name: 'Tee swings', slug: `${sport}-tee`, dosage: '10 swings' };
-      const bunt = { name: 'Sacrifice bunt', slug: `${sport}-bunt`, dosage: '7 attempts', bunt: { side: 'L' as const, type: 'sacrifice' as const, attempts: 7, sourceAttempts: 10, sourceSuccesses: 5 } };
+      const bunt = { name: 'Sacrifice bunt', slug: `${sport}-bunt`, dosage: '7 attempts', bunt: { side: 'L' as const, type: 'sac_3b' as const, attempts: 7, sourceAttempts: 10, sourceSuccesses: 5 } };
       const original = { ...block(), modality: 'hitting', drills: [swing, bunt] } as PrescribedBlock;
       const before = JSON.stringify(original);
       const parts = splitBunting([original]);

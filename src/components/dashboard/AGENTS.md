@@ -1,2 +1,3 @@
 - Growth's forecast preview is an uncertified Hammers Card, not a day-tone projection or forecast-page shortcut. Why: readiness and schedule signals do not establish future growth or justify changing training.
 - Recent development video picks reject source-read errors and omit deleted or opposite-sport sessions; they are not a weekly prescription. Why: unavailable history and a rolling evidence window must not fabricate a plan.
+- Develop This Week reads only the athlete's selected-sport saved block-day snapshots for the current Monday–Sunday week, preserving exact drill doses and exposing read failures. Why: a dashboard must not generate future work or treat rolling video suggestions as a saved prescription.
