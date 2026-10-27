@@ -1,3 +1,4 @@
 - Practice logging projects non-deleted canonical performance sessions; never add workout denominators or completed doses. Why: logging is not proof of workout completion.
 - Canonical game sessions share the practice logging projection and query allowlist. Why: an unprescribed game is saved work, not a completed prescribed workout.
+- Behavioral practice/game credit enters active-day history only from saved-sport non-deleted sessions; self JWT or authenticated system refresh is required. Why: activity must not satisfy standard/check-ins or expose other athletes.
 - Coach practice reads require self or linked-coach eligibility and table RLS; denied/unavailable reads stay distinct from empty. Why: the Discipline RPC grants broader access than the session table.

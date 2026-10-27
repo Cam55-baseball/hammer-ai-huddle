@@ -14,6 +14,8 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { buildAsbRow, emitAsbEvent } from "../_shared/asbEmit.ts";
+import { recruitingGate } from '../_shared/recruitingGate.ts';
+import { PRACTICE_SESSION_TYPES, practiceCreditDates } from './practiceCredit.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -148,8 +150,25 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     if (l.completion_state === "completed") {
       completedByDay.add(l.entry_date);
       if (!completedTemplatesByDay.has(l.entry_date)) completedTemplatesByDay.set(l.entry_date, new Set());
-      completedTemplatesByDay.get(l.entry_date)!.add(l.template_id);
+      completedTemplatesByDay.get(l.entry_date)?.add(l.template_id);
     }
+  }
+
+  // Canonical practice/game activity joins discipline only. It cannot satisfy
+  // required templates, a performance streak, or the daily outcome/check-ins.
+  const { data: athlete, error: sportError } = await supabase.from('athlete_context')
+    .select('sport_primary').eq('user_id', userId).maybeSingle();
+  if (sportError) throw sportError;
+  let practiceDays = new Set<string>();
+  if (['baseball', 'softball'].includes(athlete?.sport_primary)) {
+    const { data: sessions, error: sessionError } = await supabase.from('performance_sessions')
+      .select('id,user_id,sport,session_date,session_type,deleted_at').eq('user_id', userId)
+      .eq('sport', athlete.sport_primary).is('deleted_at', null).in('session_type', PRACTICE_SESSION_TYPES)
+      .gte('session_date', since30).lte('session_date', todayUTC).limit(1000);
+    if (sessionError) throw sessionError;
+    if (!sessions || sessions.length >= 1000) throw new Error('Complete practice history unavailable');
+    practiceDays = practiceCreditDates(sessions, userId, athlete.sport_primary, since30, todayUTC);
+    for (const date of practiceDays) anyLogByDay.add(date);
   }
 
   // 2. Injury overrides
@@ -358,7 +377,7 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     inputs: {
       denom, nn_template_count: nnIds.length, dda_relief: ddaRelief,
       max_rest_per_week: maxRestPerWeek, recurring_days: recurringDays,
-      source: "custom_activity_logs_v4_unified_day_state",
+      source: "custom_activity_logs_v5_practice_activity", practice_active_days: practiceDays.size,
     },
   }, { onConflict: "user_id,snapshot_date" });
 
@@ -540,7 +559,7 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     for (const l of logs14 ?? []) {
       if (l.completion_state !== "completed") continue;
       if (!completedByTpl.has(l.template_id)) completedByTpl.set(l.template_id, new Set());
-      completedByTpl.get(l.template_id)!.add(l.entry_date);
+      completedByTpl.get(l.template_id)?.add(l.entry_date);
     }
 
     // Build the trailing 14-date list for streak walk
@@ -658,35 +677,52 @@ serve(async (req) => {
   const startMs = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  const url = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !serviceKey) return new Response(JSON.stringify({error:'Service unavailable'}), {status:503,headers:corsHeaders});
+  const supabase = createClient(url, serviceKey);
+  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer /, '');
+  const systemCall = token === serviceKey;
+  let viewerId: string | null = null;
+  if (!systemCall) {
+    const {data, error} = await supabase.auth.getUser(token);
+    if (error || !data.user) return new Response(JSON.stringify({error:'Sign in first'}), {status:401,headers:corsHeaders});
+    viewerId = data.user.id;
+  }
 
   try {
     const todayUTC = new Date().toISOString().split("T")[0];
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const targetUser: string | null = body?.user_id ?? null;
+    if (!systemCall && (!targetUser || targetUser !== viewerId)) return new Response(JSON.stringify({error:'Only your own activity can be refreshed'}), {status:403,headers:corsHeaders});
 
     let userIds: string[];
     if (targetUser && targetUser !== SYSTEM_USER) {
       userIds = [targetUser];
     } else {
       const since30 = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
-      const [{ data: activeRows }, { data: dayRows }] = await Promise.all([
+      const [{ data: activeRows }, { data: dayRows }, {data: practiceRows, error: practiceError}] = await Promise.all([
         supabase.from("custom_activity_logs")
           .select("user_id").gte("entry_date", since30).neq("user_id", SYSTEM_USER),
         supabase.from("user_day_state_overrides")
           .select("user_id").gte("date", since30),
+        supabase.from('performance_sessions').select('user_id').is('deleted_at', null)
+          .in('session_type', PRACTICE_SESSION_TYPES).gte('session_date', since30).lte('session_date', todayUTC),
       ]);
+      if (practiceError) throw practiceError;
       const ids = new Set<string>();
       for (const r of activeRows ?? []) if (r.user_id !== SYSTEM_USER) ids.add(r.user_id);
       for (const r of dayRows ?? []) if (r.user_id !== SYSTEM_USER) ids.add(r.user_id);
+      for (const r of practiceRows ?? []) if (r.user_id !== SYSTEM_USER) ids.add(r.user_id);
       userIds = Array.from(ids);
     }
 
     const results: any[] = [];
     for (const uid of userIds) {
+      // System refresh acts as self per athlete; it never returns athlete data
+      // to an unauthenticated viewer. User calls are strictly self-only above.
+      const gate = await recruitingGate(supabase, systemCall ? uid : viewerId ?? '', [uid], 'metrics');
+      if (gate.get(uid) !== 'visible') continue;
       try { results.push(await evaluateUser(supabase, uid, todayUTC)); }
       catch (e) { results.push({ userId: uid, error: String(e) }); }
     }
