@@ -981,6 +981,13 @@
       "when": 1793130308769,
       "tag": "0139_start_hammers_today_full_readiness",
       "breakpoints": true
+    },
+    {
+      "idx": 140,
+      "version": "7",
+      "when": 1793134586465,
+      "tag": "0140_owner_drill_routine_video_metadata",
+      "breakpoints": true
     }
   ]
 }

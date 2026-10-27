@@ -23,7 +23,7 @@ interface Props {
 export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
   const { user } = useAuth();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['long-term-video-signals', user?.id, domainProp],
     enabled: !!user,
     staleTime: 60_000,
@@ -31,11 +31,12 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
       if (!user) return null;
       const since = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
 
-      const [{ data: snap }, { data: sessions }] = await Promise.all([
+      const [snapshotResult, sessionResult] = await Promise.all([
         (supabase as any)
           .from('hie_snapshots')
           .select('weakness_clusters, sport')
           .eq('user_id', user.id)
+          .is('deleted_at', null)
           .order('computed_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
@@ -47,6 +48,12 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
           .order('session_date', { ascending: false })
           .limit(20),
       ]);
+
+      if (snapshotResult.error) throw snapshotResult.error;
+      if (sessionResult.error) throw sessionResult.error;
+      const snap = snapshotResult.data;
+      // A different sport's practice must not drive this sport's picks.
+      const sessions = (sessionResult.data ?? []).filter(session => session.sport === snap?.sport);
 
       // Infer skill domain from most recent session module if not provided
       const inferred =
@@ -62,6 +69,7 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
     },
   });
 
+  if (isError) return <div role="alert" className="space-y-2 text-sm text-destructive">Recent development picks couldn’t be loaded.<Button variant="outline" size="sm" onClick={() => void refetch()}>Try again</Button></div>;
   if (isLoading || !data) return null;
 
   const agg = aggregateWeaknessClustersToTaxonomy(
@@ -75,7 +83,7 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
       <Card className="border-dashed">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" /> Develop This Week
+            <Sparkles className="h-4 w-4 text-primary" /> Recent development picks
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
@@ -92,7 +100,7 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
       movementPatterns={agg.movementPatterns}
       resultTags={agg.resultTags}
       contextTags={agg.contextTags}
-      title="Develop This Week"
+      title="Recent development picks"
     />
   );
 }

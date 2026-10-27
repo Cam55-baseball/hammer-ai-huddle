@@ -13319,6 +13319,7 @@ export type Database = {
       owner_drills: {
         Row: {
           active: boolean
+          bat_speed_kind: string | null
           common_mistake: string | null
           created_at: string
           created_by: string | null
@@ -13330,12 +13331,15 @@ export type Database = {
           feel_wrong: string | null
           id: string
           level: string | null
+          library_video_id: string | null
           name: string
           overrides_drill_id: string | null
           phase: string | null
           pinned: boolean
           placements: string[]
+          routine_role: string | null
           setup: string | null
+          skill_area: string | null
           sports: string[]
           steps: string[]
           updated_at: string
@@ -13343,6 +13347,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          bat_speed_kind?: string | null
           common_mistake?: string | null
           created_at?: string
           created_by?: string | null
@@ -13354,12 +13359,15 @@ export type Database = {
           feel_wrong?: string | null
           id?: string
           level?: string | null
+          library_video_id?: string | null
           name: string
           overrides_drill_id?: string | null
           phase?: string | null
           pinned?: boolean
           placements?: string[]
+          routine_role?: string | null
           setup?: string | null
+          skill_area?: string | null
           sports?: string[]
           steps?: string[]
           updated_at?: string
@@ -13367,6 +13375,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          bat_speed_kind?: string | null
           common_mistake?: string | null
           created_at?: string
           created_by?: string | null
@@ -13378,18 +13387,43 @@ export type Database = {
           feel_wrong?: string | null
           id?: string
           level?: string | null
+          library_video_id?: string | null
           name?: string
           overrides_drill_id?: string | null
           phase?: string | null
           pinned?: boolean
           placements?: string[]
+          routine_role?: string | null
           setup?: string | null
+          skill_area?: string | null
           sports?: string[]
           steps?: string[]
           updated_at?: string
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "owner_drills_library_video_id_fkey"
+            columns: ["library_video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_drills_library_video_id_fkey"
+            columns: ["library_video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos_readiness"
+            referencedColumns: ["video_id"]
+          },
+          {
+            foreignKeyName: "owner_drills_library_video_id_fkey"
+            columns: ["library_video_id"]
+            isOneToOne: false
+            referencedRelation: "public_library_videos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       parent_athlete_links: {
         Row: {
