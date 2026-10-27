@@ -118,6 +118,12 @@ export function mergeOwnerSlotDrills<T extends StepLike>(drills: T[], slots: Pla
     dosage: pick.dosage ?? "",
     cue: pick.cue ?? "",
     prescriptionOrigin: "owner",
+    ownerDrillId: pick.id,
+    routineRole: pick.routine_role ?? null,
+    skillArea: pick.skill_area ?? null,
+    batSpeedKind: pick.bat_speed_kind ?? null,
+    videoUrl: pick.video_url ?? null,
+    libraryVideoId: pick.library_video_id ?? null,
     ...(clean(pick.setup) ? { setup: pick.setup } : {}),
     ...(pick.equipment.length ? { equipmentNote: pick.equipment.join(", ") } : {}),
   } as unknown as T;

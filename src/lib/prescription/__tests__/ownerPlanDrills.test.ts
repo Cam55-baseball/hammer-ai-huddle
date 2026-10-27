@@ -25,6 +25,13 @@ describe("owner plan drills", () => {
     setOwnerPlanDrills([row({ placements: ["hammers_today:warmup"] })]);
     expect(mergeOwnerSlotDrills(base, ["hammers_today:warmup"], { sport: "baseball" })[2].name).toBe("Owner tee drill");
   });
+  for (const sport of ["baseball", "softball"]) it(`${sport}: exact owner role and video tags survive without granting volume or efficacy`, () => {
+    setOwnerPlanDrills([row({ sports: [sport], placements: ["hammers_today:warmup"], routine_role: "routine", skill_area: "bat_speed", bat_speed_kind: "overspeed", video_url: "https://example.org/drill.mp4", library_video_id: "video-1" })]);
+    const result = mergeOwnerSlotDrills(base, ["hammers_today:warmup"], { sport });
+    expect(result).toHaveLength(3);
+    expect(result[2]).toMatchObject({ ownerDrillId: "a", routineRole: "routine", skillArea: "bat_speed", batSpeedKind: "overspeed", videoUrl: "https://example.org/drill.mp4", libraryVideoId: "video-1", dosage: "3 x 8" });
+    expect(result[2]).not.toHaveProperty("provenEffective");
+  });
 
   it("every declared condition must hold", () => {
     const ctx = { sport: "baseball", skill: "hitting" as const };

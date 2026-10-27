@@ -7,7 +7,7 @@ export interface PracticeLog {
   deleted_at: string | null;
 }
 
-const PRACTICE_TYPES = new Set(["solo_work", "team_session", "lesson", "live_abs"]);
+const PRACTICE_TYPES = new Set(["solo_work", "team_session", "lesson", "live_abs", "game"]);
 
 /** Saved practice is evidence of logging, never evidence of completing a workout dose. */
 export function practiceLogging(days: DayRecord[], logs: PracticeLog[], from: string, to: string) {

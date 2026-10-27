@@ -25,8 +25,14 @@ describe("practice feeds Discipline without authoring workout completion", () =>
     expect(result.sessions).toBe(2);
     expect(result.dates).toEqual([day.date]);
   });
-  it("game and unrecognized records are not practice", () => {
-    expect(project([{ ...log, session_type: "game" }, { ...log, id: "unknown", session_type: "unknown" }]).sessions).toBe(0);
+  it("saved games count as logging, never as prescribed work", () => {
+    const result = project([{ ...log, session_type: "game" }]);
+    expect(result.sessions).toBe(1);
+    expect(result.days[0]).toEqual({ ...day, logged: true });
+    expect(completion(result.days)).toBe(0);
+  });
+  it("unrecognized records never count as sessions", () => {
+    expect(project([{ ...log, session_type: "unknown" }]).sessions).toBe(0);
   });
   it("out-of-window and future sessions never count", () => {
     expect(project([{ ...log, session_date: "2026-07-22" }, { ...log, id: "future", session_date: "2026-10-21" }]).sessions).toBe(0);
