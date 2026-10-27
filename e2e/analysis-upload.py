@@ -61,7 +61,9 @@ async def main():
         for reload in [False, True]:
             if reload: await page.reload()
             else: await page.goto("http://localhost:8080/players-club")
-            await page.get_by_text(title, exact=True).click(timeout=30000)
+            await page.get_by_text(title, exact=True).wait_for(timeout=30000)
+            card = page.locator('div').filter(has=page.get_by_text(title, exact=True)).filter(has=page.get_by_role('button', name='View', exact=True))
+            await card.last.get_by_role('button', name='View', exact=True).click()
             saved_report = page.get_by_role("region", name="Saved analysis report")
             await saved_report.wait_for(timeout=30000)
             assert report["feedback"] in await saved_report.inner_text(), "Saved report changed or disappeared"
