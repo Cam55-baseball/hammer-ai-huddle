@@ -2304,7 +2304,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
 
 
     
-    let efficiency_score: number | null = null;
+    let efficiency_score = 75;
     let feedback = "No analysis available";
     let summary: string[] = [];
     let positives: string[] = [];
@@ -2346,8 +2346,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     if (toolCalls && toolCalls.length > 0) {
       try {
         const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
-        efficiency_score = Number.isFinite(Number(analysisArgs.efficiency_score)) ? Math.round(Number(analysisArgs.efficiency_score)) : null;
-        originalAiScore = efficiency_score ?? 0;
+        if (Number.isFinite(Number(analysisArgs.efficiency_score))) efficiency_score = Math.round(Number(analysisArgs.efficiency_score));
+        originalAiScore = efficiency_score;
         summary = analysisArgs.summary || [];
         feedback = analysisArgs.feedback || "No feedback available";
         positives = analysisArgs.positives || [];
