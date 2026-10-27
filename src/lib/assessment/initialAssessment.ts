@@ -6,10 +6,11 @@
  * Baserunning IQ and Game IQ are never part of it.
  */
 import { hasFeatureAccess } from "@/utils/tierAccess";
+import { ANALYSIS_TYPES, type AnalysisType } from "../../../supabase/functions/_shared/analysisTypes";
 
 export type StepId = 1 | 2 | 3 | 4 | 5 | 6;
 export type StepState = "locked" | "open" | "done";
-export type AnalysisModule = "hitting" | "pitching" | "throwing";
+export type AnalysisModule = AnalysisType;
 export type StepProgress = Partial<Record<StepId, "done" | "skipped">>;
 
 export interface AssessmentInput {
@@ -34,7 +35,7 @@ export const STEP_LABELS: Record<StepId, string> = {
 
 export function requiredAnalyses(modules: readonly string[]): AnalysisModule[] {
   const m = [...modules];
-  return (["hitting", "pitching", "throwing"] as const).filter((f) => hasFeatureAccess(m, f));
+  return ANALYSIS_TYPES.filter((f) => hasFeatureAccess(m, f));
 }
 
 /** Use this assessment's sport and the saved active entitlement, never a role bypass. */
