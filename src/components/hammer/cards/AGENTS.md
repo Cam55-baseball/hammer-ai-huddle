@@ -11,3 +11,4 @@
 - Embedded practice messages are same-origin, frame-checked refetch hints; only matching self/sport/module/token canonical session readback supplies entered set counts. Why: video or a child window must never manufacture completion or bypass readiness.
 - Guided cursors persist exercise identity and own their rest clock; editable standalone timers cannot change guided advancement. Why: remounts and timer controls must not move the player to another exercise or shorten saved rest.
 - Unknown-duration guided rest persists its pending state; Finished flushes canonical entries before declared rest starts. Why: reloads and additional navigation buttons must not replay a save or bypass recovery.
+- Guided rest hides the mounted work surface without unmounting canonical rows; one timer reset/restart control changes with timer state. Why: recovery is a distinct page and removing duplicate controls must preserve drafts and active elapsed time.
