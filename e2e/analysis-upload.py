@@ -31,6 +31,14 @@ async def main():
         assert report.get("feedback", "").strip(), "No report feedback"
         await page.wait_for_timeout(2000)
         assert await page.get_by_text("What to work on", exact=True).count() or await page.get_by_text("Key Findings", exact=False).count(), "Saved report did not display"
+        for title in ["Watch this next", "Save to Library"]:
+            dialog = page.get_by_role("dialog").filter(has=page.get_by_text(title, exact=False))
+            if await dialog.count():
+                close = dialog.get_by_role("button", name="Close", exact=True)
+                if await close.count(): await close.first.click()
+        await page.keyboard.press("Escape")
+        finding = page.get_by_text("What to work on", exact=True)
+        if await finding.count(): await finding.scroll_into_view_if_needed()
         await page.screenshot(path=str(output / "saved-displayed.png"))
         request_body = response.request.post_data_json
         output.joinpath("result.json").write_text(json.dumps({"video_id": request_body["videoId"], "saved": True, "displayed": True}))
