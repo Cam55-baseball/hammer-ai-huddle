@@ -16,6 +16,7 @@ describe("LegacyDrillInlineLog return from background", () => {
     view.unmount(); render(<LegacyDrillInlineLog {...props} />);
     expect(screen.getByLabelText("er reps 1")).toHaveValue("11");
     fireEvent.change(screen.getByLabelText("ir reps 1"), { target: { value: "12" } });
+    fireEvent.blur(screen.getByLabelText("ir reps 1"));
     expect(saved.mock.lastCall?.[0].rounds).toEqual([{ set: 1, reps_0: 11, reps_1: 12, reps_2: null }]);
   });
 
