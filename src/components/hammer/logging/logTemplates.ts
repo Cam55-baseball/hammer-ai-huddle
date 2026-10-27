@@ -364,7 +364,7 @@ export function resolveTemplate(rx: WkRx): LogTemplate {
   };
   // These declared doses share exactly the entry grid used inside Today, including
   // catalog warmups/holds, coach rows and a swapped-in prescription.
-  if (["warmup", "mobility", "recovery", "arm_care"].includes(slot) || ["seconds", "minutes"].includes(unit)) {
+  if (rx.why_payload?.tracking_measure_type || ['reps per arm','reps per leg','reps each side'].includes(unit) || ["warmup", "mobility", "recovery", "arm_care"].includes(slot) || ["seconds", "minutes"].includes(unit)) {
     const spec = inlineLogSpec(rx);
     return { id: `declared_${slot}`, defaultRounds: spec.rows, meta: {}, fields: spec.fields.map(field => ({ ...field,
       kind: field.key === "time" ? "time" : "number", step: field.key === "time" || field.key === "distance" ? 0.01 : 1,
@@ -507,6 +507,6 @@ export function resolveTemplateForRx(
   catalogUnilateral: ReadonlySet<string> | null,
 ): { template: LogTemplate; unilateral: boolean } {
   const base = resolveTemplate(rx);
-  const unilateral = isUnilateralRx(rx, catalogUnilateral);
+  const unilateral = ['reps per arm','reps per leg','reps each side'].includes(rx.dosage_unit ?? '') || isUnilateralRx(rx, catalogUnilateral);
   return { template: unilateral ? withSideField(base) : base, unilateral };
 }
