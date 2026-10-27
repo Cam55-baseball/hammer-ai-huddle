@@ -124,6 +124,16 @@ export function certifyConditioning(input: CertifyConditioningInput): CertifyCon
   if (realMissing.length > 0) fatal.push({ code: "cond_unresolved_template", message: `Template ${template.id} requires: ${realMissing.join(", ")}` });
 
   const dupCats: string[] = [];
+  // Recovery-only cards cannot smuggle high-intent training into a flush.
+  // Judge catalog-declared categories, never words in an exercise name.
+  const recoveryOnly = template.id === 'cond.recovery_flush';
+  const hardCategories = new Set(['alactic_power', 'repeated_sprint', 'lactic_capacity']);
+  const hasRecovery = categorized.some(c => c.conditioning_category === 'recovery_flush');
+  for (const movement of categorized) {
+    if (movement.conditioning_category && hardCategories.has(movement.conditioning_category) && (recoveryOnly || hasRecovery)) {
+      fatal.push({code:'cond_incompatible_recovery',message:'A breathing reset or recovery-only card cannot include high-intent conditioning.',slug:movement.slug});
+    }
+  }
   const SINGLE = new Set<ConditioningCategory>(["repeated_sprint", "alactic_power", "lactic_capacity"]);
   for (const [k, n] of Object.entries(categoryCoverage)) {
     if (n > 1 && SINGLE.has(k as ConditioningCategory)) { dupCats.push(k); fatal.push({ code: "cond_duplicate_category", message: `Category "${k}" appears ${n}x (max 1).` }); }

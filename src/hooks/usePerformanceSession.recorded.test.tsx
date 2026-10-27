@@ -19,7 +19,7 @@ afterEach(() => { cleanup(); vi.clearAllMocks(); mocks.fail = false; });
 describe("embedded practice canonical save notification", () => {
   it("returns the saved ID to the exercise while report calculation is still pending", async () => {
     let finish: ((value: unknown) => void) | undefined;
-    mocks.invoke.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+    mocks.invoke.mockImplementation((name: string) => name === 'evaluate-behavioral-state' ? Promise.resolve({error:null}) : new Promise(resolve => { finish = resolve; }));
     const { result } = renderHook(() => usePerformanceSession());
     let saving: Promise<unknown> | undefined;
     await act(async () => {
@@ -27,7 +27,8 @@ describe("embedded practice canonical save notification", () => {
       await Promise.resolve(); await Promise.resolve();
     });
     expect(mocks.recorded).toHaveBeenCalledWith("saved-session");
-    expect(mocks.invoke).toHaveBeenCalledTimes(1);
+    expect(mocks.invoke).toHaveBeenCalledWith('evaluate-behavioral-state', {body:{user_id:'test-player'}});
+    expect(mocks.invoke).toHaveBeenCalledWith('calculate-session', expect.objectContaining({body:{session_id:'saved-session'}}));
     await act(async () => { finish?.({ data: { hie_completed: true } }); await saving; });
   });
   it("never notifies or calculates after a failed recording", async () => {

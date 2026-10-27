@@ -1,4 +1,5 @@
 import { sortByWarmupStage } from "./warmupStages";
+import { enforceSkillStageOrder } from './planSanity';
 import { recoveryDrills } from './recoveryDrills';
 import {applyMasteryFocus,masteryGoalWeights,type MasteryPlanFocus} from './masteryFocus';
 import { applyBuntingPlan, type BuntCatalogItem } from './buntingPlan';
@@ -2440,7 +2441,7 @@ export function buildHammerDailyPlan(
     console.debug("[dailyPlan] gp-signal bias →", gpBiasTags);
   }
   return {
-    blocks,
+    blocks: enforceSkillStageOrder(blocks),
     practiceLoad,
     seasonPhase: proj.seasonPhase,
     missingnessCount: blocks.filter((b) => b.status === "awaiting-input").length,

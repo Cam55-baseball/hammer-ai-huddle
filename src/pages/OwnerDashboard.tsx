@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { VideoLibraryManager } from "@/components/owner/VideoLibraryManager";
 import { PromoEngineTab } from "@/components/promo-engine/PromoEngineTab";
-import { DrillCmsManager } from "@/components/owner/DrillCmsManager";
+import { Navigate } from 'react-router-dom';
 import { OwnerEngineSettingsPanel } from "@/components/owner/OwnerEngineSettingsPanel";
 import { OwnerSettingsOverview } from "@/components/owner/OwnerSettingsOverview";
 import { Progress } from "@/components/ui/progress";
@@ -1282,7 +1282,7 @@ const OwnerDashboard = () => {
 
           {/* Drill CMS Section */}
           {activeSection === 'drill-cms' && (
-            <DrillCmsManager />
+            <Navigate to="/owner/drill-builder?library=legacy" replace />
           )}
 
           {/* Engine Settings Section */}
