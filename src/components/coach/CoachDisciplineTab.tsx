@@ -31,7 +31,7 @@ export function CoachDisciplineTab({ athleteId }: { athleteId: string }) {
         const logs = await supabase.from("performance_sessions")
           .select("id,session_date,session_type,deleted_at")
           .eq("user_id", athleteId).gte("session_date", data.from).lte("session_date", data.to)
-          .in("session_type", ["solo_work", "team_session", "lesson", "live_abs"]).is("deleted_at", null)
+          .in("session_type", ["solo_work", "team_session", "lesson", "live_abs", "game"]).is("deleted_at", null)
           .order("session_date", { ascending: true }).order("id", { ascending: true }).range(offset, offset + 999);
         if (logs.error) throw logs.error;
         all.push(...logs.data);
@@ -70,12 +70,12 @@ export function CoachDisciplineTab({ athleteId }: { athleteId: string }) {
         <p className="text-xs text-muted-foreground">Source: the player's plan and their saved workout logs.</p>
       </Card>
       <Card className="p-4 space-y-2">
-        <h3 className="font-semibold">Saved practice</h3>
+        <h3 className="font-semibold">Saved practice and games</h3>
         {practice.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : practice.error || practice.data === null ?
           <p role="alert" className="text-sm text-muted-foreground">Practice logs unavailable for this view.</p> : <>
-            <p className="text-sm">Practice sessions: {projected.sessions} · {data.from} to {data.to}</p>
-            <p className="text-sm">Latest practice date: {projected.dates[projected.dates.length - 1] ?? "Not entered"}</p>
-            <p className="text-xs text-muted-foreground">Source: the player's saved practice logs. Practice logging does not mark a workout complete.</p>
+            <p className="text-sm">Sessions logged: {projected.sessions} · {data.from} to {data.to}</p>
+            <p className="text-sm">Latest session date: {projected.dates[projected.dates.length - 1] ?? "Not entered"}</p>
+            <p className="text-xs text-muted-foreground">Source: the player's saved practice and game logs.</p>
           </>}
       </Card>
       <Card className="p-4 space-y-2">
