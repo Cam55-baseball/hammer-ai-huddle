@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play, RotateCcw, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { timerWasCutShort } from "@/lib/logging/timerOutcome";
 
 /** Elapsed time is wall-clock work time only; pauses never count as work. */
-export function ExerciseTimer({ target, onRecord }: { target?: number; onRecord: (seconds: number) => void }) {
+export function ExerciseTimer({ target, onRecord, hasEnteredValue = false }: { target?: number; onRecord: (seconds: number) => void; hasEnteredValue?: boolean }) {
   const accumulated = useRef(0);
   const started = useRef<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -48,5 +49,6 @@ export function ExerciseTimer({ target, onRecord }: { target?: number; onRecord:
         pause(); accumulated.current = 0; setElapsed(0); setStopped(false);
       }} aria-label={running || elapsed > 0 && !stopped ? "Restart timer" : "Reset timer"} title={running || elapsed > 0 && !stopped ? "Restart timer" : "Reset timer"}><RotateCcw className="h-4 w-4" /></Button>
     </div>
+    {timerWasCutShort({ stopped, elapsed, target, hasEnteredValue }) && <span className="text-xs font-medium text-muted-foreground">Cut short</span>}
   </div>;
 }
