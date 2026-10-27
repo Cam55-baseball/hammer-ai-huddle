@@ -1,8 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 import { hasActiveSubscription, isPlatformStaff, forbidden } from '../_shared/authGuards.ts';
 import { recruitingGate } from '../_shared/recruitingGate.ts';
-import { hasReadableReport } from '../_shared/analysisReliability.ts';
-import { isAnalysisType } from '../_shared/analysisTypes.ts';
+import { canSaveLibraryPair } from '../_shared/libraryAnalysisPair.ts';
 
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
@@ -86,7 +85,7 @@ Deno.serve(async (req) => {
     if (saveToLibrary) {
       const { data: clip, error: clipError } = await supabase.from('videos')
         .select('video_url,module,ai_analysis').eq('id', sessionId).eq('user_id', session.user_id).single();
-      if (clipError || !clip?.video_url || (requireAnalysis && (!isAnalysisType(clip.module) || !hasReadableReport(clip.ai_analysis)))) {
+      if (clipError || !canSaveLibraryPair(clip, requireAnalysis === true)) {
         return new Response(JSON.stringify({ error: 'Your video and report could not both be confirmed. Nothing was added to Players Club.' }),
           { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
