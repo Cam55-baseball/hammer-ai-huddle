@@ -73,7 +73,7 @@ export function LegacyDrillInlineLog({
     setRounds(initial);
   }, [initial, storageKey]);
 
-  const entered = (rs: Draft) => rs.filter(r => r[TOUCHED] === "1").map((r) => ({ set: rs.indexOf(r) + 1, ...Object.fromEntries(Object.entries(r).filter(([k]) => k !== TOUCHED).map(([k, v]) => [k, v === "" ? null : Number(v)])) }) as Record<string, number | null>)
+  const entered = (rs: Draft) => rs.filter(r => r[TOUCHED] === "1").map((r) => ({ set: rs.indexOf(r) + 1, ...Object.fromEntries(Object.entries(r).filter(([k]) => !k.startsWith("_")).map(([k, v]) => [k, v === "" || k.startsWith("reps_") && r[`_entered_${k}`] !== "1" ? null : Number(v)])) }) as Record<string, number | null>)
     .filter(r => stopwatch ? typeof r.time === "number" && r.time > 0 : Object.entries(r).some(([k, v]) => k !== "set" && typeof v === "number" && v > 0));
   const statusOf = (rs: Draft, skip: boolean) => autoStatus({
     prescribedRows: spec.rows,
@@ -107,7 +107,7 @@ export function LegacyDrillInlineLog({
     }
   };
   const edit = (row: number, key: string, value: string, delay?: number) =>
-    persist(rounds.map((r, i) => i === row ? { ...r, [key]: value.replace(/[^\d.]/g, ""), [TOUCHED]: "1" } : r), { delay });
+    persist(rounds.map((r, i) => i === row ? { ...r, [key]: value.replace(/[^\d.]/g, ""), [TOUCHED]: "1", ...(key.startsWith("reps_") ? { [`_entered_${key}`]: "1" } : {}) } : r), { delay });
   const touch = (row: number) => {
     if (rounds[row]?.[TOUCHED] === "1") { void autosave.flush(); return; }
     persist(rounds.map((r, i) => i === row ? { ...r, [TOUCHED]: "1" } : r), { delay: 0 });

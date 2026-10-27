@@ -7,6 +7,17 @@ describe("LegacyDrillInlineLog return from background", () => {
     sessionStorage.clear(); localStorage.clear();
     vi.useFakeTimers();
   });
+  it("does not count untouched component prefills as performed work and retains edited values on reload", () => {
+    const saved = vi.fn();
+    const props = { modality: "throwing", name: "Band series", dosage: "ER 2x12, IR 2x12, retractions 2x10", storageKey: "compound-proof", completed: false, onSave: saved };
+    const view = render(<LegacyDrillInlineLog {...props} />);
+    fireEvent.change(screen.getByLabelText("er reps 1"), { target: { value: "11" } });
+    expect(saved.mock.lastCall?.[0].rounds).toEqual([{ set: 1, reps_0: 11, reps_1: null, reps_2: null }]);
+    view.unmount(); render(<LegacyDrillInlineLog {...props} />);
+    expect(screen.getByLabelText("er reps 1")).toHaveValue("11");
+    fireEvent.change(screen.getByLabelText("ir reps 1"), { target: { value: "12" } });
+    expect(saved.mock.lastCall?.[0].rounds).toEqual([{ set: 1, reps_0: 11, reps_1: 12, reps_2: null }]);
+  });
 
   it.each([
     ["30 seconds", 30_000],

@@ -31,8 +31,15 @@ describe("legacy drill visible log rows", () => {
     });
   });
   it("throwing-card band prep records reps rather than inventing arm throws", () => {
-    expect(legacyDrillLogSpec("throwing", "Band series — ER / IR / scap pulls / retractions", "ER 2x12, IR 2x12, scap pulls 2x12, retractions 2x10").fields).toEqual([{ key: "reps", label: "Reps", prefill: 12 }]);
+    expect(legacyDrillLogSpec("throwing", "Band series — ER / IR / scap pulls / retractions", "ER 2x12, IR 2x12, scap pulls 2x12, retractions 2x10")).toEqual({ rows: 2, completion: false, fields: [
+      { key: "reps_0", label: "er reps", prefill: 12 }, { key: "reps_1", label: "ir reps", prefill: 12 }, { key: "reps_2", label: "scap pulls reps", prefill: 12 }, { key: "reps_3", label: "retractions reps", prefill: 10 },
+    ] });
     expect(legacyDrillLogSpec("pitching", "Band activation series", "2x10").fields[0].key).toBe("reps");
+  });
+  it("softball activation preserves each direction and every separate rep target", () => {
+    expect(legacyDrillLogSpec("pitching", "Windmill-specific band prep — circle path activation", "hip-to-release path 2x10 each direction, ER 2x12, IR 2x12, lat pull-through 2x10")).toMatchObject({ rows: 2, fields: [
+      { key: "reps_0", label: "hip-to-release path · each direction reps", prefill: 10 }, { key: "reps_1", prefill: 12 }, { key: "reps_2", prefill: 12 }, { key: "reps_3", prefill: 10 },
+    ] });
   });
 
   it("times warm-up and recovery work in seconds, never decimal minutes", () => {
