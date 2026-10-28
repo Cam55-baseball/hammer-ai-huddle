@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 import { hasActiveSubscription, isPlatformStaff, forbidden } from '../_shared/authGuards.ts';
 import { recruitingGate } from '../_shared/recruitingGate.ts';
 import { canSaveLibraryPair } from '../_shared/libraryAnalysisPair.ts';
+import { buildFaultFindings } from '../_shared/faultFindings.ts';
 
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
@@ -84,13 +85,29 @@ Deno.serve(async (req) => {
     };
     if (saveToLibrary) {
       const { data: clip, error: clipError } = await supabase.from('videos')
-        .select('video_url,module,ai_analysis').eq('id', sessionId).eq('user_id', session.user_id).single();
+        .select('video_url,module,sport,ai_analysis,temporary_until').eq('id', sessionId).eq('user_id', session.user_id).single();
       if (clipError || !canSaveLibraryPair(clip, requireAnalysis === true)) {
         return new Response(JSON.stringify({ error: 'Your video and report could not both be confirmed. Nothing was added to Players Club.' }),
           { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       updates.saved_to_library = true;
       updates.session_date = new Date().toISOString();
+      // A temporary analysis upload becomes permanent only now (owner P0, Oct 28).
+      if (clip.temporary_until) {
+        updates.temporary_until = null;
+        const findings = buildFaultFindings({
+          userId: session.user_id, videoId: sessionId, runId: null,
+          module: clip.module, sport: clip.sport,
+          violations: (clip.ai_analysis as { violations_detected?: Record<string, unknown> } | null)?.violations_detected ?? null,
+        });
+        if (findings.length > 0) {
+          const { count } = await supabase.from('analysis_fault_findings').select('id', { count: 'exact', head: true }).eq('video_id', sessionId);
+          if (!count) {
+            const { error: findingsError } = await supabase.from('analysis_fault_findings').insert(findings);
+            if (findingsError) console.error('[update-library-session] fault findings not written:', findingsError.message);
+          }
+        }
+      }
     }
 
     if (title !== undefined) updates.library_title = title;
