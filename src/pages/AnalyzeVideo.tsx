@@ -40,7 +40,7 @@ import { normalizeAnalysisResponse, analysisErrorDetails, settleAnalysisReport, 
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
-import { canSeeReportCard, videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
+import { canSeeReportCard, videoGradesShown } from "@/lib/reportCard/visibility";
 import { InternalLabel } from "@/components/InternalLabel";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { densePoseRowToPoseFrameRow, type PoseFrameRow } from "@/lib/biomech/pose/poseRunner";
@@ -1106,7 +1106,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
             userId: user.id,
             language: i18n.language,
             frames,
-            ...(landingTime != null && frames.length > 0 ? { landingFrameIndex: 3 } : {}),
+            ...(landingTime != null && frames.length === 7 ? { landingFrameIndex: 3 } : {}),
           },
         }
       );
@@ -1204,7 +1204,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
             userId: user.id,
             language: i18n.language,
             frames,
-            ...(landingTime != null && frames.length > 0 ? { landingFrameIndex: 3 } : {}),
+            ...(landingTime != null && frames.length === 7 ? { landingFrameIndex: 3 } : {}),
           },
         }
       );
