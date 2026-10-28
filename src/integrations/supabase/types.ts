@@ -12298,6 +12298,30 @@ export type Database = {
         }
         Relationships: []
       }
+      mind_item_logs: {
+        Row: {
+          completed_at: string
+          id: string
+          item_date: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          item_date: string
+          kind: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          item_date?: string
+          kind?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mindfulness_sessions: {
         Row: {
           completed: boolean | null
