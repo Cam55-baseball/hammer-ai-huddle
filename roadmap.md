@@ -4485,3 +4485,4 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - Oct 28 run 2: owner builder engine tags + YouTube/Vimeo/upload-only links; daily Mind card on Today; generator volume wiring still open.
 - Oct 28 run 3: owner category tags feed existing plan slots (client + server block bundle, plan-swap redeployed); generator 6-day/minimums wiring still open.
 - Oct 28 run 4: per-zone framing keeps 4 zones on lighter days; flat weekly minimums blocked — ladder ties day count/intensity to rung (ramp), owner choice needed.
+- Oct 28 batch: 6-day week for everyone in real plan (Sun rest, no ramp, low readiness → low-taxing), Mind done-log → Discipline + Tex Vision link, owner baserunning/bunting/Mind tags; conditioning tag open (no certified dose fields).
