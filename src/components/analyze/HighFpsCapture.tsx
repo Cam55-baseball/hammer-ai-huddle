@@ -23,7 +23,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
-import { extractKeyFramesDeterministic } from "@/lib/frameExtraction";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
@@ -32,7 +31,6 @@ import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { UPLOAD_ERRORS } from "@/lib/upload/uploadErrorCopy";
 import { analysisErrorDetails, normalizeAnalysisResponse } from "@/lib/upload/analysisResponse";
 import { isAnalysisType } from "../../../supabase/functions/_shared/analysisTypes";
-import { UNKNOWN_FPS_SAMPLING_GRID_HZ } from "@/lib/biomech/pose/denseLandmarkCapture";
 import {
   analysisScopeForFps,
   describeCaptureFps,
