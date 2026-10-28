@@ -48,8 +48,8 @@ describe("rules", () => {
     expect(perceivedReadiness({})).toBe("normal");
   });
   it("video links: official embeds only", () => {
-    expect(parseDrillVideoLink("https://youtu.be/dQw4w9WgXcQ")?.embedUrl).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
-    expect(parseDrillVideoLink("https://vimeo.com/123456789")?.embedUrl).toBe("https://player.vimeo.com/video/123456789");
+    expect((parseDrillVideoLink("https://youtu.be/dQw4w9WgXcQ") as any)?.embedUrl).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
+    expect((parseDrillVideoLink("https://vimeo.com/123456789") as any)?.embedUrl).toBe("https://player.vimeo.com/video/123456789");
     expect(parseDrillVideoLink("https://example.com/v.mp4")).toBeNull();
     expect(parseDrillVideoLink("http://youtu.be/dQw4w9WgXcQ")).toBeNull();
     expect(drillVideoSource({})).toBeNull();
