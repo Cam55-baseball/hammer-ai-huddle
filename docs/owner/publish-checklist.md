@@ -1,16 +1,44 @@
 # Owner findings — consolidated publish checklist
 
-**Final batch: run 7 · October 27, 2026**
+**Consolidated closeout · October 28, 2026 · owner direction 06:43 UTC**
 
-**Ready to publish: NO.** The code/test checks pass, but weekly purchased-skill completeness, the requested beginner defense increase, the routine/fix-it locking and challenge lifecycle, and several required affected-player end-to-end proofs remain incomplete. Passing tests and owner-only/local-clip screens do not certify those requirements. Missing original throwing/softball clips remain owner human checks and are not blockers by themselves.
+**Ready to publish: NO.** Large-clip server conversion is not implemented; goal-linked library coverage and analysis-to-identity/learning/coach unity are incomplete; weekly purchased-skill completeness, beginner defense frequency, routine/fix-it lifecycle and required affected-player proofs remain open. Passing tests do not certify those flows.
 
 ## Final checks
 
-- **Full suite: PASS — 612 unique files / 4,945 tests; all 20 bounded groups exit 0, no omitted files.** After the shared checker move, five changed-rule files / 19 tests also passed. Recovery/parity tests passed; six packaged-versus-fresh sport/equipment cases passed.
-- **Automatic preview build: PASS — latest observed build OK at 23:24:26 UTC.** The temporary missing sibling-module error was corrected by moving the single checker into the shared function directory. No manual project build or typecheck was run.
-- **Named live backend changes:** intel-recheck, intel-recheck-job, wk-generate-daily and plan-swap deployed successfully. The first intel-recheck deployment failed before going live; the corrected shared-module deployment succeeded. No migration, publish, cron/schedule or iOS changes.
+- **Full suite: PASS — 619 unique files / 4,971 tests in bounded groups.** Two slow groups exceeded their wrapper deadline but their completed logs both show all tests passed; no missing summary. After the identity-history addition and final edits, 10 affected files / 39 tests passed, including the new history file. This is a full-suite run plus subsequent focused verification, not a second full run of the final state. Manifest and logs: `/tmp/closeout-tests/`.
+- **Automatic preview build: PASS — latest observed build OK at 07:07:12 UTC.** No manual project build or typecheck was run.
+- **Named live backend changes this run:** `analyze-video` (written contract and recorded goals), `evaluate-behavioral-state` (complete paged history, one-year streaks, unchanged 30-day scoring window). Deployment succeeded; new model output and positive long-streak hosted readback are not yet proven. No migration, publish, cron/schedule or iOS changes. Owner reports temporary-upload-cleanup-hourly already applied; it was not rerun.
 - **No new hosted TEST, workout, check-in, drill, assessment or library records were authored for proof.** Real self-only recheck returned created=0/checked=0. Existing UI may record normal view analytics. No new TEST cleanup required; prior exact snapshots/restoration/deletion proofs retained.
-- **Completed P0 and other finished phone proofs were retained, not repeated.** A–D investigations ran in parallel; this is one authoritative sheet, not cumulative run addenda.
+- **Fresh phone evidence:** signed-in owner, Chromium and WebKit iPhone 15 profile, 390×844: analysis entry, General, owner dashboard and History load without a visible Report Card. Screenshots inspected. Owner Players Club had no visible View button in either browser; saved-report open/reload proof did not run. No fresh uploads or artificial reports were created. Prior completed acceptance evidence remains historical, not new proof. Four read-only investigations ran in parallel; one investigated the wrong checklist and its conclusions were not used as authoritative status.
+
+## October 28 A/B status table
+
+| Item | Status | Exact remaining boundary |
+|---|---|---|
+| A1 Archive Report Card for everyone | Built / phone smoke passed | Central gate denies every role; owner tour removed; evidence never mounts for owner/admin in tests. Stored code/data kept. Owner analysis/General/menu smoke passed in both browsers; exhaustive affected-role page matrix not run. |
+| A2 Goal drills with instructional videos even without faults | Partial | Saved category goals now select current library entries with attached media; no plan actions. Tests pass. Broad goal vocabulary/catalog coverage, linked videos for every goal and clean-clip phone proof remain open; unmatched catalog gaps are stated honestly. |
+| A3 Plain elite hitting 1-2-3-4, pitching and throwing | Built / inference proof open | Final written contract explains all four hitting steps and uses supplied sport/position doctrine in plain words. Deployed; fresh output quality not yet observed. |
+| A4 Remove What we saw in this clip | Built | Removed from immediate and saved written report renderers, not from stored data. Saved-report phone opening unavailable this run. |
+| A5 One priority; practice checks become drills | Partial | Separate check section removed; Area to improve uses the first ranked finding. New contract disallows exercise text in check_improvement. Exact migration of old practice checks to matching library drill identities remains open; no invented drill was added. |
+| A6 Canonical unity and recurring fix-it Because | Partial | Existing consent-scoped findings and Today ranking retained. No end-to-end record→pillars→learning→coach→Today proof, nor a completed shared recurring-finding contract. Archived scores are not substituted. |
+| A7 Original 17.7 MB backup in both browsers | Not implemented / blocked | Backup still sends original video. Hosted edge runtime has no decoder; no existing authenticated media conversion service was found. A real server-capable decoder/worker integration is needed. A local ffmpeg conversion is not a deployed fix, and no successful original-large-clip proof is claimed. |
+| B Sanity / weekly purchased skills | Partial | Saved/server-path eight-week sport/subscription/access matrix remains open. |
+| B Power Primer real numbers | Built / proof open | Needs actual saved primer → lift/rest/primer/rest/next lift → reload as affected player. |
+| B Conditioning rest/time/steps | Built / proof open | Positive steps entry→save→readback→reload remains missing. |
+| B Beginner defense volume | Not finished | Approved progression targets toward six legal days remain unspecified; no blanket six-day dose/frequency invented. |
+| B Do in this order | Done, retained | Existing populated prescribed-only phone proof retained. |
+| B Separate bunt cards | Built / proof open | Needs affected-player bunt card and actual saved upcoming week. |
+| B Recovery audit | Partial | Whole-rest explicit identity boundary exists and is tested; wider WIC/EASS setup/timer/stop audit remains open. |
+| B Unprescribed credit / skipped checks | Built / proof open | Positive practice/activity and skipped-check completion UI arithmetic needed. |
+| B Twelve-week re-screen | Built / proof open | Due→bilateral assessment save→reload without erasing pain/history. |
+| B Offseason immediate restructure | Built / proof open | All three entry save/restructure flows remain unproven. |
+| B Identity days | Improved / proof open | Complete stable paged history now replaces truncated reads; one-year streaks and 30-day score separation deployed. Helper tests pass; long-streak and positive log→snapshot phone arithmetic remain unproven. |
+| B Develop This Week | Done within saved-data scope | Retained saved-week populated proof; not evidence of future prescription completeness. |
+| B Routine + fix-it every skill/sport | Partial | Persistence, exact occurrence/source lineage and owner-defined lock/challenge release rules not finished. |
+| B Coach dashboard / player delivery / Both | Partial | Existing placement and Both fixes retained; affected accepted-coach roster and send→player readback still open. |
+| B Owner library merge | Partial | Existing navigation and video-choice persistence retained; genuine athlete playback and Exercise attachment proof open. |
+| B Start / General / defensive plays / assessment phone proofs | Partial | Normal owner General and History checked fresh; prior defensive-play proof retained. Unstarted player, stale-General recovery and changed unfinished assessment flows remain open; owner smoke does not substitute. |
 
 ## 25-item status table
 
@@ -20,7 +48,7 @@
 |---|---|---|
 | 1 | Analysis regression deep dive | **Done.** Plain-word root cause/history retained in analysis-regression.md. |
 | 2 | Restore visible qualitative coaching | **Done.** Full coaching report preserved; original/compressed baseball hitting and pitching phone proofs retained. |
-| 3 | Decode-only refusal; no athlete numeric grades | **Done.** Lenient coaching and internal report-card gates preserved; unsupported analysis routing remains blocked. |
+| 3 | Decode-only refusal; no athlete numeric grades | **Archive applied.** Report Card denied for every role; written analysis and unsupported-type boundaries retained. Large-clip failure still exists, see A7. |
 | 4 | First-try report save and Players Club | **Done for available clips.** Upload→report→save→reopen→reload retained. |
 | 5 | Original/compressed phone clips and full-report canary | **Done for available clips.** Prior full-report response/readback canary passed. Throwing/softball originals remain owner human checks, not independent blockers. |
 | 6 | Full Hammers Today start gate | **Built / proof open.** Missing-detail checks shared with server. Run7 fixes readiness refresh after assessment completion and bare-link saved-sport/explicit unfinished resume. Tests pass. An unstarted affected player has not completed the real missing-detail→start phone flow. |
@@ -31,10 +59,10 @@
 | 11 | Unprescribed work credit; skipped check-ins prevent full completion | **Partial.** Canonical selected-sport practice/game source dates count as activity, never standard completion; save-before-credit and check-in boundaries tested. Affected account has zero practice source dates; positive practice→Discipline→learning/standard separation phone proof absent. |
 | 12 | Movement/safety re-screen every 12 weeks | **Built / proof open.** Canonical movement date drives 84 local-calendar-day prompt; same assessment and pain history retained. Due→new bilateral save→reload phone proof absent. |
 | 13 | Offseason entry at all season logging locations | **Built / proof open.** Three entry controls exist and await saves; all three real saves followed by immediate correct plan restructuring remain unproved. |
-| 14 | Identity standard/active days match logs | **Partial.** Labels corrected to canonical streaks, not totals; required misses labeled by kind. Positive nonzero log→snapshot phone arithmetic absent. Evaluator loads about 30 days but may traverse up to 365: long-streak history completeness remains unresolved. |
+| 14 | Identity standard/active days match logs | **Built / proof open.** Complete paged one-year history and separate 30-day scoring deployed October 28; helper tests pass. Positive nonzero log→snapshot and long-streak hosted arithmetic remain unproved. |
 | 15 | “Do in this order” only prescribed activities | **Done.** Exact mounted categories project in order; run7 affected athlete 390×844 populated order inspected without demo overlay: warm-up, hitting, throwing, recovery, cross-sport, bat speed, conditioning. No guessed extra activity. |
 | 16 | Separate bunting cards and upcoming schedule | **Partial.** Presentation partition preserves exact tasks, doses and Swap; saved-week readback includes actual saved bunts. Positive affected-player bunting card/upcoming saved schedule proof absent; no future days invented. |
-| 17 | Meaningful recovery items and matching how-to | **Partial.** Untracked hydration/wake/injury-note exercise rows removed; mobility/breathing guides and stops match retained timers. Run7 fixes normal/elevated card and template totals to 15/25 minutes without changing rows. Wider WIC/EASS recovery-catalog audit and whole-rest recovery identity boundary remain unresolved. |
+| 17 | Meaningful recovery items and matching how-to | **Partial.** Untracked reminders removed; timed guides and 15/25-minute totals retained. Whole-rest explicit identity boundary is built/tested. Wider WIC/EASS catalog/setup/stop audit remains open. |
 | 18 | Develop This Week reflects real plans/data | **Done within read-only scope.** Self/sport Monday–Sunday saved snapshots, actual ready drills/doses, error/retry/empty states and affected-player populated phone proof retained. This does not certify missing future prescriptions or item7 completeness. |
 | 19 | Persistent routines, rotating fix-its, preparation, evidence-based locks/challenges | **Partial — lifecycle not implemented.** Owner descriptive tags, exact completion lineage and protected slots retained. Run7 unifies mounted/nightly comparable recheck, keeps scores server-only, exposes failures without blocking saved labels. Advice lacks exact owner-drill/source-clip linkage; no defined lock/challenge occurrence, exposure, duration/release rule or comparable owner-routine evidence. No efficacy invented; hitter/pitcher/defender real prescription proofs absent. |
 | 20 | The General nonblocking newer-version handling | **Built / proof open.** Once-per-tab automatic reload and dismissible notice implemented. Normal phone General proof retained; real stale-module→single reload→dismiss/recovery phone sequence unproved. |
@@ -59,4 +87,4 @@
 
 ## Exact readiness reason
 
-**Ready to publish: NO.** Implementation gaps: #7 saved subscription weekly completeness, #10 increased beginner volume, #19 routine/fix-it evidence lifecycle, #14 complete long-streak history and #17 wider recovery audit. Unfinished required real-user proofs: #6, #8, #9, #11–14, #16, #20–21, #23–25. Owner-only, completed-account, zero-source and local synthetic-clip checks do not close these. No publishing, schedule, cron or iOS action was taken.
+**Ready to publish: NO.** A2/A5/A6/A7 and B weekly coverage, beginner progression, routine lifecycle and recovery audit remain unfinished; affected-player acceptance checks listed above remain open. Required outside decisions/dependencies: a server-capable private media decoder, exact beginner frequency progression and routine/challenge release rules, plus authorized eligible affected-role testing state. No fabricated rows, schedules, publish or iOS action was used to close a gap.
