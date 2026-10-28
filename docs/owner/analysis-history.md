@@ -49,6 +49,8 @@ No uploads came from the main account in the last three days. On the 55cam316 ac
 | Baseball pitching | Live site | Yes, 69 s | classic | Yes | Pass |
 | Softball throwing | Live site | Yes, 102 s | classic | Yes | Pass |
 | Softball hitting, text-shrunk | Live site | **No** — blocked on the phone by the old 320 px check | — | — | Needs publish |
-| Softball hitting original (1280×720, 20 MB) | Preview | Not finished: the phone-side clip preparation ran past 8 minutes in the test browser before upload | — | — | Unproven |
+| Softball hitting original (1280×720) | Preview and live site | Yes, 82 s / 76 s | classic | Yes | Pass (Oct 28 run 2) |
 
 Notes: the owner's baseball "throwing" clip shows a fielding/baserunning play, and the report honestly says so. The iPhone app was not tested; it sends the same request as the live site. The 11 proof saves were then taken out of the owner's Players Club; nothing was deleted (video IDs: ccfb639a, 533d4ef7, 34bf15f0, a66e41a8, af20e43d, a28bcfda, 147b716f, 47be181e, 90d4282f, a2cf1c27, 35da25b0). The manual daily check came back "idle" because it had already run today, so the new classic requirement first runs on the next scheduled check.
+
+**Oct 28 run 2:** the 20 MB softball hitting clip only stalled because the test browser can't play iPhone-style video, so it converted the clip itself. Real iPhones and Safari play it directly and skip that step. Played in a format the test browser handles, at the same size, it passed on the preview and the live site. The 2 proof saves were taken out of Players Club (380862ee, 67e73e1b). The only gap left: the live site and the Oct 22 iPhone build still refuse clips under 320 px on the phone before anything reaches the server. A backend change can't reach that check. It goes away when the preview is published and a new iPhone build is made.
