@@ -1,3 +1,4 @@
+import { ownerBuntDrill } from '@/lib/prescription/ownerPlanDrills';
 import { buntingProgram, BUNT_TYPES, type BuntingFacts, type BuntSide, type BuntType } from '../../../../supabase/functions/_shared/wic/buntingProgram';
 import { ownsAllGear } from '../../../../supabase/functions/_shared/planSwap/simpleSwap';
 import { missingGearAnswer, COMMON_SWAP_GEAR } from '../../../../supabase/functions/_shared/planSwap/commonGear';
@@ -39,6 +40,10 @@ export function applyBuntingPlan(blocks:readonly PrescribedBlock[], facts:Buntin
   const drill:DrillStep={name:pick.name,slug:pick.slug,stage:'drills',dosage:`${attempts} attempts`,cue:pick.cue,
    setup:`Use your saved bat, ball and safe space. Record attempts and successful bunts for this side and type only. ${buntGuidance(side,identity.type)}${side==='L'&&(facts.leftPower===true||facts.powerGoal===true)?` ${LEFT_POWER_GUIDANCE}`:''}`,
    stopIf:'Pain, dizziness, fatigue or unsafe space — stop.',bunt:{side,type:identity.type,attempts,sourceAttempts:dose.attempts,sourceSuccesses:dose.successes}};
+  // Owner drill tagged for exactly this side and type supplies the how-to; attempts and bunt identity stay the plan's.
+  const ownerPick=ownerBuntDrill({sport:facts.sport,side,type:identity.type,owned,day:new Date(Date.UTC(2020,0,1)+((options.weekIndex*7+options.weekday)*86_400_000))});
+  if(ownerPick){drill.name=ownerPick.name;drill.slug=undefined;drill.cue=ownerPick.cue??drill.cue;if(ownerPick.setup?.trim())drill.setup=ownerPick.setup;
+   Object.assign(drill,{prescriptionOrigin:'owner',ownerDrillId:ownerPick.id,videoUrl:ownerPick.video_url??null,libraryVideoId:ownerPick.library_video_id??null});}
   const drills=[...block.drills.slice(0,slot),drill,...(budget>attempts?[{...original,dosage:`${budget-attempts} swings`}]:[]),...block.drills.slice(slot+1)];
   const sample=program.battingSample;
   const because=`${attempts} ${side==='R'?'right':'left'}-handed bunt attempts replace ${attempts} swings from today's skill work.${sample.under300?sample.window?` Completed batting window ${sample.window.start}–${sample.window.end}: ${sample.hits} hits in ${sample.atBats} at-bats, below ${(facts.lowAverage??.300).toFixed(3)}; source: entered game at-bats.`:` Entered batting sample: ${sample.hits} hits in ${sample.atBats} at-bats across ${sample.games} games; each entered game was below ${(facts.lowAverage??.300).toFixed(3)}.`:''}${dose.attempts?` This bunt: ${dose.successes} successful out of ${dose.attempts} entered attempts.`:''}`;

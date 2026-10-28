@@ -10,10 +10,12 @@
  */
 import type { OwnerDrillRow } from "./ownerDrills";
 
-export type PlanSlot = "hammers_today:skill" | "hammers_today:warmup" | "hammers_today:defense" | "defensive_library";
+export type PlanSlot = "hammers_today:skill" | "hammers_today:warmup" | "hammers_today:defense" | "defensive_library"
+  | "hammers_today:baserunning" | "hammers_today:bunting" | "hammers_today:mind";
 export type SkillBlock = "hitting" | "throwing";
 
-export const PLAN_SLOTS: PlanSlot[] = ["hammers_today:skill", "hammers_today:warmup", "hammers_today:defense", "defensive_library"];
+export const PLAN_SLOTS: PlanSlot[] = ["hammers_today:skill", "hammers_today:warmup", "hammers_today:defense", "defensive_library",
+  "hammers_today:baserunning", "hammers_today:bunting", "hammers_today:mind"];
 
 let rows: OwnerDrillRow[] = [];
 let loading: Promise<void> | null = null;
@@ -66,6 +68,11 @@ export function missingForPlacement(r: Omit<OwnerDrillRow, "created_at" | "id">,
     if (skillBlocksOf(r).length === 0) miss.push("which skill (tick a hitting, throwing or pitching analysis)");
     if (r.steps.filter((s) => clean(s)).length === 0 && !clean(r.setup)) miss.push("set-up or steps");
   }
+  if (slot === "hammers_today:bunting") {
+    if (!["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"].includes(clean(r.bunt_type))) miss.push("a bunt type");
+    if (!["R", "L"].includes(clean(r.bunt_side))) miss.push("a bunt side");
+  }
+  if (slot === "hammers_today:mind" && r.equipment.length > 0) miss.push("no equipment (Mind items are non-physical)");
   return miss;
 }
 
@@ -93,6 +100,9 @@ const TAG_SLOT: Record<string, PlanSlot> = {
   "hammers_today:throwing": "hammers_today:skill",
   "hammers_today:pitching": "hammers_today:skill",
   "hammers_today:defense_low_taxing": "hammers_today:defense",
+  "hammers_today:baserunning": "hammers_today:baserunning",
+  "hammers_today:bunting": "hammers_today:bunting",
+  "hammers_today:mind": "hammers_today:mind",
 };
 export function filedSlots(r: Pick<OwnerDrillRow, "placements">): PlanSlot[] {
   const out = new Set<PlanSlot>();
@@ -133,10 +143,11 @@ export function mergeOwnerSlotDrills<T extends StepLike>(drills: T[], slots: Pla
   if (pool.length === 0 || drills.length === 0) return drills;
   // Catalog tags cannot replace preparation, live execution, logging, or
   // another owner's already chosen slot. Legacy unstaged slots remain eligible.
+  // Catalog scenario identities (executionKind) are never renamed away.
   let target = -1;
   for (let i = drills.length - 1; i >= 0; i--) {
-    const drill = drills[i];
-    if (drill.prescriptionOrigin !== 'owner' && (drill.stage === undefined || drill.stage === 'drills')) { target = i; break; }
+    const drill = drills[i] as T & { executionKind?: string };
+    if (drill.prescriptionOrigin !== 'owner' && !drill.executionKind && (drill.stage === undefined || drill.stage === 'drills')) { target = i; break; }
   }
   if (target < 0) return drills;
   const dayIndex = Math.floor((ctx.day ?? day).getTime() / 86_400_000);
@@ -157,6 +168,23 @@ export function mergeOwnerSlotDrills<T extends StepLike>(drills: T[], slots: Pla
     ...(pick.equipment.length ? { equipmentNote: pick.equipment.join(", ") } : {}),
   } as unknown as T;
   return drills.map((drill, index) => index === target ? owned : drill);
+}
+
+const rotate = <R extends { id: string }>(pool: R[], day: Date): R | null => {
+  if (!pool.length) return null;
+  const sorted = [...pool].sort((a, b) => a.id.localeCompare(b.id));
+  return sorted[Math.floor(day.getTime() / 86_400_000) % sorted.length];
+};
+
+/** Owner bunting drill for EXACTLY this side and type (explicit owner tags), or null. Dose stays the plan's. */
+export function ownerBuntDrill(ctx: { sport: string; side: "R" | "L"; type: string; owned?: ReadonlySet<string> | null; day?: Date }): OwnerDrillRow | null {
+  return rotate(ownerDrillsForSlot(["hammers_today:bunting"], ctx)
+    .filter((r) => r.bunt_side === ctx.side && r.bunt_type === ctx.type), ctx.day ?? new Date());
+}
+
+/** Owner Mind item (non-physical, no equipment) for the sport, rotated by day, or null. */
+export function ownerMindDrill(ctx: { sport: string; day?: Date }): OwnerDrillRow | null {
+  return rotate(ownerDrillsForSlot(["hammers_today:mind"], { sport: ctx.sport, owned: null }), ctx.day ?? new Date());
 }
 
 if (typeof window !== "undefined" && import.meta.env.MODE !== "test") void loadOwnerPlanDrills();
