@@ -171,6 +171,10 @@ export default function DrillBuilder() {
     }
     const valid = videoFile ? validateVideoFile(videoFile) : { valid: true };
     if (!valid.valid) { toast({ title: "Video not supported", description: valid.error }); return; }
+    if (!videoFile && !draft.library_video_id && !isAcceptedDrillVideoUrl(draft.video_url)) {
+      toast({ title: "Video link not supported", description: "Upload your own video, or paste a YouTube or Vimeo link." });
+      return;
+    }
     setSaving(true);
     try {
     const { id, ...body } = draft;

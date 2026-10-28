@@ -56,6 +56,16 @@ export const OTHER_PLACEMENTS: Array<{ id: Placement; label: string }> = [
   { id: "hammers_today:warmup", label: "Hammers Today — warm-up" },
   { id: "hammers_today:defense", label: "Hammers Today — defense block" },
   { id: "defensive_library", label: "Defensive library" },
+  { id: "hammers_today:hitting", label: "Hammers Today — hitting" },
+  { id: "hammers_today:bat_speed_weighted", label: "Hammers Today — bat speed (weighted)" },
+  { id: "hammers_today:bat_speed_overspeed", label: "Hammers Today — bat speed (overspeed)" },
+  { id: "hammers_today:bunting", label: "Hammers Today — bunting" },
+  { id: "hammers_today:defense_low_taxing", label: "Hammers Today — defense (low-taxing)" },
+  { id: "hammers_today:baserunning", label: "Hammers Today — baserunning" },
+  { id: "hammers_today:throwing", label: "Hammers Today — throwing" },
+  { id: "hammers_today:pitching", label: "Hammers Today — pitching" },
+  { id: "hammers_today:conditioning", label: "Hammers Today — conditioning" },
+  { id: "hammers_today:mind", label: "Hammers Today — Mind (non-physical)" },
 ];
 
 export interface OwnerDrill extends EliteDrill {
