@@ -447,22 +447,13 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     }
 
 
-    const selection = ++selectionRef.current;
-    setPreparingVideo(true);
+    // Oct 28: the ORIGINAL file is uploaded untouched. The server watches it
+    // itself, so the phone never converts, decodes or plays the clip first
+    // (iPhone Safari often can't, which left a black box and no report).
+    ++selectionRef.current;
+    setPreparingVideo(false);
     setConversionProgress(null);
-    let prepared: File;
-    try {
-      prepared = await prepareAnalysisVideo(file, (progress) => {
-        if (selection === selectionRef.current) setConversionProgress(progress);
-      });
-      if (selection !== selectionRef.current) return;
-      if (prepared.size > 52428800) { toast.error(UPLOAD_ERRORS.tooLarge); return; }
-    } catch (error) {
-      if (selection === selectionRef.current) toast.error(error instanceof Error ? error.message : UPLOAD_ERRORS.unreadable);
-      return;
-    } finally {
-      if (selection === selectionRef.current) { setPreparingVideo(false); setConversionProgress(null); }
-    }
+    const prepared: File = file;
     setVideoFile(prepared);
     setVideoPreview(URL.createObjectURL(prepared));
     // One-second clip check before analysis (advisory; never blocks).
