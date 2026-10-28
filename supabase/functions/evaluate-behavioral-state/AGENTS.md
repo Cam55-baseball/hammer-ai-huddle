@@ -1,0 +1,1 @@
+- Identity streaks require complete paged one-year history plus the opening rest week, while scores retain the last 30 days only. Why: short source reads must not truncate earned streaks or change scoring denominators.

@@ -16,6 +16,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { buildAsbRow, emitAsbEvent } from "../_shared/asbEmit.ts";
 import { recruitingGate } from '../_shared/recruitingGate.ts';
 import { PRACTICE_SESSION_TYPES, practiceCreditDates } from './practiceCredit.ts';
+import { identityHistoryStart, readIdentityHistory } from './history.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -133,14 +134,14 @@ function eventCopy(type: string, ctx: any): { command_text: string; action_type:
 async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   if (userId === SYSTEM_USER) return { userId, skipped: "system_user" };
 
-  const since30 = dayStr(new Date(Date.now() - 30 * 86400000));
+  const sinceHistory = identityHistoryStart(todayUTC);
 
   // 1. Activity completions
-  const { data: actLogs } = await supabase
+  const actLogs = await readIdentityHistory<any>((from, to) => supabase
     .from("custom_activity_logs")
-    .select("entry_date, completion_state, template_id")
+    .select("id, entry_date, completion_state, template_id")
     .eq("user_id", userId)
-    .gte("entry_date", since30);
+    .gte("entry_date", sinceHistory).lte("entry_date", todayUTC).order('id').range(from, to));
 
   const completedByDay = new Set<string>();
   const anyLogByDay = new Set<string>();
@@ -161,34 +162,34 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   if (sportError) throw sportError;
   let practiceDays = new Set<string>();
   if (['baseball', 'softball'].includes(athlete?.sport_primary)) {
-    const { data: sessions, error: sessionError } = await supabase.from('performance_sessions')
+    const sessions = await readIdentityHistory<any>((from, to) => supabase.from('performance_sessions')
       .select('id,user_id,sport,session_date,session_type,deleted_at').eq('user_id', userId)
       .eq('sport', athlete.sport_primary).is('deleted_at', null).in('session_type', PRACTICE_SESSION_TYPES)
-      .gte('session_date', since30).lte('session_date', todayUTC).limit(1000);
-    if (sessionError) throw sessionError;
-    if (!sessions || sessions.length >= 1000) throw new Error('Complete practice history unavailable');
-    practiceDays = practiceCreditDates(sessions, userId, athlete.sport_primary, since30, todayUTC);
+      .gte('session_date', sinceHistory).lte('session_date', todayUTC).order('id').range(from, to));
+    practiceDays = practiceCreditDates(sessions, userId, athlete.sport_primary, sinceHistory, todayUTC);
     for (const date of practiceDays) anyLogByDay.add(date);
   }
 
   // 2. Injury overrides
-  const { data: dailyLogs } = await supabase
+  const dailyLogs = await readIdentityHistory<any>((from, to) => supabase
     .from("athlete_daily_log")
     .select("entry_date, injury_mode")
     .eq("user_id", userId)
-    .gte("entry_date", since30);
+    .gte("entry_date", sinceHistory).lte("entry_date", todayUTC).order('entry_date').range(from, to));
   const injuryByDay = new Set<string>();
   for (const d of dailyLogs ?? []) if (d.injury_mode) injuryByDay.add(d.entry_date);
 
   // 3. Day state — unified overrides + recurring rest rule
-  const [{ data: restRules }, { data: restOverrides }, { data: dayStateRows }] = await Promise.all([
+  const [rulesResult, restOverrides, dayStateRows] = await Promise.all([
     supabase.from("user_rest_day_rules")
       .select("recurring_days, max_rest_days_per_week").eq("user_id", userId).maybeSingle(),
-    supabase.from("user_rest_day_overrides")
-      .select("date").eq("user_id", userId).gte("date", since30),
-    supabase.from("user_day_state_overrides")
-      .select("date, type").eq("user_id", userId).gte("date", since30),
+    readIdentityHistory<any>((from, to) => supabase.from("user_rest_day_overrides")
+      .select("date").eq("user_id", userId).gte("date", sinceHistory).lte('date', todayUTC).order('date').range(from, to)),
+    readIdentityHistory<any>((from, to) => supabase.from("user_day_state_overrides")
+      .select("date, type").eq("user_id", userId).gte("date", sinceHistory).lte('date', todayUTC).order('date').range(from, to)),
   ]);
+  if (rulesResult.error) throw rulesResult.error;
+  const restRules = rulesResult.data;
   const recurringDays: number[] = restRules?.recurring_days ?? [];
   const maxRestPerWeek: number = restRules?.max_rest_days_per_week ?? 2;
 
@@ -197,12 +198,12 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   for (const r of restOverrides ?? []) intentByDay.set(r.date, "rest");
   for (const r of dayStateRows ?? []) intentByDay.set(r.date, r.type as any);
 
-  // Walk 30 days oldest→newest, applying weekly cap to rest classification
+  // Full streak history plus the opening rest week; scoring remains 30 days.
   const today = new Date(todayUTC + "T00:00:00Z");
   const days: { ds: string; klass: "injury" | "rest" | "skip" | "push" | "logged" | "missed" }[] = [];
   const restUsedByWeek = new Map<string, number>();
 
-  for (let i = 29; i >= 0; i--) {
+  for (let i = 370; i >= 0; i--) {
     const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
     const ds = dayStr(d);
     if (injuryByDay.has(ds)) { days.push({ ds, klass: "injury" }); continue; }
@@ -246,6 +247,7 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   let dayTypeToday: "injury" | "rest" | "skip" | "push" | "standard" = "standard";
   for (const x of days) {
     const ageDays = Math.round((today.getTime() - new Date(x.ds + "T00:00:00Z").getTime()) / 86400000);
+    if (ageDays >= 30) continue;
     const isToday = x.ds === todayStr;
     if (x.klass === "injury") { injuryHold++; if (isToday) dayTypeToday = "injury"; }
     else if (x.klass === "rest") {
