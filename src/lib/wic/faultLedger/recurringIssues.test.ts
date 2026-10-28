@@ -66,7 +66,7 @@ describe("Today fix-it slot for a recurring issue", () => {
     expect(out.drills[0].name).toBe("Front Side Hold");
     expect(out.drills[0].dosage).toBe("2 x 5");
     expect(out.drills[1].name).toBe("Owner");
-    expect(out.because?.at(-1)).toBe('Because "front shoulder opens early" keeps showing up (2 of your videos in the last 4 weeks), "Front Side Hold" works on it today.');
+    expect(out.because?.[out.because.length - 1]).toBe('Because "front shoulder opens early" keeps showing up (2 of your videos in the last 4 weeks), "Front Side Hold" works on it today.');
   });
   it("changes nothing when no library drill is tagged for the issue", () => {
     expect(run([issue], [other])).toBe(block);
@@ -83,6 +83,6 @@ describe("seeded replay with the real Hammers library", () => {
     const out = run([issue], ELITE_DRILL_CATALOG, gear);
     expect(out.drills[0].slug).toBe("elite.hit.step_behind_separation");
     expect(out.drills[0].analysisInfluence?.recurring?.analysisCount).toBe(2);
-    expect(out.because?.at(-1)).toMatch(/^Because "front shoulder opens early" keeps showing up/);
+    expect(out.because?.[out.because.length - 1]).toMatch(/^Because "front shoulder opens early" keeps showing up/);
   });
 });
