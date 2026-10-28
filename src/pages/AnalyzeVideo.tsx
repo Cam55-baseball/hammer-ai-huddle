@@ -571,19 +571,14 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     setUploading(true);
     const missingReport = showUnavailableReport;
 
-    // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
-    // Probe FIRST so deterministic frame selection can use fps_true.
+    // ===== PHASE 0 — Clip fingerprint =====
+    // Oct 28: the server watches the uploaded clip itself. The phone only
+    // fingerprints the file; it never has to play or decode the video, so a
+    // black preview or an unreadable codec on the phone can't stop a report.
     setUploadStage('Reading your clip…');
-    let probed: Awaited<ReturnType<typeof probeVideoMetadata>> | null = null;
-    try {
-      probed = await probeVideoMetadata(videoFile);
-      console.log("[ANALYSIS] probed metadata", probed);
-    } catch (probeErr) {
-      console.error("[ANALYSIS] probe failed", probeErr);
-      toast.error(UPLOAD_ERRORS.unreadable);
-      missingReport("video_decode");
-      return;
-    }
+    const upload = await readUploadFacts(videoFile);
+    const probed = upload.probe;
+    console.log("[ANALYSIS] upload facts", { ...upload, probe: probed ? "read" : "unreadable" });
 
     // Owner ruling 2026-10-27: a small, soft, slow, short or long clip is still
     // coached from what is visible. Only a clip with no readable frame refuses.
@@ -614,12 +609,16 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     // Unknown rate: still analysed. Seeks use a fixed time grid (not a frame
     // rate); fps stays null everywhere it is recorded, and every metric that
     // needs a frame-density tier refuses on its own.
-    const fpsTrue = probed.fps_true;
+    const fpsTrue = upload.fps_true;
     const seekHz = fpsTrue ?? UNKNOWN_FPS_SAMPLING_GRID_HZ;
     const runAnalysis = analysisEnabled;
-    if (analysisEnabled) {
-
-
+    // Optional on-phone body tracking. Runs only AFTER the report is on
+    // screen and can never block, delay or replace it.
+    const capturePose = async (probed: ProbedVideoMetadata) => {
+      // Silent: this runs after the report, so it never shows a stage.
+      const setUploadStage = (_stage: string) => {};
+      const seekHz = fpsTrue ?? UNKNOWN_FPS_SAMPLING_GRID_HZ;
+      void seekHz;
       // ===== STEP 1 — Dense D-POSE landmark production =====
       // Contiguous native-frame-rate sweep across the movement window (not the
       // 7 AI frames). Produces 2D normalized + world landmarks + per-landmark
@@ -755,60 +754,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
         // Owner 2026-10-27: body tracking is optional; coaching continues from the
         // frames, so no "couldn't follow" error is shown mid-analysis.
       }
-
-      // AI frames are placed AFTER the scout pass so the budget lands on the
-      // movement, not spread evenly across the wait and the walk-off.
-      try {
-        setUploadStage('Picking out key frames…');
-    setExtractingFrames(true);
-        toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
-
-        const result = await extractKeyFramesDeterministic({
-          videoFile,
-          fps_true: seekHz,
-          duration_sec: probed.duration_sec,
-          landingTime,
-          motionCentreSec: scoutCentreSec,
-        });
-        lastMotionCentreRef.current = scoutCentreSec;
-        console.log('[AI-FRAMES]', { placement: result.placement, motion_centre_sec: scoutCentreSec, sent_sec: result.frames.map((f) => f.timestamp_seconds) });
-        frames = result.frames.map((f) => f.dataUrl);
-        frameExtractions = result.frames.map((f) => ({
-          frame_index: f.frame_index,
-          timestamp_seconds: f.timestamp_seconds,
-          sha256_hex: f.sha256_hex,
-          width: f.width,
-          height: f.height,
-        }));
-
-        if (frames.length < 1) {
-          throw new Error(UPLOAD_ERRORS.notEnoughFrames);
-        }
-
-
-        if (landingTime != null) {
-          landingFrameIndex = calculateLandingFrameIndex(
-            landingTime,
-            seekHz,
-            result.frames.map((f) => f.frame_index),
-          );
-          console.log('[ANALYSIS] Using landing frame index:', landingFrameIndex);
-        }
-
-        console.log(`[ANALYSIS] Successfully extracted ${frames.length} frames for analysis`);
-        setExtractingFrames(false);
-      } catch (frameError: any) {
-        console.error('[ANALYSIS] Frame extraction failed:', frameError);
-        setExtractingFrames(false);
-        toast.error(friendlyThrownError(frameError) === UPLOAD_ERRORS.generic
-          ? UPLOAD_ERRORS.frameExtractionFailed
-          : friendlyThrownError(frameError));
-        missingReport("frame_extraction");
-        return;
-      }
-
-    }
-    // ===== END FRAME EXTRACTION =====
+    };
 
     try {
 
@@ -874,18 +820,18 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
           video_url: publicUrl,
           thumbnail_url: thumbnailUrl,
           status: runAnalysis ? "uploading" : "completed",
-          sha256_hex: probed.sha256_hex,
-          fps_true: probed.fps_true,
-          duration_sec: probed.duration_sec,
-          width: probed.width,
-          height: probed.height,
-          orientation: probed.orientation,
+          sha256_hex: upload.sha256_hex,
+          fps_true: upload.fps_true,
+          duration_sec: upload.duration_sec,
+          width: upload.width,
+          height: upload.height,
+          orientation: upload.orientation,
           // Uploaded footage: we never requested a frame rate, we only measured
           // what the file already had. Stored so analysis can scope its claims.
           capture_source: "upload",
-          achieved_fps: probed.fps_true,
-          capture_fps_tier: probed.fps_true == null ? null : classifyFps(probed.fps_true),
-          capture_fps_source: probed.fps_source === "container" ? "file_container" : "unknown",
+          achieved_fps: upload.fps_true,
+          capture_fps_tier: upload.fps_true == null ? null : classifyFps(upload.fps_true),
+          capture_fps_source: upload.fps_source === "container" ? "file_container" : "unknown",
           ...(landingTime != null ? { landing_time_sec: landingTime } : {}),
 
           // Side stamp — the established side for this clip (gate guarantees it
@@ -912,6 +858,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       setCurrentVideoId(videoData.id);
       currentVideoIdRef.current = videoData.id;
 
+      const persistEnrichment = async (probed: ProbedVideoMetadata, videoData: { id: string }) => {
       // Phase 51 — persist the full deterministic-tempo lineage chain
       // (landmark_run → event_run → metric_run → analysis_run) so the
       // value (or its canonical missingness reason) is retrievable from
@@ -1114,7 +1061,17 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
           console.error('[TEMPO] persistence chain threw:', e);
         }
       }
-      
+      };
+      // Optional enrichment after the report: never awaited by the report.
+      const runEnrichment = () => {
+        if (!analysisEnabled || !probed) return;
+        const savedClip = { id: videoData.id };
+        void (async () => {
+          try { await capturePose(probed); await persistEnrichment(probed, savedClip); }
+          catch (enrichError) { console.warn('[analysis] optional enrichment skipped', enrichError); }
+        })();
+      };
+
       // Branch based on analysis toggle
       if (!runAnalysis) {
         // No analysis - just upload and prompt to save to library
@@ -1149,9 +1106,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
             sport,
             userId: user.id,
             language: i18n.language,
-            frames, // Include extracted frames for visual analysis
-            frameExtractions, // Phase 1 — per-frame deterministic audit
-            ...(landingFrameIndex !== null && { landingFrameIndex }), // Only include if user marked landing
+            // No frames: the server fetches and watches the uploaded clip.
           },
         }
       );
@@ -1183,6 +1138,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
         void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
         fireAnalysisVideoMoment(normalized);
       } catch (extraError) { console.warn("[analysis] post-report extra failed", extraError); }
+      runEnrichment();
 
       if (normalized?.saved === false) toast.error(normalized.save_error ?? "Your report is shown, but could not be saved.");
       else if (normalized?.report_status === "not_measured") toast.info(normalized.feedback);
