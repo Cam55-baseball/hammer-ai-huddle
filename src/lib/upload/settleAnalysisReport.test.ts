@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { displayableReport, hasCoachingContent, settleAnalysisReport } from "./analysisResponse";
 
 const coaching = { summary: ["Your hands pass your back elbow early."], feedback: "In Phase 1 …", drills: [{ title: "Elbow first" }] };
-const db = (row: any) => ({ from: () => ({ select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: row }) }) }) }) }) });
+const db = (row: any) => ({ functions: { invoke: async () => ({ data: row ? { found: true, ...row } : { found: false } }) } });
 
 describe("report screen shows coaching whenever it exists", () => {
   it("a 'Not measured' stand-in is not coaching", () => {

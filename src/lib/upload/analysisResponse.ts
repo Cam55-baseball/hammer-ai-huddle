@@ -51,8 +51,8 @@ export async function settleAnalysisReport(
   if (fine) return displayableReport(candidate);
   if (videoId && userId) {
     try {
-      const { data } = await supabase.from("videos").select("status, ai_analysis, efficiency_score")
-        .eq("id", videoId).eq("user_id", userId).maybeSingle();
+      // Players can't read report columns directly; use the self-only reader.
+      const { data } = await supabase.functions.invoke("get-my-analysis-report", { body: { videoId } });
       const stored = data?.ai_analysis;
       if (data?.status === "completed" && hasCoachingContent(stored)) {
         return displayableReport({ ...stored, efficiency_score: candidate?.efficiency_score ?? data.efficiency_score ?? stored.efficiency_score, saved: true, save_error: null });
