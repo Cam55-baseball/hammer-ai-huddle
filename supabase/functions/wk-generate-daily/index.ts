@@ -383,6 +383,8 @@ interface Prescription {
 import { OS_ONLY_ECCENTRIC_SLUGS, IN_SEASON_BLOCKED_SLUGS } from "../_shared/wic/season.ts";
 import { isolationAllowed, robustnessAreas, robustnessPool, ROBUSTNESS_IN_SEASON_SETS, IN_SEASON_SESSION_SET_CAP, AREA_LABEL } from "../_shared/wic/lift/blueprint.ts";
 import { oppositeLowerPool } from "../_shared/wic/lift/areaMap.ts";
+import { runningReadiness, type ReadinessCheckin, type RunningReadiness } from "../_shared/readiness/runningReadiness.ts";
+import { conditioningFloorDue, isRunningConditioning, floorConditioningSlugs } from "../_shared/wic/conditioning/weeklyFloor.ts";
 
 // Step 20 C3 — the first request an isolate serves pays for loading the code.
 // That build is not comparable with a warm one, so the watchdog logs it for
@@ -1278,6 +1280,41 @@ const handler = async (req: Request): Promise<Response> => {
     const checkIn = checkInReductions(block.cns_unit_cap, { ...dl, sleep_hours: dl.sleep_hours ?? dl.sleep, cns_readiness: dl.cns_readiness ?? dl.readiness });
     const { reductions, sleep, cnsReadiness, soreness } = checkIn;
     let cnsCap = checkIn.cnsCap;
+    // Owner Oct 28: readiness is a RUNNING 14-day adjustment (check-ins, sleep,
+    // soreness, pain, rolling load, completion). Low running readiness takes the
+    // same single step as a low check-in — never stacked on one. Read failure = no change.
+    let running: RunningReadiness | null = null;
+    try {
+      const from14 = isoShift(planDate, -13), from28 = isoShift(planDate, -27);
+      const [rq, ra, rl, rr] = await Promise.all([
+        admin.from("vault_focus_quizzes").select("entry_date, physical_readiness, hours_slept, soreness_locations, pain_location, pain_scale")
+          .eq("user_id", user.id).gte("entry_date", from14).lte("entry_date", planDate).limit(200),
+        admin.from("asb_events").select("payload, occurred_at").eq("athlete_id", user.id).eq("topic_id", "behavioral.readiness")
+          .gte("occurred_at", `${from14}T00:00:00Z`).order("occurred_at", { ascending: false }).limit(60),
+        admin.from("wk_session_logs").select("plan_date, prescription_id").eq("user_id", user.id).gte("plan_date", from28).lte("plan_date", planDate).limit(2000),
+        admin.from("wk_prescriptions").select("id").eq("user_id", user.id).gte("plan_date", from14).lt("plan_date", planDate).limit(2000),
+      ]);
+      if (!rq.error && !ra.error && !rl.error && !rr.error) {
+        const checkins: ReadinessCheckin[] = ((rq.data ?? []) as any[]).map((q) => ({ date: q.entry_date, bodyReadiness: q.physical_readiness,
+          hoursSlept: q.hours_slept, sorenessAreas: Array.isArray(q.soreness_locations) ? q.soreness_locations.length : null,
+          painAreas: Array.isArray(q.pain_location) ? q.pain_location.length : null, painScale: q.pain_scale }));
+        const seenDay = new Set<string>();
+        for (const e of (ra.data ?? []) as any[]) {
+          const d = String(e.occurred_at).slice(0, 10); if (seenDay.has(d)) continue; seenDay.add(d);
+          const n = Number(e.payload?.score); if (Number.isFinite(n)) checkins.push({ date: d, readiness10: n <= 1 ? n * 10 : n });
+        }
+        const units: Record<string, number> = {};
+        for (const l of (rl.data ?? []) as any[]) units[l.plan_date] = (units[l.plan_date] ?? 0) + 1;
+        const ids = new Set(((rr.data ?? []) as any[]).map((r) => r.id));
+        const done = new Set(((rl.data ?? []) as any[]).filter((l) => l.prescription_id && ids.has(l.prescription_id)).map((l) => l.prescription_id));
+        running = runningReadiness({ today: planDate, checkins, workUnitsByDate: units, prescribedPast14: ids.size, completedPast14: done.size,
+          testTrend: null, seasonPhase: null });
+      }
+    } catch (_e) { running = null; }
+    if (running?.band === "low") {
+      if (!reductions.some(r => r.reason === "sleep" || r.reason === "cns")) cnsCap = Math.max(1, cnsCap - 1);
+      reductions.push({ reason: "running_readiness", detail: `Your last 14 days point to a lighter day${running.reasons.length ? ` (${running.reasons.join(", ")})` : ""}, so the hard work is dialled back.` });
+    }
     // Stage 3 (owner-authorised 2026-10-05) — the morning Day intent answer.
     // Read from the athlete's own dated row for this plan date. It can only
     // moderate downward inside what is already allowed: an easier day takes the
