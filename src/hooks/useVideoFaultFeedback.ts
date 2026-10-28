@@ -7,7 +7,7 @@
  * invents an improvement signal — whether the athlete actually got better on
  * that fault is measured separately, from later analyses.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -21,6 +21,9 @@ export interface FaultContext {
 
 export function useVideoFaultFeedback(videoIds: string[]) {
   const { user } = useAuth();
+  const userId = user?.id;
+  const currentUserId = useRef(userId);
+  currentUserId.current = userId;
   const [liked, setLiked] = useState<Set<string>>(new Set());
   const [saved, setSaved] = useState<Set<string>>(new Set());
 
@@ -39,7 +42,7 @@ export function useVideoFaultFeedback(videoIds: string[]) {
       setSaved(new Set((saves || []).map((r: any) => r.video_id)));
     })();
     return () => { cancelled = true; };
-  }, [user, videoIds.join(',')]);
+  }, [userId, videoIds.join(',')]);
 
   const toggle = useCallback(
     async (table: 'library_video_likes' | 'library_video_saves', videoId: string, ctx: FaultContext) => {
@@ -58,6 +61,7 @@ export function useVideoFaultFeedback(videoIds: string[]) {
           source: ctx.source,
           });
         if (result.error) throw result.error;
+        if (currentUserId.current !== user.id) return false;
         const next = new Set(set);
         if (set.has(videoId)) next.delete(videoId);
         else next.add(videoId);
