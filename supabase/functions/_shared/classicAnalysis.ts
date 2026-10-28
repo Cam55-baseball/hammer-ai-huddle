@@ -14,7 +14,7 @@ export interface ChatCompletionRequest {
   tools?: unknown[];
   tool_choice?: unknown;
   temperature?: number;
-  [key: string]: unknown;
+  max_tokens?: number;
 }
 export interface ChatCompletionResult {
   ok: boolean;
