@@ -2320,7 +2320,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     const runOnVideo = () => reliableAnalysis(() => classicGatewayCompletion(buildAnalysisRequest(CLASSIC_ANALYSIS_ROUTE, videoContent), { timeoutMs: 150_000 }), logUsage);
     const runOnFrames = () => reliableAnalysis((route) => routeAnalysis(route, buildAnalysisRequest(route, userContent)), logUsage);
     let analysisInput: "video" | "frames" = clipUrl ? "video" : "frames";
-    let aiResult = clipUrl ? await runOnVideo() : await runOnFrames();
+    let aiResult: Awaited<ReturnType<typeof runOnFrames>> = clipUrl ? (await runOnVideo()) as Awaited<ReturnType<typeof runOnFrames>> : await runOnFrames();
     if (clipUrl && !(aiResult.ok && hasStructuredAnalysis(aiResult.data)) && !analysisRefused(aiResult.data) && frames.length > 0) {
       console.warn(`[ANALYZE-VIDEO] whole-clip analysis failed (status ${aiResult.status}); using the client's frames`);
       aiResult = await runOnFrames();
