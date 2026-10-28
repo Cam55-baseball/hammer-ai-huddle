@@ -161,6 +161,15 @@ describe("roadmap — determinism guards", () => {
   it("arm injury clamps throwing to ≤ 2 days/wk", () => {
     expect(resolveSkillDaysTarget("peak", "throwing", "OF", ["shoulder"])).toBeLessThanOrEqual(2);
   });
+  it("padded leg injury keeps defense at the existing two-day safety ceiling", () => {
+    expect(resolveSkillDaysTarget("sustain", "defense", "OF", [" Knee "])).toBe(2);
+  });
+  it("padded leg injury keeps baserunning at the existing two-day safety ceiling", () => {
+    expect(resolveSkillDaysTarget("sustain", "baserunning", "OF", [" HAMSTRING "])).toBe(2);
+  });
+  it("padded arm injury keeps throwing at the existing two-day safety ceiling", () => {
+    expect(resolveSkillDaysTarget("peak", "throwing", "P", [" Shoulder "])).toBe(2);
+  });
 
   it("youth band never exceeds Bridge target (training-age clamp)", () => {
     const bridge = resolveSkillDaysTarget("bridge", "hitting", "OF");

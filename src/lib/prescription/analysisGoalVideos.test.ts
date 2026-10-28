@@ -24,6 +24,14 @@ describe('canonical goal instructional videos', () => {
     expect(resolve({ ...video, positionScopes: [['middle_infield']] })).toHaveLength(1);
     expect(resolveGoalVideos([match('v1')], [{ ...video, positionScopes: [['catcher']] }], 'hitting', 'baseball', [])).toEqual([]);
   });
+  it('requires declared sport before recommending a goal video', () => {
+    expect(resolve({ ...video, sport: [] })).toEqual([]);
+    expect(resolve({ ...video, sport: ['both'] })).toHaveLength(1);
+  });
+  it('requires declared skill rather than treating untagged media as hitting', () => {
+    expect(resolve({ ...video, skill_domains: [], category: null })).toEqual([]);
+    expect(resolve({ ...video, skill_domains: null, category: 'hitting' })).toHaveLength(1);
+  });
   it('combines reasons and limits only after inaccessible attachments are removed', () => {
     const matches = [match('gone1'), match('gone2'), match('v1'), match('v1', 'Your goal: Hitting to all fields')];
     expect(resolveGoalVideos(matches, [video], 'hitting', 'baseball', [])[0]?.reasons).toEqual(['Your goal: Barrel control', 'Your goal: Hitting to all fields']);
