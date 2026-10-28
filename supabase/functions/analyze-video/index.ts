@@ -2312,7 +2312,21 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         }
       ],
       tool_choice: { type: "function", function: { name: "return_analysis" } }
-    }), (result) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result }));
+    });
+    const logUsage = (result: Awaited<ReturnType<typeof routeAnalysis>>) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result });
+    // The whole clip goes to the classic gateway model (the only route that
+    // takes video). Phone frames are used only when the clip itself can't be
+    // watched and an older client sent them.
+    const runOnVideo = () => reliableAnalysis(() => classicGatewayCompletion(buildAnalysisRequest(CLASSIC_ANALYSIS_ROUTE, videoContent), { timeoutMs: 150_000 }), logUsage);
+    const runOnFrames = () => reliableAnalysis((route) => routeAnalysis(route, buildAnalysisRequest(route, userContent)), logUsage);
+    let analysisInput: "video" | "frames" = clipUrl ? "video" : "frames";
+    let aiResult = clipUrl ? await runOnVideo() : await runOnFrames();
+    if (clipUrl && !(aiResult.ok && hasStructuredAnalysis(aiResult.data)) && !analysisRefused(aiResult.data) && frames.length > 0) {
+      console.warn(`[ANALYZE-VIDEO] whole-clip analysis failed (status ${aiResult.status}); using the client's frames`);
+      aiResult = await runOnFrames();
+      analysisInput = "frames";
+    }
+    console.log(`[ANALYZE-VIDEO] analysis input=${analysisInput} ok=${aiResult.ok} status=${aiResult.status}`);
     if (!aiResult.ok) {
       const errorText = aiResult.errorBody || "";
       console.error("AI provider error:", aiResult.provider, aiResult.status, errorText);
