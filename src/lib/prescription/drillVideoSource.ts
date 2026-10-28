@@ -98,7 +98,7 @@ export function drillVideoSource(d: { video_storage_path?: string | null; video_
 /** Source for a stored drill video_url (upload in our storage, or a link). */
 export function drillVideoFromUrl(url: string | null | undefined): DrillVideoSource | null {
   if (!url || !url.trim()) return null;
-  if (isOwnStorageUrl(url) || /\.(mp4|mov|webm|avi|m4v)(\?|$)/i.test(url) && !parseEmbedLink(url) && isOwnStorageUrl(url)) {
+  if (isOwnStorageUrl(url)) {
     return { kind: "upload", storagePath: url };
   }
   return parseDrillVideoLink(url);
