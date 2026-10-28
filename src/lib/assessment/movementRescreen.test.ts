@@ -10,4 +10,15 @@ describe('12-week movement re-screen', () => {
     expect(movementRescreenDue('invalid', '2026-08-24')).toBe(false);
     expect(movementRescreenDue('2027-06-01T12:00:00', '2026-08-24')).toBe(false);
   });
+  it('rejects an impossible saved calendar date instead of moving it into March', () => {
+    expect(movementRescreenDue('2026-02-30T12:00:00', '2026-05-25')).toBe(false);
+  });
+  it('rejects an impossible device date instead of manufacturing elapsed days', () => {
+    expect(movementRescreenDue('2026-06-01T12:00:00', '2026-09-31')).toBe(false);
+  });
+  it('accepts a real leap day and preserves the day-84 boundary', () => {
+    expect(movementRescreenDue('2024-02-29T12:00:00', '2024-05-22')).toBe(false);
+    expect(movementRescreenDue('2024-02-29T12:00:00', '2024-05-23')).toBe(true);
+    expect(movementRescreenDue('2026-02-29T12:00:00', '2026-06-01')).toBe(false);
+  });
 });

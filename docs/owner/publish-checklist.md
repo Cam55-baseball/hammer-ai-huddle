@@ -5,6 +5,13 @@
 **Ready to publish: NO.** Large-clip server conversion is not implemented; goal-linked library coverage and analysis-to-identity/learning/coach unity are incomplete; weekly purchased-skill completeness, beginner defense frequency, routine/fix-it lifecycle and required affected-player proofs remain open. Passing tests do not certify those flows.
 
 ## Continuation — October 28, owner request 07:15 UTC
+### Run (4) — owner request 07:45 UTC
+
+- **A fixed:** `useAnalysisGoalVideos` resolved cached picks despite failed profile/library/goal reads, pending profile reads, or signed-out identity. It now withholds suggestions until all required eligibility reads succeed, disables downstream library reads on upstream errors and preserves the error for the existing visible alert. Self-keyed account switching and matching canonical IDs remain intact. This closes hook failure safety, not missing goal media or positive athlete playback.
+- **B fixed:** impossible saved dates such as February 30 and impossible device dates normalized to other days, falsely opening re-screen reminders. Source calendar components now validate before local-calendar elapsed calculation. Real leap dates remain valid; the existing day-84 threshold, canonical `movement_done_at`, history and pain protections are unchanged.
+- **Proof:** eight failing assertions reproduced before correction; five focused files / 22 tests passed afterward. Re-screen tests also passed independently in Pacific/Honolulu and Pacific/Auckland (same five tests, not additional unique tests). Logs: `/tmp/closeout-run4/before.log`, `after.log`, `honolulu.log`, `auckland.log`. Latest observed automatic preview build OK 07:47:02 UTC. No full-suite or fresh affected-player phone acceptance claimed; prior finished phone proofs were not repeated.
+- **Live/pending:** frontend changes are in preview; no backend function change/deployment or migration needed. No publish, cron or iOS changes. No hosted test identities, uploads, workout logs, assessments or media attachments authored. **Ready to publish: NO** — original-large-clip private decoding, goal instructional media coverage, legacy practice-check mapping, recurring findings unity, beginner/routine decisions and remaining affected-player flows are still open.
+
 ### Run (3) — owner request 07:37 UTC
 
 - **A concrete fix:** the goal-video resolver treated missing sport and missing skill/category as compatible. Both missing-metadata cases were reproduced as failing tests; it now requires an explicit matching sport (including declared `both`) and a matching skill-domain or legacy category. Canonical IDs, accessible-media checks, position scope and no-fault goal attribution remain unchanged. No attachments or recommendations were fabricated.
