@@ -34,10 +34,13 @@ export const SKILL_DAYS_CEILING = 6;
 
 /** Position-player baseline ladder (hitting/defense/baserunning + non-pitcher throwing). */
 const POSITION_LADDER: Record<SkillModality, Record<RoadmapRung, number>> = {
-  hitting:     { foundation: 3, build: 4, bridge: 5, peak: 6, sustain: 6 },
+  // Owner Oct 28: no week-by-week ramp — fixed weekly minimums at every rung
+  // (hitting 3, defense 4, baserunning 1); readiness modulates inside sessions.
+  // Throwing keeps its arm-rule ladder unchanged.
+  hitting:     { foundation: 3, build: 3, bridge: 3, peak: 3, sustain: 3 },
   throwing:    { foundation: 3, build: 4, bridge: 5, peak: 6, sustain: 6 },
-  defense:     { foundation: 2, build: 3, bridge: 4, peak: 5, sustain: 6 },
-  baserunning: { foundation: 1, build: 2, bridge: 3, peak: 4, sustain: 6 },
+  defense:     { foundation: 4, build: 4, bridge: 4, peak: 4, sustain: 4 },
+  baserunning: { foundation: 1, build: 1, bridge: 1, peak: 1, sustain: 1 },
 };
 
 /** Pitcher throwing is bullpen-capped — the arm can't hold 6 max-intent days. */
