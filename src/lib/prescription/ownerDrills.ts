@@ -80,7 +80,7 @@ export function rowToDrills(row: OwnerDrillRow): OwnerDrill[] {
   const byCat = new Map<EliteDrill["category"], Set<EliteDrill["sports"][number]>>();
   for (const t of targets) {
     if (!byCat.has(t.category)) byCat.set(t.category, new Set());
-    byCat.get(t.category)!.add(t.sport);
+    byCat.get(t.category)?.add(t.sport);
   }
   const baseId = row.overrides_drill_id ?? `owner.${row.id}`;
   return [...byCat.entries()].map(([category, sports], i) => ({
@@ -105,6 +105,7 @@ export function rowToDrills(row: OwnerDrillRow): OwnerDrill[] {
     commonMistake: row.common_mistake ?? undefined,
     source: "Owner drill builder",
     videoUrl: row.video_url,
+    libraryVideoId: row.library_video_id ?? null,
     ownerReview: "approved",
     ownerRowId: row.id,
     placements: row.placements,
@@ -124,7 +125,7 @@ export function mergeCatalog(base: EliteDrill[], rows: OwnerDrillRow[]): EliteDr
     if (!r.active) continue;
     const [replacement] = rowToDrills(r);
     // Keep the built-in category/sports if the owner chose no analysis placement.
-    out.push(replacement ?? { ...d, name: r.name, videoUrl: r.video_url });
+    out.push(replacement ?? { ...d, name: r.name, videoUrl: r.video_url, libraryVideoId: r.library_video_id ?? null });
   }
   for (const r of rows) if (!r.overrides_drill_id && r.active) out.push(...rowToDrills(r));
   return out;
