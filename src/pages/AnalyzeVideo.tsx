@@ -36,7 +36,7 @@ import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { isAnalysisVideoFile } from "@/lib/upload/analysisVideoFile";
 import { prepareAnalysisVideo } from "@/lib/upload/prepareAnalysisVideo";
 import { unavailableAnalysis } from "../../supabase/functions/_shared/analysisReliability";
-import { normalizeAnalysisResponse, analysisErrorDetails } from "@/lib/upload/analysisResponse";
+import { normalizeAnalysisResponse, analysisErrorDetails, settleAnalysisReport, hasCoachingContent } from "@/lib/upload/analysisResponse";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
@@ -355,6 +355,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     setClipTiles(null);
     setAnalysisError(null);
     setCurrentVideoId(null);
+    currentVideoIdRef.current = null;
     setLandingTime(null);
     if (module && sport && !assessment) {
       toast.info(t('videoAnalysis.switchedContext', { sport, module, defaultValue: 'Switched to {{sport}} - {{module}}. Upload space cleared.' }));
@@ -489,6 +490,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     setClipSide(null);
     setShowSideOverride(false);
   };
+
+  // The clip row created by this upload, readable from catch paths.
+  const currentVideoIdRef = useRef<string | null>(null);
 
   const showUnavailableReport = (stage: string, reason?: string) => {
     const report = unavailableAnalysis(module ?? "video", stage);
@@ -906,6 +910,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
 
       setCurrentVideoId(videoData.id);
+      currentVideoIdRef.current = videoData.id;
 
       // Phase 51 — persist the full deterministic-tempo lineage chain
       // (landmark_run → event_run → metric_run → analysis_run) so the
