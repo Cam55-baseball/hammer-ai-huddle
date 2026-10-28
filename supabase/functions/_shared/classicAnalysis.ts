@@ -17,7 +17,7 @@ export interface ChatCompletionRequest {
 export interface ChatCompletionResult {
   ok: boolean;
   status: number;
-  provider: string;
+  provider: "google" | "openai" | "lovable" | "none";
   data: any;
   errorBody?: string;
   [key: string]: unknown;
