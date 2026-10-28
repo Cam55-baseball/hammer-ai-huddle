@@ -1882,10 +1882,20 @@ Deno.serve(async (req) => {
     // Owner ruling 2026-10-27: resolution, frame rate, length and dropped
     // frames never refuse coaching. Only clips with no decodable frame do.
     void PHASE1_MIN_FPS; void PHASE1_MIN_WIDTH; void PHASE1_MIN_HEIGHT; void PHASE1_MIN_DURATION_SEC; void PHASE1_MAX_DURATION_SEC; void PHASE1_MAX_DROPPED_RATIO;
-    if (frames.length < 1) {
+    // Oct 28: the coach watches the uploaded clip itself, fetched here from
+    // storage through a short-lived private link. Phone-made frames are only a
+    // fallback, so the report never depends on the phone decoding the video.
+    const clipStoragePath = videoStoragePath((videoRow as { video_url?: string | null }).video_url ?? null);
+    let clipUrl: string | null = null;
+    if (clipStoragePath) {
+      const signed = await supabase.storage.from("videos").createSignedUrl(clipStoragePath, 3600);
+      clipUrl = signed.data?.signedUrl ?? null;
+      if (!clipUrl) console.warn(`[ANALYZE-VIDEO] clip link failed for ${videoId}: ${signed.error?.message ?? "unknown"}`);
+    }
+    if (frames.length < 1 && !clipUrl) {
       return await writeReject(
-        "reject_unreadable_frames",
-        `usable_frames=${frames.length} of ${rawFrames.length} (malformed=${malformedCount})`,
+        "reject_unreadable_video",
+        `no_clip_file_and_no_frames (frames=${rawFrames.length}, malformed=${malformedCount})`,
       );
     }
 
