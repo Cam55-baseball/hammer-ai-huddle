@@ -16785,6 +16785,45 @@ export type Database = {
         }
         Relationships: []
       }
+      temporary_upload_cleanup_log: {
+        Row: {
+          cleaned_at: string
+          created_at_original: string | null
+          id: string
+          outcome: string
+          removed_files: string[]
+          temporary_until: string | null
+          thumbnail_url: string | null
+          user_id: string
+          video_id: string
+          video_url: string | null
+        }
+        Insert: {
+          cleaned_at?: string
+          created_at_original?: string | null
+          id?: string
+          outcome: string
+          removed_files?: string[]
+          temporary_until?: string | null
+          thumbnail_url?: string | null
+          user_id: string
+          video_id: string
+          video_url?: string | null
+        }
+        Update: {
+          cleaned_at?: string
+          created_at_original?: string | null
+          id?: string
+          outcome?: string
+          removed_files?: string[]
+          temporary_until?: string | null
+          thumbnail_url?: string | null
+          user_id?: string
+          video_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       testing_days: {
         Row: {
           athlete_id: string
@@ -20705,6 +20744,7 @@ export type Database = {
           shared_with_scouts: boolean | null
           sport: Database["public"]["Enums"]["sport_type"]
           status: Database["public"]["Enums"]["video_status"]
+          temporary_until: string | null
           throwing_hand: string | null
           thumbnail_sizes: Json | null
           thumbnail_url: string | null
@@ -20749,6 +20789,7 @@ export type Database = {
           shared_with_scouts?: boolean | null
           sport: Database["public"]["Enums"]["sport_type"]
           status?: Database["public"]["Enums"]["video_status"]
+          temporary_until?: string | null
           throwing_hand?: string | null
           thumbnail_sizes?: Json | null
           thumbnail_url?: string | null
@@ -20793,6 +20834,7 @@ export type Database = {
           shared_with_scouts?: boolean | null
           sport?: Database["public"]["Enums"]["sport_type"]
           status?: Database["public"]["Enums"]["video_status"]
+          temporary_until?: string | null
           throwing_hand?: string | null
           thumbnail_sizes?: Json | null
           thumbnail_url?: string | null
@@ -24524,6 +24566,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      video_owned_by_me: { Args: { _video_id: string }; Returns: boolean }
       wic_adaptations_compatible: {
         Args: { day_adaptation: string; movement_adaptation: string }
         Returns: boolean
