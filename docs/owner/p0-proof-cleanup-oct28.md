@@ -1,0 +1,42 @@
+# Oct 28 P0 proof saves — snapshot before cleanup
+
+Owner account test saves made by the WebKit/Chromium proof runs. Before cleanup: saved_to_library=true, temporary_until=NULL. Cleanup sets saved_to_library=false and temporary_until=2026-10-28 (hidden; removed by the 24-hour job only once the owner schedules it). Clips and reports are not deleted by this step.
+
+- id:c7449d61-5de0-4aed-8db5-786fd314e617 library_title:P0 proof chromium hit_bb_2 1793163224 module:hitting sport:baseball
+- id:55e5f790-079d-426a-b3e3-720a0e46327e library_title:P0 proof chromium hit_bb_1 1793163314 module:hitting sport:baseball
+- id:413ea633-617c-4240-8935-5ac949b9c217 library_title:P0 proof webkit hit_bb_1 1793163351 module:hitting sport:baseball
+- id:a846c367-e0c2-40ee-97eb-2657d9a48ade library_title:P0 proof chromium hit_bb_3 1793163387 module:hitting sport:baseball
+- id:4cda7a1a-58b2-4bea-9546-3abe9cc56025 library_title:P0 proof chromium pit_bb_1 1793163430 module:pitching sport:baseball
+- id:8d18e391-dc76-4073-add2-8510c696b787 library_title:P0 proof webkit hit_bb_3 1793163479 module:hitting sport:baseball
+- id:49ac4333-f8df-424e-afb0-fad3bf3c0517 library_title:P0 proof chromium pit_bb_2 1793163483 module:pitching sport:baseball
+- id:7dddcc56-9bca-4325-943d-44df704f4ad9 library_title:P0 proof chromium pit_bb_3 1793163530 module:pitching sport:baseball
+- id:59f249a1-7b1d-428e-8257-1ee0b89542a7 library_title:P0 proof webkit pit_bb_1 1793163555 module:pitching sport:baseball
+- id:215c212d-a223-48d8-9728-13083a383f35 library_title:P0 proof chromium thr_bb_1 1793163576 module:throwing sport:baseball
+- id:f5cc5ad7-a263-4587-a3c1-da72d2923014 library_title:P0 proof chromium thr_bb_2 1793163638 module:throwing sport:baseball
+- id:fe1ee835-d2d0-4000-9251-d11dbd202fba library_title:P0 proof webkit pit_bb_2 1793163640 module:pitching sport:baseball
+- id:301ebecb-e58a-4019-9a36-3d993b1e954e library_title:P0 proof chromium thr_bb_3 1793163690 module:throwing sport:baseball
+- id:14bf7a9a-5d04-451c-912f-3b8353cb3c88 library_title:P0 proof webkit pit_bb_3 1793163718 module:pitching sport:baseball
+- id:60a42732-b771-484c-8cda-ccd5c1300ede library_title:P0 proof chromium hit_sb_1 1793163762 module:hitting sport:softball
+- id:4ebb7a91-4a6c-403d-9c52-d9e9088c9f0a library_title:P0 proof webkit thr_bb_1 1793163820 module:throwing sport:baseball
+- id:501fad99-8881-4713-b183-37737bb72058 library_title:P0 proof chromium hit_sb_2 1793163844 module:hitting sport:softball
+- id:dcf7e2a3-65f4-47b5-a7da-d1b26a3639ac library_title:P0 proof webkit thr_bb_3 1793164032 module:throwing sport:baseball
+- id:b193818b-eebe-4094-bc73-5b2c8cca94af library_title:P0 proof chromium pit_sb_3 1793164138 module:pitching sport:softball
+- id:5e66fc02-8339-418b-a380-d542e97e3e7b library_title:P0 proof chromium thr_sb_1 1793164242 module:throwing sport:softball
+- id:f69f4be9-7d43-405a-85d1-cbceb6655b78 library_title:P0 proof webkit pit_sb_1 1793164319 module:pitching sport:softball
+- id:18eb87b0-25a8-47e6-bbbd-b902ad50a139 library_title:P0 proof chromium thr_sb_2 1793164319 module:throwing sport:softball
+- id:abff2873-c23c-4e98-afe3-32fc8983ea5e library_title:P0 proof webkit hit_sb_3 1793166620 module:hitting sport:softball
+- id:e4c299b8-3585-4592-8bba-f747f647ffdb library_title:P0 proof webkit pit_sb_2 1793166728 module:pitching sport:softball
+- id:70556f58-60b0-4b38-89b5-e9494a5fc395 library_title:P0 proof webkit pit_sb_3 1793166812 module:pitching sport:softball
+- id:37bc7bfe-6247-4047-92aa-2d8441d953c7 library_title:P0 proof webkit thr_sb_1 1793166897 module:throwing sport:softball
+- id:4f98cec9-a41b-4bd2-952e-c41d1d10d978 library_title:P0 proof webkit thr_sb_2 1793166978 module:throwing sport:softball
+- id:dfba3077-f9ef-48b5-b30e-82be35b7f326 library_title:P0 proof webkit thr_sb_3 1793167058 module:throwing sport:softball
+- id:675b3176-79a7-401f-99e5-f31ac1a3b868 library_title:P0 proof webkit pics_hit_bb_latest 1793167115 module:hitting sport:baseball
+- id:e6dc4853-625e-40a9-8f20-8a62d03c6376 library_title:P0 proof webkit pics_pit_bb 1793167168 module:pitching sport:baseball
+- id:d410e864-91b0-4f42-b6a1-ea65af914bf3 library_title:P0 proof webkit pics_thr_sb 1793167219 module:throwing sport:softball
+- id:07a5642b-4f6b-4f94-a473-f1bda5314960 library_title:P0 proof chromium hit_sb_3 1793167312 module:hitting sport:softball
+- id:83173276-7cd1-437c-9657-fb16ba153699 library_title:P0 proof chromium pit_sb_1 1793167362 module:pitching sport:softball
+- id:81d1dc31-e9cb-44d5-b104-362076b0618d library_title:P0 proof chromium pit_sb_2 1793167410 module:pitching sport:softball
+- id:2755b321-b20b-422b-a0de-595de2fc9398 library_title:P0 proof chromium thr_sb_3 1793167459 module:throwing sport:softball
+- id:fa9c0b73-b76c-4cbc-b7a4-341b9b6cbad6 library_title:P0 proof webkit hit_sb_1 1793167667 module:hitting sport:softball
+- id:12edb9af-a5f0-422f-9a3b-fe3b2e914d4f library_title:P0 proof webkit hit_sb_2 1793167751 module:hitting sport:softball
+- id:ffe18848-7095-49de-aa3e-50239004c125 library_title:P0 proof webkit thr_bb_2 1793167833 module:throwing sport:baseball
