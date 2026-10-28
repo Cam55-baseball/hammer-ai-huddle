@@ -19,6 +19,9 @@ import { useHIESnapshot } from "@/hooks/useHIESnapshot";
 import { matchPrescriptionDrills, maintenanceDrills } from "@/lib/prescription/matchDrills";
 import type { EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import { useDrillCirculation } from "@/hooks/useDrillCirculation";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { categoryGoals, matchGoalDrills } from '@/lib/prescription/analysisGoals';
 
 interface Props {
   module?: string | null;
@@ -142,10 +145,20 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
   );
 
   const { catalog, historyCatalog, circulation, log, markDone, userId, ready, error: circulationError } = useDrillCirculation();
-  const frozenKey = historyKey ? `rx.frozen.v1:${userId ?? "anon"}:${historyKey}` : null;
+  const goalRead = useQuery({
+    queryKey: ['analysis-saved-goals', userId, module], enabled: !!userId,
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase.from('athlete_context').select('category_goals').eq('user_id', userId).maybeSingle();
+      if (error) throw error;
+      return categoryGoals(data?.category_goals, module ?? '');
+    },
+  });
+  const goalMatches = useMemo(() => matchGoalDrills(catalog, goalRead.data ?? [], module ?? '', sport ?? 'baseball'), [catalog, goalRead.data, module, sport]);
+  const frozenKey = historyKey ? `rx.frozen.v2:${userId ?? "anon"}:${historyKey}` : null;
   const live = useMemo(
     () =>
-      matchPrescriptionDrills({
+      [...matchPrescriptionDrills({
         catalog,
         circulation,
         violations,
@@ -156,8 +169,8 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
         weaknessAreas: [],
         module,
         sport,
-      }),
-    [catalog, circulation, violations, faultKeys, includePendingReview, pieV2Signals, weaknessAreas, module, sport],
+      }), ...goalMatches].filter((m, i, all) => all.findIndex(x => x.drill.id === m.drill.id) === i),
+    [catalog, circulation, violations, faultKeys, includePendingReview, pieV2Signals, weaknessAreas, module, sport, goalMatches],
   );
   // History stays intact: once a video's prescription is shown, the same drills
   // are shown for that video forever — even if a drill is later switched off.
@@ -210,7 +223,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
       <div className="space-y-5">
         <section className="space-y-2">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            From this clip
+            For this clip and your goals
           </h4>
           {matches.length > 0 ? (
             matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} reasons={m.reasons} staff={includePendingReview} onOpen={() => log([m.drill.id], "opened")} onDone={() => markDone(m.drill.id)} />)
@@ -225,7 +238,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
             </>
           ) : (
             <p className="text-xs text-muted-foreground">
-              {faultKeys?.length ? "No Hammers drill is tagged for this finding yet." : "Nothing in this clip needs a drill right now."}
+              {goalRead.isError ? "Couldn't read your saved goals. Try again later." : "No instructional Hammers drill is linked to this finding or your saved goals yet."}
             </p>
           )}
         </section>
