@@ -62,25 +62,26 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
   );
 
   // Cross-skill root patterns rank above single-discipline faults.
-  const { data: rootGroups = [] } = useCrossDomainFaults();
-  const rootKeys = useMemo(() => crossDomainCorrectionKeys(rootGroups), [rootGroups]);
+  // Only this clip's findings pick videos (owner P0, Oct 28): no earlier
+  // patterns, plan items or season filler.
+  void useCrossDomainFaults; void crossDomainCorrectionKeys;
+  const rootKeys: string[] = [];
 
   // What the plan is already working on in this domain.
-  const { data: openFaultKeys = [] } = useRecentFaultKeys(skillDomain);
+  void useRecentFaultKeys;
+  const openFaultKeys: string[] = [];
 
   // Where the athlete is in their year — decides which situations are relevant.
   const { resolvedPhase } = useSeasonStatus();
-  const contextTags = useMemo(
-    () => seasonContextTags(skillDomain, resolvedPhase as RelevancePhase, tagSport),
-    [skillDomain, resolvedPhase, tagSport],
-  );
+  void seasonContextTags; void tagSport;
+  const contextTags = useMemo<string[]>(() => [], []);
 
   const correctionTags = useMemo(
     () => Array.from(new Set([...(signals?.correctionTags ?? []), ...openFaultKeys])),
     [signals?.correctionTags, openFaultKeys],
   );
 
-  const { data: suggestions = [], isLoading } = useVideoSuggestions({
+  const { data: allSuggestions = [], isLoading } = useVideoSuggestions({
     skillDomain: skillDomain ?? 'hitting',
     mode: 'session',
     movementPatterns: signals?.movementPatterns ?? [],
@@ -93,6 +94,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
     enabled: Boolean(signals),
   });
 
+  const suggestions = useMemo(() => allSuggestions.filter((s) => s.relevance !== 'general'), [allSuggestions]);
   const feedback = useVideoFaultFeedback(suggestions.map(s => s.video.id));
   // Never a blank shelf: if nothing matches the fault, offer the closest
   // foundational video for this part of the game, labelled as exactly that.
@@ -102,7 +104,8 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
     triggerGated: false,
     surface: 'library',
   });
-  const fallback = suggestions.length === 0 ? foundationPicks[0] ?? null : null;
+  void foundationPicks;
+  const fallback = null as (typeof foundationPicks)[number] | null;
   const navigate = useNavigate();
 
   const primaryFault = signals?.correctionTags[0] ?? signals?.movementPatterns[0] ?? null;
@@ -286,8 +289,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
             </div>
           ))}
           <p className="text-[10px] text-muted-foreground">
-            Matched to the faults this analysis reported, what your plan is already working on,
-            and {phase ? `where you are ${phase}` : 'your season'} — nothing else.
+            Matched only to what this clip showed.
           </p>
         </div>
       )}
