@@ -66,7 +66,8 @@ export interface ChatCompletionRequest {
 export interface ChatCompletionResult {
   ok: boolean;
   status: number;
-  provider: "google" | "openai" | "none";
+  /** "lovable" = the classic analysis engine through the Lovable AI Gateway. */
+  provider: "google" | "openai" | "lovable" | "none";
   data: {
     choices: Array<{
       message: {

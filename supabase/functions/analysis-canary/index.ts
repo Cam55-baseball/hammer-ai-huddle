@@ -39,11 +39,12 @@ Deno.serve(async req => {
     const result=await response.json();
     const report=result.ai_analysis??result;
     const readback=await sb.from("videos").select("status,ai_analysis").eq("id",config.video_id).eq("user_id",config.owner_id).maybeSingle();
-    const ok=response.ok&&result.saved===true&&hasFullCoachingReport(report)&&readback.data?.status==="completed"&&hasFullCoachingReport(readback.data.ai_analysis);
+    // Pass only when the classic engine wrote a full coaching report, saved and read back.
+    const ok=response.ok&&result.saved===true&&hasFullCoachingReport(report)&&readback.data?.status==="completed"&&hasFullCoachingReport(readback.data.ai_analysis)&&readback.data.ai_analysis?.analysis_engine==="classic";
     const paused=[401,402,403,404,422].includes(response.status) ? `terminal_http_${response.status}` : null;
     const persisted=await sb.from("analysis_canary_config").update({last_status:ok?"passed":`failed_http_${response.status}`,paused_reason:paused,lease_until:null,lease_id:null,updated_at:new Date().toISOString()}).eq("id",1).eq("lease_id",lease);
     if(persisted.error)throw new Error("canary_status_save_failed");
-    if(!ok)await dispatch({key:"analysis_canary_failed",severity:"critical",title:"Daily video analysis check failed",detail:{status:response.status,reason:paused??"report_not_saved_or_readable"}});
+    if(!ok)await dispatch({key:"analysis_canary_failed",severity:"critical",title:"Daily video analysis check failed",detail:{status:response.status,reason:paused??(readback.data?.ai_analysis?.analysis_engine&&readback.data.ai_analysis.analysis_engine!=="classic"?"classic_engine_not_used":"report_not_saved_or_readable")}});
     return json({status:ok?"passed":"failed",paused:!!paused},ok?200:502);
   }catch{
     await sb.from("analysis_canary_config").update({last_status:"fixture_or_service_failure",lease_until:null,lease_id:null}).eq("id",1).eq("lease_id",lease);

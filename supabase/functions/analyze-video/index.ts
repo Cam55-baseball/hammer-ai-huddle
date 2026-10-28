@@ -16,7 +16,15 @@ import {
   METRIC_ENGINE_VERSION,
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
-import { chatCompletion } from "../_shared/googleAi.ts";
+import { chatCompletion, type ChatCompletionRequest } from "../_shared/googleAi.ts";
+import { classicGatewayCompletion, isClassicRoute } from "../_shared/classicAnalysis.ts";
+
+/** Classic engine first (no artificial cut-off); today's direct route and backup keep their limits. */
+function routeAnalysis(route: string, req: ChatCompletionRequest) {
+  return isClassicRoute(route)
+    ? classicGatewayCompletion(req, { timeoutMs: 120_000 })
+    : chatCompletion(req, { timeoutMs: 40_000, allowFallback: false });
+}
 import { analysisRefused, hasFullCoachingReport, hasReadableReport, hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../_shared/analysisReliability.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
@@ -51,23 +59,27 @@ const requestSchema = z.object({
   module: z.enum(ANALYSIS_TYPES, { errorMap: () => ({ message: "This analysis is coming soon" }) }),
   sport: z.enum(["baseball", "softball"], { errorMap: () => ({ message: "Invalid sport" }) }),
   userId: z.string().uuid("Invalid user ID format"),
-  language: z.string().optional(),
-  frames: z.array(z.string()).min(3, "At least 3 frames required for accurate analysis"),
-  landingFrameIndex: z.number().optional(),
+  // Every published and iPhone client shape is accepted: optional extras that an
+  // older client sends malformed are dropped, never a refusal. Only "no picture
+  // at all" can stop a report.
+  language: z.string().optional().catch(undefined),
+  frames: z.array(z.string()).min(1, "No readable picture in this clip"),
+  landingFrameIndex: z.number().optional().catch(undefined),
   /**
    * Phase 1 — deterministic frame extraction audit. One entry per extracted
    * frame, in the same order as `frames`. Persisted to video_frame_extractions
    * keyed on the resulting video_analysis_runs.id.
    */
-  frameExtractions: z.array(frameExtractionSchema).optional(),
+  frameExtractions: z.array(z.unknown()).optional().catch(undefined)
+    .transform((rows) => rows?.flatMap((row) => { const ok = frameExtractionSchema.safeParse(row); return ok.success ? [ok.data] : []; })),
   /**
    * Capture-honesty inputs. `captureFps` is the frame rate the recorder
    * actually achieved (measured, not requested). `ballTrackingEligible` is the
    * client's own verdict — advisory, and it can only ever close the gate,
    * never open it (see _shared/ballTrackingGate.ts).
    */
-  captureFps: z.number().positive().optional(),
-  ballTrackingEligible: z.boolean().optional(),
+  captureFps: z.number().positive().optional().catch(undefined),
+  ballTrackingEligible: z.boolean().optional().catch(undefined),
 });
 
 /**
@@ -1660,6 +1672,8 @@ Deno.serve(async (req) => {
     return result;
   };
   let reportModule = "video";
+  // deno-lint-ignore no-explicit-any
+  let savedClassicReport: Record<string, any> | null = null;
   let auditCtx: {
     videoId?: string;
     userId?: string;
@@ -2106,8 +2120,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       await supabase.from("videos").update({ status: "uploading" }).eq("id", videoId);
       return new Response(JSON.stringify({ error: HOURLY_LIMIT_MESSAGE, code: "hourly_limit", resume_at: await hourlyResumeAt(supabase, userId), video_id: videoId }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const aiResult = await reliableAnalysis((model) => chatCompletion({
-      model,
+    const aiResult = await reliableAnalysis((route) => routeAnalysis(route, {
+      model: route,
       // Determinism lock: same video → same scores. Do not relax.
       temperature: 0,
       messages: [
@@ -2263,7 +2277,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         }
       ],
       tool_choice: { type: "function", function: { name: "return_analysis" } }
-    }, { timeoutMs: 40_000, allowFallback: false }), (result) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result }));
+    }), (result) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result }));
     if (!aiResult.ok) {
       const errorText = aiResult.errorBody || "";
       console.error("AI provider error:", aiResult.provider, aiResult.status, errorText);
@@ -2533,8 +2547,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       analyzed_at: new Date().toISOString(),
     };
 
-    const MODEL_ID = "google/gemini-2.5-flash";
-    const MODEL_VERSION = "2.5-flash";
+    // Honest provenance: which route actually wrote this report.
+    const MODEL_ID = aiResult.provider === "openai" ? "openai/gpt-4o-mini" : aiResult.provider === "google" ? "google/gemini-3.6-flash" : "google/gemini-2.5-flash";
+    const MODEL_VERSION = MODEL_ID.split("/")[1];
+    const ANALYSIS_ENGINE = aiResult.provider === "lovable" ? "classic" : `backup:${aiResult.provider}`;
     const prompt_hash = await sha256Hex(systemPrompt);
 
     const ai_analysis = {
@@ -2550,6 +2566,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       score_adjusted: scoreWasAdjusted,
       original_ai_score: originalAiScore,
       model_used: MODEL_ID,
+      analysis_engine: ANALYSIS_ENGINE,
       // Hammer Report Card structured measurements (additive).
       metrics: metrics ?? null,
       report_card_contract_id: reportCardContract?.id ?? null,
@@ -2609,6 +2626,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // The classic report is saved. Anything after this point is optional
+    // enrichment; a failure there returns this report, never "Not measured".
+    savedClassicReport = { ...ai_analysis, efficiency_score, mocap_data, saved: true };
 
     // Phase 0 audit row — successful analysis.
     const okAudit = await recordRun(supabase, {
@@ -2849,6 +2870,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       fault_persistence: faultPersistence,
       audit_persistence: auditPersistence,
       saved: true,
+      analysis_engine: ANALYSIS_ENGINE,
+      model_used: MODEL_ID,
     };
 
 
@@ -2885,6 +2908,13 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       } catch (auditErr) {
         console.error("[analyze-video] audit-row write failed:", auditErr);
       }
+    }
+
+    // Optional enrichment failed after the classic report was saved: return it.
+    if (savedClassicReport && auditSupabase && auditCtx.userId) {
+      const allowed = await canSeeScoredGrading(auditSupabase, auditCtx.userId).catch(() => false);
+      return new Response(JSON.stringify(allowed ? savedClassicReport : stripScoredGrading(savedClassicReport)),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // A missingness report belongs only to the verified owner of this clip.
