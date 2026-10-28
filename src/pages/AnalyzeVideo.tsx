@@ -584,9 +584,6 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     // coached from what is visible. Only a clip with no readable frame refuses.
 
     // ===== PHASE 1 — Deterministic frame extraction =====
-    let frames: string[] = [];
-    let frameExtractions: Array<{ frame_index: number; timestamp_seconds: number; sha256_hex: string; width: number; height: number }> = [];
-    let landingFrameIndex: number | null = null;
     // Phase 42B — D-POSE Build Authority. Real-landmark execution artifacts
     // captured here and persisted into `video_landmark_runs` after the video
     // row is created. Surfaced on `window.__DPOSE_LAST_RUN__` for proof capture.
@@ -1063,9 +1060,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       }
       };
       // Optional enrichment after the report: never awaited by the report.
+      const savedClip = { id: videoData.id };
       const runEnrichment = () => {
         if (!analysisEnabled || !probed) return;
-        const savedClip = { id: videoData.id };
         void (async () => {
           try { await capturePose(probed); await persistEnrichment(probed, savedClip); }
           catch (enrichError) { console.warn('[analysis] optional enrichment skipped', enrichError); }
@@ -1190,69 +1187,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
   const handleRetryAnalysis = async () => {
     if (!currentVideoId || !user || !isAnalysisType(module)) return;
     
-    // Guard: Need video file to re-extract frames
-    if (!videoFile) {
-      toast.error("That clip isn't loaded anymore. Pick the video again to run the analysis.");
-      return;
-    }
-    
+    // The server re-watches the uploaded clip; the phone needs nothing but the clip id.
     setAnalyzing(true);
     setAnalysisError(null);
-    
-    // Re-extract frames for retry — deterministic pipeline requires probe.
-    let frames: string[] = [];
-    let frameExtractions: Array<{ frame_index: number; timestamp_seconds: number; sha256_hex: string; width: number; height: number }> = [];
-    let landingFrameIndex: number | null = null;
-
-    try {
-      setExtractingFrames(true);
-      toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
-
-      const probedRetry = await probeVideoMetadata(videoFile);
-      // Seek grid only — an unknown rate is never recorded as a rate.
-      const probed = { ...probedRetry, fps_true: probedRetry.fps_true ?? UNKNOWN_FPS_SAMPLING_GRID_HZ };
-      const result = await extractKeyFramesDeterministic({
-        videoFile,
-        fps_true: probed.fps_true,
-        duration_sec: probed.duration_sec,
-        landingTime,
-        motionCentreSec: lastMotionCentreRef.current,
-      });
-      frames = result.frames.map((f) => f.dataUrl);
-      frameExtractions = result.frames.map((f) => ({
-        frame_index: f.frame_index,
-        timestamp_seconds: f.timestamp_seconds,
-        sha256_hex: f.sha256_hex,
-        width: f.width,
-        height: f.height,
-      }));
-
-      if (frames.length < 3) {
-        throw new Error(UPLOAD_ERRORS.notEnoughFrames);
-      }
-
-
-      if (landingTime != null) {
-        landingFrameIndex = calculateLandingFrameIndex(
-          landingTime,
-          probed.fps_true,
-          result.frames.map((f) => f.frame_index),
-        );
-        console.log('[RETRY ANALYSIS] Using landing frame index:', landingFrameIndex);
-      }
-
-      console.log(`[RETRY ANALYSIS] Successfully extracted ${frames.length} frames for analysis`);
-      setExtractingFrames(false);
-    } catch (frameError: any) {
-      console.error('[RETRY ANALYSIS] Frame extraction failed:', frameError);
-      setExtractingFrames(false);
-      toast.error(friendlyThrownError(frameError) === UPLOAD_ERRORS.generic
-        ? UPLOAD_ERRORS.frameExtractionFailed
-        : friendlyThrownError(frameError));
-
-      showUnavailableReport("retry_frames");
-      return;
-    }
 
     try {
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
@@ -1264,9 +1201,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
             sport,
             userId: user.id,
             language: i18n.language,
-            frames, // Include re-extracted frames
-            frameExtractions, // Phase 1 — per-frame deterministic audit
-            ...(landingFrameIndex !== null && { landingFrameIndex }), // Only include if user marked landing
+            // No frames: the server fetches and watches the uploaded clip.
           },
         }
       );
