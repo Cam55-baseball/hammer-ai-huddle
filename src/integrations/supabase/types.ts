@@ -13388,13 +13388,17 @@ export type Database = {
       owner_drills: {
         Row: {
           active: boolean
+          base_distance_feet: number | null
+          bases_per_rep: number | null
           bat_speed_kind: string | null
           bunt_side: string | null
           bunt_type: string | null
           common_mistake: string | null
+          conditioning_kind: string | null
           created_at: string
           created_by: string | null
           cue: string | null
+          distance_feet: number | null
           dosage: string | null
           equipment: string[]
           fault_keys: string[]
@@ -13408,6 +13412,8 @@ export type Database = {
           phase: string | null
           pinned: boolean
           placements: string[]
+          rest_seconds: number | null
+          rounds: number | null
           routine_role: string | null
           setup: string | null
           skill_area: string | null
@@ -13415,16 +13421,21 @@ export type Database = {
           steps: string[]
           updated_at: string
           video_url: string | null
+          work_seconds: number | null
         }
         Insert: {
           active?: boolean
+          base_distance_feet?: number | null
+          bases_per_rep?: number | null
           bat_speed_kind?: string | null
           bunt_side?: string | null
           bunt_type?: string | null
           common_mistake?: string | null
+          conditioning_kind?: string | null
           created_at?: string
           created_by?: string | null
           cue?: string | null
+          distance_feet?: number | null
           dosage?: string | null
           equipment?: string[]
           fault_keys?: string[]
@@ -13438,6 +13449,8 @@ export type Database = {
           phase?: string | null
           pinned?: boolean
           placements?: string[]
+          rest_seconds?: number | null
+          rounds?: number | null
           routine_role?: string | null
           setup?: string | null
           skill_area?: string | null
@@ -13445,16 +13458,21 @@ export type Database = {
           steps?: string[]
           updated_at?: string
           video_url?: string | null
+          work_seconds?: number | null
         }
         Update: {
           active?: boolean
+          base_distance_feet?: number | null
+          bases_per_rep?: number | null
           bat_speed_kind?: string | null
           bunt_side?: string | null
           bunt_type?: string | null
           common_mistake?: string | null
+          conditioning_kind?: string | null
           created_at?: string
           created_by?: string | null
           cue?: string | null
+          distance_feet?: number | null
           dosage?: string | null
           equipment?: string[]
           fault_keys?: string[]
@@ -13468,6 +13486,8 @@ export type Database = {
           phase?: string | null
           pinned?: boolean
           placements?: string[]
+          rest_seconds?: number | null
+          rounds?: number | null
           routine_role?: string | null
           setup?: string | null
           skill_area?: string | null
@@ -13475,6 +13495,7 @@ export type Database = {
           steps?: string[]
           updated_at?: string
           video_url?: string | null
+          work_seconds?: number | null
         }
         Relationships: [
           {
