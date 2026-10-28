@@ -19,3 +19,13 @@ export function analysisVideoContentType(file: Pick<File, "type" | "name">): str
   if (ext === "avi") return "video/x-msvideo";
   return "video/mp4"; // mp4, m4v, 3gp and other ISO-media phone clips
 }
+
+/**
+ * The same clip bytes, labelled with an accepted upload type. Storage reads
+ * the type from the file itself (an explicit option is ignored for files), so
+ * an untyped .MOV must be relabelled, never re-encoded.
+ */
+export function withAnalysisVideoType(file: File): File {
+  const type = analysisVideoContentType(file);
+  return file.type === type ? file : new File([file], file.name, { type, lastModified: file.lastModified });
+}

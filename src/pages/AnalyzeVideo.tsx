@@ -33,7 +33,7 @@ import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protecte
 import { useSideContext } from "@/contexts/SideContext";
 import { UPLOAD_ERRORS, friendlyRejectReason, friendlyThrownError } from "@/lib/upload/uploadErrorCopy";
 import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
-import { isAnalysisVideoFile, analysisVideoContentType } from "@/lib/upload/analysisVideoFile";
+import { isAnalysisVideoFile, analysisVideoContentType, withAnalysisVideoType } from "@/lib/upload/analysisVideoFile";
 import { unavailableAnalysis } from "../../supabase/functions/_shared/analysisReliability";
 import { normalizeAnalysisResponse, analysisErrorDetails, settleAnalysisReport, hasCoachingContent } from "@/lib/upload/analysisResponse";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
@@ -750,7 +750,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       
       const { error: uploadError } = await supabase.storage
         .from('videos')
-        .upload(fileName, videoFile, { contentType: analysisVideoContentType(videoFile) });
+        .upload(fileName, withAnalysisVideoType(videoFile), { contentType: analysisVideoContentType(videoFile) });
 
       if (uploadError) {
         console.error('[upload] storage upload failed', uploadError);

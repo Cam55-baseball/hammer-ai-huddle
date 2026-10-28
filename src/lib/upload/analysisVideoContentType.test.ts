@@ -14,3 +14,13 @@ describe("analysisVideoContentType", () => {
     expect(analysisVideoContentType({ name: "a.webm", type: "" })).toBe("video/webm");
   });
 });
+
+describe("withAnalysisVideoType", () => {
+  it("relabels an untyped .MOV without changing its bytes", async () => {
+    const { withAnalysisVideoType } = await import("./analysisVideoFile");
+    const original = new File([new Uint8Array([1, 2, 3])], "IMG_1.MOV", { type: "" });
+    const labelled = withAnalysisVideoType(original);
+    expect(labelled.type).toBe("video/quicktime");
+    expect(new Uint8Array(await labelled.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
+  });
+});
