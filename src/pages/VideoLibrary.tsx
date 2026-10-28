@@ -160,6 +160,10 @@ const VideoLibrary = () => {
               <SavedVideos videos={videos} onPlay={handlePlay} onLike={toggleLike} />
             </TabsContent>
           </Tabs>
+          <p className="pt-10 pb-2 text-center text-[10px] leading-snug text-muted-foreground/60">
+            Some instructional videos are embedded from their creators' platforms; all rights remain with their owners. To request removal, contact{" "}
+            <a href="mailto:hammersmodality@hammersmodality.org" className="underline">hammersmodality@hammersmodality.org</a>.
+          </p>
         </div>
       </div>
     </SubscriptionGate>
