@@ -479,7 +479,7 @@ const GUIDES: Record<string, MovementGuide> = {
   rc_postgame_flush: {
     what: "A short, easy cool-down the night of a game: walk, reach long, then breathe slowly.",
     setup: "Any space after the game, in uniform is fine.",
-    goodRep: ["5 minutes of easy walking.", "Long reaches on each step for the last minute.", "1 minute of slow breathing, long breath out."],
+    goodRep: ["Walk easily and add comfortable long reaches as you go.", "Finish with gentle breathing and a relaxed, longer exhale; do not hold your breath.", "Follow the time shown on your prescription for the whole sequence."],
     badRep: ["Skipping it to sit straight down for the drive home.", "Turning it into extra running."],
     feel: "Your heart rate settles and your legs feel lighter.",
     whyToday: "You played tonight. A short easy cool-down tonight helps you feel better tomorrow.",
@@ -489,7 +489,7 @@ const GUIDES: Record<string, MovementGuide> = {
   rc_travel_reset: {
     what: "Easy walking and long reaches to undo the stiffness of a long trip.",
     setup: "Any space when you arrive, or a rest stop on the way.",
-    goodRep: ["5 minutes of easy walking.", "Long reaches overhead and to each side.", "A few slow steps with deep breaths out."],
+    goodRep: ["Walk easily and reach overhead and to each side within a comfortable range.", "Keep your breathing gentle; do not force deep breaths or hold your breath.", "Follow the time shown on your prescription for the whole sequence."],
     badRep: ["Doing a hard workout after sitting for hours.", "Skipping it and staying stiff."],
     feel: "Looser hips and back, and more awake.",
     whyToday: "You're travelling, so today is about moving easy, not training hard.",

@@ -17,6 +17,7 @@ export function recoveryDrills(elevated: boolean): DrillStep[] {
         feel: 'Comfortable movement, not a hard workout.',
         whyToday: 'Easy movement after your session.',
         nextLink: 'Continue with your evening breathing.',
+        stopIf: 'Stop if movement causes sharp pain. Follow your professional’s injury instructions.',
       },
     },
     {
@@ -33,6 +34,7 @@ export function recoveryDrills(elevated: boolean): DrillStep[] {
         feel: 'Easy and relaxed.',
         whyToday: 'A quiet finish to your session.',
         nextLink: 'Finish your evening check-in.',
+        stopIf: 'Return to normal breathing if you feel dizzy or uncomfortable.',
       },
     },
   ];
