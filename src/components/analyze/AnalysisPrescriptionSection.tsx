@@ -69,7 +69,7 @@ function DrillRow({ drill, reasons, staff, onOpen, onDone }: { drill: EliteDrill
             )}
             {!drill.phase && reasons?.slice(0, 2).map((r) => (
               <Badge key={r} variant="destructive" className="text-[10px] capitalize">
-                fixes: {r}
+                {r.startsWith('Your goal:') ? r : `fixes: ${r}`}
               </Badge>
             ))}
           </div>
@@ -146,12 +146,12 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
 
   const { catalog, historyCatalog, circulation, log, markDone, userId, ready, error: circulationError } = useDrillCirculation();
   const goalRead = useQuery({
-    queryKey: ['analysis-saved-goals', userId, module], enabled: !!userId,
+    queryKey: ['analysis-saved-goals', userId, module, sport], enabled: !!userId,
     queryFn: async () => {
       if (!userId) return [];
-      const { data, error } = await supabase.from('athlete_context').select('category_goals').eq('user_id', userId).maybeSingle();
+      const { data, error } = await supabase.from('athlete_context').select('category_goals,position_primary').eq('user_id', userId).maybeSingle();
       if (error) throw error;
-      return categoryGoals(data?.category_goals, module ?? '');
+      return categoryGoals(data?.category_goals, module ?? '', sport ?? '', data?.position_primary);
     },
   });
   const goalMatches = useMemo(() => matchGoalDrills(catalog, goalRead.data ?? [], module ?? '', sport ?? 'baseball'), [catalog, goalRead.data, module, sport]);
