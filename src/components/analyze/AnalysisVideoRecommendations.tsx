@@ -273,12 +273,13 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
                       aria-label="This helped"
                       onClick={async () => {
                         const wasLiked = feedback.isLiked(video.id);
-                        await feedback.toggleLike(video.id, {
+                        const confirmed = await feedback.toggleLike(video.id, {
                           skillDomain: skillDomain ?? 'hitting',
                           faultTagKey: primaryFault,
                           faultTagLayer: faultLayer,
                           source: 'analysis_recommendation',
                         });
+                        if (confirmed === false) return;
                         toast(
                           wasLiked ? 'Removed from your video library' : 'Saved to your video library',
                           {

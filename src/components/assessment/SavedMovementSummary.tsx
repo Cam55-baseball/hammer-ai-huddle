@@ -14,8 +14,13 @@ import type { Json } from "@/integrations/supabase/types";
 /** Self-owned observations only; never authors a plan, finding, or clinical interpretation. */
 export function SavedMovementSummary({ athleteId }: { athleteId?: string } = {}) {
   const { user } = useAuth();
+  return <OwnedMovementSummary key={`${user?.id ?? 'signed-out'}:${athleteId ?? 'self'}`} athleteId={athleteId} />;
+}
+
+function OwnedMovementSummary({ athleteId }: { athleteId?: string }) {
+  const { user } = useAuth();
   const qc = useQueryClient();
-  const [draft, setDraft] = useState<MovementScreen | null>(null);
+  const [draftState, setDraftState] = useState<{ screen: MovementScreen; source: unknown } | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [painOpen, setPainOpen] = useState(false);
@@ -34,10 +39,13 @@ export function SavedMovementSummary({ athleteId }: { athleteId?: string } = {})
   if (query.error) return <p role="alert" className="text-xs text-destructive">Couldn't load your saved movement checks.</p>;
   if (query.data && 'shared' in query.data && query.data.shared === false) return <p className="text-xs text-muted-foreground">Movement observations are not shared with you.</p>;
   const screen = (query.data?.movement_screen ?? {}) as MovementScreen;
+  const source = query.data && 'movement_done_at' in query.data ? query.data.movement_done_at : null;
+  const draft = !athleteId && draftState?.source === source ? draftState?.screen ?? null : null;
+  const setDraft = (next: MovementScreen | null) => setDraftState(next ? { screen: next, source } : null);
   const rows = movementSummary(screen);
   const due = !athleteId && query.data && 'movement_done_at' in query.data && movementRescreenDue(query.data.movement_done_at as string | null, getLocalDateString());
   const saveRescreen = async () => {
-    if (!user || athleteId || !draft || !movementScreenComplete(draft) || saving) return;
+    if (!user || athleteId || !draft || !due || !movementScreenComplete(draft) || saving) return;
     setSaving(true); setSaveError(false);
     try {
       const at = new Date().toISOString();
