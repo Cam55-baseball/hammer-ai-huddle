@@ -4,7 +4,25 @@
 // with the `return_analysis` tool forcing the structured report. No body
 // tracking, metrics or quality gate is involved; today's prompt content rides
 // on top unchanged.
-import type { ChatCompletionRequest, ChatCompletionResult } from "./googleAi.ts";
+// Structural copies of the googleAi.ts request/result types, so this module
+// stays importable from browser-side tests without Deno globals.
+export interface ChatCompletionRequest {
+  model?: string;
+  messages: unknown[];
+  tools?: unknown[];
+  tool_choice?: unknown;
+  temperature?: number;
+  [key: string]: unknown;
+}
+export interface ChatCompletionResult {
+  ok: boolean;
+  status: number;
+  provider: string;
+  data: any;
+  errorBody?: string;
+  [key: string]: unknown;
+}
+declare const Deno: { env: { get(name: string): string | undefined } };
 
 export const CLASSIC_ANALYSIS_ROUTE = "classic:google/gemini-2.5-flash";
 export const CLASSIC_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
