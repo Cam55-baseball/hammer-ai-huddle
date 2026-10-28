@@ -242,31 +242,24 @@ export function AnalysisResultsPanel({
         </RevealSection>
       )}
 
-      {/* ── 5b · HOW TO CHECK IT'S WORKING ─────────────────────────── */}
-      {analysis.check_improvement && (
+      {/* Single priority comes from the report's ranked findings, not a new drill. */}
+      {(analysis.improvements?.[0]?.fault || topTakeaway) && (
         <RevealSection order={4}>
-          <Card className="space-y-2 p-5 sm:p-6" data-testid="check-improvement">
-            <SectionHeading icon={<ListChecks className="h-3.5 w-3.5 text-primary" />}>How to check it's working</SectionHeading>
-            <p className="text-sm leading-relaxed">{withoutMeasurementNotation(analysis.check_improvement)}</p>
+          <Card className="space-y-2 p-5 sm:p-6">
+            <SectionHeading icon={<Wrench className="h-3.5 w-3.5 text-primary" />}>Area to improve</SectionHeading>
+            <p className="text-sm leading-relaxed">{withoutMeasurementNotation(analysis.improvements?.[0]?.fault || topTakeaway)}</p>
           </Card>
         </RevealSection>
       )}
 
-      {/* ── 5c · WHAT WE SAW vs HOW IT CONNECTS TO YOU ───────────────── */}
-      {((analysis.observed_in_clip?.length ?? 0) > 0 || (analysis.connected_to_your_data?.length ?? 0) > 0) && (
+      {(analysis.connected_to_your_data?.length ?? 0) > 0 && (
         <RevealSection order={4}>
           <Card className="space-y-4 p-5 sm:p-6" data-testid="observed-vs-inferred">
-            {(analysis.observed_in_clip?.length ?? 0) > 0 && (
-              <div className="space-y-1.5">
-                <SectionHeading icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}>What we saw in this clip</SectionHeading>
-                <ul className="list-disc space-y-1 pl-5 text-sm">{analysis.observed_in_clip!.map((o, i) => <li key={i}>{withoutMeasurementNotation(o)}</li>)}</ul>
-              </div>
-            )}
             {(analysis.connected_to_your_data?.length ?? 0) > 0 && (
               <div className="space-y-1.5 border-t pt-3">
                 <SectionHeading icon={<MessageSquareText className="h-3.5 w-3.5 text-primary" />}>How this may connect to you</SectionHeading>
                 <p className="text-xs text-muted-foreground">Our best read from your profile and logs — not something the clip showed.</p>
-                <ul className="list-disc space-y-1 pl-5 text-sm">{analysis.connected_to_your_data!.map((o, i) => <li key={i}>{withoutMeasurementNotation(o)}</li>)}</ul>
+                <ul className="list-disc space-y-1 pl-5 text-sm">{analysis.connected_to_your_data?.map((o, i) => <li key={i}>{withoutMeasurementNotation(o)}</li>)}</ul>
               </div>
             )}
           </Card>

@@ -27,5 +27,7 @@ export function videoGradesShown(): boolean {
 // still see the Report Card, marked "Internal — not released". Everyone else
 // sees nothing from it.
 export function canSeeReportCard(roles?: { isOwner: boolean; isAdmin: boolean }): boolean {
-  return videoGradesShown() || !!roles?.isOwner || !!roles?.isAdmin;
+  // Archived October 28: no role, including the owner, may open this surface.
+  void roles;
+  return false;
 }
