@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
+import { AnalysisPrescriptionSection } from "@/components/analyze/AnalysisPrescriptionSection";
+import { AnalysisVideoRecommendations } from "@/components/analyze/AnalysisVideoRecommendations";
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadOptimizedThumbnail, uploadThumbnailSizes } from '@/lib/uploadHelpers';
@@ -536,9 +538,26 @@ export function SessionDetailDialog({
               {/* Phase 49: HammerReportCard + RecomputeReportCardButton removed (no truthful measured outputs). */}
 
 
-              <SavedAnalysisReport report={aiAnalysis} module={session.module} />
+              <SavedAnalysisReport
+                report={aiAnalysis}
+                module={session.module}
+                libraryMatches={isOwner && (session.module === "hitting" || session.module === "pitching" || session.module === "throwing") ? (
+                  <div className="space-y-4">
+                    <AnalysisPrescriptionSection
+                      embedded
+                      module={session.module}
+                      sport={session.sport}
+                      violations={aiAnalysis.violations_detected ?? null}
+                      faultKeys={(aiAnalysis.improvements ?? []).map((i: { fault_key?: string }) => i.fault_key ?? "").filter(Boolean)}
+                      historyKey={session.id}
+                    />
+                    <AnalysisVideoRecommendations analysis={aiAnalysis} module={session.module} sport={session.sport} />
+                  </div>
+                ) : null}
+              />
 
-              {aiAnalysis.drills && aiAnalysis.drills.length > 0 && (
+              {/* Written-in drills are never shown; only Hammers library matches (owner P0, Oct 28). */}
+              {false && aiAnalysis.drills && aiAnalysis.drills.length > 0 && (
                 <div className="space-y-3">
                   <Label>{t('sessionDetail.recommendedDrills')}</Label>
                   {isOwner && (
