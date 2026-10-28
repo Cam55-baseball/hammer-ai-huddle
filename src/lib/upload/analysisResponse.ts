@@ -7,7 +7,7 @@ export function normalizeAnalysisResponse(data: any) {
 export async function analysisErrorDetails(error: unknown): Promise<{ status: number; message: string; report?: any }> {
   const value = error as { message?: string; context?: Response } | null;
   const response = value?.context;
-  let message = "Your clip is saved, but its analysis did not finish.";
+  let message = "Your analysis didn't finish. Tap Retry.";
   let report: any;
   if (response && typeof response.clone === "function") {
     try {
