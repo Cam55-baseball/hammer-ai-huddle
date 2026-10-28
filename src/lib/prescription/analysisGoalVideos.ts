@@ -13,8 +13,8 @@ export function resolveGoalVideos(matches: PrescriptionMatch[], videos: GoalLibr
   const resolved = videos.flatMap(video => {
     if (!video.video_url?.trim() || normalizeTier(video.distribution_tier) === 'blocked'
       || video.moderation_removed_at || video.video_class === 'foundation') return [];
-    if (video.sport?.length && !video.sport.includes(sport) && !video.sport.includes('both')) return [];
-    if (video.skill_domains?.length ? !video.skill_domains.includes(module) : video.category && video.category !== module) return [];
+    if (!video.sport?.length || (!video.sport.includes(sport) && !video.sport.includes('both'))) return [];
+    if (video.skill_domains?.length ? !video.skill_domains.includes(module) : video.category !== module) return [];
     const scopes = video.positionScopes?.filter(scope => scope.length) ?? [];
     if (scopes.length && !scopes.some(scope => scope.some(position => positions.includes(position)))) return [];
     const linked = matches.filter(match => match.drill.libraryVideoId === video.id);
