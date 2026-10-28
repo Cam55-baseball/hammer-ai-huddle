@@ -11,9 +11,10 @@ export function useAnalysisGoalVideos(module: string | null | undefined, sport: 
   const profile = useUserProfile();
   const ids = [...new Set(goals.matches.map(match => match.drill.libraryVideoId).filter((id): id is string => !!id))].sort();
   const positions = resolvePositionGroups(profile.profile?.position);
+  const sourceError = goals.error ?? goals.goalError ?? profile.error;
   const library = useQuery({
     queryKey: ['analysis-goal-videos', goals.userId, module, sport, ids, positions],
-    enabled: !!goals.userId && !goals.isPending && ids.length > 0 && !profile.loading,
+    enabled: !!goals.userId && !goals.isPending && !sourceError && ids.length > 0 && !profile.loading,
     queryFn: async () => {
       // RLS remains authoritative; blocked, moderated and foundation assets stay off this shelf.
       const { data, error } = await supabase.from('library_videos')
@@ -28,8 +29,10 @@ export function useAnalysisGoalVideos(module: string | null | undefined, sport: 
         .filter(tag => tag.video_id === video.id).map(tag => tag.video_tag_taxonomy?.position_scope ?? []) })) as GoalLibraryVideo[];
     },
   });
-  const suggestions = useMemo(() => resolveGoalVideos(goals.matches, library.data ?? [], module ?? '', sport ?? '', positions),
-    [goals.matches, library.data, module, sport, positions.join(',')]);
-  return { suggestions, error: goals.error ?? goals.goalError ?? profile.error ?? library.error,
-    isPending: goals.isPending || (ids.length > 0 && (profile.loading || library.isPending)) };
+  const error = sourceError ?? library.error;
+  const isPending = goals.isPending || (ids.length > 0 && (profile.loading || library.isPending));
+  const suggestions = useMemo(() => !goals.userId || error || isPending ? []
+    : resolveGoalVideos(goals.matches, library.data ?? [], module ?? '', sport ?? '', positions),
+    [goals.userId, error, isPending, goals.matches, library.data, module, sport, positions.join(',')]);
+  return { suggestions, error, isPending };
 }
