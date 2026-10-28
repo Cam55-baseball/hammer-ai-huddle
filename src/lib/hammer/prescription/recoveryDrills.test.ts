@@ -9,4 +9,12 @@ describe('recovery work, not untracked reminders', () => {
   it('preserves the existing elevated recovery targets', () => {
     expect(recoveryDrills(true).map(row => row.dosage)).toEqual(['15 min full body', '10 min']);
   });
+  it('keeps each existing safety stop in its expanded instructions', () => {
+    for (const elevated of [false, true]) {
+      for (const row of recoveryDrills(elevated)) {
+        expect(row.guide?.stopIf).toBe(row.stopIf);
+        expect(row.guide?.stopIf?.length).toBeGreaterThan(0);
+      }
+    }
+  });
 });

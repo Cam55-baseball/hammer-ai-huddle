@@ -27,7 +27,7 @@ export function writtenReportSchema() {
   return {
     check_improvement: {
       type: "string",
-      description: "One practice rep or simple test that shows whether the main fix is working. Plain words.",
+      description: "The single most important change for this athlete from this clip, in plain words. Not an exercise, drill, practice rep, test, schedule or dosage.",
     },
     observed_in_clip: {
       type: "array",
