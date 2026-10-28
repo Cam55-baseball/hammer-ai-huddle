@@ -3232,6 +3232,46 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // -------- Conditioning weekly floor (owner Oct 28) --------
+    // At least 2 running-conditioning sessions Mon–Sat. When the days left this
+    // week equal the sessions still needed and today built no running
+    // conditioning, add the floor session. Never Sunday, game day or HOLD;
+    // low running/check-in readiness uses the easy-flush run (still counts).
+    let conditioningFloor: { due: boolean; needed: number; added: string[]; readFailed?: boolean } | null = null;
+    try {
+      const builtToday = conditioningSelection?.slugs ?? [];
+      const ranToday = !conditioningEmptyPool && builtToday.length > 0 && isRunningConditioning(builtToday);
+      if (!ranToday && !isGameDay && !timelineToday.hold) {
+        const { data: priorRows, error: priorErr } = await admin.from("wk_prescriptions")
+          .select("plan_date, movement_slug").eq("user_id", user.id).eq("slot", "conditioning")
+          .gte("plan_date", isoShift(planDate, -6)).lt("plan_date", planDate).limit(200);
+        if (priorErr) conditioningFloor = { due: false, needed: 0, added: [], readFailed: true };
+        else {
+          const byDate = new Map<string, string[]>();
+          for (const r of (priorRows ?? []) as any[]) byDate.set(r.plan_date, [...(byDate.get(r.plan_date) ?? []), r.movement_slug]);
+          const priorRunningDates = [...byDate].filter(([, slugs]) => isRunningConditioning(slugs)).map(([d]) => d);
+          const floor = conditioningFloorDue({ planDate, priorRunningDates });
+          conditioningFloor = { due: floor.due, needed: floor.needed, added: [] };
+          if (floor.due) {
+            const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");
+            const slugs = floorConditioningSlugs({ sport, isPitcher: isPitcherAthlete, lowReadiness: low });
+            const why = low
+              ? "Weekly running minimum: an easy run today because your readiness is lower. It still counts as one of your 2 this week."
+              : isPitcherAthlete
+                ? "Weekly running minimum: pitcher conditioning today so you get your 2 sessions this week."
+                : "Weekly running minimum: base-route conditioning today so you get your 2 sessions this week.";
+            for (const slug of slugs) {
+              const m = lib.find((x) => x.slug === slug);
+              if (!m || !eligible(m)) continue;
+              push("conditioning", "conditioning", m, {}, why, { conditioning_why: why, conditioning_path: "weekly_floor",
+                conditioning_template_id: "cond.weekly_floor", conditioning_fallback: false, conditioning_dialed_down: low });
+              conditioningFloor.added.push(slug);
+            }
+          }
+        }
+      }
+    } catch (_e) { conditioningFloor = { due: false, needed: 0, added: [], readFailed: true }; }
+
     // -------- Cross-sport (its own slot, appended) --------
     // Prefer Weightless Object Sport Training coordination for youth/beginner
     // athletes; select a movement whose cross_sport_category matches the
