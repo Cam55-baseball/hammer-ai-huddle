@@ -2227,6 +2227,11 @@ function ensureRenderable(
 function scaleDosageLabel(dosage: string, scale: number): string {
   const m = /^(\d+)\s*(?:x|×)\s*(\d+)/i.exec(dosage);
   if (!m) return dosage;
+  // One set per zone: sets are spatial, so lighter days scale reps, never zones.
+  if (/one set per zone/i.test(dosage)) {
+    const reps = Math.max(1, Math.round(parseInt(m[2], 10) * scale));
+    return dosage.replace(/^(\d+\s*(?:x|×)\s*)(\d+)/i, `$1${reps}`);
+  }
   const sets = Math.max(1, Math.round(parseInt(m[1], 10) * scale));
   return dosage.replace(/^(\d+)/, String(sets));
 }
