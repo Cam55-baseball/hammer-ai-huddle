@@ -161,5 +161,5 @@ export function useHammerAthleteContext(): HammerAthleteContext {
         return vars.find((v) => v.key === key) as ContextVariable<T> | undefined;
       },
     };
-  }, [envelope, envLoading, rows, dayType, mpi, snapshot]);
+  }, [envelope, envLoading, rows, dayType, mpi, snapshot, running]);
 }
