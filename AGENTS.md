@@ -22,7 +22,6 @@
 - Sessions end only by explicit Sign out (`signOut({ scope: 'local' })`) or server end; `/` and `/auth` forward signed-in players after session load; native auth key mirrored to `@capacitor/preferences` (`src/lib/auth/nativeSessionStore.ts`), restored in `main.tsx`. Why: iOS may clear WebView storage.
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
-- Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key never loses a report.
 - 13–17 parent waiver gating lives only in `supabase/functions/_shared/legal/teenWaiverRules.ts` (used by `teen-parent-waiver` and tests); `TeenWaiverGate` wraps only the training-plan routes. Why: one rule source, and non-physical parts of the app stay open.
 - Pairings (org/coach/player/scout) only via `connection_requests` + definer RPCs (`send_/respond_connection_request`, `end_connection`, `join_by_invite_code`); org coaches see only `org_athlete_assignments`; unverified non-solo orgs add no athletes. Why: one inbox, server checks, instant revocation.
 - Staff plan purchase eligibility lives only in `supabase/functions/_shared/staffEligibility.ts` (used by create-staff-checkout and tests). Why: one rule for age, coach role and org-admin status.
@@ -61,4 +60,3 @@
 - Exact exercise measurement decisions are shared by the library, inline logger and log-sheet resolver; yard entry converts only at the display boundary, keeping canonical distance in feet. Why: ambiguous names must not diverge between logging paths or change existing distance readers.
 - Mastery: gated judges, weekly boost, JWT-only new days; saved sport, no backfill. Why: provenance.
 - Read nested AGENTS.md (also coachRx/video-library). Why: scoped consistency.
-- Video analysis input is the uploaded clip itself: `analyze-video` signs the stored file and sends it as one video part to the classic gateway model; phone frames are only a legacy fallback, and on-phone probing, body tracking and conversion run after the report or not at all. Why: iPhone Safari often can't decode or render the clip, which blocked every report.
