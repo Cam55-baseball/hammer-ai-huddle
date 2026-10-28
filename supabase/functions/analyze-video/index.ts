@@ -2124,6 +2124,28 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     }
     
     console.log(`[ANALYZE-VIDEO] Built multimodal message with ${frames.length} frames`);
+
+    // The whole uploaded clip, watched by the model itself (primary input).
+    const videoContent: unknown[] = clipUrl ? [
+      {
+        type: 'text',
+        text: `${historicalContext}
+
+---
+
+CURRENT VIDEO ANALYSIS - FULL VIDEO CLIP:
+
+You are watching the athlete's whole uploaded ${sport} ${module} video clip. Watch it all the way through, including slow sections, and coach the rep you can see.
+${positionContext}
+${landingTimeSec != null
+  ? `\n\n⭐⭐⭐ USER HAS MARKED about ${landingTimeSec.toFixed(2)} seconds into the clip as the EXACT MOMENT of front foot landing. Use that moment as the primary reference for all alignment checks. ⭐⭐⭐`
+  : `\n\nIDENTIFY the landing moment yourself: the moment the front foot FIRST makes contact with the ground. This is your reference point for all alignment checks.`}
+${alignmentChecksInstruction}
+
+${hasHistory ? `Based on the historical data above and this current analysis, generate "The Scorecard" progress report comparing current performance to ALL previous uploads.` : `This is the player's first analysis - establish a baseline.`}`,
+      },
+      { type: 'video_url', video_url: { url: clipUrl } },
+    ] : [];
     // ===== END MULTIMODAL CONTENT BUILD =====
 
     // Call AI (Google AI Studio direct, Lovable Gateway fallback) with tool-calling for structured output
@@ -2133,13 +2155,13 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       await supabase.from("videos").update({ status: "uploading" }).eq("id", videoId);
       return new Response(JSON.stringify({ error: HOURLY_LIMIT_MESSAGE, code: "hourly_limit", resume_at: await hourlyResumeAt(supabase, userId), video_id: videoId }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const aiResult = await reliableAnalysis((route) => routeAnalysis(route, {
+    const buildAnalysisRequest = (route: string, content: unknown[]): ChatCompletionRequest => ({
       model: route,
       // Determinism lock: same video → same scores. Do not relax.
       temperature: 0,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userContent as any },
+        { role: "user", content: content as any },
       ],
       tools: [
         {
