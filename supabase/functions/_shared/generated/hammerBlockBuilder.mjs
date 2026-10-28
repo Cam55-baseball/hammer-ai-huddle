@@ -163,6 +163,127 @@ function applyMasteryFocus(blocks, focus) {
   return out;
 }
 
+// src/lib/prescription/ownerPlanDrills.ts
+var PLAN_SLOTS = [
+  "hammers_today:skill",
+  "hammers_today:warmup",
+  "hammers_today:defense",
+  "defensive_library",
+  "hammers_today:baserunning",
+  "hammers_today:bunting",
+  "hammers_today:mind"
+];
+var rows = [];
+function setOwnerPlanDrills(next) {
+  rows = next;
+}
+function skillBlocksOf(r) {
+  const out = /* @__PURE__ */ new Set();
+  for (const p of r.placements) {
+    if (/^analysis:[a-z]+:hitting$/.test(p)) out.add("hitting");
+    if (/^analysis:[a-z]+:(throwing|pitching)$/.test(p)) out.add("throwing");
+    if (/^hammers_today:(hitting|bat_speed_weighted|bat_speed_overspeed)$/.test(p)) out.add("hitting");
+    if (/^hammers_today:(throwing|pitching)$/.test(p)) out.add("throwing");
+  }
+  return [...out];
+}
+var clean = (s) => (s ?? "").trim();
+function missingForPlacement(r, slot) {
+  const miss = [];
+  if (!clean(r.name)) miss.push("a name");
+  if (!clean(r.dosage)) miss.push("a dose");
+  if (!clean(r.cue)) miss.push("a cue");
+  if (r.sports.length === 0) miss.push("a sport");
+  if (slot === "hammers_today:skill") {
+    if (skillBlocksOf(r).length === 0) miss.push("which skill (tick a hitting, throwing or pitching analysis)");
+    if (r.steps.filter((s) => clean(s)).length === 0 && !clean(r.setup)) miss.push("set-up or steps");
+  }
+  if (slot === "hammers_today:bunting") {
+    if (!["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"].includes(clean(r.bunt_type))) miss.push("a bunt type");
+    if (!["R", "L"].includes(clean(r.bunt_side))) miss.push("a bunt side");
+  }
+  if (slot === "hammers_today:mind" && r.equipment.length > 0) miss.push("no equipment (Mind items are non-physical)");
+  return miss;
+}
+var norm = (s) => s.trim().toLowerCase();
+var TAG_SLOT = {
+  "hammers_today:hitting": "hammers_today:skill",
+  "hammers_today:bat_speed_weighted": "hammers_today:skill",
+  "hammers_today:bat_speed_overspeed": "hammers_today:skill",
+  "hammers_today:throwing": "hammers_today:skill",
+  "hammers_today:pitching": "hammers_today:skill",
+  "hammers_today:defense_low_taxing": "hammers_today:defense",
+  "hammers_today:baserunning": "hammers_today:baserunning",
+  "hammers_today:bunting": "hammers_today:bunting",
+  "hammers_today:mind": "hammers_today:mind"
+};
+function filedSlots(r) {
+  const out = /* @__PURE__ */ new Set();
+  for (const p of r.placements) {
+    if (PLAN_SLOTS.includes(p)) out.add(p);
+    if (TAG_SLOT[p]) out.add(TAG_SLOT[p]);
+  }
+  return [...out];
+}
+function eligibleFor(r, slots, ctx) {
+  if (!r.active) return false;
+  const filed = filedSlots(r);
+  const slot = slots.find((s) => filed.includes(s));
+  if (!slot) return false;
+  if (missingForPlacement(r, slot).length > 0) return false;
+  if (!r.sports.includes(ctx.sport)) return false;
+  if (slot === "hammers_today:skill" && (!ctx.skill || !skillBlocksOf(r).includes(ctx.skill))) return false;
+  const need = r.equipment.map(norm).filter(Boolean);
+  if (need.length > 0) {
+    const owned = new Set([...ctx.owned ?? []].map(norm));
+    if (!need.every((e) => owned.has(e))) return false;
+  }
+  return true;
+}
+function ownerDrillsForSlot(slots, ctx) {
+  return rows.filter((r) => eligibleFor(r, slots, ctx));
+}
+function mergeOwnerSlotDrills(drills, slots, ctxOrSport, day = /* @__PURE__ */ new Date()) {
+  const ctx = typeof ctxOrSport === "string" ? { sport: ctxOrSport, day } : ctxOrSport;
+  const pool = ownerDrillsForSlot(slots, ctx).sort((a, b) => a.id.localeCompare(b.id));
+  if (pool.length === 0 || drills.length === 0) return drills;
+  let target = -1;
+  for (let i = drills.length - 1; i >= 0; i--) {
+    const drill = drills[i];
+    if (drill.prescriptionOrigin !== "owner" && !drill.executionKind && (drill.stage === void 0 || drill.stage === "drills")) {
+      target = i;
+      break;
+    }
+  }
+  if (target < 0) return drills;
+  const dayIndex = Math.floor((ctx.day ?? day).getTime() / 864e5);
+  const pick = pool[dayIndex % pool.length];
+  const owned = {
+    name: pick.name,
+    dosage: pick.dosage ?? "",
+    cue: pick.cue ?? "",
+    prescriptionOrigin: "owner",
+    ownerDrillId: pick.id,
+    routineRole: pick.routine_role ?? null,
+    skillArea: pick.skill_area ?? null,
+    batSpeedKind: pick.bat_speed_kind ?? null,
+    videoUrl: pick.video_url ?? null,
+    libraryVideoId: pick.library_video_id ?? null,
+    ...clean(pick.setup) ? { setup: pick.setup } : {},
+    ...pick.equipment.length ? { equipmentNote: pick.equipment.join(", ") } : {}
+  };
+  return drills.map((drill, index) => index === target ? owned : drill);
+}
+var rotate = (pool, day) => {
+  if (!pool.length) return null;
+  const sorted = [...pool].sort((a, b) => a.id.localeCompare(b.id));
+  return sorted[Math.floor(day.getTime() / 864e5) % sorted.length];
+};
+function ownerBuntDrill(ctx) {
+  return rotate(ownerDrillsForSlot(["hammers_today:bunting"], ctx).filter((r) => r.bunt_side === ctx.side && r.bunt_type === ctx.type), ctx.day ?? /* @__PURE__ */ new Date());
+}
+if (false) void loadOwnerPlanDrills();
+
 // supabase/functions/_shared/wic/buntingMastery.ts
 var BUNT_TYPES = ["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"];
 var BUNT_WORDING = {
@@ -332,7 +453,7 @@ function applyBuntingPlan(blocks, facts, options) {
     const budget = original ? Number(/^(\d+) swings/i.exec(original.dosage)?.[1]) : 0;
     if (!original || budget < dose.floor) return block;
     const attempts = Math.min(dose.reps, budget, 20);
-    const drill = {
+    let drill = {
       name: pick.name,
       slug: pick.slug,
       stage: "drills",
@@ -342,6 +463,8 @@ function applyBuntingPlan(blocks, facts, options) {
       stopIf: "Pain, dizziness, fatigue or unsafe space \u2014 stop.",
       bunt: { side, type: identity.type, attempts, sourceAttempts: dose.attempts, sourceSuccesses: dose.successes }
     };
+    const ownerPick = ownerBuntDrill({ sport: facts.sport, side, type: identity.type, owned, day: new Date(Date.UTC(2020, 0, 1) + (options.weekIndex * 7 + options.weekday) * 864e5) });
+    if (ownerPick) drill = { ...drill, name: ownerPick.name, slug: void 0, cue: ownerPick.cue ?? drill.cue, ...ownerPick.setup?.trim() ? { setup: ownerPick.setup } : {}, ...{ prescriptionOrigin: "owner", ownerDrillId: ownerPick.id, videoUrl: ownerPick.video_url ?? null, libraryVideoId: ownerPick.library_video_id ?? null } };
     const drills = [...block.drills.slice(0, slot), drill, ...budget > attempts ? [{ ...original, dosage: `${budget - attempts} swings` }] : [], ...block.drills.slice(slot + 1)];
     const sample = program.battingSample;
     const because = `${attempts} ${side === "R" ? "right" : "left"}-handed bunt attempts replace ${attempts} swings from today's skill work.${sample.under300 ? sample.window ? ` Completed batting window ${sample.window.start}\u2013${sample.window.end}: ${sample.hits} hits in ${sample.atBats} at-bats, below ${(facts.lowAverage ?? 0.3).toFixed(3)}; source: entered game at-bats.` : ` Entered batting sample: ${sample.hits} hits in ${sample.atBats} at-bats across ${sample.games} games; each entered game was below ${(facts.lowAverage ?? 0.3).toFixed(3)}.` : ""}${dose.attempts ? ` This bunt: ${dose.successes} successful out of ${dose.attempts} entered attempts.` : ""}`;
@@ -769,8 +892,8 @@ var ARM_INJURIES = /* @__PURE__ */ new Set(["shoulder", "ucl", "elbow", "labrum"
 function resolveSkillDaysTarget(rung, modality, position, injuryRegions = [], lifecycleBand = null, liftingAgeYears = null) {
   let target = modality === "throwing" && isPitcher(position) ? PITCHER_THROWING_LADDER[rung] : POSITION_LADDER[modality][rung];
   const youngBand = lifecycleBand === "u10" || lifecycleBand === "u12" || lifecycleBand === "u14";
-  const lowLiftingAge = typeof liftingAgeYears === "number" && liftingAgeYears < 1;
-  if (youngBand || lowLiftingAge) {
+  void liftingAgeYears;
+  if (youngBand) {
     const bridgeTarget = modality === "throwing" && isPitcher(position) ? PITCHER_THROWING_LADDER.bridge : POSITION_LADDER[modality].bridge;
     target = Math.min(target, bridgeTarget);
   }
@@ -1111,6 +1234,7 @@ function todayPositionLabel(dows, today) {
   if (idx === -1) return "";
   return `Day ${idx + 1} of ${uniq.length}`;
 }
+var SIX_DAY_REST_DOW = 0;
 function resolveSkillDays(template, modality, target) {
   const baselineArr = template.perModality[modality] ?? [];
   const baseline = [...new Set(baselineArr)].sort((a, b) => a - b);
@@ -1119,17 +1243,18 @@ function resolveSkillDays(template, modality, target) {
   const picked = [];
   for (const d2 of priority) {
     if (picked.length >= clamped) break;
+    if (d2 === SIX_DAY_REST_DOW) continue;
     if (!picked.includes(d2)) picked.push(d2);
   }
   for (let d2 = 0; picked.length < clamped && d2 <= 6; d2 = d2 + 1) {
-    if (!picked.includes(d2)) picked.push(d2);
+    if (d2 !== SIX_DAY_REST_DOW && !picked.includes(d2)) picked.push(d2);
     if (d2 === 6) break;
   }
   const baselineSet = new Set(baseline);
   const overflowDays = picked.filter((d2) => !baselineSet.has(d2));
   return { days: picked, baseline, overflowDays };
 }
-function applyMicrocycle(template, today, skillTargets = {}) {
+function applyMicrocycle(template, today, skillTargets = {}, readiness = "normal") {
   const dow = today.getDay();
   const perModality = {};
   const skillDays = {};
@@ -1181,12 +1306,13 @@ function applyMicrocycle(template, today, skillTargets = {}) {
       };
       continue;
     }
-    const isOverflowToday = overflowSet.has(dow);
+    void overflowSet;
     const templateIntensity = template.intensityOverrides?.[m]?.[dow] ?? "primary";
-    const intensity = isOverflowToday ? "activation" : templateIntensity;
+    const lowReady = isSkill && readiness === "low";
+    const intensity = lowReady ? "activation" : templateIntensity;
     const accent = template.dayLabels?.[m]?.[dow];
     const position = todayPositionLabel(dows, dow);
-    const overflowNote = isOverflowToday ? " \xB7 earned overflow (activation only)" : "";
+    const overflowNote = lowReady ? " \xB7 low-taxing version (you're less fresh today \u2014 it still counts)" : "";
     const microcycleLabel = accent ? `${position} \xB7 ${accent}${overflowNote}` : `${position}${overflowNote}`;
     const nxt = nextScheduled(dow, dows);
     const nxtLabel = nxt === null || nxt === dow ? null : (() => {
@@ -1221,7 +1347,8 @@ function projectWeeklyRoadmap(template, today, skillTargets = {}) {
       const dows = isSkill && skillDays[m] !== void 0 ? skillDays[m] : template.perModality[m] ?? [];
       if (!dows.includes(d2)) return [];
       const isOverflow = isSkill && (skillOverflow[m]?.has(d2) ?? false);
-      const intensity = isOverflow ? "activation" : template.intensityOverrides?.[m]?.[d2] ?? "primary";
+      void isOverflow;
+      const intensity = template.intensityOverrides?.[m]?.[d2] ?? "primary";
       const accent = template.dayLabels?.[m]?.[d2] ?? null;
       return [{ key: m, intensity, accent }];
     });
@@ -1894,7 +2021,7 @@ function selectThrowingAdaptations(profile) {
 }
 
 // src/lib/hammer/prescription/movementGuide.ts
-function norm(s) {
+function norm2(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
 }
 var GUIDES = {
@@ -2377,7 +2504,7 @@ function guideFor(slugOrName) {
   if (!slugOrName) return null;
   const direct = GUIDES[slugOrName];
   if (direct) return direct;
-  const n = norm(slugOrName);
+  const n = norm2(slugOrName);
   if (GUIDES[n]) return GUIDES[n];
   const aliases = {
     reaction_ball_vs_wall: "wu_reaction_ball_wall",
@@ -3882,7 +4009,7 @@ function defenseExecutionKind(name) {
 }
 
 // src/lib/hammer/prescription/defenseGuides.ts
-function norm2(s) {
+function norm3(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
 }
 var G = {
@@ -4766,7 +4893,7 @@ var G = {
   }
 };
 var NAME_TO_FAMILY = (() => {
-  const norms = (arr) => arr.map(norm2);
+  const norms = (arr) => arr.map(norm3);
   const map = {};
   const add = (family, names) => {
     for (const n of norms(names)) map[n] = family;
@@ -4913,7 +5040,7 @@ var NAME_TO_FAMILY = (() => {
 function guideForDefense(name) {
   if (!name) return null;
   const clean2 = name.replace(/\s*\(secondary:[^)]+\)\s*$/i, "").trim();
-  const family = NAME_TO_FAMILY[norm2(clean2)];
+  const family = NAME_TO_FAMILY[norm3(clean2)];
   return family ? G[family] : null;
 }
 function tierNoteForDefense(name, tier) {
@@ -5367,103 +5494,6 @@ function selectDefenseDrills(input) {
     why
   };
 }
-
-// src/lib/prescription/ownerPlanDrills.ts
-var PLAN_SLOTS = ["hammers_today:skill", "hammers_today:warmup", "hammers_today:defense", "defensive_library"];
-var rows = [];
-function setOwnerPlanDrills(next) {
-  rows = next;
-}
-function skillBlocksOf(r) {
-  const out = /* @__PURE__ */ new Set();
-  for (const p of r.placements) {
-    if (/^analysis:[a-z]+:hitting$/.test(p)) out.add("hitting");
-    if (/^analysis:[a-z]+:(throwing|pitching)$/.test(p)) out.add("throwing");
-    if (/^hammers_today:(hitting|bat_speed_weighted|bat_speed_overspeed)$/.test(p)) out.add("hitting");
-    if (/^hammers_today:(throwing|pitching)$/.test(p)) out.add("throwing");
-  }
-  return [...out];
-}
-var clean = (s) => (s ?? "").trim();
-function missingForPlacement(r, slot) {
-  const miss = [];
-  if (!clean(r.name)) miss.push("a name");
-  if (!clean(r.dosage)) miss.push("a dose");
-  if (!clean(r.cue)) miss.push("a cue");
-  if (r.sports.length === 0) miss.push("a sport");
-  if (slot === "hammers_today:skill") {
-    if (skillBlocksOf(r).length === 0) miss.push("which skill (tick a hitting, throwing or pitching analysis)");
-    if (r.steps.filter((s) => clean(s)).length === 0 && !clean(r.setup)) miss.push("set-up or steps");
-  }
-  return miss;
-}
-var norm3 = (s) => s.trim().toLowerCase();
-var TAG_SLOT = {
-  "hammers_today:hitting": "hammers_today:skill",
-  "hammers_today:bat_speed_weighted": "hammers_today:skill",
-  "hammers_today:bat_speed_overspeed": "hammers_today:skill",
-  "hammers_today:throwing": "hammers_today:skill",
-  "hammers_today:pitching": "hammers_today:skill",
-  "hammers_today:defense_low_taxing": "hammers_today:defense"
-};
-function filedSlots(r) {
-  const out = /* @__PURE__ */ new Set();
-  for (const p of r.placements) {
-    if (PLAN_SLOTS.includes(p)) out.add(p);
-    if (TAG_SLOT[p]) out.add(TAG_SLOT[p]);
-  }
-  return [...out];
-}
-function eligibleFor(r, slots, ctx) {
-  if (!r.active) return false;
-  const filed = filedSlots(r);
-  const slot = slots.find((s) => filed.includes(s));
-  if (!slot) return false;
-  if (missingForPlacement(r, slot).length > 0) return false;
-  if (!r.sports.includes(ctx.sport)) return false;
-  if (slot === "hammers_today:skill" && (!ctx.skill || !skillBlocksOf(r).includes(ctx.skill))) return false;
-  const need = r.equipment.map(norm3).filter(Boolean);
-  if (need.length > 0) {
-    const owned = new Set([...ctx.owned ?? []].map(norm3));
-    if (!need.every((e) => owned.has(e))) return false;
-  }
-  return true;
-}
-function ownerDrillsForSlot(slots, ctx) {
-  return rows.filter((r) => eligibleFor(r, slots, ctx));
-}
-function mergeOwnerSlotDrills(drills, slots, ctxOrSport, day = /* @__PURE__ */ new Date()) {
-  const ctx = typeof ctxOrSport === "string" ? { sport: ctxOrSport, day } : ctxOrSport;
-  const pool = ownerDrillsForSlot(slots, ctx).sort((a, b) => a.id.localeCompare(b.id));
-  if (pool.length === 0 || drills.length === 0) return drills;
-  let target = -1;
-  for (let i = drills.length - 1; i >= 0; i--) {
-    const drill = drills[i];
-    if (drill.prescriptionOrigin !== "owner" && (drill.stage === void 0 || drill.stage === "drills")) {
-      target = i;
-      break;
-    }
-  }
-  if (target < 0) return drills;
-  const dayIndex = Math.floor((ctx.day ?? day).getTime() / 864e5);
-  const pick = pool[dayIndex % pool.length];
-  const owned = {
-    name: pick.name,
-    dosage: pick.dosage ?? "",
-    cue: pick.cue ?? "",
-    prescriptionOrigin: "owner",
-    ownerDrillId: pick.id,
-    routineRole: pick.routine_role ?? null,
-    skillArea: pick.skill_area ?? null,
-    batSpeedKind: pick.bat_speed_kind ?? null,
-    videoUrl: pick.video_url ?? null,
-    libraryVideoId: pick.library_video_id ?? null,
-    ...clean(pick.setup) ? { setup: pick.setup } : {},
-    ...pick.equipment.length ? { equipmentNote: pick.equipment.join(", ") } : {}
-  };
-  return drills.map((drill, index) => index === target ? owned : drill);
-}
-if (false) void loadOwnerPlanDrills();
 
 // src/lib/hammer/roadmap/roadmapLadder.ts
 var RUNG_ORDER = [
@@ -6829,14 +6859,15 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       }
       const inSeason = seasonPhase === "in";
       const runningSport = normalizeSport(ctx.get("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball";
-      const drills = structureSkillSession(inSeason ? [
+      const ownedRunning = new Set(proj.equipmentList ?? []);
+      const drills = structureSkillSession(mergeOwnerSlotDrills(inSeason ? [
         { name: runningSport === "softball" ? "Pitch-release reads" : "Pickoff reads", dosage: "8 reps", cue: runningSport === "softball" ? "Stay on the base until the pitch is released; then read and move." : "first move = first step" },
         { name: "First-to-third / tag-up scenarios", dosage: "5 reps", executionKind: "baserunning_scenarios" }
       ] : [
         { name: runningSport === "softball" ? "Release + first-step footwork" : "Lead + secondary footwork", dosage: "10 reps", cue: runningSport === "softball" ? "Start on the base; leave only when the pitch is released." : "balanced lead, no lean" },
         { name: runningSport === "softball" ? "Pitch-release reads (with partner if possible)" : "Pickoff reads (with partner if possible)", dosage: "10 reps" },
         { name: "First-to-third / tag-up scenarios", dosage: "5 reps", executionKind: "baserunning_scenarios" }
-      ], { skill: "baserunning", sport: runningSport, owned: new Set(proj.equipmentList ?? []), injuryRegions, recoveryDay: recoverDay || !skillExecutionAllowed });
+      ], ["hammers_today:baserunning"], { sport: runningSport, owned: ownedRunning }), { skill: "baserunning", sport: runningSport, owned: new Set(proj.equipmentList ?? []), injuryRegions, recoveryDay: recoverDay || !skillExecutionAllowed });
       return {
         modality,
         title: inSeason ? "Baserunning \u2014 game scenarios" : "Baserunning IQ",
@@ -7461,8 +7492,20 @@ function ensureRenderable(blocks) {
 function scaleDosageLabel2(dosage, scale) {
   const m = /^(\d+)\s*(?:x|×)\s*(\d+)/i.exec(dosage);
   if (!m) return dosage;
+  if (/one set per zone/i.test(dosage)) {
+    const reps = Math.max(1, Math.round(parseInt(m[2], 10) * scale));
+    return dosage.replace(/^(\d+\s*(?:x|×)\s*)(\d+)/i, `$1${reps}`);
+  }
   const sets = Math.max(1, Math.round(parseInt(m[1], 10) * scale));
   return dosage.replace(/^(\d+)/, String(sets));
+}
+function planReadinessBand(ctx) {
+  const r = ctx.get("readiness")?.value;
+  const score = typeof r === "number" ? r : typeof r?.score === "number" ? r.score : null;
+  if (score === null) return "normal";
+  if (score < 0.4) return "low";
+  if (score >= 0.75) return "high";
+  return "normal";
 }
 function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = null, gpSignal = null, identityOverride, today = /* @__PURE__ */ new Date(), roadmapInputs = {}) {
   const proj = projectEnvelope(ctx);
@@ -7484,7 +7527,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   const throwingLadder = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
   const skillTargets = SKILL_MODALITIES.reduce((acc, m) => {
     acc[m] = resolveSkillDaysTarget(
-      rung.descriptor.rung,
+      "sustain",
       m,
       positionRaw,
       proj.injuryRegions,
@@ -7496,9 +7539,10 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   const earnedDaysByModality = countEarnedSkillDays(roadmapInputs.recentCompletions ?? [], today);
   const rungIdx = RUNG_ORDER.indexOf(rung.descriptor.rung);
   const nextRung = rungIdx >= 0 && rungIdx < RUNG_ORDER.length - 1 ? RUNG_ORDER[rungIdx + 1] : null;
+  void nextRung;
   const skillLadder = projectSkillLadder(
-    rung.descriptor.rung,
-    nextRung,
+    "sustain",
+    null,
     proj,
     positionRaw,
     earnedDaysByModality
@@ -7517,7 +7561,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     new Set(firstPass.filter((b) => b.status === "ready" && goalEligible(b.modality)).map((b) => b.modality))
   );
   const weeklyTemplate = goalWeek.template;
-  const microcycle = applyMicrocycle(weeklyTemplate, today, goalWeek.targets);
+  const microcycle = applyMicrocycle(weeklyTemplate, today, goalWeek.targets, planReadinessBand(ctx));
   const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, goalWeek.targets);
   const activeToday = new Set(
     firstPass.filter((b) => b.status === "ready" || b.status === "awaiting-input").map((b) => b.modality)
