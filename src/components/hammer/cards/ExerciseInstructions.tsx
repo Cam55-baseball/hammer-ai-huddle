@@ -1,3 +1,5 @@
+import { DrillVideo } from "@/components/drills/DrillVideo";
+import { drillVideoFromUrl } from "@/lib/prescription/drillVideoSource";
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,7 +46,7 @@ export function ExerciseInstructions({ name, slug, videoUrl, guideOverride, setu
   const steps = guide?.goodRep ?? fallback?.steps ?? liveSteps;
   const content = <>
 
-      {videoUrl ? <VideoPlayer videoUrl={videoUrl} videoType={/\.(mp4|mov|webm|avi|m4v)(\?|$)/i.test(videoUrl) ? 'upload' : 'external'} title={name} /> : slug ? <ExerciseVideo slug={slug} /> : null}
+      {videoUrl ? (drillVideoFromUrl(videoUrl) ? <DrillVideo url={videoUrl} title={name} /> : <VideoPlayer videoUrl={videoUrl} videoType={/\.(mp4|mov|webm|avi|m4v)(\?|$)/i.test(videoUrl) ? 'upload' : 'external'} title={name} />) : slug ? <ExerciseVideo slug={slug} /> : null}
       {live?.how_to_one_rep && <p className="text-muted-foreground"><span className="font-medium text-foreground">How to do one rep: </span>{R(live.how_to_one_rep)}</p>}
       <p className="text-muted-foreground"><span className="font-medium text-foreground">Setup: </span>{R(setup ?? guide?.setup ?? fallback?.setup ?? live?.setup)}</p>
       {steps.length > 0 && <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">{steps.map((step, i) => <li key={i}>{R(step)}</li>)}</ol>}

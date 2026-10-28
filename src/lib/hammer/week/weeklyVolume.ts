@@ -61,6 +61,20 @@ export function dailyMindItem(dayIndex: number, texVisionPrescribed: boolean): {
   return { kind, physical: false, countsIn: "discipline" };
 }
 
+/**
+ * Owner Oct 28 placement: study items (film, game situations, Tex Vision) go in
+ * "Before you start"; mental-health and reflection items (breathing, focus routine,
+ * journaling) are the very last task of the recovery card. Same on rest days.
+ */
+export type MindPlacement = "before_you_start" | "recovery_last";
+export const MIND_STUDY: ReadonlySet<MindKind> = new Set(["situations", "film_study", "tex_vision"]);
+export function mindPlacement(kind: MindKind): MindPlacement {
+  return MIND_STUDY.has(kind) ? "before_you_start" : "recovery_last";
+}
+
+/** Owner Oct 28: every player gets at least 2 running-conditioning sessions a week, never on the rest day. */
+export const CONDITIONING_WEEKLY_MINIMUM = 2;
+
 export interface DayPlan {
   dayIndex: number;
   rest: boolean;

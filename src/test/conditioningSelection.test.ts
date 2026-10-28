@@ -145,6 +145,8 @@ describe("shape and voice guarantees", () => {
   it("on/off switches are untouched in the generator", () => {
     const src = readFileSync("supabase/functions/wk-generate-daily/index.ts", "utf8");
     expect(src).toContain("if (!isGameDay && !isPostSeason && !conditioningSuppressed && !timelineToday.hold) {");
-    expect((src.match(/push\("conditioning"/g) ?? []).length).toBe(1);
+    // Owner Oct 28: the only second conditioning push is the 2-a-week running floor.
+    expect((src.match(/push\("conditioning"/g) ?? []).length).toBe(2);
+    expect(src).toContain('conditioning_path: "weekly_floor"');
   });
 });

@@ -18,6 +18,7 @@ import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import { useHIESnapshot } from "@/hooks/useHIESnapshot";
 import { useDayState } from "@/hooks/useDayState";
 import { useMPIScores } from "@/hooks/useMPIScores";
+import { useRunningReadiness } from "@/hooks/useRunningReadiness";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EQUIPMENT_CONTEXT_CHANGED_EVENT } from "@/lib/hammer/context/equipment";
 import {
@@ -63,6 +64,8 @@ export function useHammerAthleteContext(): HammerAthleteContext {
   const { data: rows } = useAthleteCommandRows({ days: 30, limit: 500 });
   const { dayType } = useDayState();
   const { data: mpi } = useMPIScores();
+  // Owner Oct 28: the plan reads RUNNING readiness (14-day history); latest check-in only when history is too thin.
+  const { data: running } = useRunningReadiness();
 
   const { data: envelope, isLoading: envLoading } = useQuery({
     queryKey: ["hammer-context-envelope", user?.id],
@@ -109,8 +112,10 @@ export function useHammerAthleteContext(): HammerAthleteContext {
         "readiness",
         "Readiness",
         "physiology",
-        readinessEv ? projectLatest(readinessEv).value : null,
-        "asb:behavioral.readiness",
+        running?.score != null
+          ? { score: running.score, band: running.band, source: "running_14d", painFlag: running.painFlag }
+          : readinessEv ? projectLatest(readinessEv).value : null,
+        running?.score != null ? "runningReadiness:14d" : "asb:behavioral.readiness",
         readinessEv?.occurred_at ?? null,
       ),
       mkLive(
@@ -156,5 +161,5 @@ export function useHammerAthleteContext(): HammerAthleteContext {
         return vars.find((v) => v.key === key) as ContextVariable<T> | undefined;
       },
     };
-  }, [envelope, envLoading, rows, dayType, mpi, snapshot]);
+  }, [envelope, envLoading, rows, dayType, mpi, snapshot, running]);
 }

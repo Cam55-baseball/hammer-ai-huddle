@@ -2,7 +2,15 @@
 
 **Batch closeout · October 28, 2026 · after the owner's "both, combined" answer**
 
-**Ready to publish: NO.** (Re-checked Oct 28 17:23 UTC: full suite 632 files / 5,079 tests PASS; preview build clean.) One owner-requested item is not built: owner drills tagged "conditioning" are not used by the plan yet. Conditioning is built by the server with checked work/rest doses, and the drill builder has no fields for those, so the drill can't go in without making up a dose. Waiting on owner: "Add fields" (work/rest/rounds in the drill builder) or "Leave it" (existing exercise list; flips verdict to YES). Everything else in this batch is built and tested.
+**Ready to publish: NO.** (Oct 28 18:00 UTC: full suite 634 files / 5,103 tests PASS; preview build OK.) One owner-requested item is still open: owner drills tagged "conditioning" are not used by the plan, because the drill builder has no work/rest/rounds fields and a dose would have to be made up. Owner to choose "Add fields" or "Leave it" ("Leave it" flips this to YES).
+
+Oct 28 owner additions (built this run):
+- Drill video links: YouTube, Vimeo, TikTok, Instagram, X, Facebook play only in each platform's official embed; any other https link is a "Watch on [site]" button; checked on save with the platform name shown. Proven in the drill builder at 390x844.
+- Legal: video credit/takedown notice marked APPROVED; privacy-policy cookie line queued for the lawyer (not live).
+- Mind placement: study items in Before you start; breathing/focus/journaling last in the recovery card (proven at 390x844: Breathing reset sits after recovery, before the night check-in). Still counts in Discipline.
+- Running readiness (14 days: check-ins, sleep, soreness, pain, rolling load, completed/skipped work; season/game-day caps) feeds the phone plan's 40% rule and the plan service's single-step reduction; one plain line on Today. Test trend not used yet (tests aren't comparable across types; listed as missing, never guessed).
+- Conditioning floor: at least 2 running sessions/week for every player, never Sunday, game day or HOLD; position players run bases (90-ft / 60-ft), pitchers use pitcher conditioning, low readiness uses the easy-flush run. 8-week checks pass. Live plan-service run not yet seen for a real day (today's plans were already saved; not rebuilt).
+- Redeployed: wk-generate-daily.
 
 ## Automated verification (this run)
 

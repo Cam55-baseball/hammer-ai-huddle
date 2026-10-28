@@ -383,6 +383,8 @@ interface Prescription {
 import { OS_ONLY_ECCENTRIC_SLUGS, IN_SEASON_BLOCKED_SLUGS } from "../_shared/wic/season.ts";
 import { isolationAllowed, robustnessAreas, robustnessPool, ROBUSTNESS_IN_SEASON_SETS, IN_SEASON_SESSION_SET_CAP, AREA_LABEL } from "../_shared/wic/lift/blueprint.ts";
 import { oppositeLowerPool } from "../_shared/wic/lift/areaMap.ts";
+import { runningReadiness, type ReadinessCheckin, type RunningReadiness } from "../_shared/readiness/runningReadiness.ts";
+import { conditioningFloorDue, isRunningConditioning, floorConditioningSlugs } from "../_shared/wic/conditioning/weeklyFloor.ts";
 
 // Step 20 C3 — the first request an isolate serves pays for loading the code.
 // That build is not comparable with a warm one, so the watchdog logs it for
@@ -1278,6 +1280,41 @@ const handler = async (req: Request): Promise<Response> => {
     const checkIn = checkInReductions(block.cns_unit_cap, { ...dl, sleep_hours: dl.sleep_hours ?? dl.sleep, cns_readiness: dl.cns_readiness ?? dl.readiness });
     const { reductions, sleep, cnsReadiness, soreness } = checkIn;
     let cnsCap = checkIn.cnsCap;
+    // Owner Oct 28: readiness is a RUNNING 14-day adjustment (check-ins, sleep,
+    // soreness, pain, rolling load, completion). Low running readiness takes the
+    // same single step as a low check-in — never stacked on one. Read failure = no change.
+    let running: RunningReadiness | null = null;
+    try {
+      const from14 = isoShift(planDate, -13), from28 = isoShift(planDate, -27);
+      const [rq, ra, rl, rr] = await Promise.all([
+        admin.from("vault_focus_quizzes").select("entry_date, physical_readiness, hours_slept, soreness_locations, pain_location, pain_scale")
+          .eq("user_id", user.id).gte("entry_date", from14).lte("entry_date", planDate).limit(200),
+        admin.from("asb_events").select("payload, occurred_at").eq("athlete_id", user.id).eq("topic_id", "behavioral.readiness")
+          .gte("occurred_at", `${from14}T00:00:00Z`).order("occurred_at", { ascending: false }).limit(60),
+        admin.from("wk_session_logs").select("plan_date, prescription_id").eq("user_id", user.id).gte("plan_date", from28).lte("plan_date", planDate).limit(2000),
+        admin.from("wk_prescriptions").select("id").eq("user_id", user.id).gte("plan_date", from14).lt("plan_date", planDate).limit(2000),
+      ]);
+      if (!rq.error && !ra.error && !rl.error && !rr.error) {
+        const checkins: ReadinessCheckin[] = ((rq.data ?? []) as any[]).map((q) => ({ date: q.entry_date, bodyReadiness: q.physical_readiness,
+          hoursSlept: q.hours_slept, sorenessAreas: Array.isArray(q.soreness_locations) ? q.soreness_locations.length : null,
+          painAreas: Array.isArray(q.pain_location) ? q.pain_location.length : null, painScale: q.pain_scale }));
+        const seenDay = new Set<string>();
+        for (const e of (ra.data ?? []) as any[]) {
+          const d = String(e.occurred_at).slice(0, 10); if (seenDay.has(d)) continue; seenDay.add(d);
+          const n = Number(e.payload?.score); if (Number.isFinite(n)) checkins.push({ date: d, readiness10: n <= 1 ? n * 10 : n });
+        }
+        const units: Record<string, number> = {};
+        for (const l of (rl.data ?? []) as any[]) units[l.plan_date] = (units[l.plan_date] ?? 0) + 1;
+        const ids = new Set(((rr.data ?? []) as any[]).map((r) => r.id));
+        const done = new Set(((rl.data ?? []) as any[]).filter((l) => l.prescription_id && ids.has(l.prescription_id)).map((l) => l.prescription_id));
+        running = runningReadiness({ today: planDate, checkins, workUnitsByDate: units, prescribedPast14: ids.size, completedPast14: done.size,
+          testTrend: null, seasonPhase: null });
+      }
+    } catch (_e) { running = null; }
+    if (running?.band === "low") {
+      if (!reductions.some(r => r.reason === "sleep" || r.reason === "cns")) cnsCap = Math.max(1, cnsCap - 1);
+      reductions.push({ reason: "running_readiness", detail: `Your last 14 days point to a lighter day${running.reasons.length ? ` (${running.reasons.join(", ")})` : ""}, so the hard work is dialled back.` });
+    }
     // Stage 3 (owner-authorised 2026-10-05) — the morning Day intent answer.
     // Read from the athlete's own dated row for this plan date. It can only
     // moderate downward inside what is already allowed: an easier day takes the
@@ -3194,6 +3231,46 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
     }
+
+    // -------- Conditioning weekly floor (owner Oct 28) --------
+    // At least 2 running-conditioning sessions Mon–Sat. When the days left this
+    // week equal the sessions still needed and today built no running
+    // conditioning, add the floor session. Never Sunday, game day or HOLD;
+    // low running/check-in readiness uses the easy-flush run (still counts).
+    let conditioningFloor: { due: boolean; needed: number; added: string[]; readFailed?: boolean } | null = null;
+    try {
+      const builtToday = conditioningSelection?.slugs ?? [];
+      const ranToday = !conditioningEmptyPool && builtToday.length > 0 && isRunningConditioning(builtToday);
+      if (!ranToday && !isGameDay && !timelineToday.hold) {
+        const { data: priorRows, error: priorErr } = await admin.from("wk_prescriptions")
+          .select("plan_date, movement_slug").eq("user_id", user.id).eq("slot", "conditioning")
+          .gte("plan_date", isoShift(planDate, -6)).lt("plan_date", planDate).limit(200);
+        if (priorErr) conditioningFloor = { due: false, needed: 0, added: [], readFailed: true };
+        else {
+          const byDate = new Map<string, string[]>();
+          for (const r of (priorRows ?? []) as any[]) byDate.set(r.plan_date, [...(byDate.get(r.plan_date) ?? []), r.movement_slug]);
+          const priorRunningDates = [...byDate].filter(([, slugs]) => isRunningConditioning(slugs)).map(([d]) => d);
+          const floor = conditioningFloorDue({ planDate, priorRunningDates });
+          conditioningFloor = { due: floor.due, needed: floor.needed, added: [] };
+          if (floor.due) {
+            const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");
+            const slugs = floorConditioningSlugs({ sport, isPitcher: isPitcherAthlete, lowReadiness: low });
+            const why = low
+              ? "Weekly running minimum: an easy run today because your readiness is lower. It still counts as one of your 2 this week."
+              : isPitcherAthlete
+                ? "Weekly running minimum: pitcher conditioning today so you get your 2 sessions this week."
+                : "Weekly running minimum: base-route conditioning today so you get your 2 sessions this week.";
+            for (const slug of slugs) {
+              const m = lib.find((x) => x.slug === slug);
+              if (!m || !eligible(m)) continue;
+              push("conditioning", "conditioning", m, {}, why, { conditioning_why: why, conditioning_path: "weekly_floor",
+                conditioning_template_id: "cond.weekly_floor", conditioning_fallback: false, conditioning_dialed_down: low });
+              conditioningFloor.added.push(slug);
+            }
+          }
+        }
+      }
+    } catch (_e) { conditioningFloor = { due: false, needed: 0, added: [], readFailed: true }; }
 
     // -------- Cross-sport (its own slot, appended) --------
     // Prefer Weightless Object Sport Training coordination for youth/beginner

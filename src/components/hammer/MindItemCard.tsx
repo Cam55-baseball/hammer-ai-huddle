@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Brain, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { dailyMindItem, type MindKind } from "@/lib/hammer/week/weeklyVolume";
+import { dailyMindItem, mindPlacement, type MindKind, type MindPlacement } from "@/lib/hammer/week/weeklyVolume";
 import { useTexVisionS2Priority } from "./TexVisionS2Priority";
 import { useTexVisionProgress } from "@/hooks/useTexVisionProgress";
 import { useDailyDrillSelection } from "@/hooks/useDailyDrillSelection";
@@ -28,8 +28,12 @@ function useTexVisionPrescribed(): boolean {
   return !loading && !!hasAccess && (dailyDrills?.length ?? 0) > 0;
 }
 
-/** One non-physical item every day, rest days included. Never adds physical work. Done counts in Discipline. */
-export function MindItemCard({ planDate }: { planDate: string }) {
+/**
+ * One non-physical item every day, rest days included. Never adds physical work. Done counts in Discipline.
+ * Rendered in two spots; only the spot matching today's item shows it (study → Before you start,
+ * reflection → last task of the recovery card). An owner Mind drill takes the slot of the day's item.
+ */
+export function MindItemCard({ planDate, placement }: { planDate: string; placement: MindPlacement }) {
   const navigate = useNavigate();
   const texVisionPrescribed = useTexVisionPrescribed();
   const [done, setDone] = useState<boolean | null>(null);
@@ -56,7 +60,7 @@ export function MindItemCard({ planDate }: { planDate: string }) {
     return () => { live = false; };
   }, [planDate]);
 
-  if (!kind) return null;
+  if (!kind || mindPlacement(kind) !== placement) return null;
   const item = owner ? { title: owner.name, how: [owner.dosage, owner.cue].filter(Boolean).join(" · ") } : COPY[kind];
 
   const markDone = async () => {
