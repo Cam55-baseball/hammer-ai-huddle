@@ -2258,6 +2258,16 @@ export interface RoadmapInputs {
   readonly bunting?: {evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
+/** Perceived readiness (check-in score 0–1). Missing → normal, never "low". */
+export function planReadinessBand(ctx: { get<T>(k: string): { value: T } | null | undefined }): "low" | "normal" | "high" {
+  const r = ctx.get<unknown>("readiness")?.value as unknown;
+  const score = typeof r === "number" ? r : typeof (r as { score?: unknown } | null)?.score === "number" ? (r as { score: number }).score : null;
+  if (score === null) return "normal";
+  if (score < 0.4) return "low";
+  if (score >= 0.75) return "high";
+  return "normal";
+}
+
 export function buildHammerDailyPlan(
   ctx: HammerAthleteContext,
   scheduleSignal: ScheduleSignal = NORMAL_SIGNAL,
@@ -2294,16 +2304,19 @@ export function buildHammerDailyPlan(
   // targets into the microcycle so priorityDayOrder is honoured, and count
   // earned days from the last 7d of max-intent completions.
   const skillTargets = SKILL_MODALITIES.reduce<Partial<Record<SkillModality, number>>>((acc, m) => {
+    // Owner Oct 28: everyone is on the top (6-day) schedule — no rung ramp.
+    // Age and injury clamps inside the resolver still only lower it.
     acc[m] = resolveSkillDaysTarget(
-      rung.descriptor.rung, m, positionRaw, proj.injuryRegions, proj.lifecycleBand, proj.liftingAgeYears,
+      "sustain", m, positionRaw, proj.injuryRegions, proj.lifecycleBand, proj.liftingAgeYears,
     );
     return acc;
   }, {});
   const earnedDaysByModality = countEarnedSkillDays(roadmapInputs.recentCompletions ?? [], today);
   const rungIdx = RUNG_ORDER.indexOf(rung.descriptor.rung);
   const nextRung = rungIdx >= 0 && rungIdx < RUNG_ORDER.length - 1 ? RUNG_ORDER[rungIdx + 1] : null;
+  void nextRung;
   const skillLadder = projectSkillLadder(
-    rung.descriptor.rung, nextRung, proj, positionRaw, earnedDaysByModality,
+    "sustain", null, proj, positionRaw, earnedDaysByModality,
   );
 
   // Resolve the weekly microcycle NEXT so we can thread its label into blocks.
@@ -2320,7 +2333,7 @@ export function buildHammerDailyPlan(
   const goalWeek = weeklyGoalBlocks(resolveWeeklyTemplate(proj), skillTargets, focusProjection, positionRaw,
     new Set(firstPass.filter(b => b.status === 'ready' && goalEligible(b.modality)).map(b => b.modality)));
   const weeklyTemplate = goalWeek.template;
-  const microcycle = applyMicrocycle(weeklyTemplate, today, goalWeek.targets);
+  const microcycle = applyMicrocycle(weeklyTemplate, today, goalWeek.targets, planReadinessBand(ctx));
   const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, goalWeek.targets);
   // Warm-up bias is derived from the slots that actually landed in today's
   // plan — a lift day gets lift prep, a speed day gets speed prep. Priority
