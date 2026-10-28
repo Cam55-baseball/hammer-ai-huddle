@@ -34,6 +34,8 @@ export interface OwnerDrillRow {
   skill_area?: string | null;
   routine_role?: string | null;
   bat_speed_kind?: string | null;
+  bunt_type?: string | null;
+  bunt_side?: string | null;
   active: boolean;
   pinned: boolean;
   created_at: string;

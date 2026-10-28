@@ -73,8 +73,10 @@ export function resolveSkillDaysTarget(
   // Training-age / youth clamp — never exceed Bridge target while learning.
   const youngBand =
     lifecycleBand === "u10" || lifecycleBand === "u12" || lifecycleBand === "u14";
-  const lowLiftingAge = typeof liftingAgeYears === "number" && liftingAgeYears < 1;
-  if (youngBand || lowLiftingAge) {
+  // Owner Oct 28: a beginner's training age no longer ramps skill days (no
+  // week-by-week ramp); only the youth age bands keep the Bridge clamp.
+  void liftingAgeYears;
+  if (youngBand) {
     const bridgeTarget =
       modality === "throwing" && isPitcher(position)
         ? PITCHER_THROWING_LADDER.bridge

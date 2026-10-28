@@ -384,6 +384,16 @@ export interface ResolvedMicrocycle {
   readonly skillDays: Record<SkillModality, ReadonlyArray<Dow>>;
 }
 
+/**
+ * Owner decision Oct 28: everyone trains a 6-day week with ONE whole rest day.
+ * Sunday is the last-priority, lift/speed-free day in every template, so it is
+ * the rest day; skill days are never placed on it.
+ */
+export const SIX_DAY_REST_DOW: Dow = 0;
+
+/** Perceived readiness band (check-ins + load) that modulates INSIDE a session. */
+export type ReadinessBand = "low" | "normal" | "high";
+
 /** Per-skill day-count target from the skill-frequency ladder. */
 export type SkillDayTargets = Partial<Record<SkillModality, number>>;
 
@@ -407,12 +417,13 @@ export function resolveSkillDays(
   const picked: Dow[] = [];
   for (const d of priority) {
     if (picked.length >= clamped) break;
+    if (d === SIX_DAY_REST_DOW) continue;
     if (!picked.includes(d)) picked.push(d);
   }
   // If priority list doesn't cover the target, top up from the remaining
   // days of the week in ascending order so the result is fully deterministic.
   for (let d = 0 as Dow; picked.length < clamped && d <= 6; d = (d + 1) as Dow) {
-    if (!picked.includes(d)) picked.push(d);
+    if (d !== SIX_DAY_REST_DOW && !picked.includes(d)) picked.push(d);
     if (d === 6) break;
   }
   const baselineSet = new Set(baseline);
@@ -424,6 +435,7 @@ export function applyMicrocycle(
   template: WeeklyTemplate,
   today: Date,
   skillTargets: SkillDayTargets = {},
+  readiness: ReadinessBand = "normal",
 ): ResolvedMicrocycle {
   const dow = today.getDay() as Dow;
   const perModality = {} as Record<ModalityKey, ModalityDayDecision>;
@@ -489,15 +501,17 @@ export function applyMicrocycle(
       continue;
     }
 
-    // Earned-overflow days (added on top of template baseline via the
-    // ladder) are forced to `activation` — days are earned before intensity.
-    const isOverflowToday = overflowSet.has(dow);
+    // Owner Oct 28: no week-by-week ramp — days beyond the template keep the
+    // template intensity. Perceived readiness modulates INSIDE the session:
+    // low readiness → the low-taxing version, which still counts.
+    void overflowSet;
     const templateIntensity =
       template.intensityOverrides?.[m]?.[dow] ?? ("primary" as ModalityIntensity);
-    const intensity: ModalityIntensity = isOverflowToday ? "activation" : templateIntensity;
+    const lowReady = isSkill && readiness === "low";
+    const intensity: ModalityIntensity = lowReady ? "activation" : templateIntensity;
     const accent = template.dayLabels?.[m]?.[dow];
     const position = todayPositionLabel(dows, dow);
-    const overflowNote = isOverflowToday ? " · earned overflow (activation only)" : "";
+    const overflowNote = lowReady ? " · low-taxing version (you're less fresh today — it still counts)" : "";
     const microcycleLabel = accent
       ? `${position} · ${accent}${overflowNote}`
       : `${position}${overflowNote}`;
@@ -564,9 +578,8 @@ export function projectWeeklyRoadmap(
       if (!dows.includes(d)) return [];
       const isOverflow =
         isSkill && (skillOverflow[m as SkillModality]?.has(d) ?? false);
-      const intensity: ModalityIntensity = isOverflow
-        ? "activation"
-        : (template.intensityOverrides?.[m]?.[d] ?? "primary");
+      void isOverflow;
+      const intensity: ModalityIntensity = template.intensityOverrides?.[m]?.[d] ?? "primary";
       const accent = template.dayLabels?.[m]?.[d] ?? null;
       return [{ key: m, intensity, accent }];
     });

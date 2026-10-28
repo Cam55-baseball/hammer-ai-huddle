@@ -1,0 +1,2 @@
+ALTER TABLE public.owner_drills ADD COLUMN IF NOT EXISTS bunt_type text CHECK (bunt_type IS NULL OR bunt_type IN ('squeeze','sac_3b','sac_1b','drag','push','hit'));
+ALTER TABLE public.owner_drills ADD COLUMN IF NOT EXISTS bunt_side text CHECK (bunt_side IS NULL OR bunt_side IN ('R','L'));

@@ -1002,6 +1002,27 @@
       "when": 1793198619491,
       "tag": "0142_recurring_issues",
       "breakpoints": true
+    },
+    {
+      "idx": 143,
+      "version": "7",
+      "when": 1793206614549,
+      "tag": "0143_mind_item_logs",
+      "breakpoints": true
+    },
+    {
+      "idx": 144,
+      "version": "7",
+      "when": 1793206742937,
+      "tag": "0144_owner_drills_bunt_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 145,
+      "version": "7",
+      "when": 1793206778184,
+      "tag": "0145_mind_item_logs_owner_kind",
+      "breakpoints": true
     }
   ]
 }

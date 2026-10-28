@@ -12298,6 +12298,33 @@ export type Database = {
         }
         Relationships: []
       }
+      mind_item_logs: {
+        Row: {
+          completed_at: string
+          id: string
+          item_date: string
+          kind: string
+          owner_drill_id: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          item_date: string
+          kind: string
+          owner_drill_id?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          item_date?: string
+          kind?: string
+          owner_drill_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       mindfulness_sessions: {
         Row: {
           completed: boolean | null
@@ -13362,6 +13389,8 @@ export type Database = {
         Row: {
           active: boolean
           bat_speed_kind: string | null
+          bunt_side: string | null
+          bunt_type: string | null
           common_mistake: string | null
           created_at: string
           created_by: string | null
@@ -13390,6 +13419,8 @@ export type Database = {
         Insert: {
           active?: boolean
           bat_speed_kind?: string | null
+          bunt_side?: string | null
+          bunt_type?: string | null
           common_mistake?: string | null
           created_at?: string
           created_by?: string | null
@@ -13418,6 +13449,8 @@ export type Database = {
         Update: {
           active?: boolean
           bat_speed_kind?: string | null
+          bunt_side?: string | null
+          bunt_type?: string | null
           common_mistake?: string | null
           created_at?: string
           created_by?: string | null
