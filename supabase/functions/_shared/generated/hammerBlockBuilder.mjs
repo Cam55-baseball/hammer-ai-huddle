@@ -5369,6 +5369,7 @@ function selectDefenseDrills(input) {
 }
 
 // src/lib/prescription/ownerPlanDrills.ts
+var PLAN_SLOTS = ["hammers_today:skill", "hammers_today:warmup", "hammers_today:defense", "defensive_library"];
 var rows = [];
 function setOwnerPlanDrills(next) {
   rows = next;
@@ -5378,6 +5379,8 @@ function skillBlocksOf(r) {
   for (const p of r.placements) {
     if (/^analysis:[a-z]+:hitting$/.test(p)) out.add("hitting");
     if (/^analysis:[a-z]+:(throwing|pitching)$/.test(p)) out.add("throwing");
+    if (/^hammers_today:(hitting|bat_speed_weighted|bat_speed_overspeed)$/.test(p)) out.add("hitting");
+    if (/^hammers_today:(throwing|pitching)$/.test(p)) out.add("throwing");
   }
   return [...out];
 }
@@ -5395,9 +5398,26 @@ function missingForPlacement(r, slot) {
   return miss;
 }
 var norm3 = (s) => s.trim().toLowerCase();
+var TAG_SLOT = {
+  "hammers_today:hitting": "hammers_today:skill",
+  "hammers_today:bat_speed_weighted": "hammers_today:skill",
+  "hammers_today:bat_speed_overspeed": "hammers_today:skill",
+  "hammers_today:throwing": "hammers_today:skill",
+  "hammers_today:pitching": "hammers_today:skill",
+  "hammers_today:defense_low_taxing": "hammers_today:defense"
+};
+function filedSlots(r) {
+  const out = /* @__PURE__ */ new Set();
+  for (const p of r.placements) {
+    if (PLAN_SLOTS.includes(p)) out.add(p);
+    if (TAG_SLOT[p]) out.add(TAG_SLOT[p]);
+  }
+  return [...out];
+}
 function eligibleFor(r, slots, ctx) {
   if (!r.active) return false;
-  const slot = slots.find((s) => r.placements.includes(s));
+  const filed = filedSlots(r);
+  const slot = slots.find((s) => filed.includes(s));
   if (!slot) return false;
   if (missingForPlacement(r, slot).length > 0) return false;
   if (!r.sports.includes(ctx.sport)) return false;

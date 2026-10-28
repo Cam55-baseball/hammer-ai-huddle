@@ -44,6 +44,8 @@ export function skillBlocksOf(r: Pick<OwnerDrillRow, "placements">): SkillBlock[
   for (const p of r.placements) {
     if (/^analysis:[a-z]+:hitting$/.test(p)) out.add("hitting");
     if (/^analysis:[a-z]+:(throwing|pitching)$/.test(p)) out.add("throwing");
+    if (/^hammers_today:(hitting|bat_speed_weighted|bat_speed_overspeed)$/.test(p)) out.add("hitting");
+    if (/^hammers_today:(throwing|pitching)$/.test(p)) out.add("throwing");
   }
   return [...out];
 }
@@ -69,7 +71,7 @@ export function missingForPlacement(r: Omit<OwnerDrillRow, "created_at" | "id">,
 
 /** Builder summary: per filed plan placement, whether it competes or what it still needs. */
 export function planReadiness(r: Omit<OwnerDrillRow, "created_at" | "id">): Array<{ slot: PlanSlot; missing: string[] }> {
-  return PLAN_SLOTS.filter((s) => r.placements.includes(s)).map((slot) => ({ slot, missing: missingForPlacement(r, slot) }));
+  return PLAN_SLOTS.filter((s) => filedSlots(r).includes(s)).map((slot) => ({ slot, missing: missingForPlacement(r, slot) }));
 }
 
 export interface MergeContext {
@@ -83,10 +85,29 @@ export interface MergeContext {
 
 const norm = (s: string) => s.trim().toLowerCase();
 
+/** Oct 28 engine category tags map onto the existing legal plan slots (no new slots, no new dose). */
+const TAG_SLOT: Record<string, PlanSlot> = {
+  "hammers_today:hitting": "hammers_today:skill",
+  "hammers_today:bat_speed_weighted": "hammers_today:skill",
+  "hammers_today:bat_speed_overspeed": "hammers_today:skill",
+  "hammers_today:throwing": "hammers_today:skill",
+  "hammers_today:pitching": "hammers_today:skill",
+  "hammers_today:defense_low_taxing": "hammers_today:defense",
+};
+export function filedSlots(r: Pick<OwnerDrillRow, "placements">): PlanSlot[] {
+  const out = new Set<PlanSlot>();
+  for (const p of r.placements) {
+    if ((PLAN_SLOTS as string[]).includes(p)) out.add(p as PlanSlot);
+    if (TAG_SLOT[p]) out.add(TAG_SLOT[p]);
+  }
+  return [...out];
+}
+
 /** Every condition the drill declares must hold. */
 export function eligibleFor(r: OwnerDrillRow, slots: PlanSlot[], ctx: MergeContext): boolean {
   if (!r.active) return false;
-  const slot = slots.find((s) => r.placements.includes(s));
+  const filed = filedSlots(r);
+  const slot = slots.find((s) => filed.includes(s));
   if (!slot) return false;
   if (missingForPlacement(r, slot).length > 0) return false;
   if (!r.sports.includes(ctx.sport)) return false;
