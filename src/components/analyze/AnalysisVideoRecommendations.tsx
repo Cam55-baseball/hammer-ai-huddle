@@ -129,7 +129,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
   const phase = phaseLabel(resolvedPhase as RelevancePhase);
 
   return (
-    <Card className="p-4 space-y-3 border-primary/20">
+    <Card className="min-w-0 max-w-full p-4 space-y-3 border-primary/20">
       <div className="flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-primary" />
         <h3 className="font-semibold text-sm">Watch this next</h3>
@@ -219,7 +219,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
       ) : (
         <div className="space-y-2">
           {suggestions.map(({ video, reasons, relevance, faultScope }) => (
-            <div key={video.id} className="flex gap-3 p-2 rounded-md border bg-card hover:bg-accent/30 transition">
+            <div key={video.id} className="grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] gap-3 p-2 rounded-md border bg-card hover:bg-accent/30 transition">
               <VideoThumb
                 videoUrl={video.video_url}
                 thumbnailUrl={video.thumbnail_url}
@@ -228,7 +228,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 min-w-0">
-                  <p className="text-sm font-medium truncate">{video.title}</p>
+                  <p className="text-sm font-medium break-words">{video.title}</p>
                   {relevance === 'general' && (
                     <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">
                       General
@@ -247,7 +247,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
                   ))}
                 </ul>
               </div>
-              <div className="flex flex-col gap-1 self-center shrink-0">
+              <div className="col-start-2 flex flex-wrap gap-1">
                 <Button
                   size="sm"
                   onClick={() => {
