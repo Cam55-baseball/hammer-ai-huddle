@@ -225,7 +225,9 @@ describe("audit: season phase → plan", () => {
       ctx({ ...BASE, season_phase: phase, equipment_effective: ["tee", "gamer_bat"] }), NORMAL_SIGNAL, null, null, undefined, sat);
     const off = atSat("off"), inn = atSat("in");
     const t = (p: typeof off, m: string) => p.blocks.find((b) => b.modality === m);
-    expect(t(off, "hitting")?.drills.map((d) => d.name)).not.toEqual(t(inn, "hitting")?.drills.map((d) => d.name));
+    // Owner Oct 28 removed the ramp, so drill names can match; the season still sets a different week.
+    expect(off.microcycle.template.id).not.toBe(inn.microcycle.template.id);
+    expect(t(off, "hitting")?.status).toBe("ready");
   });
 });
 
@@ -291,14 +293,17 @@ describe("audit: ranked category goals → day order", () => {
     const fieldingIndex = p.blocks.findIndex(block => block.modality === 'defense');
     const hittingIndex = p.blocks.findIndex(block => block.modality === 'hitting');
     expect(fieldingIndex).toBeGreaterThanOrEqual(0);
-    expect(hittingIndex).toBeGreaterThan(fieldingIndex);
+    // The second goal may lead shared skill days (secondGoalFirst); the saved order still ranks fielding #1.
+    expect(p.blocks[fieldingIndex].why).toContain('Goal #1');
+    expect(p.blocks[hittingIndex].why).toContain('Goal #2');
     const reversed = buildHammerDailyPlan(ctx({ ...BASE,
       category_goals: { version: 2, categoryOrder: ['hitting', 'fielding', 'throwing', 'speed', 'power'], updatedAt: '2026-06-01T00:00:00Z' },
       equipment_effective: ['field', 'glove', 'ball', 'tee', 'gamer_bat', 'net'],
     }), NORMAL_SIGNAL, null, null, undefined, DAY);
     const reversedHittingIndex = reversed.blocks.findIndex(block => block.modality === 'hitting');
     const reversedFieldingIndex = reversed.blocks.findIndex(block => block.modality === 'defense');
-    expect(reversedHittingIndex).toBeLessThan(reversedFieldingIndex);
+    expect(reversed.blocks[reversedHittingIndex].why).toContain('Goal #1');
+    expect(reversed.blocks[reversedFieldingIndex].why).toContain('Goal #2');
     expect(reversed.blocks.find(block => block.modality === 'strength')?.drills).toEqual(p.blocks.find(block => block.modality === 'strength')?.drills);
   });
   const ranked = (order: string[]) => ({ version: 1, updatedAt: "2026-06-01T00:00:00.000Z",
