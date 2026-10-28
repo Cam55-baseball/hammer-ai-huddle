@@ -32,15 +32,16 @@ describe("PerformanceAreaRows", () => {
     view();
     expect(await screen.findByText(/Analyses: 1 · early read/)).toBeTruthy();
     expect(screen.getByText(/Last analysis:/)).toBeTruthy();
-    expect(screen.getByText("Grade: Grade coming with camera measurement")).toBeTruthy();
+    expect(screen.queryByText("Grade: Grade coming with camera measurement")).toBeNull();
     expect(screen.getByText("See analysis")).toBeTruthy();
     expect(screen.queryByText(/Grade: 50/)).toBeNull();
   });
-  it("shows owner/admin the report card with the internal label", async () => {
+  it("keeps the archived card and internal label hidden for the owner", async () => {
     staff = true;
     result = { data: [{ module: "hitting", created_at: "2026-10-01T12:00:00Z" }], error: null };
     view();
-    expect(await screen.findByText("Internal — not released")).toBeTruthy();
+    expect(await screen.findByText(/Analyses: 1 · early read/)).toBeTruthy();
+    expect(screen.queryByText("Internal — not released")).toBeNull();
     expect(screen.queryByText("Grade: Grade coming with camera measurement")).toBeNull();
     staff = false;
   });

@@ -12,10 +12,12 @@ export const WRITTEN_REPORT_CONTRACT = `
 - summary: the FIRST bullet is the single top takeaway for this rep. The rest are key findings from THIS clip.
 - positives: 1-3 things this athlete did well in THIS clip.
 - improvements: every correction, each with what to change, why it matters and how to fix it.
-- check_improvement: one practice rep or simple test the athlete can do to check the fix is working.
+- check_improvement: the single most important change for this athlete after watching this clip, not an exercise or test instruction. Concrete practice actions belong only to supplied, eligible Hammers library drill entries; never invent one.
 - observed_in_clip: 2-4 plain statements of what you actually saw in these pictures.
 - connected_to_your_data: 0-3 short links between a finding in THIS clip and the athlete's own data (name the data you used). Leave empty when no data is recorded. These are inferences, never facts about the clip.
-- Recommend only for the mechanical findings in THIS clip. Never mention their plan, other drills they are doing, or anything this clip didn't show.
+- Relevant recorded goals may guide library practice even when no fault is flagged. Clearly label goal work, never present a goal as a fault. Never mention their ongoing plan or invent a library drill, video or history.
+- feedback for hitting must explain all four numbers plainly: 1 — Create Balance, stay supported on the back leg; 2 — Gather, collect yourself without losing balance; 3 — Load by Stride, let the stride load the body while the hands stay back; 4 — Hitter's Move, the elbow moves forward while the hands stay back and the barrel fires last. Tie the observed rep to this sequence, not a checklist of invented faults. Contact comes before post-contact extension; never coach a separate artificial hand counter-move.
+- For pitching and throwing, explain the applicable supplied Hammers doctrine in everyday words: how the athlete gathers, drives toward the target, sequences the body and releases. Preserve baseball versus softball and positional differences. Explain cause, consequence and one useful correction, without repetitive roadmaps or technical jargon. Do not flag arm slot or elbow height.
 - Never mention measuring, measurements, estimates, cameras, filming, clip quality, frames, pictures, video quality, grades or scores. Never add an "Optional tip" bullet.
 === END WRITTEN ANALYSIS CONTRACT ===`;
 

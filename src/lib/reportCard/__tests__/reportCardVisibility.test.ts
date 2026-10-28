@@ -7,10 +7,11 @@ describe("report_card switch (owner turned OFF Oct 18)", () => {
     expect(REPORT_CARD_SWITCH).toBe("off");
     expect(videoGradesShown()).toBe(false);
   });
-  it("hides the report card from players, coaches and scouts; owner/admin keep it (Oct 19)", () => {
+  it("archives the report card for players, owner and admin (Oct 28)", () => {
     expect(canSeeReportCard({ isOwner: false, isAdmin: false })).toBe(false);
-    expect(canSeeReportCard({ isOwner: true, isAdmin: false })).toBe(true);
-    expect(canSeeReportCard({ isOwner: false, isAdmin: true })).toBe(true);
+    expect(canSeeReportCard({ isOwner: true, isAdmin: false })).toBe(false);
+    expect(canSeeReportCard({ isOwner: false, isAdmin: true })).toBe(false);
+    expect(canSeeReportCard({ isOwner: true, isAdmin: true })).toBe(false);
   });
   it("uses the owner's placeholder wording", () => {
     expect(VIDEO_GRADE_PLACEHOLDER).toBe("Grade coming with camera measurement");
