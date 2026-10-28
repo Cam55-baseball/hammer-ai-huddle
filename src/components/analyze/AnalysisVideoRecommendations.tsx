@@ -29,6 +29,7 @@ import { moduleToSkillDomain } from '@/lib/videoMoments/registry';
 import { VideoThumb } from '@/components/video/VideoThumb';
 import { VideoLightbox, type LightboxVideo } from '@/components/video/VideoLightbox';
 import type { SkillDomain, TagSport } from '@/lib/videoRecommendationEngine';
+import { useAnalysisGoalVideos } from '@/hooks/useAnalysisGoalVideos';
 
 
 interface Props {
@@ -95,7 +96,9 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
   });
 
   const suggestions = useMemo(() => allSuggestions.filter((s) => s.relevance !== 'general'), [allSuggestions]);
-  const feedback = useVideoFaultFeedback(suggestions.map(s => s.video.id));
+  const goalVideos = useAnalysisGoalVideos(module, sport);
+  const goalPicks = goalVideos.suggestions.filter(pick => !suggestions.some(s => s.video.id === pick.video.id));
+  const feedback = useVideoFaultFeedback([...suggestions, ...goalPicks].map(s => s.video.id));
   // Never a blank shelf: if nothing matches the fault, offer the closest
   // foundational video for this part of the game, labelled as exactly that.
   const { results: foundationPicks } = useFoundationVideos({
@@ -141,7 +144,31 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
 
 
 
-      {!hasFeedbackKeys ? (
+      {goalVideos.error ? <p role="alert" className="text-sm text-destructive">Couldn't check your goal videos. Try again later.</p>
+        : goalVideos.isPending ? <p role="status" className="text-sm text-muted-foreground">Checking your goal videos…</p>
+        : goalPicks.length > 0 ? <section aria-label="Videos for saved goals" className="space-y-2">
+          <h4 className="text-sm font-semibold">For your saved goals</h4>
+          {goalPicks.map(({ video, reasons }) => <div key={video.id} className="flex items-start gap-3 rounded-md border bg-card p-2">
+            <VideoThumb videoUrl={video.video_url} thumbnailUrl={video.thumbnail_url} title={video.title} className="h-16 w-24 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium break-words">{video.title}</p>
+              {reasons.map(reason => <p key={reason} className="text-xs text-muted-foreground">{reason}</p>)}
+              <div className="mt-2 flex flex-wrap gap-1">
+                <Button size="sm" onClick={() => {
+                  if (!video.video_url) return;
+                  if (user) trackVideoWatched(user.id, video.id, 0).catch(() => {});
+                  setPlaying({ id: video.id, title: video.title, video_url: video.video_url, thumbnail_url: video.thumbnail_url });
+                }}><Play className="mr-1 h-3 w-3" />Watch</Button>
+                {feedback.canRecord && <Button size="sm" variant="ghost" aria-label={`Save ${video.title} for later`}
+                  onClick={() => feedback.toggleSave(video.id, {
+                    skillDomain: skillDomain ?? 'hitting', faultTagKey: null, faultTagLayer: null, source: 'analysis_recommendation',
+                  })}><Bookmark className="h-3.5 w-3.5" /></Button>}
+              </div>
+            </div>
+          </div>)}
+        </section> : null}
+
+      {!hasFeedbackKeys && goalPicks.length > 0 ? null : !hasFeedbackKeys ? (
         <p className="text-sm text-muted-foreground">
           This analysis didn't flag a fault we can match a video to.
         </p>

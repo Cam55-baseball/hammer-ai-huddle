@@ -157,7 +157,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
         weaknessAreas: [],
         module,
         sport,
-      }), ...goalMatches].filter((m, i, all) => all.findIndex(x => x.drill.id === m.drill.id) === i),
+      }), ...goalMatches.slice(0, 2)].filter((m, i, all) => all.findIndex(x => x.drill.id === m.drill.id) === i),
     [catalog, circulation, violations, faultKeys, includePendingReview, pieV2Signals, weaknessAreas, module, sport, goalMatches],
   );
   // History stays intact: once a video's prescription is shown, the same drills

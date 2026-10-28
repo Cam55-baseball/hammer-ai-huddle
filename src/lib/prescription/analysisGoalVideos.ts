@@ -10,7 +10,7 @@ export type GoalLibraryVideo = Pick<LibraryVideo, 'id' | 'title' | 'video_url' |
 /** Only explicit attachments read through athlete library access become goal videos. */
 export function resolveGoalVideos(matches: PrescriptionMatch[], videos: GoalLibraryVideo[], module: string, sport: string, positions: string[]) {
   if (!['hitting', 'pitching', 'throwing'].includes(module) || !['baseball', 'softball'].includes(sport)) return [];
-  return videos.flatMap(video => {
+  const resolved = videos.flatMap(video => {
     if (!video.video_url?.trim() || normalizeTier(video.distribution_tier) === 'blocked'
       || video.moderation_removed_at || video.video_class === 'foundation') return [];
     if (video.sport?.length && !video.sport.includes(sport) && !video.sport.includes('both')) return [];
@@ -21,4 +21,6 @@ export function resolveGoalVideos(matches: PrescriptionMatch[], videos: GoalLibr
     if (!linked.length) return [];
     return [{ video, reasons: [...new Set(linked.flatMap(match => match.reasons))], faultScope: undefined }];
   });
+  return resolved.sort((a, b) => matches.findIndex(m => m.drill.libraryVideoId === a.video.id)
+    - matches.findIndex(m => m.drill.libraryVideoId === b.video.id)).slice(0, 2);
 }

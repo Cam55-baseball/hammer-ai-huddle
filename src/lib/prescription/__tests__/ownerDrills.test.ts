@@ -12,6 +12,16 @@ const row = (o: Partial<OwnerDrillRow>): OwnerDrillRow => ({
 });
 
 describe("owner drill builder", () => {
+  it('keeps the explicit library identity through every category projection', () => {
+    const catalog = mergeCatalog([], [row({ library_video_id: 'library-123', placements: ['analysis:baseball:hitting', 'analysis:baseball:throwing'] })]);
+    expect(catalog.map(d => d.libraryVideoId)).toEqual(['library-123', 'library-123']);
+  });
+  it('replacements retain or clear attachments without guessing an identity from a URL', () => {
+    const base = [{ ...ELITE_DRILL_CATALOG[0], libraryVideoId: 'old' }];
+    const replacement = row({ overrides_drill_id: base[0].id, placements: [], library_video_id: 'new' });
+    expect(mergeCatalog(base, [replacement])[0].libraryVideoId).toBe('new');
+    expect(mergeCatalog(base, [{ ...replacement, library_video_id: null, video_url: 'https://example.test/new.mp4' }])[0].libraryVideoId).toBeNull();
+  });
   it("an owner-created drill is matched for its fault", () => {
     const catalog = mergeCatalog(ELITE_DRILL_CATALOG, [row({})]);
     const hits = matchPrescriptionDrills({ catalog, faultKeys: ["front_heel_not_down_at_landing"], module: "hitting", sport: "baseball", max: 50 });

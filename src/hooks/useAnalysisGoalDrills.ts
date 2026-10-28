@@ -20,7 +20,7 @@ export function useAnalysisGoalDrills(module: string | null | undefined, sport: 
   });
   const isPending = !drills.ready || (!!drills.userId && goals.isPending);
   const matches = useMemo(() => isPending || goals.isError || drills.error ? []
-    : matchGoalDrills(drills.catalog, goals.data ?? [], module ?? '', sport ?? ''),
+    : matchGoalDrills(drills.catalog, goals.data ?? [], module ?? '', sport ?? '', drills.catalog.length),
   [isPending, goals.isError, drills.error, drills.catalog, goals.data, module, sport]);
   return { ...drills, matches, isPending, goalError: goals.error, goals: goals.data ?? [] };
 }
