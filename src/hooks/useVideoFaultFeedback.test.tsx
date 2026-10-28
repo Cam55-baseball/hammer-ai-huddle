@@ -15,11 +15,13 @@ describe('confirmed video feedback saves', () => {
   it('does not grant saved state when the canonical insert fails', async () => {
     state.writeError = new Error('save rejected');
     const hook = renderHook(() => useVideoFaultFeedback(['v']));
+    await act(async () => {});
     await act(async () => { await hook.result.current.toggleSave('v', ctx); });
     expect(hook.result.current.isSaved('v')).toBe(false);
   });
   it('retains saved state when removal fails', async () => {
     const hook = renderHook(() => useVideoFaultFeedback(['v']));
+    await act(async () => {});
     await act(async () => { await hook.result.current.toggleSave('v', ctx); });
     expect(hook.result.current.isSaved('v')).toBe(true);
     state.writeError = new Error('delete rejected');
@@ -28,6 +30,7 @@ describe('confirmed video feedback saves', () => {
   });
   it('does not borrow another account saved flags', async () => {
     const hook = renderHook(() => useVideoFaultFeedback(['v']));
+    await act(async () => {});
     await act(async () => { await hook.result.current.toggleSave('v', ctx); });
     state.userId = 'b'; hook.rerender();
     await waitFor(() => expect(hook.result.current.isSaved('v')).toBe(false));
