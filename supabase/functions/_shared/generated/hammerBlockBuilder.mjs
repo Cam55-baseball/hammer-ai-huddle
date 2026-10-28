@@ -774,8 +774,8 @@ function resolveSkillDaysTarget(rung, modality, position, injuryRegions = [], li
     const bridgeTarget = modality === "throwing" && isPitcher(position) ? PITCHER_THROWING_LADDER.bridge : POSITION_LADDER[modality].bridge;
     target = Math.min(target, bridgeTarget);
   }
-  const hasLeg = injuryRegions.some((r) => LEG_INJURIES.has(r.toLowerCase()));
-  const hasArm = injuryRegions.some((r) => ARM_INJURIES.has(r.toLowerCase()));
+  const hasLeg = injuryRegions.some((r) => LEG_INJURIES.has(r.trim().toLowerCase()));
+  const hasArm = injuryRegions.some((r) => ARM_INJURIES.has(r.trim().toLowerCase()));
   if ((modality === "defense" || modality === "baserunning") && hasLeg) {
     target = Math.min(target, 2);
   }
