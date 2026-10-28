@@ -212,6 +212,17 @@ const sections: LegalSection[] = [
     ),
   },
   {
+    id: "embedded-videos",
+    title: "Embedded videos",
+    body: (
+      <p>
+        Some instructional videos are embedded from their creators' platforms; all rights remain
+        with their owners. To request removal, contact{" "}
+        <a href="mailto:hammersmodality@hammersmodality.org">hammersmodality@hammersmodality.org</a>.
+      </p>
+    ),
+  },
+  {
     id: "changes",
     title: "Changes to these terms",
     body: (
