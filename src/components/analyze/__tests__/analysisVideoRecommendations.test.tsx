@@ -17,6 +17,7 @@ const open = () => render(<MemoryRouter><AnalysisVideoRecommendations analysis={
 describe('goal shelf stays independent of clip faults', () => {
   it('shows a clean-clip goal video and uses canonical playback/save with no fault attribution', () => {
     state.goals = [{ video, reasons: ['Your goal: Barrel control'] }]; state.faults = []; state.error = null;
+    state.watched.mockResolvedValue(null);
     open();
     expect(screen.getByRole('region', { name: 'Videos for saved goals' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Watch' }));
