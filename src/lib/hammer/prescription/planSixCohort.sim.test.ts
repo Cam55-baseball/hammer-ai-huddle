@@ -140,7 +140,9 @@ describe('AT1: ranked weekly skill blocks through the actual builder, both sport
           expect(skills[0].modality).toBe('defense'); sharedFieldingFirst++;
         }
       }
-      expect(goalHitting - baselineHitting).toBe(8);
+      // Owner Oct 28: everyone already trains hitting on all 6 days, so a goal adds no day.
+      expect(goalHitting - baselineHitting).toBe(0);
+      expect(baselineHitting).toBe(48);
       expect(sharedFieldingFirst).toBeGreaterThan(0);
     });
   }
@@ -198,7 +200,8 @@ describe('AT4: subscription-qualified ranked goals through actual daily plans', 
           }
         }
       }
-      expect(totals.hit - totals.baseHit).toBe(tier === 'pitcher' ? 0 : 8);
+      // Owner Oct 28: 6-day week for everyone — no goal-added hitting day remains.
+      expect(totals.hit - totals.baseHit).toBe(0);
       // This actual builder resolves the build rung: all three legal fielding
       // phase slots are already occupied, so a top goal cannot add a fourth.
       expect(totals.field - totals.baseField).toBe(0);
