@@ -2926,6 +2926,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       positives,
       improvements,
       clean_reason,
+      ...writtenFields,
       drills,
       scorecard,
       // The structured fault flags. The client matches library videos and
