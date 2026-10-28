@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-const state = vi.hoisted(() => ({ userId: 'a', doneAt: '2026-01-01T12:00:00Z', update: vi.fn(), eq: vi.fn(), invalidate: vi.fn() }));
+const state = vi.hoisted(() => ({ userId: 'a', doneAt: '2026-01-01T12:00:00Z', serverDoneAt: '2026-01-01T12:00:00Z', update: vi.fn(), eq: vi.fn(), invalidate: vi.fn() }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: state.userId } }) }));
 vi.mock('@tanstack/react-query', () => ({ useQuery: () => ({ data: { movement_screen: { history: { current_pain: 'yes' } }, movement_done_at: state.doneAt }, error: null, isPending: false }), useQueryClient: () => ({ invalidateQueries: state.invalidate }) }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { from: () => ({ update: state.update }) } }));
@@ -10,10 +10,25 @@ vi.mock('@/components/hammer/ReportInjuryDialog', () => ({ ReportInjuryDialog: (
 import { movementGroups } from '@/lib/assessment/movementScreen';
 import { SavedMovementSummary } from './SavedMovementSummary';
 beforeEach(() => {
-  vi.clearAllMocks(); state.userId = 'a'; state.doneAt = '2026-01-01T12:00:00Z';
-  state.update.mockImplementation((patch: any) => ({ eq: (...args: any[]) => { state.eq(...args); return { select: () => ({ single: async () => ({ data: { movement_done_at: patch.movement_done_at }, error: null }) }) }; } }));
+  vi.clearAllMocks(); state.userId = 'a'; state.doneAt = '2026-01-01T12:00:00Z'; state.serverDoneAt = state.doneAt;
+  state.update.mockImplementation((patch: any) => {
+    let matches = true;
+    const builder = { eq: (...args: any[]) => { state.eq(...args); if (args[0] === 'movement_done_at') matches = args[1] === state.serverDoneAt; return builder; }, select: () => ({ single: async () => ({ data: matches ? { movement_done_at: patch.movement_done_at } : null, error: matches ? null : new Error('stale source') }) }) };
+    return builder;
+  });
 });
 describe('re-screen draft ownership', () => {
+  it('does not confirm a stale draft over a newer server screen', async () => {
+    render(<SavedMovementSummary />);
+    fireEvent.click(screen.getByRole('button', { name: 'Re-check movement & safety' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Enter complete test screen' }));
+    state.serverDoneAt = '2026-02-01T12:00:00Z';
+    fireEvent.click(screen.getByRole('button', { name: 'Save movement check' }));
+    await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
+    expect(state.eq).toHaveBeenCalledWith('movement_done_at', state.doneAt);
+    expect(state.invalidate).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Save movement check' })).toBeTruthy();
+  });
   it('does not carry a self draft into another account', () => {
     const view = render(<SavedMovementSummary />);
     fireEvent.click(screen.getByRole('button', { name: 'Re-check movement & safety' }));

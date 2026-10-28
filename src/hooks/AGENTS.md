@@ -1,0 +1,1 @@
+- Library feedback writes require confirmed account/list reads and one pending operation per video/table; merge confirmed results. Why: stale reads and concurrent writes must not erase saved choices or invent fault attribution.
