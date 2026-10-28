@@ -61,3 +61,4 @@
 - Mastery: gated judges, weekly boost, JWT-only new days; saved sport, no backfill. Why: provenance.
 - Read nested AGENTS.md, including hooks. Why: scoped consistency.
 - Goal shelves share self-scoped goal reads and resolve explicit athlete-readable library IDs without fault attribution. Why: goals and URLs cannot invent faults or library identity.
+- Owner conditioning drills (`placements` hammers_today:conditioning) serve only the weekly running floor in `wk-generate-daily`, validated by `_shared/wic/conditioning/ownerConditioning.ts` against `runRest.ts`, inheriting the built-in floor movement's legality. Why: owner numbers are used as entered without a new safety limit or a second conditioning path.

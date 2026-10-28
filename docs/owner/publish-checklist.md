@@ -2,7 +2,7 @@
 
 **Batch closeout · October 28, 2026 · after the owner's "both, combined" answer**
 
-**Ready to publish: NO.** (Oct 28 18:00 UTC: full suite 634 files / 5,103 tests PASS; preview build OK.) One owner-requested item is still open: owner drills tagged "conditioning" are not used by the plan, because the drill builder has no work/rest/rounds fields and a dose would have to be made up. Owner to choose "Add fields" or "Leave it" ("Leave it" flips this to YES).
+**Ready to publish: YES.** (Oct 28 18:50 UTC: full suite 635 files / 5,113 tests PASS in three bounded batches; preview build OK.) Owner chose "Add fields": conditioning-tagged owner drills now carry rounds, work time, rest time and distance (or bases per rep + sport base distance), validated against the existing run-rest rules, and serve the 2-a-week running floor (readiness halves rounds, rest never shortened, never Sunday/game day/HOLD). `wk-generate-daily` redeployed under named authorization; migration 0146 applied. Human-only checks below remain the owner's and do not block.
 
 Oct 28 owner additions (built this run):
 - Drill video links: YouTube, Vimeo, TikTok, Instagram, X, Facebook play only in each platform's official embed; any other https link is a "Watch on [site]" button; checked on save with the platform name shown. Proven in the drill builder at 390x844.
@@ -10,6 +10,7 @@ Oct 28 owner additions (built this run):
 - Mind placement: study items in Before you start; breathing/focus/journaling last in the recovery card (proven at 390x844: Breathing reset sits after recovery, before the night check-in). Still counts in Discipline.
 - Running readiness (14 days: check-ins, sleep, soreness, pain, rolling load, completed/skipped work; season/game-day caps) feeds the phone plan's 40% rule and the plan service's single-step reduction; one plain line on Today. Test trend not used yet (tests aren't comparable across types; listed as missing, never guessed).
 - Conditioning floor: at least 2 running sessions/week for every player, never Sunday, game day or HOLD; position players run bases (90-ft / 60-ft), pitchers use pitcher conditioning, low readiness uses the easy-flush run. 8-week checks pass. Live plan-service run not yet seen for a real day (today's plans were already saved; not rebuilt).
+- Human check: tag one conditioning drill in the builder and confirm it appears on a weekly-floor day with your numbers.
 - Redeployed: wk-generate-daily.
 
 ## Automated verification (this run)
@@ -30,7 +31,7 @@ Oct 28 owner additions (built this run):
 | A2 Weekly minimums | **Met**: everyone gets the top schedule (hitting/defense/baserunning 6, pitcher throwing ≤5); bunting 2 for 5Tool/Golden 2Way. Youth age bands (u10–u14) still cap at 5/4/3, which is above every minimum. Injury can still lower days |
 | A3 No ramp; readiness inside sessions | **Built**: beginners no longer get fewer days; low readiness (<40%) gives the low-taxing version of every skill session, which still counts |
 | A4 Mind item | **Built**: Done button saves a log that counts in Discipline (rest days included, never in performance). On a prescribed day, Tex Vision opens the player's real Tex Vision session |
-| A5 Owner tags used by the plan | Hitting, bat speed, throwing, pitching, low-taxing defense (before); **now also baserunning, bunting (exact type + side) and Mind**. **Conditioning: not used** (see reason above) |
+| A5 Owner tags used by the plan | All categories used, **including conditioning** (owner numbers, validated; weekly running floor only; pitchers never get base routes) |
 | A6 8-week simulations | **Real-plan simulations pass** (above) |
 | B1 Upload or YouTube/Vimeo link | Built |
 | B2 Credit/takedown notice | Built; waiting on lawyer review |
