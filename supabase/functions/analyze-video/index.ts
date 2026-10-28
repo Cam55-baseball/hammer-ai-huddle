@@ -17,7 +17,7 @@ import {
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
 import { chatCompletion, type ChatCompletionRequest } from "../_shared/googleAi.ts";
-import { classicGatewayCompletion, isClassicRoute } from "../_shared/classicAnalysis.ts";
+import { classicGatewayCompletion, isClassicRoute, CLASSIC_ANALYSIS_ROUTE, videoStoragePath } from "../_shared/classicAnalysis.ts";
 
 /** Classic engine first (no artificial cut-off); today's direct route and backup keep their limits. */
 function routeAnalysis(route: string, req: ChatCompletionRequest) {
