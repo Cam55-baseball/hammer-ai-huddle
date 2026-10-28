@@ -17,7 +17,7 @@ import {
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
 import { chatCompletion, type ChatCompletionRequest } from "../_shared/googleAi.ts";
-import { classicGatewayCompletion, isClassicRoute } from "../_shared/classicAnalysis.ts";
+import { classicGatewayCompletion, isClassicRoute, CLASSIC_ANALYSIS_ROUTE, videoStoragePath } from "../_shared/classicAnalysis.ts";
 
 /** Classic engine first (no artificial cut-off); today's direct route and backup keep their limits. */
 function routeAnalysis(route: string, req: ChatCompletionRequest) {
@@ -63,7 +63,10 @@ const requestSchema = z.object({
   // older client sends malformed are dropped, never a refusal. Only "no picture
   // at all" can stop a report.
   language: z.string().optional().catch(undefined),
-  frames: z.array(z.string()).min(1, "No readable picture in this clip"),
+  // Optional since Oct 28: the server watches the uploaded clip itself. Older
+  // clients still send phone-made frames; they are only a fallback.
+  frames: z.array(z.unknown()).optional().catch(undefined)
+    .transform((rows) => (rows ?? []).filter((f): f is string => typeof f === "string")),
   landingFrameIndex: z.number().optional().catch(undefined),
   /**
    * Phase 1 — deterministic frame extraction audit. One entry per extracted
@@ -1765,7 +1768,7 @@ Deno.serve(async (req) => {
 
     const { data: videoRow } = await supabase
       .from("videos")
-      .select("user_id, module, sport, batting_side, sha256_hex, fps_true, achieved_fps, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
+      .select("user_id, module, sport, batting_side, sha256_hex, fps_true, achieved_fps, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status, video_url")
       .eq("id", videoId)
       .maybeSingle();
 
@@ -1879,10 +1882,20 @@ Deno.serve(async (req) => {
     // Owner ruling 2026-10-27: resolution, frame rate, length and dropped
     // frames never refuse coaching. Only clips with no decodable frame do.
     void PHASE1_MIN_FPS; void PHASE1_MIN_WIDTH; void PHASE1_MIN_HEIGHT; void PHASE1_MIN_DURATION_SEC; void PHASE1_MAX_DURATION_SEC; void PHASE1_MAX_DROPPED_RATIO;
-    if (frames.length < 1) {
+    // Oct 28: the coach watches the uploaded clip itself, fetched here from
+    // storage through a short-lived private link. Phone-made frames are only a
+    // fallback, so the report never depends on the phone decoding the video.
+    const clipStoragePath = videoStoragePath((videoRow as { video_url?: string | null }).video_url ?? null);
+    let clipUrl: string | null = null;
+    if (clipStoragePath) {
+      const signed = await supabase.storage.from("videos").createSignedUrl(clipStoragePath, 3600);
+      clipUrl = signed.data?.signedUrl ?? null;
+      if (!clipUrl) console.warn(`[ANALYZE-VIDEO] clip link failed for ${videoId}: ${signed.error?.message ?? "unknown"}`);
+    }
+    if (frames.length < 1 && !clipUrl) {
       return await writeReject(
-        "reject_unreadable_frames",
-        `usable_frames=${frames.length} of ${rawFrames.length} (malformed=${malformedCount})`,
+        "reject_unreadable_video",
+        `no_clip_file_and_no_frames (frames=${rawFrames.length}, malformed=${malformedCount})`,
       );
     }
 
@@ -2111,6 +2124,28 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     }
     
     console.log(`[ANALYZE-VIDEO] Built multimodal message with ${frames.length} frames`);
+
+    // The whole uploaded clip, watched by the model itself (primary input).
+    const videoContent: unknown[] = clipUrl ? [
+      {
+        type: 'text',
+        text: `${historicalContext}
+
+---
+
+CURRENT VIDEO ANALYSIS - FULL VIDEO CLIP:
+
+You are watching the athlete's whole uploaded ${sport} ${module} video clip. Watch it all the way through, including slow sections, and coach the rep you can see.
+${positionContext}
+${landingTimeSec != null
+  ? `\n\n⭐⭐⭐ USER HAS MARKED about ${landingTimeSec.toFixed(2)} seconds into the clip as the EXACT MOMENT of front foot landing. Use that moment as the primary reference for all alignment checks. ⭐⭐⭐`
+  : `\n\nIDENTIFY the landing moment yourself: the moment the front foot FIRST makes contact with the ground. This is your reference point for all alignment checks.`}
+${alignmentChecksInstruction}
+
+${hasHistory ? `Based on the historical data above and this current analysis, generate "The Scorecard" progress report comparing current performance to ALL previous uploads.` : `This is the player's first analysis - establish a baseline.`}`,
+      },
+      { type: 'video_url', video_url: { url: clipUrl } },
+    ] : [];
     // ===== END MULTIMODAL CONTENT BUILD =====
 
     // Call AI (Google AI Studio direct, Lovable Gateway fallback) with tool-calling for structured output
@@ -2120,13 +2155,13 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       await supabase.from("videos").update({ status: "uploading" }).eq("id", videoId);
       return new Response(JSON.stringify({ error: HOURLY_LIMIT_MESSAGE, code: "hourly_limit", resume_at: await hourlyResumeAt(supabase, userId), video_id: videoId }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const aiResult = await reliableAnalysis((route) => routeAnalysis(route, {
+    const buildAnalysisRequest = (route: string, content: unknown[]): ChatCompletionRequest => ({
       model: route,
       // Determinism lock: same video → same scores. Do not relax.
       temperature: 0,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userContent as any },
+        { role: "user", content: content as any },
       ],
       tools: [
         {
@@ -2277,7 +2312,21 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         }
       ],
       tool_choice: { type: "function", function: { name: "return_analysis" } }
-    }), (result) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result }));
+    });
+    const logUsage = (result: Awaited<ReturnType<typeof routeAnalysis>>) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result });
+    // The whole clip goes to the classic gateway model (the only route that
+    // takes video). Phone frames are used only when the clip itself can't be
+    // watched and an older client sent them.
+    const runOnVideo = () => reliableAnalysis(() => classicGatewayCompletion(buildAnalysisRequest(CLASSIC_ANALYSIS_ROUTE, videoContent), { timeoutMs: 150_000 }), logUsage);
+    const runOnFrames = () => reliableAnalysis((route) => routeAnalysis(route, buildAnalysisRequest(route, userContent)), logUsage);
+    let analysisInput: "video" | "frames" = clipUrl ? "video" : "frames";
+    let aiResult: Awaited<ReturnType<typeof runOnFrames>> = clipUrl ? (await runOnVideo()) as Awaited<ReturnType<typeof runOnFrames>> : await runOnFrames();
+    if (clipUrl && !(aiResult.ok && hasStructuredAnalysis(aiResult.data)) && !analysisRefused(aiResult.data) && frames.length > 0) {
+      console.warn(`[ANALYZE-VIDEO] whole-clip analysis failed (status ${aiResult.status}); using the client's frames`);
+      aiResult = await runOnFrames();
+      analysisInput = "frames";
+    }
+    console.log(`[ANALYZE-VIDEO] analysis input=${analysisInput} ok=${aiResult.ok} status=${aiResult.status}`);
     if (!aiResult.ok) {
       const errorText = aiResult.errorBody || "";
       console.error("AI provider error:", aiResult.provider, aiResult.status, errorText);
@@ -2567,6 +2616,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       original_ai_score: originalAiScore,
       model_used: MODEL_ID,
       analysis_engine: ANALYSIS_ENGINE,
+      analysis_input: analysisInput,
       // Hammer Report Card structured measurements (additive).
       metrics: metrics ?? null,
       report_card_contract_id: reportCardContract?.id ?? null,
@@ -2871,6 +2921,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       audit_persistence: auditPersistence,
       saved: true,
       analysis_engine: ANALYSIS_ENGINE,
+      analysis_input: analysisInput,
       model_used: MODEL_ID,
     };
 
