@@ -78,8 +78,8 @@ describe("Today fix-it slot for a recurring issue", () => {
 
 describe("seeded replay with the real Hammers library", () => {
   it("the stored row from two saved analyses puts a real tagged drill in Today with its Because line", async () => {
-    const { ELITE_DRILLS } = await import("@/data/drills/eliteDrillCatalog");
-    const out = run([issue], ELITE_DRILLS as EliteDrill[]);
+    const { ELITE_DRILL_CATALOG } = await import("@/data/drills/eliteDrillCatalog");
+    const out = run([issue], ELITE_DRILL_CATALOG);
     expect(out.drills[0].analysisInfluence?.recurring?.analysisCount).toBe(2);
     expect(out.because?.at(-1)).toMatch(/^Because "front shoulder opens early" keeps showing up/);
   });
