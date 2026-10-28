@@ -43,8 +43,6 @@ import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCard
 import { canSeeReportCard, videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { InternalLabel } from "@/components/InternalLabel";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
-import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
-import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
 import { densePoseRowToPoseFrameRow, type PoseFrameRow } from "@/lib/biomech/pose/poseRunner";
 import { resolveClipSide, frontAnkleIndex, deriveDirectionSign } from "@/lib/biomech/side/strideSide";
 import { checkDeclaredSide } from "@/lib/biomech/side/sideCheck";
@@ -68,7 +66,8 @@ import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
 import { evaluateMovementGate, type MovementGateResult } from "@/lib/biomech/gates/movementGate";
 import { diagnoseTrack } from "@/lib/biomech/pose/trackDiagnosis";
 import { detectCameraView } from "@/lib/biomech/camera/cameraView";
-import { fpsProvenance } from "@/lib/biomech/probeVideoMetadata";
+import { fpsProvenance, probeVideoMetadata, type ProbedVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
+import { readUploadFacts } from "@/lib/upload/uploadFacts";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 import { useSmartBack } from "@/hooks/useSmartBack";
