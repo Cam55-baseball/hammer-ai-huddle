@@ -36,6 +36,13 @@ export interface OwnerDrillRow {
   bat_speed_kind?: string | null;
   bunt_type?: string | null;
   bunt_side?: string | null;
+  conditioning_kind?: string | null;
+  work_seconds?: number | null;
+  rest_seconds?: number | null;
+  rounds?: number | null;
+  distance_feet?: number | null;
+  bases_per_rep?: number | null;
+  base_distance_feet?: number | null;
   active: boolean;
   pinned: boolean;
   created_at: string;

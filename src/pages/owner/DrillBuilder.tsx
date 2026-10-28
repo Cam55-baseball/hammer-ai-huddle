@@ -25,6 +25,7 @@ import { useVideoLibrary } from '@/hooks/useVideoLibrary';
 import { BuilderLibraryLink } from '@/components/owner/BuilderLibraryLink';
 import { DrillCmsManager } from '@/components/owner/DrillCmsManager';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { ownerConditioningProblems } from '../../../supabase/functions/_shared/wic/conditioning/ownerConditioning';
 import { SKILL_AREAS, ROUTINE_ROLES, BAT_SPEED_KINDS, validDrillRoleTags } from '@/lib/prescription/drillRoleTags';
 
 const SLOT_LABEL: Record<PlanSlot, string> = {
@@ -35,6 +36,7 @@ const SLOT_LABEL: Record<PlanSlot, string> = {
   "hammers_today:baserunning": "Baserunning block",
   "hammers_today:bunting": "Bunting (exact type and side)",
   "hammers_today:mind": "Daily Mind item",
+  "hammers_today:conditioning": "Weekly running minimum (conditioning)",
 };
 const BUNT_TYPES = ["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"] as const;
 
@@ -171,6 +173,10 @@ export default function DrillBuilder() {
   const save = async () => {
     if (!draft || saving) return;
     if (!validDrillRoleTags(draft)) { toast({ title: 'Check the drill role tags' }); return; }
+    if (draft.placements.includes('hammers_today:conditioning')) {
+      const problems = ownerConditioningProblems(draft);
+      if (problems.length) { toast({ title: 'Conditioning numbers need fixing', description: `Add ${problems.join(', ')}.` }); return; }
+    }
     if (!draft.name.trim() || draft.placements.length === 0) {
       toast({ title: "Name and at least one place to land are required" });
       return;
@@ -459,6 +465,14 @@ export default function DrillBuilder() {
                 {draft.placements.includes('hammers_today:bunting') && <div className="grid grid-cols-2 gap-2">
                   <div><Label>Bunt type</Label><Select value={draft.bunt_type ?? 'none'} onValueChange={value => set('bunt_type', value === 'none' ? null : value)}><SelectTrigger aria-label="Bunt type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem>{BUNT_TYPES.map(value => <SelectItem key={value} value={value}>{value.replace(/_/g, ' ')}</SelectItem>)}</SelectContent></Select></div>
                   <div><Label>Bunt side</Label><Select value={draft.bunt_side ?? 'none'} onValueChange={value => set('bunt_side', value === 'none' ? null : value)}><SelectTrigger aria-label="Bunt side"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem><SelectItem value="R">Right-handed</SelectItem><SelectItem value="L">Left-handed</SelectItem></SelectContent></Select></div>
+                </div>}
+                {draft.placements.includes('hammers_today:conditioning') && <div className="grid grid-cols-2 gap-2 sm:col-span-2">
+                  <div className="col-span-2"><Label>Conditioning type</Label><Select value={draft.conditioning_kind ?? 'none'} onValueChange={value => setDraft(d => d && ({ ...d, conditioning_kind: value === 'none' ? null : value, base_distance_feet: value === 'base_route' && d.sports.length === 1 ? (d.sports[0] === 'softball' ? 60 : 90) : d.base_distance_feet }))}><SelectTrigger aria-label="Conditioning type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not set</SelectItem><SelectItem value="run">Run (set distance)</SelectItem><SelectItem value="base_route">Base route</SelectItem></SelectContent></Select></div>
+                  <div><Label>Rounds</Label><Input aria-label="Rounds" type="number" inputMode="numeric" value={draft.rounds ?? ''} onChange={e => set('rounds', e.target.value === '' ? null : Math.round(Number(e.target.value)))} /></div>
+                  <div><Label>Work time (seconds)</Label><Input aria-label="Work time in seconds" type="number" inputMode="numeric" value={draft.work_seconds ?? ''} onChange={e => set('work_seconds', e.target.value === '' ? null : Math.round(Number(e.target.value)))} /></div>
+                  <div><Label>Rest time (seconds)</Label><Input aria-label="Rest time in seconds" type="number" inputMode="numeric" value={draft.rest_seconds ?? ''} onChange={e => set('rest_seconds', e.target.value === '' ? null : Math.round(Number(e.target.value)))} /></div>
+                  {draft.conditioning_kind === 'base_route' ? <><div><Label>Bases per rep (1–4)</Label><Input aria-label="Bases per rep" type="number" inputMode="numeric" value={draft.bases_per_rep ?? ''} onChange={e => set('bases_per_rep', e.target.value === '' ? null : Math.round(Number(e.target.value)))} /></div><div><Label>Base distance</Label><Select value={String(draft.base_distance_feet ?? 'none')} onValueChange={value => set('base_distance_feet', value === 'none' ? null : Number(value))}><SelectTrigger aria-label="Base distance"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not set</SelectItem><SelectItem value="90">90 ft (baseball)</SelectItem><SelectItem value="60">60 ft (softball)</SelectItem></SelectContent></Select></div></> : num('distance_feet','Distance (feet)','Distance in feet')}
+                  <p className="col-span-2 text-xs text-muted-foreground">Safety limits still apply: runs rest at least 1 minute per 10 yards (up to 5 minutes); base routes rest at least 30 seconds and 5 minutes after every 4 bases. Low readiness halves the rounds.</p>
                 </div>}
               </div>
               <div className="space-y-2"><Label htmlFor="drill-library-search">Video library</Label><Input id="drill-library-search" placeholder="Search library videos" value={videoSearch} onChange={e => setVideoSearch(e.target.value)} /><div className="max-h-48 space-y-1 overflow-y-auto">{libraryVideos.filter(video => video.video_url).map(video => <Button key={video.id} type="button" variant={draft.library_video_id === video.id ? 'default' : 'outline'} className="h-auto w-full justify-start whitespace-normal break-words text-left" onClick={() => { setDraft(d => d && ({ ...d, library_video_id: video.id, video_url: video.video_url })); setVideoFile(null); }}>{video.title}</Button>)}</div>{videosLoading && <p role="status" className="text-xs text-muted-foreground">Loading videos…</p>}{moreVideos && <Button type="button" variant="ghost" disabled={videosLoading} onClick={loadMoreVideos}>More videos</Button>}</div>

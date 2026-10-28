@@ -9,13 +9,14 @@
  * newly switched-on drill is served within (pool size) days.
  */
 import type { OwnerDrillRow } from "./ownerDrills";
+import { ownerConditioningProblems } from "../../../supabase/functions/_shared/wic/conditioning/ownerConditioning";
 
 export type PlanSlot = "hammers_today:skill" | "hammers_today:warmup" | "hammers_today:defense" | "defensive_library"
-  | "hammers_today:baserunning" | "hammers_today:bunting" | "hammers_today:mind";
+  | "hammers_today:baserunning" | "hammers_today:bunting" | "hammers_today:mind" | "hammers_today:conditioning";
 export type SkillBlock = "hitting" | "throwing";
 
 export const PLAN_SLOTS: PlanSlot[] = ["hammers_today:skill", "hammers_today:warmup", "hammers_today:defense", "defensive_library",
-  "hammers_today:baserunning", "hammers_today:bunting", "hammers_today:mind"];
+  "hammers_today:baserunning", "hammers_today:bunting", "hammers_today:mind", "hammers_today:conditioning"];
 
 let rows: OwnerDrillRow[] = [];
 let loading: Promise<void> | null = null;
@@ -72,6 +73,7 @@ export function missingForPlacement(r: Omit<OwnerDrillRow, "created_at" | "id">,
     if (!["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"].includes(clean(r.bunt_type))) miss.push("a bunt type");
     if (!["R", "L"].includes(clean(r.bunt_side))) miss.push("a bunt side");
   }
+  if (slot === "hammers_today:conditioning") miss.push(...ownerConditioningProblems(r));
   if (slot === "hammers_today:mind" && r.equipment.length > 0) miss.push("no equipment (Mind items are non-physical)");
   return miss;
 }
