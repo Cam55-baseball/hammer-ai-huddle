@@ -460,9 +460,13 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     setPreflightChecking(true);
     void (async () => {
       try {
-        const meta = await probeVideoMetadata(prepared).catch(() => null);
-        const fps = meta && meta.fps_source === "container" ? meta.fps_true ?? null : null;
-        setPreflight(await runClipPreflight(prepared, fps));
+        // Advisory only; a phone that can't play the clip just skips it.
+        const giveUp = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("preflight_timeout")), 15_000));
+        await Promise.race([(async () => {
+          const meta = await probeVideoMetadata(prepared).catch(() => null);
+          const fps = meta && meta.fps_source === "container" ? meta.fps_true ?? null : null;
+          setPreflight(await runClipPreflight(prepared, fps));
+        })(), giveUp]);
       } catch (err) {
         console.warn("[clip-preflight] skipped", err);
       } finally {

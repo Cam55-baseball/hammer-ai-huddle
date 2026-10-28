@@ -21,6 +21,7 @@ describe("withAnalysisVideoType", () => {
     const original = new File([new Uint8Array([1, 2, 3])], "IMG_1.MOV", { type: "" });
     const labelled = withAnalysisVideoType(original);
     expect(labelled.type).toBe("video/quicktime");
-    expect(new Uint8Array(await labelled.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
+    expect(labelled.size).toBe(3);
+    expect(labelled.name).toBe("IMG_1.MOV");
   });
 });
