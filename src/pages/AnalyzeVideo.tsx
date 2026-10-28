@@ -558,7 +558,6 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     }
 
     setUploading(true);
-    const missingReport = showUnavailableReport;
 
     // ===== PHASE 0 — Clip fingerprint =====
     // Oct 28: the server watches the uploaded clip itself. The phone only
