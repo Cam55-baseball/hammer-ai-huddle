@@ -54,3 +54,25 @@ No uploads came from the main account in the last three days. On the 55cam316 ac
 Notes: the owner's baseball "throwing" clip shows a fielding/baserunning play, and the report honestly says so. The iPhone app was not tested; it sends the same request as the live site. The 11 proof saves were then taken out of the owner's Players Club; nothing was deleted (video IDs: ccfb639a, 533d4ef7, 34bf15f0, a66e41a8, af20e43d, a28bcfda, 147b716f, 47be181e, 90d4282f, a2cf1c27, 35da25b0). The manual daily check came back "idle" because it had already run today, so the new classic requirement first runs on the next scheduled check.
 
 **Oct 28 run 2:** the 20 MB softball hitting clip only stalled because the test browser can't play iPhone-style video, so it converted the clip itself. Real iPhones and Safari play it directly and skip that step. Played in a format the test browser handles, at the same size, it passed on the preview and the live site. The 2 proof saves were taken out of Players Club (380862ee, 67e73e1b). The only gap left: the live site and the Oct 22 iPhone build still refuse clips under 320 px on the phone before anything reaches the server. A backend change can't reach that check. It goes away when the preview is published and a new iPhone build is made.
+
+## 6. The owner's own preview attempts (Oct 27, 02:44–03:41 UTC, hitting) — Oct 28 run 3
+**What happened:** the server analyzed all five clips and saved coaching. The 02:48–03:41 saves had drills and cues; the 02:44 save was a thin "couldn't judge" report. But the preview app at that time had a catch-all: any error on the phone during or after the request swapped the report on screen for its own local "Hitting report: Not measured" stand-in, marked "not saved". The headline under the video was also driven by a "not measured" flag, not by whether coaching text existed. And the phone could never double-check the saved copy itself: players aren't allowed to read the report column directly (a deliberate privacy rule), so any direct re-read was refused. That is why the owner saw "Not measured" and "saved copy could not be confirmed" while full coaching sat in the database.
+
+**Fixed (preview):**
+- Whenever the reply is lost, fails, comes back "Not measured" or comes back unconfirmed, the screen reads the clip's saved report through a new self-only reader (`get-my-analysis-report`, deployed by name). If the saved report has coaching, it shows it, marked as saved.
+- Coaching words always win: the headline and the retry button only say "Not measured" when there is no coaching text at all.
+- Extras that run after the report is on screen (video suggestions, assessment hooks) can no longer take the report away.
+- Players Club viewer: already renders summary, feedback, strengths and drills with no metrics needed; no change required.
+
+**Replay of the five saved reports through the fixed screen** (owner session, 390×844; the reply was forced to fail or come back "Not measured", and the screen pulled the real saved row):
+| Upload | Forced reply | Screen now shows |
+|---|---|---|
+| 02:44 | lost | The saved report (a thin "couldn't judge" one from before the fix); no "Not measured", no save warning |
+| 02:48 | "Not measured" stand-in | Full coaching: what to work on, top takeaway, what went well, drills |
+| 03:16 | lost | Full coaching with drills |
+| 03:20 | lost | Full coaching with drills |
+| 03:41 | "Not measured" stand-in | Full coaching with drills |
+
+Each replay created an empty upload row with no report (cdcdf9c7, ec0cf672, 2d5029af, dae59e4a, 25298d14, 78176c7e, 8a8655b9, 83fe8c54, 4bcd7e10). They aren't in Players Club and nothing was deleted.
+
+**Fresh uploads after the fix (preview, owner clips):** baseball hitting, softball pitching and softball throwing each gave a full classic report, saved on the first try, then Players Club → reopen → reload passed. The proof saves were taken out of Players Club (c6953d7e, eacc4210, 844978ce).
