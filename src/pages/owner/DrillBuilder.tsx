@@ -54,6 +54,7 @@ function PlanReadiness({ row, compact = false }: { row: Omit<OwnerDrillRow, "cre
 import { Plus, Pencil, Eye } from "lucide-react";
 import { ELITE_DRILL_CATALOG, type EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import { listDefenseCatalogForOwner } from "@/lib/hammer/prescription/defenseLibrary";
+import { isAcceptedDrillVideoUrl } from "@/lib/prescription/drillVideoSource";
 import { ANALYSIS_PLACEMENTS, OTHER_PLACEMENTS, type OwnerDrillRow } from "@/lib/prescription/ownerDrills";
 import { faultKeysFor } from "../../../supabase/functions/analyze-video/constructiveCriticism";
 
