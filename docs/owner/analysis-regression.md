@@ -45,4 +45,4 @@ Baseline: early October, when every upload got a full coaching report. Changes t
 - A failure shows only "Your analysis didn't finish. Tap Retry." with a Retry button. No report shell is saved.
 - No auto-save: uploads are temporary (`videos.temporary_until`, hidden by database rules) until Save to Players Club. `cleanup-temporary-uploads` removes unsaved uploads after 24 hours, logging each one first. The schedule SQL is in `docs/owner/temporary-upload-cleanup-cron.sql` and has NOT been run.
 
-**Known limit:** a whole-clip backup over about 15 MB is rejected by the model (the 17.7 MB clip fails; clips up to 9.8 MB pass). Big clips need the phone's pictures, which iPhone Safari takes from its own camera clips. If both fail, the athlete sees the Retry screen, never a fake report.
+**Known limit:** a whole-clip backup over about 15 MB is rejected by the model (the 17.7 MB clip fails; clips up to 9.8 MB pass). Big clips need the phone's pictures. Real iPhone Safari is expected to read its own camera clips (it did from January to September), but this sandbox cannot confirm it. If both fail, the athlete sees the Retry screen, never a fake report.
