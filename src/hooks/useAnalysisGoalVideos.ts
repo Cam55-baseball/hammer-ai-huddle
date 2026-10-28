@@ -1,0 +1,35 @@
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAnalysisGoalDrills } from './useAnalysisGoalDrills';
+import { useUserProfile } from './useUserProfile';
+import { resolvePositionGroups } from '@/lib/hammer/positions/positionGroups';
+import { resolveGoalVideos, type GoalLibraryVideo } from '@/lib/prescription/analysisGoalVideos';
+
+export function useAnalysisGoalVideos(module: string | null | undefined, sport: string | null | undefined) {
+  const goals = useAnalysisGoalDrills(module, sport);
+  const profile = useUserProfile();
+  const ids = [...new Set(goals.matches.map(match => match.drill.libraryVideoId).filter((id): id is string => !!id))].sort();
+  const positions = resolvePositionGroups(profile.profile?.position);
+  const library = useQuery({
+    queryKey: ['analysis-goal-videos', goals.userId, module, sport, ids, positions],
+    enabled: !!goals.userId && !goals.isPending && ids.length > 0 && !profile.loading,
+    queryFn: async () => {
+      // RLS remains authoritative; blocked, moderated and foundation assets stay off this shelf.
+      const { data, error } = await supabase.from('library_videos')
+        .select('id,title,video_url,thumbnail_url,sport,skill_domains,category,distribution_tier,moderation_removed_at,video_class')
+        .in('id', ids).neq('distribution_tier', 'blocked').is('moderation_removed_at', null)
+        .or('video_class.is.null,video_class.eq.application');
+      if (error) throw error;
+      const { data: tags, error: tagError } = await supabase.from('video_tag_assignments')
+        .select('video_id,video_tag_taxonomy(position_scope)').in('video_id', ids);
+      if (tagError) throw tagError;
+      return (data ?? []).map(video => ({ ...video, positionScopes: (tags ?? [])
+        .filter(tag => tag.video_id === video.id).map(tag => tag.video_tag_taxonomy?.position_scope ?? []) })) as GoalLibraryVideo[];
+    },
+  });
+  const suggestions = useMemo(() => resolveGoalVideos(goals.matches, library.data ?? [], module ?? '', sport ?? '', positions),
+    [goals.matches, library.data, module, sport, positions.join(',')]);
+  return { suggestions, error: goals.error ?? goals.goalError ?? profile.error ?? library.error,
+    isPending: goals.isPending || (ids.length > 0 && (profile.loading || library.isPending)) };
+}
