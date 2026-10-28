@@ -8,6 +8,7 @@ import { dailyMindItem, type MindKind } from "@/lib/hammer/week/weeklyVolume";
 import { useTexVisionS2Priority } from "./TexVisionS2Priority";
 import { useTexVisionProgress } from "@/hooks/useTexVisionProgress";
 import { useDailyDrillSelection } from "@/hooks/useDailyDrillSelection";
+import { loadOwnerPlanDrills, ownerMindDrill } from "@/lib/prescription/ownerPlanDrills";
 
 const COPY: Record<MindKind, { title: string; how: string }> = {
   situations: { title: "Game situations", how: "Pick 3 game spots (runner on 2nd, 1 out). Say out loud what you'd do before the pitch." },
@@ -35,7 +36,13 @@ export function MindItemCard({ planDate }: { planDate: string }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const day = Math.floor(new Date(`${planDate}T12:00:00Z`).getTime() / 86_400_000);
-  const kind = Number.isFinite(day) ? dailyMindItem(day, texVisionPrescribed).kind : null;
+  const [ownerLoaded, setOwnerLoaded] = useState(false);
+  useEffect(() => { void loadOwnerPlanDrills().then(() => setOwnerLoaded(true)); }, []);
+  const builtIn = Number.isFinite(day) ? dailyMindItem(day, texVisionPrescribed).kind : null;
+  const sport = typeof window !== "undefined" && localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball";
+  // Owner Mind-tagged drills take the non-Tex-Vision days; a prescribed Tex Vision day stays Tex Vision.
+  const owner = ownerLoaded && builtIn && builtIn !== "tex_vision" ? ownerMindDrill({ sport, day: new Date(`${planDate}T12:00:00Z`) }) : null;
+  const kind = builtIn;
 
   useEffect(() => {
     let live = true;
@@ -50,14 +57,14 @@ export function MindItemCard({ planDate }: { planDate: string }) {
   }, [planDate]);
 
   if (!kind) return null;
-  const item = COPY[kind];
+  const item = owner ? { title: owner.name, how: [owner.dosage, owner.cue].filter(Boolean).join(" · ") } : COPY[kind];
 
   const markDone = async () => {
     setSaving(true); setError(null);
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) { setSaving(false); return; }
     const { error: e } = await supabase.from("mind_item_logs")
-      .upsert({ user_id: auth.user.id, item_date: planDate, kind }, { onConflict: "user_id,item_date", ignoreDuplicates: true });
+      .upsert({ user_id: auth.user.id, item_date: planDate, kind: owner ? "owner_mind" : kind, owner_drill_id: owner?.id ?? null }, { onConflict: "user_id,item_date", ignoreDuplicates: true });
     setSaving(false);
     if (e) setError("That didn't save. Tap Done again.");
     else setDone(true);
