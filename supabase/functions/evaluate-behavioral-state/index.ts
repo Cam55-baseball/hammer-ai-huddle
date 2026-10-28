@@ -170,6 +170,12 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     for (const date of practiceDays) anyLogByDay.add(date);
   }
 
+  // Owner Oct 28: the daily Mind item done-log counts in Discipline only (never performance).
+  const mindDays = new Set<string>();
+  const { data: mindLogs } = await supabase.from("mind_item_logs").select("item_date")
+    .eq("user_id", userId).gte("item_date", sinceHistory).lte("item_date", todayUTC).limit(1000);
+  for (const m of mindLogs ?? []) { mindDays.add(m.item_date); }
+
   // 2. Injury overrides
   const dailyLogs = await readIdentityHistory<any>((from, to) => supabase
     .from("athlete_daily_log")
@@ -319,9 +325,10 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
     const ds = dayStr(d);
     const klass = days.find(x => x.ds === ds)?.klass;
+    if (klass === "rest" && mindDays.has(ds)) { discStreak++; continue; }
     if (klass === "injury" || klass === "rest") continue;
     if (klass === "skip") break; // hard discipline break too
-    if (anyLogByDay.has(ds)) discStreak++; else break;
+    if (anyLogByDay.has(ds) || mindDays.has(ds)) discStreak++; else break;
   }
 
   // 7. Score (rest excluded from denom)
