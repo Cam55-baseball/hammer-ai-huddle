@@ -18,7 +18,8 @@ describe("report_card switch (owner turned OFF Oct 18)", () => {
   it("analysis page renders the toggle and card only behind the gate", () => {
     const src = readFileSync("src/pages/AnalyzeVideo.tsx", "utf8");
     expect(src).toMatch(/showReportCard\s*\?\s*\(\s*<div[^>]*>\{!videoGradesShown\(\) && <InternalLabel \/>\}<AnalysisToggle/);
-    expect(src).toContain('Grade: {VIDEO_GRADE_PLACEHOLDER}');
+    // Owner P0 (Oct 28): the written analysis shows no grade line or camera wording.
+    expect(src).not.toContain('Grade: {VIDEO_GRADE_PLACEHOLDER}');
     expect(src).toMatch(/showReportCard\s*&&\s*analysisView === "report_card"/);
     expect(src).toMatch(/<ReportCardAccessGate>\s*<HammerReportCard/);
   });
