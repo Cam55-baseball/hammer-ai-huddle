@@ -191,7 +191,7 @@ import { usePlanFaultContext } from "@/hooks/usePlanFaultContext";
 import { useDrillCirculation } from "@/hooks/useDrillCirculation";
 import { projectEnvelope } from "@/lib/hammer/context/decisionFilters";
 import { applyFaultPlanInfluence } from "@/lib/prescription/applyFaultPlanInfluence";
-import { accessiblePlanFaults } from '@/lib/hammer/planAnalysisAccess';
+import { accessiblePlanFaults, accessibleRecurringIssues } from '@/lib/hammer/planAnalysisAccess';
 
 function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | "post" | null {
   if (!p) return null;
@@ -851,6 +851,7 @@ function HammerDailyPlanBody({
       rankedFaults: accessiblePlanFaults(faultContext.isError || !drillCirculation.ready ? [] : faultContext.data?.rankedFaults ?? [], modules, sportKey,
         { clips: faultContext.isError ? [] : faultContext.data?.clips ?? [] }),
       signalScopes: faultContext.isError ? {} : faultContext.data?.signalScopes ?? {},
+      recurringIssues: faultContext.isError || !drillCirculation.ready ? [] : accessibleRecurringIssues(faultContext.data?.recurringIssues ?? [], modules, sportKey),
       sport: ctx.get<unknown>("sport_primary")?.value === "softball" ? "softball" : "baseball",
       ownedEquipment: new Set(projectedAthlete.equipmentList),
       catalog: drillCirculation.catalog,

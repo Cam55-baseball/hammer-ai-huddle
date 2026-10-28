@@ -5,11 +5,14 @@ import type { CirculationInput, OwnerDrill } from "@/lib/prescription/ownerDrill
 import { matchPrescriptionDrills } from "@/lib/prescription/matchDrills";
 import { recencyWeight, type Discipline, type RankedFault } from "@/lib/wic/faultLedger/ranking";
 import { fadeMessage } from "@/lib/wic/faultLedger/cleanClipFade";
+import { recurringBecause, stillRecurring, type RecurringIssue } from "@/lib/wic/faultLedger/recurringIssues";
 
 const PLAN_SIGNAL_SOURCES = new Set(["video_analysis", "report_card"]);
 
 export interface AnalysisInfluenceTrace {
   readonly version: "analysis-slot-v1";
+  /** Set when the slot was filled for a stored recurring issue. */
+  readonly recurring?: { readonly analysisCount: number; readonly videoIds: readonly string[] };
   readonly faultKey: string;
   readonly rootPatternId: string;
   readonly source: "video_analysis" | "report_card";
@@ -33,6 +36,8 @@ export interface FaultPlanInfluenceInput {
   readonly circulation: CirculationInput;
   readonly now?: Date;
   /** Canonical source-record provenance, never inferred from the selected sport. */
+  /** Stored recurring issues (self-scoped read); they take the fix-it slot first. */
+  readonly recurringIssues?: ReadonlyArray<RecurringIssue>;
   readonly signalScopes?: Readonly<Record<string, { sport: 'baseball' | 'softball'; module: string }>>;
 }
 
@@ -87,7 +92,10 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
     const disciplines = disciplinesForBlock(original);
     if (disciplines.length === 0 || original.status !== "ready" || original.drills.length === 0) return original;
     const block = disciplines.reduce((b, d) => withCleanClipNote(b, d, input.rankedFaults), original);
-    if (priorities.length === 0 || catalog.length === 0) return block;
+    if (catalog.length === 0) return block;
+    const recurringBlock = applyRecurring(block, disciplines, input, catalog, now);
+    if (recurringBlock) return recurringBlock;
+    if (priorities.length === 0) return block;
     const signals = priorities.flatMap((priority) => priority.signals
       .filter((signal) => {
         if (!disciplines.includes(signal.discipline) || !PLAN_SIGNAL_SOURCES.has(signal.source)) return false;
@@ -157,4 +165,43 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
       gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist } : null,
     };
   });
+}
+
+/** Fix-it slot for a recurring issue: same one-slot replacement, same dose, never an owner slot. */
+function applyRecurring(block: PrescribedBlock, disciplines: Discipline[], input: FaultPlanInfluenceInput,
+  catalog: EliteDrill[], now: Date): PrescribedBlock | null {
+  const issues = (input.recurringIssues ?? [])
+    .filter((i) => i.sport === input.sport && disciplines.includes(i.skill_domain as Discipline) && stillRecurring(i, now.getTime()))
+    .sort((a, b) => b.analysis_count - a.analysis_count || b.last_seen.localeCompare(a.last_seen));
+  for (const issue of issues) {
+    const discipline = issue.skill_domain as Discipline;
+    const [match] = matchPrescriptionDrills({
+      catalog: catalog.filter((d) => d.category === (discipline === "running" ? "baserunning" : discipline)),
+      circulation: input.circulation, faultKeys: [issue.fault_key], module: MODULE_FOR[discipline], sport: input.sport, max: 1,
+    });
+    if (!match || !match.drill.violationKeys.includes(issue.fault_key)) continue;
+    const idx = block.drills.findIndex((d) => (d as InfluencedDrillStep).prescriptionOrigin !== "owner" && (d.stage === undefined || d.stage === "drills"));
+    if (idx < 0) return null;
+    const displaced = block.drills[idx];
+    const replacement: InfluencedDrillStep = {
+      name: match.drill.name, slug: match.drill.id, setup: match.drill.setup || undefined, dosage: displaced.dosage,
+      cue: match.drill.cues[0], equipmentNote: match.drill.equipment.length ? match.drill.equipment.join(", ") : undefined,
+      stage: "drills", prescriptionOrigin: "analysis",
+      analysisInfluence: {
+        version: "analysis-slot-v1", faultKey: issue.fault_key, rootPatternId: issue.fault_key, source: "video_analysis",
+        observedAt: issue.last_seen, recencyWeight: recencyWeight(issue.last_seen, now.getTime()), drillId: match.drill.id,
+        displacedDrill: displaced.name, recurring: { analysisCount: issue.analysis_count, videoIds: issue.video_ids },
+      },
+    };
+    const drills = block.drills.slice();
+    drills[idx] = replacement;
+    const checklist = drills.map((d) => `${d.name} — ${d.dosage}`);
+    return {
+      ...block, drills, steps: checklist,
+      because: [...(block.because ?? []), recurringBecause(issue, match.drill.name)],
+      roadmapReason: `${block.roadmapReason} A recurring finding shaped one existing drill slot.`,
+      gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist } : null,
+    };
+  }
+  return null;
 }

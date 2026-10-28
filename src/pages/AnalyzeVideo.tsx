@@ -1,4 +1,5 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
+import { taggedPracticeChecks } from '@/lib/prescription/practiceCheckDrills';
 import { SavedMovementSummary } from "@/components/assessment/SavedMovementSummary";
 import { isAnalysisType } from "../../supabase/functions/_shared/analysisTypes";
 import { Fragment, useEffect, useState, useRef } from "react";
@@ -1583,6 +1584,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
                         faultKeys={(analysis.improvements ?? []).map((i) => i.fault_key ?? "").filter(Boolean)}
                         includePendingReview={isOwner || isAdmin}
                         historyKey={currentVideoId}
+                        practiceChecks={taggedPracticeChecks(analysis)}
                       />
                     }
                      recommendations={

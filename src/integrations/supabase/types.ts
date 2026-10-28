@@ -3834,6 +3834,48 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_recurring_issues: {
+        Row: {
+          analysis_count: number
+          corroborating_signal_ids: string[]
+          fault_key: string
+          first_seen: string
+          id: string
+          last_seen: string
+          skill_domain: string
+          sport: string
+          updated_at: string
+          user_id: string
+          video_ids: string[]
+        }
+        Insert: {
+          analysis_count?: number
+          corroborating_signal_ids?: string[]
+          fault_key: string
+          first_seen: string
+          id?: string
+          last_seen: string
+          skill_domain: string
+          sport: string
+          updated_at?: string
+          user_id: string
+          video_ids?: string[]
+        }
+        Update: {
+          analysis_count?: number
+          corroborating_signal_ids?: string[]
+          fault_key?: string
+          first_seen?: string
+          id?: string
+          last_seen?: string
+          skill_domain?: string
+          sport?: string
+          updated_at?: string
+          user_id?: string
+          video_ids?: string[]
+        }
+        Relationships: []
+      }
       athlete_roadmap_progress: {
         Row: {
           blocked_reason: string | null
@@ -24358,6 +24400,10 @@ export type Database = {
       }
       recompute_library_video_tier: {
         Args: { p_video_id: string }
+        Returns: undefined
+      }
+      recompute_recurring_issues: {
+        Args: { _user: string }
         Returns: undefined
       }
       record_my_test: {

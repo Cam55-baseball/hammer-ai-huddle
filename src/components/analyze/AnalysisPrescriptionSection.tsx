@@ -19,6 +19,7 @@ import { useHIESnapshot } from "@/hooks/useHIESnapshot";
 import { matchPrescriptionDrills, maintenanceDrills } from "@/lib/prescription/matchDrills";
 import type { EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import { useAnalysisGoalDrills } from '@/hooks/useAnalysisGoalDrills';
+import { practiceCheckDrills, type AnalysisPracticeCheck } from '@/lib/prescription/practiceCheckDrills';
 
 interface Props {
   module?: string | null;
@@ -37,6 +38,8 @@ interface Props {
   embedded?: boolean;
   /** The analysed video's id — freezes the first prescription so history never changes. */
   historyKey?: string | null;
+  /** Report practice checks; only their exact finding tags pick library drills. */
+  practiceChecks?: AnalysisPracticeCheck[];
 }
 
 function DrillRow({ drill, reasons, staff, onOpen, onDone }: { drill: EliteDrill; reasons?: string[]; staff?: boolean; onOpen?: () => void; onDone?: () => void }) {
@@ -132,7 +135,7 @@ function DrillRow({ drill, reasons, staff, onOpen, onDone }: { drill: EliteDrill
   );
 }
 
-export function AnalysisPrescriptionSection({ module, sport, violations, faultKeys, includePendingReview, pieV2Signals, embedded, historyKey }: Props) {
+export function AnalysisPrescriptionSection({ module, sport, violations, faultKeys, includePendingReview, pieV2Signals, embedded, historyKey, practiceChecks }: Props) {
   const navigate = useNavigate();
   const { snapshot } = useHIESnapshot();
 
@@ -144,6 +147,10 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
   const { catalog, historyCatalog, circulation, log, markDone, userId, ready, error: circulationError,
     matches: goalMatches, isPending: goalsPending, goalError } = useAnalysisGoalDrills(module, sport);
   const frozenKey = historyKey ? `rx.frozen.v2:${userId ?? "anon"}:${historyKey}` : null;
+  const checkMatches = useMemo(
+    () => practiceCheckDrills(practiceChecks ?? [], { catalog, circulation, module, sport, includePendingReview }),
+    [practiceChecks, catalog, circulation, module, sport, includePendingReview],
+  );
   const live = useMemo(
     () =>
       [...matchPrescriptionDrills({
@@ -157,8 +164,8 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
         weaknessAreas: [],
         module,
         sport,
-      }), ...goalMatches.slice(0, 2)].filter((m, i, all) => all.findIndex(x => x.drill.id === m.drill.id) === i),
-    [catalog, circulation, violations, faultKeys, includePendingReview, pieV2Signals, weaknessAreas, module, sport, goalMatches],
+      }), ...checkMatches, ...goalMatches.slice(0, 2)].filter((m, i, all) => all.findIndex(x => x.drill.id === m.drill.id) === i),
+    [checkMatches, catalog, circulation, violations, faultKeys, includePendingReview, pieV2Signals, weaknessAreas, module, sport, goalMatches],
   );
   // History stays intact: once a video's prescription is shown, the same drills
   // are shown for that video forever — even if a drill is later switched off.
@@ -171,13 +178,17 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
         const saved = JSON.parse(raw) as Array<{ id: string; reasons: string[] }>;
         const byId = new Map(historyCatalog.map((d) => [d.id, d]));
         const restored = saved.map((x) => ({ drill: byId.get(x.id), score: 0, reasons: x.reasons })).filter((x) => x.drill);
-        if (restored.length === saved.length) return restored as typeof live;
+        if (restored.length === saved.length) {
+          // Frozen history stays; tagged practice-check drills are added once.
+          const extra = checkMatches.filter((m) => !restored.some((r) => r.drill!.id === m.drill.id));
+          return [...restored, ...extra] as typeof live;
+        }
       } else if (live.length) {
         localStorage.setItem(frozenKey, JSON.stringify(live.map((m) => ({ id: m.drill.id, reasons: m.reasons }))));
       }
     } catch { /* storage unavailable — live list */ }
     return live;
-  }, [frozenKey, live, historyCatalog, ready, goalsPending]);
+  }, [frozenKey, live, historyCatalog, ready, goalsPending, checkMatches]);
 
   const fallback = useMemo(
     // Maintenance work only when the clip genuinely had no faults.

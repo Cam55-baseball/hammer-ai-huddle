@@ -25,3 +25,11 @@ export function accessiblePlanFaults(ranked: readonly RankedFault[], modules: re
     return rankFaults(signals, evidence?.now ?? Date.now(), evidence?.clips ?? []);
   }).sort((a, b) => b.score - a.score || a.rootPatternId.localeCompare(b.rootPatternId));
 }
+
+/** Recurring issues follow the same purchased-category access as ranked faults. */
+export function accessibleRecurringIssues<T extends { skill_domain: string; sport: string }>(issues: readonly T[], modules: readonly string[], sport: 'baseball' | 'softball'): T[] {
+  const access = priorityAccess(modules, sport);
+  const ok = (d: string) => (d === 'hitting' && access.hasHitting) || (d === 'pitching' && access.hasPitching)
+    || ((d === 'throwing' || d === 'fielding' || d === 'running') && access.hasThrowing);
+  return issues.filter((i) => i.sport === sport && ok(i.skill_domain));
+}

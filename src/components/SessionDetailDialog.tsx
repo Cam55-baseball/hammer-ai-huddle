@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { taggedPracticeChecks } from '@/lib/prescription/practiceCheckDrills';
 import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { AnalysisPrescriptionSection } from "@/components/analyze/AnalysisPrescriptionSection";
 import { AnalysisVideoRecommendations } from "@/components/analyze/AnalysisVideoRecommendations";
@@ -63,6 +64,9 @@ export function SessionDetailDialog({
   /** Marked-up copies of this session, if any were saved alongside it. */
   const markedUpVersions: any[] = Array.isArray(session?.markedUpVersions) ? session.markedUpVersions : [];
   const [activeVideoId, setActiveVideoId] = useState<string>(session?.id);
+  // The player mounts only on tap so a clip Safari can't decode never takes the report down with it.
+  const [showVideo, setShowVideo] = useState(false);
+  useEffect(() => { setShowVideo(false); }, [session?.id]);
   useEffect(() => { setActiveVideoId(session?.id); }, [session?.id]);
   const activeVideoUrl: string =
     (activeVideoId && activeVideoId !== session?.id
@@ -550,6 +554,7 @@ export function SessionDetailDialog({
                       violations={aiAnalysis.violations_detected ?? null}
                       faultKeys={(aiAnalysis.improvements ?? []).map((i: { fault_key?: string }) => i.fault_key ?? "").filter(Boolean)}
                       historyKey={session.id}
+                        practiceChecks={taggedPracticeChecks(aiAnalysis)}
                     />
                     <AnalysisVideoRecommendations analysis={aiAnalysis} module={session.module} sport={session.sport} />
                   </div>
@@ -793,12 +798,12 @@ export function SessionDetailDialog({
                 </div>
               )}
               <div className="relative">
-                <video
-                  ref={mainVideoRef}
-                  style={{ display: 'none' }}
-                  src={activeVideoUrl}
-                  crossOrigin="anonymous"
-                />
+                {/* No hidden second player: a duplicate decoder crashed WebKit on saved reports. */}
+                {!showVideo ? (
+                  <Button type="button" variant="outline" className="w-full" onClick={() => setShowVideo(true)}>
+                    Play video
+                  </Button>
+                ) : (
                 <EnhancedVideoPlayer
                   key={activeVideoId}
                   videoSrc={activeVideoUrl}
@@ -809,6 +814,7 @@ export function SessionDetailDialog({
                   isOwnerView={isOwner}
                   onSaveAnnotation={isOwner ? handleSaveSelfAnnotation : handleSaveAnnotation}
                 />
+                )}
               </div>
             </div>
           )}

@@ -1,3 +1,4 @@
+import { RecurringIssuesList } from '@/components/intelligence/RecurringIssuesList';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +52,7 @@ export function LearningLoopList() {
   if (isError) return (
     <section className="space-y-2" aria-label="Your Do-this list">
       <h3 className="text-sm font-semibold">Your "Do this" list</h3>
+      <RecurringIssuesList title="Recurring findings to work on" />
       <p role="status" className="text-sm text-muted-foreground">We couldn't load your saved advice. Please try again later.</p>
     </section>
   );

@@ -1,3 +1,4 @@
+import {RecurringIssuesList} from '@/components/intelligence/RecurringIssuesList';
 import {PitchingJudgement} from '@/components/intelligence/PitchingJudgement';
 import {useMasteryIdentity} from '@/hooks/useMasteryIdentity';
 import {PracticeSwingLog} from '@/components/intelligence/PracticeSwingLog';
@@ -27,6 +28,7 @@ export function MasteryIdentityPanel({sport,athleteId}:{sport:'baseball'|'softba
      <p className="text-muted-foreground">Sleep and recovery: {data.strategy.sleep}</p>
      <p className="text-xs text-muted-foreground">Source: judged pillars and your top saved goal · owner principle "Secure what's natural first".</p>
     </div>}
+    <RecurringIssuesList athleteId={athleteId} sport={sport}/>
     {!athleteId&&<PracticeSwingLog sport={sport}/>}
     <div><h3 className="font-medium">Next development focus</h3><p className="text-muted-foreground">{data?.guidance.reason}</p><p className="text-muted-foreground">{data?.guidance.alternativeReason}</p></div>
    </div>
