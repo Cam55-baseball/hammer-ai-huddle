@@ -36,7 +36,7 @@ import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { isAnalysisVideoFile } from "@/lib/upload/analysisVideoFile";
 import { prepareAnalysisVideo } from "@/lib/upload/prepareAnalysisVideo";
 import { unavailableAnalysis } from "../../supabase/functions/_shared/analysisReliability";
-import { normalizeAnalysisResponse, analysisErrorDetails } from "@/lib/upload/analysisResponse";
+import { normalizeAnalysisResponse, analysisErrorDetails, settleAnalysisReport, hasCoachingContent } from "@/lib/upload/analysisResponse";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
@@ -355,6 +355,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     setClipTiles(null);
     setAnalysisError(null);
     setCurrentVideoId(null);
+    currentVideoIdRef.current = null;
     setLandingTime(null);
     if (module && sport && !assessment) {
       toast.info(t('videoAnalysis.switchedContext', { sport, module, defaultValue: 'Switched to {{sport}} - {{module}}. Upload space cleared.' }));
@@ -489,6 +490,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     setClipSide(null);
     setShowSideOverride(false);
   };
+
+  // The clip row created by this upload, readable from catch paths.
+  const currentVideoIdRef = useRef<string | null>(null);
 
   const showUnavailableReport = (stage: string, reason?: string) => {
     const report = unavailableAnalysis(module ?? "video", stage);
@@ -906,6 +910,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
 
       setCurrentVideoId(videoData.id);
+      currentVideoIdRef.current = videoData.id;
 
       // Phase 51 — persist the full deterministic-tempo lineage chain
       // (landmark_run → event_run → metric_run → analysis_run) so the
@@ -1153,6 +1158,13 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
       if (analysisError) {
         const safeError = await analysisErrorDetails(analysisError);
+        // The server may have saved coaching even though this reply failed.
+        const recovered = await settleAnalysisReport(supabase, videoData.id, user.id, safeError.report ?? null);
+        if (recovered && hasCoachingContent(recovered)) {
+          setAnalysis(recovered); setAnalysisError(null); setAnalyzing(false);
+          toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
+          return;
+        }
         if (safeError.report) setAnalysis(safeError.report);
         setAnalysisError({ ...safeError, terminal: safeError.status !== 429 && safeError.status < 500 });
         setAnalyzing(false);
@@ -1161,13 +1173,16 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
       }
 
-      const normalized = normalizeAnalysisResponse(analysisData);
+      const normalized = await settleAnalysisReport(supabase, videoData.id, user.id, normalizeAnalysisResponse(analysisData));
       setAnalysis(normalized);
       setAnalysisError(null);
-      assessment?.onSaved?.(normalized);
-      void queryClient.invalidateQueries({ queryKey: ["back-leg-finding", user?.id, videoData.id] });
-      void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
-      fireAnalysisVideoMoment(normalized);
+      // Extras after the report is on screen must never take it away.
+      try {
+        assessment?.onSaved?.(normalized);
+        void queryClient.invalidateQueries({ queryKey: ["back-leg-finding", user?.id, videoData.id] });
+        void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
+        fireAnalysisVideoMoment(normalized);
+      } catch (extraError) { console.warn("[analysis] post-report extra failed", extraError); }
 
       if (normalized?.saved === false) toast.error(normalized.save_error ?? "Your report is shown, but could not be saved.");
       else if (normalized?.report_status === "not_measured") toast.info(normalized.feedback);
@@ -1176,6 +1191,12 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
     } catch (error: any) {
       console.error("Error:", error);
+      const savedId = currentVideoIdRef.current;
+      const recovered = savedId ? await settleAnalysisReport(supabase, savedId, user.id, null) : null;
+      if (recovered && hasCoachingContent(recovered)) {
+        setAnalysis(recovered); setAnalysisError(null); setAnalyzing(false);
+        return;
+      }
       // An upload/network failure is not an analysis: show the problem and a retry, never a blanket report.
       const message = friendlyThrownError(error);
       setAnalysisError({ status: 0, message, terminal: false });
@@ -1297,6 +1318,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       if (analysisError) {
         console.error("Retry analysis error:", analysisError);
         const safeError = await analysisErrorDetails(analysisError);
+        const recovered = await settleAnalysisReport(supabase, currentVideoId, user.id, safeError.report ?? null);
+        if (recovered && hasCoachingContent(recovered)) { setAnalysis(recovered); setAnalysisError(null); return; }
         if (safeError.report) setAnalysis(safeError.report);
         setAnalysisError({ ...safeError, terminal: safeError.status !== 429 && safeError.status < 500 });
         toast.error(safeError.message);
@@ -1304,7 +1327,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
       }
 
-      const normalizedRetry = normalizeAnalysisResponse(analysisData);
+      const normalizedRetry = await settleAnalysisReport(supabase, currentVideoId, user.id, normalizeAnalysisResponse(analysisData));
       setAnalysis(normalizedRetry);
       setAnalysisError(null);
       assessment?.onSaved?.(normalizedRetry);
@@ -1317,6 +1340,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       else toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
     } catch (error: any) {
       console.error("Retry error:", error);
+      const recovered = await settleAnalysisReport(supabase, currentVideoId, user.id, null);
+      if (recovered && hasCoachingContent(recovered)) { setAnalysis(recovered); return; }
       showUnavailableReport("retry_request");
       toast.error(friendlyThrownError(error));
     } finally {
@@ -1639,7 +1664,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
             {analysis && (
               <div className="space-y-4">
                 {analysis.saved === false && <p role="alert" className="text-sm text-destructive">{analysis.save_error ?? "Your report is shown here, but its saved copy could not be confirmed. Saving to Players Club will check it again."}</p>}
-                {analysis.report_status === "not_measured" && <Button variant="outline" disabled={uploading || analyzing} onClick={currentVideoId ? handleRetryAnalysis : handleUploadAndAnalyze}>{t('videoAnalysis.retryAnalysis')}</Button>}
+                {analysis.report_status === "not_measured" && !hasCoachingContent(analysis) && <Button variant="outline" disabled={uploading || analyzing} onClick={currentVideoId ? handleRetryAnalysis : handleUploadAndAnalyze}>{t('videoAnalysis.retryAnalysis')}</Button>}
                 {showReportCard ? (
                   <div className="space-y-1">{!videoGradesShown() && <InternalLabel />}<AnalysisToggle value={analysisView} onChange={setAnalysisView} /></div>
                 ) : (
