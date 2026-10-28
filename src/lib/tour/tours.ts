@@ -1,7 +1,7 @@
 /**
  * Demo tours by audience and plan. A step whose feature the viewer cannot use
  * is left out (allowed=false) — the progress count reflects only real steps.
- * No tour mentions the Report Card except the admin/owner tour.
+ * No tour advertises the archived Report Card.
  * No tour teaches the temporary programmes.
  */
 import type { TourStep } from "@/components/tour/SpotlightTour";
@@ -119,10 +119,7 @@ export function scoutSteps(): TourStep[] {
 }
 
 export function staffExtraSteps(): TourStep[] {
-  return [
-    { id: "report-card", route: "/owner", target: H1, title: "Report Card (staff only)",
-      body: "The Report Card is hidden from athletes. Only you and admins see it, from an analysis." },
-  ];
+  return [];
 }
 
 export function stepsFor(audience: TourAudience, c: TourContext): TourStep[] {

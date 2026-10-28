@@ -24,8 +24,9 @@ export function PerformanceAreaRows() {
     queryKey: ["perf-area-rows", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase.from("videos")
-        .select("module, created_at").eq("user_id", user!.id)
+        .select("module, created_at").eq("user_id", user.id)
         .order("created_at", { ascending: false }).limit(200);
       if (error) throw error;
       return buildAreaRows((data ?? []) as AreaVideo[]);
@@ -50,7 +51,7 @@ export function PerformanceAreaRows() {
               Analyses: {r.count}{isEarlyRead(r.count) ? " · early read" : ""}
             </p>
             <p className="text-xs text-muted-foreground">Last analysis: {fmtDate(r.lastAt)}</p>
-            {showCard ? <div>{!videoGradesShown() && <InternalLabel />}<AreaGradeLine area={r.area} /></div> : <p className="text-xs text-muted-foreground">Grade: {VIDEO_GRADE_PLACEHOLDER}</p>}
+            {showCard && <div>{!videoGradesShown() && <InternalLabel />}<AreaGradeLine area={r.area} /></div>}
           </div>
           <Link to={`/analyze/${r.area.toLowerCase()}`} className="text-xs text-primary underline">{showCard ? "See report card" : "See analysis"}</Link>
         </Card>

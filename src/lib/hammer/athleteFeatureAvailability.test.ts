@@ -12,8 +12,8 @@ it("shows Game IQ only to owner and admin", () => {
   expect(gameIqVisible({ isOwner: false, isAdmin: false })).toBe(false);
 });
 
-it("shows the Report Card only to owner and admin", () => {
-  expect(canSeeReportCard({ isOwner: true, isAdmin: false })).toBe(true);
-  expect(canSeeReportCard({ isOwner: false, isAdmin: true })).toBe(true);
+it("archives the Report Card including for owner and admin", () => {
+  expect(canSeeReportCard({ isOwner: true, isAdmin: false })).toBe(false);
+  expect(canSeeReportCard({ isOwner: false, isAdmin: true })).toBe(false);
   expect(canSeeReportCard({ isOwner: false, isAdmin: false })).toBe(false);
 });
