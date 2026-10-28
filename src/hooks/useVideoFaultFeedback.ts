@@ -22,31 +22,44 @@ export interface FaultContext {
 export function useVideoFaultFeedback(videoIds: string[]) {
   const { user } = useAuth();
   const userId = user?.id;
-  const currentUserId = useRef(userId);
-  currentUserId.current = userId;
+  const scope = JSON.stringify([userId, videoIds]);
+  const currentScope = useRef(scope);
+  currentScope.current = scope;
+  const inFlight = useRef(new Set<string>());
+  const [readyScope, setReadyScope] = useState<string | null>(null);
   const [liked, setLiked] = useState<Set<string>>(new Set());
   const [saved, setSaved] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setLiked(new Set());
     setSaved(new Set());
+    setReadyScope(null);
     if (!user || videoIds.length === 0) return;
     let cancelled = false;
     (async () => {
-      const [{ data: likes }, { data: saves }] = await Promise.all([
+      try {
+      const [likes, saves] = await Promise.all([
         (supabase as any).from('library_video_likes').select('video_id').eq('user_id', user.id).in('video_id', videoIds),
         (supabase as any).from('library_video_saves').select('video_id').eq('user_id', user.id).in('video_id', videoIds),
       ]);
-      if (cancelled) return;
-      setLiked(new Set((likes || []).map((r: any) => r.video_id)));
-      setSaved(new Set((saves || []).map((r: any) => r.video_id)));
+      if (cancelled || currentScope.current !== scope) return;
+      if (likes.error || saves.error) throw likes.error || saves.error;
+      setLiked(new Set((likes.data || []).map((r: any) => r.video_id)));
+      setSaved(new Set((saves.data || []).map((r: any) => r.video_id)));
+      setReadyScope(scope);
+      } catch {
+        if (!cancelled && currentScope.current === scope) toast.error("Couldn't load your video choices. Try again.");
+      }
     })();
     return () => { cancelled = true; };
-  }, [userId, videoIds.join(',')]);
+  }, [scope]);
 
   const toggle = useCallback(
     async (table: 'library_video_likes' | 'library_video_saves', videoId: string, ctx: FaultContext) => {
-      if (!user) return;
+      if (!user || readyScope !== scope || currentScope.current !== scope || !videoIds.includes(videoId)) return false;
+      const operation = JSON.stringify([scope, table, videoId]);
+      if (inFlight.current.has(operation)) return false;
+      inFlight.current.add(operation);
       const set = table === 'library_video_likes' ? liked : saved;
       const apply = table === 'library_video_likes' ? setLiked : setSaved;
       try {
@@ -61,25 +74,29 @@ export function useVideoFaultFeedback(videoIds: string[]) {
           source: ctx.source,
           });
         if (result.error) throw result.error;
-        if (currentUserId.current !== user.id) return false;
-        const next = new Set(set);
-        if (set.has(videoId)) next.delete(videoId);
-        else next.add(videoId);
-        apply(next);
+        if (currentScope.current !== scope) return false;
+        apply(previous => {
+          const next = new Set(previous);
+          if (set.has(videoId)) next.delete(videoId);
+          else next.add(videoId);
+          return next;
+        });
         return true;
       } catch {
-        toast.error("Couldn't save your video choice. Try again.");
+        if (currentScope.current === scope) toast.error("Couldn't save your video choice. Try again.");
         return false;
+      } finally {
+        inFlight.current.delete(operation);
       }
     },
-    [user, liked, saved],
+    [user, liked, saved, scope, readyScope],
   );
 
   return {
-    isLiked: (id: string) => liked.has(id),
-    isSaved: (id: string) => saved.has(id),
+    isLiked: (id: string) => readyScope === scope && liked.has(id),
+    isSaved: (id: string) => readyScope === scope && saved.has(id),
     toggleLike: (id: string, ctx: FaultContext) => toggle('library_video_likes', id, ctx),
     toggleSave: (id: string, ctx: FaultContext) => toggle('library_video_saves', id, ctx),
-    canRecord: Boolean(user),
+    canRecord: Boolean(user) && readyScope === scope,
   };
 }
