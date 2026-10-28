@@ -75,3 +75,15 @@ export async function classicGatewayCompletion(
     clearTimeout(timer);
   }
 }
+
+/**
+ * Storage key of an uploaded clip inside the private `videos` bucket, read
+ * from the saved video_url (public, signed or authenticated form). Null when
+ * the clip isn't in that bucket.
+ */
+export function videoStoragePath(videoUrl: string | null): string | null {
+  if (!videoUrl) return null;
+  const m = videoUrl.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/videos\/([^?#]+)/);
+  if (!m) return null;
+  try { return decodeURIComponent(m[1]); } catch { return m[1]; }
+}

@@ -2616,6 +2616,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       original_ai_score: originalAiScore,
       model_used: MODEL_ID,
       analysis_engine: ANALYSIS_ENGINE,
+      analysis_input: analysisInput,
       // Hammer Report Card structured measurements (additive).
       metrics: metrics ?? null,
       report_card_contract_id: reportCardContract?.id ?? null,
@@ -2920,6 +2921,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       audit_persistence: auditPersistence,
       saved: true,
       analysis_engine: ANALYSIS_ENGINE,
+      analysis_input: analysisInput,
       model_used: MODEL_ID,
     };
 
