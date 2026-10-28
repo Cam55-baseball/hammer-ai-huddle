@@ -1,3 +1,4 @@
+import { MindItemCard } from "./MindItemCard";
 /**
  * HammerDailyPlan — expandable, conversational daily prescription.
  *
@@ -975,6 +976,9 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       <ErrorBoundary>
         <CoachPrescriptionInbox planDate={pocketDate} />
+      </ErrorBoundary>
+      <ErrorBoundary>
+        <MindItemCard planDate={pocketDate} />
       </ErrorBoundary>
       <ErrorBoundary>
         <HeightReminderCard />

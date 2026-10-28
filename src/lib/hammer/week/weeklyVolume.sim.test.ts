@@ -48,10 +48,25 @@ describe("rules", () => {
     expect(perceivedReadiness({})).toBe("normal");
   });
   it("video links: official embeds only", () => {
-    expect(parseDrillVideoLink("https://youtu.be/dQw4w9WgXcQ")?.embedUrl).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
-    expect(parseDrillVideoLink("https://vimeo.com/123456789")?.embedUrl).toBe("https://player.vimeo.com/video/123456789");
+    expect((parseDrillVideoLink("https://youtu.be/dQw4w9WgXcQ") as any)?.embedUrl).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
+    expect((parseDrillVideoLink("https://vimeo.com/123456789") as any)?.embedUrl).toBe("https://player.vimeo.com/video/123456789");
     expect(parseDrillVideoLink("https://example.com/v.mp4")).toBeNull();
     expect(parseDrillVideoLink("http://youtu.be/dQw4w9WgXcQ")).toBeNull();
     expect(drillVideoSource({})).toBeNull();
+  });
+});
+
+import { isAcceptedDrillVideoUrl } from "@/lib/prescription/drillVideoSource";
+import { OTHER_PLACEMENTS } from "@/lib/prescription/ownerDrills";
+describe("owner drill builder", () => {
+  it("accepts uploads/YouTube/Vimeo, rejects other hosts", () => {
+    expect(isAcceptedDrillVideoUrl("")).toBe(true);
+    expect(isAcceptedDrillVideoUrl("https://x.supabase.co/storage/v1/object/public/videos/a.mp4")).toBe(true);
+    expect(isAcceptedDrillVideoUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(true);
+    expect(isAcceptedDrillVideoUrl("https://tiktok.com/@a/video/1")).toBe(false);
+  });
+  it("offers every engine category incl. low-taxing and Mind", () => {
+    const ids = OTHER_PLACEMENTS.map((p) => p.id);
+    for (const t of ["hitting","bunting","defense_low_taxing","baserunning","throwing","pitching","conditioning","mind","bat_speed_weighted","bat_speed_overspeed"]) expect(ids).toContain(`hammers_today:${t}`);
   });
 });

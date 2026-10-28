@@ -32,3 +32,10 @@ export function drillVideoSource(d: { video_storage_path?: string | null; video_
   if (d.video_link) return parseDrillVideoLink(d.video_link);
   return null;
 }
+
+/** Owner uploads (our storage) or YouTube/Vimeo links only; empty means "no video yet". */
+export function isAcceptedDrillVideoUrl(url: string | null | undefined): boolean {
+  if (!url || !url.trim()) return true;
+  if (parseDrillVideoLink(url)) return true;
+  try { return /\/storage\/v1\/object\//.test(new URL(url).pathname); } catch { return false; }
+}
