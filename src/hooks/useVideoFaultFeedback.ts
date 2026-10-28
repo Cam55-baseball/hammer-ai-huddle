@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 export interface FaultContext {
   skillDomain: string;
@@ -24,6 +25,8 @@ export function useVideoFaultFeedback(videoIds: string[]) {
   const [saved, setSaved] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    setLiked(new Set());
+    setSaved(new Set());
     if (!user || videoIds.length === 0) return;
     let cancelled = false;
     (async () => {
@@ -43,22 +46,26 @@ export function useVideoFaultFeedback(videoIds: string[]) {
       if (!user) return;
       const set = table === 'library_video_likes' ? liked : saved;
       const apply = table === 'library_video_likes' ? setLiked : setSaved;
-      const next = new Set(set);
-      if (set.has(videoId)) {
-        next.delete(videoId);
-        apply(next);
-        await (supabase as any).from(table).delete().eq('user_id', user.id).eq('video_id', videoId);
-      } else {
-        next.add(videoId);
-        apply(next);
-        await (supabase as any).from(table).insert({
+      try {
+        const result = set.has(videoId)
+          ? await (supabase as any).from(table).delete().eq('user_id', user.id).eq('video_id', videoId)
+          : await (supabase as any).from(table).insert({
           user_id: user.id,
           video_id: videoId,
           skill_domain: ctx.skillDomain,
           fault_tag_key: ctx.faultTagKey,
           fault_tag_layer: ctx.faultTagLayer,
           source: ctx.source,
-        });
+          });
+        if (result.error) throw result.error;
+        const next = new Set(set);
+        if (set.has(videoId)) next.delete(videoId);
+        else next.add(videoId);
+        apply(next);
+        return true;
+      } catch {
+        toast.error("Couldn't save your video choice. Try again.");
+        return false;
       }
     },
     [user, liked, saved],
