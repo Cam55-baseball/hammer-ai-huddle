@@ -58,7 +58,8 @@ function PlanReadiness({ row, compact = false }: { row: Omit<OwnerDrillRow, "cre
 import { Plus, Pencil, Eye } from "lucide-react";
 import { ELITE_DRILL_CATALOG, type EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import { listDefenseCatalogForOwner } from "@/lib/hammer/prescription/defenseLibrary";
-import { isAcceptedDrillVideoUrl } from "@/lib/prescription/drillVideoSource";
+import { isAcceptedDrillVideoUrl, drillVideoFromUrl, drillVideoLabel } from "@/lib/prescription/drillVideoSource";
+import { DrillVideo } from "@/components/drills/DrillVideo";
 import { ANALYSIS_PLACEMENTS, OTHER_PLACEMENTS, type OwnerDrillRow } from "@/lib/prescription/ownerDrills";
 import { faultKeysFor } from "../../../supabase/functions/analyze-video/constructiveCriticism";
 
@@ -177,7 +178,7 @@ export default function DrillBuilder() {
     const valid = videoFile ? validateVideoFile(videoFile) : { valid: true };
     if (!valid.valid) { toast({ title: "Video not supported", description: valid.error }); return; }
     if (!videoFile && !draft.library_video_id && !isAcceptedDrillVideoUrl(draft.video_url)) {
-      toast({ title: "Video link not supported", description: "Upload your own video, or paste a YouTube or Vimeo link." });
+      toast({ title: "Video link not supported", description: "Upload your own video, or paste a full https link to the video post (YouTube, Vimeo, TikTok, Instagram, X, Facebook or any site)." });
       return;
     }
     setSaving(true);
@@ -353,7 +354,7 @@ export default function DrillBuilder() {
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{preview?.name}</DialogTitle></DialogHeader>
           {preview && <div className="space-y-3 text-sm">
-            {preview.video_url && <VideoPlayer videoUrl={preview.video_url} videoType={/\.(mp4|mov|webm|avi|m4v)(\?|$)/i.test(preview.video_url) ? "upload" : "external"} title={preview.name} />}
+            {preview.video_url && <DrillVideo url={preview.video_url} title={preview.name} />}
             {preview.setup && <p><strong>Set-up:</strong> {preview.setup}</p>}
             {preview.steps?.length > 0 && <ol className="list-decimal pl-5">{preview.steps.filter(Boolean).map((step, i) => <li key={i}>{step}</li>)}</ol>}
             {preview.cue && <p><strong>Cue:</strong> {preview.cue}</p>}
@@ -461,9 +462,9 @@ export default function DrillBuilder() {
                 </div>}
               </div>
               <div className="space-y-2"><Label htmlFor="drill-library-search">Video library</Label><Input id="drill-library-search" placeholder="Search library videos" value={videoSearch} onChange={e => setVideoSearch(e.target.value)} /><div className="max-h-48 space-y-1 overflow-y-auto">{libraryVideos.filter(video => video.video_url).map(video => <Button key={video.id} type="button" variant={draft.library_video_id === video.id ? 'default' : 'outline'} className="h-auto w-full justify-start whitespace-normal break-words text-left" onClick={() => { setDraft(d => d && ({ ...d, library_video_id: video.id, video_url: video.video_url })); setVideoFile(null); }}>{video.title}</Button>)}</div>{videosLoading && <p role="status" className="text-xs text-muted-foreground">Loading videos…</p>}{moreVideos && <Button type="button" variant="ghost" disabled={videosLoading} onClick={loadMoreVideos}>More videos</Button>}</div>
-              <div><Label>Video link</Label><Input value={draft.video_url ?? ""} onChange={(e) => setDraft(d => d && ({ ...d, video_url: e.target.value, library_video_id: null }))} placeholder="Paste your drill video link" /></div>
+              <div><Label>Video link</Label><Input value={draft.video_url ?? ""} onChange={(e) => setDraft(d => d && ({ ...d, video_url: e.target.value, library_video_id: null }))} placeholder="Paste your drill video link" />{draft.video_url?.trim() ? <p className={`mt-1 text-xs ${isAcceptedDrillVideoUrl(draft.video_url) ? "text-muted-foreground" : "text-destructive"}`}>{isAcceptedDrillVideoUrl(draft.video_url) ? drillVideoLabel(drillVideoFromUrl(draft.video_url)) : "This link can't be used. Paste the full https link to the video post."}</p> : null}</div>
               <div><Label htmlFor="drill-video-file">Or upload a video</Label><Input id="drill-video-file" type="file" accept="video/mp4,video/quicktime,video/webm,video/x-msvideo,video/x-m4v" onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)} />{videoFile && <p className="text-xs text-muted-foreground">{videoFile.name} will be attached when you save.</p>}</div>
-              {(draft.video_url || localVideoUrl) && <VideoPlayer videoUrl={localVideoUrl || draft.video_url} videoType={localVideoUrl || /\.(mp4|mov|webm|avi|m4v)(\?|$)/i.test(draft.video_url ?? "") ? "upload" : "external"} title={draft.name || "Drill preview"} />}
+              {localVideoUrl ? <VideoPlayer videoUrl={localVideoUrl} videoType="upload" title={draft.name || "Drill preview"} /> : draft.video_url ? <DrillVideo url={draft.video_url} title={draft.name || "Drill preview"} /> : null}
               <PlanReadiness row={draft} />
               <div className="flex gap-6">
                 <label className="flex items-center gap-2"><Switch checked={draft.active} onCheckedChange={(v) => set("active", v)} />On</label>
