@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { taggedPracticeChecks } from '@/lib/prescription/practiceCheckDrills';
 import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { AnalysisPrescriptionSection } from "@/components/analyze/AnalysisPrescriptionSection";
 import { AnalysisVideoRecommendations } from "@/components/analyze/AnalysisVideoRecommendations";
@@ -550,6 +551,7 @@ export function SessionDetailDialog({
                       violations={aiAnalysis.violations_detected ?? null}
                       faultKeys={(aiAnalysis.improvements ?? []).map((i: { fault_key?: string }) => i.fault_key ?? "").filter(Boolean)}
                       historyKey={session.id}
+                        practiceChecks={taggedPracticeChecks(aiAnalysis)}
                     />
                     <AnalysisVideoRecommendations analysis={aiAnalysis} module={session.module} sport={session.sport} />
                   </div>
