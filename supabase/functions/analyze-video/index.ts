@@ -43,7 +43,7 @@ import { validAnalysisJobToken, canaryDelegationAllowed } from "../_shared/analy
 import { ANALYSIS_TYPES, dispatchAnalysisType } from "../_shared/analysisTypes.ts";
 import { hasActiveRole } from "../_shared/authGuards.ts";
 import { loadAthleteFacts, athleteContextBlock } from "./athleteContext.ts";
-import { WRITTEN_REPORT_CONTRACT, writtenReportSchema, readWrittenReportFields } from "./writtenReport.ts";
+import { WRITTEN_REPORT_CONTRACT, WRITTEN_REPORT_REQUIRED, writtenReportSchema, readWrittenReportFields } from "./writtenReport.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1663,6 +1663,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  const requestStartedAt = Date.now();
 
   // Best-effort audit context — populated as we learn things so the catch
   // block can still write a "failed" video_analysis_runs row.
@@ -2315,8 +2316,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                 ...(reportCardContract ? { metrics: buildMetricsSchema(reportCardContract) } : {}),
               },
               required: reportCardContract
-                ? ["efficiency_score", "violations", "summary", "feedback", "improvements", "drills", "scorecard", "metrics"]
-                : ["efficiency_score", "violations", "summary", "feedback", "improvements", "drills", "scorecard"]
+                ? ["efficiency_score", "violations", "summary", "feedback", "positives", "improvements", "drills", "scorecard", "metrics", ...WRITTEN_REPORT_REQUIRED]
+                : ["efficiency_score", "violations", "summary", "feedback", "positives", "improvements", "drills", "scorecard", ...WRITTEN_REPORT_REQUIRED]
             }
           }
         }
