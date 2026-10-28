@@ -32,7 +32,11 @@ const SLOT_LABEL: Record<PlanSlot, string> = {
   "hammers_today:warmup": "Warm-up",
   "hammers_today:defense": "Defense block",
   defensive_library: "Defensive library",
+  "hammers_today:baserunning": "Baserunning block",
+  "hammers_today:bunting": "Bunting (exact type and side)",
+  "hammers_today:mind": "Daily Mind item",
 };
+const BUNT_TYPES = ["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"] as const;
 
 /** At-a-glance: will this drill actually compete in each block it's filed under? */
 function PlanReadiness({ row, compact = false }: { row: Omit<OwnerDrillRow, "created_at" | "id"> & { id?: string }; compact?: boolean }) {
@@ -451,6 +455,10 @@ export default function DrillBuilder() {
                 <div><Label>Skill area</Label><Select value={draft.skill_area ?? 'none'} onValueChange={value => setDraft(d => d && ({ ...d, skill_area: value === 'none' ? null : value, bat_speed_kind: value === 'bat_speed' ? d.bat_speed_kind : null }))}><SelectTrigger aria-label="Skill area"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem>{SKILL_AREAS.map(value => <SelectItem key={value} value={value}>{value.replace(/_/g, ' ')}</SelectItem>)}</SelectContent></Select></div>
                 <div><Label>Drill role</Label><Select value={draft.routine_role ?? 'none'} onValueChange={value => set('routine_role', value === 'none' ? null : value)}><SelectTrigger aria-label="Drill role"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem>{ROUTINE_ROLES.map(value => <SelectItem key={value} value={value}>{value === 'prep' ? 'Collective preparation' : value.replace(/_/g, ' ')}</SelectItem>)}</SelectContent></Select></div>
                 {draft.skill_area === 'bat_speed' && <div><Label>Bat-speed kind</Label><Select value={draft.bat_speed_kind ?? 'none'} onValueChange={value => set('bat_speed_kind', value === 'none' ? null : value)}><SelectTrigger aria-label="Bat-speed kind"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem>{BAT_SPEED_KINDS.map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select></div>}
+                {draft.placements.includes('hammers_today:bunting') && <div className="grid grid-cols-2 gap-2">
+                  <div><Label>Bunt type</Label><Select value={draft.bunt_type ?? 'none'} onValueChange={value => set('bunt_type', value === 'none' ? null : value)}><SelectTrigger aria-label="Bunt type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem>{BUNT_TYPES.map(value => <SelectItem key={value} value={value}>{value.replace(/_/g, ' ')}</SelectItem>)}</SelectContent></Select></div>
+                  <div><Label>Bunt side</Label><Select value={draft.bunt_side ?? 'none'} onValueChange={value => set('bunt_side', value === 'none' ? null : value)}><SelectTrigger aria-label="Bunt side"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem><SelectItem value="R">Right-handed</SelectItem><SelectItem value="L">Left-handed</SelectItem></SelectContent></Select></div>
+                </div>}
               </div>
               <div className="space-y-2"><Label htmlFor="drill-library-search">Video library</Label><Input id="drill-library-search" placeholder="Search library videos" value={videoSearch} onChange={e => setVideoSearch(e.target.value)} /><div className="max-h-48 space-y-1 overflow-y-auto">{libraryVideos.filter(video => video.video_url).map(video => <Button key={video.id} type="button" variant={draft.library_video_id === video.id ? 'default' : 'outline'} className="h-auto w-full justify-start whitespace-normal break-words text-left" onClick={() => { setDraft(d => d && ({ ...d, library_video_id: video.id, video_url: video.video_url })); setVideoFile(null); }}>{video.title}</Button>)}</div>{videosLoading && <p role="status" className="text-xs text-muted-foreground">Loading videos…</p>}{moreVideos && <Button type="button" variant="ghost" disabled={videosLoading} onClick={loadMoreVideos}>More videos</Button>}</div>
               <div><Label>Video link</Label><Input value={draft.video_url ?? ""} onChange={(e) => setDraft(d => d && ({ ...d, video_url: e.target.value, library_video_id: null }))} placeholder="Paste your drill video link" /></div>
