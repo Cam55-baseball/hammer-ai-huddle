@@ -28,17 +28,18 @@ describe('confirmed video feedback saves', () => {
     expect(hook.result.current.canRecord).toBe(false);
   });
   it('does not duplicate concurrent writes or lose another confirmed video', async () => {
-    let finish: ((value: any) => void) | undefined;
-    state.write = () => new Promise(resolve => { finish = resolve; });
+    const finishes: Array<(value: any) => void> = [];
+    state.write = () => new Promise(resolve => { finishes.push(resolve); });
     const hook = renderHook(() => useVideoFaultFeedback(['v', 'w']));
     await act(async () => {});
     await act(async () => {
       const first = hook.result.current.toggleSave('v', ctx);
-      expect(await hook.result.current.toggleSave('v', ctx)).toBe(false);
+      const duplicate = hook.result.current.toggleSave('v', ctx);
       state.write = null;
       await hook.result.current.toggleSave('w', ctx);
-      finish?.({ error: null });
+      finishes.forEach(finish => finish({ error: null }));
       await first;
+      expect(await duplicate).toBe(false);
     });
     expect(state.insert).toHaveBeenCalledTimes(2);
     expect(hook.result.current.isSaved('v')).toBe(true);
