@@ -23,6 +23,18 @@ describe("owner P0 Oct 28 — temporary uploads and the written analysis", () =>
 
   it("keeps how-to-check and observed vs inferred sections apart", () => {
     const r = readWrittenReportFields({ check_improvement: " 5 tee swings ", observed_in_clip: ["Head stays still"], connected_to_your_data: ["Your goal is power"] });
-    expect(r).toEqual({ check_improvement: "5 tee swings", observed_in_clip: ["Head stays still"], connected_to_your_data: ["Your goal is power"] });
+    expect(r).toEqual({ check_improvement: "5 tee swings", practice_checks: [], observed_in_clip: ["Head stays still"], connected_to_your_data: ["Your goal is power"] });
+  });
+
+  it("keeps only practice-check tags that name this report's own improvements", () => {
+    const r = readWrittenReportFields({
+      improvements: [{ fault_key: "early_shoulder_rotation" }],
+      practice_checks: [
+        { text: "Hold the front shoulder", finding_tags: ["early_shoulder_rotation", "made_up_tag"] },
+        { text: "Tee swings", finding_tags: ["made_up_tag"] },
+        { text: "No tags", finding_tags: [] },
+      ],
+    });
+    expect(r.practice_checks).toEqual([{ text: "Hold the front shoulder", finding_tags: ["early_shoulder_rotation"] }]);
   });
 });
