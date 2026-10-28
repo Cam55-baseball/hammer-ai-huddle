@@ -34,7 +34,8 @@ import { useSideContext } from "@/contexts/SideContext";
 import { UPLOAD_ERRORS, friendlyRejectReason, friendlyThrownError } from "@/lib/upload/uploadErrorCopy";
 import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { isAnalysisVideoFile, analysisVideoContentType, withAnalysisVideoType } from "@/lib/upload/analysisVideoFile";
-import { unavailableAnalysis } from "../../supabase/functions/_shared/analysisReliability";
+import { extractClassicKeyFrames } from "@/lib/frameExtraction";
+import { ANALYSIS_DID_NOT_FINISH, temporaryUploadUntil } from "@/lib/upload/temporaryUpload";
 import { normalizeAnalysisResponse, analysisErrorDetails, settleAnalysisReport, hasCoachingContent } from "@/lib/upload/analysisResponse";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
@@ -487,14 +488,15 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
   // The clip row created by this upload, readable from catch paths.
   const currentVideoIdRef = useRef<string | null>(null);
 
-  const showUnavailableReport = (stage: string, reason?: string) => {
-    const report = unavailableAnalysis(module ?? "video", stage);
-    // Local-only: nothing was analysed or saved, so no save-confirmation claim.
-    setAnalysis({ ...report, ...(reason ? { feedback: reason } : {}) });
-    setAnalysisError(null);
+  // Owner P0 (Oct 28): a failed analysis shows only "Tap Retry", never a report shell.
+  const showRetryScreen = () => {
+    setAnalysis(null);
+    setAnalysisError({ status: 0, message: ANALYSIS_DID_NOT_FINISH, terminal: false });
     setUploading(false);
     setAnalyzing(false);
   };
+  // The original pictures, started as soon as the clip is chosen for analysis.
+  const classicFramesRef = useRef<Promise<string[]> | null>(null);
 
   const handleUploadAndAnalyze = async () => {
     if (!videoFile || !user || !isAnalysisType(module)) return;
@@ -562,6 +564,10 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     }
 
     setUploading(true);
+    // January–September engine: sample the original pictures on the phone,
+    // alongside the upload. No gates; zero pictures means the server watches
+    // the uploaded clip instead.
+    classicFramesRef.current = analysisEnabled ? extractClassicKeyFrames(videoFile, landingTime) : null;
 
     // ===== PHASE 0 — Clip fingerprint =====
     // Oct 28: the server watches the uploaded clip itself. The phone only
@@ -800,9 +806,14 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       }
 
       // Create video record with appropriate status — Phase 0 fields populated up front.
-      const { data: videoData, error: videoError } = await supabase
+      // The row is a hidden temporary record until Save to Players Club; the
+      // id is made here because temporary rows can't be read back.
+      const newVideoId = crypto.randomUUID();
+      const { error: videoError } = await supabase
         .from("videos")
         .insert([{
+          id: newVideoId,
+          temporary_until: temporaryUploadUntil(),
           user_id: user.id,
           sport: sport as "baseball" | "softball",
           module: module as "hitting" | "pitching" | "throwing",
@@ -830,11 +841,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
                 ? { batting_side: activeSide }
                 : { throwing_hand: activeSide })
             : {}),
-        }] as never)
-        // Read back only the id. Score columns are locked from direct reads, so
-        // a bare `.select()` (RETURNING *) makes the whole save fail.
-        .select('id')
-        .single();
+        }] as never);
+      const videoData = videoError ? null : { id: newVideoId };
 
       if (videoError || !videoData) {
         const failure = describeVideoSaveFailure(videoError as any, { surface: 'analyze-upload', module, userId: user.id });
@@ -1065,7 +1073,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       if (!runAnalysis) {
         // No analysis - just upload and prompt to save to library
         if (analysisEnabled) {
-          toast.info("Your clip is saved. We couldn't read its frame rate, so it can't be analysed frame by frame.");
+          toast.info("Your clip is uploaded. Tap Save to Players Club to keep it.");
         } else {
           toast.success(t('videoAnalysis.uploadSuccess', "Video uploaded successfully!"));
         }
@@ -1084,6 +1092,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       setUploading(false);
       setAnalyzing(true);
 
+      const frames = (await classicFramesRef.current?.catch(() => [])) ?? [];
+      console.log(`[ANALYSIS] original picture sampling: ${frames.length} pictures`);
       // Call AI analysis edge function with frames for multimodal analysis
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
         "analyze-video",
@@ -1095,7 +1105,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
             sport,
             userId: user.id,
             language: i18n.language,
-            // No frames: the server fetches and watches the uploaded clip.
+            frames,
+            ...(landingTime != null && frames.length > 0 ? { landingFrameIndex: 3 } : {}),
           },
         }
       );
@@ -1109,15 +1120,16 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
           toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
           return;
         }
-        if (safeError.report) setAnalysis(safeError.report);
-        setAnalysisError({ ...safeError, terminal: safeError.status !== 429 && safeError.status < 500 });
+        // Plain retry only; the hourly fair-use limit keeps its own wording.
+        setAnalysis(null);
+        setAnalysisError({ status: safeError.status, message: safeError.status === 429 ? safeError.message : ANALYSIS_DID_NOT_FINISH, terminal: false });
         setAnalyzing(false);
-        toast.error(safeError.message);
         return;
 
       }
 
       const normalized = await settleAnalysisReport(supabase, videoData.id, user.id, normalizeAnalysisResponse(analysisData));
+      if (!hasCoachingContent(normalized)) { showRetryScreen(); return; }
       setAnalysis(normalized);
       setAnalysisError(null);
       // Extras after the report is on screen must never take it away.
@@ -1129,9 +1141,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       } catch (extraError) { console.warn("[analysis] post-report extra failed", extraError); }
       runEnrichment();
 
-      if (normalized?.saved === false) toast.error(normalized.save_error ?? "Your report is shown, but could not be saved.");
-      else if (normalized?.report_status === "not_measured") toast.info(normalized.feedback);
-      else toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
+      toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
       setAnalyzing(false);
 
     } catch (error: any) {
@@ -1143,10 +1153,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
         return;
       }
       // An upload/network failure is not an analysis: show the problem and a retry, never a blanket report.
-      const message = friendlyThrownError(error);
-      setAnalysisError({ status: 0, message, terminal: false });
-      if (!error?.userNotified) toast.error(message);
-      setAnalyzing(false);
+      // An upload problem is told once in a toast; the screen shows only Retry.
+      if (!error?.userNotified) toast.error(friendlyThrownError(error));
+      showRetryScreen();
     } finally {
       setUploading(false);
       setUploadStage(null);
@@ -1179,11 +1188,12 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
   const handleRetryAnalysis = async () => {
     if (!currentVideoId || !user || !isAnalysisType(module)) return;
     
-    // The server re-watches the uploaded clip; the phone needs nothing but the clip id.
+    // Retry re-samples the original pictures when the clip is still on the phone.
     setAnalyzing(true);
     setAnalysisError(null);
 
     try {
+      const frames = videoFile ? await extractClassicKeyFrames(videoFile, landingTime).catch(() => []) : [];
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
         "analyze-video",
         {
@@ -1193,7 +1203,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
             sport,
             userId: user.id,
             language: i18n.language,
-            // No frames: the server fetches and watches the uploaded clip.
+            frames,
+            ...(landingTime != null && frames.length > 0 ? { landingFrameIndex: 3 } : {}),
           },
         }
       );
@@ -1203,14 +1214,14 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
         const safeError = await analysisErrorDetails(analysisError);
         const recovered = await settleAnalysisReport(supabase, currentVideoId, user.id, safeError.report ?? null);
         if (recovered && hasCoachingContent(recovered)) { setAnalysis(recovered); setAnalysisError(null); return; }
-        if (safeError.report) setAnalysis(safeError.report);
-        setAnalysisError({ ...safeError, terminal: safeError.status !== 429 && safeError.status < 500 });
-        toast.error(safeError.message);
+        setAnalysis(null);
+        setAnalysisError({ status: safeError.status, message: safeError.status === 429 ? safeError.message : ANALYSIS_DID_NOT_FINISH, terminal: false });
         return;
 
       }
 
       const normalizedRetry = await settleAnalysisReport(supabase, currentVideoId, user.id, normalizeAnalysisResponse(analysisData));
+      if (!hasCoachingContent(normalizedRetry)) { showRetryScreen(); return; }
       setAnalysis(normalizedRetry);
       setAnalysisError(null);
       assessment?.onSaved?.(normalizedRetry);
@@ -1218,15 +1229,12 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
       fireAnalysisVideoMoment(normalizedRetry);
 
-      if (normalizedRetry?.saved === false) toast.error(normalizedRetry.save_error ?? "Your report is shown, but could not be saved.");
-      else if (normalizedRetry?.report_status === "not_measured") toast.info(normalizedRetry.feedback);
-      else toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
+      toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
     } catch (error: any) {
       console.error("Retry error:", error);
       const recovered = await settleAnalysisReport(supabase, currentVideoId, user.id, null);
       if (recovered && hasCoachingContent(recovered)) { setAnalysis(recovered); return; }
-      showUnavailableReport("retry_request");
-      toast.error(friendlyThrownError(error));
+      showRetryScreen();
     } finally {
       setAnalyzing(false);
       setExtractingFrames(false);
@@ -1523,36 +1531,19 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
 
             {analysisError && !analyzing && (
-              <Card className="p-6 border-destructive">
-                <h3 className="text-xl font-semibold text-destructive mb-2">{t('videoAnalysis.analysisFailed')}</h3>
-                <p className="text-muted-foreground mb-3">
-                  {analysisError.message || (analysisError.status === 429
-                    ? t('videoAnalysis.rateLimitError')
-                    : analysisError.message?.includes('402') || analysisError.status === 402
-                    ? t('videoAnalysis.paymentRequiredError')
-                    : t('videoAnalysis.genericAnalysisError', "The analysis run did not complete. No score was produced. This is shown as failed instead of as a partial result."))}
-                </p>
-                {analysisError.message && (
-                  <details className="mb-4 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs">
-                    <summary className="cursor-pointer font-medium text-foreground">Technical details</summary>
-                    <pre className="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] text-muted-foreground">{String(analysisError.message)}</pre>
-                  </details>
-                )}
-                {!analysisError.terminal && <Button onClick={handleRetryAnalysis} className="w-full">
+              <Card className="p-6 space-y-4" data-testid="analysis-retry">
+                <p className="text-base font-medium">{analysisError.status === 429 && analysisError.message ? analysisError.message : ANALYSIS_DID_NOT_FINISH}</p>
+                <Button onClick={currentVideoId ? handleRetryAnalysis : handleUploadAndAnalyze} disabled={uploading || analyzing} className="w-full">
                   {t('videoAnalysis.retryAnalysis')}
-                </Button>}
+                </Button>
               </Card>
             )}
 
             {analysis && (
               <div className="space-y-4">
-                {analysis.saved === false && <p role="alert" className="text-sm text-destructive">{analysis.save_error ?? "Your report is shown here, but its saved copy could not be confirmed. Saving to Players Club will check it again."}</p>}
-                {analysis.report_status === "not_measured" && !hasCoachingContent(analysis) && <Button variant="outline" disabled={uploading || analyzing} onClick={currentVideoId ? handleRetryAnalysis : handleUploadAndAnalyze}>{t('videoAnalysis.retryAnalysis')}</Button>}
                 {showReportCard ? (
                   <div className="space-y-1">{!videoGradesShown() && <InternalLabel />}<AnalysisToggle value={analysisView} onChange={setAnalysisView} /></div>
-                ) : (
-                  <p className="text-sm text-muted-foreground" data-testid="video-grade-placeholder">Grade: {VIDEO_GRADE_PLACEHOLDER}</p>
-                )}
+                ) : null}
 
                 {showReportCard && analysisView === "report_card" ? (
                   <ReportCardAccessGate>
