@@ -70,47 +70,26 @@ export const EnhancedVideoPlayer = ({
   const MAX_ZOOM = 4;
   const ZOOM_STEP = 0.5;
 
-  // Load video as blob to bypass CORS restrictions for frame capture
+  // Stream the signed URL directly. Downloading the whole clip into memory
+  // (old blob path) plus a hidden duplicate player crashed iPhone Safari.
+  const [mediaFailed, setMediaFailed] = useState(false);
   useEffect(() => {
     let isMounted = true;
-    
-    const loadVideoAsBlob = async () => {
+    setBlobVideoUrl(null);
+    setMediaFailed(false);
+    (async () => {
       if (!videoSrc) return;
-      
       try {
         const { resolveMediaUrl } = await import('@/lib/media/privateMedia');
         const signed = await resolveMediaUrl(videoSrc);
         if (!signed) throw new Error('Not allowed to view this video');
-        const response = await fetch(signed);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch video');
-        }
-        
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        
-        if (isMounted) {
-          setBlobVideoUrl(blobUrl);
-        }
+        if (isMounted) setBlobVideoUrl(signed);
       } catch (error) {
-        console.error('Failed to load video as blob:', error);
-        // Fall back to direct URL if blob loading fails
-        if (isMounted) {
-          setBlobVideoUrl(null);
-        }
+        console.error('Failed to resolve video:', error);
+        if (isMounted) setMediaFailed(true);
       }
-    };
-    
-    loadVideoAsBlob();
-    
-    return () => {
-      isMounted = false;
-      // Clean up blob URL when component unmounts or video changes
-      if (blobVideoUrl) {
-        URL.revokeObjectURL(blobVideoUrl);
-      }
-    };
+    })();
+    return () => { isMounted = false; };
   }, [videoSrc]);
 
   useEffect(() => {
@@ -629,14 +608,19 @@ export const EnhancedVideoPlayer = ({
         >
           <video
             ref={videoRef}
-            src={blobVideoUrl || videoSrc}
+            src={blobVideoUrl ?? undefined}
             controls
+            playsInline
             crossOrigin="anonymous"
             preload="metadata"
+            onError={() => setMediaFailed(true)}
             className={`w-full ${isFullscreen ? 'h-full object-contain' : 'h-auto'} ${isSteppingFrames ? 'pointer-events-none' : ''}`}
             style={{ maxHeight: isFullscreen ? '100%' : 'min(600px, 70vh)' }}
           />
         </div>
+        {mediaFailed && (
+          <p role="status" className="p-3 text-sm text-muted-foreground">This video can't play here. Your report is below.</p>
+        )}
         <canvas ref={canvasRef} className="hidden" />
         
         {/* Fullscreen Controls Overlay */}

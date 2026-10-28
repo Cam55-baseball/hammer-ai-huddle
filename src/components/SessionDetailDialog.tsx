@@ -795,12 +795,7 @@ export function SessionDetailDialog({
                 </div>
               )}
               <div className="relative">
-                <video
-                  ref={mainVideoRef}
-                  style={{ display: 'none' }}
-                  src={activeVideoUrl}
-                  crossOrigin="anonymous"
-                />
+                {/* No hidden second player: a duplicate decoder crashed WebKit on saved reports. */}
                 <EnhancedVideoPlayer
                   key={activeVideoId}
                   videoSrc={activeVideoUrl}
