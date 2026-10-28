@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { hasCoachingContent } from "@/lib/upload/analysisResponse";
 import { useTranslation } from "react-i18next";
 import {
   BookMarked,
@@ -121,7 +122,8 @@ export function AnalysisResultsPanel({
 
 }: Props) {
   const { t } = useTranslation();
-  const notMeasured = (analysis as { report_status?: string }).report_status === "not_measured";
+  // Coaching words always win over flags or missing metrics (owner, Oct 28).
+  const notMeasured = (analysis as { report_status?: string }).report_status === "not_measured" && !hasCoachingContent(analysis);
 
   const summary = analysis.summary ?? [];
   const [topTakeaway, ...restFindings] = summary;
