@@ -46,3 +46,16 @@ Baseline: early October, when every upload got a full coaching report. Changes t
 - No auto-save: uploads are temporary (`videos.temporary_until`, hidden by database rules) until Save to Players Club. `cleanup-temporary-uploads` removes unsaved uploads after 24 hours, logging each one first. The schedule SQL is in `docs/owner/temporary-upload-cleanup-cron.sql` and has NOT been run.
 
 **Known limit:** a whole-clip backup over about 15 MB is rejected by the model (the 17.7 MB clip fails; clips up to 9.8 MB pass). Big clips need the phone's pictures. Real iPhone Safari is expected to read its own camera clips (it did from January to September), but this sandbox cannot confirm it. If both fail, the athlete sees the Retry screen, never a fake report.
+
+**Proof (Oct 28, preview, owner account, phone-sized 390×844 screen; upload → report → Save to Players Club → View → reload → View):**
+
+| Browser engine | Clips (owner originals) | Full report + saved first try + reopens after reload |
+|---|---|---|
+| Safari (WebKit, iPhone 15 profile) | 3 uploads each of hitting, pitching, throwing in both sports | 17 of 18. The miss: the 17.7 MB hitting clip, Retry screen shown. Runs stopped by test setup or the hourly limit were rerun one at a time. |
+| Safari, picture path | 17.7 MB hitting clip, baseball pitching, softball throwing (container rewritten so the test browser can read it; same video data) | 3 of 3, server confirms "input: frames", 7 pictures, about 20 s |
+| Chrome | Same 18 | 17 of 18. The same 17.7 MB clip shows Retry. |
+| Forced model failure, both engines | | Only "Your analysis didn't finish. Tap Retry." and the Retry button; the upload stayed hidden and temporary with no report |
+
+Every report had: top takeaway, key findings, what you did well, corrections with why and how, "How to check it's working" and "What we saw in this clip". None had measurement wording, a grade line, "From your ongoing plan" or Tex Vision, and none on reopen. The test browsers can't read original `.MOV` files on their own, so every non-rewritten run used the whole-clip backup (0 pictures).
+
+The 38 proof saves were listed in `docs/owner/p0-proof-cleanup-oct28.md`, then hidden (made temporary and unsaved). Nothing was deleted.
