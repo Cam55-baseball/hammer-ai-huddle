@@ -145,8 +145,12 @@ describe("shape and voice guarantees", () => {
   it("on/off switches are untouched in the generator", () => {
     const src = readFileSync("supabase/functions/wk-generate-daily/index.ts", "utf8");
     expect(src).toContain("if (!isGameDay && !isPostSeason && !conditioningSuppressed && !timelineToday.hold) {");
-    // Owner Oct 28: the only second conditioning push is the 2-a-week running floor.
-    expect((src.match(/push\("conditioning"/g) ?? []).length).toBe(2);
+    // Owner Oct 28: the only extra conditioning pushes are the 2-a-week running floor
+    // (built-in) and its owner-drill stand-in ("Add fields"), both inside the floor block.
+    expect((src.match(/push\("conditioning"/g) ?? []).length).toBe(3);
     expect(src).toContain('conditioning_path: "weekly_floor"');
+    const floor = src.slice(src.indexOf("Conditioning weekly floor (owner Oct 28)"), src.indexOf("-------- Cross-sport"));
+    expect(floor).toContain('conditioning_path: "weekly_floor_owner"');
+    expect((floor.match(/push\("conditioning"/g) ?? []).length).toBe(2);
   });
 });

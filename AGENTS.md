@@ -35,7 +35,7 @@
 - Swap uses the server `swap_v2_enabled` gate for UI, saves, memory and equipment prompts; legacy behavior remains outside it. Why: unproven swaps stay limited to authorized accounts.
 - `wk-generate-daily` `pickBest` narrows legal candidates to those passing `ownsAllGear` (saved gear + universal gear) when any exists, else keeps the prior pick. Why: prescribe with the player's own gear first without ever emptying a role; catalog gear tags must be accurate for this to help.
 - Simple Swap records missing gear through `swapMemoryAnswer` for both dated Today and persistent Always scope, and reports partial save failures honestly. Why: a changed prescription must never imply that unavailable equipment was remembered when its write failed.
-- Simple Swap checks replacement requirements against current canonical inventory and dated/persistent missing answers; chronological answers share normalized gear identities, and the daily generator excludes remembered missing requirements even without a family fallback. Why: a missing item or unknown partner must never be assumed available to satisfy a Swap proof.
+- Simple Swap checks replacements against canonical inventory and dated/persistent missing answers (shared normalized gear identities); the daily generator excludes remembered missing gear even without a family fallback. Why: missing gear or partners are never assumed available.
 - Simple Swap uses the saved athlete sport and canonical declaredRouteBases for both source and target; a base-route replacement keeps the same bases and recorded distance. Why: category/family/reps equality cannot authorize another sport or change conditioning rest and route work.
 - Today clip evidence uses the self-only sport-scoped RPC, never private `videos.ai_analysis`; advice reads server outcome labels, never stored scores. Why: player reads must preserve measurement privacy.
 - Coach summaries: gated reads; see coach AGENTS.md. Why: no wider access.
@@ -49,7 +49,7 @@
 - Server block generation bundles the existing pure daily-plan builder through `scripts/build-hammer-block-bundle.mjs`, rejecting browser/auth dependencies and injecting owner drills/stage tags. Why: block Swap must reuse the same generator rather than accept client snapshots or create a second builder.
 - Envelopes use hook-free `contextProjection`, re-exported by `athleteContext`. Why: client/server builders share lineage and missingness without browser imports.
 
-- TEST-only catalog rows (`visible_to`) are filtered by `src/lib/catalog/testOnlyVisibility.ts` in every non-owner client list and by the builder/Swap server queries; cross-athlete view audits go only through `record_view_audit_event`. Why: real players must never see TEST items, and client roster checks can't authorize ledger writes.
+- TEST-only catalog rows (`visible_to`) are filtered by `src/lib/catalog/testOnlyVisibility.ts` in non-owner client lists and builder/Swap server queries. Why: real players never see TEST items.
 - Swap ranks same movement pattern, then same-or-easier difficulty (`difficultyLevel` in `_shared/planSwap/simpleSwap.ts`) and never offers pairs more than one level apart; those join the Vault review queue. Why: a swap must not be a hidden difficulty jump.
 - Today focus uses a presentation cursor over mounted canonical log rows; saves must succeed before canonical rest starts, and tool check-offs use existing self-owned session records without claiming analysis. Why: guided work must not create a second prescription, logger or measurement pipeline.
 - Guided conditioning retains its base counter in the existing dated focus cursor across reloads; declared exercise rest wins except for canonical sprint/base-route rules. Why: remounts cannot shorten recovery or reset the four-base cycle.
@@ -61,3 +61,4 @@
 - Mastery: gated judges, weekly boost, JWT-only new days; saved sport, no backfill. Why: provenance.
 - Read nested AGENTS.md, including hooks. Why: scoped consistency.
 - Goal shelves share self-scoped goal reads and resolve explicit athlete-readable library IDs without fault attribution. Why: goals and URLs cannot invent faults or library identity.
+- Owner conditioning drills serve only the weekly running floor, validated by `_shared/wic/conditioning/ownerConditioning.ts` against `runRest.ts`. Why: owner numbers used as entered, no new limit or path.

@@ -3260,7 +3260,43 @@ const handler = async (req: Request): Promise<Response> => {
               : isPitcherAthlete
                 ? "Weekly running minimum: pitcher conditioning today so you get your 2 sessions this week."
                 : "Weekly running minimum: base-route conditioning today so you get your 2 sessions this week.";
-            for (const slug of slugs) {
+            // Owner "Add fields" (Oct 28): a switched-on owner conditioning drill with
+            // valid numbers takes the floor session, using exactly his numbers
+            // (rounds halved on low readiness, rest never shortened). It inherits
+            // the legality/category of the built-in floor movement it stands in for.
+            let ownerServed = false;
+            try {
+              const templateSlug = floorConditioningSlugs({ sport, isPitcher: isPitcherAthlete, lowReadiness: false })[0];
+              const template = lib.find((x) => x.slug === templateSlug);
+              if (template && eligible(template)) {
+                const { data: ownerRows } = await admin.from("owner_drills").select("*").eq("active", true)
+                  .contains("placements", ["hammers_today:conditioning"]).limit(100);
+                const gear = new Set(declaredEquipment.map((e) => String(e).trim().toLowerCase()));
+                const pool = ((ownerRows ?? []) as any[])
+                  .filter((r) => ownerConditioningFits(r, { sport, isPitcher: isPitcherAthlete }))
+                  .filter((r) => (r.equipment ?? []).every((e: string) => gear.has(String(e).trim().toLowerCase())))
+                  .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+                if (pool.length) {
+                  const pick = pool[Math.floor(new Date(`${planDate}T12:00:00Z`).getTime() / 86_400_000) % pool.length];
+                  const dose = ownerConditioningDose(pick, low)!;
+                  const synth = {
+                    ...template, slug: `owner_cond_${pick.id}`, name: String(pick.name), cue: String(pick.cue ?? template.cue),
+                    why_prescribed: ownerConditioningLine(String(pick.name), dose), family: null, regression_slug: null, progression_slug: null,
+                    default_sets: dose.rounds, default_reps: 1, default_duration_seconds: dose.work_seconds, default_distance_feet: dose.distance_feet,
+                    dosage_unit: "feet", substitution_family: null, transfer_group: null,
+                    base_route: dose.bases_per_rep ? { sport, bases_per_rep: dose.bases_per_rep, base_distance_feet: dose.base_distance_feet } : null,
+                  } as unknown as MovementRow;
+                  lib = [...lib, synth];
+                  const ownerWhy = `Weekly running minimum: ${ownerConditioningLine(String(pick.name), dose)}`;
+                  if (push("conditioning", "conditioning", synth, { sets: dose.rounds, distance_feet: dose.distance_feet, duration_seconds: dose.work_seconds } as any, ownerWhy, {
+                    conditioning_why: ownerWhy, conditioning_path: "weekly_floor_owner", conditioning_template_id: "cond.weekly_floor",
+                    conditioning_fallback: false, conditioning_dialed_down: low, owner_drill_id: pick.id,
+                    owner_conditioning: { rounds: dose.rounds, work_seconds: dose.work_seconds, rest_seconds: dose.rest_seconds, distance_feet: dose.distance_feet, bases_per_rep: dose.bases_per_rep },
+                  })) { conditioningFloor.added.push(synth.slug); ownerServed = true; }
+                }
+              }
+            } catch (_e) { ownerServed = false; }
+            for (const slug of ownerServed ? [] : slugs) {
               const m = lib.find((x) => x.slug === slug);
               if (!m || !eligible(m)) continue;
               push("conditioning", "conditioning", m, {}, why, { conditioning_why: why, conditioning_path: "weekly_floor",
