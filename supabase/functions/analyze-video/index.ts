@@ -63,7 +63,10 @@ const requestSchema = z.object({
   // older client sends malformed are dropped, never a refusal. Only "no picture
   // at all" can stop a report.
   language: z.string().optional().catch(undefined),
-  frames: z.array(z.string()).min(1, "No readable picture in this clip"),
+  // Optional since Oct 28: the server watches the uploaded clip itself. Older
+  // clients still send phone-made frames; they are only a fallback.
+  frames: z.array(z.unknown()).optional().catch(undefined)
+    .transform((rows) => (rows ?? []).filter((f): f is string => typeof f === "string")),
   landingFrameIndex: z.number().optional().catch(undefined),
   /**
    * Phase 1 — deterministic frame extraction audit. One entry per extracted
@@ -1765,7 +1768,7 @@ Deno.serve(async (req) => {
 
     const { data: videoRow } = await supabase
       .from("videos")
-      .select("user_id, module, sport, batting_side, sha256_hex, fps_true, achieved_fps, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
+      .select("user_id, module, sport, batting_side, sha256_hex, fps_true, achieved_fps, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status, video_url")
       .eq("id", videoId)
       .maybeSingle();
 
