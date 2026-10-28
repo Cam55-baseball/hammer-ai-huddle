@@ -50,7 +50,7 @@ describe("rules", () => {
   it("video links: official embeds only", () => {
     expect((parseDrillVideoLink("https://youtu.be/dQw4w9WgXcQ") as any)?.embedUrl).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
     expect((parseDrillVideoLink("https://vimeo.com/123456789") as any)?.embedUrl).toBe("https://player.vimeo.com/video/123456789");
-    expect(parseDrillVideoLink("https://example.com/v.mp4")).toBeNull();
+    expect(parseDrillVideoLink("https://example.com/v.mp4")).toEqual({ kind: "external", url: "https://example.com/v.mp4", siteName: "Example" });
     expect(parseDrillVideoLink("http://youtu.be/dQw4w9WgXcQ")).toBeNull();
     expect(drillVideoSource({})).toBeNull();
   });
@@ -59,11 +59,13 @@ describe("rules", () => {
 import { isAcceptedDrillVideoUrl } from "@/lib/prescription/drillVideoSource";
 import { OTHER_PLACEMENTS } from "@/lib/prescription/ownerDrills";
 describe("owner drill builder", () => {
-  it("accepts uploads/YouTube/Vimeo, rejects other hosts", () => {
+  it("accepts uploads, official embeds and https links; rejects non-post platform pages and http", () => {
     expect(isAcceptedDrillVideoUrl("")).toBe(true);
     expect(isAcceptedDrillVideoUrl("https://x.supabase.co/storage/v1/object/public/videos/a.mp4")).toBe(true);
     expect(isAcceptedDrillVideoUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(true);
     expect(isAcceptedDrillVideoUrl("https://tiktok.com/@a/video/1")).toBe(false);
+    expect(isAcceptedDrillVideoUrl("https://www.tiktok.com/@coach/video/7212345678901234567")).toBe(true);
+    expect(isAcceptedDrillVideoUrl("http://example.com/drill")).toBe(false);
   });
   it("offers every engine category incl. low-taxing and Mind", () => {
     const ids = OTHER_PLACEMENTS.map((p) => p.id);
