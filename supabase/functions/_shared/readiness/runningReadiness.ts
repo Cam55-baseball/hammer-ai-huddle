@@ -45,6 +45,8 @@ const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.le
 
 export const LOW_BELOW = 0.4;
 export const HIGH_FROM = 0.7;
+/** Minimum weight of available signals (check-ins alone, or two other trends). */
+export const MIN_EVIDENCE = 0.3;
 
 export function bandFor(score: number): ReadinessBand {
   return score < LOW_BELOW ? "low" : score >= HIGH_FROM ? "high" : "normal";
@@ -126,6 +128,11 @@ export function runningReadiness(input: ReadinessInput): RunningReadiness {
   // Pain flag: recent pain always lowers readiness.
   const painFlag = recent.some((c) => ago(input.today, c.date) < 3 && ((c.painScale ?? 0) >= 4 || ((c.painAreas ?? 0) > 0 && ago(input.today, c.date) < 2)));
 
+  // One thin signal (e.g. only unlogged work) is not enough history to move the plan.
+  const evidence = parts.reduce((a, b) => a + b.w, 0);
+  if (evidence < MIN_EVIDENCE && !painFlag) {
+    return { score: null, band: null, painFlag, loadRatio: ratio, completionRate: completion, reasons: [], missing, windowDays: 14 };
+  }
   if (!parts.length) {
     return { score: null, band: null, painFlag, loadRatio: ratio, completionRate: completion,
       reasons: painFlag ? ["you reported pain"] : [], missing, windowDays: 14 };

@@ -37,15 +37,19 @@ describe("running readiness (14 days)", () => {
     expect(r.band).toBe("low");
     expect(readinessLine(r)).toMatch(/^Readiness from your last 14 days: Take it lighter/);
   });
+  it("one thin signal (only unlogged work) is not enough to change the plan", () => {
+    expect(runningReadiness({ ...base, checkins: [], prescribedPast14: 20, completedPast14: 0 }).band).toBeNull();
+  });
   it("load spike lowers readiness; steady load does not", () => {
     const units: Record<string, number> = {};
     for (let d = 7; d < 28; d++) units[iso(today, -d)] = 2;
     for (let d = 0; d < 7; d++) units[iso(today, -d)] = 6;
     expect(loadRatio(today, units)).toBeCloseTo(3, 1);
-    const spike = runningReadiness({ ...base, checkins: [], workUnitsByDate: units });
+    const sleepOnly = Array.from({ length: 5 }, (_, i) => ({ date: iso(today, -i), hoursSlept: 7 }));
+    const spike = runningReadiness({ ...base, checkins: sleepOnly, workUnitsByDate: units });
     expect(spike.band).toBe("low");
     for (let d = 0; d < 7; d++) units[iso(today, -d)] = 2;
-    expect(runningReadiness({ ...base, checkins: [], workUnitsByDate: units }).band).not.toBe("low");
+    expect(runningReadiness({ ...base, checkins: sleepOnly, workUnitsByDate: units }).band).not.toBe("low");
   });
   it("skipped work counts; recent pain always caps at low", () => {
     const good = Array.from({ length: 10 }, (_, i) => ({ date: iso(today, -i), bodyReadiness: 5, hoursSlept: 8.5, sorenessAreas: 0 }));
