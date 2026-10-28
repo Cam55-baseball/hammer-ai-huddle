@@ -18,10 +18,7 @@ import { Zap, ChevronDown, ChevronRight, ArrowRight, Play } from "lucide-react";
 import { useHIESnapshot } from "@/hooks/useHIESnapshot";
 import { matchPrescriptionDrills, maintenanceDrills } from "@/lib/prescription/matchDrills";
 import type { EliteDrill } from "@/data/drills/eliteDrillCatalog";
-import { useDrillCirculation } from "@/hooks/useDrillCirculation";
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { categoryGoals, matchGoalDrills } from '@/lib/prescription/analysisGoals';
+import { useAnalysisGoalDrills } from '@/hooks/useAnalysisGoalDrills';
 
 interface Props {
   module?: string | null;
@@ -144,17 +141,8 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     [snapshot],
   );
 
-  const { catalog, historyCatalog, circulation, log, markDone, userId, ready, error: circulationError } = useDrillCirculation();
-  const goalRead = useQuery({
-    queryKey: ['analysis-saved-goals', userId, module, sport], enabled: !!userId,
-    queryFn: async () => {
-      if (!userId) return [];
-      const { data, error } = await supabase.from('athlete_context').select('category_goals,position_primary').eq('user_id', userId).maybeSingle();
-      if (error) throw error;
-      return categoryGoals(data?.category_goals, module ?? '', sport ?? '', data?.position_primary);
-    },
-  });
-  const goalMatches = useMemo(() => matchGoalDrills(catalog, goalRead.data ?? [], module ?? '', sport ?? 'baseball'), [catalog, goalRead.data, module, sport]);
+  const { catalog, historyCatalog, circulation, log, markDone, userId, ready, error: circulationError,
+    matches: goalMatches, isPending: goalsPending, goalError } = useAnalysisGoalDrills(module, sport);
   const frozenKey = historyKey ? `rx.frozen.v2:${userId ?? "anon"}:${historyKey}` : null;
   const live = useMemo(
     () =>
@@ -169,13 +157,13 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
         weaknessAreas: [],
         module,
         sport,
-      }), ...goalMatches].filter((m, i, all) => all.findIndex(x => x.drill.id === m.drill.id) === i),
+      }), ...goalMatches.slice(0, 2)].filter((m, i, all) => all.findIndex(x => x.drill.id === m.drill.id) === i),
     [catalog, circulation, violations, faultKeys, includePendingReview, pieV2Signals, weaknessAreas, module, sport, goalMatches],
   );
   // History stays intact: once a video's prescription is shown, the same drills
   // are shown for that video forever — even if a drill is later switched off.
   const matches = useMemo(() => {
-    if (!ready || (userId && goalRead.isPending)) return [];
+    if (!ready || goalsPending) return [];
     if (!frozenKey) return live;
     try {
       const raw = localStorage.getItem(frozenKey);
@@ -189,7 +177,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
       }
     } catch { /* storage unavailable — live list */ }
     return live;
-  }, [frozenKey, live, historyCatalog, ready, userId, goalRead.isPending]);
+  }, [frozenKey, live, historyCatalog, ready, goalsPending]);
 
   const fallback = useMemo(
     // Maintenance work only when the clip genuinely had no faults.
@@ -238,7 +226,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
             </>
           ) : (
             <p className="text-xs text-muted-foreground">
-              {goalRead.isError ? "Couldn't read your saved goals. Try again later." : "No instructional Hammers drill is linked to this finding or your saved goals yet."}
+              {goalError ? "Couldn't read your saved goals. Try again later." : "No instructional Hammers drill is linked to this finding or your saved goals yet."}
             </p>
           )}
         </section>

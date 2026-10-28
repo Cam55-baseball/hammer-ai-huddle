@@ -49,6 +49,8 @@ export interface EliteDrill {
   source?: string;
   /** Owner's own drill video — empty until he attaches one. */
   videoUrl?: string | null;
+  /** Canonical attached library identity, never inferred from the playback URL. */
+  libraryVideoId?: string | null;
   /** doctrine_fix = drill trains the correct move the doctrine states; proposed_shape = our drill shape. */
   basis?: "doctrine_fix" | "proposed_shape";
   /** Review label only (owner ruling 2026-10-01: drills are never hidden). Staff see a badge. */

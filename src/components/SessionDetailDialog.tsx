@@ -404,7 +404,7 @@ export function SessionDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-full sm:max-w-[90vw] lg:max-w-3xl max-h-[90vh] overflow-y-auto p-3 sm:p-6 overflow-x-hidden">
+      <DialogContent className="w-[calc(100%-2rem)] min-w-0 max-w-full sm:max-w-[90vw] lg:max-w-3xl max-h-[90vh] overflow-y-auto p-3 sm:p-6 overflow-x-hidden [&>*]:min-w-0">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? (
