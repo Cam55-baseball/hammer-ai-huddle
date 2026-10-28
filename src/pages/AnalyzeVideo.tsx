@@ -34,7 +34,6 @@ import { useSideContext } from "@/contexts/SideContext";
 import { UPLOAD_ERRORS, friendlyRejectReason, friendlyThrownError } from "@/lib/upload/uploadErrorCopy";
 import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { isAnalysisVideoFile } from "@/lib/upload/analysisVideoFile";
-import { prepareAnalysisVideo } from "@/lib/upload/prepareAnalysisVideo";
 import { unavailableAnalysis } from "../../supabase/functions/_shared/analysisReliability";
 import { normalizeAnalysisResponse, analysisErrorDetails, settleAnalysisReport, hasCoachingContent } from "@/lib/upload/analysisResponse";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
