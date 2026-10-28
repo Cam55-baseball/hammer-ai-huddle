@@ -2,7 +2,7 @@
 
 **Batch closeout · October 28, 2026 · after the owner's "both, combined" answer**
 
-**Ready to publish: NO.** One owner-requested item is not built: owner drills tagged "conditioning" are not used by the plan yet. Conditioning is built by the server with checked work/rest doses, and the drill builder has no fields for those, so the drill can't go in without making up a dose. Everything else in this batch is built and tested.
+**Ready to publish: NO.** (Re-checked Oct 28 17:23 UTC: full suite 632 files / 5,079 tests PASS; preview build clean.) One owner-requested item is not built: owner drills tagged "conditioning" are not used by the plan yet. Conditioning is built by the server with checked work/rest doses, and the drill builder has no fields for those, so the drill can't go in without making up a dose. Waiting on owner: "Add fields" (work/rest/rounds in the drill builder) or "Leave it" (existing exercise list; flips verdict to YES). Everything else in this batch is built and tested.
 
 ## Automated verification (this run)
 
