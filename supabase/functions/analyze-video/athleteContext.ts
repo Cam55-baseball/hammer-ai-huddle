@@ -55,13 +55,14 @@ export async function loadAthleteFacts(db: Db, userId: string, sport: string, sa
   };
   const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
   const threeDaysAgo = new Date(Date.now() - 3 * 86_400_000).toISOString().slice(0, 10);
-  const [profile, settings, test, quiz, logs] = await Promise.all([
+  const [profile, settings, test, quiz, logs, context] = await Promise.all([
     safe(db.from("profiles").select("date_of_birth,experience_level,position,positions,training_age_years").eq("id", userId).maybeSingle()),
     safe(db.from("athlete_mpi_settings").select("season_status,season_status_manual,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date,league_tier").eq("user_id", userId).eq("sport", sport).maybeSingle()),
     safe(db.from("vault_performance_tests").select("test_date,test_type,results,six_week_goals_text").eq("user_id", userId).eq("sport", sport).order("test_date", { ascending: false }).limit(1).maybeSingle()),
     safe(db.from("vault_focus_quizzes").select("entry_date,physical_readiness,perceived_recovery,hours_slept,pain_scale").eq("user_id", userId).gte("entry_date", threeDaysAgo).order("entry_date", { ascending: false }).limit(1).maybeSingle()),
     safe(db.from("wk_session_logs").select("plan_date,sets_completed").eq("user_id", userId).gte("plan_date", weekAgo).limit(500)),
-  ]) as [any, any, any, any, any[] | null];
+    safe(db.from("athlete_context").select("category_goals,goal_summary,competition_level,position_primary,lifting_age_years").eq("user_id", userId).eq('sport_primary', sport).maybeSingle()),
+  ]) as [any, any, any, any, any[] | null, any];
 
   const positions = Array.isArray(profile?.positions) && profile.positions.length
     ? profile.positions.map(String)
@@ -76,7 +77,10 @@ export async function loadAthleteFacts(db: Db, userId: string, sport: string, sa
     positions,
     trainingAgeYears: profile?.training_age_years == null ? null : Number(profile.training_age_years),
     season,
-    goals: typeof test?.six_week_goals_text === "string" && test.six_week_goals_text.trim() ? test.six_week_goals_text.trim().slice(0, 400) : null,
+    goals: context?.category_goals && typeof context.category_goals === 'object'
+      ? JSON.stringify(context.category_goals).slice(0, 1000)
+      : typeof context?.goal_summary === 'string' ? context.goal_summary.slice(0, 400)
+      : typeof test?.six_week_goals_text === "string" && test.six_week_goals_text.trim() ? test.six_week_goals_text.trim().slice(0, 400) : null,
     latestTest: test ? { date: String(test.test_date), type: String(test.test_type ?? "test"), results: compactResults(test.results) } : null,
     readiness: quiz ? {
       date: String(quiz.entry_date),
@@ -96,17 +100,17 @@ export function athleteContextBlock(f: AthleteFacts): string {
   const r = f.readiness;
   return `
 
-=== THIS ATHLETE'S OWN DATA (for "connected_to_your_data" only) ===
+=== THIS ATHLETE'S OWN DATA ===
 ${line("Age", f.ageYears == null ? null : `${f.ageYears}`)}
 ${line("Level", f.level)}
 ${line("Position(s)", f.positions.length ? f.positions.join(", ") : null)}
 ${line("Years training", f.trainingAgeYears == null ? null : `${f.trainingAgeYears}`)}
 ${line("Season right now", f.season)}
-${line("Their goals (from their last test)", f.goals)}
+${line("Their recorded goals", f.goals)}
 ${line("Last test", f.latestTest ? `${f.latestTest.type} on ${f.latestTest.date}${f.latestTest.results ? ` (${f.latestTest.results})` : ""}` : null)}
 ${line("Latest check-in (last 3 days)", r ? `${r.date}: body readiness ${r.physical ?? "not answered"}, recovery ${r.recovery ?? "not answered"}, sleep ${r.sleepHours ?? "not answered"} h, pain ${r.painScale ?? "not answered"}` : null)}
 ${line("Training this past week", f.workload7d ? `${f.workload7d.sessions} logged days, ${f.workload7d.sets} sets` : null)}
 ${line("Saved analyses before this one", `${f.savedAnalyses}`)}
-RULES: Use these only to explain how a finding in THIS clip connects to the athlete. Name the data you used ("your last check-in", "your goal"). Never state a data item that says "not recorded". Never diagnose pain or injury; if pain is high, say to tell a coach or parent. Never prescribe a training load.
+RULES: Use these to explain how this clip connects to the athlete. Recorded goals may support eligible library practice even without a fault; goals are not evidence of a fault. Name the data you used ("your last check-in", "your goal"). Never state a data item that says "not recorded". Never diagnose pain or injury; if pain is high, say to tell a coach or parent. Never prescribe a training load.
 === END ATHLETE DATA ===`;
 }

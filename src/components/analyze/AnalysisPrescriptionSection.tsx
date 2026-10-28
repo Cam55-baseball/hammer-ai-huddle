@@ -175,7 +175,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
   // History stays intact: once a video's prescription is shown, the same drills
   // are shown for that video forever — even if a drill is later switched off.
   const matches = useMemo(() => {
-    if (!ready) return [];
+    if (!ready || (userId && goalRead.isPending)) return [];
     if (!frozenKey) return live;
     try {
       const raw = localStorage.getItem(frozenKey);
@@ -189,7 +189,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
       }
     } catch { /* storage unavailable — live list */ }
     return live;
-  }, [frozenKey, live, historyCatalog, ready]);
+  }, [frozenKey, live, historyCatalog, ready, userId, goalRead.isPending]);
 
   const fallback = useMemo(
     // Maintenance work only when the clip genuinely had no faults.

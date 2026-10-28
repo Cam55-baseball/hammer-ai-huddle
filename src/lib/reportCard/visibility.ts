@@ -1,16 +1,13 @@
 /**
- * REPORT CARD SWITCH (`report_card`) — owner ruling 2026-10-18 (reversal):
- * OFF for players, parents, coaches, organizations and scouts. Owner/admin see
- * it with an "Internal — not released" label (correction 2026-10-19). The Report Card states specific numbers and the
- * owner allows no estimates on it; it stays off until camera measurement
- * (computer vision) exists. Stored data is kept — nothing is deleted.
+ * REPORT CARD ARCHIVE — owner October 28: hidden for every role, including
+ * owner and admin. Code and stored data remain intact for later use.
  *
  * While off, no screen may show a numeric grade that comes from video
  * analysis; show VIDEO_GRADE_PLACEHOLDER instead. Entered test measurements
  * (sprint, jumps, verified maxes, radar/sensor) and human coach/scout grades
  * are not affected.
  *
- * Only the owner turns this on.
+ * The archive has no athlete or staff release control.
  */
 export type SwitchMode = "on" | "off";
 export const REPORT_CARD_SWITCH: SwitchMode = "off";
@@ -23,9 +20,7 @@ export function videoGradesShown(): boolean {
   return REPORT_CARD_SWITCH === "on";
 }
 
-// Owner correction 2026-10-19: while the switch is off, owner and admin
-// still see the Report Card, marked "Internal — not released". Everyone else
-// sees nothing from it.
+// A role never overrides the owner's universal archive.
 export function canSeeReportCard(roles?: { isOwner: boolean; isAdmin: boolean }): boolean {
   // Archived October 28: no role, including the owner, may open this surface.
   void roles;
