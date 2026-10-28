@@ -76,3 +76,24 @@ Notes: the owner's baseball "throwing" clip shows a fielding/baserunning play, a
 Each replay created an empty upload row with no report (cdcdf9c7, ec0cf672, 2d5029af, dae59e4a, 25298d14, 78176c7e, 8a8655b9, 83fe8c54, 4bcd7e10). They aren't in Players Club and nothing was deleted.
 
 **Fresh uploads after the fix (preview, owner clips):** baseball hitting, softball pitching and softball throwing each gave a full classic report, saved on the first try, then Players Club → reopen → reload passed. The proof saves were taken out of Players Club (c6953d7e, eacc4210, 844978ce).
+
+## Oct 28 run 4 — the phone no longer reads the video
+
+**What the owner hit on his iPhone (Safari, preview):** the video box stayed black and the toast said "We couldn't pull enough clear pictures out of this clip". The phone was supposed to play the clip, pull still pictures out of it and send those to the coach. iPhone Safari couldn't do that with his clip, so nothing ever reached the server. Earlier proofs ran in a desktop test browser that could.
+
+**What changed:**
+- The phone now only uploads the original file, untouched (no conversion, no picture pulling, no body tracking first). A .MOV that arrives without a file type is labelled as a .MOV so storage accepts it (this also blocked uploads in the Safari test).
+- `analyze-video` makes a private one-hour link to the uploaded file and sends **the whole video** to the same classic model (Gemini 2.5 Flash through the Lovable AI Gateway; the gateway currently serves that name with its newest Gemini Flash). Today's philosophy, cues, position, tagged videos and drills are unchanged.
+- Phone-made pictures are used only if an older app sends them and the whole clip can't be watched.
+- The only refusal left: no clip file and no pictures at all. The "couldn't pull enough clear pictures" message was deleted.
+- Body tracking now runs on the phone only after the report is on screen and can't change it.
+- HEVC (iPhone default) .MOV files are read by the model directly; no server conversion was needed.
+
+**Proof (owner session, owner's original .MOV clips, upload → report → saved on first try → Players Club → reopen → reload):**
+
+| Browser | Clips | Result |
+|---|---|---|
+| Safari engine (WebKit), iPhone 15 profile, 390×844 | baseball hitting, softball hitting, baseball pitching, softball pitching, baseball throwing, softball throwing, plus softball hitting re-encoded as HEVC | 7/7 pass, whole video sent, 2–3 drills each, 44–78 s to report |
+| Chrome engine, 390×844 phone | the same six clips | 6/6 pass |
+
+Notes: this sandbox's Safari engine crashes whenever any video plays, so in the Safari runs on-page video was kept blank, which matches the owner's black box. The report never needed it. One Chrome baseball hitting run came back with coaching but no drills; the Safari run of the same clip had 2 drills. The baseball "throwing" clip is a fielding play, and the report says so. The 14 proof saves were taken out of Players Club (nothing deleted). The live site and the Oct 22 iPhone app still pull pictures on the phone until a publish and a new iPhone build.

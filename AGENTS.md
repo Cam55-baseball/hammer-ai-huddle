@@ -61,3 +61,4 @@
 - Exact exercise measurement decisions are shared by the library, inline logger and log-sheet resolver; yard entry converts only at the display boundary, keeping canonical distance in feet. Why: ambiguous names must not diverge between logging paths or change existing distance readers.
 - Mastery: gated judges, weekly boost, JWT-only new days; saved sport, no backfill. Why: provenance.
 - Read nested AGENTS.md (also coachRx/video-library). Why: scoped consistency.
+- Video analysis input is the uploaded clip itself: `analyze-video` signs the stored file and sends it as one video part to the classic gateway model; phone frames are only a legacy fallback, and on-phone probing, body tracking and conversion run after the report or not at all. Why: iPhone Safari often can't decode or render the clip, which blocked every report.
