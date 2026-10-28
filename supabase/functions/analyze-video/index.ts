@@ -17,7 +17,9 @@ import {
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
 import { chatCompletion, type ChatCompletionRequest } from "../_shared/googleAi.ts";
-import { classicGatewayCompletion, isClassicRoute, CLASSIC_ANALYSIS_ROUTE, videoStoragePath } from "../_shared/classicAnalysis.ts";
+import { classicGatewayCompletion, isClassicRoute, CLASSIC_ANALYSIS_ROUTE, CLASSIC_MODEL, videoStoragePath } from "../_shared/classicAnalysis.ts";
+
+const ANALYSIS_DID_NOT_FINISH = "Your analysis didn't finish. Tap Retry.";
 
 /** Classic engine first (no artificial cut-off); today's direct route and backup keep their limits. */
 function routeAnalysis(route: string, req: ChatCompletionRequest) {
@@ -40,6 +42,8 @@ import { analysisPositionContext } from "../_shared/analysisPosition.ts";
 import { validAnalysisJobToken, canaryDelegationAllowed } from "../_shared/analysisCanaryAuth.ts";
 import { ANALYSIS_TYPES, dispatchAnalysisType } from "../_shared/analysisTypes.ts";
 import { hasActiveRole } from "../_shared/authGuards.ts";
+import { loadAthleteFacts, athleteContextBlock } from "./athleteContext.ts";
+import { WRITTEN_REPORT_CONTRACT, WRITTEN_REPORT_REQUIRED, writtenReportSchema, readWrittenReportFields } from "./writtenReport.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1659,6 +1663,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  const requestStartedAt = Date.now();
 
   // Best-effort audit context — populated as we learn things so the catch
   // block can still write a "failed" video_analysis_runs row.
@@ -1768,7 +1773,7 @@ Deno.serve(async (req) => {
 
     const { data: videoRow } = await supabase
       .from("videos")
-      .select("user_id, module, sport, batting_side, sha256_hex, fps_true, achieved_fps, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status, video_url")
+      .select("user_id, module, sport, batting_side, sha256_hex, fps_true, achieved_fps, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status, video_url, temporary_until")
       .eq("id", videoId)
       .maybeSingle();
 
@@ -1978,7 +1983,11 @@ Deno.serve(async (req) => {
       .eq("status", "completed")
       .not("ai_analysis", "is", null)
       .neq("id", videoId) // Exclude current video
-      .order("created_at", { ascending: true }); // Oldest first for chronological context
+      // Unsaved temporary uploads never count as history; newest 10 only.
+      .is("temporary_until", null)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    historicalVideos?.reverse(); // oldest first for chronological context
     
     if (historyError) {
       console.error("[ANALYZE-VIDEO] Error fetching historical data:", historyError);
@@ -2015,7 +2024,8 @@ Every fault you surface in feedback/drill recommendations MUST be expressed as a
       hitting: () => getSystemPrompt("hitting", sport),
       pitching: () => getSystemPrompt("pitching", sport),
       throwing: () => getSystemPrompt("throwing", sport),
-    }) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock + constructiveCriticismBlock(module, sport) + doctrineContextBlock(module, sport) + VISIBLE_COACHING_CONTRACT;
+    }) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock + constructiveCriticismBlock(module, sport) + doctrineContextBlock(module, sport) + VISIBLE_COACHING_CONTRACT
+      + athleteContextBlock(await loadAthleteFacts(supabase, userId, sport, historicalVideos?.length ?? 0)) + WRITTEN_REPORT_CONTRACT;
 
     // ===== BUILD MULTIMODAL USER CONTENT WITH FRAMES =====
     const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [];
@@ -2224,6 +2234,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                   items: { type: "string" }
                 },
                 improvements: improvementsSchema(module, sport),
+                ...writtenReportSchema(),
                 clean_reason: { type: "string", description: "Only when improvements is empty: which doctrine checks were verified clean" },
                 drills: {
                   type: "array",
@@ -2305,8 +2316,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                 ...(reportCardContract ? { metrics: buildMetricsSchema(reportCardContract) } : {}),
               },
               required: reportCardContract
-                ? ["efficiency_score", "violations", "summary", "feedback", "improvements", "drills", "scorecard", "metrics"]
-                : ["efficiency_score", "violations", "summary", "feedback", "improvements", "drills", "scorecard"]
+                ? ["efficiency_score", "violations", "summary", "feedback", "positives", "improvements", "drills", "scorecard", "metrics", ...WRITTEN_REPORT_REQUIRED]
+                : ["efficiency_score", "violations", "summary", "feedback", "positives", "improvements", "drills", "scorecard", ...WRITTEN_REPORT_REQUIRED]
             }
           }
         }
@@ -2314,17 +2325,27 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       tool_choice: { type: "function", function: { name: "return_analysis" } }
     });
     const logUsage = (result: Awaited<ReturnType<typeof routeAnalysis>>) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result });
-    // The whole clip goes to the classic gateway model (the only route that
-    // takes video). Phone frames are used only when the clip itself can't be
-    // watched and an older client sent them.
-    const runOnVideo = () => reliableAnalysis(() => classicGatewayCompletion(buildAnalysisRequest(CLASSIC_ANALYSIS_ROUTE, videoContent), { timeoutMs: 150_000 }), logUsage);
-    const runOnFrames = () => reliableAnalysis((route) => routeAnalysis(route, buildAnalysisRequest(route, userContent)), logUsage);
-    let analysisInput: "video" | "frames" = clipUrl ? "video" : "frames";
-    let aiResult: Awaited<ReturnType<typeof runOnFrames>> = clipUrl ? (await runOnVideo()) as Awaited<ReturnType<typeof runOnFrames>> : await runOnFrames();
-    if (clipUrl && !(aiResult.ok && hasStructuredAnalysis(aiResult.data)) && !analysisRefused(aiResult.data) && frames.length > 0) {
-      console.warn(`[ANALYZE-VIDEO] whole-clip analysis failed (status ${aiResult.status}); using the client's frames`);
-      aiResult = await runOnFrames();
-      analysisInput = "frames";
+    // Owner P0 (Oct 28): the phone's sampled pictures go first, exactly like
+    // the January–September engine. The whole uploaded clip is only a backup
+    // when there are no pictures or the picture run fails, with a hard limit.
+    const ANALYSIS_BUDGET_MS = 140_000;
+    const VIDEO_BACKUP_LIMIT_MS = 60_000;
+    const timeLeft = () => ANALYSIS_BUDGET_MS - (Date.now() - requestStartedAt);
+    const runOnFrames = () => reliableAnalysis(
+      (route) => isClassicRoute(route)
+        ? classicGatewayCompletion(buildAnalysisRequest(route, userContent), { timeoutMs: Math.max(10_000, Math.min(80_000, timeLeft() - 5_000)) })
+        : chatCompletion(buildAnalysisRequest(route, userContent), { timeoutMs: Math.max(10_000, Math.min(40_000, timeLeft() - 5_000)), allowFallback: false }),
+      logUsage, undefined, () => timeLeft() > 25_000);
+    const runOnVideo = () => reliableAnalysis(
+      () => classicGatewayCompletion(buildAnalysisRequest(CLASSIC_ANALYSIS_ROUTE, videoContent), { timeoutMs: Math.max(10_000, Math.min(VIDEO_BACKUP_LIMIT_MS, timeLeft() - 5_000)) }),
+      logUsage, undefined, () => false);
+    const usable = (r: Awaited<ReturnType<typeof runOnFrames>>) => r.ok && hasStructuredAnalysis(r.data);
+    let analysisInput: "frames" | "video" = frames.length > 0 ? "frames" : "video";
+    let aiResult = frames.length > 0 ? await runOnFrames() : (await runOnVideo()) as Awaited<ReturnType<typeof runOnFrames>>;
+    if (frames.length > 0 && !usable(aiResult) && !analysisRefused(aiResult.data) && clipUrl && timeLeft() > 20_000) {
+      console.warn(`[ANALYZE-VIDEO] picture analysis failed (status ${aiResult.status}); trying the whole clip as backup`);
+      const backup = (await runOnVideo()) as Awaited<ReturnType<typeof runOnFrames>>;
+      if (usable(backup)) { aiResult = backup; analysisInput = "video"; }
     }
     console.log(`[ANALYZE-VIDEO] analysis input=${analysisInput} ok=${aiResult.ok} status=${aiResult.status}`);
     if (!aiResult.ok) {
@@ -2337,20 +2358,20 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         provider: aiResult.provider,
       };
 
-      const safeMessage = aiResult.status === 403 ? "Analysis provider access is denied. The owner must restore access before a fresh analysis." : aiResult.status === 402 ? "Analysis credits are unavailable. The owner must restore credits before a fresh analysis." : aiResult.status === 401 ? "Analysis credentials need the owner's attention." : aiResult.status === 404 ? "The configured analysis model is unavailable." : aiResult.status === 429 ? "Analysis is busy. Your clip is saved; wait before starting a fresh request." : "The analysis service did not finish. Your clip is saved.";
-      const failedReport = { ...unavailableAnalysis(module, "provider"), feedback: safeMessage, failure_status: aiResult.status, retry_allowed: aiResult.status === 429 || aiResult.status >= 500 };
-      const savedFailure = await saveAnalysisReport(() => supabase.from("videos").update({ status: "failed", ai_analysis: failedReport }).eq("id", videoId).eq("user_id", userId));
+      // Owner P0 (Oct 28): no report shell and no "saved" claim. The clip
+      // stays a temporary record; the screen shows only "Tap Retry".
+      const safeMessage = ANALYSIS_DID_NOT_FINISH;
+      void errorData;
+      await supabase.from("videos").update({ status: "failed" }).eq("id", videoId).eq("user_id", userId);
       await recordRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: cacheFingerprintHex, cache_hit: false, outcome: "failed", outcome_reason: `provider_status:${aiResult.status}` });
-      return new Response(JSON.stringify({ error: safeMessage, message: safeMessage, report: failedReport, saved: savedFailure.saved }), { status: aiResult.status >= 400 && aiResult.status <= 599 ? aiResult.status : 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: safeMessage, message: safeMessage, code: "analysis_did_not_finish", retry_allowed: true, video_id: videoId }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const data = aiResult.data;
     if (analysisRefused(data)) {
-      const message = "The analysis provider declined this clip. No findings were generated.";
-      const report = { ...unavailableAnalysis(module, "refusal"), feedback: message, retry_allowed: false };
-      const persisted = await saveAnalysisReport(() => supabase.from("videos").update({ status: "failed", ai_analysis: report }).eq("id", videoId).eq("user_id", userId));
+      await supabase.from("videos").update({ status: "failed" }).eq("id", videoId).eq("user_id", userId);
       await recordRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: cacheFingerprintHex, cache_hit: false, outcome: "failed", outcome_reason: "provider_refusal" });
-      return new Response(JSON.stringify({ message, error: message, report, saved: persisted.saved }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ message: ANALYSIS_DID_NOT_FINISH, error: ANALYSIS_DID_NOT_FINISH, code: "analysis_did_not_finish", retry_allowed: true, video_id: videoId }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (!hasStructuredAnalysis(data)) throw new Error("coaching_output_unreadable");
     console.log(`[ANALYZE-VIDEO] AI provider=${aiResult.provider}`);
@@ -2366,6 +2387,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     let improvements: any[] = [];
     let clean_reason: string | null = null;
     let honesty_flags: unknown[] = [];
+    let writtenFields: ReturnType<typeof readWrittenReportFields> = readWrittenReportFields(null);
     // Calculate average historical score
     const averageHistoricalScore = historicalScores.length > 0 
       ? Math.round(historicalScores.reduce((sum, s) => sum + s, 0) / historicalScores.length)
@@ -2409,6 +2431,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         improvements = Array.isArray(analysisArgs.improvements) ? analysisArgs.improvements : [];
         clean_reason = typeof analysisArgs.clean_reason === "string" ? analysisArgs.clean_reason : null;
         violations = analysisArgs.violations || {};
+        writtenFields = readWrittenReportFields(analysisArgs);
         // Honesty check (owner ruling 2026-10-01): strip any sentence that
         // asserts edits, cuts, missing frames or on-screen readouts as fact.
         {
@@ -2597,7 +2620,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     };
 
     // Honest provenance: which route actually wrote this report.
-    const MODEL_ID = aiResult.provider === "openai" ? "openai/gpt-4o-mini" : aiResult.provider === "google" ? "google/gemini-3.6-flash" : "google/gemini-2.5-flash";
+    const MODEL_ID = aiResult.provider === "openai" ? "openai/gpt-4o-mini" : aiResult.provider === "google" ? "google/gemini-3.6-flash" : CLASSIC_MODEL;
     const MODEL_VERSION = MODEL_ID.split("/")[1];
     const ANALYSIS_ENGINE = aiResult.provider === "lovable" ? "classic" : `backup:${aiResult.provider}`;
     const prompt_hash = await sha256Hex(systemPrompt);
@@ -2608,6 +2631,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       positives,
       improvements,
       clean_reason,
+      ...writtenFields,
       honesty_flags,
       drills,
       scorecard,
@@ -2742,7 +2766,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         violations,
         engineVersion: ENGINE_VERSION,
       });
-      if (findings.length > 0) {
+      if (findings.length > 0 && (videoRow as { temporary_until?: string | null }).temporary_until) {
+        // Temporary clip: findings are written when it is saved to Players Club.
+        faultPersistence = { persisted: 0, attempted: 0, error: null };
+      } else if (findings.length > 0) {
         const { error: findingsError } = await supabase
           .from("analysis_fault_findings")
           .insert(findings);
@@ -2899,6 +2926,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       positives,
       improvements,
       clean_reason,
+      ...writtenFields,
       drills,
       scorecard,
       // The structured fault flags. The client matches library videos and
@@ -2968,14 +2996,11 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // A missingness report belongs only to the verified owner of this clip.
+    // Owner P0 (Oct 28): never a report shell — only "Tap Retry".
     if (authorizedClip && auditSupabase && auditCtx.videoId) {
-      const report = unavailableAnalysis(reportModule, "analysis");
-      const { error: saveError } = await auditSupabase.from("videos")
-        .update({ status: "completed", ai_analysis: report, efficiency_score: null })
-        .eq("id", auditCtx.videoId).eq("user_id", auditCtx.userId);
-      return new Response(JSON.stringify({ ...report, audit_persistence: auditPersistence, saved: !saveError, save_error: saveError ? "Report is shown here but could not be saved. Try again." : null }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      await auditSupabase.from("videos").update({ status: "failed" }).eq("id", auditCtx.videoId).eq("user_id", auditCtx.userId);
+      return new Response(JSON.stringify({ error: ANALYSIS_DID_NOT_FINISH, message: ANALYSIS_DID_NOT_FINISH, code: "analysis_did_not_finish", retry_allowed: true, video_id: auditCtx.videoId }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Return validation errors with 400 status

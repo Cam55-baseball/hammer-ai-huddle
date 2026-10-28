@@ -152,7 +152,8 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
         faultKeys,
         includePendingReview,
         pieV2Signals,
-        weaknessAreas,
+        // Only this clip's findings pick drills (owner P0, Oct 28); never the plan.
+        weaknessAreas: [],
         module,
         sport,
       }),
@@ -179,7 +180,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
 
   const fallback = useMemo(
     // Maintenance work only when the clip genuinely had no faults.
-    () => (ready && matches.length === 0 && !(faultKeys?.length) ? maintenanceDrills(module, sport) : []),
+    () => (void maintenanceDrills, [] as ReturnType<typeof maintenanceDrills>),
     [matches.length, faultKeys, module, sport, ready],
   );
 
@@ -191,7 +192,9 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     log(matches.map((m) => m.drill.id), "served");
   }, [matches, log]);
 
-  const hieActions = snapshot?.prescriptive_actions ?? [];
+  // "From your ongoing plan" items never appear in a clip's report (owner P0, Oct 28).
+  const hieActions: NonNullable<typeof snapshot>["prescriptive_actions"] = [];
+  void weaknessAreas;
 
   const startDrill = (drillModule: string, name: string, constraints?: string) => {
     const params = new URLSearchParams({
@@ -207,7 +210,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
       <div className="space-y-5">
         <section className="space-y-2">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {matches.length > 0 ? "From this clip" : "Maintenance work"}
+            From this clip
           </h4>
           {matches.length > 0 ? (
             matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} reasons={m.reasons} staff={includePendingReview} onOpen={() => log([m.drill.id], "opened")} onDone={() => markDone(m.drill.id)} />)
@@ -222,7 +225,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
             </>
           ) : (
             <p className="text-xs text-muted-foreground">
-              {faultKeys?.length ? "Your drills for this clip are written above." : "No drill match for this module yet."}
+              {faultKeys?.length ? "No Hammers drill is tagged for this finding yet." : "Nothing in this clip needs a drill right now."}
             </p>
           )}
         </section>

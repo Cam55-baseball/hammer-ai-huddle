@@ -55,11 +55,13 @@ export function analysisRefused(data: unknown): boolean {
 }
 
 /** Attempt order: classic engine first, then today's direct route, then the backup. */
-export const ANALYSIS_ROUTES = ["classic:google/gemini-2.5-flash", "google/gemini-2.5-flash", "openai/gpt-4o-mini"] as const;
+export const ANALYSIS_ROUTES = ["classic:google/gemini-3.8-flash", "google/gemini-2.5-flash", "openai/gpt-4o-mini"] as const;
 
 export async function reliableAnalysis<T extends { ok: boolean; status: number; data: unknown; errorBody?: string }>(
   call: (model: string) => Promise<T>, record: (result: T) => Promise<void>,
   wait: () => Promise<void> = () => new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 500)),
+  /** Stop trying further routes once this returns false (time budget spent). */
+  canContinue: () => boolean = () => true,
 ): Promise<T> {
   const recordSafely = async (attempt: T) => {
     try { await record(attempt); } catch { console.warn("[analysis] usage logging failed; report retry continues"); }
@@ -68,7 +70,7 @@ export async function reliableAnalysis<T extends { ok: boolean; status: number; 
   let best: T | null = null;
   let result: T | null = null;
   for (let i = 0; i < ANALYSIS_ROUTES.length; i++) {
-    if (i > 0) await wait();
+    if (i > 0) { if (!canContinue()) break; await wait(); }
     result = await call(ANALYSIS_ROUTES[i]);
     await recordSafely(result);
     if (result.ok && hasFullCoaching(result.data)) return result;

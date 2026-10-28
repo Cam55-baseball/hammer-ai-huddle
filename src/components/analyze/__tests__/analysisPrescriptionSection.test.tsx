@@ -37,8 +37,9 @@ describe("AnalysisPrescriptionSection", () => {
     expect(screen.getByText(/Wall Arm-Action Drill/i)).toBeTruthy();
   });
 
-  it("falls back to maintenance drills on a clean clip without inventing a fault", () => {
+  // Owner P0 (Oct 28): only drills that address this clip's findings; no filler.
+  it("shows no maintenance filler drills on a clean clip", () => {
     renderSection("hitting", "baseball", {});
-    expect(screen.getByText(/Walk-Away Load/i)).toBeTruthy();
+    expect(screen.queryByText(/Walk-Away Load/i)).toBeNull();
   });
 });

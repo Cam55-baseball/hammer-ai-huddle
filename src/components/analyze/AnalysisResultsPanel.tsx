@@ -53,6 +53,12 @@ export interface AnalysisResultData {
   improvements?: AnalysisImprovement[];
   clean_reason?: string | null;
   drills: AnalysisDrill[];
+  /** One practice rep or simple test that shows the fix is working. */
+  check_improvement?: string | null;
+  /** What the clip itself showed (observed). */
+  observed_in_clip?: string[];
+  /** Links between this clip's findings and the athlete's own data (inferred). */
+  connected_to_your_data?: string[];
 }
 
 export interface PersistedTempo {
@@ -122,8 +128,9 @@ export function AnalysisResultsPanel({
 
 }: Props) {
   const { t } = useTranslation();
-  // Coaching words always win over flags or missing metrics (owner, Oct 28).
-  const notMeasured = (analysis as { report_status?: string }).report_status === "not_measured" && !hasCoachingContent(analysis);
+  // Only reports with coaching words reach this panel (owner P0, Oct 28).
+  const notMeasured = !hasCoachingContent(analysis);
+  void hideGeneratedDrills;
 
   const summary = analysis.summary ?? [];
   const [topTakeaway, ...restFindings] = summary;
@@ -134,7 +141,6 @@ export function AnalysisResultsPanel({
 
   return (
     <div className="space-y-5">
-      <p className="flex items-center gap-2 text-xs text-muted-foreground"><Camera className="h-4 w-4" />{notMeasured ? "Not measured" : "Estimated · visual coaching from this clip"}</p>
       {!notMeasured && analysis.improvements && analysis.improvements.length > 0 && <section className="space-y-3">
         <h3 className="flex items-center gap-2 font-semibold"><Wrench className="h-4 w-4 text-primary" />What to work on</h3>
         {analysis.improvements.map((finding, index) => <Card key={`${finding.phase}-${index}`} className="space-y-2 border-l-4 border-l-primary p-4">
@@ -236,10 +242,41 @@ export function AnalysisResultsPanel({
         </RevealSection>
       )}
 
+      {/* ── 5b · HOW TO CHECK IT'S WORKING ─────────────────────────── */}
+      {analysis.check_improvement && (
+        <RevealSection order={4}>
+          <Card className="space-y-2 p-5 sm:p-6" data-testid="check-improvement">
+            <SectionHeading icon={<ListChecks className="h-3.5 w-3.5 text-primary" />}>How to check it's working</SectionHeading>
+            <p className="text-sm leading-relaxed">{withoutMeasurementNotation(analysis.check_improvement)}</p>
+          </Card>
+        </RevealSection>
+      )}
+
+      {/* ── 5c · WHAT WE SAW vs HOW IT CONNECTS TO YOU ───────────────── */}
+      {((analysis.observed_in_clip?.length ?? 0) > 0 || (analysis.connected_to_your_data?.length ?? 0) > 0) && (
+        <RevealSection order={4}>
+          <Card className="space-y-4 p-5 sm:p-6" data-testid="observed-vs-inferred">
+            {(analysis.observed_in_clip?.length ?? 0) > 0 && (
+              <div className="space-y-1.5">
+                <SectionHeading icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}>What we saw in this clip</SectionHeading>
+                <ul className="list-disc space-y-1 pl-5 text-sm">{analysis.observed_in_clip!.map((o, i) => <li key={i}>{withoutMeasurementNotation(o)}</li>)}</ul>
+              </div>
+            )}
+            {(analysis.connected_to_your_data?.length ?? 0) > 0 && (
+              <div className="space-y-1.5 border-t pt-3">
+                <SectionHeading icon={<MessageSquareText className="h-3.5 w-3.5 text-primary" />}>How this may connect to you</SectionHeading>
+                <p className="text-xs text-muted-foreground">Our best read from your profile and logs — not something the clip showed.</p>
+                <ul className="list-disc space-y-1 pl-5 text-sm">{analysis.connected_to_your_data!.map((o, i) => <li key={i}>{withoutMeasurementNotation(o)}</li>)}</ul>
+              </div>
+            )}
+          </Card>
+        </RevealSection>
+      )}
+
       {!notMeasured && recommendations && <RevealSection order={5}>{recommendations}</RevealSection>}
 
       {/* ── 6 · YOUR PRESCRIPTION (drills) ───────────────────────────── */}
-      {!notMeasured && ((analysis.drills && analysis.drills.length > 0) || prescriptionExtra) && (
+      {!notMeasured && prescriptionExtra && (
         <RevealSection order={6}>
           <Card className="space-y-5 p-5 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -252,7 +289,8 @@ export function AnalysisResultsPanel({
               </p>
             </div>
 
-            {!hideGeneratedDrills && analysis.drills && analysis.drills.length > 0 && (
+            {/* Hammers library drills only (owner P0, Oct 28): written-in drills are never shown. */}
+            {false && analysis.drills && analysis.drills.length > 0 && (
             <div className="space-y-4">
               {analysis.drills.map((drill, index) => {
                 const isSaved = savedDrillIds.has(drill.title);

@@ -210,3 +210,75 @@ export const calculateLandingFrameIndex = (
   // Legacy behavior: landing was always at array position 3 in the 7-offset grid.
   return 3;
 };
+
+/**
+ * The January–September 2026 picture sampling, restored as the primary
+ * analysis input (owner P0, Oct 28). Same method as commit f55fb9d9d's
+ * `extractKeyFrames`: a hidden muted inline <video>, 7 seeks at 10/25/40/50/
+ * 60/75/90% of the clip (or −0.4…+0.3 s around a marked landing), each drawn
+ * to a canvas at the clip's own size and saved as JPEG at 80% quality.
+ *
+ * The only differences from January: no "need at least 3 frames" refusal and
+ * no throw. Whatever pictures were captured are returned (possibly none, if
+ * the phone can't decode the clip); the server then watches the uploaded
+ * clip itself as a backup. No quality, blur, size or body-tracking check.
+ */
+export const CLASSIC_FRAME_POSITIONS = [0.10, 0.25, 0.40, 0.50, 0.60, 0.75, 0.90] as const;
+export const CLASSIC_LANDING_OFFSETS = [-0.4, -0.2, -0.1, 0, 0.1, 0.2, 0.3] as const;
+
+export function classicFrameTimestamps(duration: number, landingTime?: number | null): number[] {
+  if (!Number.isFinite(duration) || duration <= 0) return [];
+  if (landingTime != null && landingTime > 0 && landingTime < duration) {
+    return CLASSIC_LANDING_OFFSETS.map((o) => landingTime + o).filter((t) => t >= 0 && t <= duration);
+  }
+  return CLASSIC_FRAME_POSITIONS.map((p) => p * duration);
+}
+
+export const extractClassicKeyFrames = (
+  videoFile: Blob,
+  landingTime?: number | null,
+  timeoutMs = 30_000,
+): Promise<string[]> => new Promise((resolve) => {
+  const video = document.createElement("video");
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  const frames: string[] = [];
+  let done = false;
+  let url: string | null = null;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    if (url) URL.revokeObjectURL(url);
+    resolve(frames.slice());
+  };
+  const timer = setTimeout(() => { console.warn("[FRAME EXTRACTION] timed out; using", frames.length, "pictures"); finish(); }, timeoutMs);
+  if (!ctx) { finish(); return; }
+
+  video.addEventListener("error", () => { console.warn("[FRAME EXTRACTION] video failed to load:", video.error?.message); finish(); });
+  video.addEventListener("loadedmetadata", async () => {
+    if (!video.videoWidth || !video.videoHeight) { finish(); return; }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    for (const time of classicFrameTimestamps(video.duration, landingTime)) {
+      if (done) return;
+      try {
+        video.currentTime = time;
+        await new Promise<void>((res, rej) => {
+          video.addEventListener("seeked", () => res(), { once: true });
+          video.addEventListener("error", () => rej(new Error("seek failed")), { once: true });
+        });
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        if (dataUrl && dataUrl !== "data:," && dataUrl.length > 100) frames.push(dataUrl);
+      } catch (e) {
+        console.warn("[FRAME EXTRACTION] picture skipped at", time.toFixed(2), e);
+      }
+    }
+    finish();
+  });
+  video.preload = "metadata";
+  video.muted = true;
+  video.playsInline = true;
+  try { url = URL.createObjectURL(videoFile); video.src = url; } catch { finish(); }
+});

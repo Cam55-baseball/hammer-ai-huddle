@@ -988,6 +988,13 @@
       "when": 1793134586465,
       "tag": "0140_owner_drill_routine_video_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 141,
+      "version": "7",
+      "when": 1793161540837,
+      "tag": "0141_temporary_analysis_uploads",
+      "breakpoints": true
     }
   ]
 }

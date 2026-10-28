@@ -26,7 +26,7 @@ describe("analysis completion", () => {
   it("retries empty output then uses a backup model and records all attempts", async () => {
     const models: string[] = []; const logs: unknown[] = [];
     const result = await reliableAnalysis(async (model) => { models.push(model); return { ok: true, status: 200, data: models.length === 3 ? valid : {} }; }, async (r) => { logs.push(r); });
-    expect(models).toEqual(["classic:google/gemini-2.5-flash", "google/gemini-2.5-flash", "openai/gpt-4o-mini"]);
+    expect(models).toEqual(["classic:google/gemini-3.8-flash", "google/gemini-2.5-flash", "openai/gpt-4o-mini"]);
     expect(logs).toHaveLength(3); expect(hasStructuredAnalysis(result.data)).toBe(true);
   });
   it("does not retry authorization or billing failures", async () => {
@@ -46,7 +46,7 @@ describe("analysis completion", () => {
   it("waits before transient retries and retains the existing backup", async () => {
     const events: string[] = [];
     await reliableAnalysis(async model => { events.push(model); return { ok: false, status: 429, data: {} }; }, async () => {}, async () => { events.push("wait"); });
-    expect(events).toEqual(["classic:google/gemini-2.5-flash", "wait", "google/gemini-2.5-flash", "wait", "openai/gpt-4o-mini"]);
+    expect(events).toEqual(["classic:google/gemini-3.8-flash", "wait", "google/gemini-2.5-flash", "wait", "openai/gpt-4o-mini"]);
   });
   it("still retries and returns the backup report when diagnostic storage fails", async () => {
     const models: string[] = [];
@@ -54,7 +54,7 @@ describe("analysis completion", () => {
       models.push(model);
       return { ok: true, status: 200, data: models.length === 3 ? valid : {} };
     }, async () => { throw new Error("diagnostic storage unavailable"); });
-    expect(models).toEqual(["classic:google/gemini-2.5-flash", "google/gemini-2.5-flash", "openai/gpt-4o-mini"]);
+    expect(models).toEqual(["classic:google/gemini-3.8-flash", "google/gemini-2.5-flash", "openai/gpt-4o-mini"]);
     expect(hasStructuredAnalysis(result.data)).toBe(true);
   });
 });

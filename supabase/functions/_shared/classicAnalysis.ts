@@ -1,6 +1,8 @@
 // The classic analysis engine: the call that produced every saved report from
 // January through late September 2026. Sampled clip frames go as images in one
-// multimodal chat request through the Lovable AI Gateway to Gemini 2.5 Flash,
+// multimodal chat request through the Lovable AI Gateway to Gemini 2.5 Flash
+// (retired Oct 20 2026; the gateway has served that name with Gemini 3.8
+// Flash since, so the call now names 3.8 Flash directly),
 // with the `return_analysis` tool forcing the structured report. No body
 // tracking, metrics or quality gate is involved; today's prompt content rides
 // on top unchanged.
@@ -12,7 +14,7 @@ export interface ChatCompletionRequest {
   tools?: unknown[];
   tool_choice?: unknown;
   temperature?: number;
-  [key: string]: unknown;
+  max_tokens?: number;
 }
 export interface ChatCompletionResult {
   ok: boolean;
@@ -24,9 +26,9 @@ export interface ChatCompletionResult {
 }
 declare const Deno: { env: { get(name: string): string | undefined } };
 
-export const CLASSIC_ANALYSIS_ROUTE = "classic:google/gemini-2.5-flash";
+export const CLASSIC_ANALYSIS_ROUTE = "classic:google/gemini-3.8-flash";
 export const CLASSIC_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-export const CLASSIC_MODEL = "google/gemini-2.5-flash";
+export const CLASSIC_MODEL = "google/gemini-3.8-flash";
 
 export function isClassicRoute(route: string): boolean {
   return route === CLASSIC_ANALYSIS_ROUTE;
