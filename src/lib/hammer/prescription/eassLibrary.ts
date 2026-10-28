@@ -330,12 +330,18 @@ const COOLDOWN_UNIVERSAL: EassDrill[] = [
 const RECOVERY_ONLY: EassDrill[] = [
   { name: "Cuff/scap activation — low intensity", category: "recovery", intensity: "prep",
     dosage: "ER 1x10, IR 1x10, scap pulls 1x10 — recovery pace only",
+    setup: "Use a light resistance band with a secure anchor. ER means rotate your forearm away from your body; IR means rotate it toward your body. Keep your elbow bent and close to your side. For scap pulls, gently draw your shoulder blades back without shrugging.",
+    stopIf: "Stop for shoulder or elbow pain, pinching, numbness or tingling. Follow your professional’s injury instructions.",
     cue: "blood flow, not stimulus" },
   { name: "Wrist + forearm mobility flush", category: "recovery", intensity: "prep",
     dosage: "wrist circles 30s each way, forearm massage 90s per side",
+    setup: "Sit or stand comfortably with your forearm supported. Make slow wrist circles in each direction, then gently massage the forearm with your opposite hand.",
+    stopIf: "Stop for pain, numbness or tingling. Do not press into an injured or painful area.",
     cue: "gentle — the point is to flush, not to work" },
   { name: "Sleeper + cross-body stretch", category: "recovery", intensity: "prep",
     dosage: "sleeper 2x30s per side, cross-body 2x30s",
+    setup: "For the sleeper stretch, lie on your side with your elbow bent and gently guide your forearm toward the floor with your other hand. For cross-body, bring your arm across your chest and support it with your opposite hand. Use only a comfortable range.",
+    stopIf: "Stop for shoulder pain, pinching, numbness or tingling. Never force the stretch; follow your professional’s injury instructions.",
     cue: "long exhales, relax into the stretch" },
 ];
 

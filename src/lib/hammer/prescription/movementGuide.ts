@@ -35,6 +35,36 @@ function norm(s: string): string {
 
 // ─── Guides keyed by canonical slug or normalized name ─────────────────────
 const GUIDES: Record<string, MovementGuide> = {
+  cuff_scap_activation_low_intensity: {
+    what: "Gentle shoulder rotation and shoulder-blade movement with a light band.",
+    setup: "Use a light resistance band with a secure anchor. ER means rotate your forearm away from your body; IR means rotate it toward your body. Keep your elbow bent and close to your side. For scap pulls, gently draw your shoulder blades back without shrugging.",
+    goodRep: ["Turn your forearm slowly away from your body for ER, then toward your body for IR.", "Keep your elbow close to your side and your shoulder relaxed.", "For scap pulls, gently draw your shoulder blades back without shrugging.", "Follow the sets and repetitions shown on your prescription."],
+    badRep: ["Forcing the movement or working through pain.", "Adding resistance, repetitions or time beyond the prescription."],
+    feel: "Easy, comfortable movement, not a hard shoulder workout.",
+    whyToday: "Gentle movement on your arm-recovery day.",
+    nextLink: "Continue with the next prescribed recovery item.",
+    stopIf: "Stop for shoulder or elbow pain, pinching, numbness or tingling. Follow your professional’s injury instructions.",
+  },
+  wrist_forearm_mobility_flush: {
+    what: "Slow wrist circles and gentle forearm massage.",
+    setup: "Sit or stand comfortably with your forearm supported. Make slow wrist circles in each direction, then gently massage the forearm with your opposite hand.",
+    goodRep: ["Circle your wrist slowly in each direction without forcing the range.", "Use your opposite hand to massage your forearm with light pressure.", "Follow each time and side shown on your prescription."],
+    badRep: ["Forcing the movement or working through pain.", "Adding resistance, repetitions or time beyond the prescription."],
+    feel: "Gentle movement and light pressure, not pain.",
+    whyToday: "Easy wrist and forearm movement during recovery.",
+    nextLink: "Continue with the next prescribed recovery item.",
+    stopIf: "Stop for pain, numbness or tingling. Do not press into an injured or painful area.",
+  },
+  sleeper_cross_body_stretch: {
+    what: "Two gentle shoulder stretches, only within a comfortable range.",
+    setup: "For the sleeper stretch, lie on your side with your elbow bent and gently guide your forearm toward the floor with your other hand. For cross-body, bring your arm across your chest and support it with your opposite hand. Use only a comfortable range.",
+    goodRep: ["For the sleeper stretch, gently guide your forearm down without pushing into the shoulder.", "For cross-body, support your arm across your chest without pulling hard.", "Breathe gently and follow the holds and sides shown on your prescription."],
+    badRep: ["Forcing the movement or working through pain.", "Adding resistance, repetitions or time beyond the prescription."],
+    feel: "A comfortable stretch, never a pinch.",
+    whyToday: "Gentle shoulder mobility during recovery.",
+    nextLink: "Continue with the next prescribed recovery item.",
+    stopIf: "Stop for shoulder pain, pinching, numbness or tingling. Never force the stretch; follow your professional’s injury instructions.",
+  },
   // ============ Neural priming / reaction drills ============
   wu_reaction_ball_wall: {
     what: "A small, uneven rubber ball is thrown at a wall. Because it is uneven, it bounces back in an unpredictable direction, and your job is to catch it before it hits the ground a second time.",
