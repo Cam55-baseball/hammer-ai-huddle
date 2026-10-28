@@ -1,4 +1,5 @@
 import { MindItemCard } from "./MindItemCard";
+import { RunningReadinessLine } from "./RunningReadinessLine";
 /**
  * HammerDailyPlan — expandable, conversational daily prescription.
  *
@@ -978,9 +979,6 @@ function HammerDailyPlanBody({
         <CoachPrescriptionInbox planDate={pocketDate} />
       </ErrorBoundary>
       <ErrorBoundary>
-        <MindItemCard planDate={pocketDate} />
-      </ErrorBoundary>
-      <ErrorBoundary>
         <HeightReminderCard />
         <GrowthModeCard />
       </ErrorBoundary>
@@ -993,6 +991,8 @@ function HammerDailyPlanBody({
         <WkRestDayBanner />
         <FinishProfileCard />
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
+        <ErrorBoundary><RunningReadinessLine /></ErrorBoundary>
+        <ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary>
         {splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}
         {/* Owner order 2026-10-05: aim (with breath primer) → defensive video → coach advice → why the plan changed.
             Performance context moved to The General; Recall & Clarity moved to the identity drawer. */}
@@ -1358,6 +1358,8 @@ function HammerDailyPlanBody({
                 );
               })}
               {coachCards(["mobility", "recovery"])}
+              {/* Owner Oct 28: reflection Mind item is the absolute last task of the recovery card. */}
+              <ErrorBoundary><MindItemCard planDate={pocketDate} placement="recovery_last" /></ErrorBoundary>
               <HammerCheckInCard
                 quizType="night"
                 completed={vaultQuizzes.hasCompleted("night")}
