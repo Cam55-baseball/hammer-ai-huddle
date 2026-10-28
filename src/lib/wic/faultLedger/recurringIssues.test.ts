@@ -55,8 +55,8 @@ const block: PrescribedBlock = {
   cues: [], stopRules: [], durationMin: 20, route: "/practice", ctaLabel: "Open", status: "ready",
   missing: [], missingContextKeys: [], gamePlanTemplate: null,
 };
-const run = (issues: RecurringIssue[], catalog = [drill, other]) => applyFaultPlanInfluence({
-  blocks: [block], rankedFaults: [], recurringIssues: issues, sport: "baseball", ownedEquipment: new Set(),
+const run = (issues: RecurringIssue[], catalog = [drill, other], owned: string[] = []) => applyFaultPlanInfluence({
+  blocks: [block], rankedFaults: [], recurringIssues: issues, sport: "baseball", ownedEquipment: new Set(owned),
   catalog, circulation: { servedToUser: {}, usage: {} }, now: new Date(NOW),
 })[0];
 
@@ -79,7 +79,9 @@ describe("Today fix-it slot for a recurring issue", () => {
 describe("seeded replay with the real Hammers library", () => {
   it("the stored row from two saved analyses puts a real tagged drill in Today with its Because line", async () => {
     const { ELITE_DRILL_CATALOG } = await import("@/data/drills/eliteDrillCatalog");
-    const out = run([issue], ELITE_DRILL_CATALOG);
+    const gear = ELITE_DRILL_CATALOG.find((d) => d.id === "elite.hit.step_behind_separation")!.equipment;
+    const out = run([issue], ELITE_DRILL_CATALOG, gear);
+    expect(out.drills[0].slug).toBe("elite.hit.step_behind_separation");
     expect(out.drills[0].analysisInfluence?.recurring?.analysisCount).toBe(2);
     expect(out.because?.at(-1)).toMatch(/^Because "front shoulder opens early" keeps showing up/);
   });
