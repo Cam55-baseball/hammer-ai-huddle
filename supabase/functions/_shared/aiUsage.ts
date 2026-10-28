@@ -9,7 +9,7 @@ export const AI_RATES: Record<string, { input: number; output: number }> = {
 
 export const HOURLY_ANALYSIS_LIMIT = 30;
 export const HOURLY_LIMIT_MESSAGE =
-  "You've reached 30 analyses this hour. Your video is saved and will be analyzed when the hour resets. You won't be charged.";
+  "You've reached 30 analyses this hour. Tap Retry after the hour resets. You won't be charged.";
 
 /** When the oldest analysis in the window leaves it, one slot opens. */
 export function resumeAtFrom(oldestInWindowIso: string | null, now = Date.now()): string {
