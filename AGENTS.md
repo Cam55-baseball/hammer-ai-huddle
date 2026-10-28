@@ -47,7 +47,7 @@
 - Catalog alternative gear uses complete groups in equipment_alternatives; all mandatory gear plus one complete group must be available. Why: dumbbell-or-kettlebell must not require both or silently accept neither.
 - Sport drill-library equipment is adapted through `sportDrillGear` to the shared saved-plan gear judge. Why: mandatory and complete alternative groups must have identical availability semantics across libraries and Swap.
 - Server block generation bundles the existing pure daily-plan builder through `scripts/build-hammer-block-bundle.mjs`, rejecting browser/auth dependencies and injecting owner drills/stage tags. Why: block Swap must reuse the same generator rather than accept client snapshots or create a second builder.
-- Athlete envelope projection lives in the hook-free `contextProjection` module and is re-exported by `athleteContext`. Why: browser and server block builders must preserve identical confidence, missingness and lineage without importing React or auth.
+- Envelopes use hook-free `contextProjection`, re-exported by `athleteContext`. Why: client/server builders share lineage and missingness without browser imports.
 
 - TEST-only catalog rows (`visible_to`) are filtered by `src/lib/catalog/testOnlyVisibility.ts` in every non-owner client list and by the builder/Swap server queries; cross-athlete view audits go only through `record_view_audit_event`. Why: real players must never see TEST items, and client roster checks can't authorize ledger writes.
 - Swap ranks same movement pattern, then same-or-easier difficulty (`difficultyLevel` in `_shared/planSwap/simpleSwap.ts`) and never offers pairs more than one level apart; those join the Vault review queue. Why: a swap must not be a hidden difficulty jump.
@@ -60,3 +60,4 @@
 - Exact exercise measurement decisions are shared by the library, inline logger and log-sheet resolver; yard entry converts only at the display boundary, keeping canonical distance in feet. Why: ambiguous names must not diverge between logging paths or change existing distance readers.
 - Mastery: gated judges, weekly boost, JWT-only new days; saved sport, no backfill. Why: provenance.
 - Read nested AGENTS.md, including coachRx, video-library and evaluate-behavioral-state. Why: scoped consistency.
+- Goal shelves share self-scoped goal reads and resolve explicit athlete-readable library IDs without fault attribution. Why: goals and URLs cannot invent faults or library identity.
