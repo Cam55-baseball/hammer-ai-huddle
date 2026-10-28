@@ -64,6 +64,9 @@ export function SessionDetailDialog({
   /** Marked-up copies of this session, if any were saved alongside it. */
   const markedUpVersions: any[] = Array.isArray(session?.markedUpVersions) ? session.markedUpVersions : [];
   const [activeVideoId, setActiveVideoId] = useState<string>(session?.id);
+  // The player mounts only on tap so a clip Safari can't decode never takes the report down with it.
+  const [showVideo, setShowVideo] = useState(false);
+  useEffect(() => { setShowVideo(false); }, [session?.id]);
   useEffect(() => { setActiveVideoId(session?.id); }, [session?.id]);
   const activeVideoUrl: string =
     (activeVideoId && activeVideoId !== session?.id
@@ -796,6 +799,11 @@ export function SessionDetailDialog({
               )}
               <div className="relative">
                 {/* No hidden second player: a duplicate decoder crashed WebKit on saved reports. */}
+                {!showVideo ? (
+                  <Button type="button" variant="outline" className="w-full" onClick={() => setShowVideo(true)}>
+                    Play video
+                  </Button>
+                ) : (
                 <EnhancedVideoPlayer
                   key={activeVideoId}
                   videoSrc={activeVideoUrl}
@@ -806,6 +814,7 @@ export function SessionDetailDialog({
                   isOwnerView={isOwner}
                   onSaveAnnotation={isOwner ? handleSaveSelfAnnotation : handleSaveAnnotation}
                 />
+                )}
               </div>
             </div>
           )}
