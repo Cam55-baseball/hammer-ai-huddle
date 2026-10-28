@@ -4483,3 +4483,4 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - 2026-10-28 run 8: recurring findings stored (2+ saved analyses/28d) → identity, coach, learning loop, Today fix-it with Because; practice checks → tagged drills only; saved report video loads on tap (Safari crash fixed).
 - Oct 28 owner decisions: weekly volume/Mind/video-link rules + 8-week sims + embed notice built as shared rules; generator wiring, drill-builder tags/video field, full suite pending.
 - Oct 28 run 2: owner builder engine tags + YouTube/Vimeo/upload-only links; daily Mind card on Today; generator volume wiring still open.
+- Oct 28 run 3: owner category tags feed existing plan slots (client + server block bundle, plan-swap redeployed); generator 6-day/minimums wiring still open.
