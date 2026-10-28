@@ -382,24 +382,8 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysi
         : clip.achievedFps != null ? "measured" : "unknown";
       const scope = analysisScopeForFps(achievedFps);
 
-      // Pull analysis frames BEFORE uploading, so a clip that can't be
-      // analyzed is rejected in seconds instead of after a full upload.
-      let extraction: Awaited<ReturnType<typeof extractKeyFramesDeterministic>> | null = null;
-      const fpsForFrames = probed.fps_true;
-      if (opts.analyze) {
-        toast.loading("Extracting frames…", { id: toastId });
-        const tExtract = performance.now();
-        extraction = await extractKeyFramesDeterministic({
-          videoFile: file,
-          fps_true: fpsForFrames ?? UNKNOWN_FPS_SAMPLING_GRID_HZ,
-          duration_sec: probed.duration_sec,
-          landingTime: null,
-        });
-        mark("extract_ms", tExtract);
-        // Only "no readable picture at all" stops a report (owner, Oct 27).
-        if (extraction.frames.length < 1) throw new Error("not_enough_frames");
-        toast.loading("Uploading your clip…", { id: toastId });
-      }
+      // Oct 28: the server watches the uploaded clip itself; the phone pulls no pictures.
+      if (opts.analyze) toast.loading("Uploading your clip…", { id: toastId });
 
       const tUpload = performance.now();
       const { error: uploadError } = await supabase.storage
@@ -468,7 +452,6 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysi
         return;
       }
 
-      if (!extraction) throw new Error("not_enough_frames");
       mark("total_before_analysis_ms", t0);
       console.info("[HighFpsCapture] timings", { ...timings, bytes: file.size });
 
@@ -479,14 +462,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysi
           module: resolvedModule,
           sport: resolvedSport,
           userId: user.id,
-          frames: extraction.frames.map((f) => f.dataUrl),
-          frameExtractions: extraction.frames.map((f) => ({
-            frame_index: f.frame_index,
-            timestamp_seconds: f.timestamp_seconds,
-            sha256_hex: f.sha256_hex,
-            width: f.width,
-            height: f.height,
-          })),
+          // No frames: the server fetches and watches the uploaded clip.
           captureFps: achievedFps,
           ballTrackingEligible: scope.ballTracking,
         },
@@ -505,9 +481,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysi
     } catch (e: any) {
       console.error("[HighFpsCapture] save failed", e);
       toast.error(
-        e?.message === "not_enough_frames"
-          ? UPLOAD_ERRORS.notEnoughFrames
-          : e?.userMessage ?? "Couldn't finish saving this clip. Try again.",
+        e?.userMessage ?? "Couldn't finish saving this clip. Try again.",
         { id: toastId },
       );
     } finally {

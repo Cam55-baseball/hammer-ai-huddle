@@ -30,9 +30,6 @@ export const UPLOAD_ERRORS = {
   droppedFrames:
     "Too much of this clip came through damaged. Re-save it from your camera roll and upload again.",
 
-  notEnoughFrames:
-    "We couldn't pull enough clear pictures out of this clip to analyze it. Try a steadier clip, filmed in better light, with the athlete fully in frame.",
-
   frameExtractionFailed:
     "Your browser couldn't read this video. Try again in Safari or Chrome, or re-save the clip from your camera roll first.",
 
