@@ -1,6 +1,7 @@
 import type { EliteDrill } from '@/data/drills/eliteDrillCatalog';
 import type { PrescribedBlock, DrillStep } from '@/lib/hammer/prescription/dailyPlan';
-import type { OwnerDrill } from './ownerDrills';
+import type { OwnerDrill, OwnerDrillRow } from './ownerDrills';
+import { eligibleFor, type PlanSlot } from './ownerPlanDrills';
 import { fadeForSignal, type ClipEvidence } from '@/lib/wic/faultLedger/cleanClipFade';
 import { ownsAllGear, avoidsMissingGear } from '../../../supabase/functions/_shared/planSwap/simpleSwap';
 
@@ -26,7 +27,15 @@ export function analysisDrillCategory(block: Pick<PrescribedBlock, 'modality' | 
 
 /** One existing ordinary slot, never prep, full-go, log, owner work or extra dose. */
 export function analysisDrillSlot(drills: readonly DrillStep[]): number {
-  return drills.findIndex(d => !d.ownerDrillId && d.prescriptionOrigin !== 'owner' && !d.bunt && (d.stage == null || d.stage === 'drills'));
+  return drills.findIndex(d => !d.ownerDrillId && d.prescriptionOrigin !== 'owner' && !d.bunt && !d.executionKind && (d.stage == null || d.stage === 'drills'));
+}
+
+export function analysisOwnerEligible(drill:EliteDrill,owners:readonly OwnerDrillRow[],sport:string,equipment:Iterable<string>,date:string){
+  if(!('ownerRowId' in drill))return true;
+  const row=owners.find(r=>r.id===(drill as OwnerDrill).ownerRowId);
+  if(!row)return false;
+  const slot:PlanSlot=drill.category==='fielding'?'hammers_today:defense':drill.category==='baserunning'?'hammers_today:baserunning':'hammers_today:skill';
+  return eligibleFor(row,[slot],{sport,owned:new Set(equipment),skill:drill.category==='hitting'?'hitting':drill.category==='throwing'||drill.category==='pitching'?'throwing':undefined,day:new Date(`${date}T12:00:00Z`)});
 }
 
 export function enrollmentBecause(enrollment: AnalysisDrillEnrollment, name: string): string {
@@ -45,7 +54,7 @@ export function enrolledDrill(source: DrillStep, drill: EliteDrill, enrollment: 
 /** Reuse legal ready cards; clean-clip learning moves a cleared issue on, not a timer or a heart. */
 export function applyAnalysisDrillRotation(input: {
   blocks: readonly PrescribedBlock[]; enrollments: readonly AnalysisDrillEnrollment[]; catalog: readonly EliteDrill[];
-  sport: string; equipment: Iterable<string>; missing?: Iterable<string>; clips: readonly ClipEvidence[];
+  sport: string; equipment: Iterable<string>; missing?: Iterable<string>; clips: readonly ClipEvidence[];owners?:readonly OwnerDrillRow[];date?:string;
 }): PrescribedBlock[] {
   return input.blocks.map(block => {
     if (block.status !== 'ready') return block;
@@ -59,10 +68,7 @@ export function applyAnalysisDrillRotation(input: {
         fault_key: enrollment.fault_key, observed_at: enrollment.observed_at }, input.clips).status === 'cleared') continue;
       const drill = input.catalog.find(d => d.id === enrollment.drill_id && d.category === category && d.sports.includes(input.sport as 'baseball' | 'softball'));
       if (!drill) continue;
-      if ('ownerRowId' in drill) {
-        const placements = (drill as OwnerDrill).placements;
-        if (!placements.includes('hammers_today:skill') && !placements.includes(`hammers_today:${category}`)) continue;
-      }
+      if(!analysisOwnerEligible(drill,input.owners??[],input.sport,input.equipment,input.date??new Date().toISOString().slice(0,10)))continue;
       const gear = { equipment_requirements: drill.equipment };
       if (!ownsAllGear(gear, input.equipment) || !avoidsMissingGear(gear, input.missing ?? [])) continue;
       const drills = block.drills.slice();

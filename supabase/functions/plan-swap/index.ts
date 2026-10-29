@@ -5,7 +5,7 @@ import { missingGearAnswer, swapGearList } from "../_shared/planSwap/commonGear.
 import { blockKnownGear, blockSwapChoices } from "../_shared/planSwap/blockSwap.ts";
 import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, rememberedMissingGear, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
 import { speedRowSwap } from "../_shared/planSwap/speedRowSwap.ts";
-import { addAnalysisDrill, rotateAnalysisDrills } from '../_shared/planSwap/analysisDrillAction.ts';
+import { addAnalysisDrill, rotateAnalysisDrills,acknowledgeAnalysisRotation } from '../_shared/planSwap/analysisDrillAction.ts';
 
 const base = { prescriptionId: z.string().uuid(), planDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   speedSetup: z.object({ spaceYards: z.number().finite().min(0).max(200).nullable(), hill: z.boolean(), sled: z.boolean(), band: z.boolean(), treadmill: z.boolean() }).strict().optional(),
@@ -13,6 +13,7 @@ const base = { prescriptionId: z.string().uuid(), planDate: z.string().regex(/^\
   missing: z.array(z.string().min(1).max(60)).max(40), note: z.string().max(300).optional() };
 const bodySchema = z.discriminatedUnion("action", [
   z.object({action:z.literal('analysis_rotation'),sport:z.enum(['baseball','softball']),planDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/)}).strict(),
+  z.object({action:z.literal('analysis_rotation_ack'),sport:z.enum(['baseball','softball']),planDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),videoId:z.string().uuid(),drillId:z.string().min(1).max(150),acknowledged:z.array(z.string()).max(30)}).strict(),
   z.object({ action: z.literal('analysis_drill'), videoId:z.string().uuid(),drillId:z.string().min(1).max(150),sport:z.enum(['baseball','softball']),planDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),acknowledged:z.array(z.string()).max(30).optional() }).strict(),
   z.object({ action: z.literal("options"), ...base }).strict(),
   z.object({ action: z.literal("swap"), ...base, toSlug: z.string().min(1).max(120),
@@ -41,6 +42,9 @@ Deno.serve(async req => {
     const input = bodySchema.safeParse(await req.json());
     if (!input.success) return reply({ error: "Check your Swap answer. Nothing was saved." }, 400);
     const body = input.data;
+    if(body.action==='analysis_rotation_ack'){
+      try{return reply(await acknowledgeAnalysisRotation(client,admin,uid,body));}catch(e){return reply({error:e instanceof Error?e.message:'Nothing saved.'},409);}
+    }
     if (body.action === 'analysis_rotation') {
       try {return reply(await rotateAnalysisDrills(client,admin,uid,body));}
       catch(e){return reply({error:e instanceof Error ? e.message : 'Fix-it work could not be checked.'},409);}

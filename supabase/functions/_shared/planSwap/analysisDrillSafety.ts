@@ -47,5 +47,5 @@ export function analysisDrillSafety(drill: Row, block: Row, facts: Row, date: st
   const warnings = typeof readiness === 'number' ? [] : [missingCoachFactWarning(date, 'check_in')];
   if (!declaredIntensity) warnings.push({code:'missing_facts',date,rule:'This drill’s intensity and workload values are not recorded. Those values could not be checked. Proceed with the same planned amount?'});
   if (drill.progression_level == null) warnings.push({code:'missing_facts',date,rule:'This drill’s age-progression level is not recorded, so the catalog’s usual age check could not be completed. Proceed?'});
-  return { warnings, keys: warningKeys(warnings), acknowledged: (keys: unknown) => warningsAcknowledged(warnings, keys) };
+  return { equipment:[...owned], warnings, keys: warningKeys(warnings), acknowledged: (keys: unknown) => warningsAcknowledged(warnings, keys) };
 }
