@@ -1,3 +1,4 @@
+import { ownerHealth } from "@/lib/intelligence/ownerHealth";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -121,6 +122,9 @@ export default function AdminTrainingIntelligence() {
   const gateLoading = adminLoading || ownerLoading;
 
   const [loading, setLoading] = useState(true);
+  const [readFailed, setReadFailed] = useState(false);
+  const [view, setView] = useState("health");
+  const [details, setDetails] = useState(false);
   const [gateRun, setGateRun] = useState<TestRun | null>(null);
   const [versionRun, setVersionRun] = useState<TestRun | null>(null);
   const [checks, setChecks] = useState<ShadowCheck[]>([]);
@@ -192,6 +196,7 @@ export default function AdminTrainingIntelligence() {
         .limit(500),
     ]);
 
+    setReadFailed([runsRes, checksRes, matrixRes, switchRes, pendingRes, decisionRes].some(r => Boolean(r.error)));
     const runs = (runsRes.data ?? []) as TestRun[];
     const current = (r: TestRun) =>
       r.config_hash === TCS_CONFIG_HASH && r.thresholds_hash === TCS_THRESHOLDS_HASH;
@@ -227,6 +232,7 @@ export default function AdminTrainingIntelligence() {
       .gte("noted_at", new Date(Date.now() - 86400000).toISOString())
       .order("noted_at", { ascending: false })
       .limit(50);
+    if (noteRows === null) setReadFailed(true);
     setWatchNotes((noteRows ?? []) as typeof watchNotes);
 
 
@@ -272,7 +278,19 @@ export default function AdminTrainingIntelligence() {
   const versionOk = versionRun?.status === "passed" && (versionRun.violations_count ?? 0) === 0;
   const determinismOk = lastCheck ? lastNightGreen : null;
   const matrixOk = matrix ? matrix.status === "passed" && matrix.empty_cells === 0 : null;
+  const health = ownerHealth([
+    { name: "Safety tests", passed: gateRun ? gateOk : null },
+    { name: "Version tests", passed: versionRun ? versionOk : null },
+    { name: "Nightly plan comparison", passed: determinismOk },
+    { name: "Complete plan cards", passed: matrixOk },
+  ], watchNotes.filter(n => n.severity === "critical").length, watchNotes.filter(n => n.severity === "warn").length, readFailed);
   const healthGreen = Boolean(gateOk) && determinismOk === true && matrixOk === true;
+  const attention = [
+    ...health.failed.map(c => ({ title: `${c.name} need checking.`, action: "Review the failed check", target: "health" })),
+    ...health.missing.map(c => ({ title: `${c.name} have no saved result for these settings.`, action: "Review available evidence", target: "health" })),
+    ...(readFailed ? [{ title: "Some system records could not be loaded.", action: "Refresh the records", target: "reload" }] : []),
+    ...watchNotes.filter(n => n.severity === "critical" || n.severity === "warn").map(n => ({ title: n.title, action: "Review the recorded warning", target: "health" })),
+  ];
 
   const modeAllowed = (mode: string): { ok: boolean; why: string; needsConfirm: boolean } => {
     if (mode === "off") return { ok: true, why: "", needsConfirm: false };
@@ -478,12 +496,25 @@ export default function AdminTrainingIntelligence() {
       <div className="mx-auto w-full max-w-3xl space-y-4 p-4">
         <div>
           <h1 className="text-2xl font-bold">Training Intelligence</h1>
-          <p className="text-sm text-muted-foreground">
-            System checks, review and switches for the new training calculator.
-          </p>
+
         </div>
 
-        <Tabs defaultValue="health">
+        <section aria-label="System health" className="space-y-5 border-y border-border py-5">
+          <h2 className="text-xl font-semibold">Is the System Healthy?</h2>
+          <div className="flex items-center gap-3" role="status">
+            <span className={`h-4 w-4 shrink-0 rounded-full ${health.status === 'green' ? 'bg-state-calm' : health.status === 'yellow' ? 'bg-state-watch' : 'bg-state-escalate'}`} />
+            <p className="text-lg font-semibold">{health.status === 'green' ? 'Green — recorded checks passed' : health.status === 'yellow' ? 'Yellow — needs a closer look' : 'Red — a recorded problem needs attention'}</p>
+          </div>
+          <p className="text-base text-muted-foreground">{health.status === 'green' ? 'The latest saved checks passed. This does not certify every part of the app.' : 'Missing checks are not a pass. Keep current safety limits in place while reviewing.'}</p>
+          <h2 className="text-xl font-semibold">What Needs My Attention?</h2>
+          {!attention.length ? <p>No recorded concerns in these checks.</p> : <ul className="list-disc space-y-2 pl-5">{attention.slice(0,5).map((a,i)=><li key={i} className="break-words">{a.title}</li>)}</ul>}
+          {attention.length>5 && <p className="text-sm text-muted-foreground">{attention.length-5} more concerns in Details.</p>}
+          <h2 className="text-xl font-semibold">What Should I Do?</h2>
+          {!attention.length ? <Button variant="outline" onClick={()=>void load()}>Refresh checks</Button> : attention.slice(0,5).map((a,i)=><div className="flex flex-col gap-2 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between" key={i}><p className="min-w-0 break-words text-base">{a.title}</p><Button variant="outline" className="shrink-0" onClick={()=>{if(a.target==='reload') void load(); else {setView(a.target);setDetails(true);}}}>{a.action}</Button></div>)}
+        </section>
+        <Button variant="outline" aria-expanded={details} onClick={()=>setDetails(!details)}>{details ? 'Hide Details' : 'Details'}</Button>
+        <div hidden={!details}>
+        <Tabs value={view} onValueChange={setView}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="health">System checks</TabsTrigger>
             <TabsTrigger value="review">Review</TabsTrigger>
@@ -655,7 +686,7 @@ export default function AdminTrainingIntelligence() {
                       readOnly
                       value={reportText}
                       onFocus={(e) => e.currentTarget.select()}
-                      className="h-64 font-mono text-[11px]"
+                      className="h-64 font-mono text-sm"
                     />
                   </div>
                 )}
@@ -869,6 +900,7 @@ export default function AdminTrainingIntelligence() {
             ))}
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </DashboardLayout>
   );
