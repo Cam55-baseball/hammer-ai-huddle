@@ -4495,3 +4495,4 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - Oct 29 r2-run5: item 10 plain upload checklist (type/size, one rep, full body, side/front, light) before upload.
 - Oct 29 r2-run6: item 15 Develop This Week + Recent Development Picks moved off dashboard into The General drawers.
 - Oct 29 r2-run7: item 16 body-load bar merged into Your training block & season card.
+- Oct 29 r2-run8: full suite 635 pass, build OK, checklist updated; 8 P0 items open → not ready.
