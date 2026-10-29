@@ -161,7 +161,7 @@ export default function CoachDashboard() {
       setLoading(true);
       const { data, error } = await supabase.functions.invoke('get-following-players');
       if (error) throw error;
-      setFollowing(data?.results || []);
+      setFollowing((data?.results || []).map((player: Player) => ({ ...player, full_name: player.full_name?.trim() || 'Name not provided' })));
     } catch (error) {
       console.error('Error in fetchFollowing:', error);
       toast({ title: t('common.error'), description: t('coach.failedToLoadPlayers', 'Failed to load your players'), variant: "destructive" });

@@ -120,11 +120,10 @@ export default function CoachingConsole() {
       <MasterySettings />
       <PitchingStandardsSettings />
       </details>
-      <section aria-label="Development philosophy" className="space-y-1 py-2"><h2 className="text-lg font-semibold">Secure what's natural first</h2><p className="text-sm text-muted-foreground">{NATURAL_FIRST_PRINCIPLE}</p></section>
+      <section aria-label="Development philosophy" className="space-y-1 py-2"><h2 className="text-lg font-semibold">Secure What's Natural First</h2><p className="text-base text-muted-foreground">{NATURAL_FIRST_PRINCIPLE}</p></section>
 
       <details open><summary className="cursor-pointer py-3 text-lg font-semibold">Questions for the Owner</summary>
       <section className="space-y-3 border-b border-border pb-4" aria-label="Questions for the owner">
-        <h2 className="text-lg font-semibold">Questions for the owner</h2>
         {isLoading ? <p className="text-sm text-muted-foreground">Loading saved answers…</p> : isError ?
           <p role="alert" className="text-sm text-destructive">Couldn't check saved answers. Try again later.</p> :
           OWNER_QUESTIONS.map(question => {
