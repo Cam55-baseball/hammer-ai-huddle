@@ -1530,7 +1530,8 @@ function requiredAnalyses(modules) {
 
 // src/lib/hammer/priorityAccess.ts
 function priorityAccess(modules, sport) {
-  const included = requiredAnalyses(modules.filter((module) => module.startsWith(`${sport}_`)));
+  const scoped = modules.flatMap((module) => module.startsWith(`${sport}_`) ? [module] : ["hitting", "pitching", "throwing"].includes(module) ? [`${sport}_${module}`] : []);
+  const included = requiredAnalyses(scoped);
   return {
     hasPitching: included.includes("pitching"),
     hasHitting: included.includes("hitting"),
@@ -1542,10 +1543,10 @@ function priorityAccess(modules, sport) {
 function subscriptionSchedule(modules, sport) {
   const access = priorityAccess(modules, sport);
   const pitcher = modules.includes(`${sport}_pitcher`);
-  const position = modules.includes(`${sport}_5tool`) || modules.includes(`${sport}_golden2way`);
+  const position = modules.includes(`${sport}_5tool`) || modules.includes(`${sport}_golden2way`) || access.hasHitting && access.hasThrowing;
   return {
     ...access,
-    pitcherOnly: pitcher && !position && !access.hasHitting,
+    pitcherOnly: (pitcher || access.hasPitching) && !position && !access.hasHitting,
     hasDefense: pitcher || position || access.hasThrowing,
     hasBaserunning: position,
     hasBunting: position,
