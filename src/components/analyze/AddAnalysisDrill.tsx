@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { supabase } from '@/integrations/supabase/client';
 import type { EliteDrill } from '@/data/drills/eliteDrillCatalog';
 
-export function AddAnalysisDrill({ drill, videoId, sport }: {drill: EliteDrill; videoId?: string | null; sport: string}) {
+export function AddAnalysisDrill({ drill, videoId, sport,planDate,rotation=false }: {drill: EliteDrill; videoId?: string | null; sport: string;planDate?:string;rotation?:boolean}) {
   const qc = useQueryClient();
   const pending = useRef(false);
   const [open,setOpen] = useState(false);
@@ -19,7 +19,7 @@ export function AddAnalysisDrill({ drill, videoId, sport }: {drill: EliteDrill; 
     if (!videoId || pending.current) return;
     pending.current=true;setBusy(true);setError(null);
     try {
-      const {data,error:failure} = await supabase.functions.invoke('plan-swap',{body:{action:'analysis_drill',videoId,drillId:drill.id,sport,planDate:new Date().toISOString().slice(0,10),acknowledged}});
+      const {data,error:failure} = await supabase.functions.invoke('plan-swap',{body:{action:rotation?'analysis_rotation_ack':'analysis_drill',videoId,drillId:drill.id,sport,planDate:planDate??new Date().toISOString().slice(0,10),acknowledged}});
       if (failure || data?.error) {
         const response = failure && 'context' in failure && failure.context instanceof Response ? await failure.context.clone().json().catch(()=>null) : null;
         throw new Error(response?.error ?? data?.error ?? 'Nothing was saved. Try again.');
@@ -34,7 +34,7 @@ export function AddAnalysisDrill({ drill, videoId, sport }: {drill: EliteDrill; 
     finally {pending.current=false;setBusy(false);}
   };
   return <>
-    <Button variant="outline" size="sm" disabled={!videoId || busy} onClick={()=>{setOpen(true);setDone(false);setWarnings([]);setKeys([]);void add();}}><Plus className="h-4 w-4 mr-1"/>Add to Today</Button>
+    <Button variant="outline" size="sm" disabled={!videoId || busy} onClick={()=>{setOpen(true);setDone(false);setWarnings([]);setKeys([]);void add();}}><Plus className="h-4 w-4 mr-1"/>{rotation?'Review fix-it choice':'Add to Today'}</Button>
     <Sheet open={open} onOpenChange={value=>{if(!busy)setOpen(value);}}><SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
       <SheetHeader><SheetTitle>{drill.name}</SheetTitle></SheetHeader>
       <div className="space-y-4 py-4">
