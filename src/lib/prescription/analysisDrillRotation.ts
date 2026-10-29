@@ -68,7 +68,7 @@ export function applyAnalysisDrillRotation(input: {
       const drills = block.drills.slice();
       drills[index] = enrolledDrill(drills[index], drill, enrollment);
       const checklist = drills.map(d => `${d.name} — ${d.dosage}`);
-      return { ...block, drills, steps: checklist, because: [...block.because, enrollmentBecause(enrollment, drill.name)],
+      return { ...block, drills, steps: checklist, because: [...(block.because ?? []), enrollmentBecause(enrollment, drill.name)],
         gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist } : null };
     }
     return block;
