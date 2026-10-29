@@ -84,6 +84,9 @@ function sortByWarmupStage(items, slugOf, roleOf) {
   return keyed.map((k) => k.it);
 }
 
+// src/lib/hammer/athleteFeatureAvailability.ts
+var GAME_IQ_AVAILABLE_TO_ATHLETES = false;
+
 // supabase/functions/_shared/health/physioMapping.ts
 function physioDefaults(raw) {
   const r = raw && typeof raw === "object" ? raw : {};
@@ -3613,6 +3616,9 @@ function normalizeInjuryToText(raw) {
   const txt = injuryHistoryToText(activeInjuryHistory(raw));
   return txt === "" ? null : txt;
 }
+var GYM_VENUE_TOKENS = /* @__PURE__ */ new Set(["full_gym", "commercial_gym", "school_gym", "home_gym", "garage"]);
+var BODYWEIGHT_VENUE_TOKENS = /* @__PURE__ */ new Set(["bodyweight", "bands", "hotel"]);
+var LOAD_GEAR_TOKENS = /* @__PURE__ */ new Set(["barbell", "squat_rack", "power_rack", "bench", "dumbbells", "dumbbell", "kettlebell", "kettlebells", "trap_bar", "plates", "cable_machine"]);
 var VENUE_EQUIPMENT_TOKENS = /* @__PURE__ */ new Set([
   "full_gym",
   "commercial_gym",
@@ -3634,7 +3640,9 @@ function projectEnvelope(ctx) {
   const eqObj = typeof eq === "object" && eq !== null && !Array.isArray(eq) ? eq : null;
   const venueFromEntry = eqObj?.venue ?? entry?.venue ?? null;
   const equipmentVenue = typeof venueFromEntry === "string" ? venueFromEntry : null;
-  const equipment = equipmentVenue ?? equipmentList.find((t) => VENUE_EQUIPMENT_TOKENS.has(t)) ?? null;
+  const hasLoadGear = equipmentList.some((t) => LOAD_GEAR_TOKENS.has(t));
+  const listVenue = equipmentList.find((t) => GYM_VENUE_TOKENS.has(t)) ?? equipmentList.find((t) => VENUE_EQUIPMENT_TOKENS.has(t) && !(hasLoadGear && BODYWEIGHT_VENUE_TOKENS.has(t))) ?? null;
+  const equipment = (equipmentVenue && !(hasLoadGear && BODYWEIGHT_VENUE_TOKENS.has(equipmentVenue)) ? equipmentVenue : null) ?? listVenue;
   const scopeRaw = eqObj?.scope ?? entry?.scope ?? null;
   const equipmentScope = typeof scopeRaw === "string" ? scopeRaw : null;
   const injury = normalizeInjuryToText(ctx.get("injury_history")?.value);
@@ -8355,7 +8363,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     earnedDaysByModality
   );
   const positionOverrideArg = roadmapInputs.positionOverride ?? null;
-  const allowed = (m) => !access || (m === "hitting" ? access.hasHitting : m === "baserunning" ? access.hasBaserunning : m === "defense" ? access.hasDefense : m === "throwing" ? access.hasThrowing || access.hasPitching : true);
+  const allowed = (m) => (m !== "game_iq" || GAME_IQ_AVAILABLE_TO_ATHLETES) && (!access || (m === "hitting" ? access.hasHitting : m === "baserunning" ? access.hasBaserunning : m === "defense" ? access.hasDefense : m === "throwing" ? access.hasThrowing || access.hasPitching : true));
   const firstPass = ALL_MODALITIES.filter(allowed).map(
     (m) => builder({
       modality: m,

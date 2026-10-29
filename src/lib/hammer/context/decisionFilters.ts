@@ -83,6 +83,9 @@ function normalizeInjuryToText(raw: unknown): string | null {
  * (["gamer_bat","tee","pitching_machine"]); only these tokens describe the
  * training environment, so an inventory entry may never masquerade as one.
  */
+const GYM_VENUE_TOKENS = new Set(["full_gym", "commercial_gym", "school_gym", "home_gym", "garage"]);
+const BODYWEIGHT_VENUE_TOKENS = new Set(["bodyweight", "bands", "hotel"]);
+const LOAD_GEAR_TOKENS = new Set(["barbell", "squat_rack", "power_rack", "bench", "dumbbells", "dumbbell", "kettlebell", "kettlebells", "trap_bar", "plates", "cable_machine"]);
 const VENUE_EQUIPMENT_TOKENS = new Set([
   "full_gym", "commercial_gym", "home_gym", "bodyweight", "bands",
   "hotel", "field", "open_space", "cage", "garage", "school_gym",
@@ -119,8 +122,16 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
   const venueFromEntry = eqObj?.venue ?? entry?.venue ?? null;
   const equipmentVenue = typeof venueFromEntry === "string" ? venueFromEntry : null;
 
+  // A saved band or bodyweight token is gear, not the whole venue: when the
+  // inventory also holds loadable lifting gear, the strength card must not
+  // fall to the bodyweight template. Gym venues win over field/band tokens.
+  const hasLoadGear = equipmentList.some((t) => LOAD_GEAR_TOKENS.has(t));
+  const listVenue =
+    equipmentList.find((t) => GYM_VENUE_TOKENS.has(t)) ??
+    equipmentList.find((t) => VENUE_EQUIPMENT_TOKENS.has(t) && !(hasLoadGear && BODYWEIGHT_VENUE_TOKENS.has(t))) ??
+    null;
   const equipment: string | null =
-    equipmentVenue ?? equipmentList.find((t) => VENUE_EQUIPMENT_TOKENS.has(t)) ?? null;
+    (equipmentVenue && !(hasLoadGear && BODYWEIGHT_VENUE_TOKENS.has(equipmentVenue)) ? equipmentVenue : null) ?? listVenue;
 
   const scopeRaw = eqObj?.scope ?? entry?.scope ?? null;
   const equipmentScope = typeof scopeRaw === "string" ? scopeRaw : null;

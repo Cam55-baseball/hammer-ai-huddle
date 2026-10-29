@@ -1,4 +1,5 @@
 import { sortByWarmupStage } from "./warmupStages";
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "../athleteFeatureAvailability";
 import { mapPhysio, PREHAB_SLUGS, type PhysioMapping } from '../../../../supabase/functions/_shared/health/physioMapping';
 import { WARMUP_LIBRARY } from './warmupLibrary';
 import { enforceSkillStageOrder, validatePlanSanity } from './planSanity';
@@ -2403,7 +2404,8 @@ export function buildHammerDailyPlan(
 
   // Resolve the weekly microcycle NEXT so we can thread its label into blocks.
   const positionOverrideArg = roadmapInputs.positionOverride ?? null;
-  const allowed = (m: ModalityKey) => !access || (m === 'hitting' ? access.hasHitting : m === 'baserunning' ? access.hasBaserunning : m === 'defense' ? access.hasDefense : m === 'throwing' ? access.hasThrowing || access.hasPitching : true);
+  // Game IQ is unreleased: it is never saved into a player's plan until the release switch opens.
+  const allowed = (m: ModalityKey) => (m !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES) && (!access || (m === 'hitting' ? access.hasHitting : m === 'baserunning' ? access.hasBaserunning : m === 'defense' ? access.hasDefense : m === 'throwing' ? access.hasThrowing || access.hasPitching : true));
   const firstPass = ALL_MODALITIES.filter(allowed).map((m) =>
     builder({ modality: m, ctx, proj, speed, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
       pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings) : undefined,
