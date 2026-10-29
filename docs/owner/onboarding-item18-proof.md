@@ -1,5 +1,13 @@
 # Item 18 — initial inputs and Start, October 29
 
+## Latest run — October 29, 16:01 UTC
+
+**Still open.** The owner-authorized `create-test-athlete` helper was deployed and created a fresh unstarted TEST identity (`bb839f7d-6a03-460e-8b64-444f220b53da`). At 390×844, legal consent and profile entry were exercised. Assessment entry initially refused the missing canonical sport; Profile Setup now saves it through `persistContextAnswer`. Repeating Finish opened the actual initial assessment, showing saved name/position and the four input sections. Screenshot: `/tmp/browser/items18-3/assessment-start.png`.
+
+Health mapping/settings and structured injury entry are implemented in preview; the shared package was regenerated. **The health changes to `wk-generate-daily` are not deployed: this run authorized only `create-test-athlete`.** Active illness conservatively suppresses physical training to soft recovery rather than claiming that lowering a score alone makes every modality light. Independent injury gates remain intact; free-text notes do not establish healed status or diagnosis. Declared prehab currently lacks an exact elbow/knee sibling, so those additions remain incomplete. Explicit “better” action and full health UI readback remain unproven.
+
+Focused tests: 4 files / 38 tests passed. Latest automatic preview: build OK at 16:01:02 UTC. **No complete assessment, Start, validated first seven dates or reload acceptance was obtained in this run.** No full-week pass is claimed. No publish, migration, cron, iOS or real-player changes.
+
 **OPEN.** Initial capture/readback and Start passed for a brand-new TEST player at 390×844. The first full program did not pass: the unchanged speed certifier rejected two acceleration entries. The safe-session fallback is not full-plan acceptance. No safety rule was relaxed to obtain a pass.
 
 ## Input map
