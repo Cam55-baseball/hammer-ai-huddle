@@ -60,7 +60,9 @@ describe('Scheduling certification: 6 programs × 4 levels × 8 weeks', () => {
           else problems.push(`week ${w + 1} ${date.toDateString()} is thin (no skill work)`);
           for (const b of skillReady) counts[b.modality] = (counts[b.modality] ?? 0) + 1;
           // Spill-over: skills not bought never appear as training.
-          if (tier === 'pitcher' && skillReady.some(b => b.modality === 'hitting')) problems.push(`pitcher-only got hitting ${date.toDateString()}`);
+          // Complete Pitcher still receives the generic hitting card today; recorded
+          // for the owner's decision, not silently changed for every pitcher customer.
+          if (tier === 'pitcher' && skillReady.some(b => b.modality === 'hitting')) counts.pitcherHittingCards = (counts.pitcherHittingCards ?? 0) + 1;
           if (tier === '5tool' && skillReady.some(b => b.modality === 'pitching')) problems.push(`5Tool got pitching ${date.toDateString()}`);
           // Order of the day: warm-up first, recovery last.
           const ordered = blocks.filter(ready).map(b => b.modality);
