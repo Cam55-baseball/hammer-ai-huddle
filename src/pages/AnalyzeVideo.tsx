@@ -357,9 +357,6 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     setCurrentVideoId(null);
     currentVideoIdRef.current = null;
     setLandingTime(null);
-    if (module && sport && !assessment) {
-      toast.info(t('videoAnalysis.switchedContext', { sport, module, defaultValue: 'Switched to {{sport}} - {{module}}. Upload space cleared.' }));
-    }
   }, [module, sport, t]);
 
   useEffect(() => {
