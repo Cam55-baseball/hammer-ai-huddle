@@ -645,8 +645,7 @@ export default function Dashboard() {
 
         {/* My Daily Game Plan lives on its own page (side menu). */}
 
-        {/* Long-term Hammer video picks — athletes only */}
-        {hasPlayerAccess && <><DevelopThisWeek /><LongTermVideoSuggestions /></>}
+        {/* Develop This Week and Recent development picks live as drawers in The General. */}
 
         {/* Sport Switch Confirmation Dialog */}
         <AlertDialog open={showSportSwitchDialog} onOpenChange={setShowSportSwitchDialog}>

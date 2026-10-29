@@ -39,6 +39,8 @@ import { StandardsBoard } from '@/components/hammer/standards/StandardsBoard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 import { HammersCard } from '@/components/intelligence/HammersCard';
+import { DevelopThisWeek } from '@/components/dashboard/DevelopThisWeek';
+import { LongTermVideoSuggestions } from '@/components/dashboard/LongTermVideoSuggestions';
 import { howSureFor } from '@/lib/intelligence/howSure';
 import { useReadinessState } from '@/hooks/useReadinessState';
 import { PerformanceAreaRows } from '@/components/intelligence/PerformanceAreaRows';
@@ -226,6 +228,14 @@ Confidence: ${snapshot.development_confidence}%
             <Collapsible>
               <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-4 text-left font-semibold">Standards Board<ChevronDown className="h-4 w-4" /></CollapsibleTrigger>
               <CollapsibleContent className="pt-3"><StandardsBoard /></CollapsibleContent>
+            </Collapsible>
+            <Collapsible>
+              <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-4 text-left font-semibold">Develop This Week<ChevronDown className="h-4 w-4" /></CollapsibleTrigger>
+              <CollapsibleContent className="pt-3"><DevelopThisWeek /></CollapsibleContent>
+            </Collapsible>
+            <Collapsible>
+              <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-4 text-left font-semibold">Recent Development Picks<ChevronDown className="h-4 w-4" /></CollapsibleTrigger>
+              <CollapsibleContent className="pt-3"><LongTermVideoSuggestions /></CollapsibleContent>
             </Collapsible>
             <ReportCardAccessGate>
               <InternalLabel />
