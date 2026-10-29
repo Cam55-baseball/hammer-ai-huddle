@@ -141,15 +141,6 @@ export function AnalysisResultsPanel({
 
   return (
     <div className="space-y-5">
-      {!notMeasured && analysis.improvements && analysis.improvements.length > 0 && <section className="space-y-3">
-        <h3 className="flex items-center gap-2 font-semibold"><Wrench className="h-4 w-4 text-primary" />What to work on</h3>
-        {analysis.improvements.map((finding, index) => <Card key={`${finding.phase}-${index}`} className="space-y-2 border-l-4 border-l-primary p-4">
-          <p className="text-xs text-muted-foreground">{finding.phase}</p>
-          <h4 className="font-semibold">{withoutMeasurementNotation(finding.fault)}</h4>
-          <p className="text-sm text-muted-foreground">{withoutMeasurementNotation(finding.why)}</p>
-          <p className="text-sm"><strong>Work on:</strong> {withoutMeasurementNotation(finding.fix)}</p>
-        </Card>)}
-      </section>}
       {/* ── 2 · KEY FINDINGS ─────────────────────────────────────────── */}
       {(summary.length > 0 || crossDomainSlot) && (
         <RevealSection order={1}>
@@ -162,14 +153,6 @@ export function AnalysisResultsPanel({
 
 
 
-            {topTakeaway && (
-              <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
-                  {t('videoAnalysis.topTakeaway', 'Top takeaway')}
-                </p>
-                 <p className="mt-1 text-base font-medium leading-snug">{withoutMeasurementNotation(topTakeaway)}</p>
-              </div>
-            )}
 
             {restFindings.length > 0 && (
               <ol className="space-y-2.5">
@@ -243,11 +226,23 @@ export function AnalysisResultsPanel({
       )}
 
       {/* Single priority comes from the report's ranked findings, not a new drill. */}
-      {(analysis.improvements?.[0]?.fault || topTakeaway) && (
+      {/* One merged section: the single top priority, then the full "what to work on" list. */}
+      {(analysis.improvements?.[0]?.fault || topTakeaway || (!notMeasured && (analysis.improvements?.length ?? 0) > 0)) && (
         <RevealSection order={4}>
-          <Card className="space-y-2 p-5 sm:p-6">
-            <SectionHeading icon={<Wrench className="h-3.5 w-3.5 text-primary" />}>Area to improve</SectionHeading>
-            <p className="text-sm leading-relaxed">{withoutMeasurementNotation(analysis.improvements?.[0]?.fault || topTakeaway)}</p>
+          <Card className="space-y-3 p-5 sm:p-6">
+            <SectionHeading icon={<Wrench className="h-3.5 w-3.5 text-primary" />}>What to work on</SectionHeading>
+            {(analysis.improvements?.[0]?.fault || topTakeaway) && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">The one thing to improve most</p>
+                <p className="mt-1 text-base font-medium leading-snug">{withoutMeasurementNotation(analysis.improvements?.[0]?.fault || topTakeaway)}</p>
+              </div>
+            )}
+            {!notMeasured && analysis.improvements?.map((finding, index) => <div key={`${finding.phase}-${index}`} className="space-y-1 border-l-4 border-l-primary pl-3">
+              <p className="text-xs text-muted-foreground">{finding.phase}</p>
+              <h4 className="font-semibold">{withoutMeasurementNotation(finding.fault)}</h4>
+              <p className="text-sm text-muted-foreground">{withoutMeasurementNotation(finding.why)}</p>
+              <p className="text-sm"><strong>Work on:</strong> {withoutMeasurementNotation(finding.fix)}</p>
+            </div>)}
           </Card>
         </RevealSection>
       )}
