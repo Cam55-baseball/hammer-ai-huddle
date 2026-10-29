@@ -38,7 +38,8 @@ export function AssessmentPlanInputs({ registerFlush, onBack }: { registerFlush?
     const context = query.data.context ?? {};
     const nutrition = query.data.nutrition ?? {};
     setValues(Object.fromEntries(Object.entries({ ...context, ...nutrition }).filter(([, value]) => value != null && !Array.isArray(value)).map(([key, value]) => [key, String(value)])));
-    setSupplements(query.data.nutrition?.supplement_goals?.join(', ') ?? '');
+    const savedSupplements = query.data.nutrition?.supplement_goals;
+    setSupplements(Array.isArray(savedSupplements) ? savedSupplements.filter((item): item is string => typeof item === 'string').join(', ') : '');
   }, [query.data]);
   const save = async () => {
     if (!user || !query.isSuccess || saving || healthOpen || datesOpen) return false;
