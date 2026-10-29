@@ -412,7 +412,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
                 <div className="flex flex-wrap gap-1.5">
                   {sgs.map((sg) => {
                     const pick = picks.find((p) => p.id === sg.id);
-                    const active = !!pick;
+                    const selected = !!pick;
                     return (
                       <Button
                         key={sg.id}
@@ -423,7 +423,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
                         onClick={() => togglePick(active, cat, sg.id)}
                         title={sg.helpText}
                         className={`group inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition ${
-                          active
+                          selected
                             ? pick.rank === "primary"
                               ? "border-primary bg-primary/15 text-primary"
                               : "border-secondary bg-secondary/40 text-foreground"
