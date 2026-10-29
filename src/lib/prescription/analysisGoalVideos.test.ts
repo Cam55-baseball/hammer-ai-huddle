@@ -8,6 +8,13 @@ const video: GoalLibraryVideo = { id: 'v1', title: 'Current instruction', video_
 const resolve = (v: GoalLibraryVideo) => resolveGoalVideos([match('v1')], [v], 'hitting', 'baseball', ['middle_infield']);
 
 describe('canonical goal instructional videos', () => {
+  it('prescribes actual exact-tagged goal video on a positive clip without requiring a drill attachment', () => {
+    const tagged = { ...video, tags: ['Barrel Path', 'Player Development'] };
+    const picks = resolveGoalVideos([], [tagged], 'hitting', 'baseball', [], ['Barrel control'], true);
+    expect(picks[0]?.reasons).toEqual(['Your goal: Barrel control', 'Keep developing this skill']);
+    expect(picks[0]?.faultScope).toBeUndefined();
+    expect(resolveGoalVideos([], [tagged], 'hitting', 'baseball', [], ['Plate discipline'])).toEqual([]);
+  });
   it('resolves only the attached readable identity using its current URL and no fault scope', () => {
     expect(resolve(video)[0]).toEqual({ video, reasons: ['Your goal: Barrel control'], faultScope: undefined });
     expect(resolveGoalVideos([match('missing')], [video], 'hitting', 'baseball', [])).toEqual([]);
