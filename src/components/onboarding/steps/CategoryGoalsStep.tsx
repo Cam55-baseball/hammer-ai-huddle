@@ -132,7 +132,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
         let initialPanes: PaneId[] = [];
         let initialPicks: Record<string, DisciplineGoals> = {};
 
-        if (draft?.panes?.length) {
+        if (draft?.panes?.length && draft.panes.every(p => draft.picks?.[paneKey(p)] !== undefined)) {
           initialPanes = draft.panes;
           initialPicks = draft.picks ?? {};
         } else if (existingV2) {
