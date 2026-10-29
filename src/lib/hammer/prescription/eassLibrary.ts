@@ -68,6 +68,7 @@ export type EassMode =
   | "arm_protected";
 
 export interface EassDrill {
+  slug?: string;
   armCard?: 'pitching'|'throwing';
   name: string;
   category: EassCategory;
