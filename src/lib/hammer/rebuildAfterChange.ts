@@ -11,6 +11,7 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
   let userId:string|null=null;
   let boughtBunting=false;
   let missingInputs=false;
+  const kept: string[] = [];
   for (let offset = 0; offset < 7; offset++) {
     const date = isoShift(firstDate, offset);
     try {
@@ -19,6 +20,8 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
       });
       if (error) {
         const body = await (error as { context?: Response }).context?.clone?.().json?.().catch(() => null);
+        // Server refused to replace work the player already chose or marked: kept by design, not a failure to retry.
+        if (body?.error === 'adjust_failed' && /protected/i.test(String(body?.message ?? ''))) { kept.push(date); continue; }
         if (body?.error === 'initial_inputs_missing') { missingInputs = true; for (let rest = offset; rest < 7; rest++) failed.push(isoShift(firstDate, rest)); break; }
       }
       if (error || data?.ok !== true || data?.composed !== true || data?.degraded === true) failed.push(date);
@@ -30,10 +33,12 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
     if(!sport||!userId)weekIssues=['saved_week_identity_unconfirmed'];
     else try {weekIssues=(await readComposedWeek(userId,firstDate,isoShift(firstDate,6),sport,boughtBunting)).issues;}catch{weekIssues=['saved_week_readback_unavailable'];}
   }
-  return { ok: failed.length === 0&&!weekIssues.length, failed, weekIssues, missingInputs, message: missingInputs
+  const keptNote = kept.length ? ` ${kept.length === 1 && kept[0] === today ? 'Today' : `${kept.length} day${kept.length === 1 ? '' : 's'}`} kept the work you already marked done.` : '';
+  return { ok: failed.length === 0&&!weekIssues.length, failed, kept, weekIssues, missingInputs, message: (missingInputs
     ? `${reason} — saved. Your week can't be rebuilt until you finish your missing starting details.`
     : failed.length
     ? `${reason} — saved, but ${failed.length} day${failed.length === 1 ? '' : 's'} could not be rebuilt. Try rebuilding again.`
     : weekIssues.length?`${reason} — saved days were rebuilt, but your weekly minimums could not be confirmed. Equipment, injury and schedule limits still apply.`
-      : `${reason} — your plan was rebuilt for ${firstDate === today ? 'today and the next 6 days' : `${firstDate} and the next 6 days`}.` };
+      : kept.length ? `${reason} — your plan was rebuilt for the other ${7 - kept.length} days.`
+      : `${reason} — your plan was rebuilt for ${firstDate === today ? 'today and the next 6 days' : `${firstDate} and the next 6 days`}.`) + (failed.length || missingInputs ? '' : keptNote) };
 }
