@@ -1,7 +1,7 @@
 import { ELITE_DRILL_CATALOG, mergeCatalog, categoryGoals, matchGoalDrills, analysisDrillCategory, analysisDrillSlot, enrolledDrill, enrollmentBecause } from '../generated/analysisDrills.mjs';
 import { analysisDrillSafety } from './analysisDrillSafety.ts';
 import { isPlatformStaff } from '../authGuards.ts';
-import { needsTeenWaiver, isLocked, ageOn } from '../legal/teenWaiverRules.ts';
+import { needsTeenWaiver, ageOn } from '../legal/teenWaiverRules.ts';
 type Row = Record<string, any>;
 const checked = async (query: any) => { const result = await query; if (result.error) throw result.error; return result.data; };
 
@@ -24,7 +24,7 @@ export async function addAnalysisDrill(client: any, admin: any, uid: string, inp
     const waiver = await checked(client.functions.invoke('teen-parent-waiver',{body:{action:'status'}}));
     if (waiver?.locked) throw new Error('A parent needs to sign before physical training can be changed.');
   }
-  const catalog = mergeCatalog(ELITE_DRILL_CATALOG,owners ?? [],`analysis:${input.sport}:${video.module}`);
+  const catalog = mergeCatalog(ELITE_DRILL_CATALOG,owners ?? []);
   const drill = catalog.find((d: Row) => d.id === input.drillId && d.category === video.module && d.sports.includes(input.sport));
   if (!drill) throw new Error('This drill is no longer available.');
   const violations = video.ai_analysis?.violations_detected ?? {};

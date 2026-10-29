@@ -22,6 +22,7 @@ import { matchPrescriptionDrills, maintenanceDrills } from "@/lib/prescription/m
 import type { EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import { useAnalysisGoalDrills } from '@/hooks/useAnalysisGoalDrills';
 import { practiceCheckDrills, type AnalysisPracticeCheck } from '@/lib/prescription/practiceCheckDrills';
+import { AddAnalysisDrill } from './AddAnalysisDrill';
 
 interface Props {
   module?: string | null;
@@ -44,7 +45,7 @@ interface Props {
   practiceChecks?: AnalysisPracticeCheck[];
 }
 
-function DrillRow({ drill, reasons, staff, onOpen, onSave, saved, saving }: { drill: EliteDrill; reasons?: string[]; staff?: boolean; onOpen?: () => void; onSave?: () => void; saved?: boolean; saving?: boolean }) {
+function DrillRow({ drill, reasons, staff, onOpen, onSave, saved, saving, videoId, sport }: { drill: EliteDrill; reasons?: string[]; staff?: boolean; onOpen?: () => void; onSave?: () => void; saved?: boolean; saving?: boolean; videoId?:string|null; sport?:string }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="rounded-lg border bg-accent/20 p-3">
@@ -79,6 +80,7 @@ function DrillRow({ drill, reasons, staff, onOpen, onSave, saved, saving }: { dr
       {onSave && <Button variant="ghost" size="icon" aria-label={`Save ${drill.name} to Saved drills`} aria-pressed={saved} disabled={saving || saved} onClick={onSave}>
         <Heart className={saved ? 'h-4 w-4 fill-destructive text-destructive' : 'h-4 w-4'} />
       </Button>}
+      {sport && <AddAnalysisDrill drill={drill} videoId={videoId} sport={sport} />}
 
       {open && (
         <div className="mt-3 space-y-2 border-t pt-3 text-xs">
@@ -224,7 +226,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
             For this clip and your goals
           </h4>
           {matches.length > 0 ? (
-            matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} reasons={m.reasons} staff={includePendingReview} onOpen={() => log([m.drill.id], "opened")} saved={saved.isSaved(m.drill)} saving={!saved.ready || saved.saving} onSave={() => { void saved.save(m.drill).then(() => toast.success('Saved to Saved drills'), () => toast.error("Couldn't save this drill. Try again.")); }} />)
+            matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} videoId={historyKey} sport={sport ?? 'baseball'} reasons={m.reasons} staff={includePendingReview} onOpen={() => log([m.drill.id], "opened")} saved={saved.isSaved(m.drill)} saving={!saved.ready || saved.saving} onSave={() => { void saved.save(m.drill).then(() => toast.success('Saved to Saved drills'), () => toast.error("Couldn't save this drill. Try again.")); }} />)
           ) : fallback.length > 0 ? (
             <>
               <p className="text-xs text-muted-foreground">
