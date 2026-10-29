@@ -44,3 +44,16 @@ Oct 28 owner additions (built this run):
 - Real player: Today shows 6 training days and a Sunday rest; tap Done on the Mind card and see Discipline count it; a low-readiness day shows the low-taxing version; owner-tagged baserunning, bunting and Mind drills appear.
 - Real coach: recurring findings in the player summary.
 - Lawyer: embedded-video notice wording.
+
+## Round 2 (Oct 28 owner fixes) — status as of Oct 29 00:36 UTC
+Full suite: 635 files passed. Preview build: OK.
+
+Done in code (not yet phone-checked by a human): 4, 9, 6b, 10, 11, 15, 16, 17, 23; 22 partial (names wrap, buttons own row).
+Open (blocks publish): 1, 2, 3, 5, 6a, 6c, 7, 8, 12, 13, 14, 18, 19, 20, 21, 22 (My Connections style), 24.
+
+### Human-only checks (390×844)
+- Report: one "What to work on" section after Detailed analysis; upload checklist shows before choosing a clip.
+- History: "My defensive plays" drawer opens and lists plays.
+- The General: Develop This Week and Recent Development Picks drawers; gone from dashboard.
+- Today: body-load line inside "Your training block & season".
+- Coach Dashboard: "Analyze a guest" opens guest mode; long names readable.
