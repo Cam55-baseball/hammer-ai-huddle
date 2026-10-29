@@ -5235,6 +5235,7 @@ export type Database = {
           applies_when: string | null
           area: string
           body: string
+          configuration_receipt: Json | null
           connected_work: string | null
           created_at: string
           created_by: string
@@ -5251,6 +5252,7 @@ export type Database = {
           applies_when?: string | null
           area: string
           body: string
+          configuration_receipt?: Json | null
           connected_work?: string | null
           created_at?: string
           created_by: string
@@ -5267,6 +5269,7 @@ export type Database = {
           applies_when?: string | null
           area?: string
           body?: string
+          configuration_receipt?: Json | null
           connected_work?: string | null
           created_at?: string
           created_by?: string
@@ -24454,6 +24457,16 @@ export type Database = {
         Returns: Json
       }
       org_test_ranking: { Args: { _org: string; _test: string }; Returns: Json }
+      owner_confirm_test_cue: {
+        Args: {
+          p_area: string
+          p_body: string
+          p_change: Json
+          p_sport: string
+          p_thread: string
+        }
+        Returns: Json
+      }
       owner_principle_population_stats: {
         Args: never
         Returns: {
@@ -24496,6 +24509,7 @@ export type Database = {
         }
         Returns: string
       }
+      owner_undo_test_cue: { Args: { p_version: string }; Returns: Json }
       owns_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
       parent_optional_sharing: {
         Args: { _athlete: string }
