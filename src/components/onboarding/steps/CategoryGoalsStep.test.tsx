@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { CategoryGoalsStep } from './CategoryGoalsStep';
 
@@ -18,7 +19,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: { from: () => ({
 beforeEach(() => { state.raw = null; state.writes = []; state.success.mockReset(); });
 afterEach(cleanup);
 it('the actual editor saves two ranked picks and all category priorities together', async () => {
-  render(<QueryClientProvider client={new QueryClient()}><CategoryGoalsStep onContinue={vi.fn()} /></QueryClientProvider>);
+  render(<MemoryRouter><QueryClientProvider client={new QueryClient()}><CategoryGoalsStep onContinue={vi.fn()} /></QueryClientProvider></MemoryRouter>);
   const barrel = await screen.findByRole('button', { name: /Barrel control/ });
   await waitFor(() => expect(barrel.hasAttribute('disabled')).toBe(false));
   fireEvent.click(barrel);
