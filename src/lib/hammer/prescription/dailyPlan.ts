@@ -248,6 +248,7 @@ interface BuilderArgs {
   readonly planDate?: string;
   readonly armRole?: 'pitcher'|'two_way';
   readonly positionThrowing?: boolean;
+  readonly pitchingPhase?: string;
   readonly skillExecutionAllowed?: boolean;
   readonly pitcherOutings?: OutingFacts | null;
   readonly modality: ModalityKey;
@@ -347,7 +348,7 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, armHistory, planDate, armRole, positionThrowing, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, planDate, armRole, positionThrowing, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
   const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
@@ -1023,8 +1024,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const eass = buildEassPrescription(eassCtx);
       if(armRole && normalizeSport(sportRaw)==='softball'){
         const care=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
-        const phase=seasonPhase==='off'?'os_q2':seasonPhase==='pre'?'preseason':seasonPhase==='in'?'in_season':'post_season';
-        eass.drills=[...care,...windmillPlanningDrills({date:planDate??todayIso(),phase,age:ageYears,readiness:readinessScore,armPain:armSore||injuryRegions.some(r=>['shoulder','elbow','ucl','forearm'].includes(r)),equipment:[...proj.equipmentList],history:armHistory,outings:pitcherOutings})];
+        const phase=pitchingPhase??(seasonPhase==='off'?'os_q1':seasonPhase==='pre'?'preseason':seasonPhase==='in'?'in_season':'post_season');
+        eass.drills=[...care,...(planDate?windmillPlanningDrills({date:planDate,phase,age:ageYears,readiness:readinessScore,armPain:armSore||injuryRegions.some(r=>['shoulder','elbow','ucl','forearm'].includes(r)),equipment:[...proj.equipmentList],history:armHistory,outings:pitcherOutings}):[])];
       }
       if(armRole==='two_way') {
         const position=normalizePosition(declaredPos)==='pitcher'?normalizePosition(ctx.get('position_secondary')?.value):normalizePosition(declaredPos);
@@ -2380,6 +2381,7 @@ export function buildHammerDailyPlan(
   const firstPass = ALL_MODALITIES.filter(allowed).map((m) =>
     builder({ modality: m, ctx, proj, speed, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
       pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings) : undefined,
+      pitchingPhase:quarter.key,
       armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,positionThrowing:!!access&&!access.hasPitching,armHistory:roadmapInputs.armHistory,
       planDate:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,skillExecutionAllowed: scheduleSignal.postureToday === 'normal' && !(m==='defense'&&access?.pitcherOnly) }),
   );
