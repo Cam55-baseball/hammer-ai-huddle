@@ -3660,8 +3660,8 @@ const handler = async (req: Request): Promise<Response> => {
           alternatives,
           canSubstitute: (from, alternative) => {
             const row = finalRxs.find(r => r.movement_slug === from.slug);
-            return preservesSpeedIntent(row?.slot, catalogMap[from.slug]?.speed_category,
-              catalogMap[alternative.slug]?.speed_category);
+            return preservesSpeedIntent(row?.slot, lib.find(m => m.slug === from.slug)?.speed_category,
+              lib.find(m => m.slug === alternative.slug)?.speed_category);
           },
         });
 
