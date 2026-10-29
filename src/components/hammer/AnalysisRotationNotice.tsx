@@ -2,8 +2,6 @@ import {useQuery,useQueryClient}from '@tanstack/react-query';
 import {useAuth}from '@/hooks/useAuth';
 import {supabase}from '@/integrations/supabase/client';
 import {AddAnalysisDrill}from '@/components/analyze/AddAnalysisDrill';
-import {ELITE_DRILL_CATALOG}from '@/data/drills/eliteDrillCatalog';
-import{mergeCatalog}from '@/lib/prescription/ownerDrills';
 import {useDrillCirculation}from '@/hooks/useDrillCirculation';
 export function AnalysisRotationNotice({sport,date}:{sport:string;date:string}){
  const {user}=useAuth();const qc=useQueryClient();const circulation=useDrillCirculation();
