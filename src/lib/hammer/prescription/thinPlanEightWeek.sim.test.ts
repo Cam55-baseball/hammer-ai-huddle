@@ -4,10 +4,10 @@ import { validatePlanWeek } from './planSanity';
 import { NORMAL_SIGNAL } from './scheduleContext';
 import type { ContextVariable, HammerAthleteContext } from '../context/athleteContext';
 
-for (const sport of ['baseball', 'softball']) for (const program of ['pitcher', '5tool', 'golden2way', 'hitting', 'throwing']) {
-  it(`${sport}/${program}: eight actual-builder weeks have zero recovery-only training days`, () => {
+for (const sport of ['baseball', 'softball']) for (const program of ['pitcher', '5tool', 'golden2way', 'hitting', 'throwing']) for (const phase of ['off', 'pre', 'in', 'post'] as const) {
+  it(`${sport}/${program}/${phase}: eight actual-builder weeks have zero recovery-only training days`, () => {
     const variables = Object.entries({ sport_primary: sport, position_primary: program === 'pitcher' ? 'P' : 'SS',
-      lifecycle_band: 'adult', season_phase: 'off', lifting_age_years: 5, weekly_availability_days: 6,
+      lifecycle_band: 'adult', season_phase: phase, lifting_age_years: 5, weekly_availability_days: 6,
       injury_history: [], equipment_effective: ['tee', 'gamer_bat', 'net', 'field', 'glove', 'ball'],
     }).map(([key, value]) => ({ key, value, confidence: 'high', missing: false }) as ContextVariable);
     const ctx = { variables, missing: [], missingCount: 0, isLoading: false, envelope: null,

@@ -41,6 +41,10 @@ export function planSnapshotPayload(plan: HammerDailyPlanResult, sport: string, 
 }
 
 export async function savePlanSnapshot(userId: string, plan: HammerDailyPlanResult, sport: string, planDate: string, masteryFocus?: MasteryGuidance): Promise<boolean> {
+  if (plan.sanity?.ok === false) {
+    console.debug("[plan-snapshot] incomplete training plan rejected", plan.sanity.issues);
+    return false;
+  }
   try {
     const { error } = await supabase.rpc("wk_save_block_day", {
       p_date: planDate, p_sport: sport, p_engine: ENGINE_CONTRACT.version,
