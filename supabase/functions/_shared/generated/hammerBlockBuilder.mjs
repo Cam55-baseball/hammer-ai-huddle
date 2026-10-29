@@ -8479,7 +8479,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     battingGames: bunting.evidence.battingGames,
     battingWindow: bunting.evidence.battingWindow,
     outcomes: bunting.evidence.outcomes,
-    legalWeekdays: weeklyRoadmap.filter((d3) => !d3.restDay && d3.modalities.some((m) => m.key === "hitting" && m.intensity !== "activation")).map((d3) => d3.dow),
+    legalWeekdays: weeklyRoadmap.filter((d3) => !d3.restDay && !(bunting.gameWeekdays ?? []).includes(d3.dow) && d3.modalities.some((m) => m.key === "hitting" && m.intensity !== "activation")).map((d3) => d3.dow),
     restDay: fullRestDay,
     gameDay: scheduleSignal.postureToday !== "normal"
   }, {
