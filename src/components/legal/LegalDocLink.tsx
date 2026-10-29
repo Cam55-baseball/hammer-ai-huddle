@@ -3,34 +3,43 @@
  * agreements). No new tab and no page change, so Close/"I've read this" returns
  * the person exactly where they were, still signed in, with their choices kept.
  */
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { displayBody, fetchLatestDoc, recordConsent, type LegalDoc } from "@/lib/legal/legalV2";
 import { LegalMarkdown } from "@/components/legal/LegalMarkdown";
 import { useOptionalAuth } from "@/hooks/useAuth";
+import { closeLegalOverlay, LEGAL_OVERLAY_KEY, openLegalOverlay } from "@/lib/legal/overlayHistory";
 
 export function LegalDocLink({ slug, children, className }: { slug: string; children: ReactNode; className?: string }) {
   const [open, setOpen] = useState(false);
   const [doc, setDoc] = useState<LegalDoc | null | undefined>(undefined);
   const [saving, setSaving] = useState(false);
+  const id = useId();
+  const dismiss = () => { closeLegalOverlay(id); setOpen(false); };
   const { user } = (useOptionalAuth() as any) ?? {};
   useEffect(() => { if (open && doc === undefined) fetchLatestDoc(slug).then(setDoc).catch(() => setDoc(null)); }, [open, slug, doc]);
+  useEffect(() => {
+    if (!open) return;
+    const back = () => { if (window.history.state?.[LEGAL_OVERLAY_KEY] !== id) setOpen(false); };
+    window.addEventListener("popstate", back);
+    return () => window.removeEventListener("popstate", back);
+  }, [open, id]);
 
   const confirm = async () => {
-    if (!user || !doc) { setOpen(false); return; }
+    if (!user || !doc) { dismiss(); return; }
     setSaving(true);
     try { await recordConsent({ slug: doc.slug, version: doc.version, choice: "accepted", method: "read_confirmation" }); }
     catch { /* already saved for this version, or offline — reading still counts locally */ }
-    finally { setSaving(false); setOpen(false); }
+    finally { setSaving(false); dismiss(); }
   };
 
   return (
     <>
-      <button type="button" className={className ?? "text-primary underline"} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(true); }}>
+      <Button type="button" variant="link" className={className ?? "h-auto p-0 text-primary underline"} onClick={(e) => { e.preventDefault(); e.stopPropagation(); openLegalOverlay(id); setOpen(true); }}>
         {children}
-      </button>
-      <Dialog open={open} onOpenChange={setOpen}>
+      </Button>
+      <Dialog open={open} onOpenChange={(next) => { if (!next) dismiss(); }}>
         <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
           <DialogHeader><DialogTitle>{doc?.title ?? "Loading…"}</DialogTitle></DialogHeader>
           {doc === null && <p className="text-sm text-muted-foreground">This document couldn't load. Please try again.</p>}
@@ -39,7 +48,7 @@ export function LegalDocLink({ slug, children, className }: { slug: string; chil
             <LegalMarkdown body={displayBody(doc.slug, doc.body)} />
           </>}
           <div className="sticky bottom-0 flex gap-2 bg-background pt-2">
-            <Button variant="outline" className="min-h-11 flex-1" onClick={() => setOpen(false)}>Close</Button>
+            <Button variant="outline" className="min-h-11 flex-1" onClick={dismiss}>Close</Button>
             {doc && user && <Button className="min-h-11 flex-1" disabled={saving} onClick={confirm}>{saving ? "Saving…" : "I've read this"}</Button>}
           </div>
         </DialogContent>

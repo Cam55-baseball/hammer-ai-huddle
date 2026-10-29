@@ -6,6 +6,8 @@
  */
 import { stripDraftNotes } from "@/lib/legal/legalV2";
 import { Fragment, type ReactNode } from "react";
+import { LegalDocLink } from "./LegalDocLink";
+import { legalLinkSlug } from "@/lib/legal/overlayHistory";
 
 function inline(text: string, key: string): ReactNode[] {
   const out: ReactNode[] = [];
@@ -16,9 +18,14 @@ function inline(text: string, key: string): ReactNode[] {
     const t = m[0];
     if (t.startsWith("**")) out.push(<strong key={`${key}b${i++}`}>{t.slice(2, -2)}</strong>);
     else {
-      const [, label, href] = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(t)!;
+      const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(t);
+      if (!link) continue;
+      const [, label, href] = link;
       const safe = /^(https?:|mailto:|\/)/.test(href) ? href : "#";
-      out.push(<a key={`${key}a${i++}`} href={safe}>{label}</a>);
+      const slug = legalLinkSlug(safe);
+      out.push(slug
+        ? <LegalDocLink key={`${key}a${i++}`} slug={slug}>{label}</LegalDocLink>
+        : <a key={`${key}a${i++}`} href={safe}>{label}</a>);
     }
     last = m.index + t.length;
   }
