@@ -237,7 +237,7 @@ import {
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 import { finalRuleCheck, nextEligibleDates, dayKinds, rowKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
-import { isSoftRecovery, isWholeRestDayType } from "../_shared/wic/schedule/softRecovery.ts";
+import { isSoftRecovery, isWholeRestDayType, restSafeFallback } from "../_shared/wic/schedule/softRecovery.ts";
 import { loadU13ThrowBlock, loadU13ThrowState } from "../_shared/wic/phases/u13ThrowGate.ts";
 import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
@@ -4758,7 +4758,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       const restFallback = wholePlanRest(planDate, timelineToday.hold) || availabilityRest;
-      const fallbackRows = (safePlan.rows as any[]).filter(r => !restFallback || isSoftRecovery(r.movement_slug));
+      const fallbackRows = restSafeFallback(safePlan.rows as any[], restFallback);
       if (!fallbackRows.length) return json({ error: 'rest_recovery_unavailable', message: 'Rest today. No training was added; gentle recovery could not be saved.', issues: ['rest_fallback_without_soft_recovery'] }, 409);
       const safeRows = fallbackRows.map((r, i) => ({
         slot: r.slot,
