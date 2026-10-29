@@ -4490,3 +4490,4 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - Oct 29 round 2 (24 items): run 1 removed the 'Upload space cleared' toast; org sign-up already offers Both; items 1–8 and 10–24 open.
 - Oct 29 round 2 run 2: coaches' My Workouts now shows 'Send a workout' + 'Sent workouts' (item 6b); other P0 items still open.
 - Oct 29 r2-run2: item 10/11 report layout — merged Top takeaway + Area to improve + What to work on into one section after Detailed analysis.
+- Oct 29 r2-run3: item 23 'Analyze a guest' button on Coach Dashboard; item 22 My Players names wrap, actions own row on phone. 18–21, 24 open.
