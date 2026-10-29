@@ -33,7 +33,7 @@ import type { OutingFacts } from "../../../../supabase/functions/_shared/wic/pit
  *
  * Every block remains pure (no I/O), preserves missingness, never fabricates.
  */
-import type { HammerAthleteContext } from "@/lib/hammer/context/athleteContext";
+import type { HammerAthleteContext, ContextVariable } from "@/lib/hammer/context/athleteContext";
 import {
   projectEnvelope,
   selectSpeedFocus,
@@ -2334,8 +2334,8 @@ export function buildHammerDailyPlan(
   const physio = roadmapInputs.physio ?? mapPhysio({ injuries:ctx.get('injury_history')?.value, today:today.toLocaleDateString('en-CA') });
   if (physio.lowReadiness) {
     const original = ctx;
-    ctx = { ...original, get<T>(key: string) {
-      if (key === 'readiness') return { key, label:'Readiness',domain:'health',value:0.2 as T,source:'active illness',confidence:'high',missing:false,lastUpdated:null,lineage:{owner:'athlete',source:'active illness',rawConfidence:'high'} };
+    ctx = { ...original, get<T>(key: string): ContextVariable<T> | undefined {
+      if (key === 'readiness') return { key, label:'Readiness',domain:'physiology',value:0.2 as T,source:'active illness',confidence:'high',missing:false,lastUpdated:null,lineage:{owner:'athlete',source:'active illness',rawConfidence:'high'} };
       return original.get<T>(key);
     } };
   }
@@ -2517,13 +2517,13 @@ export function buildHammerDailyPlan(
   // never copies it into a second arm exposure.
   const prehabbed = restFiltered.map(b => {
     const notices = [...physio.cautions, ...(physio.professionalWarning ? [physio.professionalWarning] : []), ...(physio.illnessActive ? ['Illness is still active. Keep work light until you mark yourself better.'] : [])];
-    const available = b.modality === 'warmup' && b.status === 'ready' && !fullRestDay
+    const available: DrillStep[] = b.modality === 'warmup' && b.status === 'ready' && !fullRestDay
       ? [...new Set(physio.healedAreas.filter(a=>!physio.activeAreas.includes(a)).map(a=>PREHAB_SLUGS[a]))].flatMap(slug=>{
         if(b.drills.some(d=>d.slug===slug))return [];
         const drill=WARMUP_LIBRARY.find(d=>d.slug===slug);
         return drill ? [{slug:drill.slug,name:drill.name,dosage:drill.baseDose,setup:drill.setup,cue:drill.cue,stopIf:drill.stopIf??'Stop if this hurts.',stage:'prep' as const}] : [];
       }) : [];
-    const drills=available.length?sortByWarmupStage([...b.drills,...available]):b.drills;
+    const drills=available.length?sortByWarmupStage([...b.drills,...available],d=>d.slug??''):b.drills;
     return {...b,drills,steps:available.length?drillsToSteps(drills):b.steps,because:[...(b.because??[]),...notices]};
   });
   const blocks = prehabbed.flatMap(b => {
