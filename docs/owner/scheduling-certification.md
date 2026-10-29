@@ -204,3 +204,28 @@ Every listed card comes from an actual local shared-builder result. Dates are ex
 5. Compare off-season versus in-season inside each saved lift/conditioning/skill card; record exact sets, reps, percentage, verified load, Primer number, route distance and rest. Mark absent/unknown numbers honestly.
 6. Reload affected-player Today and game logging, verify pre/postgame and next-outing recovery; aggregate purchased floors per week with explicit safety exceptions. Reject missing rows, fallback days, invented dates and unverified arm totals.
 7. Only after all 224 persisted dates and required game-density cohorts pass, replace this OPEN verdict with certified results.
+
+## certhsp — saved server sample weeks (read from saved days, Oct 29 21:19 UTC)
+
+### Off-season week (2026-10-30 – 2026-11-05)
+- 2026-10-30: Warm-up — speed-day fast-twitch prep; Speed — off-season volume; Strength — bodyweight (bands); Pitching — baseball · fielding only; Defense — P · developing (volume + range); Game IQ — situational reps; Fueling — body-comp aware; Recovery
+- 2026-10-31: Warm-up — speed-day fast-twitch prep; Speed — off today · Returns Tue.; Strength — off today · Returns Mon.; Pitching — baseball · bullpen; Defense — P · developing (volume + range); Game IQ — situational reps; Fueling — body-comp aware; Recovery
+- 2026-11-01 (rest day): Warm-up — speed-day fast-twitch prep; Speed — off today · Returns Tue.; Strength — off today · Returns Mon.; Pitching — baseball · rest; Defense — off today · Returns Mon.; Game IQ — situational reps; Fueling — body-comp aware; Recovery
+- 2026-11-02: Warm-up — speed-day fast-twitch prep; Speed — off today · Returns Tue.; Strength — bodyweight (bands); Pitching — baseball · bullpen; Defense — P · developing (volume + range); Game IQ — situational reps; Fueling — body-comp aware; Recovery
+- 2026-11-03: Warm-up — speed-day fast-twitch prep; Speed — off-season volume; Strength — bodyweight (bands); Pitching — baseball · flush; Defense — P · developing (volume + range); Game IQ — situational reps; Fueling — body-comp aware; Recovery
+- 2026-11-04: Warm-up — speed-day fast-twitch prep; Speed — off today · Returns Fri.; Strength — off today · Returns Thu.; Pitching — baseball · long toss; Defense — P · developing (volume + range); Game IQ — situational reps; Fueling — body-comp aware; Recovery
+- 2026-11-05: Warm-up — speed-day fast-twitch prep; Speed — off today · Returns Fri.; Strength — bodyweight (bands); Pitching — baseball · bullpen; Defense — P · developing (volume + range); Game IQ — situational reps; Fueling — body-comp aware; Recovery
+
+### In-season week (2026-11-16 – 2026-11-22)
+- 2026-11-16: Warm-up — speed-day fast-twitch prep; Speed — off today · Returns Tue.; Strength — bodyweight (bands); Pitching — baseball · bullpen; Defense — P · beginner (game-rep); Game IQ — daily micro-reps; Fueling — game-day carb-forward; Recovery — in-season
+- 2026-11-17: Warm-up — speed-day fast-twitch prep; Speed — in-season freshness; Strength — off today · Returns Thu.; Pitching — baseball · flush; Defense — P · beginner (game-rep); Game IQ — daily micro-reps; Fueling — game-day carb-forward; Recovery — in-season
+- 2026-11-18: Warm-up — speed-day fast-twitch prep; Speed — off today · Returns Tue.; Strength — off today · Returns Thu.; Pitching — baseball · long toss; Defense — P · beginner (game-rep); Game IQ — daily micro-reps; Fueling — game-day carb-forward; Recovery — in-season
+- 2026-11-19: Warm-up — speed-day fast-twitch prep; Speed — off today · Returns Tue.; Strength — bodyweight (bands); Pitching — baseball · bullpen; Defense — P · beginner (game-rep); Game IQ — daily micro-reps; Fueling — game-day carb-forward; Recovery — in-season
+- 2026-11-20: Warm-up — speed-day fast-twitch prep; Speed — off today · Returns Tue.; Strength — off today · Returns Mon.; Pitching — baseball · fielding only; Defense — P · beginner (game-rep); Game IQ — daily micro-reps; Fueling — game-day carb-forward; Recovery — in-season
+- 2026-11-21: Warm-up — speed-day fast-twitch prep; Speed — off today · Returns Tue.; Strength — off today · Returns Mon.; Pitching — baseball · bullpen; Defense — P · beginner (game-rep); Game IQ — daily micro-reps; Fueling — game-day carb-forward; Recovery — in-season
+- 2026-11-22 (rest day): Warm-up — speed-day fast-twitch prep; Speed — off today · Returns Tue.; Strength — off today · Returns Mon.; Pitching — baseball · rest; Defense — off today · Returns Mon.; Game IQ — daily micro-reps; Fueling — game-day carb-forward; Recovery — in-season
+
+Findings to fix before certifying floors (not fixed this run):
+- A "Game IQ" card is saved on every day; Game IQ is unreleased and must stay hidden from players.
+- Strength shows "bodyweight (bands)" although the persona has barbell gear saved.
+- Off-season pitching shows 3 bullpens in 7 days for a high-school pitcher; needs checking against the arm rules.

@@ -20,3 +20,7 @@
 - Unit 1 (certhsp Oct 30–Nov 5): 7/7 saved and validated, readback confirmed. Unit 2 (certhsp Nov 6–12): 7/7 saved and validated.
 - Load: memory 64–67%, connections 24–25/60, no new DiskIO alert after 17:15 UTC.
 - **Certified saved dates: 14 / 224.** Next: certhsp Nov 13–19.
+
+## Run 4 — Oct 29 2026, 21:15 UTC
+- Units 3–4 (certhsp Nov 13–26): 14/14 saved and validated; load steady (memory 69%, 24/60 connections, no new DiskIO alert).
+- Built and saved: 28 / 224 dates. These dates are NOT yet floor-certified: the saved days carry a Game IQ card, bands-only strength and 3 off-season bullpens (see scheduling-certification.md).
