@@ -4,11 +4,13 @@ import { contextFromEnvelope } from '../context/contextProjection';
 import { BUNT_TYPES, BUNT_WORDING } from '../../../../supabase/functions/_shared/wic/buntingProgram';
 import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
 import { guardArmDrills, eassArmEvent } from './pitchingDay';
+import { subscriptionSchedule } from './subscriptionSchedule';
 import type { BuntCatalogItem } from './buntingPlan';
 import type { EassDrill } from './eassLibrary';
 const catalog:BuntCatalogItem[]=(['R','L'] as const).flatMap(side=>BUNT_TYPES.map(type=>({slug:`bunt_${side.toLowerCase()}_${type}`,name:BUNT_WORDING[side][type],cue:BUNT_WORDING[side][type],is_active:true,dosage_unit:'attempts',equipment_requirements:['bat','ball','field'],equipment:[],equipment_alternatives:[],sport_scope:'both',min_age_years:0,season_eligibility:['os_q1','os_q2','os_q3','os_q4','in_season'],visible_to:null})));
 const ctx=(sport:string,extra:Record<string,unknown>={})=>contextFromEnvelope(Object.fromEntries(Object.entries({sport_primary:sport,position_primary:'SS',bats_hand:'R',age_years:20,lifecycle_band:'adult',lifting_age_years:4,weekly_availability_days:6,season_phase:'off',injury_history:[],equipment_effective:null,...extra}).map(([key,value])=>[key,{value,source:'test',owner:'athlete',confidence:'high',missing:false,last_updated:null}])));
 describe('owner scheduling corrections A B C F G',()=>{
+ it('legacy active all-skill subscription retains defense, bunting and pitching',()=>{expect(subscriptionSchedule(['hitting','pitching','throwing'],'baseball')).toMatchObject({hasPitching:true,hasHitting:true,hasDefense:true,hasBaserunning:true,hasBunting:true,pitcherOnly:false});});
  for(const sport of ['baseball','softball'] as const)for(const tier of ['pitcher','5tool','golden2way'] as const)it(`${sport}/${tier}: purchased floors with unknown gear across eight weeks`,()=>{
   for(let week=0;week<8;week++){
    const counts:Record<string,number>={};let rest=0;
