@@ -5,6 +5,9 @@ type Identity = ReturnType<typeof projectMasterySources>;
 export interface PillarSeries { id: string; title: string; unit: string; points: EvidencePoint[] }
 const shortDate = (date: string) => date.slice(5, 10);
 export function pillarTrends(d: Identity): PillarSeries[] {
+  const armGroups=new Map<string,typeof d.recordedArmEvidence>();
+  for(const p of d.recordedArmEvidence){const key=`${p.measure}:${p.position}:${p.source}`;armGroups.set(key,[...(armGroups.get(key)??[]),p]);}
+  const armSeries:PillarSeries[]=[...armGroups].map(([key,points],i)=>({id:i===0?'arm':`arm-${key}`,title:`Arm · ${points[0].measure==='throwing_velocity'?'Throwing Velocity':points[0].measure==='catcher_pop_time'?'Catcher Pop Time':'Human Arm Grade'} · ${points[0].position} · ${points[0].source.replace(/_/g,' ')}`,unit:points[0].unit,points:points.map(p=>({label:p.date,value:p.value,date:p.date,sample:1,source:`${p.source} · ${p.position} · Record ${p.id}`}))}));
   const speedGroups = new Map<string, typeof d.recordedSpeedEvidence>();
   for (const e of d.recordedSpeedEvidence) {
     if (!speedIdentity([e]).evidence.length) continue;
@@ -17,7 +20,7 @@ export function pillarTrends(d: Identity): PillarSeries[] {
     { id: 'power', title: 'Power', unit: 'HR per at-bat', points: d.batting.completed.map(w => ({ label: `AB ${w.end}`, value: w.homeRuns / w.atBats, date: `${w.from}–${w.through}`, sample: w.atBats, source: 'Completed game at-bat window' })) },
     { id: 'defense', title: 'Defense', unit: 'successful chances %', points: d.defense.completed.map(w => ({ label: `Chance ${w.end}`, value: w.successful / w.chances * 100, date: `${w.from}–${w.through}`, sample: w.chances, source: 'Scored game-chance window; supporting results, not a human grade' })) },
     ...(speedSeries.length ? speedSeries : [{id:'speed',title:'Speed',unit:'grade',points:[]}]),
-    { id: 'arm', title: 'Arm', unit: 'grade', points: d.arm.grade !== null && d.arm.source ? [{ label: 'Latest', value: d.arm.grade, date: d.arm.source, source: 'Position-matching measurement and human accuracy grade' }] : [] },
+    ...(armSeries.length?armSeries:[{id:'arm',title:'Arm',unit:'recorded measure',points:[]}]),
     { id: 'pitching', title: 'Pitching', unit: 'strikeouts / BF %', points: d.pitching.completed.map(w => ({ label: `BF ${w.end}`, value: w.k === null ? null : w.k * 100, date: `${w.from}–${w.through}`, sample: w.sample, source: 'Completed batters-faced window with recorded outcomes' })) },
   ];
 }

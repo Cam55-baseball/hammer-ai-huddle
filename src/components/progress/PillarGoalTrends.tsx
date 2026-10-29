@@ -38,8 +38,8 @@ function SavedGoalTrends({sport,series,visible}:{sport:'baseball'|'softball';ser
     {goals.data?.length === 0 && <p className="text-muted-foreground">No saved goals for this sport yet.</p>}
     <div className="grid min-w-0 gap-6 lg:grid-cols-2">{goals.data?.map(g => {
       const pillar = g.module === 'pitching' ? 'pitching' : g.module === 'throwing' ? 'arm' : g.module === 'fielding' ? 'defense' : g.module === 'speed' ? 'speed' : g.module === 'power' || /power/i.test(g.title) ? 'power' : 'contact';
-      const s = series.find(row=>row.id===pillar);
-      return <section className="min-w-0 border-b border-border pb-4" key={`${g.module}:${g.title}`}><h4><MeaningTitle title={g.title}>This is your saved {g.module} goal. The graph shows supporting {s?.title.toLowerCase()} evidence only. It does not directly measure this skill or claim the goal is reached.</MeaningTitle></h4>{s && <EvidenceTrendChart label={`${g.title} · Supporting ${s.title}`} unit={s.unit} points={visible(s.points)}/>}</section>;
+      const supporting = series.filter(row=>row.id===pillar||row.id.startsWith(`${pillar}-`));
+      return <section className="min-w-0 space-y-4 border-b border-border pb-4" key={`${g.module}:${g.title}`}><h4><MeaningTitle title={g.title}>This is your saved {g.module} goal. The graphs show supporting {pillar} evidence only, separated by method and position. They do not directly measure this skill or claim the goal is reached.</MeaningTitle></h4>{supporting.map(s=><EvidenceTrendChart key={s.id} label={`${g.title} · Supporting ${s.title}`} unit={s.unit} points={visible(s.points)}/>)}</section>;
     })}</div>
   </section>;
 }
