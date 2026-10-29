@@ -9,8 +9,8 @@
 | # | Requirement | Status | Built/proven result and remaining functional boundary |
 |---|---|---|---|
 | 1 | Goal picker | PASS | Two goals, ranking, save/readback/reload, Start and goal-weighted plan retained. |
-| 2 | Full Today matching block and season | OPEN | Combined composer/transaction is preview-only and its input/overlay parity audit remains open. Fresh self/TEST saved readback confirms zero certified combined dates: owner sport only Oct29; TEST Oct29/30. Seven-day floors, strip/card equality and full saved plans remain unproven; restrictions/gear stay binding. |
-| 3 | Update Hammer everywhere | OPEN | Availability and future-date handling built. Preview rebuild requires composed replies that the deployed physical-only writer cannot provide. Both alternate-form successful journeys and connected democoach before/after refresh still require proof after item2 rollout. |
+| 2 | Full Today matching block and season | PASS (owner gear check in Part B) | Live combined seven-day composer (Oct 29). TEST player Oct30–Nov5 certified 0 issues; owner --self 7 days composed, os_q1 every day, Sunday recovery only. Owner defense 0/4 only because no glove/ball/field is saved — gear stays binding. |
+| 3 | Update Hammer everywhere | OPEN | Not proven: Schedule & what changed and Tell Hammers forms at phone size, plus democoach before/after refresh. Next run after Item 18. |
 | 4 | Organization sport: Both | HUMAN | Shared registration supports Both. Persisted organization and its edits are the owner’s nonblocking check. |
 | 5 | Sign-up terms overlay and Back | PASS | Nested Close/Back preserves entered fields, agreement and sign-up route at phone size. |
 | 6 | Coach sending and player responses | PASS | Retained real coach → player → coach send, notification, Today choices, logging and Saved-for-later proof. Authenticated live test skips are not fresh passes. |
@@ -20,14 +20,14 @@
 | 10 | Plain upload requirements | PASS | Formats, size, short rep, full body, camera angle, steadiness and light displayed; retained phone proof. |
 | 11 | Merge and order report advice | PASS | Saved advice duplication corrected in prior close-out; report-order regressions covered. Presentation capture was explicitly synthetic, not a new hosted analysis. |
 | 12 | Positive-clip and growth videos | HUMAN | Goal-matched positive-clip proof retained. Combined growth/drill/informational video acceptance after real attachments is the owner’s nonblocking check. |
-| 13 | Heart, Saved drills, Add to Today | OPEN | Eligible real TEST report heart → Saved drills → reload and Okay → Today hitting → issue-named Because → reload have passed. Exact stored-issue/owner bindings and dated warning review are pending rollout; next-date warning → Okay → saved fix-it/Because → reload and complete prescribed-drill coverage remain unproven. |
+| 13 | Heart, Saved drills, Add to Today | PASS | plan-swap + 0154 live. Every prescribable drill test-bound to its exact issue per sport (271 tests). TEST: heart → reload; Add to Today → warnings → Okay → hitting card; next-day fix-it with issue-named Because → reload. Okay was sent through the app's request, not a screen tap. |
 | 14 | General pillar and goal trends | HUMAN | Dated compatible velocity by position, catcher pop time and coach/scout arm grades retained as independent series. Fresh explicit browser-only TEST fixtures show four dated series at phone/desktop and Weeks; no invented hosted evidence. Genuine populated-history comparison remains human-only. |
 | 15 | Develop This Week / Recent picks | PASS | Retained affected-player drawers inside General Recorded Performance, not Dashboard. |
 | 16 | Body load inside block/season | HUMAN | Embedded body-load display built; populated card acceptance is nonblocking human work. |
 | 17 | Defensive-plays history drawer | PASS | Drawer opening and earlier populated defensive-play proof retained. |
-| 18 | Complete initial capture and server Start | OPEN | Capture/readback and Start retained. Intent-preserving governor correction resolves the reproduced stance-acceleration/resisted-sled substitution defect in source, not deployed. Reader inventory now distinguishes actual consumers from saved-only fields; physio injury history still lacks a traced canonical safety bridge. Fresh full first-program/seven-date/reload proof remains open. |
+| 18 | Complete initial capture and server Start | OPEN | Duplicate-acceleration fix live. A brand-new unstarted TEST player needs a create-test-athlete change + redeploy (named approval), and owner answers on past injuries / active illness for the physio mapping. |
 | 19 | Owner health, attention, actions, Details | PASS | Built and retained actual owner two-size interaction proof; a green health label is not readiness certification. |
-| 20 | Philosophy conversation applied | OPEN | TEST cue clarification, exact old/new, atomic versioned Confirm/Undo and thread retained. Standards are sport-global and drill/video tags lack TEST isolation; changing them would affect real players. TEST-isolated canonical adapters for standards/tags/fix-it/weights/minimums and multi-change downstream/Undo proof remain unbuilt. |
+| 20 | Philosophy conversation applied | OPEN | Cue adapter live with Confirm/Undo. TEST-isolation migration was never written; standards are sport-global, tags lack TEST scope, floors are code, weights unused by daily plan. Needs one dedicated build run. |
 | 21 | Informational Video Manager | HUMAN | Separate manager, tags/save and Before you start placement proven. Matching-analysis playback after attaching genuine media is nonblocking human work. |
 | 22 | My Players names/photos | HUMAN | Real coach rows readable at both sizes, no overflow; real saved photos are the owner’s nonblocking check. |
 | 23 | Discoverable guest analysis | PASS | Retained coach button → /coach/guest proof; no new guest upload claimed. |
@@ -59,7 +59,18 @@ Use real consenting accounts, normal access and genuine records. Do not bypass s
 
 **Visual review (nonblocking):** review Dashboard/Today, General, saved analysis, Saved drills, owner builders/console and an entitled organization on phone and desktop. Open drawers/explanations, scroll, check text/buttons/photos/video framing and give final copy/layout approval. Approved legal versions stay unchanged; pending cookie wording is not silently approved.
 
-## Final verification
+### Extra owner checks
+| Check | Exact steps |
+|---|---|
+| 2 owner gear | On Today tap "Confirm my equipment", pick what you own (glove, ball, field), save; rebuild the week; confirm 4+ fielding days appear. |
+| Scheduling sample weeks | Open docs/owner/scheduling-certification.md. For each program (Complete Pitcher, 5Tool, Golden 2Way) in both sports, read the off-season and in-season sample weeks; confirm they match how you coach. Decide: should Complete Pitcher days drop the hitting card? |
+| Physical iPhone + visual review | On a real iPhone: sign in, upload a hitting clip, read the report, open Today, log one item, sign out and back in. |
+
+## Final verification (close-out 3)
+- Full suite in 12 bounded batches: 668 files, 5,318 passed, 0 failed, 2 skipped. Preview build OK.
+- Live: hammersmodality.org returns 200; wk-generate-daily and plan-swap answer unsigned requests with 401 (auth contract intact). Owner sign-in on the published site was not done.
+
+## Earlier verification
 
 Close-out (2), requested **12:39 UTC**: full configured suite **23 bounded batches, 667 unique files, 5,293 passed, 0 failed, 2 skipped**; zero missing, extra or duplicate files and every batch exited 0. Batches contain at most 30 files and use one worker; independent groups ran concurrently. The authenticated coach Save-for-later and organization-edit tests skipped because their live prerequisites were absent; they are not fresh passes. Automatic preview **build OK at 12:49:54 UTC**; no manual build/typecheck run.
 
