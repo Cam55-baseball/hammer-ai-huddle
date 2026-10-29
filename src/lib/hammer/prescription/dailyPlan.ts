@@ -454,7 +454,6 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         dosage: d.dosage,
         cue: d.cue,
         stopIf: d.stopIf,
-        ...(armRole && eassArmEvent(d) ? {armEvent:eassArmEvent(d)??undefined} : {}),
         equipmentNote: d.equipmentNote,
         guide: d.guide,
       })), ["hammers_today:warmup"], { sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []) });
@@ -1047,6 +1046,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         setup: d.setup,
         dosage: d.dosage,
         stage: d.stage ?? (d.intensity === 'prep' ? 'prep' : 'drills'),
+        ...(armRole && eassArmEvent(d) ? {armEvent:eassArmEvent(d)??undefined} : {}),
         cue: d.cue,
         stopIf: d.stopIf,
         guide: _guideForMovement((d as { slug?: string }).slug) ?? _guideForMovement(d.name) ?? undefined,
