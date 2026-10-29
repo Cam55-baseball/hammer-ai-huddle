@@ -78,12 +78,6 @@ export default function StaffPlans() {
     refresh();
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [user?.id]);
-  const [orgPending, setOrgPending] = useState(false);
-  useEffect(() => {
-    if (!user) return;
-    (supabase as any).from("organizations").select("verification_status,is_solo").eq("owner_user_id", user.id)
-      .then(({ data }: any) => setOrgPending((data ?? []).some((o: any) => !o.is_solo && o.verification_status !== "verified")));
-  }, [user?.id]);
 
   async function buy(plan: "coach" | "organization") {
     if (mode === "native-linkout") { await openWebsiteCheckout("/staff-plans"); return; }
@@ -133,9 +127,6 @@ export default function StaffPlans() {
           <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
             {STAFF_PLAN_COPY[p].includes.map((i) => <li key={i}>{i}</li>)}
           </ul>
-          {p === "organization" && orgPending && (
-            <p className="text-sm rounded-md bg-muted p-2" role="note">You can set up staff and teams now; athletes can be added once your organization is verified.</p>
-          )}
           {p === "organization" && mode === "web" && (
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span>Extra coach seats ($150/month each):</span>
