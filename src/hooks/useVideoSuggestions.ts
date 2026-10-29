@@ -82,6 +82,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
       const { data: videos, error: vErr } = await supabase
         .from('library_videos')
         .select('id, title, description, thumbnail_url, video_url, created_at')
+        .or('category.is.null,category.neq.informational')
         .limit(500);
       if (vErr) throw vErr;
 
