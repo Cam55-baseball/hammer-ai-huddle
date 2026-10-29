@@ -4,8 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { isSwitchOnFor } from "../../supabase/functions/_shared/wic/flags/featureSwitches";
 import { useQuery } from "@tanstack/react-query";
 import { assessmentStartAllowed } from "@/lib/assessment/startGate";
-import { startMissing, type StartMissingItem } from "../../supabase/functions/_shared/startReadiness";
-import { assessmentPlanMissing } from '@/lib/assessment/planInputReview';
+import { type StartMissingItem } from "../../supabase/functions/_shared/startReadiness";
 
 /**
  * Once-per-account "Start Hammers Today Plan" state.
@@ -37,25 +36,10 @@ export function useHammersTodayStart() {
     queryKey: ["start-readiness", user?.id, !!assessment.data], enabled: !!user?.id && !startedAt, staleTime: 5_000,
     queryFn: async (): Promise<StartMissingItem[]> => {
       if (!user) throw new Error("Sign in before checking plan details.");
-      const uid = user.id;
-      const [p, c, m, e, n, h] = await Promise.all([
-        supabase.from("profiles").select("date_of_birth").eq("id", uid).maybeSingle(),
-        supabase.from("athlete_context").select("sport_primary, position_primary, competition_level, category_goals, goal_summary, goal_priority_rank, weekly_availability_days, bats_hand, throws_hand, anthropometrics, sleep_target_hrs, lifting_age_years").eq("user_id", uid).maybeSingle(),
-        supabase.from("athlete_mpi_settings").select("sport, season_status").eq("user_id", uid),
-        supabase.from("athlete_equipment_context").select("equipment").eq("user_id", uid).eq("scope", "persistent").maybeSingle(),
-        supabase.from('vault_nutrition_goals').select('user_id').eq('user_id', uid).maybeSingle(),
-        supabase.from('physio_health_profiles').select('setup_completed').eq('user_id', uid).maybeSingle(),
-      ]);
-      for (const r of [p, c, m, e, n, h]) if (r.error) throw r.error;
-      const ctx = (c.data ?? {}) as Record<string, any>;
-      const mpi = ((m.data ?? []) as Array<{ sport: string | null; season_status: string | null }>);
-      const season = (mpi.find((r) => r.sport === ctx.sport_primary) ?? mpi[0])?.season_status ?? null;
-      const eq = (e.data as { equipment?: unknown } | null)?.equipment;
-      return [...startMissing({
-        ...ctx, date_of_birth: (p.data as any)?.date_of_birth ?? null, season_status: season,
-        equipment_saved: Array.isArray(eq) && eq.length > 0,
-        assessment_completed: !!assessment.data,
-      }), ...assessmentPlanMissing(ctx, n.data, h.data)];
+      const { data, error } = await supabase.rpc('initial_plan_missing');
+      if (error) throw error;
+      if (!Array.isArray(data)) throw new Error('Could not check your saved answers.');
+      return data as unknown as StartMissingItem[];
     },
   });
   const missing = details.data ?? [];
@@ -100,5 +84,5 @@ export function useHammersTodayStart() {
     try { if (user?.id) localStorage.setItem(`hm.htstart.${user.id}`, at); } catch { /* storage blocked */ }
   }, [starting, startedAt, user?.id, assessmentReady]);
 
-  return { loading, gateOn, startedAt, needsStart: gateOn && !startedAt, start, starting, error, assessmentReady, missing, missingLoading: details.isLoading, missingError: details.isError };
+  return { loading, gateOn, startedAt, needsStart: !startedAt, start, starting, error, assessmentReady, missing, missingLoading: details.isLoading, missingError: details.isError };
 }
