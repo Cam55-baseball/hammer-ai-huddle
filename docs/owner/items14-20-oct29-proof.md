@@ -10,6 +10,7 @@
 - Real retained onboarding TEST authenticated at `/progress`: actual hosted throwing/catching/human-grade arrays are empty. No hosted measurements were fabricated.
 - Browser-only **explicit TEST fixtures** exercised the existing self-gated General Performance tab at 390×844 and 1280×1800. Four series rendered with dot counts 2/2/2/1; full recorded dates displayed; Weeks retained four separate series; zero page errors and no page overflow. This is TEST-data render proof, not populated hosted-history acceptance.
 - Screenshots inspected: `/tmp/browser/items14-20/arm-390-1.png`, `/tmp/browser/items14-20/arm-1280-0.png`. Logs: `render-arm.log`, `arm-tests.log`.
+- Final targeted regressions: 48 tests / 8 files passed, including General gating, saved goal mapping and existing philosophy Confirm refusal/receipt behavior. Repeat phone/desktop renders passed; automatic preview build OK at 12:38:50 UTC.
 
 ## Item 20 — OPEN
 
