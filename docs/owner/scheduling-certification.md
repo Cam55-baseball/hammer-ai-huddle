@@ -229,3 +229,4 @@ Findings to fix before certifying floors (not fixed this run):
 - A "Game IQ" card is saved on every day; Game IQ is unreleased and must stay hidden from players.
 - Strength shows "bodyweight (bands)" although the persona has barbell gear saved.
 - Off-season pitching shows 3 bullpens in 7 days for a high-school pitcher; needs checking against the arm rules.
+- The in-season week has no game card on any day and 3 bullpens, even though the helper put games on the schedule; game days are not showing up.
