@@ -4756,6 +4756,7 @@ const handler = async (req: Request): Promise<Response> => {
         (primaryEngine && engineFailures[primaryEngine]?.[0]) ??
         validatorReport.issues.find((i: any) => i.severity === "fatal")?.message ??
         "Publication blocked by WIC validator.";
+      if(composeRequested)return json({error:'composed_day_validation_failed',message:'This full day could not be built safely. Your saved day is unchanged.',engine_failures:engineFailures,validator_report:validatorReport},409);
       // ── Safe Plan ladder (Stage 1, BUG-2 / L0.1) ──────────────────────────
       // The fatals above are already logged in full. The athlete still gets a
       // card: drop the offending rows → legal core → hardcoded Safe Session.

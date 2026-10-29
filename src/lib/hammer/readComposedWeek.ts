@@ -8,6 +8,7 @@ export async function readComposedWeek(userId:string,firstDate:string,lastDate:s
   if(snapshots.error)throw snapshots.error;if(physical.error)throw physical.error;
   if(!physical.data||physical.data.length>=1000||!snapshots.data)throw new Error('Complete saved week unavailable');
   const days:ComposedDayEvidence[]=snapshots.data.flatMap(row=>{
+    if(!row.payload||typeof row.payload!=='object'||Array.isArray(row.payload))return [];
     const p=row.payload as unknown as Record<string,unknown>;
     if(p.composition_version!=='sport_physical_v1'||!Array.isArray(p.blocks)||typeof p.physicalPhase!=='string'||typeof p.restDay!=='boolean')return [];
     return [{date:row.plan_date,sport:row.sport,phase:p.physicalPhase,restDay:p.restDay,blocks:p.blocks as ComposedDayEvidence['blocks'],physical:physical.data.filter(r=>r.plan_date===row.plan_date).map(r=>({slot:r.slot,phase:r.phase,slug:r.movement_slug}))}];

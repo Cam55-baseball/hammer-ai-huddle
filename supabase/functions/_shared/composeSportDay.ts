@@ -43,7 +43,7 @@ export async function composeSportDay(db: any, input: {
   if(!env.data)throw new Error('Dated athlete context unavailable');
   const sessionRows=complete(sessions), logRows=complete(logs), gameRows=complete(games);
   const clipRows=complete(clips,501).filter((c:any)=>Date.parse(c.created_at)<=day.getTime()).map((c:any)=>({video_id:c.id,user_id:c.user_id,sport:c.sport,module:c.module,created_at:c.created_at,violations:c.violations}));
-  const faults=planFaultContext(complete(signals,501),complete(findings,501),clipRows,uid,sport);
+  const faults=planFaultContext(complete(signals,501),complete(findings,501),clipRows,uid,sport,day.getTime());
   const issues=complete(recurring,200).filter((r:any)=>Date.parse(r.last_seen)<=day.getTime());
   const ids=gameRows.map((g:any)=>g.id);
   const [abs,pitches,defense]=ids.length?await Promise.all([
