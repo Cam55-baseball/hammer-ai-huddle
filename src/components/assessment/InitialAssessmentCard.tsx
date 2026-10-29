@@ -20,6 +20,7 @@ import { assessmentAnalysisSaved } from "@/lib/assessment/analysisSaved";
 import { isAnalysisType } from "../../../supabase/functions/_shared/analysisTypes";
 import { saveBeforeAssessmentNavigation, type DraftFlush } from "@/lib/assessment/draftFlush";
 import { assessmentModules, assessmentSteps, requiredAnalyses, shouldFinalizeAssessment, type AnalysisModule, type StepId, type StepProgress } from "@/lib/assessment/initialAssessment";
+import { persistContextAnswer } from '@/lib/hammer/context/acquisition';
 const EmbeddedAnalysis = lazy(() => import("@/pages/AnalyzeVideo"));
 
 export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sport: "baseball" | "softball"; autoOpen?: boolean; onClose?: () => void }) {
@@ -120,6 +121,10 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
       if (!await saveBeforeAssessmentNavigation(profileFlush.current, async () => {})) return;
       const { error } = await supabase.from("profiles").update({ full_name: profile.full_name || null, position: profile.position || null }).eq("id", user.id);
       if (error) { setSaveError("Couldn't save your profile. Try again."); return; }
+      if (profile.position.trim()) {
+        try { await persistContextAnswer(user.id, 'position_primary', profile.position.trim(), 'initial_assessment.profile'); }
+        catch { setSaveError("Couldn't save your position. Try again."); return; }
+      }
       if (await save({ ...patch, current_step: id })) { setAnalysisModule(null); setStep(id); }
     })();
   };
@@ -143,6 +148,10 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
     if (step === 1) {
       const { error } = await supabase.from("profiles").update({ full_name: profile.full_name || null, position: profile.position || null }).eq("id", user.id);
       if (error) { setSaveError("Couldn't save your profile. Try again."); return; }
+      if (profile.position.trim()) {
+        try { await persistContextAnswer(user.id, 'position_primary', profile.position.trim(), 'initial_assessment.profile'); }
+        catch { setSaveError("Couldn't save your position. Try again."); return; }
+      }
     }
     if (step === 2) {
       if (state === "skipped") patch.last_season_skipped_at = at;

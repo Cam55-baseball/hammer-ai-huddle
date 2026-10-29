@@ -1,8 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { analysisInfoKeys, matchInfoVideos, infoPlacementTag, infoFaultTag, type InfoVideo } from './informational';
+import { analysisInfoKeys, matchInfoVideos, infoPlacementTag, infoFaultTag, infoGoalTag, type InfoVideo } from './informational';
 const video: InfoVideo = { id: 'info', title: 'Teaching', video_url: 'https://example.test/teach.mp4', video_type: 'upload', category: 'informational', sport: ['baseball'], skill_domains: ['hitting'], distribution_tier: 'normal', tags: [infoPlacementTag('before_you_start'), infoPlacementTag('after_analysis'), infoPlacementTag('recurring'), infoPlacementTag('growth'), infoFaultTag('early_shoulder_rotation')] };
 const context = { sport: 'baseball', allowedDomains: ['hitting'] };
 describe('owner informational video timing', () => {
+  it('matches saved goals after an all-positive clip without manufacturing a finding', () => {
+    const goalVideo = { ...video, tags: [infoPlacementTag('after_analysis'), infoGoalTag('Barrel control')] };
+    expect(matchInfoVideos([goalVideo], { ...context, placement: 'after_analysis', faultKeys: [], goals: ['Barrel control'] })).toHaveLength(1);
+    expect(matchInfoVideos([goalVideo], { ...context, placement: 'after_analysis', goals: ['Plate discipline'] })).toEqual([]);
+  });
+  it('growth in an analysis requires both developed status and an exact saved goal tag', () => {
+    const growth = { ...video, tags: [infoPlacementTag('growth'), infoGoalTag('Barrel control')] };
+    expect(matchInfoVideos([growth], { ...context, placement: 'growth', developed: true, goals: ['Barrel control'] })).toHaveLength(1);
+    expect(matchInfoVideos([growth], { ...context, placement: 'growth', developed: false, goals: ['Barrel control'] })).toEqual([]);
+    expect(matchInfoVideos([growth], { ...context, placement: 'growth', developed: true, goals: [] })).toEqual([]);
+  });
   it('shows the explicitly tagged video before starting', () => { expect(matchInfoVideos([video], { ...context, placement: 'before_you_start' }).map(v => v.id)).toEqual(['info']); });
   it('requires an exact current analysis finding; unrelated prose cannot match', () => {
     const keys = analysisInfoKeys({ violations_detected: { early_shoulder_rotation: true, made_up: true } }, 'hitting', 'baseball');

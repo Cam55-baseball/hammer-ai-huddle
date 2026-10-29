@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useVideoLibraryAdmin } from '@/hooks/useVideoLibraryAdmin';
-import { INFO_PLACEMENTS, infoPlacementTag, infoFaultTag, type InfoPlacement, type InfoVideo } from '@/lib/videoMoments/informational';
+import { INFO_PLACEMENTS, infoPlacementTag, infoFaultTag, infoGoalTag, type InfoPlacement, type InfoVideo } from '@/lib/videoMoments/informational';
+import { subGoalsFor, type CategoryKey } from '@/lib/hammer/goals/subGoalCatalog';
 import { faultKeysFor } from '../../../supabase/functions/analyze-video/constructiveCriticism';
 import { isAcceptedDrillVideoUrl } from '@/lib/prescription/drillVideoSource';
 import { toast } from '@/hooks/use-toast';
@@ -30,11 +31,13 @@ export default function VideoManager() {
     return result.data as InfoVideo[];
   } });
   const keys = draft ? [...new Set((draft.sport === 'both' ? ['baseball', 'softball'] : [draft.sport]).flatMap(sport => faultKeysFor(draft.domain, sport)))] : [];
+  const goalLabels = draft ? [...new Set((draft.sport === 'both' ? ['baseball', 'softball'] as const : [draft.sport as 'baseball' | 'softball']).flatMap(sport => ['position', 'pitcher'].flatMap(discipline => subGoalsFor(sport, discipline as 'position' | 'pitcher', draft.domain as CategoryKey).map(goal => goal.label))))] : [];
   const save = async () => {
     if (!draft || saving || uploading) return;
     if (!draft.title.trim() || !draft.placements.length || (!file && (!draft.url || !isAcceptedDrillVideoUrl(draft.url)))) { toast({ title: 'Add a title, video and place to show it' }); return; }
-    if (draft.placements.some(place => place === 'after_analysis' || place === 'recurring') && !draft.faults.length) { toast({ title: 'Pick a matching finding' }); return; }
-    const tags = [...draft.tags.filter(tag => !tag.startsWith('info:')), ...draft.placements.map(infoPlacementTag), ...draft.faults.map(infoFaultTag)];
+    if (draft.placements.includes('recurring') && !draft.faults.length) { toast({ title: 'Pick a matching finding for recurring issues' }); return; }
+    if (draft.placements.includes('after_analysis') && !draft.faults.length && !draft.tags.some(tag => tag.startsWith('info:goal:'))) { toast({ title: 'Pick a matching finding or goal' }); return; }
+    const tags = [...draft.tags.filter(tag => !tag.startsWith('info:') || tag.startsWith('info:goal:')), ...draft.placements.map(infoPlacementTag), ...draft.faults.map(infoFaultTag)];
     setSaving(true);
     try {
       let id = draft.id;
@@ -48,7 +51,7 @@ export default function VideoManager() {
       const result = await supabase.from('library_videos').update({ title: draft.title.trim(), tags, sport: [draft.sport], skill_domains: [draft.domain as SkillDomain],
         ...(!file ? { video_url: draft.url } : {}), distribution_tier: draft.active ? 'normal' : 'blocked' }).eq('id', id).select('id,tags,distribution_tier').single();
       if (result.error) throw result.error;
-      if (result.data.tags?.length !== tags.length) throw new Error('Video tags did not read back.');
+      if (result.data.tags?.length !== tags.length || !tags.every(tag => result.data.tags?.includes(tag))) throw new Error('Video tags did not read back.');
       await qc.invalidateQueries({ queryKey: ['owner-informational-videos'] });
       await qc.invalidateQueries({ queryKey: ['informational-videos'] });
       setDraft(null); setFile(null); toast({ title: 'Informational video saved' });
@@ -71,6 +74,7 @@ export default function VideoManager() {
         <div className="grid grid-cols-2 gap-3"><label className="space-y-1 text-sm">Sport<select aria-label="Video sport" className="h-9 w-full rounded-md border border-input bg-background" value={draft.sport} onChange={e => setDraft({ ...draft, sport: e.target.value, faults: [] })}>{['both', 'baseball', 'softball'].map(sport => <option key={sport}>{sport}</option>)}</select></label>
         <label className="space-y-1 text-sm">Skill<select aria-label="Video skill" className="h-9 w-full rounded-md border border-input bg-background" value={draft.domain} onChange={e => setDraft({ ...draft, domain: e.target.value, faults: [] })}>{['hitting', 'pitching', 'throwing', 'fielding', 'base_running'].map(domain => <option key={domain} value={domain}>{domain.replace('_', ' ')}</option>)}</select></label></div>
         <fieldset className="space-y-2"><legend className="mb-2 text-sm font-semibold">Where it appears</legend>{(Object.keys(INFO_PLACEMENTS) as InfoPlacement[]).map(place => <label key={place} className="flex items-center gap-2 text-sm"><Checkbox checked={draft.placements.includes(place)} onCheckedChange={checked => setDraft({ ...draft, placements: checked ? [...draft.placements, place] : draft.placements.filter(item => item !== place) })} />{INFO_PLACEMENTS[place]}</label>)}</fieldset>
+        <fieldset className="max-h-48 space-y-2 overflow-y-auto"><legend className="text-sm font-semibold">Matching goals</legend>{goalLabels.map(goal => <label key={goal} className="flex items-center gap-2 text-sm"><Checkbox checked={draft.tags.includes(infoGoalTag(goal))} onCheckedChange={checked => setDraft({ ...draft, tags: checked ? [...draft.tags, infoGoalTag(goal)] : draft.tags.filter(tag => tag !== infoGoalTag(goal)) })} />{goal}</label>)}</fieldset>
         {draft.placements.some(place => place === 'after_analysis' || place === 'recurring') && <fieldset className="max-h-48 space-y-2 overflow-y-auto"><legend className="text-sm font-semibold">Matching findings</legend>{keys.map(key => <label key={key} className="flex items-center gap-2 text-sm"><Checkbox checked={draft.faults.includes(key)} onCheckedChange={checked => setDraft({ ...draft, faults: checked ? [...draft.faults, key] : draft.faults.filter(item => item !== key) })} />{key.replace(/_/g, ' ')}</label>)}</fieldset>}
         <label className="flex items-center gap-2 text-sm"><Checkbox checked={draft.active} onCheckedChange={checked => setDraft({ ...draft, active: Boolean(checked) })} />Show when it matches</label>
         {draft.url && <VideoPlayer videoUrl={draft.url} videoType="external" title={draft.title} />}

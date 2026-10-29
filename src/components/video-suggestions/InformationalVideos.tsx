@@ -2,10 +2,10 @@ import { useInformationalVideos } from '@/hooks/useInformationalVideos';
 import type { InfoPlacement } from '@/lib/videoMoments/informational';
 import { VideoPlayer } from '@/components/video-library/VideoPlayer';
 
-export function InformationalVideos({ placement, sport, faultKeys = [], developed = false, domain }: {
-  placement: InfoPlacement; sport: string; faultKeys?: string[]; developed?: boolean; domain?: string;
+export function InformationalVideos({ placement, sport, faultKeys = [], developed = false, domain, goals }: {
+  placement: InfoPlacement; sport: string; faultKeys?: string[]; developed?: boolean; domain?: string; goals?: string[];
 }) {
-  const { videos, isError } = useInformationalVideos(placement, sport, faultKeys, developed, domain);
+  const { videos, isError } = useInformationalVideos(placement, sport, faultKeys, developed, domain, goals);
   if (isError) return <p role="alert" className="text-sm text-destructive">Couldn't load your learning videos. Try again later.</p>;
   if (!videos.length) return null;
   return <section aria-label="Learning videos" data-info-placement={placement} className="min-w-0 space-y-3">

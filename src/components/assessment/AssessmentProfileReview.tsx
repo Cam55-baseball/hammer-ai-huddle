@@ -6,14 +6,13 @@ import { Label } from "@/components/ui/label";
 import { AnthropometricsStep } from "@/components/onboarding/steps/AnthropometricsStep";
 import { EquipmentStep } from "@/components/onboarding/steps/EquipmentStep";
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
-import { useSwapV2 } from "@/hooks/useSwapV2";
+import { AssessmentPlanInputs } from './AssessmentPlanInputs';
 import type { DraftFlush, RegisterDraftFlush } from "@/lib/assessment/draftFlush";
 type Profile = { full_name: string; position: string };
-type Section = "body" | "equipment" | "goals";
+type Section = "body" | "equipment" | "goals" | "planning";
 /** Existing self-scoped answer forms, not assessment-only copies. */
-export function AssessmentProfileReview({ profile, onChange, registerFlush }: { profile: Profile; onChange: (profile: Profile) => void; registerFlush?: RegisterDraftFlush }) {
+export function AssessmentProfileReview({ profile, onChange, registerFlush, detailsOnly = false }: { profile: Profile; onChange: (profile: Profile) => void; registerFlush?: RegisterDraftFlush; detailsOnly?: boolean }) {
   const [section, setSection] = useState<Section | null>(null);
-  const swapV2 = useSwapV2();
   const childFlush = useRef<DraftFlush | null>(null);
   const registerChild: RegisterDraftFlush = flush => { childFlush.current = flush; registerFlush?.(flush); };
   const back = () => { void (async () => { if (!childFlush.current || await childFlush.current()) setSection(null); })(); };
@@ -23,14 +22,15 @@ export function AssessmentProfileReview({ profile, onChange, registerFlush }: { 
     {section === "body" && <AnthropometricsStep onContinue={savedBack} onBack={back} registerFlush={registerChild} />}
     {section === "equipment" && <EquipmentStep onContinue={back} onBack={back} registerFlush={registerChild} />}
     {section === "goals" && <CategoryGoalsStep embedded onContinue={savedBack} onBack={back} registerFlush={registerChild} />}
+    {section === "planning" && <AssessmentPlanInputs onBack={savedBack} registerFlush={registerChild} />}
   </div>;
   return <div className="space-y-5">
-    {(["full_name", "position"] as const).map(key => <div key={key} className="space-y-2">
+    {!detailsOnly && (["full_name", "position"] as const).map(key => <div key={key} className="space-y-2">
       <Label htmlFor={`assessment-${key}`}>{key === "full_name" ? "Your name" : "Position"}</Label>
       <Input id={`assessment-${key}`} value={profile[key]} onChange={e => onChange({ ...profile, [key]: e.target.value })} />
     </div>)}
     <div className="divide-y divide-border border-y border-border">
-      {([["body", "Body measurements"], ...(!swapV2.enabled ? [["equipment", "Equipment"] as const] : []), ["goals", "Your goals"]] as const).map(([key, label]) => <Button key={key} variant="ghost" className="h-14 w-full justify-between rounded-none" onClick={() => setSection(key)}>{label}<ChevronRight className="h-4 w-4" /></Button>)}
+      {([["body", "Body measurements"], ["equipment", "Equipment"], ["goals", "Your goals"], ["planning", "Training, nutrition & health"]] as const).map(([key, label]) => <Button key={key} variant="ghost" className="h-14 w-full justify-between rounded-none" onClick={() => setSection(key)}>{label}<ChevronRight className="h-4 w-4" /></Button>)}
     </div>
   </div>;
 }

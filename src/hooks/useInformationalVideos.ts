@@ -8,7 +8,7 @@ import { matchInfoVideos, infoPlacementTag, type InfoPlacement, type InfoVideo }
 import { domainToModule } from '@/lib/videoMoments/registry';
 import type { SkillDomain } from '@/lib/videoRecommendationEngine';
 
-export function useInformationalVideos(placement: InfoPlacement, sport: string, faultKeys: string[] = [], developed = false, domain?: string) {
+export function useInformationalVideos(placement: InfoPlacement, sport: string, faultKeys: string[] = [], developed = false, domain?: string, goals?: string[]) {
   const { user } = useAuth();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
@@ -26,5 +26,5 @@ export function useInformationalVideos(placement: InfoPlacement, sport: string, 
   });
   const domains = domain ? [domain] : ['hitting', 'pitching', 'throwing', 'fielding', 'base_running'];
   const allowedDomains = domains.filter(key => isOwner || isAdmin || (initialized && hasAccessForSport(domainToModule(key as SkillDomain), sport, false)));
-  return { ...query, videos: matchInfoVideos(query.data ?? [], { placement, sport, allowedDomains, faultKeys, developed }) };
+  return { ...query, videos: !user || query.isPending || query.isError ? [] : matchInfoVideos(query.data ?? [], { placement, sport, allowedDomains, faultKeys, developed, goals }) };
 }

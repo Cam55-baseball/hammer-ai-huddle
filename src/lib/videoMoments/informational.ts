@@ -10,6 +10,7 @@ export const INFO_PLACEMENTS = {
 export type InfoPlacement = keyof typeof INFO_PLACEMENTS;
 export const infoPlacementTag = (place: InfoPlacement) => `info:place:${place}`;
 export const infoFaultTag = (key: string) => `info:fault:${key}`;
+export const infoGoalTag = (goal: string) => `info:goal:${goal.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`;
 export interface InfoVideo {
   id: string; title: string; video_url: string | null; video_type: string;
   tags: string[]; sport: string[]; skill_domains?: string[] | null;
@@ -23,7 +24,7 @@ export function analysisInfoKeys(analysis: AnalysisLike | null | undefined, doma
   return [...new Set(keys.filter(key => allowed.has(key)))];
 }
 export function matchInfoVideos(videos: readonly InfoVideo[], context: {
-  placement: InfoPlacement; sport: string; allowedDomains: string[]; faultKeys?: string[]; developed?: boolean;
+  placement: InfoPlacement; sport: string; allowedDomains: string[]; faultKeys?: string[]; developed?: boolean; goals?: string[];
 }): InfoVideo[] {
   return videos.filter(video => {
     if (video.category !== 'informational' || !video.video_url || video.distribution_tier === 'blocked' || video.moderation_removed_at) return false;
@@ -32,8 +33,11 @@ export function matchInfoVideos(videos: readonly InfoVideo[], context: {
     if (!(video.skill_domains ?? []).some(domain => context.allowedDomains.includes(domain))) return false;
     if (context.placement === 'growth' && !context.developed) return false;
     if (context.placement === 'after_analysis' || context.placement === 'recurring') {
-      return (context.faultKeys ?? []).some(key => video.tags.includes(infoFaultTag(key)));
+      const findingMatch = (context.faultKeys ?? []).some(key => video.tags.includes(infoFaultTag(key)));
+      const goalMatch = context.placement === 'after_analysis' && (context.goals ?? []).some(goal => video.tags.includes(infoGoalTag(goal)));
+      return findingMatch || goalMatch;
     }
+    if (context.placement === 'growth' && context.goals) return context.goals.some(goal => video.tags.includes(infoGoalTag(goal)));
     return true;
   }).slice(0, 3);
 }

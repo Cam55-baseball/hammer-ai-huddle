@@ -14,7 +14,9 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Zap, ChevronDown, ChevronRight, ArrowRight, Play } from "lucide-react";
+import { Zap, ChevronDown, ChevronRight, ArrowRight, Play, Heart } from "lucide-react";
+import { useSavedAnalysisDrills } from '@/hooks/useSavedAnalysisDrills';
+import { toast } from 'sonner';
 import { useHIESnapshot } from "@/hooks/useHIESnapshot";
 import { matchPrescriptionDrills, maintenanceDrills } from "@/lib/prescription/matchDrills";
 import type { EliteDrill } from "@/data/drills/eliteDrillCatalog";
@@ -42,15 +44,14 @@ interface Props {
   practiceChecks?: AnalysisPracticeCheck[];
 }
 
-function DrillRow({ drill, reasons, staff, onOpen, onDone }: { drill: EliteDrill; reasons?: string[]; staff?: boolean; onOpen?: () => void; onDone?: () => void }) {
+function DrillRow({ drill, reasons, staff, onOpen, onSave, saved, saving }: { drill: EliteDrill; reasons?: string[]; staff?: boolean; onOpen?: () => void; onSave?: () => void; saved?: boolean; saving?: boolean }) {
   const [open, setOpen] = useState(false);
-  const [done, setDone] = useState(false);
   return (
     <div className="rounded-lg border bg-accent/20 p-3">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => setOpen((o) => { if (!o) onOpen?.(); return !o; })}
-        className="flex w-full items-start gap-2 text-left"
+        className="flex h-auto w-full items-start gap-2 whitespace-normal p-0 text-left"
       >
         {open ? (
           <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -74,7 +75,10 @@ function DrillRow({ drill, reasons, staff, onOpen, onDone }: { drill: EliteDrill
             ))}
           </div>
         </div>
-      </button>
+      </Button>
+      {onSave && <Button variant="ghost" size="icon" aria-label={`Save ${drill.name} to Saved drills`} aria-pressed={saved} disabled={saving || saved} onClick={onSave}>
+        <Heart className={saved ? 'h-4 w-4 fill-destructive text-destructive' : 'h-4 w-4'} />
+      </Button>}
 
       {open && (
         <div className="mt-3 space-y-2 border-t pt-3 text-xs">
@@ -123,12 +127,6 @@ function DrillRow({ drill, reasons, staff, onOpen, onDone }: { drill: EliteDrill
             <span className="font-medium text-foreground">Equipment: </span>
             {drill.equipment.join(", ")}
           </div>
-          {onDone && (
-            <Button size="sm" variant={done ? "secondary" : "outline"} disabled={done}
-              onClick={() => { setDone(true); onDone(); }}>
-              {done ? "Marked done" : "I did this drill"}
-            </Button>
-          )}
         </div>
       )}
     </div>
@@ -137,6 +135,7 @@ function DrillRow({ drill, reasons, staff, onOpen, onDone }: { drill: EliteDrill
 
 export function AnalysisPrescriptionSection({ module, sport, violations, faultKeys, includePendingReview, pieV2Signals, embedded, historyKey, practiceChecks }: Props) {
   const navigate = useNavigate();
+  const saved = useSavedAnalysisDrills(sport ?? 'baseball');
   const { snapshot } = useHIESnapshot();
 
   const weaknessAreas = useMemo(
@@ -144,7 +143,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     [snapshot],
   );
 
-  const { catalog, historyCatalog, circulation, log, markDone, userId, ready, error: circulationError,
+  const { catalog, historyCatalog, circulation, log, userId, ready, error: circulationError,
     matches: goalMatches, isPending: goalsPending, goalError } = useAnalysisGoalDrills(module, sport);
   const frozenKey = historyKey ? `rx.frozen.v2:${userId ?? "anon"}:${historyKey}` : null;
   const checkMatches = useMemo(
@@ -180,7 +179,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
         const restored = saved.map((x) => ({ drill: byId.get(x.id), score: 0, reasons: x.reasons })).filter((x) => x.drill);
         if (restored.length === saved.length) {
           // Frozen history stays; tagged practice-check drills are added once.
-          const extra = checkMatches.filter((m) => !restored.some((r) => r.drill!.id === m.drill.id));
+          const extra = [...checkMatches, ...goalMatches].filter((m) => !restored.some((r) => r.drill?.id === m.drill.id));
           return [...restored, ...extra] as typeof live;
         }
       } else if (live.length) {
@@ -188,7 +187,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
       }
     } catch { /* storage unavailable — live list */ }
     return live;
-  }, [frozenKey, live, historyCatalog, ready, goalsPending, checkMatches]);
+  }, [frozenKey, live, historyCatalog, ready, goalsPending, checkMatches, goalMatches]);
 
   const fallback = useMemo(
     // Maintenance work only when the clip genuinely had no faults.
@@ -225,7 +224,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
             For this clip and your goals
           </h4>
           {matches.length > 0 ? (
-            matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} reasons={m.reasons} staff={includePendingReview} onOpen={() => log([m.drill.id], "opened")} onDone={() => markDone(m.drill.id)} />)
+            matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} reasons={m.reasons} staff={includePendingReview} onOpen={() => log([m.drill.id], "opened")} saved={saved.isSaved(m.drill)} saving={!saved.ready || saved.saving} onSave={() => { void saved.save(m.drill).then(() => toast.success('Saved to Saved drills'), () => toast.error("Couldn't save this drill. Try again.")); }} />)
           ) : fallback.length > 0 ? (
             <>
               <p className="text-xs text-muted-foreground">
@@ -241,6 +240,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
             </p>
           )}
         </section>
+        <Button variant="outline" onClick={() => navigate('/vault?section=saved-items')}>Saved drills</Button>
 
         {hieActions.length > 0 && (
           <section className="space-y-2 border-t pt-4">
