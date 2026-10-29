@@ -87,6 +87,7 @@ export function usePhysioProfile() {
       if (!data || Object.entries(updates).some(([key, value]) => JSON.stringify((data as Record<string, unknown>)[key]) !== JSON.stringify(value))) throw new Error('Health save was not confirmed.');
       queryClient.invalidateQueries({ queryKey: ['physioProfile'] });
       queryClient.invalidateQueries({ queryKey: ['physioGamePlanBadges'] });
+      queryClient.invalidateQueries({ queryKey: ['physio-plan-mapping'] });
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message };
