@@ -56,6 +56,9 @@ export function useSeasonStatus() {
     queryKey,
     queryFn: async (): Promise<SeasonData> => {
       if (!user) throw new Error('Not authenticated');
+      const { data: athlete, error: athleteError } = await supabase.from('athlete_context').select('sport_primary').eq('user_id', user.id).maybeSingle();
+      if (athleteError) throw athleteError;
+      if (!athlete?.sport_primary) throw new Error('Choose your sport before changing your season');
       const { data, error } = await supabase
         .from('athlete_mpi_settings')
         .select('season_status, season_status_manual, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date')
@@ -89,7 +92,7 @@ export function useSeasonStatus() {
           : rest;
       const { data, error } = await supabase
         .from('athlete_mpi_settings')
-        .upsert({ user_id: user.id, ...payload }, { onConflict: 'user_id' })
+        .upsert({ user_id: user.id, sport: athlete.sport_primary, ...payload }, { onConflict: 'user_id' })
         .select('season_status, preseason_start_date, in_season_start_date, in_season_end_date, post_season_end_date')
         .single();
       if (error) throw error;
