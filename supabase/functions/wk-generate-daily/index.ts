@@ -2804,7 +2804,10 @@ const handler = async (req: Request): Promise<Response> => {
     // At four or more games in a rolling seven days the 48-hour rule cannot be
     // satisfied, so a game day still earns a primer rather than nothing at all
     // — `primerOnly` above has already capped what can appear.
-    if ((!isGameDay || gameProximity.highDensity || gameProximity.overrideApplied) && !gameProximity.removeLift) {
+    // The validator never allows a lift row on a game day (any density), so a
+    // dense game week keeps lifting on its non-game days only; otherwise the
+    // whole game day failed and the player got the stand-in session.
+    if (!isGameDay && !gameProximity.removeLift) {
       // WIC strength engine — full-body roles.
       // 1) Arm care — every session, non-negotiable. Elite picker draws from full seeded catalog.
       const daySeedForArmCare = Math.floor(new Date(planDate + "T00:00:00").getTime() / 86400000);
@@ -3730,6 +3733,13 @@ const handler = async (req: Request): Promise<Response> => {
             );
             if (holder) requiredHolders.add(holder.movement_slug);
           }
+          // Same law for conditioning: every conditioning session needs one
+          // aerobic-base row (the certifier fails without it), so the first
+          // one is trimmed to its floor, never dropped.
+          const aerobicHolder = finalRxs.find(
+            (r) => r.slot === "conditioning" && (catalogMap[r.movement_slug] as any)?.conditioning_category === "aerobic_base",
+          );
+          if (aerobicHolder) requiredHolders.add(aerobicHolder.movement_slug);
           const trimPlan = planTrims(gov.trims as any, requiredHolders);
           const droppedFrom = trimPlan.dropped;
           const steppedFrom = trimPlan.stepped as Map<string, any>;
@@ -4543,7 +4553,10 @@ const handler = async (req: Request): Promise<Response> => {
       const s = computeWhyCompleteness(rx.why_v2);
       if (s < p1112_whyMinScore) p1112_whyMinScore = s;
     }
-    if (finalRxs.length === 0) p1112_whyMinScore = 0;
+    // A game day may legitimately carry no physical rows (lifting and
+    // conditioning are off; the game card itself is the day). Every other
+    // empty day stays an honest refusal.
+    if (finalRxs.length === 0 && !isGameDay) p1112_whyMinScore = 0;
     if (p1112_whyMinScore < 100) {
       validatorReport.issues.push({
         code: "why_v2_incomplete", severity: "fatal",
