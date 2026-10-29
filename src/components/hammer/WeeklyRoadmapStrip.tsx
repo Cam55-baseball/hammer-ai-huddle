@@ -1,4 +1,11 @@
 import { useState } from "react";
+import {useQuery}from '@tanstack/react-query';
+import {useAuth}from '@/hooks/useAuth';
+import {useSubscription}from '@/hooks/useSubscription';
+import {readComposedWeek}from '@/lib/hammer/readComposedWeek';
+import {composedDayCategories}from '@/lib/hammer/composedWeek';
+import {isoShift}from '../../../../supabase/functions/_shared/wic/schedule/timeline';
+import {localIso}from '@/hooks/usePitcherSchedule';
 import { Button } from "@/components/ui/button";
 import { SeasonDatesDialog } from "@/components/hammer/SeasonDatesDialog";
 import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
@@ -53,14 +60,21 @@ interface Props {
   readonly plan: Pick<HammerDailyPlanResult, "weeklyRoadmap" | "weeklyTemplate" | "microcycle" | "roadmap">;
   readonly todayCategories?: readonly string[];
   readonly savedPhase?: string | null;
+  readonly sport?:'baseball'|'softball';
 }
 
-export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase }: Props) {
+export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: Props) {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
   const { weeklyRoadmap, microcycle, roadmap } = plan;
   const season = useSeasonStatus();
+  const {user}=useAuth();const {modules}=useSubscription();
+  const today=localIso();
+  const monday=isoShift(today,-((new Date(`${today}T12:00:00Z`).getUTCDay()+6)%7));
+  const savedWeek=useQuery({queryKey:['composed-plan-week',user?.id,sport,monday],enabled:!!user&&!!sport,
+    queryFn:()=>{if(!user||!sport)throw new Error('Sign in');return readComposedWeek(user.id,monday,isoShift(monday,6),sport,modules.includes(`${sport}_5tool`)||modules.includes(`${sport}_golden2way`));}});
+  const savedCategories=(day:RoadmapDay)=>{const date=isoShift(monday,(day.dow+6)%7);const saved=savedWeek.data?.days.find(d=>d.date===date);return saved?composedDayCategories(saved):undefined;};
   const resolvedPhaseCode = { off_season: "off", preseason: "pre", in_season: "in", post_season: "post" }[season.resolvedPhase];
   const phaseWeek = roadmap.quarter.phaseKnown && season.phaseStartedAt && season.phaseDaysIn !== null && resolvedPhaseCode === roadmap.quarter.phase
     ? Math.max(1, Math.floor(season.phaseDaysIn / 7) + 1)
@@ -117,13 +131,13 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase }: Props)
             day={day}
             onClick={() => setExpanded((cur) => (cur === idx ? null : idx))}
             active={expanded === idx}
-            todayCategories={day.isToday ? todayCategories : undefined}
+            todayCategories={savedCategories(day)??(day.isToday ? todayCategories : undefined)}
           />
         ))}
       </div>
 
       {expanded !== null && weeklyRoadmap[expanded] && (
-        <DayDetail day={weeklyRoadmap[expanded]} todayCategories={weeklyRoadmap[expanded].isToday ? todayCategories : undefined} />
+        <DayDetail day={weeklyRoadmap[expanded]} todayCategories={savedCategories(weeklyRoadmap[expanded])??(weeklyRoadmap[expanded].isToday ? todayCategories : undefined)} />
       )}
 
       <div className="mt-2 flex items-start gap-2 rounded-md border border-muted/30 bg-muted/5 px-2 py-1.5 text-[11px] text-muted-foreground">

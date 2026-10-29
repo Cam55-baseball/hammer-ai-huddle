@@ -1040,6 +1040,7 @@ function HammerDailyPlanBody({
           })}
         {/* Quarter / phase + weekly rhythm context */}
         <WeeklyRoadmapStrip plan={plan}
+          sport={sportKey}
           savedPhase={wkRx.data?.find(row => row.phase)?.phase}
           todayCategories={[...new Set([
             ...plan.blocks.filter(block => block.status === "ready" && block.drills.length > 0 && !["warmup", "fueling", "game_iq", "strength", "speed"].includes(block.modality)).map(block => block.modality === "defense" ? "Defense" : block.modality === "hitting" ? "Hitting" : block.modality === "baserunning" ? "Baserunning" : block.modality === "throwing" ? "Throwing" : "Recovery"),

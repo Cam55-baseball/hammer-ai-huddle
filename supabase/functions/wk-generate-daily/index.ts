@@ -5291,7 +5291,7 @@ const handler = async (req: Request): Promise<Response> => {
         ...(composed?{p_sport:sport,p_engine:composed.engine,p_payload:composed.payload,p_expected_rows:expectedDayRows,p_expected_snapshot:composed.expectedSnapshot,p_diag:{},p_shared:{}}:{}),
       });
       if (adjErr) return json({ error: "adjust_failed", message: adjErr.message }, 500);
-      return json({ ok: true, adjusted: true, plan_date: planDate, ...(adj as any) }, 200);
+      return json({ ok: true, adjusted: true, plan_date: planDate, ...(adj as any),...(composed?{user_id:user.id,bunting_entitled:bsModules.includes(`${sport}_5tool`)||bsModules.includes(`${sport}_golden2way`)}:{}) }, 200);
     }
 
     stampPhase(rows as any[]);
@@ -5451,7 +5451,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
     return json({
       ok: true,
-      ...(composed?{composed:true,sport,plan_date:planDate}:{}),
+      ...(composed?{composed:true,sport,plan_date:planDate,user_id:user.id,bunting_entitled:bsModules.includes(`${sport}_5tool`)||bsModules.includes(`${sport}_golden2way`)}:{}),
       phase: phaseRes.phase,
       phase_display: phaseRes.displayName,
       adaptation: adaptationDecision.primary,
