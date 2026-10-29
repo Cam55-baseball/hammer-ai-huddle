@@ -1037,6 +1037,13 @@
       "when": 1793241502830,
       "tag": "0147_organizations_immediate_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 148,
+      "version": "7",
+      "when": 1793241869923,
+      "tag": "0148_organization_coach_invite_existing_requests",
+      "breakpoints": true
     }
   ]
 }
