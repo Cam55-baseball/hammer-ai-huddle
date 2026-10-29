@@ -1,4 +1,4 @@
--- PENDING named owner authorization; exact original saved report keys only, no prose inference.
+-- Owner-authorized Oct29; exact original saved report keys only, no prose inference.
 CREATE OR REPLACE FUNCTION public.wk_analysis_drill_atomic(p_user uuid,p_date date,p_id uuid,p_sport text,p_modality text,p_index integer,p_expected jsonb,p_replacement jsonb,p_enrollment jsonb,p_expected_updated timestamptz,p_safety jsonb,p_warnings jsonb) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 DECLARE s public.athlete_plan_snapshots; b integer; result jsonb; v public.videos; reason text;
 BEGIN

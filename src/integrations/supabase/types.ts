@@ -24780,6 +24780,25 @@ export type Database = {
         Args: { _day: string; _user: string }
         Returns: boolean
       }
+      wk_commit_composed_day: {
+        Args: {
+          p_date: string
+          p_detail: Json
+          p_diag: Json
+          p_engine: string
+          p_expected_rows: Json
+          p_expected_snapshot: string
+          p_payload: Json
+          p_reason_code: string
+          p_reason_text: string
+          p_replace_slots: string[]
+          p_rows: Json
+          p_shared: Json
+          p_sport: string
+          p_user: string
+        }
+        Returns: Json
+      }
       wk_external_training_days: {
         Args: { p_from: string; p_to: string; p_user: string }
         Returns: {
