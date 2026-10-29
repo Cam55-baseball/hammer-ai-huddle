@@ -14,12 +14,10 @@ import { OrganizationRegistration } from '@/components/organization/Organization
 import { OrganizationMemberList } from '@/components/organization/OrganizationMemberList';
 import { TeamComplianceCard } from '@/components/organization/TeamComplianceCard';
 import { TeamRosterView } from '@/components/organization/TeamRosterView';
-import { TeamHeatMapOverlay } from '@/components/organization/TeamHeatMapOverlay';
 import { InviteCodeCard } from '@/components/organization/InviteCodeCard';
 import { JoinOrganization } from '@/components/organization/JoinOrganization';
 import { TeamAnnouncements } from '@/components/organization/TeamAnnouncements';
 import { Building2 } from 'lucide-react';
-import { OrgVerificationForm } from '@/components/organization/OrgVerificationCards';
 import { AssignAthletesCard } from '@/components/organization/AssignAthletesCard';
 import { FacilitySpaces } from '@/components/organization/FacilitySpaces';
 import { FacilityBoard } from '@/components/organization/FacilityBoard';
@@ -38,15 +36,14 @@ export default function OrganizationDashboard() {
   const { membership, organizationId, roleInOrg, orgName } = usePlayerOrganization();
   const activeOrg = myOrgs.data?.[0];
   const memberList = members.data ?? [];
-  const isOwnerOrCoach = !!activeOrg;
   const { data: teamStats } = useTeamStats(activeOrg?.id);
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Building2 className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-start gap-2 break-words">
+            <Building2 className="h-8 w-8 shrink-0 text-primary" />
             {activeOrg?.name ?? 'Organization'}
           </h1>
           <p className="text-muted-foreground">Organization Dashboard</p>

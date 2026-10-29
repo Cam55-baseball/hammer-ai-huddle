@@ -3,7 +3,7 @@ import { useMasteryIdentity } from '@/hooks/useMasteryIdentity';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { categoryGoals } from '@/lib/prescription/analysisGoals';
+import { savedTrendGoals } from '@/lib/progress/savedTrendGoals';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MeaningTitle } from './SectionMeaning';
 import { EvidenceTrendChart } from './EvidenceTrendChart';
@@ -31,13 +31,13 @@ function SavedGoalTrends({sport,series,visible}:{sport:'baseball'|'softball';ser
     if (!user) return [];
     const {data,error} = await supabase.from('athlete_context').select('category_goals,position_primary').eq('user_id',user.id).maybeSingle();
     if (error) throw error;
-    return ['hitting','pitching','throwing'].flatMap(module => categoryGoals(data?.category_goals,module,sport,data?.position_primary).map(title => ({title,module})));
+    return savedTrendGoals(data?.category_goals,sport);
   }});
   return <section className="space-y-4"><h3><MeaningTitle title="Your Goals">Saved goals show supporting pillar results, not a made-up goal score. A batting average cannot prove barrel control, and an arm grade cannot prove footwork. Keep these limits in mind.</MeaningTitle></h3>
     {goals.isError && <p role="alert" className="text-destructive">Could not load saved goals.</p>}
     {goals.data?.length === 0 && <p className="text-muted-foreground">No saved goals for this sport yet.</p>}
     <div className="grid min-w-0 gap-6 lg:grid-cols-2">{goals.data?.map(g => {
-      const pillar = g.module === 'pitching' ? 'pitching' : g.module === 'throwing' ? 'arm' : /power/i.test(g.title) ? 'power' : 'contact';
+      const pillar = g.module === 'pitching' ? 'pitching' : g.module === 'throwing' ? 'arm' : g.module === 'fielding' ? 'defense' : g.module === 'speed' ? 'speed' : g.module === 'power' || /power/i.test(g.title) ? 'power' : 'contact';
       const s = series.find(row=>row.id===pillar);
       return <section className="min-w-0 border-b border-border pb-4" key={`${g.module}:${g.title}`}><h4><MeaningTitle title={g.title}>This is your saved {g.module} goal. The graph shows supporting {s?.title.toLowerCase()} evidence only. It does not directly measure this skill or claim the goal is reached.</MeaningTitle></h4>{s && <EvidenceTrendChart label={`${g.title} · Supporting ${s.title}`} unit={s.unit} points={visible(s.points)}/>}</section>;
     })}</div>
