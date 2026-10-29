@@ -5468,7 +5468,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
     return json({
       ok: true,
-      ...(composed?{composed:true,sport,plan_date:planDate,user_id:user.id,bunting_entitled:bsModules.includes(`${sport}_5tool`)||bsModules.includes(`${sport}_golden2way`)}:{}),
+      ...(composed?{composed:true,sport,plan_date:planDate,user_id:user.id,bunting_entitled:bsModules.includes(`${sport}_5tool`)||bsModules.includes(`${sport}_golden2way`)||['hitting',`${sport}_hitting`].some(m=>bsModules.includes(m))&&['throwing',`${sport}_throwing`].some(m=>bsModules.includes(m))}:{}),
       phase: phaseRes.phase,
       phase_display: phaseRes.displayName,
       adaptation: adaptationDecision.primary,
