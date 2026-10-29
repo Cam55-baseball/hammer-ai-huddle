@@ -157,9 +157,6 @@ export function certifiedConditioningTemplate(
   lowReadinessFloorRun = false,
 ): ConditioningTemplateId | undefined {
   const cond = rows.filter((r) => r.slot === "conditioning");
-  // A session that is only an easy flush is a Recovery Flush, whatever trimmed it (readiness,
-  // spacing or equipment): stricter checks, no hard work. Weekly running floors are judged separately.
-  void primaryAdaptation; void lowReadinessFloorRun;
-  const flushOnly = cond.length > 0 && cond.every((r) => categoryOf(r.movement_slug) === "recovery_flush");
+  const flushOnly = (primaryAdaptation === "recovery_only" || lowReadinessFloorRun) && cond.length > 0 && cond.every((r) => categoryOf(r.movement_slug) === "recovery_flush");
   return flushOnly ? "cond.recovery_flush" : chosen;
 }
