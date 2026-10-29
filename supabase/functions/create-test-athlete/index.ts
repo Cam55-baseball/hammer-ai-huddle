@@ -140,6 +140,32 @@ function personas(): Record<string, Persona> {
       events: [-21, -19, -17, -16, -5, -3, -1].map((d) => ({ d, type: "scrimmage" as const, title: "Fall scrimmage" })),
       arm: [-5, -3, -1].map((d) => ({ d, type: "pitcher_warmup", count: 20, source: "pitching" as const })),
     },
+    // Scheduling certification (Oct 29): off-season weeks 1–2, in-season with games weeks 3–4.
+    certhsp: {
+      email: "hammersmodality+certhsp@gmail.com", name: "TEST — Cert HS Pitcher (BB)", dob: "2009-04-10", sport: "baseball",
+      position: "P", level: "hs_varsity", season: "off_season", inStart: add(t, 14), inEnd: add(t, 80), tier: "pitcher",
+      events: [16, 19, 23, 26].map((d) => ({ d, type: "game" as const, title: "HS game" })), arm: [], start: true,
+    },
+    certsb5: {
+      email: "hammersmodality+certsb5@gmail.com", name: "TEST — Cert HS 5Tool (SB)", dob: "2009-06-12", sport: "softball",
+      position: "SS", level: "hs_varsity", season: "off_season", inStart: add(t, 14), inEnd: add(t, 80), tier: "5tool",
+      events: [15, 18, 22, 25, 27].map((d) => ({ d, type: "game" as const, title: "HS game" })), arm: [], start: true,
+    },
+    certsbp: {
+      email: "hammersmodality+certsbp@gmail.com", name: "TEST — Cert HS Pitcher (SB)", dob: "2009-02-20", sport: "softball",
+      position: "P", level: "hs_varsity", season: "off_season", inStart: add(t, 14), inEnd: add(t, 80), tier: "pitcher",
+      events: [16, 18, 23, 25].map((d) => ({ d, type: "game" as const, title: "HS game" })), arm: [], start: true,
+    },
+    certsb2: {
+      email: "hammersmodality+certsb2@gmail.com", name: "TEST — Cert HS 2Way (SB)", dob: "2009-08-03", sport: "softball",
+      position: "P", secondary: "SS", level: "hs_varsity", season: "off_season", inStart: add(t, 14), inEnd: add(t, 80), tier: "golden2way",
+      events: [15, 18, 22, 25].map((d) => ({ d, type: "game" as const, title: "HS game" })), arm: [], start: true,
+    },
+    certcsb2: {
+      email: "hammersmodality+certcsb2@gmail.com", name: "TEST — Cert College 2Way (SB)", dob: "2005-05-15", sport: "softball",
+      position: "P", secondary: "1B", level: "d1", season: "off_season", inStart: add(t, 14), inEnd: add(t, 80), tier: "golden2way",
+      events: [15, 17, 19, 20, 22, 24, 26, 27].map((d) => ({ d, type: "game" as const, title: "College game" })), arm: [], start: true,
+    },
   };
 }
 
