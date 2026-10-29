@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { filterSendCatalog, vaultSendItem, drillSendItem } from './sendCatalog';
+import { filterSendCatalog, vaultSendItem, drillSendItem, sendCatalog } from './sendCatalog';
 import type { CatalogMovement } from '@/hooks/useWorkoutCatalog';
 describe('coach sends retain declared work', () => {
+  it('does not list another sport’s Vault items', () => {
+    const rows = [{ id: 'softball-only', name: 'Windmill', sport_scope: 'softball', category: 'windmill_pitching' }, { id: 'shared', name: 'Shared', sport_scope: 'both', category: 'warmup' }] as CatalogMovement[];
+    const list = sendCatalog(rows, [], 'baseball');
+    expect(list.some(item => item.id === 'vault:softball-only')).toBe(false);
+    expect(list.some(item => item.id === 'vault:shared')).toBe(true);
+  });
   it('retains Vault identity, exact dose and complete gear groups without a template reference', () => {
     const item = vaultSendItem({ id: 'vault-row', slug: 'reviewed', name: 'Reviewed', category: 'warmup', default_sets: 2, default_reps: 8, dosage_unit: 'reps', equipment: ['bat'], equipment_requirements: ['net'], equipment_alternatives: [['tee', 'baseballs'], ['partner']] } as CatalogMovement);
     expect(item.templateId).toBeNull();
