@@ -154,8 +154,9 @@ export { CONDITIONING_TEMPLATES, resolveConditioningTemplate };
 export function certifiedConditioningTemplate(
   chosen: ConditioningTemplateId | undefined, primaryAdaptation: string | null | undefined,
   rows: readonly { slot: string; movement_slug: string }[], categoryOf: (slug: string) => string | null | undefined,
+  lowReadinessFloorRun = false,
 ): ConditioningTemplateId | undefined {
   const cond = rows.filter((r) => r.slot === "conditioning");
-  const flushOnly = primaryAdaptation === "recovery_only" && cond.length > 0 && cond.every((r) => categoryOf(r.movement_slug) === "recovery_flush");
+  const flushOnly = (primaryAdaptation === "recovery_only" || lowReadinessFloorRun) && cond.length > 0 && cond.every((r) => categoryOf(r.movement_slug) === "recovery_flush");
   return flushOnly ? "cond.recovery_flush" : chosen;
 }

@@ -4056,7 +4056,7 @@ const handler = async (req: Request): Promise<Response> => {
       prescriptions: finalRxs as any,
       catalog: lib as any,
       // Certify against the session type the selector actually chose.
-      templateId: certifiedConditioningTemplate(conditioningSelection?.templateId, adaptationDecision.primary, finalRxs as any, (x) => condCatOf.get(x)),
+      templateId: certifiedConditioningTemplate(conditioningSelection?.templateId, adaptationDecision.primary, finalRxs as any, (x) => condCatOf.get(x), !!conditioningFloor?.added?.includes("rc_easy_flush")),
       template: {
         seasonPhase: trainingContext.season_phase,
         dayType: trainingContext.day_type,
