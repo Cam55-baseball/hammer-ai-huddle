@@ -946,7 +946,12 @@ const handler = async (req: Request): Promise<Response> => {
     // A game told to Hammer (timeline) makes today a game day exactly like a
     // Game Plan game — otherwise the lift template would still ask for a full
     // strength session on a game day.
-    const isGameDay = gamesOnPlanDate.length > 0 || timelineToday.games.length > 0;
+    // Calendar games (the app's schedule) count too — they were missing, so
+    // in-season game days were built as ordinary taper days with no game card.
+    const isGameDay = isPlanGameDay(planDate, {
+      gpGames: gameWindowRows, calendarGames: (calendarGames ?? []) as any[],
+      timelineGamesToday: timelineToday.games.length, cancelled: timelineCancelled,
+    });
 
     // -------- Schedule enforcement (Pass B, revised) --------
     // Two sources, one list, de-duplicated inside `resolveGameProximity`: the
