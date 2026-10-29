@@ -114,21 +114,15 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
     if (!user?.id || loaded) return;
     (async () => {
       try {
-        const [{ data: ctxRow, error: ctxError }, { data: profile, error: profileError }, draft] = await Promise.all([
+        const [{ data: ctxRow, error: ctxError }, draft] = await Promise.all([
           supabase
             .from("athlete_context")
-            .select("category_goals")
+            .select("category_goals, sport_primary, position_primary")
             .eq("user_id", user.id)
-            .maybeSingle(),
-          supabase
-            .from("profiles")
-            .select("sport_primary, sport_secondary, position_primary")
-            .eq("id", user.id)
             .maybeSingle(),
           readDraftSlot<DraftShape>(user.id, "category-goals-wizard"),
         ]);
         if (ctxError) throw ctxError;
-        if (profileError) throw profileError;
 
         const existingV2 = normalizeCategoryGoalsV2(
           (ctxRow as { category_goals?: unknown } | null)?.category_goals,
@@ -158,8 +152,9 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
             initialPanes.push({ sport: "softball", discipline: "pitcher" });
             initialPicks[paneKey({ sport: "softball", discipline: "pitcher" })] = existingV2.softball.pitcher;
           }
-        } else {
-          const p = profile as { sport_primary?: string; sport_secondary?: string[]; position_primary?: string } | null;
+        }
+        if (!initialPanes.length) {
+          const p = ctxRow as { sport_primary?: string; position_primary?: string } | null;
           const sport: Sport = (p?.sport_primary ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
           initialPanes.push({ sport, discipline: "position" });
           if ((p?.position_primary ?? "").toUpperCase() === "P") {
@@ -173,9 +168,12 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
         setActivePane(initialPanes[0] ? paneKey(initialPanes[0]) : null);
       } catch (e) {
         console.warn("[onboarding] category_goals hydrate failed", e);
+        toast.error("Couldn't load your goals. Reload to try again.");
+        return;
       } finally {
-        setLoaded(true);
+        // Failed reads must not enable a blank overwrite.
       }
+      setLoaded(true);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
@@ -283,7 +281,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
       const actual = normalizeCategoryGoalsV2(saved.category_goals);
       if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("Your saved goals could not be confirmed. Try again.");
       clearDraftSlot(user.id, "category-goals-wizard");
-      await Promise.all(["goal-ranking", "hammer-context-envelope", "athlete-onboarding-state", "hammers-today-start", "onboarding-answer-status"].map(key => qc.invalidateQueries({ queryKey: [key, user.id] })));
+      await Promise.all(["goal-ranking", "hammer-context-envelope", "athlete-onboarding-state", "start-readiness", "onboarding-answer-status"].map(key => qc.invalidateQueries({ queryKey: [key, user.id] })));
       toast.success("Goals saved. Hammer will plan around them.");
       if (advance) onContinue();
       return true;
