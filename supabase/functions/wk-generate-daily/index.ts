@@ -3730,6 +3730,13 @@ const handler = async (req: Request): Promise<Response> => {
             );
             if (holder) requiredHolders.add(holder.movement_slug);
           }
+          // Same law for conditioning: every conditioning session needs one
+          // aerobic-base row (the certifier fails without it), so the first
+          // one is trimmed to its floor, never dropped.
+          const aerobicHolder = finalRxs.find(
+            (r) => r.slot === "conditioning" && (catalogMap[r.movement_slug] as any)?.conditioning_category === "aerobic_base",
+          );
+          if (aerobicHolder) requiredHolders.add(aerobicHolder.movement_slug);
           const trimPlan = planTrims(gov.trims as any, requiredHolders);
           const droppedFrom = trimPlan.dropped;
           const steppedFrom = trimPlan.stepped as Map<string, any>;
