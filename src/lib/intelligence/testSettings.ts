@@ -11,6 +11,10 @@ export function testSettingsFor<T extends object>(row:T, userId:string|undefined
 }
 export type SettingChange={target:'mastery_identity_settings'|'library_videos'|'owner_drills'|'engine_dynamic_weights';id:string;field:string;before:unknown;after:unknown};
 export type SettingsReceipt={principle_id:string;version:number;version_id:string;test_user:string;changes:SettingChange[];undone?:boolean};
+export type TestPlanPreferences={prescription_weights?:Record<string,number>;weekly_minimums?:Record<string,number>};
+export function boundedSkillFloor(base:number,minimum:number|undefined,safetyCeiling:number):number{
+  return Number.isInteger(minimum)&&typeof minimum==='number'&&minimum>=0&&minimum<=6?Math.min(safetyCeiling,Math.max(base,minimum)):base;
+}
 export function settingsChanges(raw:unknown):SettingChange[]{
   if(!Array.isArray(raw)||raw.length<1||raw.length>12)throw Error('Choose 1–12 exact existing settings.');
   const seen=new Set<string>();

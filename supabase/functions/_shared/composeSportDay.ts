@@ -59,6 +59,13 @@ export async function composeSportDay(db: any, input: {
   ]):[{data:[],error:null},{data:[],error:null},{data:[],error:null}];
   const abRows=complete(abs), pitchRows=complete(pitches), defenseRows=complete(defense);
   const circulation=await readDrillCirculation({owner:db.from('owner_drills').select('*').limit(1000),usage:db.rpc('drill_usage_totals'),events:db.from('drill_engagement').select('drill_id,event,created_at').eq('user_id',uid).lt('created_at',`${date}T00:00:00Z`).in('event',['served','completed']).limit(1000)});
+  const testIds=['a283a732-dfca-4160-9c9b-55305e092572','bb839f7d-6a03-460e-8b64-444f220b53da'];
+  let testPreferences:unknown;
+  if(testIds.includes(uid)){
+    const s=await db.from('mastery_identity_settings').select('test_overrides').eq('sport',sport).maybeSingle();if(s.error)throw s.error;
+    testPreferences=s.data?.test_overrides?.[uid];
+    circulation.rows=circulation.rows.map((r:any)=>({...r,...Object.fromEntries(Object.entries(r.test_overrides?.[uid]??{}).filter(([k])=>['fault_keys','placements','routine_role'].includes(k)))}));
+  }
   // Per-request setters are synchronous immediately before the pure builder; no await can mix accounts.
   const envelope={...env.data};
   const entry=(value:unknown,source:string)=>({value,source,owner:'canonical',confidence:'derived',missing:value==null,last_updated:null});
@@ -87,7 +94,7 @@ export async function composeSportDay(db: any, input: {
   setWarmupStageOverrides(input.warmupStages);
   const evidence=projectBuntingEvidence(sessionRows,abRows,pitchRows.filter((p:any)=>p.perspective==='hitter'&&['bunt_foul','bunt_in_play'].includes(p.result)),complete(tasks),sport);
   const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
-    alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,physio:input.physio,
+    alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,physio:input.physio,testPreferences,
     bunting:access.hasHitting?{evidence,catalog:complete(bunts),age,userId:uid,phase:input.phase}:undefined});
   const plan=finalizeDatedPlan(raw,{sport,now:day,cnsHigh:input.cns>=7,adjustments:adjRows,clips:clipRows,games:gp,principles:complete(principles),rankedFaults:accessiblePlanFaults(faults.rankedFaults,modules,sport,{clips:clipRows,now:day.getTime()}),signalScopes:faults.signalScopes,recurringIssues:accessibleRecurringIssues(issues,modules,sport),ownedEquipment:new Set(planningGear(input.equipment,input.alwaysMissingGear??[])),catalog:mergeCatalog(ELITE_DRILL_CATALOG,circulation.rows),circulation:{servedToUser:circulation.served,usage:circulation.usage}});
   if(plan.sanity?.ok===false&&!input.rest)throw new Error('Sport day failed structural validation');
