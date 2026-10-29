@@ -98,7 +98,7 @@ const DAY_TYPES: ReadonlyArray<[string, ScheduleSignal, Date]> = [
 
 const ALL: ReadonlyArray<ModalityKey> = [
   "warmup", "speed", "strength", "hitting", "throwing",
-  "defense", "baserunning", "game_iq", "fueling", "recovery",
+  "defense", "baserunning", "fueling", "recovery", // Game IQ is unreleased for players
 ];
 
 /** Only athlete-visible copy — internal keys such as `missingContextKeys` are not copy. */
