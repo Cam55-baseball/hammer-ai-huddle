@@ -4,8 +4,8 @@ import {planSnapshotPayload,savePlanSnapshot} from './planSnapshot';
 import {buildHammerDailyPlan} from './prescription/dailyPlan';
 import {NORMAL_SIGNAL} from './prescription/scheduleContext';
 import type {ContextVariable,HammerAthleteContext} from './context/athleteContext';
-const mock=vi.hoisted(()=>({rpc:vi.fn()}));
-vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc:mock.rpc}}));
+const mock=vi.hoisted(()=>({rpc:vi.fn(),invoke:vi.fn().mockResolvedValue({data:{},error:null})}));
+vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc:mock.rpc,functions:{invoke:mock.invoke}}}));
 const saved={isPending:false,isError:false,hasSportDay:false};
 const ready={isPending:false,isError:false,isFetching:false};
 const focus={observedFocus:'defense',sourceIds:['human-fielding-65'],reason:'Defense is the weakest judged pillar.',leftPowerStealEmphasis:false};
@@ -60,6 +60,12 @@ describe('first plan identity readiness and canonical snapshot replay',()=>{
   mock.rpc.mockRejectedValueOnce(new Error('network unavailable')).mockResolvedValueOnce({error:null});
   expect(await savePlanSnapshot('athlete',build('baseball'),'baseball','2026-10-26',focus)).toBe(false);
   expect(await savePlanSnapshot('athlete',build('baseball'),'baseball','2026-10-26',focus)).toBe(true);
+ });
+ it('a failed follow-up rotation cannot deny a confirmed canonical snapshot save',async()=>{
+  mock.rpc.mockResolvedValueOnce({error:null});
+  mock.invoke.mockRejectedValueOnce(new Error('rotation unavailable'));
+  expect(await savePlanSnapshot('athlete',build('baseball'),'baseball','2026-10-26',focus)).toBe(true);
+  expect(mock.invoke).toHaveBeenCalledWith('plan-swap',{body:{action:'analysis_rotation',sport:'baseball',planDate:'2026-10-26'}});
  });
  it('a current reduced ready-block dose is never overwritten by the older saved dose',()=>{
   const plan=build('baseball',true);const payload=planSnapshotPayload(plan,'baseball','2026-10-26',focus);
