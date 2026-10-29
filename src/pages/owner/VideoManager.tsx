@@ -39,7 +39,7 @@ export default function VideoManager() {
     try {
       let id = draft.id;
       if (!id) {
-        const result = await uploadVideo({ title: draft.title.trim(), tags, sport: [draft.sport], category: 'informational', skillDomains: [draft.domain],
+        const result = await uploadVideo({ title: draft.title.trim(), tags, sport: [draft.sport], category: 'informational',
           videoType: file ? 'upload' : 'external', externalUrl: draft.url, videoFile: file ?? undefined, skillDomains: [draft.domain as SkillDomain] });
         if (!result) return;
         id = result.id;
