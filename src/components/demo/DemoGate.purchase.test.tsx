@@ -18,4 +18,8 @@ describe("pending enrollment demo never intercepts purchase", () => {
     render(<MemoryRouter initialEntries={["/training"]}><DemoGate><Routes><Route path="/training" element={<h1>Training</h1>} /><Route path="/start-here" element={<h1>Enrollment demo</h1>} /></Routes></DemoGate></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole("heading").textContent).toBe("Enrollment demo"));
   });
+  it('opens the existing saved-drill shelf without starting a simulated drill',async()=>{
+    render(<MemoryRouter initialEntries={['/vault?openSection=saved-items']}><DemoGate><Routes><Route path='/vault' element={<h1>Saved drills</h1>}/><Route path='/start-here' element={<h1>Enrollment demo</h1>}/></Routes></DemoGate></MemoryRouter>);
+    await waitFor(()=>expect(screen.getByRole('heading').textContent).toBe('Saved drills'));
+  });
 });

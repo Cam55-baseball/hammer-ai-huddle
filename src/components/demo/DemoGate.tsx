@@ -34,6 +34,8 @@ export function DemoGate({ children }: { children: ReactNode }) {
     if (!user) return;
     if (!progress) return;
     if (progress.demo_state !== 'pending') return;
+    // Deliberate saved-drill access is not a training session or a demo step.
+    if (pathname === '/vault' && new URLSearchParams(search).get('openSection') === 'saved-items') return;
     if (pathname.startsWith('/demo') || pathname.startsWith('/start-here')) return;
     if (!GATED_PREFIXES.some(p => pathname.startsWith(p))) return;
     const intent = encodeURIComponent(pathname + search);

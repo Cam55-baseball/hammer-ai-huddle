@@ -1692,6 +1692,141 @@ function checkDrillSafety(drill, athlete) {
   return { ok: reasons.length === 0, reasons };
 }
 
+// src/lib/prescription/practiceCheckDrills.ts
+function taggedPracticeChecks(report) {
+  const list = report?.practice_checks;
+  if (!Array.isArray(list)) return [];
+  return list.filter((item) => !!item && typeof item === "object" && Array.isArray(item.finding_tags));
+}
+
+// src/lib/prescription/analysisDrillBinding.ts
+function analysisDrillBinding(drill, report, goals, findings = [], sport = drill.sports[0]) {
+  if (!drill.sports.includes(sport)) return null;
+  const r = report && typeof report === "object" ? report : {};
+  const violations = r.violations_detected && typeof r.violations_detected === "object" ? r.violations_detected : {};
+  const keys = new Set(Object.entries(violations).filter(([, v]) => v === true).map(([k]) => k));
+  for (const f of findings) keys.add(f.fault_key);
+  if (Array.isArray(r.improvements)) for (const f of r.improvements) {
+    if (f && typeof f === "object" && typeof f.fault_key === "string" && f.fault_key !== "other") keys.add(f.fault_key);
+  }
+  for (const check of taggedPracticeChecks(r)) if (Array.isArray(check.finding_tags)) {
+    for (const key2 of check.finding_tags) if (typeof key2 === "string") keys.add(key2.trim());
+  }
+  const fault = drill.violationKeys.find((key2) => keys.has(key2));
+  if (fault) return { issue_key: `fault:${fault}`, fault_key: fault, goal_label: null };
+  const goal = matchGoalDrills([drill], goals, drill.category, sport)[0]?.reasons[0]?.replace(/^Your goal: /, "");
+  return goal ? { issue_key: `goal:${goal}`, fault_key: null, goal_label: goal } : null;
+}
+
+// supabase/functions/_shared/wic/runRest.ts
+function sprintRestSeconds(distanceFeet) {
+  if (typeof distanceFeet !== "number" || !Number.isFinite(distanceFeet) || distanceFeet <= 0) return null;
+  return Math.min(300, Math.ceil(distanceFeet / 30) * 60);
+}
+
+// supabase/functions/_shared/wic/conditioning/ownerConditioning.ts
+var int = (v, lo, hi) => typeof v === "number" && Number.isInteger(v) && v >= lo && v <= hi;
+var sportBaseFeet = (sport) => sport === "softball" ? 60 : 90;
+function ownerConditioningProblems(r) {
+  const out = [];
+  const kind = r.conditioning_kind;
+  if (kind !== "run" && kind !== "base_route") return ["a conditioning type (run or base route)"];
+  if (!int(r.rounds, 1, 20)) out.push("rounds (1 to 20)");
+  if (!int(r.work_seconds, 1, 600)) out.push("a work time (1 to 600 seconds)");
+  if (!int(r.rest_seconds, 0, 600)) out.push("a rest time (0 to 600 seconds)");
+  if (kind === "run") {
+    if (!int(r.distance_feet, 1, 1200)) out.push("a run distance in feet");
+    else {
+      const min = sprintRestSeconds(r.distance_feet);
+      if (int(r.rest_seconds, 0, 600) && r.rest_seconds < min) out.push(`at least ${min} seconds rest for ${r.distance_feet} ft (1 minute per 10 yards, up to 5)`);
+    }
+  } else {
+    const sports = r.sports ?? [];
+    if (sports.length !== 1) out.push("exactly one sport (base distance is 90 ft baseball, 60 ft softball)");
+    else if (r.base_distance_feet !== sportBaseFeet(sports[0])) out.push(`a ${sportBaseFeet(sports[0])} ft base distance for ${sports[0]}`);
+    if (!int(r.bases_per_rep, 1, 4)) out.push("bases per rep (1 to 4)");
+    if (int(r.rest_seconds, 0, 600) && r.rest_seconds < 30) out.push("at least 30 seconds rest between base reps");
+  }
+  return out;
+}
+
+// src/lib/prescription/ownerPlanDrills.ts
+var PLAN_SLOTS = [
+  "hammers_today:skill",
+  "hammers_today:warmup",
+  "hammers_today:defense",
+  "defensive_library",
+  "hammers_today:baserunning",
+  "hammers_today:bunting",
+  "hammers_today:mind",
+  "hammers_today:conditioning"
+];
+function skillBlocksOf(r) {
+  const out = /* @__PURE__ */ new Set();
+  for (const p of r.placements) {
+    if (/^analysis:[a-z]+:hitting$/.test(p)) out.add("hitting");
+    if (/^analysis:[a-z]+:(throwing|pitching)$/.test(p)) out.add("throwing");
+    if (/^hammers_today:(hitting|bat_speed_weighted|bat_speed_overspeed)$/.test(p)) out.add("hitting");
+    if (/^hammers_today:(throwing|pitching)$/.test(p)) out.add("throwing");
+  }
+  return [...out];
+}
+var clean = (s) => (s ?? "").trim();
+function missingForPlacement(r, slot) {
+  const miss = [];
+  if (!clean(r.name)) miss.push("a name");
+  if (!clean(r.dosage)) miss.push("a dose");
+  if (!clean(r.cue)) miss.push("a cue");
+  if (r.sports.length === 0) miss.push("a sport");
+  if (slot === "hammers_today:skill") {
+    if (skillBlocksOf(r).length === 0) miss.push("which skill (tick a hitting, throwing or pitching analysis)");
+    if (r.steps.filter((s) => clean(s)).length === 0 && !clean(r.setup)) miss.push("set-up or steps");
+  }
+  if (slot === "hammers_today:bunting") {
+    if (!["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"].includes(clean(r.bunt_type))) miss.push("a bunt type");
+    if (!["R", "L"].includes(clean(r.bunt_side))) miss.push("a bunt side");
+  }
+  if (slot === "hammers_today:conditioning") miss.push(...ownerConditioningProblems(r));
+  if (slot === "hammers_today:mind" && r.equipment.length > 0) miss.push("no equipment (Mind items are non-physical)");
+  return miss;
+}
+var norm2 = (s) => s.trim().toLowerCase();
+var TAG_SLOT = {
+  "hammers_today:hitting": "hammers_today:skill",
+  "hammers_today:bat_speed_weighted": "hammers_today:skill",
+  "hammers_today:bat_speed_overspeed": "hammers_today:skill",
+  "hammers_today:throwing": "hammers_today:skill",
+  "hammers_today:pitching": "hammers_today:skill",
+  "hammers_today:defense_low_taxing": "hammers_today:defense",
+  "hammers_today:baserunning": "hammers_today:baserunning",
+  "hammers_today:bunting": "hammers_today:bunting",
+  "hammers_today:mind": "hammers_today:mind"
+};
+function filedSlots(r) {
+  const out = /* @__PURE__ */ new Set();
+  for (const p of r.placements) {
+    if (PLAN_SLOTS.includes(p)) out.add(p);
+    if (TAG_SLOT[p]) out.add(TAG_SLOT[p]);
+  }
+  return [...out];
+}
+function eligibleFor(r, slots, ctx) {
+  if (!r.active) return false;
+  const filed = filedSlots(r);
+  const slot = slots.find((s) => filed.includes(s));
+  if (!slot) return false;
+  if (missingForPlacement(r, slot).length > 0) return false;
+  if (!r.sports.includes(ctx.sport)) return false;
+  if (slot === "hammers_today:skill" && (!ctx.skill || !skillBlocksOf(r).includes(ctx.skill))) return false;
+  const need = r.equipment.map(norm2).filter(Boolean);
+  if (need.length > 0) {
+    const owned = new Set([...ctx.owned ?? []].map(norm2));
+    if (!need.every((e) => owned.has(e))) return false;
+  }
+  return true;
+}
+if (false) void loadOwnerPlanDrills();
+
 // src/lib/wic/faultLedger/cleanClipFade.ts
 var CLEAN_CLIP_FADE_VERSION = "clean_clip_fade_v1";
 var ONE_CLEAN_CLIP_WEIGHT = 0.5;
@@ -1722,21 +1857,21 @@ function fadeForSignal(signal, clips) {
     const t = new Date(c.created_at).getTime();
     return Number.isFinite(t) && t > seenAt;
   }).slice().sort((a, b) => a.created_at.localeCompare(b.created_at) || a.video_id.localeCompare(b.video_id));
-  let clean = [];
+  let clean2 = [];
   for (const clip of later) {
     const answer = clip.violations ? clip.violations[signal.fault_key] : void 0;
-    if (answer === true) clean = [];
-    else if (answer === false) clean.push(clip);
+    if (answer === true) clean2 = [];
+    else if (answer === false) clean2.push(clip);
   }
-  if (clean.length === 0) return NONE;
-  const cleared = clean.length >= CLEAN_CLIPS_TO_CLEAR;
+  if (clean2.length === 0) return NONE;
+  const cleared = clean2.length >= CLEAN_CLIPS_TO_CLEAR;
   return {
     version: CLEAN_CLIP_FADE_VERSION,
-    cleanClips: clean.length,
+    cleanClips: clean2.length,
     multiplier: cleared ? 0 : ONE_CLEAN_CLIP_WEIGHT,
     status: cleared ? "cleared" : "eased",
-    cleanClipIds: clean.map((c) => c.video_id),
-    latestCleanClipAt: clean[clean.length - 1].created_at
+    cleanClipIds: clean2.map((c) => c.video_id),
+    latestCleanClipAt: clean2[clean2.length - 1].created_at
   };
 }
 
@@ -1801,7 +1936,14 @@ function analysisDrillCategory(block) {
   return null;
 }
 function analysisDrillSlot(drills) {
-  return drills.findIndex((d2) => !d2.ownerDrillId && d2.prescriptionOrigin !== "owner" && !d2.bunt && (d2.stage == null || d2.stage === "drills"));
+  return drills.findIndex((d2) => !d2.ownerDrillId && d2.prescriptionOrigin !== "owner" && !d2.bunt && !d2.executionKind && (d2.stage == null || d2.stage === "drills"));
+}
+function analysisOwnerEligible(drill, owners, sport, equipment, date) {
+  if (!("ownerRowId" in drill)) return true;
+  const row = owners.find((r) => r.id === drill.ownerRowId);
+  if (!row) return false;
+  const slot = drill.category === "fielding" ? "hammers_today:defense" : drill.category === "baserunning" ? "hammers_today:baserunning" : "hammers_today:skill";
+  return eligibleFor(row, [slot], { sport, owned: new Set(equipment), skill: drill.category === "hitting" ? "hitting" : drill.category === "throwing" || drill.category === "pitching" ? "throwing" : void 0, day: /* @__PURE__ */ new Date(`${date}T12:00:00Z`) });
 }
 function enrollmentBecause(enrollment, name) {
   const reason = enrollment.fault_key ? enrollment.fault_key.replace(/_/g, " ") : `your goal: ${enrollment.goal_label ?? "saved skill work"}`;
@@ -1839,10 +1981,7 @@ function applyAnalysisDrillRotation(input) {
       }, input.clips).status === "cleared") continue;
       const drill = input.catalog.find((d2) => d2.id === enrollment.drill_id && d2.category === category && d2.sports.includes(input.sport));
       if (!drill) continue;
-      if ("ownerRowId" in drill) {
-        const placements = drill.placements;
-        if (!placements.includes("hammers_today:skill") && !placements.includes(`hammers_today:${category}`)) continue;
-      }
+      if (!analysisOwnerEligible(drill, input.owners ?? [], input.sport, input.equipment, input.date ?? (/* @__PURE__ */ new Date()).toISOString().slice(0, 10))) continue;
       const gear = { equipment_requirements: drill.equipment };
       if (!ownsAllGear(gear, input.equipment) || !avoidsMissingGear(gear, input.missing ?? [])) continue;
       const drills = block.drills.slice();
@@ -1861,8 +2000,10 @@ function applyAnalysisDrillRotation(input) {
 }
 export {
   ELITE_DRILL_CATALOG,
+  analysisDrillBinding,
   analysisDrillCategory,
   analysisDrillSlot,
+  analysisOwnerEligible,
   applyAnalysisDrillRotation,
   categoryGoals,
   checkDrillSafety,

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { applyAnalysisDrillRotation, analysisDrillSlot, enrolledDrill, type AnalysisDrillEnrollment } from '../analysisDrillRotation';
+import { applyAnalysisDrillRotation, analysisDrillSlot, analysisOwnerEligible,enrolledDrill, type AnalysisDrillEnrollment } from '../analysisDrillRotation';
+import {rowToDrills,type OwnerDrillRow}from '../ownerDrills';
 import type { PrescribedBlock } from '@/lib/hammer/prescription/dailyPlan';
 import { ELITE_DRILL_CATALOG } from '@/data/drills/eliteDrillCatalog';
 import { analysisDrillSafety } from '../../../../supabase/functions/_shared/planSwap/analysisDrillSafety';
@@ -13,10 +14,15 @@ describe('analysis Add to Today and exact fix-it rotation',()=>{
  it('retains exact chosen drill in own category with existing 20-swing dose',()=>{const next=rotate()[0];expect(next.drills[1].slug).toBe(drill.id);expect(next.drills[1].dosage).toBe('20 swings');expect(next.drills).toHaveLength(3);expect(next.drills[0]).toEqual(block.drills[0]);expect(next.drills[2]).toEqual(block.drills[2]);});
  it('preserves original stage and stop instruction in an atomic replacement payload',()=>{expect(enrolledDrill({...block.drills[1],stopIf:'Pain — stop'},drill,enrollment)).toMatchObject({stage:'drills',dosage:'20 swings',stopIf:'Pain — stop',routineRole:'fix_it'});});
  it('never replaces owner, prep, full-go or log work',()=>{expect(analysisDrillSlot([{...block.drills[1],ownerDrillId:'owner'},{...block.drills[1],prescriptionOrigin:'owner'},block.drills[0],block.drills[2],{name:'Log',dosage:'5',stage:'log'}])).toBe(-1);});
+ it('never replaces catalog execution scenario work',()=>{expect(analysisDrillSlot([{...block.drills[1],executionKind:'fielding_reads'}])).toBe(-1);});
  it('does not open a suppressed card',()=>{expect(rotate([],[{...block,status:'suppressed'}])[0]).toEqual({...block,status:'suppressed'});});
  it('does not borrow another sport or category',()=>{expect(applyAnalysisDrillRotation({blocks:[block],enrollments:[{...enrollment,sport:'softball'}],catalog:[drill],sport:'baseball',equipment:drill.equipment,clips:[]})[0]).toEqual(block);});
  it('two genuine newer clean clips move the issue out of the fix-it slot',()=>{expect(rotate([{video_id:'clean1',module:'hitting',created_at:'2026-10-29T10:00:00Z',violations:{early_shoulder_rotation:false}},{video_id:'clean2',module:'hitting',created_at:'2026-10-30T10:00:00Z',violations:{early_shoulder_rotation:false}}])[0]).toEqual(block);});
  it('missing clip answers do not count as learned',()=>{expect(rotate([{video_id:'missing',module:'hitting',created_at:'2026-10-29T10:00:00Z',violations:{}}])[0].drills[1].slug).toBe(drill.id);});
+});
+describe('analysis owner drill retains existing placement eligibility',()=>{
+ const row:OwnerDrillRow={id:'owner',overrides_drill_id:null,placements:['analysis:baseball:hitting','hammers_today:skill'],sports:['baseball'],name:'Owner drill',fault_keys:['early_shoulder_rotation'],phase:null,level:'feel',dosage:'3 x 6',setup:'Stand balanced',steps:[],cue:'Hold balance',feel:null,feel_wrong:null,common_mistake:null,equipment:['tee'],video_url:null,active:true,pinned:false,created_at:'2026-10-29'};
+ it('accepts only complete declared placement with actual gear',()=>{const [d]=rowToDrills(row);expect(analysisOwnerEligible(d,[row],'baseball',['tee'],'2026-10-30')).toBe(true);expect(analysisOwnerEligible(d,[row],'baseball',[],'2026-10-30')).toBe(false);expect(analysisOwnerEligible(d,[{...row,placements:['analysis:baseball:hitting']}],'baseball',['tee'],'2026-10-30')).toBe(false);});
 });
 const safetyFacts={profile:{dob:'2005-03-01',hammers_today_started_at:'2026-10-29'},context:{sport_primary:'baseball',injury_history:null},gear:[{equipment:drill.equipment}],memory:[],settings:{season_status:'off_season'},logs:[],games:[],calendar:[],arm:[],readiness:[]};
 describe('existing safety judge for athlete action',()=>{

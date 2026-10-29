@@ -148,6 +148,7 @@ import { HammersTodayProvider, useHammersToday } from "@/components/hammer/Hamme
 import { useGameDayContext } from "@/hooks/useGameDayContext";
 import { WkSeasonReplanNote } from "@/components/hammer/WkSeasonReplanNote";
 import { WkSafePlanNotice } from "@/components/hammer/WkSafePlanNotice";
+import {AnalysisRotationNotice}from './AnalysisRotationNotice';
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
@@ -981,6 +982,7 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       <ErrorBoundary>
         <CoachPrescriptionInbox planDate={pocketDate} />
+        {hasSavedSportDay&&<AnalysisRotationNotice sport={sportKey} date={pocketDate}/>}
       </ErrorBoundary>
       <ErrorBoundary>
         <HeightReminderCard />
