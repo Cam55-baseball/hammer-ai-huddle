@@ -1,4 +1,5 @@
 # Prescription rules
+- Pitching cards partition existing arm work through pitchingDay and guardArmDrills before schedule/stage reductions. Why: card identity never authorizes a second pitch dose or arm budget.
 - Final skill ordering uses only complete declared prep/drills/full-go/log stages and never moves owner slots or changes doses. Why: game-speed work must follow preparation without inferred intensity or new training.
 - Beginner defense guidance cannot remove required protective gear or add a competing receiving dose. Why: a tier note must not contradict the legal card's setup and volume.
 - Catcher framing declares four sets, one per zone, in the existing sets/reps syntax so the existing tier multiplier applies only to reps. Why: spatial-zone wording must not bypass beginner dose scaling.

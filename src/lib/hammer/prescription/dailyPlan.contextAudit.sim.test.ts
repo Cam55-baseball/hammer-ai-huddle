@@ -249,7 +249,8 @@ describe("audit: games → drill choice (chase)", () => {
     expect(h.because?.some((l) => l.includes("Two-Ball Recognition") && l.includes("(early read)"))).toBe(true);
   });
   it("no net → no swap (never prescribe missing equipment)", () => {
-    expect(hit(withGear(["tee", "gamer_bat"])).drills.map((d) => d.name)).not.toContain("Two-Ball Recognition");
+    const plan=buildHammerDailyPlan(ctx({...BASE,equipment_effective:['tee','gamer_bat']}),NORMAL_SIGNAL,null,gp({chasePct:40,atBats:12,pitchesSeen:50}),undefined,DAY,{alwaysMissingGear:['net']});
+    expect(hit(plan).drills.map((d) => d.name)).not.toContain("Two-Ball Recognition");
   });
 });
 
@@ -279,7 +280,8 @@ describe("execution: hitting session structure", () => {
     expect(h(["tee", "gamer_bat", "net"]).drills.some((d) => d.stage === "full_go")).toBe(true);
   });
   it("bat only: no invented full-go round (needs a net or machine)", () => {
-    expect(h(["gamer_bat"]).drills.some((d) => d.stage === "full_go")).toBe(false);
+    const plan=buildHammerDailyPlan(ctx({...BASE,equipment_effective:['gamer_bat']}),NORMAL_SIGNAL,null,null,undefined,DAY,{alwaysMissingGear:['net','pitching_machine']});
+    expect(hit(plan).drills.some((d) => d.stage === "full_go")).toBe(false);
   });
 });
 
@@ -315,8 +317,10 @@ describe("audit: ranked category goals → day order", () => {
     const h = skills(at(["hitting", "fielding", "throwing", "speed", "power"]));
     const f = skills(at(["fielding", "hitting", "throwing", "speed", "power"]));
     if (h.includes("hitting") && h.includes("defense")) {
-      expect(h.indexOf("hitting")).toBeLessThan(h.indexOf("defense"));
-      expect(f.indexOf("defense")).toBeLessThan(f.indexOf("hitting"));
+      // Existing secondGoalFirst rotates the secondary goal into shared days;
+      // newly available fielding now legitimately participates in that rule.
+      expect(h.indexOf("defense")).toBeLessThan(h.indexOf("hitting"));
+      expect(f.indexOf("hitting")).toBeLessThan(f.indexOf("defense"));
     } else {
       expect(h).toEqual(f); // same day without both skills: order source still identical
     }
