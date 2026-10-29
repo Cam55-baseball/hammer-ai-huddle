@@ -269,6 +269,15 @@ export default function CoachDashboard() {
             Who needs help · Why · What to run today
           </p>
         </div>
+        <Card>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <p className="text-sm text-muted-foreground min-w-0 flex-1">Analyze a player who isn't on your roster yet — nothing is saved to their account.</p>
+            <Button onClick={() => navigate('/coach/guest')} className="gap-2">
+              <User className="h-4 w-4" />
+              Analyze a guest
+            </Button>
+          </CardContent>
+        </Card>
         <Tabs value={sportFilter} onValueChange={(value) => setSportFilter(value as 'all' | 'baseball' | 'softball')} className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-3 mx-auto">
             <TabsTrigger value="all">{t('common.allSports')}</TabsTrigger>
@@ -322,7 +331,7 @@ export default function CoachDashboard() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-semibold truncate">{player.full_name}</p>
+                          <p className="font-semibold break-words">{player.full_name}</p>
                           {player.sport && (
                             <Badge variant="outline" className={player.sport === 'baseball' ? "border-blue-500 text-blue-600 text-xs" : player.sport === 'softball' ? "border-pink-500 text-pink-600 text-xs" : "border-purple-500 text-purple-600 text-xs"}>
                               {player.sport === 'baseball' && '⚾ Baseball'}
@@ -333,7 +342,7 @@ export default function CoachDashboard() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 items-center">
+                    <div className="flex w-full flex-wrap gap-2 items-center sm:w-auto">
                       <Button onClick={() => navigate(`/profile?userId=${player.id}`)} size="sm" variant="outline" className="flex-shrink-0">
                         <User className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.viewProfile', 'View Profile')}</span>
