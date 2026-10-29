@@ -17,6 +17,7 @@ import { previousPlanDates, savedTrainingHistory, savedPlanReasons, type SavedCo
 import { sixWeekPlanDates } from '@/lib/coach/sixWeekPlanSummary';
 import { CoachSixWeekSummary } from './CoachSixWeekSummary';
 import { CoachPlanActuals } from './CoachPlanActuals';
+import { isoShift } from '../../../supabase/functions/_shared/wic/schedule/timeline';
 
 function SavedWork({ blocks }: { blocks: SavedPlanBlock[] }) {
   return <ul className="space-y-3">
@@ -35,18 +36,24 @@ function SavedWork({ blocks }: { blocks: SavedPlanBlock[] }) {
 
 export function CoachPlanCard({ athleteId }: { athleteId: string }) {
   const today = localIso();
+  const [ahead, setAhead] = useState(0);
+  const viewDate = isoShift(today, ahead);
+  const dayLabel = ahead === 0 ? 'Today' : 'Tomorrow';
+  const dayToggle = <div className="flex gap-1" role="group" aria-label="Which day">
+    {[0, 1].map(n => <Button key={n} type="button" size="sm" variant={ahead === n ? 'default' : 'outline'} aria-pressed={ahead === n} onClick={() => setAhead(n)}>{n === 0 ? 'Today' : 'Tomorrow'}</Button>)}
+  </div>;
   const [historyFor, setHistoryFor] = useState<string | null>(null);
   const historyKey = `${athleteId}:${today}`;
   const historyOpen = historyFor === historyKey;
   const [summaryFor, setSummaryFor] = useState<string | null>(null);
   const summaryOpen = summaryFor === historyKey;
   const query = useQuery({
-    queryKey: ["coach-athlete-plan", athleteId, today],
+    queryKey: ["coach-athlete-plan", athleteId, viewDate],
     staleTime: 60_000,
     refetchInterval: 15_000,
     refetchIntervalInBackground: false,
     queryFn: async (): Promise<SavedCoachPlan> => {
-      const { data, error } = await supabase.rpc("coach_athlete_plan", { _athlete: athleteId, _date: today });
+      const { data, error } = await supabase.rpc("coach_athlete_plan", { _athlete: athleteId, _date: viewDate });
       if (error) throw error;
       return data as unknown as SavedCoachPlan;
     },
@@ -108,7 +115,8 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
     return (
       <section className="space-y-2 rounded-xl border border-border p-4" aria-label="Hammers' plan for this player">
         <h3 className="text-sm font-semibold">Hammers' plan for this player</h3>
-        <p className="text-sm text-muted-foreground">No plan saved for today yet. It appears here after the player opens today's plan.</p>
+        {dayToggle}
+        <p className="text-sm text-muted-foreground">{ahead === 0 ? "No plan saved for today yet. It appears here after the player opens today's plan." : 'No plan saved for tomorrow yet.'}</p>
       </section>
     );
   }
@@ -118,19 +126,20 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
     <section className="space-y-3 rounded-xl border border-border p-4" aria-label="Hammers' plan for this player">
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-sm font-semibold">Hammers' plan for this player</h3>
-        <div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">Today{plan.sport ? ` · ${plan.sport}` : ""}</span>
+        <div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">{dayLabel}{plan.sport ? ` · ${plan.sport}` : ""}</span>
           <Button variant="ghost" size="icon" aria-label="Refresh player's saved plan" title="Refresh player's saved plan" disabled={query.isFetching} onClick={()=>void query.refetch()}><RefreshCw className="h-4 w-4" /></Button>
         </div>
       </div>
+      {dayToggle}
       {plan.health_shared === false && (
         <p className="text-xs text-muted-foreground">Health details stay private — the player hasn't turned on health sharing.</p>
       )}
       {blocks.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No training prescribed today.</p>
+        <p className="text-sm text-muted-foreground">No training prescribed {ahead === 0 ? 'today' : 'tomorrow'}.</p>
       ) : (
         <SavedWork blocks={blocks} />
       )}
-      <CoachPlanActuals athleteId={athleteId} planDate={today} />
+      {ahead === 0 && <CoachPlanActuals athleteId={athleteId} planDate={today} />}
       <div className="border-t border-border pt-3 space-y-3">
         <Button variant="ghost" size="sm" aria-expanded={historyOpen} onClick={() => setHistoryFor(historyOpen ? null : historyKey)}>
           {historyOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}Saved work — last 7 days

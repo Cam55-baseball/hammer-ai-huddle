@@ -12,6 +12,8 @@ import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 
 import { Calendar, Target } from "lucide-react";
+import { QUARTER_LABEL } from "@/lib/hammer/workout/phaseQuarter";
+const seasonWords=(p:string)=>(QUARTER_LABEL as Record<string,string>)[p]??({off_season:"Off-season",preseason:"Preseason",in_season:"In-season",post_season:"Post-season"} as Record<string,string>)[p]??p.replace(/_/g," ");
 import type {
   HammerDailyPlanResult,
 } from "@/lib/hammer/prescription/dailyPlan";
@@ -97,13 +99,13 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
              <div className="text-xs text-muted-foreground">Your training steps: {roadmap.rung.label}</div>
             {!roadmap.quarter.quarterKnown ? (
               <div className="text-[11px] text-muted-foreground leading-tight">
-                {savedPhase && <span>Season: {savedPhase.replace(/_/g, " ")}. </span>}
+                {savedPhase && <span>Season: {seasonWords(savedPhase)}. </span>}
                 {roadmap.quarter.phaseKnown ? "Your season phase is known, but its start date isn't. Add your season dates to show your week." : "Add your season dates to show where you are in your training block."}{' '}
                 <Button variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setSeasonDatesOpen(true)}>Set season dates</Button>
               </div>
             ) : (
                <div className="text-[11px] text-muted-foreground leading-tight">
-                 Where you are in the season: {(savedPhase ?? season.resolvedPhase).replace(/_/g, " ")} {phaseWeek !== null ? `· Week ${phaseWeek}` : "· Add your season dates to show your week"}
+                 Where you are in the season: {seasonWords(savedPhase ?? season.resolvedPhase)} {phaseWeek !== null ? `· Week ${phaseWeek}` : "· Add your season dates to show your week"}
               </div>
             )}
 
