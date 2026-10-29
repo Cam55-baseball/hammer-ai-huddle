@@ -84,6 +84,9 @@ function sortByWarmupStage(items, slugOf, roleOf) {
   return keyed.map((k) => k.it);
 }
 
+// src/lib/hammer/athleteFeatureAvailability.ts
+var GAME_IQ_AVAILABLE_TO_ATHLETES = false;
+
 // supabase/functions/_shared/health/physioMapping.ts
 function physioDefaults(raw) {
   const r = raw && typeof raw === "object" ? raw : {};
@@ -8355,7 +8358,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     earnedDaysByModality
   );
   const positionOverrideArg = roadmapInputs.positionOverride ?? null;
-  const allowed = (m) => !access || (m === "hitting" ? access.hasHitting : m === "baserunning" ? access.hasBaserunning : m === "defense" ? access.hasDefense : m === "throwing" ? access.hasThrowing || access.hasPitching : true);
+  const allowed = (m) => (m !== "game_iq" || GAME_IQ_AVAILABLE_TO_ATHLETES) && (!access || (m === "hitting" ? access.hasHitting : m === "baserunning" ? access.hasBaserunning : m === "defense" ? access.hasDefense : m === "throwing" ? access.hasThrowing || access.hasPitching : true));
   const firstPass = ALL_MODALITIES.filter(allowed).map(
     (m) => builder({
       modality: m,
