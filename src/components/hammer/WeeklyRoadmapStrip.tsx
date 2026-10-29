@@ -79,6 +79,7 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase }: Props)
              <div className="text-xs text-muted-foreground">Your training steps: {roadmap.rung.label}</div>
             {!roadmap.quarter.quarterKnown ? (
               <div className="text-[11px] text-muted-foreground leading-tight">
+                {savedPhase && <span>Season: {savedPhase.replace(/_/g, " ")}. </span>}
                 {roadmap.quarter.phaseKnown ? "Your season phase is known, but its start date isn't. Add your season dates to show your week." : "Add your season dates to show where you are in your training block."}{' '}
                 <Button variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setSeasonDatesOpen(true)}>Set season dates</Button>
               </div>
@@ -122,7 +123,7 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase }: Props)
       </div>
 
       {expanded !== null && weeklyRoadmap[expanded] && (
-        <DayDetail day={weeklyRoadmap[expanded]} />
+        <DayDetail day={weeklyRoadmap[expanded]} todayCategories={weeklyRoadmap[expanded].isToday ? todayCategories : undefined} />
       )}
 
       <div className="mt-2 flex items-start gap-2 rounded-md border border-muted/30 bg-muted/5 px-2 py-1.5 text-[11px] text-muted-foreground">
@@ -194,7 +195,7 @@ function DayCell({
   );
 }
 
-function DayDetail({ day }: { day: RoadmapDay }) {
+function DayDetail({ day, todayCategories }: { day: RoadmapDay; todayCategories?: readonly string[] }) {
   if (day.restDay) {
     return (
       <div className="mt-2 rounded-md border border-muted/40 bg-muted/5 px-2 py-1.5 text-[11px] text-muted-foreground">
@@ -203,6 +204,7 @@ function DayDetail({ day }: { day: RoadmapDay }) {
       </div>
     );
   }
+  if (todayCategories) return <div className="mt-2 text-xs text-foreground">{day.short} — {todayCategories.join(" · ")}</div>;
   return (
     <div className="mt-2 space-y-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px]">
       <div className="text-xs font-semibold text-foreground">
