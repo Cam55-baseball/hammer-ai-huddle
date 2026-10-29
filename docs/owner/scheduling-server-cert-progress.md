@@ -41,3 +41,10 @@
 - certsb5 Nov 13–19 rebuilt and Nov 20–26 built: game cards on all 5 calendar games (Nov 13, 16, 20, 23, 25); Sunday rest only; no Game IQ; no pitching; Nov 16–22 week: bunting Tue/Wed, conditioning Tue/Wed/Sat. Nov 23–29 week continues past the window (Nov 27–29 not in scope).
 - Load: memory 70%, connections 25/60, disk 45%, no new DiskIO alert after 17:15 UTC.
 - **Saved and verified: 28 / 224 (certsb5 complete).** certhsp's 28 saved days still await the bullpen-frequency fix (bug 3) and a rebuild. Next: certsbp Oct 30–Nov 5.
+
+## Run 7 — Oct 29 2026, 22:06–22:45 UTC (batch 3)
+- **Fixed (bug 3):** a fixed Saturday bullpen was added on top of the existing pitching week, giving 3 pens. Removed; the existing pitching week alone sets pens (2/week: Mon outing-equivalent + Thu), the day after pitching stays a flush, Sunday rest (3 tests, `src/test/schedule/bullpenFrequency.test.ts`). 787 plan tests pass; bundle regenerated; approved `wk-generate-daily` redeploy live (sha256 be3e8c60…9e9f).
+- Rebuilt certhsp Oct 30–Nov 12 and built certsbp Oct 30–Nov 12: pitching card every day, 2 bullpens/week, no hitting/bunting/baserunning, no Game IQ, Sunday rest.
+- **Failure found, not fixed:** both pitchers get only ONE real running-conditioning day in the Nov 2–7 week (most days are easy flush only), below the 2+ floor. certsbp Nov 9–10 were refused by the safety check for the same reason (flush-only day judged as Off-Day Conditioning; that check is correct and was left in place). Next: trace why pitcher conditioning collapses to flush-only on normal days.
+- Load: memory 65%, connections 24/60, no new DiskIO alert after 17:15 UTC.
+- **Saved and verified: 28 / 224** (certsb5). Saved but blocked by the conditioning floor: certhsp 28 (14 rebuilt), certsbp 12.
