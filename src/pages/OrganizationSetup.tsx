@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/ui/button";
 import { OrganizationRegistration } from "@/components/organization/OrganizationRegistration";
-import { OrgVerificationForm } from "@/components/organization/OrgVerificationCards";
 import { useOrganization } from "@/hooks/useOrganization";
 
 /** Register immediately, then subscribe. No organization validation step. */

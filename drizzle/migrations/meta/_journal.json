@@ -1030,6 +1030,13 @@
       "when": 1793211650989,
       "tag": "0146_owner_drill_conditioning_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 147,
+      "version": "7",
+      "when": 1793241502830,
+      "tag": "0147_organizations_immediate_approval",
+      "breakpoints": true
     }
   ]
 }
