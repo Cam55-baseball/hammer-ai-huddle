@@ -112,6 +112,9 @@ export function DemoTourHost() {
         if (window.location.pathname !== '/dashboard') { window.clearInterval(wait); return stop('left the dashboard before it finished loading'); }
         if (Date.now() - started > 45000) { window.clearInterval(wait); return stop('dashboard did not finish loading within 45 seconds'); }
         if (!document.querySelector(LANDING_READY)) return;
+        // Never open over another open window (e.g. the assessment): its
+        // modal blocks taps outside it, so the tour's Exit could not be pressed.
+        if (document.querySelector('[role="dialog"][data-state="open"]')) return;
         if (!landingAt) landingAt = Date.now();
         const { isCoach: c, isScout: sc } = roleRef.current;
         // Athletes: also wait for today's plan, but never more than 10s extra.
