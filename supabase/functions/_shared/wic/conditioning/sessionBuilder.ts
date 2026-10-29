@@ -1,6 +1,6 @@
 // Phase 10 — Conditioning Session Builder / Certifier
 
-import type { ConditioningTemplateResolutionInput } from "./templates.ts";
+import type { ConditioningTemplateResolutionInput, ConditioningTemplateId } from "./templates.ts";
 import { CONDITIONING_TEMPLATES, resolveConditioningTemplate } from "./templates.ts";
 import type { ConditioningCategory } from "./movementCategories.ts";
 import { coverageOf, missingCategories } from "./movementCategories.ts";
@@ -149,3 +149,13 @@ export function certifyConditioning(input: CertifyConditioningInput): CertifyCon
 }
 
 export { CONDITIONING_TEMPLATES, resolveConditioningTemplate };
+
+/** A recovery-only day that kept only flush work is certified as a recovery flush session. */
+export function certifiedConditioningTemplate(
+  chosen: ConditioningTemplateId | undefined, primaryAdaptation: string | null | undefined,
+  rows: readonly { slot: string; movement_slug: string }[], categoryOf: (slug: string) => string | null | undefined,
+): ConditioningTemplateId | undefined {
+  const cond = rows.filter((r) => r.slot === "conditioning");
+  const flushOnly = primaryAdaptation === "recovery_only" && cond.length > 0 && cond.every((r) => categoryOf(r.movement_slug) === "recovery_flush");
+  return flushOnly ? "cond.recovery_flush" : chosen;
+}

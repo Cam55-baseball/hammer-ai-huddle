@@ -141,7 +141,7 @@ import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { preservesSpeedIntent } from "../_shared/wic/speed/governorComposition.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
-import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
+import { certifyConditioning, certifiedConditioningTemplate } from "../_shared/wic/conditioning/sessionBuilder.ts";
 import { resolveOutingFacts, type OutingFacts } from "../_shared/wic/pitching/outingFacts.ts";
 import { baselineSignal, type BaselineSignal } from "../_shared/wic/recovery/baselineSignal.ts";
 import { recentLoadEffect, type RecentLoadEffect, GAME_WINDOW_DAYS } from "../_shared/wic/recovery/recentLoad.ts";
@@ -4051,11 +4051,12 @@ const handler = async (req: Request): Promise<Response> => {
     const isStarterCtx = Boolean((athleteContext as any)?.pitcher_role === "starter");
     const isRelieverCtx = Boolean((athleteContext as any)?.pitcher_role === "reliever");
 
+    const condCatOf = new Map((lib as any[]).map((m: any) => [m.slug, m.conditioning_category]));
     const conditioningCertification = certifyConditioning({
       prescriptions: finalRxs as any,
       catalog: lib as any,
       // Certify against the session type the selector actually chose.
-      templateId: conditioningSelection?.templateId,
+      templateId: certifiedConditioningTemplate(conditioningSelection?.templateId, adaptationDecision.primary, finalRxs as any, (x) => condCatOf.get(x)),
       template: {
         seasonPhase: trainingContext.season_phase,
         dayType: trainingContext.day_type,

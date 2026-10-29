@@ -140,6 +140,32 @@ function personas(): Record<string, Persona> {
       events: [-21, -19, -17, -16, -5, -3, -1].map((d) => ({ d, type: "scrimmage" as const, title: "Fall scrimmage" })),
       arm: [-5, -3, -1].map((d) => ({ d, type: "pitcher_warmup", count: 20, source: "pitching" as const })),
     },
+    // Scheduling certification (Oct 29): off-season weeks 1–2, in-season with games weeks 3–4.
+    certhsp: {
+      email: "hammersmodality+certhsp@gmail.com", name: "TEST — Cert HS Pitcher (BB)", dob: "2009-04-10", sport: "baseball",
+      position: "P", level: "hs_varsity", season: "off_season", inStart: add(t, 14), inEnd: add(t, 80), tier: "pitcher",
+      events: [16, 19, 23, 26].map((d) => ({ d, type: "game" as const, title: "HS game" })), arm: [],
+    },
+    certsb5: {
+      email: "hammersmodality+certsb5@gmail.com", name: "TEST — Cert HS 5Tool (SB)", dob: "2009-06-12", sport: "softball",
+      position: "SS", level: "hs_varsity", season: "off_season", inStart: add(t, 14), inEnd: add(t, 80), tier: "5tool",
+      events: [15, 18, 22, 25, 27].map((d) => ({ d, type: "game" as const, title: "HS game" })), arm: [],
+    },
+    certsbp: {
+      email: "hammersmodality+certsbp@gmail.com", name: "TEST — Cert HS Pitcher (SB)", dob: "2009-02-20", sport: "softball",
+      position: "P", level: "hs_varsity", season: "off_season", inStart: add(t, 14), inEnd: add(t, 80), tier: "pitcher",
+      events: [16, 18, 23, 25].map((d) => ({ d, type: "game" as const, title: "HS game" })), arm: [],
+    },
+    certsb2: {
+      email: "hammersmodality+certsb2@gmail.com", name: "TEST — Cert HS 2Way (SB)", dob: "2009-08-03", sport: "softball",
+      position: "P", secondary: "SS", level: "hs_varsity", season: "off_season", inStart: add(t, 14), inEnd: add(t, 80), tier: "golden2way",
+      events: [15, 18, 22, 25].map((d) => ({ d, type: "game" as const, title: "HS game" })), arm: [],
+    },
+    certcsb2: {
+      email: "hammersmodality+certcsb2@gmail.com", name: "TEST — Cert College 2Way (SB)", dob: "2005-05-15", sport: "softball",
+      position: "P", secondary: "1B", level: "d1", season: "off_season", inStart: add(t, 14), inEnd: add(t, 80), tier: "golden2way",
+      events: [15, 17, 19, 20, 22, 24, 26, 27].map((d) => ({ d, type: "game" as const, title: "College game" })), arm: [],
+    },
   };
 }
 
@@ -287,6 +313,36 @@ async function seed(admin: any, id: string, p: Persona, ownerId: string) {
   );
 }
 
+/** TEST-only starting answers, filled only where the player has none yet (never overwrites). */
+async function seedStartingInputs(admin: any, id: string, p: Persona) {
+  const pitcherOnly = p.tier === "pitcher";
+  const order = pitcherOnly ? ["pitching", "fielding", "power", "speed"] : p.tier === "golden2way"
+    ? ["pitching", "hitting", "fielding", "power", "speed", "throwing"] : ["hitting", "fielding", "speed", "power", "throwing"];
+  const adult = p.dob <= "2007-01-01";
+  const { data: c } = await admin.from("athlete_context").select("category_goals,weekly_availability_days,anthropometrics,sleep_target_hrs,lifting_age_years").eq("user_id", id).maybeSingle();
+  const upd: Record<string, unknown> = {};
+  const cg = c?.category_goals;
+  if (!cg || !Array.isArray(cg.categoryOrder) || !cg.categoryOrder.length) upd.category_goals = { ...(cg ?? {}), version: 2, categoryOrder: order, updatedAt: new Date().toISOString() };
+  if (typeof c?.weekly_availability_days !== "number") upd.weekly_availability_days = 6;
+  const an = c?.anthropometrics ?? {};
+  if (typeof an.height_in !== "number" || typeof an.weight_lb !== "number") upd.anthropometrics = { ...an, height_in: an.height_in ?? (p.sport === "softball" ? 66 : 71), weight_lb: an.weight_lb ?? (p.sport === "softball" ? 145 : (adult ? 195 : 170)) };
+  if (typeof c?.sleep_target_hrs !== "number") upd.sleep_target_hrs = 8.5;
+  if (typeof c?.lifting_age_years !== "number") upd.lifting_age_years = adult ? 4 : 2;
+  if (Object.keys(upd).length) await admin.from("athlete_context").update(upd).eq("user_id", id);
+  const { data: gear } = await admin.from("athlete_equipment_context").select("id").eq("user_id", id).eq("scope", "persistent").limit(1);
+  if (!gear?.length) await admin.from("athlete_equipment_context").insert({ user_id: id, scope: "persistent", source: "onboarding_self_report",
+    equipment: ["partner", "bat", "baseballs", "ball", "net", "tee", "glove", "barbell", "plates", "squat_rack", "bench", "dumbbells", "bands", "open_space", "field", "foam_roller", "mound"] });
+  const { data: a } = await admin.from("initial_assessments").select("completed_at,initial_input_answers").eq("user_id", id).maybeSingle();
+  const answers = { ...(a?.initial_input_answers ?? {}), season_dates_reviewed: true };
+  if (!a) await admin.from("initial_assessments").insert({ user_id: id, completed_at: new Date().toISOString(), initial_input_answers: answers, recorded_by_label: "TEST seed" });
+  else if (!a.completed_at || !a.initial_input_answers?.season_dates_reviewed) await admin.from("initial_assessments").update({ completed_at: a.completed_at ?? new Date().toISOString(), initial_input_answers: answers }).eq("user_id", id);
+  const { data: n } = await admin.from("vault_nutrition_goals").select("id").eq("user_id", id).maybeSingle();
+  if (!n) await admin.from("vault_nutrition_goals").insert({ user_id: id, calorie_goal: adult ? 3000 : 2700, protein_goal: 150, carbs_goal: 350, fats_goal: 85, hydration_goal: 100 });
+  const { data: h } = await admin.from("physio_health_profiles").select("id,setup_completed").eq("user_id", id).maybeSingle();
+  if (!h) await admin.from("physio_health_profiles").insert({ user_id: id, setup_completed: true, injury_history: [], medical_conditions: [], allergies: [], medications: [] });
+  else if (!h.setup_completed) await admin.from("physio_health_profiles").update({ setup_completed: true }).eq("user_id", id);
+}
+
 async function oneTimeSession(admin: any, url: string, email: string) {
   const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email });
   if (error) throw new Error(error.message);
@@ -373,7 +429,16 @@ Deno.serve(async (req) => {
       const s = await oneTimeSession(admin, url, email);
       return json({ user_id: id, email, access_token: s.access_token, refresh_token: s.refresh_token, expires_at: s.expires_at, token_type: s.token_type, user: s.user });
     }
-    if (p) await seed(admin, id!, p, u.user.id);
+    // Certification builds reuse the saved seed: reseeding later would shift dated games.
+    if (p && !(body?.skip_seed === true && !created)) await seed(admin, id!, p, u.user.id);
+    if (p && body?.prepare === true) {
+      await seedStartingInputs(admin, id!, p);
+      const s0 = await oneTimeSession(admin, url, email);
+      const anon = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: `Bearer ${s0.access_token}` } }, auth: { persistSession: false } });
+      const { data: missing } = await anon.rpc("initial_plan_missing", { p_user: id });
+      const { data: started, error: startErr } = await anon.rpc("start_hammers_today");
+      return json({ user_id: id, email, missing, started, start_error: startErr?.message ?? null });
+    }
     if (sp) await seedStaff(admin, id!, sp);
 
     if (body?.session) {
@@ -394,7 +459,7 @@ Deno.serve(async (req) => {
     const r = await fetch(`${url}/functions/v1/wk-generate-daily`, {
       method: "POST",
       headers: { Authorization: `Bearer ${s.access_token}`, apikey: Deno.env.get("SUPABASE_ANON_KEY")!, "Content-Type": "application/json" },
-      body: JSON.stringify({ plan_date: planDate }),
+      body: JSON.stringify({ plan_date: planDate, ...(body?.compose === true ? { compose_sport_day: true } : {}), ...(body?.change_reason === "player_request" ? { change_reason: "player_request", change_text: String(body?.change_text ?? "").slice(0, 200) } : {}) }),
     });
     return json({ user_id: id, email, phase_status: ph.status, phase: phase?.plan ?? phase, status: r.status, result: await r.json().catch(() => null) });
   } catch (e) {
