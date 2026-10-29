@@ -41,7 +41,7 @@ export function AssessmentPlanInputs({ registerFlush, onBack }: { registerFlush?
     if (!query.data) return;
     const context = query.data.context ?? {};
     const nutrition = query.data.nutrition ?? {};
-    setValues({ ...Object.fromEntries(Object.entries({ ...context, ...nutrition, ...query.data.season }).filter(([, value]) => value != null && !Array.isArray(value)).map(([key, value]) => [key, String(value)])), position_secondary: context.position_secondary?.join(', ') ?? '' });
+    setValues({ ...Object.fromEntries(Object.entries({ ...context, ...nutrition, ...query.data.season }).filter(([, value]) => value != null && !Array.isArray(value)).map(([key, value]) => [key, String(value)])), position_secondary: query.data.context?.position_secondary?.join(', ') ?? '' });
     const review = query.data.assessment?.initial_input_answers as Record<string, unknown> | null;
     setDatesUnknown(review?.season_dates_unknown === true);
     const savedSupplements = query.data.nutrition?.supplement_goals;
