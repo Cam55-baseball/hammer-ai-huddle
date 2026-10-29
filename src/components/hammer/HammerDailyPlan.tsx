@@ -809,7 +809,7 @@ function HammerDailyPlanBody({
         {
           recentCompletions: recentCompletions ?? [],
           phaseStartedAt: phaseStartedAt ?? null,
-          resolvedSeasonPhase: shortSeasonPhase(resolvedPhase),
+          resolvedSeasonPhase: shortSeasonPhase(wkRx.data?.find(row => row.phase)?.phase?.startsWith("os_") ? "off_season" : wkRx.data?.find(row => row.phase)?.phase ?? resolvedPhase),
           seasonPhaseSource: phaseSource ?? null,
           positionOverride: planAdjust.positionWorked,
           defenseFullOverride,
@@ -1033,7 +1033,15 @@ function HammerDailyPlanBody({
             );
           })}
         {/* Quarter / phase + weekly rhythm context */}
-        <WeeklyRoadmapStrip plan={plan} />
+        <WeeklyRoadmapStrip plan={plan}
+          savedPhase={wkRx.data?.find(row => row.phase)?.phase}
+          todayCategories={[...new Set([
+            ...plan.blocks.filter(block => block.status === "ready" && block.drills.length > 0 && !["warmup", "fueling", "game_iq", "strength", "speed"].includes(block.modality)).map(block => block.modality === "defense" ? "Defense" : block.modality === "hitting" ? "Hitting" : block.modality === "baserunning" ? "Baserunning" : block.modality === "throwing" ? "Throwing" : "Recovery"),
+            ...wkRx.grouped.speedCard.length ? ["Speed"] : [],
+            ...wkRx.grouped.batSpeedCard.length ? ["Bat speed"] : [],
+            ...wkRx.grouped.conditioningCard.length ? ["Conditioning"] : [],
+            ...wkRx.grouped.lifts.length ? ["Lift / tissue care"] : [],
+          ])]} />
       </BeforeYouStartSection>
     <Card id="hammer-plan" className="scroll-mt-24">
       <CardHeader className="pb-2" data-tour="today-plan-heading" data-tour-context>

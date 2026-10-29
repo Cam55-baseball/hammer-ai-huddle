@@ -51,9 +51,11 @@ const INTENSITY_TONE: Record<ModalityIntensity, string> = {
 
 interface Props {
   readonly plan: Pick<HammerDailyPlanResult, "weeklyRoadmap" | "weeklyTemplate" | "microcycle" | "roadmap">;
+  readonly todayCategories?: readonly string[];
+  readonly savedPhase?: string | null;
 }
 
-export function WeeklyRoadmapStrip({ plan }: Props) {
+export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase }: Props) {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
@@ -82,7 +84,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
               </div>
             ) : (
                <div className="text-[11px] text-muted-foreground leading-tight">
-                 Where you are in the season: {season.resolvedPhase.replace(/_/g, " ")} {phaseWeek !== null ? `· Week ${phaseWeek}` : "· Add your season dates to show your week"}
+                 Where you are in the season: {(savedPhase ?? season.resolvedPhase).replace(/_/g, " ")} {phaseWeek !== null ? `· Week ${phaseWeek}` : "· Add your season dates to show your week"}
               </div>
             )}
 
@@ -125,7 +127,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
       <div className="mt-2 flex items-start gap-2 rounded-md border border-muted/30 bg-muted/5 px-2 py-1.5 text-[11px] text-muted-foreground">
         <span className="font-medium text-foreground">Today:</span>
         <span>
-          {SCHEDULED_TODAY_LINE(plan.microcycle.perModality) ||
+          {(todayCategories ? todayCategories.join(" · ") : SCHEDULED_TODAY_LINE(plan.microcycle.perModality)) ||
             "Warm-up, fueling and recovery."}{" "}
           <span className="text-muted-foreground/70">
             Hammer spaces high-demand work and protects recovery.
