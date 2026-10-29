@@ -28,20 +28,21 @@ export function AssessmentPlanInputs({ registerFlush, onBack }: { registerFlush?
   const [error, setError] = useState<string | null>(null);
   const query = useQuery({ queryKey: ['assessment-plan-inputs', user?.id], enabled: !!user, queryFn: async () => {
     if (!user) throw new Error('Sign in first');
-    const [context, nutrition, season, assessment] = await Promise.all([
+    const [context, nutrition, season, assessment, profile] = await Promise.all([
       supabase.from('athlete_context').select('sport_primary,position_primary,position_secondary,competition_level,bats_hand,throws_hand,weekly_availability_days,sleep_target_hrs,lifting_age_years,goal_horizon,weekly_availability_hours,typical_session_length_min,years_in_sport').eq('user_id', user.id).maybeSingle(),
       supabase.from('vault_nutrition_goals').select('*').eq('user_id', user.id).maybeSingle(),
       supabase.from('athlete_mpi_settings').select('*').eq('user_id', user.id).maybeSingle(),
       supabase.from('initial_assessments').select('initial_input_answers').eq('user_id', user.id).maybeSingle(),
+      supabase.from('profiles').select('date_of_birth').eq('id', user.id).single(),
     ]);
-    for (const result of [context, nutrition, season, assessment]) if (result.error) throw result.error;
-    return { context: context.data, nutrition: nutrition.data, season: season.data, assessment: assessment.data };
+    for (const result of [context, nutrition, season, assessment, profile]) if (result.error) throw result.error;
+    return { context: context.data, nutrition: nutrition.data, season: season.data, assessment: assessment.data, profile: profile.data };
   } });
   useEffect(() => {
     if (!query.data) return;
     const context = query.data.context ?? {};
     const nutrition = query.data.nutrition ?? {};
-    setValues({ ...Object.fromEntries(Object.entries({ ...context, ...nutrition, ...query.data.season }).filter(([, value]) => value != null && !Array.isArray(value)).map(([key, value]) => [key, String(value)])), position_secondary: query.data.context?.position_secondary?.join(', ') ?? '' });
+    setValues({ ...Object.fromEntries(Object.entries({ ...context, ...nutrition, ...query.data.season, ...query.data.profile }).filter(([, value]) => value != null && !Array.isArray(value)).map(([key, value]) => [key, String(value)])), position_secondary: query.data.context?.position_secondary?.join(', ') ?? '' });
     const review = query.data.assessment?.initial_input_answers as Record<string, unknown> | null;
     setDatesUnknown(review?.season_dates_unknown === true);
     const savedSupplements = query.data.nutrition?.supplement_goals;
@@ -52,6 +53,9 @@ export function AssessmentPlanInputs({ registerFlush, onBack }: { registerFlush?
     setSaving(true); setError(null);
     try {
       const nutrition = enteredNutritionGoals(values, supplements);
+      if (!values.date_of_birth || !/^\d{4}-\d{2}-\d{2}$/.test(values.date_of_birth)) throw new Error('Enter your birthday.');
+      const profile = await supabase.from('profiles').update({ date_of_birth: values.date_of_birth }).eq('id',user.id).select('date_of_birth').single();
+      if (profile.error || profile.data?.date_of_birth !== values.date_of_birth) throw profile.error ?? new Error('Birthday save was not confirmed.');
       const numberKeys = ['weekly_availability_days', 'sleep_target_hrs', 'lifting_age_years', 'weekly_availability_hours', 'typical_session_length_min', 'years_in_sport'];
       for (const key of numberKeys) {
         if (!values[key]?.trim()) continue;
@@ -98,6 +102,7 @@ export function AssessmentPlanInputs({ registerFlush, onBack }: { registerFlush?
   if (!query.isSuccess) return <p role="status">Loading your answers…</p>;
   return <section className="min-w-0 space-y-5">
     <h3 className="text-lg font-semibold">Training, nutrition & health</h3>
+    <div><Label htmlFor="assessment-date_of_birth">Your birthday</Label><Input id="assessment-date_of_birth" type="date" value={values.date_of_birth ?? ''} onChange={e => set('date_of_birth',e.target.value)} max={new Date().toISOString().slice(0,10)} /></div>
     {([['position_primary', 'Main position'], ['position_secondary', 'Other positions (comma-separated, optional)'], ['goal_horizon', 'When you want to reach your goals (optional)']] as const).map(([key, label]) => <div key={key}><Label htmlFor={`assessment-${key}`}>{label}</Label><Input id={`assessment-${key}`} value={values[key] ?? ''} onChange={e => set(key, e.target.value)} /></div>)}
     <CompetitionLevelPicker sport={query.data.context?.sport_primary === 'softball' ? 'softball' : 'baseball'} value={values.competition_level ?? ''} onChange={value => set('competition_level', typeof value === 'string' ? value : value.level)} />
     <div className="grid gap-3 sm:grid-cols-2">{[['bats_hand', 'Bats'], ['throws_hand', 'Throws']].map(([key, label]) => <div key={key}><Label htmlFor={`assessment-${key}`}>{label}</Label><select id={`assessment-${key}`} className="h-10 w-full rounded-md border border-input bg-background" value={values[key] ?? ''} onChange={e => set(key, e.target.value)}><option value="">Choose</option><option value="R">Right</option><option value="L">Left</option><option value="S">Both</option></select></div>)}</div>
