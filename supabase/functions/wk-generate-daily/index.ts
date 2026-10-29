@@ -41,6 +41,7 @@ import {
 } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
 // TCS stage S4 — rest-day calculator, gated by the `rest_day_calculator` switch.
 import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
+import { wholePlanRest, savedWholePlanRest } from "../_shared/wic/schedule/planDayScope.ts";
 // Step 20 C2 — every row resolves an intensity class, stored or derived from
 // the documented mapping, so the ceiling always compares like with like.
 import { resolveIntensityClass } from "../_shared/wic/catalog/safetyAudit.ts";
@@ -675,7 +676,7 @@ const handler = async (req: Request): Promise<Response> => {
           restDaysBetweenLifts: vSpacing ? 2 : null,
           weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
           liftRemoved: false,
-          fullRestDay: savedRows.some(r => r.why_payload?.rest_day?.allowed_class === "none" || isWholeRestDayType(r.why_payload?.training_context?.day_type)),
+          fullRestDay: savedWholePlanRest(planDate, savedRows),
           priorKindDates: vMerged.priorKindDates as any,
           gameTomorrow: ((vGp ?? []) as any[]).length > 0 || ((vCal ?? []) as any[]).length > 0,
           sameDayExternal: vMerged.sameDayExternal,
@@ -1652,14 +1653,8 @@ const handler = async (req: Request): Promise<Response> => {
           decision_source: decisionSource,
         };
         cnsCap = Math.min(cnsCap, tcsAdjust.cnsCap);
-        // Step 20 C — a "none" decision IS a recovery day. Saying so once,
-        // here, is what makes every downstream engine agree: the session
-        // template becomes the recovery template (so it no longer demands
-        // compound categories the day must not contain), and the engines that
-        // already read `day_type` behave as they do on any recovery day.
-        if (tcsAdjust.removeLift) {
-          trainingContext.day_type = "recovery_day";
-        }
+        // Lift spacing blocks loading through tcsAdjust; it cannot turn all
+        // subscribed skill work into whole-day rest. Sunday/HOLD remain rest.
         // Step 21D4 — "Why reduced today" is for real trims only. When the
         // calculator left the day at full class and kept the lift, its reasons
         // describe the day (they render in the day header), not a reduction.
@@ -1688,8 +1683,9 @@ const handler = async (req: Request): Promise<Response> => {
     // day, stated once here like the rest-day calculator's "none", so the
     // session template becomes the recovery template and never demands
     // compound lifts the day must not contain. Only ever makes the day lighter.
-    if (timelineToday.hold) {
+    if (wholePlanRest(planDate, timelineToday.hold)) {
       trainingContext.day_type = "recovery_day";
+      trainingContext.day_type_display = "Recovery Day";
     }
 
 
@@ -2938,7 +2934,7 @@ const handler = async (req: Request): Promise<Response> => {
     } catch (_e) { trendDecision = null; }
     // ONE SYSTEM, ONE PHASE: the one answer every card of this day carries.
     const phaseState = resolvePhaseState({ settings: seasonSettings as any, date: planDate, heights: heightReadings, plannedDeload: !!progression.isDeloadWeek, trendLighter: !!trendDecision?.apply && !progression.isDeloadWeek });
-    const stampPhase = (rs: any[]) => { for (const r of rs) r.why_payload = { ...(r.why_payload ?? {}), phase_state: phaseState }; return rs; };
+    const stampPhase = (rs: any[]) => { for (const r of rs) r.why_payload = { ...(r.why_payload ?? {}), phase_state: phaseState, full_plan_rest: wholePlanRest(planDate, timelineToday.hold) }; return rs; };
 
     const dayOfYearSeed = Math.floor(
       (new Date(planDate + "T00:00:00").getTime() - new Date(new Date(planDate).getFullYear(), 0, 0).getTime()) / 86400000,
