@@ -28,6 +28,8 @@ import { GrowthTrends } from '@/components/organization/GrowthTrends';
 import { TestingDays } from '@/components/organization/TestingDays';
 import { CompareByTest } from "@/components/organization/CompareByTest";
 import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
+import { MeaningSection } from '@/components/progress/SectionMeaning';
+import { OrganizationProgress } from '@/components/organization/OrganizationProgress';
 import { InviteCoach } from '@/components/organization/InviteCoach';
 
 export default function OrganizationDashboard() {
@@ -45,92 +47,49 @@ export default function OrganizationDashboard() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Building2 className="h-8 w-8 text-primary" />
-            Organization Dashboard
+            {activeOrg?.name ?? 'Organization'}
           </h1>
-          <p className="text-muted-foreground">Manage your team, track compliance, and view aggregated analytics.</p>
+          <p className="text-muted-foreground">Organization Dashboard</p>
         </div>
 
         {activeOrg ? (
           <>
-          <SendAthleteRequest organizationId={activeOrg.id} inviteCode={activeOrg.invite_code} orgName={activeOrg.name} />
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="players">Players</TabsTrigger>
-              <TabsTrigger value="compare">Compare</TabsTrigger>
-              <TabsTrigger value="trends">Trends</TabsTrigger>
-              <TabsTrigger value="testing">Testing</TabsTrigger>
-              <TabsTrigger value="sent-workouts">Sent workouts</TabsTrigger>
-              <TabsTrigger value="announcements">Announcements</TabsTrigger>
-              <TabsTrigger value="roster">Roster</TabsTrigger>
-              <TabsTrigger value="members">Members</TabsTrigger>
-              <TabsTrigger value="invite">Invite</TabsTrigger>
-              <TabsTrigger value="heatmaps">Heat Maps</TabsTrigger>
-              {spacesOn && (activeOrg.org_type === 'facility' || activeOrg.org_type === 'academy') && (
-                <TabsTrigger value="spaces">Spaces</TabsTrigger>
-              )}
-              <TabsTrigger value="settings">Settings</TabsTrigger>
+          <Tabs defaultValue="roster" className="space-y-6">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 lg:grid-cols-6">
+              <TabsTrigger className="min-h-11 whitespace-normal" value="roster">Roster</TabsTrigger>
+              <TabsTrigger className="min-h-11 whitespace-normal" value="teams">Teams</TabsTrigger>
+              <TabsTrigger className="min-h-11 whitespace-normal" value="testing">Testing</TabsTrigger>
+              <TabsTrigger className="min-h-11 whitespace-normal" value="workouts">Workouts</TabsTrigger>
+              <TabsTrigger className="min-h-11 whitespace-normal" value="results">Results &amp; Trends</TabsTrigger>
+              <TabsTrigger className="min-h-11 whitespace-normal" value="billing">Billing</TabsTrigger>
             </TabsList>
-
-            {/* Plan v3.1 Phase 6 — facility tools: manage training spaces */}
-            {spacesOn && (activeOrg.org_type === 'facility' || activeOrg.org_type === 'academy') && (
-              <TabsContent value="spaces">
-                <FacilitySpaces orgId={activeOrg.id} canManage />
-              </TabsContent>
-            )}
-
-            <TabsContent value="overview">
-              <TeamComplianceCard
-                avgIntegrity={teamStats?.avgIntegrity ?? 0}
-                coachValidationPct={teamStats?.coachValidationPct ?? 0}
-                activeMemberCount={teamStats?.activeMemberCount ?? memberList.length}
-                flaggedCount={teamStats?.flaggedCount ?? 0}
-              />
+            <TabsContent value="roster" className="space-y-6">
+              <MeaningSection organization title="Roster Progress" explanation="Bars show completed cards out of planned cards in the last seven days. They measure recorded completion, not ability or effort. A player with no planned work has no percentage."><OrganizationProgress orgId={activeOrg.id}/><FacilityBoard orgId={activeOrg.id}/></MeaningSection>
+              <MeaningSection organization title="Players & Connections" explanation="Active organization members are listed here. Membership does not replace the player's sharing permissions. Open a player to see only what they share." collapsed><TeamRosterView orgId={activeOrg.id}/></MeaningSection>
+              <MeaningSection organization title="Invite Players" explanation="Invite a player using the existing connection request or organization code. The player still chooses whether to join." collapsed><SendAthleteRequest organizationId={activeOrg.id} inviteCode={activeOrg.invite_code} orgName={activeOrg.name}/><InviteCodeCard orgId={activeOrg.id} existingCode={activeOrg.invite_code}/></MeaningSection>
             </TabsContent>
-
-            <TabsContent value="players">
-              <div className="space-y-4"><FacilityBoard orgId={activeOrg.id} /><TeamDisciplineSummary orgId={activeOrg.id} /><SponsorshipsCard orgId={activeOrg.id} /></div>
+            <TabsContent value="teams" className="space-y-6">
+              <MeaningSection organization title="Teams & Staff" explanation="Group athletes with the teams and coaches who work with them. Assignments control which athletes a coach can open; they do not grant wider health access."><InviteCoach orgId={activeOrg.id}/><AssignAthletesCard orgId={activeOrg.id}/><OrganizationMemberList/></MeaningSection>
+              <MeaningSection organization title="Announcements" explanation="Organization announcements are shared updates, not individual workout prescriptions." collapsed><TeamAnnouncements orgId={activeOrg.id}/></MeaningSection>
+              {spacesOn && (activeOrg.org_type === 'facility' || activeOrg.org_type === 'academy') && <MeaningSection organization title="Training Spaces" explanation="Manage your existing facility spaces and schedules." collapsed><FacilitySpaces orgId={activeOrg.id} canManage/></MeaningSection>}
+              <MeaningSection organization title="Organization Details" explanation="Your organization is active automatically. These details describe it; they are not identity certification." collapsed><OrganizationRegistration existingOrg={activeOrg}/></MeaningSection>
             </TabsContent>
-
-            <TabsContent value="compare">
-              <div className="space-y-4"><CompareAthletes orgId={activeOrg.id} /><CompareByTest orgId={activeOrg.id} /></div>
+            <TabsContent value="testing" className="space-y-6">
+              <MeaningSection organization title="Testing Days" explanation="Schedule testing and record the actual test results. An in-person verified result is different from an athlete-entered result."><TestingDays orgId={activeOrg.id}/></MeaningSection>
+              <MeaningSection organization title="Testing Results" explanation="Compare the latest recorded result for one test. Check the test name, dates, positions, ages, levels and whether higher or lower is better. These numbers do not rank overall ability."><CompareByTest orgId={activeOrg.id}/></MeaningSection>
             </TabsContent>
-            <TabsContent value="trends">
-              <GrowthTrends orgId={activeOrg.id} />
+            <TabsContent value="workouts" className="space-y-6">
+              <MeaningSection organization title="Workouts" explanation="Send existing workouts and see the player's saved response. Sent is not completed; the player's recorded work is shown separately."><Button asChild variant="outline"><Link to="/my-custom-activities">My Workouts</Link></Button><CoachPrescriptionStatus/></MeaningSection>
+              <MeaningSection organization title="Team Discipline" explanation="Discipline shows the existing required-item completion record, not a judgment about a player's character." collapsed><TeamDisciplineSummary orgId={activeOrg.id}/></MeaningSection>
             </TabsContent>
-            <TabsContent value="testing">
-              <TestingDays orgId={activeOrg.id} />
+            <TabsContent value="results" className="space-y-6">
+              <MeaningSection organization title="Growth vs. Game Trends" explanation="Compare recorded training completion and game outcomes across the same stretch. These are separate measures. Moving together does not prove one caused the other."><GrowthTrends orgId={activeOrg.id}/></MeaningSection>
+              <MeaningSection organization title="Compare Players" explanation="Comparisons use shared records only. Different ages, positions, levels and dates can make a comparison unfair." collapsed><CompareAthletes orgId={activeOrg.id}/></MeaningSection>
+              <MeaningSection organization title="Team Summary" explanation="These existing totals summarize active members and recorded validation. No record is not a score of zero." collapsed><TeamComplianceCard avgIntegrity={teamStats?.avgIntegrity ?? 0} coachValidationPct={teamStats?.coachValidationPct ?? 0} activeMemberCount={teamStats?.activeMemberCount ?? memberList.length} flaggedCount={teamStats?.flaggedCount ?? 0}/></MeaningSection>
             </TabsContent>
-            <TabsContent value="sent-workouts" className="space-y-4">
-              <Button asChild variant="outline"><Link to="/my-custom-activities">My Workouts</Link></Button>
-              <CoachPrescriptionStatus />
-            </TabsContent>
-
-            <TabsContent value="announcements">
-              <TeamAnnouncements orgId={activeOrg.id} />
-            </TabsContent>
-
-            <TabsContent value="roster">
-              <TeamRosterView orgId={activeOrg.id} />
-            </TabsContent>
-
-            <TabsContent value="members" className="space-y-4">
-              <InviteCoach orgId={activeOrg.id} />
-              <AssignAthletesCard orgId={activeOrg.id} />
-              <OrganizationMemberList />
-            </TabsContent>
-
-            <TabsContent value="invite">
-              <InviteCodeCard orgId={activeOrg.id} existingCode={activeOrg.invite_code} />
-            </TabsContent>
-
-            <TabsContent value="heatmaps">
-              <TeamHeatMapOverlay gridData={[]} gridSize={{ rows: 3, cols: 3 }} />
-            </TabsContent>
-
-            <TabsContent value="settings" className="space-y-4">
-              <OrgVerificationForm org={activeOrg} />
-              <OrganizationRegistration existingOrg={activeOrg} />
+            <TabsContent value="billing" className="space-y-6">
+              <MeaningSection organization title="Billing & Plan" explanation="View your organization's existing plan and manage billing through the secure payment service. Opening this page does not buy or change a plan."><Button asChild variant="outline"><Link to="/staff-plans">Manage Organization Plan</Link></Button></MeaningSection>
+              <MeaningSection organization title="Sponsorships" explanation="Use the existing sponsorship choices and limits. Sponsorship does not expand a player's data-sharing permissions."><SponsorshipsCard orgId={activeOrg.id}/></MeaningSection>
             </TabsContent>
           </Tabs>
           </>
