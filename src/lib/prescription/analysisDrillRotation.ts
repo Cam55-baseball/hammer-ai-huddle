@@ -1,5 +1,6 @@
 import type { EliteDrill } from '@/data/drills/eliteDrillCatalog';
 import type { PrescribedBlock, DrillStep } from '@/lib/hammer/prescription/dailyPlan';
+import type { OwnerDrill } from './ownerDrills';
 import { fadeForSignal, type ClipEvidence } from '@/lib/wic/faultLedger/cleanClipFade';
 import { ownsAllGear, avoidsMissingGear } from '../../../supabase/functions/_shared/planSwap/simpleSwap';
 
@@ -57,8 +58,11 @@ export function applyAnalysisDrillRotation(input: {
       if (enrollment.fault_key && fadeForSignal({ source: 'video_analysis', discipline: enrollment.category,
         fault_key: enrollment.fault_key, observed_at: enrollment.observed_at }, input.clips).status === 'cleared') continue;
       const drill = input.catalog.find(d => d.id === enrollment.drill_id && d.category === category && d.sports.includes(input.sport as 'baseball' | 'softball'));
-      if (!drill || ('ownerRowId' in drill && !(drill as EliteDrill & { placements: string[] }).placements.includes('hammers_today:skill')
-        && !(drill as EliteDrill & { placements: string[] }).placements.includes(`hammers_today:${category}`))) continue;
+      if (!drill) continue;
+      if ('ownerRowId' in drill) {
+        const placements = (drill as OwnerDrill).placements;
+        if (!placements.includes('hammers_today:skill') && !placements.includes(`hammers_today:${category}`)) continue;
+      }
       const gear = { equipment_requirements: drill.equipment };
       if (!ownsAllGear(gear, input.equipment) || !avoidsMissingGear(gear, input.missing ?? [])) continue;
       const drills = block.drills.slice();
