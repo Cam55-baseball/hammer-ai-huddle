@@ -7524,7 +7524,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         { name: "Pre-pitch + first-step reads", dosage: "20 reps", cue: "low athletic stance, weight on balls of feet" },
         { name: "Glove work \u2014 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" }
       ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: ownedDefense }), { skill: "defense", sport: defenseSport, owned: ownedDefense, injuryRegions, recoveryDay: recoverDay || tournamentToday || !skillExecutionAllowed || pitcherFielding });
-      const safeDrills = missingGear.length ? drills.filter((d3) => d3.executionKind === "fielding_reads").map((d3) => ({ ...d3, name: `${d3.name} \u2014 dry footwork`, executionKind: void 0, stage: "drills", setup: "Walk through the existing footwork without a ball or throw. Stay within your safe space; no diving, sprinting or catching.", cue: "Read an imaginary ball, set your feet, then reset. No throws.", stopIf: "Pain or unsafe space \u2014 stop." })) : drills;
+      const armProtected = injuryRegions.some((r) => ["shoulder", "elbow", "ucl", "forearm"].includes(r));
+      const safeDrills = missingGear.length || armProtected ? drills.filter((d3) => d3.executionKind === "fielding_reads").map((d3) => ({ ...d3, name: `${d3.name} \u2014 dry footwork`, executionKind: void 0, stage: "drills", setup: "Walk through the existing footwork without a ball or throw. Stay within your safe space; no diving, sprinting or catching.", cue: "Read an imaginary ball, set your feet, then reset. No throws.", stopIf: "Pain or unsafe space \u2014 stop." })) : drills;
       const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
       const stopRules = [...prescription?.stopRules ?? ["Knee, ankle, or hip pain \u2014 stop and update Hammer."], "Use a glove, the correct ball and safe space. If something is missing, use Swap before starting; do not perform an unsafe rep."];
       const durationMin = prescription?.durationMin ?? (inSeason ? 15 : offSeason ? 35 : 25);
@@ -8087,7 +8088,7 @@ function splitLateralityBlocks(blocks, ctx, identityOverride) {
       );
       continue;
     }
-    if (isAmbi && b.modality === "throwing") {
+    if (isAmbi && b.modality === "throwing" && !b.drills.some((d3) => d3.armEvent)) {
       out.push(
         cloneSide(b, "R", "Dominant arm", {
           extraCue: "Ambidextrous thrower \u2014 dominant-arm workload. Full EASS envelope."
@@ -12545,7 +12546,7 @@ function applyFaultPlanInfluence(input) {
     const sourceSignal = signals.find(({ signal }) => match.drill.violationKeys.includes(signal.fault_key));
     if (!sourceSignal) return block;
     const replacementIndex = block.drills.findIndex(
-      (drill) => drill.prescriptionOrigin !== "owner" && (drill.stage === void 0 || drill.stage === "drills")
+      (drill) => drill.prescriptionOrigin !== "owner" && !drill.bunt && !drill.armEvent && (drill.stage === void 0 || drill.stage === "drills")
     );
     if (replacementIndex < 0) return block;
     const displaced = block.drills[replacementIndex];
@@ -12598,7 +12599,7 @@ function applyRecurring(block, disciplines, input, catalog, now) {
       max: 1
     });
     if (!match || !match.drill.violationKeys.includes(issue.fault_key)) continue;
-    const idx = block.drills.findIndex((d3) => d3.prescriptionOrigin !== "owner" && (d3.stage === void 0 || d3.stage === "drills"));
+    const idx = block.drills.findIndex((d3) => d3.prescriptionOrigin !== "owner" && !d3.bunt && !d3.armEvent && (d3.stage === void 0 || d3.stage === "drills"));
     if (idx < 0) return null;
     const displaced = block.drills[idx];
     const replacement = {
