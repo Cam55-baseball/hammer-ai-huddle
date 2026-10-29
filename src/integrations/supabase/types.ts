@@ -24230,6 +24230,10 @@ export type Database = {
             }
             Returns: string
           }
+      invite_org_coach_by_email: {
+        Args: { _email: string; _organization_id: string }
+        Returns: string
+      }
       is_account_paused: { Args: { _user_id: string }; Returns: boolean }
       is_authorizing_parent: {
         Args: { _athlete: string; _parent: string }

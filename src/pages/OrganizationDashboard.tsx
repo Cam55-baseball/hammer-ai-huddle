@@ -28,6 +28,7 @@ import { GrowthTrends } from '@/components/organization/GrowthTrends';
 import { TestingDays } from '@/components/organization/TestingDays';
 import { CompareByTest } from "@/components/organization/CompareByTest";
 import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
+import { InviteCoach } from '@/components/organization/InviteCoach';
 
 export default function OrganizationDashboard() {
   const { myOrgs, members } = useOrganization();
@@ -114,6 +115,7 @@ export default function OrganizationDashboard() {
             </TabsContent>
 
             <TabsContent value="members" className="space-y-4">
+              <InviteCoach orgId={activeOrg.id} />
               <AssignAthletesCard orgId={activeOrg.id} />
               <OrganizationMemberList />
             </TabsContent>
