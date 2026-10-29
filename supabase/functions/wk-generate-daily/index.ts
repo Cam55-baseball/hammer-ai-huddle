@@ -15,6 +15,7 @@ import { applyLiveTracking } from "../_shared/vault/tracking.ts";
 // Idempotent for (user_id, plan_date, sequence_field).
 import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
 import { masteryContext } from "../_shared/masteryContext.ts";
+import { composeSportDay } from '../_shared/composeSportDay.ts';
 import { masteryPlanGuidance, masterySavedGuidance } from "../_shared/wic/masteryPlanContext.ts";
 import { checkInReductions, latestCheckInValues } from "../_shared/wic/checkInReductions.ts";
 import { BASE_REST_TEXT, prescribedBases, sprintRestSeconds, sprintRestWhy, type DeclaredBaseRoute } from "../_shared/wic/runRest.ts";
@@ -640,6 +641,9 @@ const handler = async (req: Request): Promise<Response> => {
       .select("id, slot, sequence_role, movement_slug, status, phase, sets, reps, duration_seconds, distance_feet, total_reps, why_payload")
       .eq("user_id", user.id).eq("plan_date", planDate);
     const existingDay = (existingDayData ?? []) as any[];
+    const composeRequested = rawBody.compose_sport_day === true;
+    if (composeRequested && isServiceCaller) return json({error:'athlete_session_required'},403);
+    const expectedDayRows = existingDay.map(r=>({id:r.id,status:r.status,phase:r.phase,slot:r.slot,movement_slug:r.movement_slug,sets:r.sets,reps:r.reps,duration_seconds:r.duration_seconds,distance_feet:r.distance_feet,total_reps:r.total_reps})).sort((a,b)=>a.id.localeCompare(b.id));
     const isMarkedRow = (r: any) => r.status && r.status !== "planned" && r.status !== "pending";
 
     // -------- Saved-plan re-check --------
@@ -5266,6 +5270,13 @@ const handler = async (req: Request): Promise<Response> => {
     });
     if (!planSanity.ok) return json({ error: "incomplete_training_plan", message: "Today's training could not be built safely. Check your equipment and training details, then try again.", issues: planSanity.issues }, 409);
 
+    let composed: Awaited<ReturnType<typeof composeSportDay>> | null = null;
+    if(composeRequested){
+      const posture=isTravelDay?'travel':isGameDay?'game':isHeavyPracticeDay?'team_practice':gameProximity.hoursToNearestGame!=null&&gameProximity.hoursToNearestGame>0&&gameProximity.hoursToNearestGame<=24?'taper':'normal';
+      const phaseStart=phaseRes.phase.startsWith('os_')?seasonSettings.post_season_end_date:phaseRes.phase==='in_season'?seasonSettings.in_season_start_date:phaseRes.phase==='preseason'?seasonSettings.preseason_start_date:seasonSettings.post_season_start_date;
+      composed=await composeSportDay(userClient,{userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null});
+    }
+
     // -------- Stated change to a day already built: adjust unmarked cards only --------
     if (existingDay.length > 0 && changeReason) {
       const { planChangeSignature: sig } = await import('../_shared/planChangeSignature.ts');
@@ -5273,10 +5284,11 @@ const handler = async (req: Request): Promise<Response> => {
       const oldBy = bySlot(existingDay), newBy = bySlot(rows as any[]);
       const replace = [...new Set([...oldBy.keys(), ...newBy.keys()])].filter((sl) => sig(oldBy.get(sl) ?? []) !== sig(newBy.get(sl) ?? []));
       stampPhase(rows as any[]);
-      const { data: adj, error: adjErr } = await admin.rpc("wk_adjust_prescriptions_atomic" as any, {
+      const { data: adj, error: adjErr } = await admin.rpc((composed ? 'wk_commit_composed_day' : 'wk_adjust_prescriptions_atomic') as any, {
         p_user: user.id, p_date: planDate, p_rows: rows, p_replace_slots: replace,
         p_reason_code: changeReason.code, p_reason_text: changeReason.text,
         p_detail: { generator_version: WIC_VERSION, change_key: String((rawBody as any).change_key ?? "").slice(0, 120) || null },
+        ...(composed?{p_sport:sport,p_engine:composed.engine,p_payload:composed.payload,p_expected_rows:expectedDayRows,p_expected_snapshot:composed.expectedSnapshot,p_diag:{},p_shared:{}}:{}),
       });
       if (adjErr) return json({ error: "adjust_failed", message: adjErr.message }, 500);
       return json({ ok: true, adjusted: true, plan_date: planDate, ...(adj as any) }, 200);
@@ -5284,11 +5296,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     stampPhase(rows as any[]);
     const __split = splitSharedForPersist(rows as any[]);
-    const { data: diagId, error: rpcErr } = await admin.rpc("wk_persist_prescriptions_shared" as any, {
+    const { data: persistResult, error: rpcErr } = await admin.rpc((composed?'wk_commit_composed_day':'wk_persist_prescriptions_shared') as any, {
       p_shared: __split.shared,
       p_user: user.id,
       p_date: planDate,
       p_rows: __split.rows,
+      ...(composed?{p_sport:sport,p_engine:composed.engine,p_payload:composed.payload,p_expected_rows:expectedDayRows,p_expected_snapshot:composed.expectedSnapshot,p_replace_slots:[],p_reason_code:'player_request',p_reason_text:'New composed day',p_detail:{generator_version:WIC_VERSION}}:{}),
       p_diag: {
         generator_version: WIC_VERSION,
         season_phase: phaseRes.phase,
@@ -5378,6 +5391,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
     if (rpcErr) throw rpcErr;
+    const diagId=composed?(persistResult as any)?.diagnostics_id:persistResult;
 
     // Methods diagnostics ride alongside the canonical run so every applied
     // method (and every veto) is replay-visible after the fact.
@@ -5436,6 +5450,8 @@ const handler = async (req: Request): Promise<Response> => {
       generation_ms: generationMs, diagnostics_id: diagId,
     });
     return json({
+      ok: true,
+      ...(composed?{composed:true,sport,plan_date:planDate}:{}),
       phase: phaseRes.phase,
       phase_display: phaseRes.displayName,
       adaptation: adaptationDecision.primary,

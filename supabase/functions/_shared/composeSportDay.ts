@@ -5,12 +5,14 @@ import {
   priorityAccess, ENGINE_CONTRACT,
 } from './generated/hammerBlockBuilder.mjs';
 import { isoShift } from './wic/schedule/timeline.ts';
+import { ageFromDob } from './age/ageFromDob.ts';
 
 /** Self JWT reads only; service jobs do not acquire an athlete's identity/health authority. */
 export async function composeSportDay(db: any, input: {
   userId: string; date: string; sport: 'baseball'|'softball'; phase: string;
   rest: boolean; cns: number; equipment: string[]; injuries: string[]; birthday: string|null;
   outingFacts: unknown; posture: string; gameTomorrow: boolean; warmupStages: Record<string,unknown>;
+  readiness: unknown; phaseStartedAt: string|null;
 }) {
   const { userId: uid, date, sport } = input;
   const day = new Date(`${date}T12:00:00Z`);
@@ -56,7 +58,7 @@ export async function composeSportDay(db: any, input: {
   const entry=(value:unknown,source:string)=>({value,source,owner:'canonical',confidence:'derived',missing:value==null,last_updated:null});
   envelope.equipment_effective=entry(input.equipment,'dated equipment resolver');
   envelope.injury_history=entry([envelope.injury_history?.value,...input.injuries].filter(Boolean),'canonical active injury/context');
-  const extra=[{key:'date_of_birth',label:'Birthday',domain:'identity',value:input.birthday,source:'profiles.date_of_birth',confidence:input.birthday?'high':'missing',missing:!input.birthday,lastUpdated:null,lineage:{owner:'profiles',source:'profiles.date_of_birth',rawConfidence:'self_report'}}];
+  const extra=['date_of_birth','readiness'].map(key=>({key,label:key,domain:'identity',value:key==='readiness'?input.readiness:input.birthday,source:key==='readiness'?'canonical rolling/check-in readiness':'profiles.date_of_birth',confidence:'high',missing:(key==='readiness'?input.readiness:input.birthday)==null,lastUpdated:null,lineage:{owner:'canonical',source:key,rawConfidence:'derived'}}));
   const context=contextFromEnvelope(envelope,extra);
   const modules=sub.data?.status==='active'?(sub.data.subscribed_modules??[]):[];
   const access=priorityAccess(modules,sport);
@@ -76,8 +78,8 @@ export async function composeSportDay(db: any, input: {
   setOwnerPlanDrills(circulation.rows);
   setWarmupStageOverrides(input.warmupStages);
   const evidence=projectBuntingEvidence(sessionRows,abRows,pitchRows.filter((p:any)=>p.perspective==='hitter'&&['bunt_foul','bunt_in_play'].includes(p.result)),complete(tasks),sport);
-  const age=input.birthday?Math.floor((day.getTime()-Date.parse(`${input.birthday}T12:00:00Z`))/31557600000):null;
-  const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
+  const age=ageFromDob(input.birthday,date);
+  const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
     bunting:access.hasHitting?{evidence,catalog:complete(bunts),age,userId:uid,phase:input.phase}:undefined});
   const plan=finalizeDatedPlan(raw,{sport,now:day,cnsHigh:input.cns>=7,adjustments:adjRows,clips:clipRows,games:gp,principles:complete(principles),rankedFaults:accessiblePlanFaults(faults.rankedFaults,modules,sport,{clips:clipRows,now:day.getTime()}),signalScopes:faults.signalScopes,recurringIssues:accessibleRecurringIssues(issues,modules,sport),ownedEquipment:new Set(input.equipment),catalog:mergeCatalog(ELITE_DRILL_CATALOG,circulation.rows),circulation:{servedToUser:circulation.served,usage:circulation.usage}});
   if(plan.sanity?.ok===false&&!input.rest)throw new Error('Sport day failed structural validation');
