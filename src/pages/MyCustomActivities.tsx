@@ -10,6 +10,7 @@ import { RunningPresetLibrary } from '@/components/custom-activities/RunningPres
 import { WorkoutTemplatesLibrary } from '@/components/custom-activities/WorkoutTemplatesLibrary';
 import { ReceivedActivitiesList } from '@/components/custom-activities/ReceivedActivitiesList';
 import { CoachWorkoutsPanel } from '@/components/custom-activities/CoachWorkoutsPanel';
+import { SentActivitiesHistory } from '@/components/coach/SentActivitiesHistory';
 import { useMyCoachWorkouts } from '@/hooks/useCoachPrescriptions';
 import { RecentlyDeletedList } from '@/components/custom-activities/RecentlyDeletedList';
 import { PresetLibrary } from '@/components/elite-workout/presets/PresetLibrary';
@@ -88,8 +89,12 @@ export default function MyCustomActivities() {
   };
 
   const tabs = [
-    { value: 'coach-workouts', icon: ClipboardList, label: 'From my coaches', badge: coachWorkoutsWaiting.length },
-    { value: 'saved-coach-workouts', icon: Inbox, label: 'Saved for later' },
+    isCoach
+      ? { value: 'coach-workouts', icon: ClipboardList, label: 'Send a workout', badge: 0 }
+      : { value: 'coach-workouts', icon: ClipboardList, label: 'From my coaches', badge: coachWorkoutsWaiting.length },
+    isCoach
+      ? { value: 'saved-coach-workouts', icon: Inbox, label: 'Sent workouts' }
+      : { value: 'saved-coach-workouts', icon: Inbox, label: 'Saved for later' },
     { value: 'templates', icon: LayoutGrid, label: 'My own' },
     { value: 'workout-plan', icon: Dumbbell, label: t('myCustomActivities.tabs.workoutPlan', 'Workout Plan') },
     { value: 'folders', icon: FolderOpen, label: t('myCustomActivities.tabs.folders', 'Folders'), badge: folderPendingCount },
@@ -211,12 +216,28 @@ export default function MyCustomActivities() {
               <ReceivedActivitiesList selectedSport={selectedSport} />
             </TabsContent>
 
-            <TabsContent value="coach-workouts" className="mt-0 animate-fade-in">
-              <CoachWorkoutsPanel shelf="from-coaches" />
-            </TabsContent>
-            <TabsContent value="saved-coach-workouts" className="mt-0 animate-fade-in">
-              <CoachWorkoutsPanel shelf="saved" />
-            </TabsContent>
+            {isCoach ? (
+              <>
+                <TabsContent value="coach-workouts" className="mt-0 animate-fade-in">
+                  <div className="space-y-3 rounded-lg border border-border p-4">
+                    <p className="text-sm text-muted-foreground">Pick your players on your Coach Dashboard, then tap Send Activities to choose what to send.</p>
+                    <Button onClick={() => navigate('/coach-dashboard')}>Go to my players</Button>
+                  </div>
+                </TabsContent>
+                <TabsContent value="saved-coach-workouts" className="mt-0 animate-fade-in">
+                  <SentActivitiesHistory />
+                </TabsContent>
+              </>
+            ) : (
+              <>
+                <TabsContent value="coach-workouts" className="mt-0 animate-fade-in">
+                  <CoachWorkoutsPanel shelf="from-coaches" />
+                </TabsContent>
+                <TabsContent value="saved-coach-workouts" className="mt-0 animate-fade-in">
+                  <CoachWorkoutsPanel shelf="saved" />
+                </TabsContent>
+              </>
+            )}
 
             <TabsContent value="elite-presets" className="mt-0 animate-fade-in">
               <PresetLibrary 
