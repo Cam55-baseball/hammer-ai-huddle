@@ -241,6 +241,10 @@ const ALL_MODALITIES: ModalityKey[] = [
 ];
 
 interface BuilderArgs {
+  readonly pitchingType?: ReturnType<typeof pitchingDay>;
+  readonly armHistory?: PlanningArmHistory;
+  readonly planDate?: string;
+  readonly armRole?: 'pitcher'|'two_way';
   readonly skillExecutionAllowed?: boolean;
   readonly pitcherOutings?: OutingFacts | null;
   readonly modality: ModalityKey;
@@ -991,7 +995,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const sched = scheduleAny?.schedule ?? {};
       const armSore = !!(ctx.get<{ arm_sore?: boolean }>("daily_log")?.value as { arm_sore?: boolean })?.arm_sore;
       const ageYears = (ctx.get<number>("age_years")?.value as number | null) ?? null;
-      const readinessScore =
+      const readinessScore = typeof readiness === 'number' ? readiness :
         typeof (readiness as { score?: number })?.score === "number"
           ? (readiness as { score: number }).score
           : null;
@@ -2336,7 +2340,7 @@ export function buildHammerDailyPlan(
   const positionOverrideArg = roadmapInputs.positionOverride ?? null;
   const allowed = (m: ModalityKey) => !access || (m === 'hitting' ? access.hasHitting : m === 'baserunning' ? access.hasBaserunning : m === 'defense' ? access.hasDefense : m === 'throwing' ? access.hasThrowing || access.hasPitching : true);
   const firstPass = ALL_MODALITIES.filter(allowed).map((m) =>
-    builder({ modality: m, ctx, proj, speed, positionOverride: m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings, skillExecutionAllowed: scheduleSignal.postureToday === 'normal' }),
+    builder({ modality: m, ctx, proj, speed, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings, skillExecutionAllowed: scheduleSignal.postureToday === 'normal' }),
   );
   const goalAccess = roadmapInputs.subscriptionModules === undefined ? null
     : priorityAccess(roadmapInputs.subscriptionModules, normalizeSport(sportRaw) === 'softball' ? 'softball' : 'baseball');
@@ -2456,10 +2460,7 @@ export function buildHammerDailyPlan(
   const blocks = restFiltered.map(b => {
     if(!access?.hasPitching || b.modality!=='throwing')return b;
     const type=pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings);
-    const source=buildEassPrescription({sport,position:'pitcher',seasonPhase:proj.seasonPhase as EassContext['seasonPhase'],ageYears:ctx.get<number>('age_years')?.value??null,trainingAgeYears:proj.liftingAgeYears,injuryRegions:[...proj.injuryRegions],armSore:ctx.get<{arm_sore?:boolean}>('daily_log')?.value?.arm_sore===true,isGameDay:type==='start'||type==='available',isRecoveryDay:fullRestDay||type==='flush'||type==='rest'||proj.readinessScore!==null&&proj.readinessScore<0.4,isThrowingDay:['bullpen','side','long_toss'].includes(type),readinessScore:proj.readinessScore});
-    const guarded=guardArmDrills(source.drills,{date:today.toLocaleDateString('en-CA'),sport,role:access.pitcherOnly?'pitcher':'two_way',age:ctx.get<number>('age_years')?.value??null,level:ctx.get<string>('competition_level')?.value??null,history:roadmapInputs.armHistory});
-    const drills=fullRestDay?[]:guarded.map(d=>({name:d.name,dosage:d.dosage,setup:d.setup,cue:d.cue,stopIf:d.stopIf,stage:d.stage??(d.intensity==='prep'?'prep' as const:'drills' as const)}));
-    return {...b,modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,drills,steps:drillsToSteps(drills),route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),source.why,"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
+    return {...b,modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
   });
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
