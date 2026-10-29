@@ -130,7 +130,7 @@ function enforceSkillStageOrder(blocks) {
     if (block.status !== "ready" || !["hitting", "throwing", "defense", "baserunning"].includes(block.modality) || block.drills.some((drill) => !drill.stage || drill.ownerDrillId || drill.prescriptionOrigin === "owner")) return block;
     const drills = [...block.drills].sort((a, b) => (a.stage ? ORDER[a.stage] : 0) - (b.stage ? ORDER[b.stage] : 0));
     if (drills.every((drill, index) => drill === block.drills[index])) return block;
-    return { ...block, drills, steps: drills.map((d2) => d2.setup ? `${d2.name} \u2014 ${d2.dosage} (${d2.setup})` : `${d2.name} \u2014 ${d2.dosage}`) };
+    return { ...block, drills, steps: drills.map((d3) => d3.setup ? `${d3.name} \u2014 ${d3.dosage} (${d3.setup})` : `${d3.name} \u2014 ${d3.dosage}`) };
   });
 }
 
@@ -521,7 +521,7 @@ function applyBuntingPlan(blocks, facts, options) {
     const identity = pick ? buntIdentity(pick.slug) : null;
     if (!pick || !identity) return block;
     const dose = program.dose(side, identity.type);
-    const slot = block.drills.findIndex((d2) => d2.stage === "drills" && d2.prescriptionOrigin !== "owner" && /^\d+ swings(?:\s|$)/i.test(d2.dosage));
+    const slot = block.drills.findIndex((d3) => d3.stage === "drills" && d3.prescriptionOrigin !== "owner" && /^\d+ swings(?:\s|$)/i.test(d3.dosage));
     const original = block.drills[slot];
     const budget = original ? Number(/^(\d+) swings/i.exec(original.dosage)?.[1]) : 0;
     if (!original || budget < dose.floor) return block;
@@ -541,7 +541,7 @@ function applyBuntingPlan(blocks, facts, options) {
     const drills = [...block.drills.slice(0, slot), drill, ...budget > attempts ? [{ ...original, dosage: `${budget - attempts} swings` }] : [], ...block.drills.slice(slot + 1)];
     const sample = program.battingSample;
     const because = `${attempts} ${side === "R" ? "right" : "left"}-handed bunt attempts replace ${attempts} swings from today's skill work.${sample.under300 ? sample.window ? ` Completed batting window ${sample.window.start}\u2013${sample.window.end}: ${sample.hits} hits in ${sample.atBats} at-bats, below ${(facts.lowAverage ?? 0.3).toFixed(3)}; source: entered game at-bats.` : ` Entered batting sample: ${sample.hits} hits in ${sample.atBats} at-bats across ${sample.games} games; each entered game was below ${(facts.lowAverage ?? 0.3).toFixed(3)}.` : ""}${dose.attempts ? ` This bunt: ${dose.successes} successful out of ${dose.attempts} entered attempts.` : ""}`;
-    return { ...block, drills, steps: drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`), because: [...block.because ?? [], because], gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist: drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`) } : null };
+    return { ...block, drills, steps: drills.map((d3) => `${d3.name} \u2014 ${d3.dosage}`), because: [...block.because ?? [], because], gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist: drills.map((d3) => `${d3.name} \u2014 ${d3.dosage}`) } : null };
   });
 }
 
@@ -746,11 +746,11 @@ function normalizeCategoryOrder(raw) {
 function normalizeV1Raw(raw) {
   if (!raw || typeof raw !== "object") return null;
   const obj = raw;
-  const list2 = Array.isArray(obj.goals) ? obj.goals : Array.isArray(raw) ? raw : null;
-  if (!list2) return null;
+  const list3 = Array.isArray(obj.goals) ? obj.goals : Array.isArray(raw) ? raw : null;
+  if (!list3) return null;
   const seen = /* @__PURE__ */ new Set();
   const goals = [];
-  for (const item of list2) {
+  for (const item of list3) {
     if (!item || typeof item !== "object") continue;
     const r = item;
     if (typeof r.category !== "string") continue;
@@ -1281,8 +1281,8 @@ function resolveBaseTemplate(proj) {
 function nextScheduled(today, dows) {
   if (dows.length === 0) return null;
   for (let i = 1; i <= 7; i++) {
-    const d2 = (today + i) % 7;
-    if (dows.includes(d2)) return d2;
+    const d3 = (today + i) % 7;
+    if (dows.includes(d3)) return d3;
   }
   return null;
 }
@@ -1291,7 +1291,7 @@ function daysUntil(today, target) {
 }
 function orderedFromToday(dows, today) {
   const sorted = [...new Set(dows)].sort((a, b) => a - b);
-  const rotated = [...sorted.filter((d2) => d2 >= today), ...sorted.filter((d2) => d2 < today)];
+  const rotated = [...sorted.filter((d3) => d3 >= today), ...sorted.filter((d3) => d3 < today)];
   return rotated;
 }
 function todayPositionLabel(dows, today) {
@@ -1308,17 +1308,17 @@ function resolveSkillDays(template, modality, target) {
   const allowed = new Set(template.availableDays ?? [1, 2, 3, 4, 5, 6]);
   const clamped = Math.max(0, Math.min(SKILL_DAYS_CEILING, target, allowed.size));
   const picked = [];
-  for (const d2 of priority) {
+  for (const d3 of priority) {
     if (picked.length >= clamped) break;
-    if (d2 === SIX_DAY_REST_DOW || !allowed.has(d2)) continue;
-    if (!picked.includes(d2)) picked.push(d2);
+    if (d3 === SIX_DAY_REST_DOW || !allowed.has(d3)) continue;
+    if (!picked.includes(d3)) picked.push(d3);
   }
-  for (let d2 = 0; picked.length < clamped && d2 <= 6; d2 = d2 + 1) {
-    if (d2 !== SIX_DAY_REST_DOW && allowed.has(d2) && !picked.includes(d2)) picked.push(d2);
-    if (d2 === 6) break;
+  for (let d3 = 0; picked.length < clamped && d3 <= 6; d3 = d3 + 1) {
+    if (d3 !== SIX_DAY_REST_DOW && allowed.has(d3) && !picked.includes(d3)) picked.push(d3);
+    if (d3 === 6) break;
   }
   const baselineSet = new Set(baseline);
-  const overflowDays = picked.filter((d2) => !baselineSet.has(d2));
+  const overflowDays = picked.filter((d3) => !baselineSet.has(d3));
   return { days: picked, baseline, overflowDays };
 }
 function applyMicrocycle(template, today, skillTargets = {}, readiness = "normal") {
@@ -1362,7 +1362,7 @@ function applyMicrocycle(template, today, skillTargets = {}, readiness = "normal
         const dd = daysUntil(dow, nxt2);
         return dd === 1 ? `tomorrow (${DOW_SHORT[nxt2]})` : `${DOW_SHORT[nxt2]} \xB7 in ${dd} days`;
       })();
-      const dayList = orderedFromToday(dows, dow).map((d2) => DOW_SHORT[d2]).join(" \xB7 ");
+      const dayList = orderedFromToday(dows, dow).map((d3) => DOW_SHORT[d3]).join(" \xB7 ");
       perModality[m] = {
         scheduled: false,
         intensity: "off",
@@ -1408,25 +1408,25 @@ function projectWeeklyRoadmap(template, today, skillTargets = {}) {
     skillOverflow[sm] = new Set(r.overflowDays);
   }
   const days = [];
-  for (let d2 = 0; d2 <= 6; d2 = d2 + 1) {
+  for (let d3 = 0; d3 <= 6; d3 = d3 + 1) {
     const modalities = SCHEDULABLE_MODALITIES.flatMap((m) => {
       const isSkill = SKILL_MODALITIES.includes(m);
       const dows = isSkill && skillDays[m] !== void 0 ? skillDays[m] : template.perModality[m] ?? [];
-      if (!dows.includes(d2)) return [];
-      const isOverflow = isSkill && (skillOverflow[m]?.has(d2) ?? false);
+      if (!dows.includes(d3)) return [];
+      const isOverflow = isSkill && (skillOverflow[m]?.has(d3) ?? false);
       void isOverflow;
-      const intensity = template.intensityOverrides?.[m]?.[d2] ?? "primary";
-      const accent = template.dayLabels?.[m]?.[d2] ?? null;
+      const intensity = template.intensityOverrides?.[m]?.[d3] ?? "primary";
+      const accent = template.dayLabels?.[m]?.[d3] ?? null;
       return [{ key: m, intensity, accent }];
     });
     days.push({
-      dow: d2,
-      short: DOW_SHORT[d2],
-      isToday: d2 === todayDow,
+      dow: d3,
+      short: DOW_SHORT[d3],
+      isToday: d3 === todayDow,
       modalities,
       restDay: modalities.length === 0
     });
-    if (d2 === 6) break;
+    if (d3 === 6) break;
   }
   return days;
 }
@@ -1454,7 +1454,7 @@ function weeklyGoalBlocks(template, baseline, proj, position, included) {
     return skill ? resolveSkillDays(template, skill, baseline[skill] ?? 0).days : template.perModality[m];
   }));
   const availability = proj.weeklyAvailabilityDays;
-  const extra = template.perModality[modality].find((d2) => !existing.includes(d2) && trainingDays.has(d2));
+  const extra = template.perModality[modality].find((d3) => !existing.includes(d3) && trainingDays.has(d3));
   const protectedContext = proj.workloadHigh || proj.readinessScore !== null && proj.readinessScore < 0.5 || proj.parentSupremacyActive || proj.injuryRegions.length > 0;
   const allowed = current < ceiling && extra !== void 0 && !protectedContext && availability !== null && trainingDays.size <= availability && proj.seasonPhase !== "post";
   if (!allowed) return {
@@ -1632,22 +1632,22 @@ var dayNumber = (date) => {
 function categoryPracticeLoads(records, today, sport) {
   const now = dayNumber(today);
   if (!Number.isFinite(now)) return [];
-  const unique = /* @__PURE__ */ new Map();
+  const unique2 = /* @__PURE__ */ new Map();
   const conflicts = /* @__PURE__ */ new Set();
   for (const record2 of records) {
     if (!record2.id.trim()) continue;
-    const previous = unique.get(record2.id);
+    const previous = unique2.get(record2.id);
     if (previous && (previous.date !== record2.date || previous.sport !== record2.sport || previous.category !== record2.category || previous.minutes !== record2.minutes || previous.intensity !== record2.intensity || Boolean(previous.deleted) !== Boolean(record2.deleted))) {
       conflicts.add(record2.id);
     }
-    unique.set(record2.id, record2);
+    unique2.set(record2.id, record2);
   }
-  for (const [id, record2] of unique) {
+  for (const [id, record2] of unique2) {
     const age = now - dayNumber(record2.date);
-    if (conflicts.has(id) || record2.deleted || record2.sport !== sport || !record2.category || !CATEGORIES.includes(record2.category) || !(age >= 1 && age <= 7)) unique.delete(id);
+    if (conflicts.has(id) || record2.deleted || record2.sport !== sport || !record2.category || !CATEGORIES.includes(record2.category) || !(age >= 1 && age <= 7)) unique2.delete(id);
   }
   return CATEGORIES.flatMap((category) => {
-    const rows2 = [...unique.values()].filter((row) => row.category === category);
+    const rows2 = [...unique2.values()].filter((row) => row.category === category);
     if (!rows2.length) return [];
     const days = new Set(rows2.map((row) => dayNumber(row.date)));
     let consecutiveDays = 0;
@@ -2851,7 +2851,7 @@ function fallbackFor(drill) {
   return drill.fallbackSlug ?? EQUIPMENT_OVERRIDES[drill.slug]?.fallbackSlug ?? null;
 }
 function bySlug(slug) {
-  return WARMUP_LIBRARY.find((d2) => d2.slug === slug) ?? null;
+  return WARMUP_LIBRARY.find((d3) => d3.slug === slug) ?? null;
 }
 function hasEquipment(drill, available) {
   return equipmentFor(drill).every((need) => available.has(need));
@@ -3049,18 +3049,18 @@ var LIFECYCLE_RANK = {
   advanced: 3,
   elite: 4
 };
-function isEligible(d2, f) {
-  if (LIFECYCLE_RANK[f.lifecycle] < LIFECYCLE_RANK[d2.minLifecycle]) return false;
-  if (f.gameDay && !d2.gameDayLegal) return false;
-  if (f.axis && (d2.axis ?? "bilateral") !== f.axis) return false;
-  if (d2.regions && f.injuryRegions.length > 0) {
-    if (d2.regions.some((r) => f.injuryRegions.includes(r))) return false;
+function isEligible(d3, f) {
+  if (LIFECYCLE_RANK[f.lifecycle] < LIFECYCLE_RANK[d3.minLifecycle]) return false;
+  if (f.gameDay && !d3.gameDayLegal) return false;
+  if (f.axis && (d3.axis ?? "bilateral") !== f.axis) return false;
+  if (d3.regions && f.injuryRegions.length > 0) {
+    if (d3.regions.some((r) => f.injuryRegions.includes(r))) return false;
   }
   return true;
 }
-function resolveEquipmentSafe(d2, f) {
-  if (hasEquipment(d2, f.available)) return { drill: d2, substituted: false };
-  const fb = fallbackFor(d2);
+function resolveEquipmentSafe(d3, f) {
+  if (hasEquipment(d3, f.available)) return { drill: d3, substituted: false };
+  const fb = fallbackFor(d3);
   if (!fb) return null;
   const sib = bySlug(fb);
   if (!sib) return null;
@@ -3068,7 +3068,7 @@ function resolveEquipmentSafe(d2, f) {
   return hasEquipment(sib, f.available) ? { drill: sib, substituted: true } : null;
 }
 function poolForRole(role, f) {
-  return WARMUP_LIBRARY.filter((d2) => d2.role === role && isEligible(d2, f));
+  return WARMUP_LIBRARY.filter((d3) => d3.role === role && isEligible(d3, f));
 }
 function pickForRole(role, f, seed, seen, diagnostics) {
   const pool = poolForRole(role, f);
@@ -3142,27 +3142,27 @@ function tissuePrepBlock(input, available) {
   };
   return [rolling, rhythm];
 }
-function toBuilt(d2, lifecycle) {
+function toBuilt(d3, lifecycle) {
   return {
-    slug: d2.slug,
-    name: d2.name,
-    role: d2.role,
-    setup: d2.setup,
-    dosage: doseFor(d2, lifecycle),
-    cue: d2.cue,
-    stopIf: d2.stopIf,
-    source: d2.source,
-    guide: guideFor(d2.slug) ?? guideFor(d2.name) ?? void 0,
-    equipmentNote: equipmentNoteFor(d2),
-    axis: d2.axis
+    slug: d3.slug,
+    name: d3.name,
+    role: d3.role,
+    setup: d3.setup,
+    dosage: doseFor(d3, lifecycle),
+    cue: d3.cue,
+    stopIf: d3.stopIf,
+    source: d3.source,
+    guide: guideFor(d3.slug) ?? guideFor(d3.name) ?? void 0,
+    equipmentNote: equipmentNoteFor(d3),
+    axis: d3.axis
   };
 }
 function buildWarmup(input) {
   const diagnostics = [];
   if (input.context === "recovery_day") {
     const available = expandEquipment(input.equipment, input.venue);
-    const drills2 = WARMUP_LIBRARY.filter((d2) => isSoftRecovery(d2.slug) && equipmentFor(d2).every((e) => available.has(e)) && !(d2.regions ?? []).some((r) => (input.injuryRegions ?? []).includes(r))).slice(0, 3).map((d2) => toBuilt(d2, input.lifecycle));
-    const ordered2 = input.orderByStage === false ? drills2 : sortByWarmupStage(drills2, (d2) => d2.slug, (d2) => d2.role);
+    const drills2 = WARMUP_LIBRARY.filter((d3) => isSoftRecovery(d3.slug) && equipmentFor(d3).every((e) => available.has(e)) && !(d3.regions ?? []).some((r) => (input.injuryRegions ?? []).includes(r))).slice(0, 3).map((d3) => toBuilt(d3, input.lifecycle));
+    const ordered2 = input.orderByStage === false ? drills2 : sortByWarmupStage(drills2, (d3) => d3.slug, (d3) => d3.role);
     return {
       context: input.context,
       drills: ordered2,
@@ -3215,31 +3215,31 @@ function buildWarmup(input) {
     seen.add(pick.slug);
     drills.push(toBuilt(pick, input.lifecycle));
   });
-  const twitchIdx = drills.map((d2, i) => ({ d: d2, i })).filter(({ d: d2 }) => TWITCH_ROLES.includes(d2.role));
+  const twitchIdx = drills.map((d3, i) => ({ d: d3, i })).filter(({ d: d3 }) => TWITCH_ROLES.includes(d3.role));
   if (twitchIdx.length > 0) {
     const needed = Math.ceil(twitchIdx.length * SINGLE_LEG_MIN_SHARE);
-    let single = twitchIdx.filter(({ d: d2 }) => d2.axis === "single_leg").length;
-    const bilateral = twitchIdx.filter(({ d: d2 }) => d2.axis !== "single_leg").reverse();
-    for (const { d: d2, i } of bilateral) {
+    let single = twitchIdx.filter(({ d: d3 }) => d3.axis === "single_leg").length;
+    const bilateral = twitchIdx.filter(({ d: d3 }) => d3.axis !== "single_leg").reverse();
+    for (const { d: d3, i } of bilateral) {
       if (single >= needed) break;
       const slFilters = { ...filtersBase, axis: "single_leg" };
-      const replacement = pickForRole(d2.role, slFilters, seedBase + i * 13 + 5, seen, diagnostics) ?? pickForRole("single_leg_twitch", slFilters, seedBase + i * 13 + 5, seen, diagnostics);
+      const replacement = pickForRole(d3.role, slFilters, seedBase + i * 13 + 5, seen, diagnostics) ?? pickForRole("single_leg_twitch", slFilters, seedBase + i * 13 + 5, seen, diagnostics);
       if (!replacement) continue;
-      seen.delete(d2.slug);
+      seen.delete(d3.slug);
       seen.add(replacement.slug);
       drills[i] = toBuilt(replacement, input.lifecycle);
       diagnostics.push({
         code: "single_leg_swap",
         role: replacement.role,
-        from: d2.slug,
+        from: d3.slug,
         to: replacement.slug,
-        detail: `Single-leg majority law \u2014 ${d2.name} swapped for ${replacement.name} so most of the twitch work runs through one leg.`
+        detail: `Single-leg majority law \u2014 ${d3.name} swapped for ${replacement.name} so most of the twitch work runs through one leg.`
       });
       single++;
     }
   }
-  const twitchFinal = drills.filter((d2) => TWITCH_ROLES.includes(d2.role));
-  const singleLegShare = twitchFinal.length === 0 ? null : twitchFinal.filter((d2) => d2.axis === "single_leg").length / twitchFinal.length;
+  const twitchFinal = drills.filter((d3) => TWITCH_ROLES.includes(d3.role));
+  const singleLegShare = twitchFinal.length === 0 ? null : twitchFinal.filter((d3) => d3.axis === "single_leg").length / twitchFinal.length;
   if (singleLegShare !== null && singleLegShare < SINGLE_LEG_MIN_SHARE) {
     diagnostics.push({
       code: "single_leg_short",
@@ -3247,7 +3247,7 @@ function buildWarmup(input) {
     });
   }
   const est = Math.max(8, 5 + Math.round((drills.length - 1) * 90 / 60));
-  const ordered = input.orderByStage === false ? drills : sortByWarmupStage(drills, (d2) => d2.slug, (d2) => d2.role);
+  const ordered = input.orderByStage === false ? drills : sortByWarmupStage(drills, (d3) => d3.slug, (d3) => d3.role);
   return { context: input.context, drills: ordered, estMinutes: est, singleLegShare, diagnostics };
 }
 function resolveWarmupContext(input) {
@@ -3882,10 +3882,10 @@ function buildEassPrescription(ctx) {
   const armBlocked = ctx.injuryRegions.includes("shoulder") || ctx.injuryRegions.includes("ucl") || ctx.injuryRegions.includes("elbow") || ctx.injuryRegions.includes("forearm");
   if (armBlocked) {
     const drills2 = [
-      ...(isSoftball ? BAND_PREP_SOFTBALL_WINDMILL : BAND_PREP_BASEBALL).map((d2) => ({
-        ...d2,
-        dosage: d2.dosage.replace(/2x/g, "1x"),
-        cue: `${d2.cue} \u2014 recovery pace today`
+      ...(isSoftball ? BAND_PREP_SOFTBALL_WINDMILL : BAND_PREP_BASEBALL).map((d3) => ({
+        ...d3,
+        dosage: d3.dosage.replace(/2x/g, "1x"),
+        cue: `${d3.cue} \u2014 recovery pace today`
       })),
       {
         name: "Sub-max catch play",
@@ -3975,8 +3975,8 @@ function buildEassPrescription(ctx) {
   const tennisBall = isSoftball ? TENNIS_BALL_SOFTBALL : TENNIS_BALL_BASEBALL;
   const underload = isSoftball ? UNDERLOAD_SOFTBALL : UNDERLOAD_BASEBALL;
   const regulation = isSoftball ? regulationSoftball(inSeason) : regulationBaseball(inSeason, isPitcher3);
-  const positionSkill = (isSoftball ? positionSkillSoftball(ctx.position, inSeason) : positionSkillBaseball(ctx.position, inSeason)).filter((d2) => !(ctx.armSore && d2.stage === "full_go"));
-  const scaledPrep = isPositionPlayer ? prep.map((d2) => ({ ...d2, dosage: d2.dosage.replace(/2x/g, "1x") })) : prep;
+  const positionSkill = (isSoftball ? positionSkillSoftball(ctx.position, inSeason) : positionSkillBaseball(ctx.position, inSeason)).filter((d3) => !(ctx.armSore && d3.stage === "full_go"));
+  const scaledPrep = isPositionPlayer ? prep.map((d3) => ({ ...d3, dosage: d3.dosage.replace(/2x/g, "1x") })) : prep;
   const underloadCount = isPositionPlayer || !plyoOk ? 0 : offSeason ? 3 : 1;
   const regulationTrimmed = isPositionPlayer ? regulation.slice(0, 2) : regulation;
   const drills = [
@@ -5154,8 +5154,8 @@ function gateForInjury(drills, regions) {
   const noLegs = hasAny(regions, LEG_INJURY);
   const noArm = hasAny(regions, SHOULDER_INJURY);
   const noBack = hasAny(regions, BACK_INJURY);
-  return drills.filter((d2) => {
-    const tag = `${d2.name} ${d2.setup ?? ""} ${d2.cue ?? ""}`.toLowerCase();
+  return drills.filter((d3) => {
+    const tag = `${d3.name} ${d3.setup ?? ""} ${d3.cue ?? ""}`.toLowerCase();
     if (noLegs && /(charge|sprint|do-or-die|drop-step|crossover|bunt charge|slow-roller)/.test(tag)) return false;
     if (noArm && /(long throw|max effort throw|pop-time|rock-and-throw|one-hop to)/.test(tag)) return false;
     if (noBack && /(block|dive|extension|barrel roll)/.test(tag)) return false;
@@ -5543,7 +5543,7 @@ function selectDefenseDrills(input) {
   drills = gateForInjury(drills, input.injuryRegions);
   if (phase === "tournament") drills = taperForTournament(drills);
   if (drills.length === 0) return null;
-  drills = drills.map((d2) => decorateDrill(d2, tier));
+  drills = drills.map((d3) => decorateDrill(d3, tier));
   const posLabel = position === "utility" ? "utility" : position;
   const phaseLabel = phase === "in" ? "game-rep" : phase === "off" ? "volume + range" : phase === "tournament" ? "primer" : "sharpen";
   const title = `Defense \u2014 ${posLabel} \xB7 ${tier} (${phaseLabel})`;
@@ -6047,11 +6047,11 @@ function applyRecoveryWindows(blocks, rung, quarter, recent, today) {
       };
     }
     const scale = dec.action === "activation" ? 0.3 : 0.6;
-    const scaledDrills = b.drills.map((d2) => ({ ...d2, dosage: scaleDosageLabel(d2.dosage, scale) }));
+    const scaledDrills = b.drills.map((d3) => ({ ...d3, dosage: scaleDosageLabel(d3.dosage, scale) }));
     return {
       ...b,
       drills: scaledDrills,
-      steps: scaledDrills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`),
+      steps: scaledDrills.map((d3) => `${d3.name} \u2014 ${d3.dosage}`),
       durationMin: b.durationMin == null ? b.durationMin : Math.max(8, Math.round(b.durationMin * scale)),
       roadmapReason: `${b.roadmapReason} \xB7 ${dec.reason}`
     };
@@ -6206,7 +6206,7 @@ function hittingDrillsForEquipment(owned, seasonPhase) {
     drills.push({ name: "Log bat speed on your best round", dosage: "1 round", equipmentNote: "Bat sensor" });
   }
   drills.push({ name: "Log it: film 5 swings and tag them, write your swing count", dosage: "best 5 swings", stage: "log" });
-  return drills.map((d2) => d2.stage ? d2 : { ...d2, stage: "drills" });
+  return drills.map((d3) => d3.stage ? d3 : { ...d3, stage: "drills" });
 }
 function goalLine(proj) {
   if (!proj.goalSummary) return null;
@@ -6214,11 +6214,11 @@ function goalLine(proj) {
 }
 function drillsToSteps(drills) {
   return drills.map(
-    (d2) => d2.setup ? `${d2.name} \u2014 ${d2.dosage} (${d2.setup})` : `${d2.name} \u2014 ${d2.dosage}`
+    (d3) => d3.setup ? `${d3.name} \u2014 ${d3.dosage} (${d3.setup})` : `${d3.name} \u2014 ${d3.dosage}`
   );
 }
 function drillsToChecklist(drills) {
-  return drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`);
+  return drills.map((d3) => `${d3.name} \u2014 ${d3.dosage}`);
 }
 function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, skillExecutionAllowed = true }) {
   const declaredPos = firstPositionToken(ctx.get("position_primary")?.value) ?? firstPositionToken(ctx.get("position")?.value) ?? null;
@@ -6288,15 +6288,15 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           built = fallback;
         }
       }
-      const drills = mergeOwnerSlotDrills(built.drills.map((d2) => ({
-        name: d2.name,
-        slug: d2.slug,
-        setup: d2.setup,
-        dosage: d2.dosage,
-        cue: d2.cue,
-        stopIf: d2.stopIf,
-        equipmentNote: d2.equipmentNote,
-        guide: d2.guide
+      const drills = mergeOwnerSlotDrills(built.drills.map((d3) => ({
+        name: d3.name,
+        slug: d3.slug,
+        setup: d3.setup,
+        dosage: d3.dosage,
+        cue: d3.cue,
+        stopIf: d3.stopIf,
+        equipmentNote: d3.equipmentNote,
+        guide: d3.guide
       })), ["hammers_today:warmup"], { sport: normalizeSport(ctx.get("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set(proj.equipmentList ?? []) });
       if (isRecoveryDay || recoverDay) {
         const primer = getSeasonHPI(seasonPhase);
@@ -6320,8 +6320,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         });
       }
       {
-        const roleBySlug = new Map(built.drills.map((d2) => [d2.slug, d2.role]));
-        const sorted = sortByWarmupStage(drills, (d2) => d2.slug ?? "", (d2) => roleBySlug.get(d2.slug ?? "") ?? null);
+        const roleBySlug = new Map(built.drills.map((d3) => [d3.slug, d3.role]));
+        const sorted = sortByWarmupStage(drills, (d3) => d3.slug ?? "", (d3) => roleBySlug.get(d3.slug ?? "") ?? null);
         drills.splice(0, drills.length, ...sorted);
       }
       const titleByContext = {
@@ -6366,7 +6366,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const dur = built.estMinutes;
       const contextKey = built.context;
       const hpi = getSeasonHPI(seasonPhase);
-      const twitchNote = built.singleLegShare === null ? built.diagnostics.some((d2) => d2.code === "twitch_suppressed") ? "No fast-twitch work today \u2014 prep only, we're protecting the CNS." : "" : `Fast-twitch layer: ${Math.round(built.singleLegShare * 100)}% single-leg. Baseball and softball are one-leg, quick-burst games \u2014 quickness is built one leg at a time.`;
+      const twitchNote = built.singleLegShare === null ? built.diagnostics.some((d3) => d3.code === "twitch_suppressed") ? "No fast-twitch work today \u2014 prep only, we're protecting the CNS." : "" : `Fast-twitch layer: ${Math.round(built.singleLegShare * 100)}% single-leg. Baseball and softball are one-leg, quick-burst games \u2014 quickness is built one leg at a time.`;
       return {
         modality,
         title: titleByContext[contextKey] ?? titleByContext.default,
@@ -6734,15 +6734,15 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       };
       const eass = buildEassPrescription(eassCtx);
       const outingReason = pitcherOutings?.pitchedYesterday ? "You pitched yesterday. Today's arm care is easy recovery work." : pitcherOutings?.startsToday ? "You start today. Save your throwing work for the outing." : pitcherOutings?.startsTomorrow ? "You start tomorrow. Today's throwing keeps you ready." : pitcherOutings?.relieverAvailableSoon ? "You're available to pitch. Keep your arm ready without a separate hard session." : "";
-      const drills = mergeOwnerSlotDrills(eass.drills.map((d2) => ({
-        name: d2.name,
-        slug: d2.slug,
-        setup: d2.setup,
-        dosage: d2.dosage,
-        stage: d2.stage ?? (d2.intensity === "prep" ? "prep" : "drills"),
-        cue: d2.cue,
-        stopIf: d2.stopIf,
-        guide: guideFor(d2.slug) ?? guideFor(d2.name) ?? void 0
+      const drills = mergeOwnerSlotDrills(eass.drills.map((d3) => ({
+        name: d3.name,
+        slug: d3.slug,
+        setup: d3.setup,
+        dosage: d3.dosage,
+        stage: d3.stage ?? (d3.intensity === "prep" ? "prep" : "drills"),
+        cue: d3.cue,
+        stopIf: d3.stopIf,
+        guide: guideFor(d3.slug) ?? guideFor(d3.name) ?? void 0
       })), ["hammers_today:skill"], { sport: normalizeSport(sportRaw) === "softball" ? "softball" : "baseball", owned: new Set(proj.equipmentList ?? []), skill: "throwing" });
       const thrOut = anthroSignal ? selectThrowingAdaptations(anthro) : {
         cues: [],
@@ -7111,9 +7111,9 @@ function applyMinorParentSupremacy(blocks, proj) {
   const affected = /* @__PURE__ */ new Map();
   for (const concern of proj.parentConcerns) {
     for (const m of MINOR_CONCERN_AFFECTED[concern] ?? []) {
-      const list2 = affected.get(m) ?? [];
-      list2.push(concern);
-      affected.set(m, list2);
+      const list3 = affected.get(m) ?? [];
+      list3.push(concern);
+      affected.set(m, list3);
     }
   }
   if (affected.size === 0) return blocks;
@@ -7191,7 +7191,7 @@ function gameDayDefensePrimer(b, original, tournament) {
   const src = b.drills.length > 0 ? b : original;
   const picked = (src?.drills ?? []).slice(0, tournament ? 2 : 3);
   const drills = (picked.length > 0 ? picked : PREGAME_PRIMER_FALLBACK.slice(0, tournament ? 2 : 3)).map(
-    (d2) => ({ ...d2, dosage: `${d2.dosage} \u2014 easy, pregame only` })
+    (d3) => ({ ...d3, dosage: `${d3.dosage} \u2014 easy, pregame only` })
   );
   const baseTitle = (original?.title ?? b.title).replace(/ — .*$/, "");
   return {
@@ -7348,9 +7348,9 @@ function applyGpSignalBias(blocks, gp, ownedEquipment = /* @__PURE__ */ new Set(
     if (b.modality === "hitting" && b.status === "ready" && enoughHittingSignal && gp.chasePct !== null && gp.chasePct >= 32) {
       const pick = GAME_PATTERN_DRILL.chase;
       const hasGear = pick.equipment.every((e) => ownedEquipment.has(e));
-      const idx = drills.findIndex((d2) => d2.prescriptionOrigin !== "owner" && (d2.stage === void 0 || d2.stage === "drills"));
-      if (hasGear && idx >= 0 && !drills.some((d2) => d2.name === pick.name)) {
-        drills = drills.map((d2, i) => i === idx ? { name: pick.name, dosage: pick.dosage, cue: pick.cue, equipmentNote: pick.equipment.join(", "), stage: "drills" } : d2);
+      const idx = drills.findIndex((d3) => d3.prescriptionOrigin !== "owner" && (d3.stage === void 0 || d3.stage === "drills"));
+      if (hasGear && idx >= 0 && !drills.some((d3) => d3.name === pick.name)) {
+        drills = drills.map((d3, i) => i === idx ? { name: pick.name, dosage: pick.dosage, cue: pick.cue, equipmentNote: pick.equipment.join(", "), stage: "drills" } : d3);
         because.push(`Because in your last 7 days of games you chased ${gp.chasePct}% of pitches out of the zone over ${gp.atBats} at-bats${hitRead}. "${pick.name}" works on it today.`);
         biased.add("hitting");
         tags.push(`gp:chase_drill:${gp.chasePct}`);
@@ -7384,7 +7384,7 @@ function splitLateralityBlocks(blocks, ctx, identityOverride) {
       });
     };
     const drills = b.drills.filter(filter).map(
-      (d2) => scale === 1 ? d2 : { ...d2, dosage: scaleDosage2(d2.dosage) }
+      (d3) => scale === 1 ? d3 : { ...d3, dosage: scaleDosage2(d3.dosage) }
     );
     return {
       ...b,
@@ -7424,7 +7424,7 @@ function splitLateralityBlocks(blocks, ctx, identityOverride) {
           extraCue: "Ambidextrous thrower \u2014 dominant-arm workload. Full EASS envelope."
         }),
         cloneSide(b, "L", "Non-dominant arm", {
-          drillsFilter: (d2) => NON_DOM_KEEP.test(d2.name),
+          drillsFilter: (d3) => NON_DOM_KEEP.test(d3.name),
           dosageScale: 0.5,
           extraCue: "Ambidextrous thrower \u2014 non-dominant arm keeps neural prep + light catch only. Never chase distance or intent here."
         })
@@ -7466,7 +7466,7 @@ function applyWeeklyMicrocycle(blocks, resolved) {
       };
     }
     const scale = decision.intensity === "activation" ? 0.3 : decision.intensity === "secondary" ? 0.6 : 1;
-    const scaledDrills = scale === 1 ? b.drills : b.drills.map((d2) => ({ ...d2, dosage: scaleDosageLabel2(d2.dosage, scale) }));
+    const scaledDrills = scale === 1 ? b.drills : b.drills.map((d3) => ({ ...d3, dosage: scaleDosageLabel2(d3.dosage, scale) }));
     const scaledDuration = scale === 1 || b.durationMin === null ? b.durationMin : Math.max(10, Math.round(b.durationMin * scale));
     return {
       ...b,
@@ -7511,9 +7511,9 @@ function applyDefenseAlwaysVisible(blocks, originals, defenseFullOverride) {
     if (!restingToday) return b;
     if (defenseFullOverride) {
       const src = original && original.drills.length > 0 ? original : b;
-      const drills = src.drills.slice(0, 3).map((d2) => ({
-        ...d2,
-        dosage: `${d2.dosage} \u2014 light, your call`
+      const drills = src.drills.slice(0, 3).map((d3) => ({
+        ...d3,
+        dosage: `${d3.dosage} \u2014 light, your call`
       }));
       return {
         ...b,
@@ -7695,7 +7695,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     battingGames: bunting.evidence.battingGames,
     battingWindow: bunting.evidence.battingWindow,
     outcomes: bunting.evidence.outcomes,
-    legalWeekdays: weeklyRoadmap.filter((d2) => !d2.restDay && d2.modalities.some((m) => m.key === "hitting" && m.intensity !== "activation")).map((d2) => d2.dow),
+    legalWeekdays: weeklyRoadmap.filter((d3) => !d3.restDay && d3.modalities.some((m) => m.key === "hitting" && m.intensity !== "activation")).map((d3) => d3.dow),
     restDay: fullRestDay,
     gameDay: scheduleSignal.postureToday !== "normal"
   }, {
@@ -7709,7 +7709,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   }) : masteryOrdered;
   const blocks = fullRestDay ? bunted.map((b) => {
     if (["fueling", "game_iq"].includes(b.modality)) return b;
-    const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter((d2) => isSoftRecovery(d2.slug)) : [];
+    const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter((d3) => isSoftRecovery(d3.slug)) : [];
     return {
       ...b,
       drills,
@@ -7740,7 +7740,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   }
   return {
     blocks: enforceSkillStageOrder(blocks),
-    sanity: validatePlanSanity({ restDay: fullRestDay, work: blocks.filter((b) => b.status === "ready").flatMap((b) => b.drills.map((d2) => ({ category: b.modality, slug: d2.slug }))) }),
+    sanity: validatePlanSanity({ restDay: fullRestDay, work: blocks.filter((b) => b.status === "ready").flatMap((b) => b.drills.map((d3) => ({ category: b.modality, slug: d3.slug }))) }),
     practiceLoad,
     seasonPhase: proj.seasonPhase,
     missingnessCount: blocks.filter((b) => b.status === "awaiting-input").length,
@@ -7903,17 +7903,17 @@ var HITS = /* @__PURE__ */ new Set(["1B", "2B", "3B", "HR", "single", "double", 
 var OUTS = /* @__PURE__ */ new Set(["K", "SO", "K_swinging", "K_looking", "strikeout", "GO", "FO", "LO", "PO", "FC", "ROE", "E", "groundout", "flyout", "lineout", "popout", "out", "fielders_choice", "error"]);
 var NON_AB = /* @__PURE__ */ new Set(["BB", "IBB", "walk", "HBP", "hbp", "SF", "sac_fly", "SAC", "sac_bunt", "CI", "catchers_interference"]);
 function battingIdentity(events, p = OWNER_WINDOW_POLICY) {
-  const unique = /* @__PURE__ */ new Map();
+  const unique2 = /* @__PURE__ */ new Map();
   let invalid = false;
   for (const e of events) {
-    const old = unique.get(e.id);
+    const old = unique2.get(e.id);
     if (!e.id || !e.source || !Number.isFinite(Date.parse(e.date)) || !Number.isFinite(e.order) || old && JSON.stringify(old) !== JSON.stringify(e)) {
       invalid = true;
       continue;
     }
-    unique.set(e.id, e);
+    unique2.set(e.id, e);
   }
-  const ordered = [...unique.values()].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order || a.id.localeCompare(b.id));
+  const ordered = [...unique2.values()].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order || a.id.localeCompare(b.id));
   if (ordered.some((e) => !HITS.has(e.result ?? "") && !OUTS.has(e.result ?? "") && !NON_AB.has(e.result ?? ""))) invalid = true;
   const abs = ordered.filter((e) => HITS.has(e.result ?? "") || OUTS.has(e.result ?? ""));
   const windows = opportunityWindows(abs.length, p);
@@ -7945,19 +7945,19 @@ function battingIdentity(events, p = OWNER_WINDOW_POLICY) {
   return { status: latest ? "Measured" : "Need more data", completeHistory: !invalid, latest, completed, current, totalAtBats: abs.length, average: latest ? latest.hits / latest.atBats : null };
 }
 function fieldingIdentity(events, p = OWNER_WINDOW_POLICY) {
-  const unique = /* @__PURE__ */ new Map();
+  const unique2 = /* @__PURE__ */ new Map();
   let invalid = false;
   let unclassified = 0;
   for (const e of events) {
-    const old = unique.get(e.id);
+    const old = unique2.get(e.id);
     if (!e.id || !e.source || !Number.isFinite(Date.parse(e.date)) || !Number.isFinite(e.order) || old && JSON.stringify(old) !== JSON.stringify(e)) {
       invalid = true;
       unclassified++;
       continue;
     }
-    unique.set(e.id, e);
+    unique2.set(e.id, e);
   }
-  const ordered = [...unique.values()].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order || a.id.localeCompare(b.id));
+  const ordered = [...unique2.values()].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order || a.id.localeCompare(b.id));
   const chances = ordered.filter((e) => {
     const scored = e.error === true || e.assist === true || e.putout === true;
     if (!scored || e.error === null) {
@@ -7983,13 +7983,13 @@ function speedIdentity(evidence, eliteGrade = 65) {
   const valid = evidence.filter((e) => e.kind === "measured" && e.id && e.source && Number.isFinite(Date.parse(e.date)) && Number.isFinite(e.value) && e.value > 0 && e.minimum !== null && e.minimum > 0 && e.sample >= e.minimum);
   const usable = valid.filter((e) => typeof e.grade === "number" && Number.isFinite(e.grade) && e.grade >= 0 && e.grade <= 80 && (e.grade < 20 || e.grade % 5 === 0));
   const ambiguous = /* @__PURE__ */ new Set();
-  const unique = /* @__PURE__ */ new Map();
+  const unique2 = /* @__PURE__ */ new Map();
   for (const e of usable) {
-    const old = unique.get(e.id);
+    const old = unique2.get(e.id);
     if (old && JSON.stringify(old) !== JSON.stringify(e)) ambiguous.add(e.id);
-    else unique.set(e.id, e);
+    else unique2.set(e.id, e);
   }
-  const rows2 = [...unique.values()].filter((e) => !ambiguous.has(e.id));
+  const rows2 = [...unique2.values()].filter((e) => !ambiguous.has(e.id));
   const latest = /* @__PURE__ */ new Map();
   for (const row of rows2) {
     const key2 = `${row.source}:${row.measure}:${row.unit}`;
@@ -9652,14 +9652,14 @@ function contactIdentity(window2, pitches, level, settings) {
   const cutoff = level ? { k: settings[`contact_${level}_k`], whiff: settings[`contact_${level}_whiff`], zone: settings[`contact_${level}_zone`] } : null;
   const ids = new Set(window2?.paIds ?? window2?.sourceIds ?? []);
   const rows2 = pitches.filter((p) => p.atBatId && ids.has(p.atBatId));
-  const unique = /* @__PURE__ */ new Map();
+  const unique2 = /* @__PURE__ */ new Map();
   let conflict = false;
   for (const p of rows2) {
-    const old = unique.get(p.id);
+    const old = unique2.get(p.id);
     if (!p.id || old && JSON.stringify(old) !== JSON.stringify(p)) conflict = true;
-    unique.set(p.id, p);
+    unique2.set(p.id, p);
   }
-  const actual = [...unique.values()];
+  const actual = [...unique2.values()];
   const full = !!window2 && !conflict && ids.size > 0 && [...ids].every((id) => {
     const expected = window2.pitchCounts?.[id];
     return typeof expected === "number" && Number.isInteger(expected) && expected > 0 && actual.filter((p) => p.atBatId === id).length === expected;
@@ -9802,15 +9802,15 @@ var sbBase = [
   { key: "pfp_clean_pct", dir: "min", value: 0.98 }
 ];
 function startingStandards(sport, level, overrides2 = {}) {
-  let list2;
+  let list3;
   if (sport === "baseball") {
     const [k, bb] = bbKB[level];
-    list2 = [{ key: "k_pct", dir: "min", value: k }, { key: "bb_pct", dir: "max", value: bb }, ...base];
+    list3 = [{ key: "k_pct", dir: "min", value: k }, { key: "bb_pct", dir: "max", value: bb }, ...base];
   } else {
     const hs = level === "high_school" || level === "youth";
-    list2 = [{ key: "k_per_7", dir: "min", value: hs ? 12 : 10 }, { key: "bb_per_7", dir: "max", value: hs ? 1.2 : 1.5 }, ...sbBase];
+    list3 = [{ key: "k_per_7", dir: "min", value: hs ? 12 : 10 }, { key: "bb_per_7", dir: "max", value: hs ? 1.2 : 1.5 }, ...sbBase];
   }
-  return list2.map((s) => {
+  return list3.map((s) => {
     const o = overrides2[`${sport}_${level}_${s.key}`];
     return typeof o === "number" && Number.isFinite(o) ? { ...s, value: o } : s;
   });
@@ -9941,9 +9941,9 @@ function pitchSmartApplies(age, level) {
   return age != null && age <= PITCH_SMART_MAX_AGE && !isProLevel(level);
 }
 function restDaysFor(band, pitches) {
-  let d2 = 0;
-  for (const [min, days] of band.rest) if (pitches >= min) d2 = days;
-  return d2;
+  let d3 = 0;
+  for (const [min, days] of band.rest) if (pitches >= min) d3 = days;
+  return d3;
 }
 var GROWTH_RULE = {
   inchTrigger: GROWTH_MODE_RULE.inchTrigger,
@@ -9971,7 +9971,7 @@ var THROW_WEIGHTS = {
 
 // supabase/functions/_shared/wic/phases/nextThrowDate.ts
 var dayMs = 864e5;
-var ms = (d2) => Date.parse(`${d2}T00:00:00Z`);
+var ms = (d3) => Date.parse(`${d3}T00:00:00Z`);
 var iso = (n) => new Date(n).toISOString().slice(0, 10);
 function kindOfRow(r) {
   const t = String(r.throw_type ?? "").toLowerCase();
@@ -9987,20 +9987,20 @@ function equivalentsByDay(rows2) {
     if (r.status && /skip|missed|cancel/i.test(String(r.status))) continue;
     const n = Number(r.count ?? 0);
     if (!(n > 0)) continue;
-    const d2 = String(r.entry_date);
-    by.set(d2, (by.get(d2) ?? 0) + THROW_WEIGHTS[kindOfRow(r)] * n);
+    const d3 = String(r.entry_date);
+    by.set(d3, (by.get(d3) ?? 0) + THROW_WEIGHTS[kindOfRow(r)] * n);
   }
-  for (const [d2, v] of by) by.set(d2, Math.round(v * 10) / 10);
+  for (const [d3, v] of by) by.set(d3, Math.round(v * 10) / 10);
   return by;
 }
 function nextThrowDate(age, level, rows2, today) {
   if (!pitchSmartApplies(age, level)) return null;
   const band = PITCH_SMART_BANDS[bandIndex(age)];
   let next = ms(today) + dayMs;
-  for (const [d2, eq] of equivalentsByDay(rows2)) {
-    if (d2 > today) continue;
+  for (const [d3, eq] of equivalentsByDay(rows2)) {
+    if (d3 > today) continue;
     const rest = restDaysFor(band, Math.ceil(eq));
-    next = Math.max(next, ms(d2) + (rest + 1) * dayMs);
+    next = Math.max(next, ms(d3) + (rest + 1) * dayMs);
   }
   return iso(next);
 }
@@ -10128,10 +10128,2295 @@ function projectMasterySources(raw, sport, settings) {
   const pitching = pitchingIdentity(list(source.pitcherGames).map((g) => ({ id: String(g.id), date: String(g.date), battersFaced: typeof g.battersFaced === "number" ? g.battersFaced : null, complete: g.complete === true, pitches: list(g.pitches).map((p) => ({ id: String(p.id), opportunity: typeof p.opportunity === "number" ? p.opportunity : null, outcome: typeof p.outcome === "string" ? p.outcome : null })) })), standards, areaWindowPolicy(settings, "pitching"), sport === "softball" ? "softball" : "baseball", level);
   return { batting, speed, traits, policy, settings, sport, recordedSpeedEvidence: speedEvidence, defense, defensePillar, contact, power, arm, guidance, steering, strategy, pitching, level, standardsSource: IDENTITY_SOURCE };
 }
+
+// src/data/drills/doctrineDrills.ts
+var d2 = (s) => ({
+  id: s.id,
+  name: s.name,
+  category: s.category,
+  sports: s.sports,
+  subSkill: s.phase,
+  level: s.level,
+  fixes: s.fixes,
+  setup: s.setup,
+  steps: s.steps,
+  cues: [s.cue],
+  dosage: s.dosage,
+  equipment: s.equipment,
+  violationKeys: [s.faultKey],
+  pieV2Signals: [],
+  movementPatterns: [],
+  phase: s.phase,
+  feel: s.feel,
+  feelWrong: s.feelWrong,
+  commonMistake: s.mistake,
+  source: s.source,
+  videoUrl: null,
+  ownerReview: "pending_owner_review",
+  basis: s.basis ?? "doctrine_fix"
+});
+var BOTH = ["baseball", "softball"];
+var HIT = "Owner doctrine \u2014 docs/HITTING-PHILOSOPHY.md";
+var BP = "Owner pitching doctrine";
+var TH = "Owner throwing doctrine";
+var SP = "docs/SOFTBALL-PITCHING-DOCTRINE.md \u2014 SOURCED movement; any pass line PROPOSED";
+var DOCTRINE_DRILLS = [
+  // ── HITTING (baseball + softball) ───────────────────────────────────
+  d2({
+    id: "doc.hit.back_leg_hold_stride",
+    name: "Back-Leg Hold Stride",
+    category: "hitting",
+    sports: BOTH,
+    faultKey: "hip_load_back_leg_not_balanced",
+    phase: "Phase 1 \u2014 Create Balance",
+    level: "feel",
+    fixes: "Your back leg wasn't truly holding your weight, so your body drifted forward with the stride.",
+    setup: "No bat needed. Stand sideways to a mirror (or have a partner watch you) in your normal batting stance, feet about shoulder-width apart.",
+    steps: [
+      "Slowly sit your weight into your back hip, like you're about to sit on a tall stool behind you.",
+      "Check that most of your weight is now on your back foot \u2014 you should be able to lift your front heel easily.",
+      "Take your normal stride forward with the front foot only.",
+      "Freeze the moment your front foot touches the ground. Don't swing.",
+      "Look in the mirror: your head and chest should still be over your back leg, not over your front foot."
+    ],
+    cue: "Fix the load, not the stride \u2014 get your weight truly settled on your back leg as you load.",
+    feel: "Pressure deep in your back hip and back thigh as the front foot touches down, with your head staying put.",
+    feelWrong: "Your head and belly move forward with the front foot, and the weight lands on the front leg.",
+    mistake: "Reaching with the front foot and letting the whole body follow it. Check: if your head moved past the middle of your stance at landing, you lost the load.",
+    dosage: "3 x 6",
+    equipment: ["mirror"],
+    source: HIT
+  }),
+  d2({
+    id: "doc.hit.knee_bend_hold",
+    name: "Back-Knee Bend Hold",
+    category: "hitting",
+    sports: BOTH,
+    faultKey: "back_knee_straightened_fail",
+    phase: "Phase 1 \u2014 Create Balance",
+    level: "iso",
+    fixes: "Your back knee straightened before your front foot landed, so the load leaked out.",
+    setup: "Bat in hand, ball on a tee in the middle of the plate. Get in your stance with your back knee softly bent, like an athlete ready to move.",
+    steps: [
+      "Sit into your back hip so you feel the back knee bend a little more.",
+      "Take your stride, keeping that same amount of bend in the back knee the whole way.",
+      "Hold the landing for a full breath \u2014 back knee still bent.",
+      "Now swing and hit the ball off the tee."
+    ],
+    cue: "Keep the back knee bent until the swing starts.",
+    feel: "Your back thigh and back glute working the whole way until your front foot lands.",
+    feelWrong: "Your back leg goes stiff and tall, and you pop up out of your stance as you stride.",
+    mistake: "Standing up as the front foot goes out. Check: if your head rose during the stride, your back knee straightened.",
+    dosage: "3 x 6",
+    equipment: ["bat", "tee", "balls", "net"],
+    source: HIT
+  }),
+  d2({
+    id: "doc.hit.back_pocket_hold",
+    name: "Back-Hip Socket Hold",
+    category: "hitting",
+    sports: BOTH,
+    faultKey: "back_hip_socket_hold_fail",
+    phase: "Phase 2 \u2014 Gather",
+    level: "feel",
+    fixes: "Your back hip turned open before the swing started.",
+    setup: "Bat in hand, ball on a tee in the middle of the plate, net in front of you. Normal stance.",
+    steps: [
+      "Load the bat back and lift or gather your front leg at the same time.",
+      "As you do, feel your back hip pushed back into its socket \u2014 your back pocket points toward the catcher.",
+      "Stride and land with your back pocket still pointing at the catcher.",
+      "Only after your front foot is down, let the swing go."
+    ],
+    cue: "Back hip stays in its socket \u2014 holding or increasing \u2014 until Phase 4 starts.",
+    feel: "A loaded, coiled feeling in your back glute at landing, like a spring that hasn't been let go yet.",
+    feelWrong: "Your belt buckle already faces the pitcher when your front foot lands.",
+    mistake: "Spinning the back hip forward during the stride. Check: at landing, a partner behind you should still see your back pocket.",
+    dosage: "3 x 8",
+    equipment: ["bat", "tee", "balls", "net"],
+    source: HIT
+  }),
+  d2({
+    id: "doc.hit.heel_down_freeze",
+    name: "Heel-Down Stride Freeze",
+    category: "hitting",
+    sports: BOTH,
+    faultKey: "front_heel_not_down_at_landing",
+    phase: "Phase 3 \u2014 Load by Stride",
+    level: "constraint",
+    fixes: "Your front heel wasn't down when your stride landed.",
+    setup: "Bat in hand, ball on a tee (or a partner ready to soft-toss from the side). Normal stance.",
+    steps: [
+      "Take a slow, deliberate stride.",
+      "Put your whole front foot down \u2014 toes and heel both flat on the ground.",
+      "Freeze for one count with the heel down. Don't swing yet.",
+      "Swing from that planted front foot."
+    ],
+    cue: "Heel to the floor \u2014 it gives the back bicep a better path at the ball and keeps your eyes still.",
+    feel: "Your whole front foot quiet and flat on the ground before anything turns.",
+    feelWrong: "You're up on your front toes when you start swinging, and the ball seems to jump around.",
+    mistake: "Landing on the toes and swinging right away. Check: if you can't freeze on a flat foot, the heel wasn't down.",
+    dosage: "3 x 8",
+    equipment: ["bat", "tee", "balls", "net"],
+    source: HIT
+  }),
+  d2({
+    id: "doc.hit.hands_above_elbow",
+    name: "Hands-Above-Elbow Landing Check",
+    category: "hitting",
+    sports: BOTH,
+    faultKey: "hands_below_back_elbow_at_heel_landing",
+    phase: "Phase 3 \u2014 Load by Stride",
+    level: "feel",
+    fixes: "Your hands dropped below your back elbow when your front heel landed.",
+    setup: "Bat in hand, standing sideways to a mirror so you can see your hands and back elbow.",
+    steps: [
+      "Get in your stance and take your stride.",
+      "Freeze the moment your front heel lands.",
+      "Look in the mirror: your hands should be higher than your back elbow.",
+      "If they are, swing. If they aren't, reset and try again."
+    ],
+    cue: "Hands stay above the back elbow at landing \u2014 Phase 4 drops the barrel, not the stride.",
+    feel: "Hands up and quiet as the heel lands, front shoulder still closed.",
+    feelWrong: "Your hands sink toward your back shoulder or lower as you stride, and the bat feels heavy before you swing.",
+    mistake: "Dropping the hands to 'get ready' during the stride. Check: freeze at landing and look \u2014 hands lower than the elbow means it happened.",
+    dosage: "3 x 8",
+    equipment: ["bat", "mirror"],
+    source: HIT
+  }),
+  d2({
+    id: "doc.hit.glute_power_step",
+    name: "Glute-Driven Power Step",
+    category: "hitting",
+    sports: BOTH,
+    faultKey: "stride_body_gained_ground",
+    phase: "Phase 3 \u2014 Load by Stride",
+    level: "constraint",
+    fixes: "Your body travelled forward with the stride instead of staying back.",
+    setup: "Bat in hand, ball on a tee, net in front. Put a marker (a glove or piece of tape) where your front foot normally lands.",
+    steps: [
+      "Load into your back leg.",
+      "Push your front foot out to the marker using your back glute \u2014 the foot moves, your body doesn't.",
+      "Get the foot down on the marker early, as if the pitcher hasn't let go yet.",
+      "Check that your head is still over your back half, then swing."
+    ],
+    cue: "Take a deliberate power step driven by the back glute \u2014 momentum does not play into your stride.",
+    feel: "The foot goes, the body stays.",
+    feelWrong: "You lunge at the marker and your head ends up over your front foot.",
+    mistake: "Falling into the stride. Check: if you can't hold the landing still for a second, momentum took over.",
+    dosage: "3 x 8",
+    equipment: ["bat", "tee", "balls", "net", "marker"],
+    source: HIT
+  }),
+  d2({
+    id: "doc.hit.bicep_leads_tee",
+    name: "Bicep-Leads Tee",
+    category: "hitting",
+    sports: BOTH,
+    faultKey: "hands_pass_elbow_early",
+    phase: "Phase 4 \u2014 Hitter's Move",
+    level: "feel",
+    fixes: "Your hands moved ahead of your back elbow instead of the back bicep leading.",
+    setup: "Bat in hand, ball on a tee, net in front. Start already in your landed stride with the front foot flat.",
+    steps: [
+      "From the landed position, keep your hands and the knob of the bat back.",
+      "Start the swing by moving your back bicep (upper arm) forward toward the ball.",
+      "Let your hands follow the elbow \u2014 they come last.",
+      "Release the swing hard through the ball."
+    ],
+    cue: "From a planted foot, the back bicep starts forward while the knob stays back.",
+    feel: "Your back elbow coming in first, then the barrel snapping through late and fast.",
+    feelWrong: "Your hands push straight at the ball first and the swing feels long and slow.",
+    mistake: "Throwing the hands at the ball. Check: if the knob of the bat moves before your back elbow does, the hands went early.",
+    dosage: "3 x 10",
+    equipment: ["bat", "tee", "balls", "net"],
+    source: HIT
+  }),
+  d2({
+    id: "doc.hit.planted_foot_turn",
+    name: "Planted-Foot Turn",
+    category: "hitting",
+    sports: BOTH,
+    faultKey: "post_landing_hip_drift_fail",
+    phase: "Phase 4 \u2014 Hitter's Move",
+    level: "constraint",
+    fixes: "Your hips kept sliding forward after your front foot landed, instead of turning.",
+    setup: "Bat in hand, ball on a tee, net in front. Start already in your landed stride.",
+    steps: [
+      "Set up in your landed stride with the front foot flat.",
+      "Swing by turning your hips in place, like a door spinning on its hinge.",
+      "Finish with your belt buckle facing the pitcher \u2014 but your hips shouldn't have moved forward."
+    ],
+    cue: "Once the foot lands, the hips turn \u2014 any drift after landing is causing an issue.",
+    feel: "Spinning around your front leg, your belt buckle turning rather than moving forward.",
+    feelWrong: "Your hips slide toward the pitcher and you finish leaning over your front foot.",
+    mistake: "Sliding the hips forward to 'add power'. Check: put a bat on the ground just in front of your front hip \u2014 your hip shouldn't cross it.",
+    dosage: "3 x 10",
+    equipment: ["bat", "tee", "balls", "net"],
+    source: HIT
+  }),
+  d2({
+    id: "doc.hit.back_hip_drive",
+    name: "Back-Hip Drive Turn",
+    category: "hitting",
+    sports: BOTH,
+    faultKey: "p1_load_not_used",
+    phase: "Phase 4 \u2014 Hitter's Move",
+    level: "transfer",
+    fixes: "You held your load but your back hip never drove the swing.",
+    setup: "Bat in hand, a partner soft-tossing from the side, net in front of you.",
+    steps: [
+      "Load and hold your weight on your back leg.",
+      "Stride and land with the front foot flat.",
+      "Start the swing by driving your back hip forward and around \u2014 the hips lead the turn.",
+      "Let the bat come through last."
+    ],
+    cue: "Drive from the back hip and turn it into the swing.",
+    feel: "Your back hip firing first and pulling the swing through.",
+    feelWrong: "Your arms and shoulders start the swing and your back hip is just along for the ride.",
+    mistake: "Swinging with the arms only. Check: at the finish your back knee and back hip should face the pitcher.",
+    dosage: "3 x 8",
+    equipment: ["bat", "balls", "net"],
+    source: HIT
+  }),
+  d2({
+    id: "doc.hit.chin_tuck_hold",
+    name: "Chin-Tuck Contact Hold",
+    category: "hitting",
+    sports: BOTH,
+    faultKey: "head_rises_before_contact",
+    phase: "Phase 4 \u2014 Hitter's Move",
+    level: "feel",
+    fixes: "Your head came up before the ball was off the bat.",
+    setup: "Bat in hand, ball on a tee, net in front. Normal stance.",
+    steps: [
+      "Tuck your chin slightly down toward your front shoulder.",
+      "Swing through the ball.",
+      "Keep your chin tucked and your eyes on the spot where the ball was until it's gone.",
+      "Only then let your head come up."
+    ],
+    cue: "Chin stays tucked until the ball is off the bat \u2014 sinking is fine, coming up is not.",
+    feel: "Your eyes still looking at the tee after the ball has already left.",
+    feelWrong: "You see the ball flying into the net while your bat is still coming through.",
+    mistake: "Lifting the head to watch where the ball went. Check: if you saw the ball's flight before you finished, your head came up early.",
+    dosage: "3 x 10",
+    equipment: ["bat", "tee", "balls", "net"],
+    source: HIT
+  }),
+  d2({
+    id: "doc.hit.head_stays_back",
+    name: "Head-Stays-Back Tee",
+    category: "hitting",
+    sports: BOTH,
+    faultKey: "head_discipline_head_past_com",
+    phase: "Phase 4 \u2014 Hitter's Move",
+    level: "constraint",
+    fixes: "Your head moved forward toward the ball during the swing.",
+    setup: "Bat in hand, ball on a tee set a little deeper than normal (closer to the catcher), net in front.",
+    steps: [
+      "Stride and land with your head over the back half of your stance.",
+      "Swing without letting your head move toward the ball.",
+      "Let the ball come to you \u2014 the deeper tee makes you wait for it."
+    ],
+    cue: "Head stays back \u2014 let the ball come to you.",
+    feel: "Seeing the ball deep and your head staying right where it was when you landed.",
+    feelWrong: "Your head and chest lunge toward the ball and you hit it off the end of the bat.",
+    mistake: "Chasing the ball with your head. Check: if your head finishes in front of your front knee, it went forward.",
+    dosage: "3 x 8",
+    equipment: ["bat", "tee", "balls", "net"],
+    source: HIT
+  }),
+  // ── BASEBALL PITCHING ───────────────────────────────────────────────
+  d2({
+    id: "doc.bp.closed_landing",
+    name: "Closed-Landing Freeze",
+    category: "pitching",
+    sports: ["baseball"],
+    faultKey: "chest_open_at_landing",
+    phase: "Landing",
+    level: "feel",
+    fixes: "Your chest was already facing home plate when your front foot landed.",
+    setup: "Flat ground, no ball. Stand sideways like you're on the rubber, glove-side shoulder pointing at your target.",
+    steps: [
+      "Lift your front knee.",
+      "Stride toward the target.",
+      "Freeze the moment your front foot lands.",
+      "Check: your chest should still face sideways and your front shoulder should still point at the target.",
+      "Then turn and finish the throwing motion without a ball."
+    ],
+    cue: "Land sideways \u2014 the chest turns after the foot is down.",
+    feel: "Your front shoulder still aimed at the target as your foot touches down.",
+    feelWrong: "Your chest and logo already face the target at landing, and your arm feels like it's dragging behind.",
+    mistake: "Turning the shoulders during the stride. Check: freeze at landing \u2014 if you can see the target straight ahead with both eyes over your chest, you opened early.",
+    dosage: "3 x 6",
+    equipment: [],
+    source: BP
+  }),
+  d2({
+    id: "doc.bp.lift_and_go",
+    name: "Lift-and-Go Rhythm",
+    category: "pitching",
+    sports: ["baseball"],
+    faultKey: "hang_at_peak_lift",
+    phase: "Leg lift",
+    level: "timing",
+    fixes: "You paused at the top of your leg lift.",
+    setup: "Flat ground, a partner or net at a comfortable throwing distance, a few balls.",
+    steps: [
+      "Start your delivery and lift your front knee.",
+      "The moment your knee reaches the top, start moving toward the target \u2014 no stopping.",
+      "Stride, land and throw in one smooth motion."
+    ],
+    cue: "Keep the move going once the knee gets up.",
+    feel: "One continuous move from lift to landing, no pause at the top.",
+    feelWrong: "You balance at the top for a moment, then have to restart to go forward.",
+    mistake: "Holding the balance point. Check: if a partner can say 'stop' at the top of your lift before you move, you're hanging.",
+    dosage: "3 x 8",
+    equipment: ["balls", "net"],
+    source: BP
+  }),
+  d2({
+    id: "doc.bp.stack_and_track",
+    name: "Stack-and-Track Line Throws",
+    category: "pitching",
+    sports: ["baseball"],
+    faultKey: "not_stacked_at_release",
+    phase: "Release",
+    level: "constraint",
+    fixes: "Your shoulders or eyes tipped off line when you let go of the ball.",
+    setup: "Lay a strip of tape (or a rope) on the ground straight from where you stand to your target. Balls and a partner or net.",
+    steps: [
+      "Stand at the start of the line.",
+      "Stride with your front foot landing on the line.",
+      "As you throw, keep your shoulders level and your eyes level \u2014 like a tray of drinks you can't spill.",
+      "Finish with your body still moving along the line."
+    ],
+    cue: "Keep your shoulders and your eyes level so your whole body throws on one line.",
+    feel: "Like throwing down a narrow hallway \u2014 nothing tipping sideways.",
+    feelWrong: "Your head falls off to the glove side and the ball sails or cuts.",
+    mistake: "Tilting the head sideways at release. Check: if you finish off the line or your eyes aren't level at release, you weren't stacked.",
+    dosage: "3 x 8",
+    equipment: ["balls", "tape", "net"],
+    source: BP
+  }),
+  d2({
+    id: "doc.bp.landing_balance",
+    name: "Landing Balance Hold",
+    category: "pitching",
+    sports: ["baseball"],
+    faultKey: "head_outside_base_at_landing",
+    phase: "Landing",
+    level: "iso",
+    fixes: "Your head was outside your feet when your front foot landed.",
+    setup: "Flat ground, no ball. Start sideways like you're on the rubber.",
+    steps: [
+      "Lift and stride.",
+      "Land and hold still for two seconds with your head between your two feet.",
+      "If you wobble or have to step, reset and try again.",
+      "Once the hold is steady, finish the throwing motion."
+    ],
+    cue: "Land with your head over your legs.",
+    feel: "Balanced between both feet, able to hold the landing perfectly still.",
+    feelWrong: "You fall toward the glove side or forward and can't hold the landing.",
+    mistake: "Leaning the head out past the front foot. Check: picture a box around your two feet \u2014 your head should be inside it.",
+    dosage: "3 x 6",
+    equipment: [],
+    source: BP
+  }),
+  d2({
+    id: "doc.bp.glove_swivel",
+    name: "Glove Swivel Mirror",
+    category: "pitching",
+    sports: ["baseball"],
+    faultKey: "glove_flies_open",
+    phase: "Landing to release",
+    level: "feel",
+    fixes: "Your glove flew open instead of turning over and tucking in.",
+    setup: "Stand facing a mirror, no ball, glove on.",
+    steps: [
+      "Stride with your glove reaching out in front toward the target.",
+      "As your foot lands, turn the glove over so your pinky points toward your body.",
+      "Pull the glove into your chest, inside your shoulders, as your throwing arm comes through."
+    ],
+    cue: "Turn it over, pinky to your body, and keep it inside your shoulders.",
+    feel: "Your glove side firm and tucked into your chest.",
+    feelWrong: "Your glove arm swings out wide behind you and your front shoulder pulls open.",
+    mistake: "Yanking the glove down and away. Check: in the mirror, the glove should finish in front of your chest, not out by your hip.",
+    dosage: "3 x 8",
+    equipment: ["mirror", "glove"],
+    source: BP
+  }),
+  d2({
+    id: "doc.bp.finish_the_push",
+    name: "Finish-the-Push Drag",
+    category: "pitching",
+    sports: ["baseball"],
+    faultKey: "drag_line_long_or_crooked",
+    phase: "Release to finish",
+    level: "feel",
+    fixes: "Your back-foot drag line was crooked or too long, so the push didn't go straight at the target.",
+    setup: "A dirt mound or flat ground where your back toe can leave a mark. Balls and a partner or net.",
+    steps: [
+      "Throw a normal pitch.",
+      "Let your back foot push off and drag naturally \u2014 don't lift it on purpose.",
+      "After the throw, look at the mark your back toe left.",
+      "Aim for a short line that points straight at the target. Adjust your push and throw again."
+    ],
+    cue: "Push straight at the target and let the back foot follow.",
+    feel: "Your back leg pushing you straight toward the target, not sideways.",
+    feelWrong: "Your back foot swings around to the side and the mark curves away from the target.",
+    mistake: "Spinning off the back foot. Check: if the drag mark curves or points away from the target, your push went sideways.",
+    dosage: "3 x 8",
+    equipment: ["balls", "net"],
+    source: BP
+  }),
+  d2({
+    id: "doc.bp.eyes_locked",
+    name: "Eyes-Locked Lift",
+    category: "pitching",
+    sports: ["baseball"],
+    faultKey: "eyes_off_target_at_peak_lift",
+    phase: "Leg lift",
+    level: "feel",
+    fixes: "Your eyes left the target at the top of your leg lift.",
+    setup: "Flat ground, a partner holding a glove as your target. No ball to start.",
+    steps: [
+      "Lock your eyes on your partner's glove.",
+      "Lift your front knee and keep looking at the glove the whole time.",
+      "Stride and finish the motion without ever looking away.",
+      "Once that feels easy, add a ball."
+    ],
+    cue: "Eyes stay on the target the whole lift.",
+    feel: "Your head still and your eyes never leaving the glove.",
+    feelWrong: "Your head turns toward second base or down at the ground as your knee comes up.",
+    mistake: "Turning the head with the leg lift. Check: have your partner hold up fingers during your lift \u2014 if you can't say how many, your eyes left.",
+    dosage: "3 x 8",
+    equipment: ["balls", "glove"],
+    source: BP
+  }),
+  // ── THROWING (baseball + softball) — proposed drill shapes ──────────
+  d2({
+    id: "doc.th.land_then_turn",
+    name: "Land-Then-Turn Partner Throws",
+    category: "throwing",
+    sports: BOTH,
+    faultKey: "early_shoulder_rotation",
+    phase: "Landing",
+    level: "timing",
+    fixes: "Your shoulders turned before your front foot landed.",
+    setup: "A partner a comfortable throwing distance away. Stand sideways, glove-side shoulder pointing at your partner.",
+    steps: [
+      "Step toward your partner with your front foot.",
+      "Keep your shoulders sideways until that foot is flat on the ground.",
+      "Only then turn your shoulders and throw.",
+      "Say 'land' in your head as the foot hits, then 'turn' as you throw."
+    ],
+    cue: "Land, then turn.",
+    feel: "A quick pause-and-snap: foot down, then the shoulders whip through.",
+    feelWrong: "Your chest faces your partner before your foot lands and the throw feels all arm.",
+    mistake: "Turning and stepping at the same time. Check: if your partner sees your chest before your foot lands, you turned early.",
+    dosage: "3 x 10",
+    equipment: ["balls", "glove"],
+    source: TH,
+    basis: "proposed_shape"
+  }),
+  d2({
+    id: "doc.th.line_up_landing",
+    name: "Line-Up Landing Throws",
+    category: "throwing",
+    sports: BOTH,
+    faultKey: "shoulders_not_aligned",
+    phase: "Landing",
+    level: "constraint",
+    fixes: "Your feet and shoulders weren't lined up at your target when you landed.",
+    setup: "Lay a strip of tape (or a rope) on the ground pointing straight at your partner. Stand at the start of it, sideways.",
+    steps: [
+      "Put both feet on the line.",
+      "Step forward and land your front foot on the line.",
+      "Check that your front shoulder points straight down the line at your partner.",
+      "Throw along the line."
+    ],
+    cue: "Feet and shoulders lined up at the target when you land.",
+    feel: "Everything \u2014 feet, hips, shoulder \u2014 pointing the same way as the throw.",
+    feelWrong: "Your front foot lands off to one side and you have to throw across your body.",
+    mistake: "Stepping off the line. Check: look down after the throw \u2014 your front foot should be on the tape.",
+    dosage: "3 x 10",
+    equipment: ["balls", "tape", "glove"],
+    source: TH,
+    basis: "proposed_shape"
+  }),
+  d2({
+    id: "doc.th.back_leg_drive",
+    name: "Back-Leg Drive to Target",
+    category: "throwing",
+    sports: BOTH,
+    faultKey: "back_leg_not_facing_target",
+    phase: "Landing",
+    level: "feel",
+    fixes: "Your back leg wasn't driving toward the target as you landed.",
+    setup: "A partner a comfortable throwing distance away. Stand sideways, glove-side shoulder at your partner.",
+    steps: [
+      "Push off your back leg toward your partner.",
+      "As you throw, let your back knee and back foot turn so they face your partner.",
+      "Finish with your back knee pointing at your partner."
+    ],
+    cue: "Drive the back leg at the target.",
+    feel: "Your back hip and knee coming through toward where the ball is going.",
+    feelWrong: "Your back leg stays stuck behind you, pointing sideways, and the throw is all upper body.",
+    mistake: "Leaving the back leg behind. Check: at the finish, if your back knee points away from your partner, it didn't drive.",
+    dosage: "3 x 10",
+    equipment: ["balls", "glove"],
+    source: TH,
+    basis: "proposed_shape"
+  }),
+  // ── SOFTBALL WINDMILL ───────────────────────────────────────────────
+  d2({
+    id: "doc.sp.sprinter_start",
+    name: "Sprinter-Start Hold",
+    category: "pitching",
+    sports: ["softball"],
+    faultKey: "windup_not_sprinter_position",
+    phase: "Wind-up",
+    level: "iso",
+    fixes: "You weren't in a sprinter-like position at the end of your wind-up.",
+    setup: "Stand on the rubber (or a line on flat ground), no ball, facing home plate.",
+    steps: [
+      "Do your wind-up.",
+      "At the end of it, stop and hold: both knees bent, back heel up off the ground, a slight lean forward, chest square to the plate.",
+      "Hold for two seconds \u2014 you should feel ready to sprint.",
+      "Push off from the hold toward the plate."
+    ],
+    cue: "Get into your sprinter's start \u2014 square to the plate, ready to push.",
+    feel: "Loaded like a sprinter in the blocks, your body and your drive shin leaning together.",
+    feelWrong: "You're standing tall with straight legs and flat feet, with nothing to push from.",
+    mistake: "Standing up at the end of the wind-up. Check: if your back heel is on the ground and your knees are straight, you're not in the sprinter's start.",
+    dosage: "3 x 6",
+    equipment: [],
+    source: SP
+  }),
+  d2({
+    id: "doc.sp.push_off_drive",
+    name: "Push-Off Drive",
+    category: "pitching",
+    sports: ["softball"],
+    faultKey: "no_drive_leg_extension",
+    phase: "Stride",
+    level: "constraint",
+    fixes: "Your drive leg didn't push hard off the rubber.",
+    setup: "On the rubber or a line on flat ground, no ball to start.",
+    steps: [
+      "Get into your sprinter's start.",
+      "Push off hard with your drive leg, like jumping forward off a starting block.",
+      "Straighten that leg all the way \u2014 hip, knee and ankle \u2014 behind you.",
+      "Keep your chest facing the plate as you travel. Add a ball once the push feels strong."
+    ],
+    cue: "Push away from the mound with the whole drive leg.",
+    feel: "Your drive leg finishing long and straight behind you as you travel.",
+    feelWrong: "You step forward instead of pushing, and the drive leg stays bent.",
+    mistake: "Stepping out without pushing. Check: if your drive leg never straightens behind you, the push didn't happen.",
+    dosage: "3 x 6",
+    equipment: [],
+    source: SP
+  }),
+  d2({
+    id: "doc.sp.power_line_landing",
+    name: "Power-Line Landing",
+    category: "pitching",
+    sports: ["softball"],
+    faultKey: "stride_foot_off_power_line",
+    phase: "Stride foot contact",
+    level: "constraint",
+    fixes: "Your stride foot landed pointing off the power line.",
+    setup: "Lay tape (or chalk) in a straight line from the middle of the rubber to home plate \u2014 this is your power line. Balls and a catcher or net.",
+    steps: [
+      "Pitch down the power line.",
+      "Land your stride foot on the line, turned slightly toward your throwing-arm side.",
+      "Finish the pitch.",
+      "Look down: your stride foot should be on the line, angled a little to your throwing side."
+    ],
+    cue: "Land on the power line with the foot turned slightly to your throwing side.",
+    feel: "A firm front side that lets your hips work, not a foot that blocks you or flies open.",
+    feelWrong: "Your stride foot lands way across the line or pointing straight at the plate, and your hips get stuck.",
+    mistake: "Landing off the line. Check the mark after each pitch \u2014 if the foot is off the tape, adjust the next one.",
+    dosage: "3 x 8",
+    equipment: ["tape", "balls", "net"],
+    source: SP
+  }),
+  d2({
+    id: "doc.sp.close_circle",
+    name: "Close-Circle Arm Path",
+    category: "pitching",
+    sports: ["softball"],
+    faultKey: "arm_path_away_from_body",
+    phase: "Stride to acceleration",
+    level: "feel",
+    fixes: "Your arm drifted away from your body during the circle.",
+    setup: "A partner a short distance away. Pitch at half speed.",
+    steps: [
+      "Make your arm circle with the arm staying close to your body, like a wheel turning right next to your side.",
+      "Keep it close as it comes down toward release.",
+      "Let your arm brush past your hip as you release."
+    ],
+    cue: "Keep the arm close to your body through the circle.",
+    feel: "Your arm brushing past your body rather than swinging wide.",
+    feelWrong: "Your arm swings out wide away from your side and the ball misses left or right.",
+    mistake: "Swinging the arm wide for 'more speed'. Check: if you don't feel your arm brush your hip at release, it drifted out.",
+    dosage: "3 x 10",
+    equipment: ["balls"],
+    source: SP
+  }),
+  d2({
+    id: "doc.sp.power_line_back_leg",
+    name: "Back Leg on the Line",
+    category: "pitching",
+    sports: ["softball"],
+    faultKey: "back_leg_off_power_line",
+    phase: "Acceleration",
+    level: "constraint",
+    fixes: "Your back leg drifted off the power line as you came through.",
+    setup: "Lay tape (or chalk) in a straight line from the middle of the rubber to home plate. Balls and a catcher or net.",
+    steps: [
+      "Pitch down the power line.",
+      "As you release, let your back leg follow the line forward.",
+      "After the pitch, look at where your back foot finished.",
+      "It should be close to the line. If it swung off to the side, try again."
+    ],
+    cue: "Back leg stays close to the power line.",
+    feel: "Everything travelling straight at the plate.",
+    feelWrong: "Your back leg swings out to the side and you spin off the mound.",
+    mistake: "Letting the back leg swing around. Check: if your back foot finishes well off the tape, it left the line.",
+    dosage: "3 x 8",
+    equipment: ["tape", "balls", "net"],
+    source: SP
+  })
+];
+
+// src/data/drills/fieldRunningDrills.ts
+var FIELD_RUNNING_DRILLS = [
+  {
+    id: "elite.field.soft_hands_funnel",
+    name: "Soft-hands ground-ball funnel",
+    category: "fielding",
+    sports: ["baseball", "softball"],
+    subSkill: "Glove work",
+    level: "feel",
+    fixes: "A logged bobble or booted ground ball.",
+    setup: "On a safe field, use a glove and ball. A partner rolls the ball; alone, use a gentle self-roll.",
+    steps: ["Start balanced with your glove in front.", "Move behind the ball and field it in front of your body.", "Bring the ball smoothly toward your middle, then reset. Do not add throws."],
+    cues: ["See the ball into the glove; soft hands, clean gather."],
+    dosage: "Use the existing fielding slot reps",
+    equipment: ["field", "glove", "ball"],
+    violationKeys: ["bobble", "booted_ground_ball"],
+    pieV2Signals: [],
+    movementPatterns: [],
+    ownerReview: "pending_owner_review",
+    basis: "proposed_shape",
+    source: "Owner-approved standard drill proposal"
+  },
+  {
+    id: "elite.field.clean_exchange",
+    name: "Clean glove-to-hand exchange",
+    category: "fielding",
+    sports: ["baseball", "softball"],
+    subSkill: "Glove work",
+    level: "feel",
+    fixes: "A logged late transfer.",
+    setup: "With a glove and ball, stand balanced in a safe field area.",
+    steps: ["Place the ball in your glove in front of your body.", "Bring the glove toward your middle and take the ball with your throwing hand.", "Finish with a secure grip and reset; no extra throws."],
+    cues: ["One clean exchange; do not rush the grip."],
+    dosage: "Use the existing fielding slot reps",
+    equipment: ["field", "glove", "ball"],
+    violationKeys: ["late_transfer"],
+    pieV2Signals: [],
+    movementPatterns: [],
+    ownerReview: "pending_owner_review",
+    basis: "proposed_shape",
+    source: "Owner-approved standard drill proposal"
+  },
+  ...["baseball", "softball"].map((sport) => ({
+    id: `elite.run.read_reset.${sport}`,
+    name: `${sport === "softball" ? "Pitch-release" : "Pitcher-move"} read and reset`,
+    category: "baserunning",
+    sports: [sport],
+    subSkill: "Reads and reactions",
+    level: "feel",
+    fixes: "A logged late jump.",
+    setup: "Use a safe, open field. Have a partner give the pitcher cue; alone, rehearse the read slowly.",
+    steps: [
+      sport === "softball" ? "Start on the base; stay on it until the pitch is released." : "Start in your balanced lead and watch the pitcher.",
+      "Read the cue, commit to your first step, then stop under control.",
+      "Reset fully before the next rep. No additional sprints or slides."
+    ],
+    cues: ["Read first, then go; never guess an unmeasured time."],
+    dosage: "Use the existing baserunning slot reps",
+    equipment: ["field"],
+    violationKeys: ["late_jump"],
+    pieV2Signals: [],
+    movementPatterns: [],
+    ownerReview: "pending_owner_review",
+    basis: "proposed_shape",
+    source: "Owner-approved standard drill proposal"
+  }))
+];
+
+// src/data/drills/eliteDrillCatalog.ts
+var BASE_DRILLS = [
+  // ── HITTING ────────────────────────────────────────────────────────────
+  {
+    id: "elite.hit.walkaway_load",
+    name: "Walk-Away Load",
+    category: "hitting",
+    sports: ["baseball", "softball"],
+    subSkill: "Lower-half sequencing",
+    level: "feel",
+    fixes: "Weight stuck on the back side and a load with no direction.",
+    setup: "Front toss from ~15 ft, hitter starts facing the pitcher two steps behind the plate.",
+    steps: [
+      "Walk slowly toward the plate as the feeder shows the ball.",
+      "Plant the back foot and gather \u2014 the walk becomes the load.",
+      "Land the front foot closed, then swing."
+    ],
+    cues: ["Gather, don't stop", "Back hip holds while the front foot lands"],
+    dosage: "3 x 8",
+    equipment: ["net", "machine"],
+    violationKeys: [],
+    pieV2Signals: [],
+    movementPatterns: ["weight_stuck_back", "under_rotation"]
+  },
+  {
+    id: "elite.hit.step_behind_separation",
+    name: "Step-Behind Separation",
+    category: "hitting",
+    sports: ["baseball", "softball"],
+    subSkill: "Lower-half sequencing",
+    level: "iso",
+    fixes: "Shoulders and hips turning together \u2014 no hip-shoulder separation.",
+    setup: "Tee at middle-away, hitter in stride position with hands loaded.",
+    steps: [
+      "From landing, rotate the back hip while holding the chest closed for a beat.",
+      "Feel the stretch across the front oblique before the barrel releases.",
+      "Fire only after the stretch is felt."
+    ],
+    cues: ["Hips first, chest last", "Stretch the rubber band"],
+    dosage: "4 x 6",
+    equipment: ["tee", "net"],
+    violationKeys: ["early_shoulder_rotation", "front_shoulder_opens_early"],
+    pieV2Signals: ["separation"],
+    movementPatterns: ["over_rotation", "early_shoulder_rotation"]
+  },
+  {
+    id: "elite.hit.closed_shoulder_tee",
+    name: "Closed-Shoulder Tee (Glove-Side Hold)",
+    category: "hitting",
+    sports: ["baseball", "softball"],
+    subSkill: "Barrel path",
+    level: "constraint",
+    fixes: "Front shoulder flying open and pulling the barrel off the plane.",
+    setup: "Tee on the outer third. Place a towel or short bat under the lead armpit.",
+    steps: [
+      "Load and stride without dropping the towel.",
+      "Drive the barrel to the outside pitch, keeping the lead shoulder pointed at the plate longer.",
+      "Finish tall; the towel should stay pinched until contact."
+    ],
+    cues: ["Lead shoulder to the ball, not to the dugout"],
+    dosage: "3 x 10",
+    equipment: ["tee", "net"],
+    violationKeys: ["front_shoulder_opens_early", "early_shoulder_rotation"],
+    pieV2Signals: ["separation", "front_side"],
+    movementPatterns: ["over_rotation", "head_pull_off"]
+  },
+  {
+    id: "elite.hit.hands_inside_short_bat",
+    name: "Short-Bat Inside Turn",
+    category: "hitting",
+    sports: ["baseball", "softball"],
+    subSkill: "Barrel path",
+    level: "iso",
+    fixes: "Hands casting out and passing the rear elbow early.",
+    setup: "Short bat or one-hand trainer, tee set inner third.",
+    steps: [
+      "Load with the rear elbow tight to the ribcage.",
+      "Turn the barrel from the back shoulder \u2014 elbow leads, hands follow.",
+      "Contact out front on the inner third with no barrel drag."
+    ],
+    cues: ["Elbow slots, hands don't shove", "Knob to the inside of the ball"],
+    dosage: "4 x 8",
+    equipment: ["tee", "net"],
+    violationKeys: ["hands_pass_elbow_early"],
+    pieV2Signals: [],
+    movementPatterns: ["hands_forward_early", "elbow_disconnect", "late_barrel"]
+  },
+  {
+    id: "elite.hit.high_tee_plane_match",
+    name: "High-Tee Plane Match",
+    category: "hitting",
+    sports: ["baseball", "softball"],
+    subSkill: "Barrel path",
+    level: "constraint",
+    fixes: "Steep, chopping attack angle that produces topped ground balls.",
+    setup: "Tee set at chest height, second tee or noodle placed behind at belt height.",
+    steps: [
+      "Swing without clipping the rear obstacle.",
+      "Track the barrel behind the ball, then up through it.",
+      "Ball should carry line-drive height, not spin down."
+    ],
+    cues: ["Barrel behind, then through", "Match the pitch plane early"],
+    dosage: "3 x 10",
+    equipment: ["tee", "net"],
+    violationKeys: [],
+    pieV2Signals: [],
+    movementPatterns: ["steep_attack_angle", "flat_path", "late_barrel"]
+  },
+  {
+    id: "elite.hit.two_ball_recognition",
+    name: "Two-Ball Recognition",
+    category: "hitting",
+    sports: ["baseball", "softball"],
+    subSkill: "Pitch recognition",
+    level: "transfer",
+    fixes: "Late decisions and chasing out of the zone.",
+    setup: "Feeder holds two differently colored balls and releases one.",
+    steps: [
+      "Hitter calls the color out loud, then swings only at the called pitch.",
+      "Feeder mixes speeds and heights.",
+      "Track any take all the way to the mitt."
+    ],
+    cues: ["See it early, decide once"],
+    dosage: "3 x 10",
+    equipment: ["net"],
+    violationKeys: [],
+    pieV2Signals: ["visual_stability"],
+    movementPatterns: ["head_pull_off"]
+  },
+  {
+    id: "elite.hit.head_still_mirror",
+    name: "Still-Head Mirror Swing",
+    category: "hitting",
+    sports: ["baseball", "softball"],
+    subSkill: "Timing",
+    level: "feel",
+    fixes: "Head yanking off the ball through rotation.",
+    setup: "Hitter faces a mirror or phone on a tripod at eye level.",
+    steps: [
+      "Dry swing while keeping the reflected eyes inside a fixed frame.",
+      "Repeat with a tee once the head stops traveling."
+    ],
+    cues: ["Eyes stay, body turns"],
+    dosage: "3 x 10 dry, 2 x 8 on tee",
+    equipment: ["none", "tee"],
+    violationKeys: [],
+    pieV2Signals: ["head_stability", "visual_stability"],
+    movementPatterns: ["head_pull_off"]
+  },
+  {
+    id: "elite.hit.oppo_gap_transfer",
+    name: "Opposite-Gap Transfer BP",
+    category: "hitting",
+    sports: ["baseball", "softball"],
+    subSkill: "Adjustability",
+    level: "transfer",
+    fixes: "Over-rotation and pull-only contact under live speed.",
+    setup: "Live BP on the field or long net with a target in the opposite gap.",
+    steps: [
+      "First 5 swings must land in the opposite gap.",
+      "Next 5 are pitcher's choice \u2014 hit it where it is pitched."
+    ],
+    cues: ["Let it travel", "Direction before power"],
+    dosage: "2 rounds of 10",
+    equipment: ["machine", "net"],
+    violationKeys: [],
+    pieV2Signals: [],
+    movementPatterns: ["over_rotation", "weight_leak_forward"]
+  },
+  // ── THROWING ───────────────────────────────────────────────────────────
+  {
+    id: "elite.throw.wall_arm_action",
+    name: "Wall Arm-Action Drill",
+    category: "throwing",
+    sports: ["baseball", "softball"],
+    subSkill: "Position-specific arm action",
+    level: "feel",
+    fixes: "Long, wrapped arm path and a late arm at foot strike.",
+    setup: "Stand an arm's length from a wall, throwing side toward it.",
+    steps: [
+      "Break the hands thumb-down and swing the arm up along the wall without hitting it.",
+      "Freeze at the high-cock position with the ball facing away.",
+      "Repeat slowly, then add a light throw into a net."
+    ],
+    cues: ["Thumb down, fingers on top", "Arm up on time with the front foot"],
+    dosage: "3 x 10",
+    equipment: ["wall", "net"],
+    ownerReview: "pending_owner_review",
+    violationKeys: ["hands_pass_elbow_early"],
+    pieV2Signals: ["arm_slot_consistency", "tempo"],
+    movementPatterns: ["arm_lag"]
+  },
+  {
+    id: "elite.throw.figure_eight_connection",
+    name: "Figure-Eight Connection Throws",
+    category: "throwing",
+    sports: ["baseball", "softball"],
+    subSkill: "Arm strength",
+    level: "iso",
+    fixes: "Disconnected arm that works independently of the torso.",
+    setup: "Partner at 30 ft, athlete in a wide stride stance.",
+    steps: [
+      "Swing the arm in a continuous figure eight while rocking hips.",
+      "Release out of the pattern on the coach's call.",
+      "Keep the chest and arm arriving together."
+    ],
+    cues: ["Arm rides the body", "No stop, no rush"],
+    dosage: "2 x 10 throws",
+    equipment: ["partner"],
+    ownerReview: "pending_owner_review",
+    violationKeys: ["early_shoulder_rotation", "front_shoulder_opens_early"],
+    pieV2Signals: ["separation", "tempo"],
+    movementPatterns: ["arm_lag", "early_shoulder_rotation"]
+  },
+  {
+    id: "elite.throw.roll_in_footwork",
+    name: "Roll-In Throw on the Move",
+    category: "throwing",
+    sports: ["baseball", "softball"],
+    subSkill: "Footwork",
+    level: "constraint",
+    fixes: "Offline throws caused by feet not lining up with the target.",
+    setup: "Coach rolls a ball; a rope or line points at the receiving base.",
+    steps: [
+      "Field on the move and replace the feet along the line.",
+      "Throw only when the back leg finishes facing the target.",
+      "Track the throw's finish position each rep."
+    ],
+    cues: ["Feet aim first", "Finish through the line"],
+    dosage: "4 x 6",
+    equipment: ["glove", "cones"],
+    violationKeys: ["back_leg_not_facing_target", "shoulders_not_aligned"],
+    pieV2Signals: ["hip_alignment", "stride"],
+    movementPatterns: ["offline_throw"]
+  },
+  {
+    id: "elite.throw.long_toss_pulldown_ladder",
+    name: "Long-Toss Extension Ladder",
+    category: "throwing",
+    sports: ["baseball"],
+    subSkill: "Long toss",
+    level: "transfer",
+    fixes: "Short, tight arm path and inconsistent release extension.",
+    setup: "Partner throwing on a marked field, stretching out in 30 ft increments.",
+    steps: [
+      "Stretch out on an arc until throws start to lose carry.",
+      "Come back in with flat, on-a-line throws at the same intent.",
+      "Stop at the first sign of arm fatigue or command loss."
+    ],
+    cues: ["Full arc out, flat line back", "Intent, not max effort"],
+    dosage: "1 stretch-out, 10-15 pull-in throws",
+    equipment: ["baseballs", "partner", "field"],
+    ownerReview: "pending_owner_review",
+    violationKeys: [],
+    pieV2Signals: ["extension_consistency", "arm_slot_consistency"],
+    movementPatterns: ["arm_lag"]
+  },
+  {
+    id: "elite.throw.quick_exchange_ladder",
+    name: "Quick-Exchange Ladder",
+    category: "throwing",
+    sports: ["baseball", "softball"],
+    subSkill: "Transfer",
+    level: "constraint",
+    fixes: "Slow, double-clutched transfers that add time to every throw.",
+    setup: "Partner at 45 ft, athlete on the balls of the feet with a glove.",
+    steps: [
+      "Receive and transfer to a four-seam grip in one motion.",
+      "Throw on a stopwatch \u2014 log the exchange time each rep.",
+      "Repeat with the ball fed to the backhand and glove side."
+    ],
+    cues: ["Two hands to the middle", "Grip found in the glove"],
+    dosage: "3 x 8 timed",
+    equipment: ["glove", "partner", "stopwatch"],
+    ownerReview: "pending_owner_review",
+    violationKeys: [],
+    pieV2Signals: ["tempo"],
+    movementPatterns: ["late_transfer", "double_clutch"]
+  },
+  // ── PITCHING ───────────────────────────────────────────────────────────
+  {
+    id: "elite.pitch.hershiser_separation",
+    name: "Hershiser Separation Drill",
+    category: "pitching",
+    sports: ["baseball"],
+    subSkill: "Hip-shoulder separation",
+    level: "iso",
+    fixes: "Shoulders opening with the hips \u2014 leaking energy before landing.",
+    setup: "Pitcher stands beside a fence, glove-side shoulder facing it, in stride position.",
+    steps: [
+      "Ride the back hip down the fence line while the chest stays closed to it.",
+      "Land, then let the chest arrive last.",
+      "Add a light throw once the sequence is felt."
+    ],
+    cues: ["Hips down the line, chest holds", "Land closed, finish open"],
+    dosage: "3 x 6 dry, 2 x 5 throws",
+    equipment: ["fence", "net", "baseballs"],
+    ownerReview: "pending_owner_review",
+    violationKeys: ["early_shoulder_rotation", "front_shoulder_opens_early"],
+    pieV2Signals: ["separation", "hip_alignment"],
+    movementPatterns: ["early_shoulder_rotation", "hips_open_to_3b"]
+  },
+  {
+    id: "elite.pitch.hook_em_horns",
+    name: "Hook-'Em-Horns Front Side",
+    category: "pitching",
+    sports: ["baseball", "softball"],
+    subSkill: "Command",
+    level: "constraint",
+    fixes: "Glove flying off and pulling the front side open early.",
+    setup: "Flat ground at 45 ft into a net, glove arm extended at the target.",
+    steps: [
+      "Hold the glove out front, elbow at chest height.",
+      "Pull the chest to the glove rather than yanking the glove to the hip.",
+      "Freeze the finish and check that the glove is still over the front foot."
+    ],
+    cues: ["Chest to glove", "Glove stops, body arrives"],
+    dosage: "3 x 8",
+    equipment: ["glove", "net"],
+    violationKeys: ["front_shoulder_opens_early"],
+    pieV2Signals: ["front_side", "head_alignment"],
+    movementPatterns: ["glove_pull_off"]
+  },
+  {
+    id: "elite.pitch.walking_windup_tempo",
+    name: "Walking-Windup Tempo",
+    category: "pitching",
+    sports: ["baseball"],
+    subSkill: "Tempo",
+    level: "feel",
+    fixes: "Rushed delivery \u2014 the lower half never gets to move down the mound.",
+    setup: "Flat ground, pitcher starts three steps behind the rubber.",
+    steps: [
+      "Walk into the leg lift with an unhurried rhythm.",
+      "Count the gather out loud on the first reps.",
+      "Deliver at controlled intent; time each rep for consistency."
+    ],
+    cues: ["Slow to fast", "Down the mound, not out of it"],
+    dosage: "3 x 6",
+    equipment: ["net", "stopwatch", "baseballs", "pitching_rubber"],
+    ownerReview: "pending_owner_review",
+    violationKeys: [],
+    pieV2Signals: ["tempo", "energy_angle"],
+    movementPatterns: ["rushed_tempo"]
+  },
+  {
+    id: "elite.pitch.hip_hinge_energy_angle",
+    name: "Back-Hip Load Hold",
+    category: "pitching",
+    sports: ["baseball", "softball"],
+    subSkill: "Drive-leg force",
+    level: "iso",
+    fixes: "Standing tall over the rubber with no back-side load or drive angle.",
+    setup: "Rubber or turf line, hands on hips.",
+    steps: [
+      "Lift the front leg and sink into the back hip, shin angled toward home.",
+      "Hold three seconds, checking the hip stays behind the back foot.",
+      "Release into a stride and stick the landing."
+    ],
+    cues: ["Sit in the back pocket", "Shin toward the target"],
+    dosage: "4 x 5 holds",
+    equipment: ["none"],
+    violationKeys: ["early_shoulder_rotation"],
+    pieV2Signals: ["energy_angle", "stride"],
+    movementPatterns: ["weak_back_side_load"]
+  },
+  {
+    id: "elite.pitch.stride_line_board",
+    name: "Stride-Line Board",
+    category: "pitching",
+    sports: ["baseball", "softball"],
+    subSkill: "Stride direction",
+    level: "constraint",
+    fixes: "Landing closed or across the body, throwing the hips out of line.",
+    setup: "Lay a board, rope, or towel from the rubber toward the target.",
+    steps: [
+      "Deliver with the front foot landing on the line every rep.",
+      "Mark misses; do not chase velocity until 8 of 10 land clean."
+    ],
+    cues: ["Foot on the line, toe slightly closed"],
+    dosage: "3 x 10",
+    equipment: ["none", "net"],
+    violationKeys: ["back_leg_not_facing_target", "shoulders_not_aligned"],
+    pieV2Signals: ["stride", "hip_alignment"],
+    movementPatterns: ["hips_open_to_3b", "short_stride"]
+  },
+  {
+    id: "elite.pitch.towel_extension",
+    name: "Towel Extension Drill",
+    category: "pitching",
+    sports: ["baseball"],
+    subSkill: "Arm action",
+    level: "iso",
+    fixes: "Short release and inconsistent extension out front.",
+    setup: "Partner holds a glove at the athlete's stride-length plus reach; athlete holds a towel.",
+    steps: [
+      "Run the full delivery and strike the target glove with the towel.",
+      "Miss short means the release is early; adjust the finish, not the arm speed."
+    ],
+    cues: ["Reach the target", "Chest over the front knee"],
+    dosage: "3 x 8",
+    equipment: ["glove", "towel", "partner"],
+    ownerReview: "pending_owner_review",
+    violationKeys: ["hands_pass_elbow_early"],
+    pieV2Signals: ["extension_consistency", "arm_slot_consistency"],
+    movementPatterns: ["extension_variance", "arm_slot_variance"]
+  },
+  {
+    id: "elite.pitch.head_stability_target",
+    name: "Fixed-Eye Delivery",
+    category: "pitching",
+    sports: ["baseball", "softball"],
+    subSkill: "Release consistency",
+    level: "feel",
+    fixes: "Head drifting or tilting through release, moving the release point.",
+    setup: "Flat ground, small target taped at eye height behind the net.",
+    steps: [
+      "Deliver while keeping the eyes locked on the tape the entire time.",
+      "Have a partner film from the front and check for head travel."
+    ],
+    cues: ["Eyes never leave the target", "Head rides level"],
+    dosage: "3 x 8",
+    equipment: ["net", "tape", "partner", "phone"],
+    ownerReview: "pending_owner_review",
+    violationKeys: [],
+    pieV2Signals: ["head_stability", "head_alignment", "shoulder_level"],
+    movementPatterns: ["head_drift_release", "head_tilt_release", "shoulder_dip_release"]
+  },
+  {
+    id: "elite.pitch.rear_foot_drag_finish",
+    name: "Drag-Line Finish",
+    category: "pitching",
+    sports: ["baseball"],
+    subSkill: "Lower-half sequencing",
+    level: "constraint",
+    fixes: "Back foot jumping off the rubber instead of dragging through.",
+    setup: "Dirt mound or turf that shows a drag line.",
+    steps: [
+      "Deliver and inspect the drag line after every rep.",
+      "A clean line means the hips stayed engaged; a jump means the athlete pushed early."
+    ],
+    cues: ["Toe drags, doesn't fly", "Stay in the ground longer"],
+    dosage: "3 x 8",
+    equipment: ["none"],
+    violationKeys: [],
+    pieV2Signals: ["rear_foot_drag", "energy_angle"],
+    movementPatterns: ["rear_foot_jump"]
+  },
+  {
+    id: "elite.pitch.windmill_k_position",
+    name: "Windmill K-Position Hold",
+    category: "pitching",
+    sports: ["softball"],
+    subSkill: "Arm circle",
+    level: "iso",
+    fixes: "Arm circle collapsing away from the body and losing the line.",
+    setup: "Athlete in stride landing position, arm at the top of the circle.",
+    steps: [
+      "Hold the top of the circle with the arm brushing the ear line.",
+      "Finish the bottom half into a light throw, keeping the circle flat to the target."
+    ],
+    cues: ["Circle by the ear", "Flat to the plate"],
+    dosage: "4 x 6",
+    equipment: ["net", "softballs"],
+    ownerReview: "pending_owner_review",
+    violationKeys: ["hands_pass_elbow_early"],
+    pieV2Signals: ["arm_slot_consistency"],
+    movementPatterns: ["arm_slot_variance"]
+  },
+  {
+    id: "elite.pitch.windmill_drive_leg",
+    name: "Windmill Drive-Leg Push",
+    category: "pitching",
+    sports: ["softball"],
+    subSkill: "Drive-leg force",
+    level: "transfer",
+    fixes: "Short stride and passive drive leg off the rubber.",
+    setup: "Rubber with a marked stride distance on the ground.",
+    steps: [
+      "Push the drive leg out and land past the mark.",
+      "Only add intent once the landing is repeatable and balanced."
+    ],
+    cues: ["Push, don't step", "Land loaded, not tall"],
+    dosage: "3 x 8",
+    equipment: ["net", "pitching_rubber"],
+    ownerReview: "pending_owner_review",
+    violationKeys: [],
+    pieV2Signals: ["stride", "energy_angle"],
+    movementPatterns: ["short_stride", "weak_back_side_load"]
+  }
+];
+var ELITE_DRILL_CATALOG = [...BASE_DRILLS, ...DOCTRINE_DRILLS, ...FIELD_RUNNING_DRILLS];
+
+// src/lib/analysisToTaxonomy.ts
+var HIE_AREA_TO_MOVEMENT = {
+  "hands_forward": "hands_forward_early",
+  "early_extension": "early_extension",
+  "head_movement": "head_pull_off",
+  "late_barrel": "late_barrel",
+  "flat_path": "flat_path",
+  "over_rotation": "over_rotation",
+  "under_rotation": "under_rotation",
+  "weight_shift_back": "weight_stuck_back",
+  "weight_leak": "weight_leak_forward",
+  "first_step": "slow_first_step",
+  "glove_drift": "glove_drift",
+  "arm_lag": "arm_lag"
+};
+function mapHIEAreaToMovement(area) {
+  const k = area.toLowerCase().replace(/[\s-]/g, "_");
+  return HIE_AREA_TO_MOVEMENT[k] || null;
+}
+
+// src/lib/prescription/ownerDrills.ts
+function analysisTargets(placements) {
+  return placements.filter((p) => p.startsWith("analysis:")).map((p) => {
+    const [, sport, category] = p.split(":");
+    return { sport, category };
+  });
+}
+function rowToDrills(row) {
+  const targets = analysisTargets(row.placements);
+  const byCat = /* @__PURE__ */ new Map();
+  for (const t of targets) {
+    if (!byCat.has(t.category)) byCat.set(t.category, /* @__PURE__ */ new Set());
+    byCat.get(t.category)?.add(t.sport);
+  }
+  const baseId = row.overrides_drill_id ?? `owner.${row.id}`;
+  return [...byCat.entries()].map(([category, sports], i) => ({
+    id: i === 0 ? baseId : `${baseId}.${category}`,
+    name: row.name,
+    category,
+    sports: [...sports],
+    subSkill: row.phase ?? "",
+    level: row.level ?? "feel",
+    fixes: "",
+    setup: row.setup ?? "",
+    steps: row.steps ?? [],
+    cues: row.cue ? [row.cue] : [],
+    dosage: row.dosage ?? "",
+    equipment: row.equipment ?? [],
+    violationKeys: row.fault_keys ?? [],
+    pieV2Signals: [],
+    movementPatterns: [],
+    phase: row.phase ?? void 0,
+    feel: row.feel ?? void 0,
+    feelWrong: row.feel_wrong ?? void 0,
+    commonMistake: row.common_mistake ?? void 0,
+    source: "Owner drill builder",
+    videoUrl: row.video_url,
+    libraryVideoId: row.library_video_id ?? null,
+    ownerReview: "approved",
+    ownerRowId: row.id,
+    placements: row.placements,
+    pinned: row.pinned,
+    createdAt: row.created_at
+  }));
+}
+function mergeCatalog(base2, rows2) {
+  const overridden = /* @__PURE__ */ new Map();
+  for (const r of rows2) if (r.overrides_drill_id) overridden.set(r.overrides_drill_id, r);
+  const out = [];
+  for (const d3 of base2) {
+    const r = overridden.get(d3.id);
+    if (!r) {
+      out.push(d3);
+      continue;
+    }
+    if (!r.active) continue;
+    const [replacement] = rowToDrills(r);
+    out.push(replacement ?? { ...d3, name: r.name, videoUrl: r.video_url, libraryVideoId: r.library_video_id ?? null });
+  }
+  for (const r of rows2) if (!r.overrides_drill_id && r.active) out.push(...rowToDrills(r));
+  return out;
+}
+var CIRCULATION = {
+  unseenBonus: 15,
+  perServePenalty: 8,
+  usageCap: 8,
+  // usage can never outweigh one extra serve → no drill monopolises a fault
+  newDrillBoost: 10,
+  newDrillDays: 21,
+  pinnedBonus: 1e3
+};
+function circulate(matches, c) {
+  const now = (c.now ?? /* @__PURE__ */ new Date()).getTime();
+  const ranked = matches.map((m) => {
+    const id = m.drill.id;
+    const served = c.servedToUser[id] ?? 0;
+    const u = c.usage[id];
+    const usageScore = u ? Math.min(CIRCULATION.usageCap, Math.log2(1 + u.completed + 2 * u.returned)) : 0;
+    const od = m.drill;
+    const isNew = od.createdAt ? (now - new Date(od.createdAt).getTime()) / 864e5 < CIRCULATION.newDrillDays : false;
+    const rank = m.score + (served === 0 ? CIRCULATION.unseenBonus : 0) - served * CIRCULATION.perServePenalty + usageScore + (isNew ? CIRCULATION.newDrillBoost : 0) + (od.pinned ? CIRCULATION.pinnedBonus : 0);
+    return { m, rank };
+  });
+  return ranked.sort((a, b) => b.rank - a.rank || a.m.drill.id.localeCompare(b.m.drill.id)).map((r) => r.m);
+}
+
+// src/lib/prescription/matchDrills.ts
+var LEVEL_BONUS = {
+  feel: 3,
+  iso: 4,
+  constraint: 2,
+  transfer: 1,
+  timing: 2
+};
+function moduleToCategory(module) {
+  const m = (module ?? "").toLowerCase();
+  if (m.includes("hit") || m.includes("bat") || m.includes("swing")) return "hitting";
+  if (m.includes("pitch")) return "pitching";
+  if (m === "fielding" || m === "defense") return "fielding";
+  if (m === "running" || m === "baserunning") return "baserunning";
+  if (m.includes("throw") || m.includes("catch")) return "throwing";
+  return null;
+}
+function matchPrescriptionDrills(input) {
+  const sport = input.sport === "softball" ? "softball" : "baseball";
+  const category = moduleToCategory(input.module);
+  const max = input.max ?? 4;
+  const activeViolations = Object.entries(input.violations ?? {}).filter(([, v]) => v === true).map(([k]) => k).concat((input.faultKeys ?? []).filter((k) => k && k !== "other"));
+  const signals = new Set(input.pieV2Signals ?? []);
+  const movements = new Set(
+    (input.weaknessAreas ?? []).map((a) => mapHIEAreaToMovement(a)).filter((x) => Boolean(x))
+  );
+  const matches = [];
+  for (const drill of input.catalog ?? ELITE_DRILL_CATALOG) {
+    if (!drill.sports.includes(sport)) continue;
+    if (category && drill.category !== category) continue;
+    let score = 0;
+    const reasons = [];
+    for (const v of new Set(activeViolations)) {
+      if (drill.violationKeys.includes(v)) {
+        score += 30;
+        reasons.push(v.replace(/_/g, " "));
+      }
+    }
+    for (const s of drill.pieV2Signals) {
+      if (signals.has(s)) {
+        score += 18;
+        reasons.push(s.replace(/_/g, " "));
+      }
+    }
+    for (const m of drill.movementPatterns) {
+      if (movements.has(m)) {
+        score += 12;
+        reasons.push(m.replace(/_/g, " "));
+      }
+    }
+    if (score === 0) continue;
+    score += LEVEL_BONUS[drill.level];
+    matches.push({ drill, score, reasons: [...new Set(reasons)] });
+  }
+  const sorted = matches.sort((a, b) => b.score - a.score || a.drill.id.localeCompare(b.drill.id));
+  return (input.circulation ? circulate(sorted, input.circulation) : sorted).slice(0, max);
+}
+
+// src/lib/wic/faultLedger/families.ts
+var FAULT_FAMILIES = [
+  {
+    id: "first_step_capacity",
+    label: "First step",
+    plain: "You are slow out of the box \u2014 the first two steps cost you, not the top speed.",
+    rootPatterns: ["slow_first_step", "weak_hip_flexion", "late_acceleration"],
+    troubleshooting: ["cramps in the front of the hip", "lower back takes over", "can't stay tall"],
+    ladder: [
+      { slug: "wu_split_stance_iso_hold", tier: 0 },
+      { slug: "hip_lift_march", tier: 1 },
+      { slug: "hanging_knee_raise", tier: 2 },
+      { slug: "garhammer_raise", tier: 2 },
+      { slug: "low_cable_hip_flexor_pull_in", tier: 3 },
+      { slug: "strap_loaded_hip_flexor_raise", tier: 3 }
+    ]
+  },
+  {
+    id: "deceleration_base",
+    label: "Stopping and changing direction",
+    plain: "You can get going, but slowing down and re-planting is where you lose ground.",
+    rootPatterns: ["poor_deceleration", "shin_splints_history", "weak_lower_leg"],
+    troubleshooting: ["burning in the front of the shin", "calves cramp", "heels come up"],
+    ladder: [
+      { slug: "tibialis_raise", tier: 0 },
+      { slug: "straight_leg_calf_raise", tier: 1 },
+      { slug: "seated_tibialis_raise", tier: 1 },
+      { slug: "seated_calf_raise", tier: 2 },
+      { slug: "single_leg_calf_raise_off_block", tier: 2 },
+      { slug: "slant_board_calf_raise", tier: 2 },
+      { slug: "kot_tibialis_raise", tier: 3 }
+    ]
+  },
+  {
+    id: "posterior_braking",
+    label: "Hamstring braking",
+    plain: "The back of your leg has to catch you at speed, and right now it can't.",
+    rootPatterns: ["hamstring_strain_risk", "weak_posterior_chain", "poor_eccentric_control"],
+    troubleshooting: ["hamstring cramps immediately", "can't control the way down", "back arches"],
+    ladder: [
+      { slug: "reverse_nordic", tier: 0 },
+      { slug: "sp_nordic_hamstring", tier: 1 },
+      { slug: "nordic_curl", tier: 2 },
+      { slug: "single_leg_back_extension", tier: 3 },
+      { slug: "ws_reverse_hyper", tier: 3 },
+      { slug: "lift_nordic_curl_ecc", tier: 3 }
+    ]
+  },
+  {
+    id: "ankle_and_depth",
+    label: "Ankles and depth",
+    plain: "Your ankle won't let the knee travel, so everything above it gets squeezed.",
+    rootPatterns: ["limited_ankle_dorsiflexion", "shallow_squat_depth", "knee_pain_anterior"],
+    troubleshooting: ["heel lifts off the floor", "pinch in the front of the ankle", "knees ache after"],
+    ladder: [
+      { slug: "kneeling_ankle_rocks", tier: 0 },
+      { slug: "wall_ankle_mobilization", tier: 1 },
+      { slug: "kot_elephant_walks", tier: 1 },
+      { slug: "atg_split_squat", tier: 1 },
+      { slug: "kot_atg_split_squat", tier: 2 },
+      { slug: "kot_slantboard_squat", tier: 3 }
+    ]
+  },
+  {
+    id: "back_leg_block",
+    label: "Back leg and groin",
+    plain: "The back leg has to hold and block. When the groin is weak it slides instead.",
+    // `direction_off_the_target_line` is the video-analysis key for the same
+    // problem: the back leg finishes pointing somewhere other than the target.
+    rootPatterns: [
+      "groin_strain_risk",
+      "weak_adductors",
+      "back_leg_collapse",
+      "direction_off_the_target_line"
+    ],
+    troubleshooting: ["groin grabs", "inside of the knee aches", "hip pinches at the bottom"],
+    ladder: [
+      { slug: "wu_copenhagen_short_lever", tier: 0 },
+      { slug: "standing_groin_stretch", tier: 1 },
+      { slug: "cossack_squat", tier: 1 },
+      { slug: "weighted_butterfly_stretch", tier: 2 },
+      { slug: "dumbbell_lateral_lunge", tier: 2 },
+      { slug: "barbell_lateral_lunge", tier: 3 }
+    ]
+  },
+  {
+    id: "arm_health",
+    label: "Arm health",
+    plain: "The shoulder blade isn't doing its share, so the arm pays for it.",
+    rootPatterns: ["shoulder_pain", "poor_scap_control", "arm_fatigue_high"],
+    troubleshooting: ["front of the shoulder pinches", "neck takes over", "arm dead the next day"],
+    ladder: [
+      { slug: "wu_scapular_cars", tier: 0 },
+      { slug: "ac_wall_slide", tier: 1 },
+      { slug: "ac_xband_pull_apart", tier: 1 },
+      { slug: "ac_side_lying_er", tier: 2 },
+      { slug: "ac_prone_ytw", tier: 2 },
+      { slug: "powell_raise", tier: 2 }
+    ]
+  },
+  {
+    id: "rotational_output",
+    label: "Turning power",
+    plain: "You turn, but nothing leaves the ground with it \u2014 the hips and chest go together.",
+    // `trunk_rotates_before_front_foot_plant` is the video-analysis key for a
+    // lost separation: the chest goes with the hips instead of after them.
+    rootPatterns: [
+      "poor_hip_shoulder_separation",
+      "low_rotational_power",
+      "arm_only_swing",
+      "trunk_rotates_before_front_foot_plant"
+    ],
+    troubleshooting: ["all arms, no legs", "lower back sore after", "front side flies open"],
+    ladder: [
+      { slug: "bs_deep_hip_load", tier: 0 },
+      { slug: "bs_side_plank_rot_reach", tier: 1 },
+      { slug: "wu_medball_rot_toss_wall", tier: 1 },
+      { slug: "medicine_ball_scoop_toss", tier: 2 },
+      { slug: "medicine_ball_shot_put_throw", tier: 2 },
+      { slug: "wide_stance_cable_rotation", tier: 3 },
+      { slug: "bs_landmine_rotational_punch", tier: 3 }
+    ]
+  },
+  {
+    id: "landing_and_elastic",
+    label: "Landing and bounce",
+    plain: "You land heavy. Springy athletes get the ground back; you absorb it and stop.",
+    rootPatterns: ["poor_landing_mechanics", "low_reactive_strength", "heavy_footed"],
+    troubleshooting: ["loud landings", "knees cave in", "calves sore for days"],
+    ladder: [
+      { slug: "wu_pogo_double", tier: 0 },
+      { slug: "sp_pogo_single", tier: 1 },
+      { slug: "hurdle_jump", tier: 2 },
+      { slug: "altitude_landing", tier: 2 },
+      { slug: "depth_drop_to_broad_jump", tier: 3 }
+    ]
+  },
+  {
+    id: "trunk_transfer",
+    label: "Middle of the body",
+    plain: "Power made by the legs leaks before it reaches the ball because the middle gives.",
+    // `hands_leak_forward_early` is the video-analysis key for the same leak:
+    // the top half goes before the middle has finished its work.
+    rootPatterns: [
+      "energy_leak_trunk",
+      "poor_anti_rotation",
+      "weak_bracing",
+      "hands_leak_forward_early"
+    ],
+    troubleshooting: ["lower back does the work", "ribs flare", "can't breathe and brace"],
+    ladder: [
+      { slug: "wu_pallof_press_iso", tier: 0 },
+      { slug: "dead_bug_reach", tier: 1 },
+      { slug: "bird_dog", tier: 1 },
+      { slug: "four_way_plank", tier: 1 },
+      { slug: "kneeling_ab_rollout", tier: 2 },
+      { slug: "lift_hk_pallof_iso", tier: 3 }
+    ]
+  },
+  {
+    id: "grip_and_forearm",
+    label: "Hands and forearms",
+    plain: "The bat or the ball is heavier at the end of the day than at the start.",
+    rootPatterns: ["weak_grip", "forearm_fatigue", "late_bat_control"],
+    troubleshooting: ["hands give out first", "elbow gets sore", "forearms pump up"],
+    ladder: [
+      { slug: "wu_forearm_pump", tier: 0 },
+      { slug: "dead_hang", tier: 1 },
+      { slug: "plate_pinch", tier: 1 },
+      { slug: "lift_farmer_carry", tier: 2 },
+      { slug: "offset_farmer_carry", tier: 2 },
+      { slug: "wrist_roller", tier: 3 }
+    ]
+  }
+];
+var FAMILY_BY_ID = Object.fromEntries(
+  FAULT_FAMILIES.map((f) => [f.id, f])
+);
+function familyForRootPattern(rootPatternId) {
+  return FAULT_FAMILIES.find((f) => f.rootPatterns.includes(rootPatternId)) ?? null;
+}
+
+// src/lib/wic/faultLedger/cleanClipFade.ts
+var CLEAN_CLIP_FADE_VERSION = "clean_clip_fade_v1";
+var ONE_CLEAN_CLIP_WEIGHT = 0.5;
+var CLEAN_CLIPS_TO_CLEAR = 2;
+var FADEABLE_SOURCE = "video_analysis";
+var ASSESSED_FAULTS = {
+  hitting: ["early_shoulder_rotation", "hands_pass_elbow_early", "front_shoulder_opens_early"],
+  throwing: ["early_shoulder_rotation", "shoulders_not_aligned", "back_leg_not_facing_target"],
+  pitching: ["early_shoulder_rotation", "shoulders_not_aligned", "back_leg_not_facing_target"]
+};
+var PLAIN_NAME = {
+  hitting: {
+    early_shoulder_rotation: "your shoulders turning early",
+    hands_pass_elbow_early: "your hands getting out front early",
+    front_shoulder_opens_early: "your front shoulder opening early"
+  },
+  throwing: {
+    early_shoulder_rotation: "your shoulders turning early",
+    shoulders_not_aligned: "your shoulders lining up off target",
+    back_leg_not_facing_target: "your back leg pointing off target"
+  },
+  pitching: {
+    early_shoulder_rotation: "your body turning early",
+    shoulders_not_aligned: "your shoulders lining up off target",
+    back_leg_not_facing_target: "your back leg not driving to the target"
+  }
+};
+var NONE = {
+  version: CLEAN_CLIP_FADE_VERSION,
+  cleanClips: 0,
+  multiplier: 1,
+  status: "none",
+  cleanClipIds: [],
+  latestCleanClipAt: null
+};
+function isAssessedBy(skill, faultKey) {
+  return (ASSESSED_FAULTS[skill] ?? []).includes(faultKey);
+}
+function fadeForSignal(signal, clips) {
+  if (signal.source !== FADEABLE_SOURCE) return NONE;
+  if (!isAssessedBy(signal.discipline, signal.fault_key)) return NONE;
+  const seenAt = new Date(signal.observed_at).getTime();
+  if (!Number.isFinite(seenAt)) return NONE;
+  const later = clips.filter((c) => c.module === signal.discipline).filter((c) => {
+    const t = new Date(c.created_at).getTime();
+    return Number.isFinite(t) && t > seenAt;
+  }).slice().sort((a, b) => a.created_at.localeCompare(b.created_at) || a.video_id.localeCompare(b.video_id));
+  let clean2 = [];
+  for (const clip of later) {
+    const answer = clip.violations ? clip.violations[signal.fault_key] : void 0;
+    if (answer === true) clean2 = [];
+    else if (answer === false) clean2.push(clip);
+  }
+  if (clean2.length === 0) return NONE;
+  const cleared = clean2.length >= CLEAN_CLIPS_TO_CLEAR;
+  return {
+    version: CLEAN_CLIP_FADE_VERSION,
+    cleanClips: clean2.length,
+    multiplier: cleared ? 0 : ONE_CLEAN_CLIP_WEIGHT,
+    status: cleared ? "cleared" : "eased",
+    cleanClipIds: clean2.map((c) => c.video_id),
+    latestCleanClipAt: clean2[clean2.length - 1].created_at
+  };
+}
+function fadeMessage(skill, faultKey, status) {
+  if (status === "none") return null;
+  const name = PLAIN_NAME[skill]?.[faultKey] ?? "what we were working on";
+  return status === "cleared" ? `Your recent ${skill} clips haven't shown ${name}, so we've moved on from it. Nice work.` : `Your last ${skill} clip didn't show ${name}, so we've eased off it.`;
+}
+
+// src/lib/wic/faultLedger/ranking.ts
+var HALF_LIFE_DAYS = 21;
+function recencyWeight(observedAt, now = Date.now()) {
+  const t = new Date(observedAt).getTime();
+  if (!Number.isFinite(t)) return 0.25;
+  const days = Math.max(0, (now - t) / 864e5);
+  return Math.max(0.05, Math.pow(0.5, days / HALF_LIFE_DAYS));
+}
+function sampleWeight(sampleSize) {
+  if (sampleSize <= 0) return 0;
+  return Math.min(1, Math.log10(1 + sampleSize) / Math.log10(11));
+}
+function unique(xs) {
+  return Array.from(new Set(xs));
+}
+function rankFaults(signals, now = Date.now(), clips = []) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const s of signals) {
+    const g = groups.get(s.root_pattern_id);
+    if (g) g.push(s);
+    else groups.set(s.root_pattern_id, [s]);
+  }
+  const ranked = [];
+  for (const [rootPatternId, group] of groups) {
+    const fadeBySignal = group.map((s) => ({ signal: s, fade: fadeForSignal(s, clips) }));
+    const base2 = fadeBySignal.reduce(
+      (sum, { signal: s, fade }) => sum + s.confidence * s.severity * sampleWeight(s.sample_size) * recencyWeight(s.observed_at, now) * fade.multiplier,
+      0
+    );
+    const fades = fadeBySignal.filter(({ fade }) => fade.status !== "none");
+    const clearedByCleanClips = fadeBySignal.every(({ fade }) => fade.status === "cleared");
+    const sources = unique(group.map((s) => s.source));
+    const disciplines = unique(group.map((s) => s.discipline));
+    const agreement = 1 + 0.35 * (sources.length - 1) + 0.25 * (disciplines.length - 1);
+    const sorted = group.slice().sort((a, b) => b.observed_at.localeCompare(a.observed_at));
+    const totalSampleSize = group.reduce((n, s) => n + s.sample_size, 0);
+    const family = familyForRootPattern(rootPatternId);
+    ranked.push({
+      rootPatternId,
+      family,
+      score: base2 * agreement,
+      sources,
+      disciplines,
+      totalSampleSize,
+      latestObservedAt: sorted[0].observed_at,
+      signals: sorted,
+      says: sayIt(sorted[0], disciplines, totalSampleSize),
+      fades,
+      clearedByCleanClips
+    });
+  }
+  return ranked.sort(
+    (a, b) => b.score - a.score || a.rootPatternId.localeCompare(b.rootPatternId)
+  );
+}
+function sayIt(latest, disciplines, n) {
+  const where = disciplines.length > 1 ? `It shows up in your ${disciplines.slice(0, -1).join(", ")} and ${disciplines[disciplines.length - 1]}.` : `It shows up in your ${disciplines[0]}.`;
+  const seen = n === 1 ? "Seen once so far." : `Seen ${n} times.`;
+  return `${latest.evidence} ${where} ${seen}`;
+}
+
+// src/lib/wic/faultLedger/recurringIssues.ts
+var RECURRING_WINDOW_DAYS = 28;
+function stillRecurring(issue, now = Date.now()) {
+  const last = Date.parse(issue.last_seen);
+  if (!Number.isFinite(last) || last < now - RECURRING_WINDOW_DAYS * 864e5) return false;
+  return issue.analysis_count >= 2 || issue.corroborating_signal_ids.length > 0;
+}
+var prettyFinding = (key2) => key2.replace(/_/g, " ");
+function recurringBecause(issue, drillName) {
+  const where = issue.analysis_count >= 2 ? `${issue.analysis_count} of your videos in the last 4 weeks` : "a video and your practice or game notes in the last 4 weeks";
+  return `Because "${prettyFinding(issue.fault_key)}" keeps showing up (${where}), "${drillName}" works on it today.`;
+}
+
+// src/lib/prescription/applyFaultPlanInfluence.ts
+var PLAN_SIGNAL_SOURCES = /* @__PURE__ */ new Set(["video_analysis", "report_card"]);
+function isOwnerDrill(drill) {
+  return "ownerRowId" in drill;
+}
+function eligibleCatalog(catalog, ownedEquipment) {
+  const owned = new Set([...ownedEquipment].map((item) => item.trim().toLowerCase()));
+  return catalog.filter((drill) => {
+    if (isOwnerDrill(drill)) return false;
+    return drill.equipment.every((item) => owned.has(item.trim().toLowerCase()));
+  });
+}
+function withCleanClipNote(block, discipline, ranked) {
+  const fades = ranked.flatMap((r) => r.fades ?? []).filter(({ signal, fade }) => signal.discipline === discipline && fade.status !== "none" && fade.latestCleanClipAt).sort((a, b) => String(b.fade.latestCleanClipAt).localeCompare(String(a.fade.latestCleanClipAt)));
+  const top = fades[0];
+  if (!top) return block;
+  const note = fadeMessage(discipline, top.signal.fault_key, top.fade.status);
+  return note ? { ...block, cleanClipNote: note } : block;
+}
+function disciplinesForBlock(block) {
+  if (block.modality === "hitting") return ["hitting"];
+  if (block.modality === "throwing") {
+    const module = new URL(block.route, "https://local.invalid").searchParams.get("module");
+    return module === "pitching" ? ["pitching"] : ["throwing"];
+  }
+  if (block.modality === "defense") return ["fielding"];
+  if (block.modality === "baserunning") return ["running"];
+  return [];
+}
+var MODULE_FOR = { hitting: "hitting", throwing: "throwing", pitching: "pitching", fielding: "fielding", running: "baserunning" };
+function applyFaultPlanInfluence(input) {
+  const now = input.now ?? /* @__PURE__ */ new Date();
+  const priorities = input.rankedFaults.filter((r) => !r.clearedByCleanClips).slice(0, 3);
+  const catalog = eligibleCatalog(input.catalog, input.ownedEquipment);
+  return input.blocks.map((original) => {
+    const disciplines = disciplinesForBlock(original);
+    if (disciplines.length === 0 || original.status !== "ready" || original.drills.length === 0) return original;
+    const block = disciplines.reduce((b, d3) => withCleanClipNote(b, d3, input.rankedFaults), original);
+    if (catalog.length === 0) return block;
+    const recurringBlock = applyRecurring(block, disciplines, input, catalog, now);
+    if (recurringBlock) return recurringBlock;
+    if (priorities.length === 0) return block;
+    const signals = priorities.flatMap((priority) => priority.signals.filter((signal) => {
+      if (!disciplines.includes(signal.discipline) || !PLAN_SIGNAL_SOURCES.has(signal.source)) return false;
+      if (signal.discipline !== "fielding" && signal.discipline !== "running") return true;
+      const scope = input.signalScopes?.[signal.id];
+      return scope?.sport === input.sport && scope.module === (signal.discipline === "running" ? "baserunning" : "fielding");
+    }).map((signal) => ({ signal, priority })));
+    if (signals.length === 0) return block;
+    const discipline = signals[0].signal.discipline;
+    const faultKeys = [...new Set(signals.filter(({ signal }) => signal.discipline === discipline).map(({ signal }) => signal.fault_key))];
+    const [match] = matchPrescriptionDrills({
+      catalog: catalog.filter((d3) => d3.category === (discipline === "running" ? "baserunning" : discipline)),
+      circulation: input.circulation,
+      faultKeys,
+      module: MODULE_FOR[discipline],
+      sport: input.sport,
+      max: 1
+    });
+    if (!match) return block;
+    const sourceSignal = signals.find(({ signal }) => match.drill.violationKeys.includes(signal.fault_key));
+    if (!sourceSignal) return block;
+    const replacementIndex = block.drills.findIndex(
+      (drill) => drill.prescriptionOrigin !== "owner" && (drill.stage === void 0 || drill.stage === "drills")
+    );
+    if (replacementIndex < 0) return block;
+    const displaced = block.drills[replacementIndex];
+    const replacement = {
+      name: match.drill.name,
+      slug: match.drill.id,
+      setup: match.drill.setup || void 0,
+      dosage: displaced.dosage,
+      cue: match.drill.cues[0],
+      equipmentNote: match.drill.equipment.length ? match.drill.equipment.join(", ") : void 0,
+      stage: "drills",
+      prescriptionOrigin: "analysis",
+      analysisInfluence: {
+        version: "analysis-slot-v1",
+        faultKey: sourceSignal.signal.fault_key,
+        rootPatternId: sourceSignal.priority.rootPatternId,
+        source: sourceSignal.signal.source,
+        observedAt: sourceSignal.signal.observed_at,
+        recencyWeight: recencyWeight(sourceSignal.signal.observed_at, now.getTime()),
+        drillId: match.drill.id,
+        displacedDrill: displaced.name
+      }
+    };
+    const drills = block.drills.slice();
+    drills[replacementIndex] = replacement;
+    const checklist = drills.map((drill) => `${drill.name} \u2014 ${drill.dosage}`);
+    const seen = new Date(sourceSignal.signal.observed_at);
+    const when = Number.isNaN(seen.getTime()) ? "your latest video" : `your video from ${seen.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+    const because = `Because ${when} showed: ${sourceSignal.priority.says}. "${match.drill.name}" works on it today.`;
+    return {
+      ...block,
+      drills,
+      steps: checklist,
+      because: [...block.because ?? [], because],
+      roadmapReason: `${block.roadmapReason} Recent analysis shaped one existing drill slot.`,
+      gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist } : null
+    };
+  });
+}
+function applyRecurring(block, disciplines, input, catalog, now) {
+  const issues = (input.recurringIssues ?? []).filter((i) => i.sport === input.sport && disciplines.includes(i.skill_domain) && stillRecurring(i, now.getTime())).sort((a, b) => b.analysis_count - a.analysis_count || b.last_seen.localeCompare(a.last_seen));
+  for (const issue of issues) {
+    const discipline = issue.skill_domain;
+    const [match] = matchPrescriptionDrills({
+      catalog: catalog.filter((d3) => d3.category === (discipline === "running" ? "baserunning" : discipline)),
+      circulation: input.circulation,
+      faultKeys: [issue.fault_key],
+      module: MODULE_FOR[discipline],
+      sport: input.sport,
+      max: 1
+    });
+    if (!match || !match.drill.violationKeys.includes(issue.fault_key)) continue;
+    const idx = block.drills.findIndex((d3) => d3.prescriptionOrigin !== "owner" && (d3.stage === void 0 || d3.stage === "drills"));
+    if (idx < 0) return null;
+    const displaced = block.drills[idx];
+    const replacement = {
+      name: match.drill.name,
+      slug: match.drill.id,
+      setup: match.drill.setup || void 0,
+      dosage: displaced.dosage,
+      cue: match.drill.cues[0],
+      equipmentNote: match.drill.equipment.length ? match.drill.equipment.join(", ") : void 0,
+      stage: "drills",
+      prescriptionOrigin: "analysis",
+      analysisInfluence: {
+        version: "analysis-slot-v1",
+        faultKey: issue.fault_key,
+        rootPatternId: issue.fault_key,
+        source: "video_analysis",
+        observedAt: issue.last_seen,
+        recencyWeight: recencyWeight(issue.last_seen, now.getTime()),
+        drillId: match.drill.id,
+        displacedDrill: displaced.name,
+        recurring: { analysisCount: issue.analysis_count, videoIds: issue.video_ids }
+      }
+    };
+    const drills = block.drills.slice();
+    drills[idx] = replacement;
+    const checklist = drills.map((d3) => `${d3.name} \u2014 ${d3.dosage}`);
+    return {
+      ...block,
+      drills,
+      steps: checklist,
+      because: [...block.because ?? [], recurringBecause(issue, match.drill.name)],
+      roadmapReason: `${block.roadmapReason} A recurring finding shaped one existing drill slot.`,
+      gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist } : null
+    };
+  }
+  return null;
+}
+
+// src/lib/hammer/prescription/drillSwap.ts
+function drillKey(modality, drill) {
+  return `${modality}::${(drill.slug ?? drill.name).toLowerCase().trim()}`;
+}
+function applyAdjustments(blocks, adjustments) {
+  if (adjustments.length === 0) return blocks;
+  const byKey = /* @__PURE__ */ new Map();
+  for (const a of adjustments) {
+    if (a.action === "position_worked" || !a.original_key) continue;
+    if (!byKey.has(a.original_key)) byKey.set(a.original_key, a);
+  }
+  if (byKey.size === 0) return blocks;
+  return blocks.map((b) => {
+    let touched = false;
+    const notes = [];
+    const drills = b.drills.map((d3) => {
+      const adj = byKey.get(drillKey(b.modality, d3));
+      if (!adj || adj.modality !== b.modality) return d3;
+      touched = true;
+      notes.push(`${d3.name}: your earlier change needs a safety check. The original work is kept; don't do it if the needed gear or safe space is missing.`);
+      return d3;
+    });
+    if (!touched) return b;
+    return {
+      ...b,
+      drills,
+      roadmapReason: [b.roadmapReason, ...notes].filter(Boolean).join(" ")
+    };
+  });
+}
+
+// src/lib/hammer/prescription/categorySignalEvidence.ts
+var GAME_WHIFF_NEEDS_WORK = 30;
+var GAME_CHASE_NEEDS_WORK = 35;
+var CATEGORY_MODULES = {
+  hitting: ["hitting"],
+  fielding: ["fielding", "defense"]
+};
+var CLIP_FRESH_DAYS = 21;
+function latestClip(clips, modules, now) {
+  const fresh = clips.filter((c) => c.module && modules.includes(c.module)).filter((c) => {
+    const t = Date.parse(c.created_at);
+    const age = now.getTime() - t;
+    return Number.isFinite(t) && age >= 0 && age <= CLIP_FRESH_DAYS * 86400 * 1e3;
+  }).sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+  return fresh[0] ?? null;
+}
+function measuredDirection(clip) {
+  if (!clip.violations) return null;
+  const answers = Object.entries(clip.violations);
+  if (answers.some(([, value]) => value === true)) return "needs-work";
+  return answers.some(([fault, value]) => value === false && !!clip.module && isAssessedBy(clip.module, fault)) ? "looks-good" : null;
+}
+function categorySignalEvidence(clips, games, now = /* @__PURE__ */ new Date()) {
+  const signals = [];
+  for (const [category, modules] of Object.entries(CATEGORY_MODULES)) {
+    const clip = latestClip(clips, modules, now);
+    if (!clip) continue;
+    const direction = measuredDirection(clip);
+    if (!direction) continue;
+    signals.push(
+      direction === "needs-work" ? { category, source: "video", direction: "needs-work", says: `issues on your latest ${modules[0]} video` } : { category, source: "video", direction: "looks-good", says: `your latest ${modules[0]} video looked clean` }
+    );
+  }
+  if (games) {
+    const validPercent = (value) => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
+    const count = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0;
+    const enoughSample = count(games.atBats) && (games.atBats ?? 0) >= 6 || count(games.pitchesSeen) && (games.pitchesSeen ?? 0) >= 20;
+    if (enoughSample && (validPercent(games.whiffPct) || validPercent(games.chasePct))) {
+      const whiffBad = validPercent(games.whiffPct) && (games.whiffPct ?? 0) > GAME_WHIFF_NEEDS_WORK;
+      const chaseBad = validPercent(games.chasePct) && (games.chasePct ?? 0) > GAME_CHASE_NEEDS_WORK;
+      if (whiffBad || chaseBad) {
+        const parts = [
+          whiffBad ? `whiff rate ${games.whiffPct}%` : null,
+          chaseBad ? `chase rate ${games.chasePct}%` : null
+        ].filter(Boolean).join(" and ");
+        signals.push({ category: "hitting", source: "games", direction: "needs-work", says: parts });
+      } else {
+        signals.push({ category: "hitting", source: "games", direction: "looks-good", says: "your contact and pitch selection in games" });
+      }
+    }
+    const top = games.miscueClusters.find((cluster) => cluster.position.trim() && Number.isInteger(cluster.errors) && cluster.errors > 0);
+    if (top) {
+      signals.push({ category: "fielding", source: "games", direction: "needs-work", says: `${top.errors} errors at ${top.position} in the last week` });
+    }
+  }
+  return signals;
+}
+
+// src/lib/hammer/prescription/mixedSignals.ts
+var NAMES = { video: "your video", games: "your games", practice: "your practice logs" };
+var list2 = (s) => s.length <= 1 ? NAMES[s[0]] : `${s.slice(0, -1).map((x) => NAMES[x]).join(", ")} and ${NAMES[s[s.length - 1]]}`;
+function crossReference(category, signals) {
+  const own = signals.filter((s) => s.category === category && s.says.trim());
+  if (!own.length) return { kind: "none" };
+  const bad = own.filter((s) => s.direction === "needs-work");
+  const good = own.filter((s) => s.direction === "looks-good");
+  if (bad.length && good.length) {
+    return {
+      kind: "mixed",
+      keepSafer: true,
+      because: `Mixed signals: ${list2([...new Set(bad.map((s) => s.source))])} show ${bad[0].says}, but ${list2([...new Set(good.map((s) => s.source))])} look good. We're keeping the safer plan.`
+    };
+  }
+  const sources = [...new Set(own.map((s) => s.source))];
+  if (bad.length && sources.length >= 2) {
+    return { kind: "agree", sources, raisePriority: true, because: `Because ${list2(sources)} both show ${bad[0].says}.` };
+  }
+  if (!bad.length) return { kind: "none" };
+  return { kind: "single", source: bad[0].source, because: `Because ${NAMES[bad[0].source]} showed ${bad[0].says}.` };
+}
+
+// src/lib/intelligence/principlePicks.ts
+function parseConnectedWork(text) {
+  if (!text) return [];
+  return text.split("\n").map((line) => line.trim()).filter((line) => /^[a-z0-9][a-z0-9-_]*$/i.test(line));
+}
+function principleDrillBoosts(picks, drillSlug, sport, category) {
+  return picks.filter(
+    (p) => p.sport === sport && p.area === category && parseConnectedWork(p.connected_work).includes(drillSlug)
+  );
+}
+
+// src/lib/hammer/prescription/finalizeDatedPlan.ts
+function finalizeDatedPlan(plan, input) {
+  const base2 = input.cnsHigh ? { ...plan, blocks: plan.blocks.map((b) => ["hitting", "throwing", "defense"].includes(b.modality) && ["build", "sharpen"].includes(b.phase) ? { ...b, phase: "maintain", roadmapReason: `${b.roadmapReason} (Today's load is already high \u2014 keeping skill work at maintenance.)` } : b) } : plan;
+  const influenced = applyFaultPlanInfluence({ ...input, blocks: base2.blocks });
+  const signals = categorySignalEvidence(input.clips, input.games, input.now);
+  const blocks = applyAdjustments(influenced, input.adjustments).map((block) => {
+    if (block.status !== "ready") return block;
+    const category = block.modality === "hitting" ? "hitting" : block.modality === "defense" ? "fielding" : null;
+    const xr = category ? crossReference(category, signals) : null;
+    const mixed = xr?.kind === "mixed" && !block.because?.includes(xr.because) ? { ...block, because: [...block.because ?? [], xr.because] } : block;
+    const pickCategory = category ?? (block.modality === "throwing" ? "throwing" : null);
+    if (!pickCategory) return mixed;
+    const work = mixed.drills.filter((d3) => (d3.stage ?? "drills") === "drills");
+    const boosted = work.filter((d3) => d3.slug && principleDrillBoosts(input.principles, d3.slug, input.sport, pickCategory).length);
+    const first = boosted[0];
+    if (!first || work[0] === first) return mixed;
+    const rest = mixed.drills.filter((d3) => !boosted.includes(d3));
+    const insert = mixed.drills.findIndex((d3) => (d3.stage ?? "drills") === "drills");
+    return {
+      ...mixed,
+      drills: [...rest.slice(0, insert), ...boosted, ...rest.slice(insert)],
+      because: [...mixed.because ?? [], `Your coach's saved guidance puts ${first.name} first.`]
+    };
+  });
+  return { ...base2, blocks };
+}
+
+// supabase/functions/_shared/wic/buntingOutcomes.ts
+function recordedBuntOutcomes(reps) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const rep of reps) {
+    if (rep.batter_side !== "R" && rep.batter_side !== "L" || !BUNT_TYPES.includes(rep.bunt_type) || typeof rep.bunt_success !== "boolean") continue;
+    const key2 = `${rep.batter_side}:${rep.bunt_type}`;
+    const group = groups.get(key2) ?? { side: rep.batter_side, type: rep.bunt_type, attempts: 0, successes: 0 };
+    group.attempts++;
+    if (rep.bunt_success) group.successes++;
+    groups.set(key2, group);
+  }
+  return [...groups.values()].filter(validBuntOutcome);
+}
+
+// src/lib/hammer/prescription/buntingEvidence.ts
+var object = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+var HITS2 = /* @__PURE__ */ new Set(["1B", "2B", "3B", "HR", "single", "double", "triple", "home_run"]);
+var OUTS2 = /* @__PURE__ */ new Set(["K", "SO", "strikeout", "groundout", "flyout", "lineout", "popout", "out", "GO", "FO", "LO", "PO", "FC", "fielders_choice", "ROE", "error"]);
+var NON_AB2 = /* @__PURE__ */ new Set(["BB", "walk", "HBP", "hbp", "SF", "sac_fly", "SAC", "sac_bunt", "catchers_interference"]);
+function projectBuntingEvidence(sessions, atBats, pitches, tasks = [], sport) {
+  const outcomes = [];
+  const sourceIds = [];
+  for (const task of tasks) {
+    const payload = object(task.payload), bunt = object(payload.bunt), log = object(payload.log);
+    if (!sport || payload.sport !== sport || payload.module !== "hitting") continue;
+    const rounds = Array.isArray(log.rounds) ? log.rounds : [];
+    const rows2 = rounds.map((value) => {
+      const row = object(value);
+      return { side: bunt.side, type: bunt.type, attempts: row.attempts, successes: row.successes };
+    });
+    const valid = rows2.filter((v) => validBuntOutcome(v));
+    if (valid.length) {
+      outcomes.push(...valid);
+      sourceIds.push(`task:${task.id}`);
+    }
+  }
+  for (const session of sessions) {
+    if (!["bunting", "hitting"].includes(session.module ?? "")) continue;
+    const blocks = Array.isArray(session.drill_blocks) ? session.drill_blocks : [];
+    const entries = blocks.flatMap((b) => Array.isArray(object(b).bunt_outcomes) ? object(b).bunt_outcomes : []);
+    const valid = entries.filter((v) => validBuntOutcome(object(v)));
+    const reps = Array.isArray(session.micro_layer_data) ? session.micro_layer_data.map((v) => object(v)) : [];
+    const recorded = entries.length ? valid : recordedBuntOutcomes(reps);
+    if (recorded.length) {
+      outcomes.push(...recorded);
+      sourceIds.push(`performance:${session.id}`);
+    }
+  }
+  for (const pitch of pitches) {
+    const recorded = recordedBuntOutcomes([{ batter_side: pitch.bunt_side ?? void 0, bunt_type: pitch.bunt_type ?? void 0, bunt_success: pitch.bunt_success ?? void 0 }]);
+    if (recorded.length) {
+      outcomes.push(...recorded);
+      sourceIds.push(`pitch:${pitch.id}`);
+    }
+  }
+  const games = /* @__PURE__ */ new Map();
+  for (const ab of atBats) {
+    const game = games.get(ab.game_id) ?? { hits: 0, atBats: 0, unknown: false };
+    const result = ab.result ?? "";
+    if (HITS2.has(result)) {
+      game.hits++;
+      game.atBats++;
+    } else if (OUTS2.has(result)) game.atBats++;
+    else if (!NON_AB2.has(result)) game.unknown = true;
+    games.set(ab.game_id, game);
+    sourceIds.push(`ab:${ab.id}`);
+  }
+  return { outcomes, sourceIds: [...new Set(sourceIds)], battingGames: [...games.values()].filter((g) => !g.unknown && g.atBats > 0).map(({ hits, atBats: atBats2 }) => ({ hits, atBats: atBats2 })) };
+}
+
+// src/lib/prescription/planFaultContext.ts
+function planFaultContext(signals, findings, clips, userId, sport, now = Date.now()) {
+  const ownClips = clips.filter((c) => c.user_id === userId && c.sport === sport);
+  const scopes = {};
+  const accepted = signals.filter((signal) => {
+    if (signal.user_id !== userId || signal.source !== "video_analysis") return false;
+    const module = signal.discipline === "running" ? "baserunning" : signal.discipline;
+    const matches = findings.filter((f) => f.user_id === userId && f.skill_domain === signal.discipline && f.fault_key === signal.fault_key && f.root_pattern_key === signal.root_pattern_id);
+    if (!matches.length || matches.length !== signal.sample_size) return false;
+    if (new Set(matches.map((f) => f.video_id)).size !== matches.length) return false;
+    if (matches.some((f) => f.sport !== sport || !f.video_id || !ownClips.some((c) => c.video_id === f.video_id && c.module === module))) return false;
+    const latest = Math.max(...matches.map((f) => Date.parse(f.created_at)));
+    if (!Number.isFinite(latest) || latest !== Date.parse(signal.observed_at)) return false;
+    scopes[signal.id] = { sport, module };
+    return true;
+  });
+  return { rankedFaults: rankFaults(accepted, now, ownClips), signalScopes: scopes, clips: ownClips };
+}
+
+// src/lib/hammer/planAnalysisAccess.ts
+function accessiblePlanFaults(ranked, modules, sport, evidence) {
+  const access = priorityAccess(modules, sport);
+  const allowed = /* @__PURE__ */ new Set();
+  if (access.hasHitting) allowed.add("hitting");
+  if (access.hasPitching) allowed.add("pitching");
+  if (access.hasThrowing) {
+    allowed.add("throwing");
+    allowed.add("fielding");
+    allowed.add("running");
+  }
+  return ranked.flatMap((priority) => {
+    const signals = priority.signals.filter((signal) => allowed.has(signal.discipline));
+    if (!signals.length) return [];
+    if (signals.length === priority.signals.length) return [priority];
+    if (!evidence && priority.fades.length) return [];
+    return rankFaults(signals, evidence?.now ?? Date.now(), evidence?.clips ?? []);
+  }).sort((a, b) => b.score - a.score || a.rootPatternId.localeCompare(b.rootPatternId));
+}
+function accessibleRecurringIssues(issues, modules, sport) {
+  const access = priorityAccess(modules, sport);
+  const ok = (d3) => d3 === "hitting" && access.hasHitting || d3 === "pitching" && access.hasPitching || (d3 === "throwing" || d3 === "fielding" || d3 === "running") && access.hasThrowing;
+  return issues.filter((i) => i.sport === sport && ok(i.skill_domain));
+}
+
+// src/lib/prescription/drillCirculationRead.ts
+var DRILL_HISTORY_LIMIT = 1e3;
+function projectDrillHistory(events) {
+  const served = {};
+  const completedOn = {};
+  const latest = {};
+  for (const row of events) {
+    if (!row.drill_id || !Number.isFinite(Date.parse(row.created_at))) continue;
+    if (row.event === "served") served[row.drill_id] = (served[row.drill_id] ?? 0) + 1;
+    if (row.event === "completed") {
+      const timestamp = Date.parse(row.created_at);
+      if (latest[row.drill_id] === void 0 || timestamp > latest[row.drill_id]) {
+        latest[row.drill_id] = timestamp;
+        completedOn[row.drill_id] = new Date(timestamp).toISOString().slice(0, 10);
+      }
+    }
+  }
+  return { served, completedOn };
+}
+async function readDrillCirculation(sources) {
+  const [owner, totals, events] = await Promise.all([sources.owner, sources.usage, sources.events]);
+  for (const source of [owner, totals, events]) {
+    if (source.error) throw source.error;
+    if (!source.data) throw new Error("Drill history was not returned.");
+    if (source.data.length >= DRILL_HISTORY_LIMIT) throw new Error("Complete drill history is unavailable.");
+  }
+  const usage = {};
+  for (const row of totals.data ?? []) {
+    if (Number.isFinite(row.completed) && row.completed >= 0 && Number.isFinite(row.returned) && row.returned >= 0) {
+      usage[row.drill_id] = { completed: row.completed, returned: row.returned };
+    }
+  }
+  return { rows: owner.data ?? [], usage, ...projectDrillHistory(events.data ?? []) };
+}
+
+// src/data/ENGINE_CONTRACT.ts
+var ENGINE_CONTRACT = {
+  version: "1.0",
+  locked: true,
+  // Retroactive window
+  RETROACTIVE_MAX_DAYS: 7,
+  // MPI composite weights (must sum to 1.0)
+  MPI_WEIGHTS: { bqi: 0.25, fqi: 0.15, pei: 0.2, decision: 0.2, competitive: 0.2 },
+  // Game session weight multiplier
+  GAME_SESSION_WEIGHT: 1.5,
+  // Scout blend weight
+  SCOUT_BLEND_WEIGHT: 0.2,
+  // Overload dampening thresholds (checked in order, first match wins)
+  OVERLOAD_THRESHOLDS: [
+    { days: 28, multiplier: 0.8 },
+    { days: 21, multiplier: 0.85 },
+    { days: 14, multiplier: 0.9 }
+  ],
+  // Absent-day dampening
+  ABSENT_DAMPENING: { days7_threshold: 2, mult7: 0.95, days14_threshold: 4, mult14: 0.85 },
+  // Consistency recovery threshold
+  CONSISTENCY_RECOVERY_PCT: 80,
+  // Release penalties (graduated)
+  RELEASE_PENALTIES: [
+    { release: 1, pct: 12 },
+    { release: 2, pct: 18 },
+    { release: 3, pct: 25 },
+    { release: 4, pct: 30 }
+  ],
+  // Contract modifiers
+  CONTRACT_MODIFIERS: {
+    active: 1,
+    free_agent: 0.95,
+    released: "penalty_table",
+    injured_list: 0.9,
+    retired: 0
+  },
+  // Pro probability caps
+  PRO_PROB_CAP_NON_VERIFIED: 99,
+  PRO_PROB_CAP_VERIFIED: 100,
+  // HoF requirements
+  HOF_MIN_SEASONS: 5,
+  HOF_MIN_PRO_PROB: 100,
+  HOF_BASEBALL_LEAGUES: ["mlb"],
+  HOF_SOFTBALL_LEAGUES: ["mlb", "ausl"],
+  // Velocity thresholds (high velocity definition per sport)
+  HIGH_VELOCITY_BASEBALL_MPH: 100,
+  HIGH_VELOCITY_SOFTBALL_MPH: 70,
+  // BP distance power thresholds
+  BP_DISTANCE_POWER_BASEBALL_FT: 300,
+  BP_DISTANCE_POWER_SOFTBALL_FT: 150,
+  // Governance flag integrity penalties
+  INTEGRITY_PENALTIES: { critical: -15, warning: -5, info: -2 },
+  // Injury hold lookback
+  INJURY_HOLD_LOOKBACK_DAYS: 7,
+  // Session edit/delete windows
+  SESSION_EDIT_WINDOW_HOURS: 48,
+  SESSION_DELETE_WINDOW_HOURS: 24,
+  // Verified stat rules
+  VERIFIED_STAT_REQUIRE_ADMIN: true,
+  VERIFIED_STAT_IMMUTABLE_AFTER_APPROVAL: true,
+  // Nightly process
+  NIGHTLY_CRON_UTC: "05:00",
+  NIGHTLY_SESSION_WINDOW_DAYS: 90,
+  // Governance abuse thresholds
+  RETROACTIVE_ABUSE_THRESHOLD: 3,
+  VOLUME_SPIKE_MULTIPLIER: 3,
+  GRADE_INFLATION_DELTA: 12,
+  GAME_INFLATION_DELTA: 15,
+  // Pitch distance difficulty modeling
+  PITCH_DISTANCE_REFERENCE_FT: 60,
+  PITCH_DISTANCE_MODIFIER_PER_FT: 5e-3,
+  // Season weighting
+  SEASON_WEIGHTS: { in_season: 1, preseason: 0.85, off_season: 0.7 },
+  // Coach verification bonus
+  COACH_VERIFIED_INTEGRITY_BONUS: 3,
+  COACH_VERIFIED_WEIGHT_BONUS: 1.05,
+  // Competition weighting
+  COMPETITION_WEIGHT_ENABLED: true,
+  AGE_PLAY_UP_BONUS_CAP: 0.12,
+  AGE_PLAY_UP_BONUS_PER_YEAR: 0.03,
+  SUMMER_LEAGUE_AI_CLASSIFY: true,
+  // Video limits
+  VIDEO_MAX_CLIP_DURATION_SEC: 300,
+  VIDEO_MAX_FILE_SIZE_MB: 500,
+  // Micro-field composite influence weights
+  MICRO_WEIGHTS: {
+    // BQI modifiers
+    spin_direction: { topspin: -2, backspin: 3, sidespin: 1, knuckle: 0, backspin_tail: 4 },
+    whiff_pct_penalty: 0.1,
+    in_zone_contact_bonus: 0.1,
+    // FQI blends
+    footwork_grade_weight: 0.2,
+    clean_field_pct_weight: 0.15,
+    throw_spin_quality: { carry: 5, tail: 2, cut: 2, neutral: 0 },
+    exchange_time: { fast: 5, average: 0, slow: -5 },
+    // PEI modifiers
+    zone_pct_bonus: 0.1,
+    pitch_whiff_bonus: 0.08,
+    pitch_chase_bonus: 0.05,
+    // Decision modifiers
+    chase_pct_penalty: 0.15,
+    // FQI fielding quality modifiers
+    route_efficiency: { routine: 0, plus: 3, elite: 6 },
+    play_probability: { routine: 0, plus: 3, elite: 6 },
+    receiving_quality: { poor: -3, average: 0, elite: 5 }
+  }
+};
 export {
+  ELITE_DRILL_CATALOG,
+  ENGINE_CONTRACT,
+  accessiblePlanFaults,
+  accessibleRecurringIssues,
   buildHammerDailyPlan,
   contextFromEnvelope,
+  finalizeDatedPlan,
+  mergeCatalog,
+  planFaultContext,
+  priorityAccess,
+  projectBuntingEvidence,
   projectMasterySources,
+  readDrillCirculation,
   setOwnerPlanDrills,
   setWarmupStageOverrides
 };
