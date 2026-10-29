@@ -1,3 +1,4 @@
 - Video-manager shortcuts use the existing shared library from builder headers, outside exercise drafts. Why: opening a new signed-in tab may remount access wrappers; drafts must not be put at risk or catalogs duplicated.
 - Skill drill builder hosts the existing legacy drill editor/review in a distinct URL-backed tab, without moving rows between catalogs. Why: consolidation must preserve each catalog's fields and save authority.
 - Legacy drill video selection writes the chosen canonical library playback URL into the existing video_url field. Why: the legacy catalog has no library-video identity column and must not gain duplicate storage.
+- Informational Video Manager stores placement/finding tags on canonical library_videos with category informational, never on drill rows; athlete readers match exact structured findings and preserve subscription/sport/moderation gates. Why: teaching placements must not become drills, invented evidence or duplicate storage.
