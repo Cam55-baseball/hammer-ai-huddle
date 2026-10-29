@@ -2800,7 +2800,9 @@ const handler = async (req: Request): Promise<Response> => {
       // must survive a cap" relaxation put a compound lift on a rest day.
       // Tell Hammers HOLD ("I need a break" / "I'm travelling") takes the same
       // recovery-day path — it can only ever make the day lighter.
-      const restDayToday = tcsAdjust?.removeLift === true || timelineToday.hold;
+      // Declared weekly rest dates (Sunday, or days outside the saved availability)
+      // take the same recovery-only path — owner rule: rest = soft recovery + Mind.
+      const restDayToday = tcsAdjust?.removeLift === true || timelineToday.hold || availabilityRest === true;
 
       // 2) Trunk primer — every session, rest day included. On a rest day the
       // class filter has already removed everything loaded, so what lands here
