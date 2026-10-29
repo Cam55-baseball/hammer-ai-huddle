@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -20,7 +21,7 @@ export function PhilosophyConversation({onSaved}:{onSaved:()=>void}) {
   const store=async(next:Turn[])=>{
     const {data}=await supabase.auth.getSession();const uid=data.session?.user.id;if(!uid)throw Error('Sign in again. Nothing was applied.');
     let tid=thread;if(!tid){const {data,error}=await supabase.from('recall_threads').insert({user_id:uid,title:'Owner philosophy conversation'}).select('id').single();if(error)throw error;tid=data.id;setThread(tid);}
-    const {error}=await supabase.from('recall_messages').insert(next.map(t=>({thread_id:tid,user_id:uid,role:t.role,parts:[{type:'text',entry:PHILOSOPHY_ENTRY,text:t.text,...(t.review?{review:t.review}:{}),...(t.confirmed?{confirmed:t.confirmed}:{})}]})));if(error)throw error;
+    const {error}=await supabase.from('recall_messages').insert(next.map(t=>({thread_id:tid,user_id:uid,role:t.role,parts:JSON.parse(JSON.stringify([{type:'text',entry:PHILOSOPHY_ENTRY,text:t.text,...(t.review?{review:t.review}:{}),...(t.confirmed?{confirmed:t.confirmed}:{})}])) as Json})));if(error)throw error;
   };
   const send=async()=>{if(!draft.trim()||busy||loading)return;setBusy(true);setError('');setSaved(null);const question=draft.trim();try{
     const {data,error}=await supabase.functions.invoke('hammer-chat',{body:{messages:[...turns.slice(-20).map(t=>({role:t.role,content:t.text})),{role:'user',content:`${PHILOSOPHY_REQUEST}\n\nOwner says: ${question}`} ]}});if(error)throw error;
