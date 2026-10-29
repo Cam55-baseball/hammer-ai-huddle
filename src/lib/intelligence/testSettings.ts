@@ -15,7 +15,7 @@ export function settingsChanges(raw:unknown):SettingChange[]{
   if(!Array.isArray(raw)||raw.length<1||raw.length>12)throw Error('Choose 1–12 exact existing settings.');
   const seen=new Set<string>();
   return raw.map(c=>{
-    if(!c||!['mastery_identity_settings','library_videos','owner_drills','engine_dynamic_weights'].includes(c.target)||typeof c.id!=='string'||!c.id||typeof c.field!=='string'||!Object.hasOwn(c,'before')||!Object.hasOwn(c,'after')||JSON.stringify(c.before)===JSON.stringify(c.after))throw Error('Each setting needs exact different old and new values.');
+    if(!c||!['mastery_identity_settings','library_videos','owner_drills','engine_dynamic_weights'].includes(c.target)||typeof c.id!=='string'||!c.id||typeof c.field!=='string'||!Object.prototype.hasOwnProperty.call(c,'before')||!Object.prototype.hasOwnProperty.call(c,'after')||JSON.stringify(c.before)===JSON.stringify(c.after))throw Error('Each setting needs exact different old and new values.');
     const fields:Record<string,string[]>={mastery_identity_settings:['elite_grade','pitching_standards','prescription_weights','weekly_minimums'],library_videos:['tags'],owner_drills:['fault_keys','placements','routine_role'],engine_dynamic_weights:['weight']};
     if(!fields[c.target].includes(c.field))throw Error('That setting is not supported.');
     const key=`${c.target}/${c.id}/${c.field}`;if(seen.has(key))throw Error('Duplicate setting.');seen.add(key);
