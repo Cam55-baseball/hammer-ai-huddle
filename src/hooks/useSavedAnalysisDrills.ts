@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from './useAuth';
+import { useOptionalAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import type { EliteDrill } from '@/data/drills/eliteDrillCatalog';
 
 /** Favorites use the existing self-owned Vault shelf, never completion events. */
 export function useSavedAnalysisDrills(sport: string) {
-  const { user } = useAuth();
+  const { user } = useOptionalAuth();
   const qc = useQueryClient();
   const key = ['saved-analysis-drills', user?.id, sport];
   const query = useQuery({ queryKey: key, enabled: !!user, queryFn: async () => {
