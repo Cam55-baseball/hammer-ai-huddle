@@ -548,7 +548,7 @@ function subscriptionSchedule(modules, sport) {
   return {
     ...access,
     pitcherOnly: (pitcher || access.hasPitching) && !position && !access.hasHitting,
-    hasDefense: pitcher || position || access.hasThrowing,
+    hasDefense: pitcher || access.hasPitching || position || access.hasThrowing,
     hasBaserunning: position,
     hasBunting: position,
     hasPitching: access.hasPitching
@@ -8375,7 +8375,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const reason = scheduleSignal.postureToday !== "normal" || b.status !== "ready" ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...b.because ?? [], reason] };
   }), focusProjection);
-  const fullRestDay = roadmapInputs.fullRestDay === true || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day2) => day2.isToday)?.restDay === true;
+  const fullRestDay = roadmapInputs.fullRestDay === true || today.getDay() === SIX_DAY_REST_DOW || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day2) => day2.isToday)?.restDay === true;
   const bunting = roadmapInputs.bunting;
   const masteryOrdered = applyMasteryFocus(goalOrdered, roadmapInputs.masteryFocus);
   const bunted = bunting ? applyBuntingPlan(masteryOrdered, {

@@ -64,6 +64,7 @@ import {
   resolveWeeklyTemplate,
   applyMicrocycle,
   projectWeeklyRoadmap,
+  SIX_DAY_REST_DOW,
   SCHEDULABLE_MODALITIES,
   type ResolvedMicrocycle,
   type ModalityDayDecision,
@@ -2478,6 +2479,7 @@ export function buildHammerDailyPlan(
     return { ...b, because: [...(b.because ?? []), reason] };
   }), focusProjection);
   const fullRestDay = roadmapInputs.fullRestDay === true ||
+    today.getDay() === SIX_DAY_REST_DOW ||
     (scheduleSignal.postureToday === "normal" && weeklyRoadmap.find(day => day.isToday)?.restDay === true);
   // Last composition boundary: laterality, owner slots, overrides and warm-up anchors cannot reopen rest.
   const bunting = roadmapInputs.bunting;

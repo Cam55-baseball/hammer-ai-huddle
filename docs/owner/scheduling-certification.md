@@ -1,527 +1,200 @@
 # Scheduling certification — October 29, 2026
 
-**What was run:** the real shared daily-plan builder (the same one that writes every player's saved day) for 3 programs × 2 sports × 4 levels (youth 11, high school 16, college 20, pro 26) × 8 weeks (weeks 1–4 off-season, 5–8 in-season) = 1,344 days, plus a low-readiness copy of every day. Test file: `src/lib/hammer/prescription/schedulingCertification.sim.test.ts` (24/24 pass).
-
-## Certified (every program, sport and level)
-- 6 training days and Sunday rest every week; Sunday has no skill work.
-- No thin days: every Monday–Saturday has skill work.
-- Weekly floors for 5Tool and Golden 2Way: hitting ≥3, defense ≥4, baserunning ≥1 every week.
-- Order of the day: warm-up first, nothing skill-based after recovery.
-- Low readiness (check-in under 0.4) removes all full-speed defense and baserunning work.
-- A Mind item every day (study items before you start, calm items last).
-- 5Tool never gets a pitching card.
-- Rest days on the live builder (fixed earlier today): Sunday saves only gentle recovery (verified on the owner and a TEST player).
-
-## Not certified by this run (honest limits)
-- **Physical side** (lifting, Power Primer numbers, conditioning base routes and pitcher conditioning, arm ledger and throw rules): these run only in the server builder. This run did not build 8 weeks there for these 24 personas — that needs 24 marked TEST accounts and ~1,300 server builds. Their rules are covered by the existing server tests and the owner/TEST 7-day builds (conditioning 5–6 per week, gentle Sunday).
-- **Bunting** cards, **routine/fix-it rotation over 8 weeks**, and **block/season card + strip matching** were not part of this simulation; the fix-it rotation and card match were proved on the TEST player for single days only.
-- **Defense needs a glove:** players who never confirmed a glove get a "Confirm my equipment" card instead of defense. The glove choice was added to sign-up today; existing players must confirm it.
-
-- **Off-season vs in-season:** weekly card counts are the same in both (your six-day, no-ramp rule). This run did not certify the differences inside the cards (lifting phase, doses).
-
-## Needs your decision
-- **Complete Pitcher players get hitting, defense and baserunning cards every training day** (they did not buy hitting). Pitching work arrives inside the throwing card. Should Complete Pitcher days drop the hitting card? I did not change this because it changes every pitcher customer's day.
-
-## Baseball — Complete Pitcher — youth
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 5/5, defense 4/4, baserunning 3/3, throwing 4/4; hitting cards on pitcher plan 5/wk
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Baseball — Complete Pitcher — high school
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 5/5; hitting cards on pitcher plan 6/wk
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Baseball — Complete Pitcher — college
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 5/5; hitting cards on pitcher plan 6/wk
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Baseball — Complete Pitcher — pro
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 5/5; hitting cards on pitcher plan 6/wk
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Baseball — 5Tool Player — youth
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 5/5, defense 4/4, baserunning 3/3, throwing 5/5
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Baseball — 5Tool Player — high school
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Baseball — 5Tool Player — college
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Baseball — 5Tool Player — pro
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Baseball — Golden 2Way — youth
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 5/5, defense 4/4, baserunning 3/3, throwing 5/5
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Baseball — Golden 2Way — high school
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Baseball — Golden 2Way — college
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Baseball — Golden 2Way — pro
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — Complete Pitcher — youth
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 5/5, defense 4/4, baserunning 3/3, throwing 4/4; hitting cards on pitcher plan 5/wk
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — Complete Pitcher — high school
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 5/5; hitting cards on pitcher plan 6/wk
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — Complete Pitcher — college
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 5/5; hitting cards on pitcher plan 6/wk
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — Complete Pitcher — pro
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 5/5; hitting cards on pitcher plan 6/wk
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — 5Tool Player — youth
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 5/5, defense 4/4, baserunning 3/3, throwing 5/5
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — 5Tool Player — high school
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — 5Tool Player — college
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — 5Tool Player — pro
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — Golden 2Way — youth
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 5/5, defense 4/4, baserunning 3/3, throwing 5/5
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense · Mind: breathing
-- Wed: hitting, throwing, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense · Mind: focus_routine
-- Fri: hitting, throwing · Mind: journaling
-- Sat: defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — Golden 2Way — high school
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — Golden 2Way — college
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-## Softball — Golden 2Way — pro
-Weekly counts (off-season wk1 / in-season wk5): trainingDays 6/6, hitting 6/6, defense 6/6, baserunning 6/6, throwing 6/6
-
-Sample off-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
-
-Sample in-season week:
-- Mon: hitting, throwing, defense, baserunning · Mind: situations
-- Tue: hitting, throwing, defense, baserunning · Mind: breathing
-- Wed: hitting, throwing, defense, baserunning · Mind: film_study
-- Thu: hitting, throwing, defense, baserunning · Mind: focus_routine
-- Fri: hitting, throwing, defense, baserunning · Mind: journaling
-- Sat: hitting, throwing, defense, baserunning · Mind: situations
-- Sun: Rest — gentle recovery · Mind: breathing
+**Verdict: OPEN — D, E and H are not fully server-certified.**
+
+## Evidence and limits
+
+- Added 25 shared-builder regression cases: 24 program/sport/level combinations × 28 dated game-week days = 672 shared skill days, plus a Sunday-game safety case. Explicit simulation inputs are not hosted schedules, outings or completed work.
+- Found and fixed two regressions in the shared source: a Sunday game could reopen defense; pitching-only analysis entitlement could omit pitcher defense. The generated server package was refreshed. These fixes are preview/package-only; no new deployment occurred.
+- Existing high-school baseball TEST player: entered November 2, 4 and 6 games through Calendar → Import schedule → review → Add 3 to calendar at 390×844. Reloaded canonical gp_games records showed all three scheduled games on the exact entered dates. Opponent was explicitly TEST DEH; no outing or completed load was invented.
+- The same TEST player’s real wk-generate-daily request refused with initial_inputs_missing. Sixteen required starting fields remain missing. No gate, assessment, health fact, verified max or start flag was manufactured to obtain a plan.
+- Focused suite: 17 files / 254 tests passed, covering physical Option B, numeric PAP algorithm, game proximity, in-season timeline, conditioning, arm ledger, windmill and running rest. The separate legacy eight-week shared suite also passed 24 tests. These are algorithm tests, not the requested 224 saved server days.
+- Automatic preview build was clean after the edits. Browser schedule evidence: /tmp/browser/scheduling-deh/import-reviewed.png and import-saved.png; canonical readback: import-proof.json.
+
+## Requested game densities
+
+| Sport | Pro | College | High school | Youth |
+|---|---:|---:|---:|---:|
+| Baseball | 6 | 4 | 3 | 2 |
+| Softball | 4 | 5 | 3 | 2 |
+
+These are explicit TEST input choices within the owner’s ranges. They were exercised in the shared builder, not entered for eight hosted personas.
+
+## Still open
+
+1. **D:** App-entered game schedules for every requested cohort, saved loggable game-card flow, light pregame work plus postgame recovery, recorded starter/reliever outing and next-day protocol, and purchased-floor reconciliation around dense games remain unproven.
+2. **E:** No completed 8-persona × 28-day server certification (224 days). Exact six high-school program/sport personas plus pro baseball 5Tool and college softball Golden 2Way need complete TEST setup and canonical safety inputs. Real verified Primer numbers, two running sessions per week, route distance, pitcher conditioning, arm-ledger limits and readiness must be checked on persisted rows and reloaded UI, not inferred from tests.
+3. **H:** Samples below are actual shared skill-builder outputs only. Server lifting phase/dose, conditioning phase/type, saved bunting and Primer placement remain unverified. Dense pro schedules leave no non-game training slots in this shared sample; weekly floors are NOT certified as met.
+4. **Release:** Shared Sunday/PFP fixes are pending named wk-generate-daily deployment authorization for this D/E/H run. No publish, migration, cron or iOS changes.
+
+## How to read the sample weeks
+
+Every listed card comes from an actual local shared-builder result. Dates are explicit TEST dates, June 1–7, 2026. High-school level is used in the six samples, with games Tuesday/Thursday/Saturday. No real athlete’s week is represented.
+
+**Not available in these samples:** Conditioning and Power Primer are server-owned; therefore every row explicitly marks them unverified. Bunting needs active canonical catalog/evidence inputs not supplied by this isolated fixture; its absence is not a passed floor. Lifting below is a client skill-side card, not a certified saved server lift. Mind is separately generated and daily presence/placement was not checked here. Internal Game IQ is not presented as a released athlete action.
+
+## Baseball — Complete Pitcher
+
+### Off-season
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Pitching — baseball · bullpen; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Tue · 2026-06-02 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Pitching — baseball · flush; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Wed · 2026-06-03 | Warm-up; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Thu · 2026-06-04 | Warm-up; Lift card (server dose unverified); Pitching — baseball · bullpen; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Fri · 2026-06-05 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Pitching — baseball · fielding only; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Sat · 2026-06-06 | Warm-up; Pitching — baseball · bullpen; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+
+### In-season with three TEST games
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Pitching — baseball · bullpen; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Tue · 2026-06-02 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Wed · 2026-06-03 | Warm-up; Pitching — baseball · long toss; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Thu · 2026-06-04 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Fri · 2026-06-05 | Warm-up; Pitching — baseball · fielding only; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Sat · 2026-06-06 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+
+## Baseball — 5Tool
+
+### Off-season
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Tue · 2026-06-02 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Wed · 2026-06-03 | Warm-up; Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Thu · 2026-06-04 | Warm-up; Lift card (server dose unverified); Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Fri · 2026-06-05 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sat · 2026-06-06 | Warm-up; Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+
+### In-season with three TEST games
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Tue · 2026-06-02 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Wed · 2026-06-03 | Warm-up; Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Thu · 2026-06-04 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Fri · 2026-06-05 | Warm-up; Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sat · 2026-06-06 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+
+## Baseball — Golden 2Way
+
+### Off-season
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Hitting; Pitching — baseball · bullpen; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Tue · 2026-06-02 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Hitting; Pitching — baseball · flush; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Wed · 2026-06-03 | Warm-up; Hitting; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Thu · 2026-06-04 | Warm-up; Lift card (server dose unverified); Hitting; Pitching — baseball · bullpen; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Fri · 2026-06-05 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Hitting; Pitching — baseball · fielding only; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sat · 2026-06-06 | Warm-up; Hitting; Pitching — baseball · bullpen; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+
+### In-season with three TEST games
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Hitting; Pitching — baseball · bullpen; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Tue · 2026-06-02 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Wed · 2026-06-03 | Warm-up; Hitting; Pitching — baseball · long toss; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Thu · 2026-06-04 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Fri · 2026-06-05 | Warm-up; Hitting; Pitching — baseball · fielding only; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sat · 2026-06-06 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+
+## Softball — Complete Pitcher
+
+### Off-season
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Pitching — windmill · bullpen; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Tue · 2026-06-02 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Pitching — windmill · flush; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Wed · 2026-06-03 | Warm-up; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Thu · 2026-06-04 | Warm-up; Lift card (server dose unverified); Pitching — windmill · bullpen; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Fri · 2026-06-05 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Pitching — windmill · flush; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Sat · 2026-06-06 | Warm-up; Pitching — windmill · bullpen; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+
+### In-season with three TEST games
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Pitching — windmill · side; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Tue · 2026-06-02 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Wed · 2026-06-03 | Warm-up; Pitching — windmill · side; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Thu · 2026-06-04 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Fri · 2026-06-05 | Warm-up; Pitching — windmill · flush; Defense; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Sat · 2026-06-06 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: not purchased |
+
+## Softball — 5Tool
+
+### Off-season
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Tue · 2026-06-02 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Wed · 2026-06-03 | Warm-up; Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Thu · 2026-06-04 | Warm-up; Lift card (server dose unverified); Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Fri · 2026-06-05 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sat · 2026-06-06 | Warm-up; Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+
+### In-season with three TEST games
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Tue · 2026-06-02 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Wed · 2026-06-03 | Warm-up; Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Thu · 2026-06-04 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Fri · 2026-06-05 | Warm-up; Hitting; Position throwing; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sat · 2026-06-06 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+
+## Softball — Golden 2Way
+
+### Off-season
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Hitting; Pitching — windmill · bullpen; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Tue · 2026-06-02 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Hitting; Pitching — windmill · flush; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Wed · 2026-06-03 | Warm-up; Hitting; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Thu · 2026-06-04 | Warm-up; Lift card (server dose unverified); Hitting; Pitching — windmill · bullpen; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Fri · 2026-06-05 | Warm-up; Speed — off-season volume; Lift card (server dose unverified); Hitting; Pitching — windmill · flush; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sat · 2026-06-06 | Warm-up; Hitting; Pitching — windmill · bullpen; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+
+### In-season with three TEST games
+
+| Day | Actual shared cards | Required server-only checks |
+|---|---|---|
+| Mon · 2026-06-01 | Warm-up; Lift card (server dose unverified); Hitting; Pitching — windmill · side; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Tue · 2026-06-02 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Wed · 2026-06-03 | Warm-up; Hitting; Pitching — windmill · side; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Thu · 2026-06-04 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Fri · 2026-06-05 | Warm-up; Hitting; Pitching — windmill · flush; Defense; Baserunning; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sat · 2026-06-06 | Scheduled TEST game (not a generated loggable card in this output); Warm-up; Defense — pregame primer; Nutrition; Recovery | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+| Sun · 2026-06-07 | Sunday rest — only retained soft-recovery rows; no training | Conditioning, Primer, saved lift dose and Mind: unverified; bunting: unverified |
+
+## Remaining exact acceptance procedure
+
+1. Authorize only the necessary named TEST helper rollout and wk-generate-daily fixes; never reset existing TEST identities or alter real players.
+2. Prepare the exact eight isolated TEST personas through the existing owner-only path. Complete saved onboarding, entitlement, consent and starting safety inputs; use explicitly labeled TEST values, never call them measured maxima.
+3. As each player, enter four weeks of games through the schedule importer. Review and confirm all dates. For D’s other levels, enter their specified game densities too.
+4. Generate each dated day through the actual server and read back both wk_prescriptions and the composed saved sport day. Separate planned game from logged game and completed pitcher outing.
+5. Compare off-season versus in-season inside each saved lift/conditioning/skill card; record exact sets, reps, percentage, verified load, Primer number, route distance and rest. Mark absent/unknown numbers honestly.
+6. Reload affected-player Today and game logging, verify pre/postgame and next-outing recovery; aggregate purchased floors per week with explicit safety exceptions. Reject missing rows, fallback days, invented dates and unverified arm totals.
+7. Only after all 224 persisted dates and required game-density cohorts pass, replace this OPEN verdict with certified results.
