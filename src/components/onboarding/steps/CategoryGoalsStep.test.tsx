@@ -28,7 +28,7 @@ it('the actual editor saves two ranked picks and all category priorities togethe
   for (const category of ['Hitting', 'Fielding', 'Throwing', 'Speed', 'Power']) {
     fireEvent.click(screen.getByRole('button', { name: `${category} priority` }));
   }
-  fireEvent.click(screen.getByRole('button', { name: 'Save goals' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save & continue' }));
   await waitFor(() => expect(state.success).toHaveBeenCalledTimes(1));
   expect(state.writes).toHaveLength(1);
   expect(state.writes[0].category_goals.baseball.position.hitting).toEqual([
