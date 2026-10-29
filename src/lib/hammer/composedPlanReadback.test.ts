@@ -2,7 +2,7 @@ import{describe,expect,it}from 'vitest';
 import{buildHammerDailyPlan}from './prescription/dailyPlan';
 import{contextFromEnvelope}from './context/contextProjection';
 import{composedPlanReadback}from './composedPlanReadback';
-const ctx=contextFromEnvelope(Object.fromEntries(Object.entries({sport_primary:'baseball',position_primary:'SS',lifecycle_band:'adult',season_phase:'off',weekly_availability_days:6,injury_history:[],equipment_effective:['bat'],lifting_age_years:2}).map(([k,value])=>[k,{value,owner:'test',source:'test',confidence:'high' as const,missing:false,last_updated:null}])));
+const ctx=contextFromEnvelope(Object.fromEntries(Object.entries({sport_primary:'baseball',position_primary:'SS',lifecycle_band:'adult',season_phase:'off',weekly_availability_days:6,injury_history:[],equipment_effective:['bat'],lifting_age_years:2}).map(([k,value])=>[k,{value,owner:'athlete' as const,source:'test',confidence:'high' as const,missing:false,last_updated:null}])));
 describe('certified composed day readback',()=>{
  it('returns exact saved block content for its date and sport rather than fresh reconstruction',()=>{
    const p=buildHammerDailyPlan(ctx,undefined,null,null,undefined,new Date('2026-10-29T12:00:00Z'));
