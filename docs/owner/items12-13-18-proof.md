@@ -39,4 +39,4 @@ Client Start now additionally lists missing bats/throws/height/weight/sleep/lift
 
 390×844 affected-player proof: existing adult `demogoals29`, session-only owner tool, no reseed. `/assessment?review=profile` → Training, nutrition & health → health intake PASS (screenshots `assessment-inputs.png`, `assessment-health.png`). That player's original assessment is already complete/started, so initial completion and missing Start UI remain NOT proven. Other existing TEST accounts hit canonical parent-signature gates; not bypassed.
 
-Tests and latest preview status recorded in roadmap/checklist. TEST-session files stay private under `/tmp/browser`; temporary unsaved analysis uploads retain existing cleanup lifecycle.
+Verification: **91 tests across 13 unique files passed**, in a 12-file/88-test affected run plus the new isolated three-test heart persistence run. Automatic preview **build OK at 03:42:41 UTC**. Full suite was not requested/run. TEST-session files stay private under `/tmp/browser`; temporary unsaved analysis uploads retain existing cleanup lifecycle.

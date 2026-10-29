@@ -5,6 +5,7 @@
 - 13: catalog-drill hearts + existing Saved drills shelf built/tested; old false local completion removed. Actual heart save/reload unproven; Add to Today/fix-it not implemented (new protected server save requires named authorization).
 - 18: assessment canonical planning/nutrition/health review built; adult TEST phone review/health opening proven. Missing-input client list extended, canonical fuel draft-only bug fixed. Initial full save/readback, remaining audited inputs and server gate extension still open.
 - Exact audit/evidence: `docs/owner/items12-13-18-proof.md`. No publish/migration/deployment/cron/iOS changes; earlier YES below is historical, not the current verdict.
+- Focused verification:91tests/13unique files PASS; automatic previewOK03:42:41. No full-suite claim.
 
 **Batch closeout · October 28, 2026 · after the owner's "both, combined" answer**
 
