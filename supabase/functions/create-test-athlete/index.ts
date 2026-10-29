@@ -459,7 +459,7 @@ Deno.serve(async (req) => {
     const r = await fetch(`${url}/functions/v1/wk-generate-daily`, {
       method: "POST",
       headers: { Authorization: `Bearer ${s.access_token}`, apikey: Deno.env.get("SUPABASE_ANON_KEY")!, "Content-Type": "application/json" },
-      body: JSON.stringify({ plan_date: planDate }),
+      body: JSON.stringify({ plan_date: planDate, ...(body?.compose === true ? { compose_sport_day: true } : {}) }),
     });
     return json({ user_id: id, email, phase_status: ph.status, phase: phase?.plan ?? phase, status: r.status, result: await r.json().catch(() => null) });
   } catch (e) {
