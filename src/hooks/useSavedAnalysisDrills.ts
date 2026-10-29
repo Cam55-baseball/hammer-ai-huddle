@@ -15,7 +15,7 @@ export function useSavedAnalysisDrills(sport: string) {
     return data ?? [];
   } });
   const save = useMutation({ mutationFn: async (drill: EliteDrill) => {
-    if (!user || !query.isSuccess) throw new Error('Wait for your saved drills to load.');
+    if (!user || !query.isSuccess || save.isPending) throw new Error('Wait for your saved drills to load.');
     if (query.data.some(row => row.drill_name === drill.name && row.module_origin === drill.category)) return;
     const { data, error } = await supabase.from('vault_saved_drills').insert({ user_id: user.id, sport,
       module_origin: drill.category, drill_name: drill.name,

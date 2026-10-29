@@ -13,6 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { writeDraftSlot, readDraftSlot } from "@/lib/onboarding/draftStore";
 import { LifestyleIntakeBlock } from "@/components/hpi/LifestyleIntakeBlock";
+import { supabase } from '@/integrations/supabase/client';
+import { persistContextAnswer } from '@/lib/hammer/context/acquisition';
+import type { RegisterDraftFlush } from '@/lib/assessment/draftFlush';
 
 interface FuelDraft {
   sleep_target_hrs?: number | null;
@@ -21,26 +24,33 @@ interface FuelDraft {
   allergies?: string;
 }
 
-interface Props { onContinue: () => void; onBack: () => void; }
+interface Props { onContinue: () => void; onBack: () => void; registerFlush?: RegisterDraftFlush; }
 
 const DIETS = ["Omnivore", "Vegetarian", "Vegan", "Pescatarian", "Keto", "Other"] as const;
 
-export function FuelRecoveryStep({ onContinue, onBack }: Props) {
+export function FuelRecoveryStep({ onContinue, onBack, registerFlush }: Props) {
   const { user } = useAuth();
   const [sleep, setSleep] = useState("");
   const [water, setWater] = useState("");
   const [diet, setDiet] = useState<string>("");
   const [allergies, setAllergies] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
-      const d = await readDraftSlot<FuelDraft>(user.id, "fuel-recovery");
+      const draft = await readDraftSlot<FuelDraft>(user.id, "fuel-recovery");
+      const result = await supabase.from('athlete_context').select('sleep_target_hrs,water_goal_oz,diet_style,allergies').eq('user_id', user.id).maybeSingle();
+      if (result.error) { setError("Couldn't load your saved fuel answers. Try again."); return; }
+      const d = draft ?? result.data;
+      setReady(true);
       if (!d) return;
       if (d.sleep_target_hrs != null) setSleep(String(d.sleep_target_hrs));
       if (d.water_goal_oz != null) setWater(String(d.water_goal_oz));
       if (d.diet_style) setDiet(d.diet_style);
-      if (d.allergies) setAllergies(d.allergies);
+      if (typeof d.allergies === 'string') setAllergies(d.allergies);
     })();
   }, [user?.id]);
 
@@ -56,6 +66,23 @@ export function FuelRecoveryStep({ onContinue, onBack }: Props) {
       ...patch,
     });
   };
+  const save = async () => {
+    if (!user || !ready || saving) return false;
+    setSaving(true); setError(null);
+    try {
+      if (sleep.trim() && (!(Number(sleep) > 0) || Number(sleep) > 24)) throw new Error('Check your sleep hours.');
+      if (water.trim() && !(Number(water) > 0)) throw new Error('Check your water goal.');
+      const entered: Array<[string, string | number]> = [];
+      if (sleep.trim()) entered.push(['sleep_target_hrs', Number(sleep)]);
+      if (water.trim()) entered.push(['water_goal_oz', Number(water)]);
+      if (diet) entered.push(['diet_style', diet]);
+      if (allergies.trim()) entered.push(['allergies', allergies.trim()]);
+      for (const [key, value] of entered) await persistContextAnswer(user.id, key, value, 'onboarding.fuel_recovery');
+      return true;
+    } catch (err) { setError(err instanceof Error ? err.message : "Couldn't save your answers."); return false; }
+    finally { setSaving(false); }
+  };
+  useEffect(() => { registerFlush?.(save); return () => registerFlush?.(null); }, [registerFlush, user?.id, ready, sleep, water, diet, allergies, saving]);
 
   return (
     <section className="space-y-4">
@@ -107,10 +134,11 @@ export function FuelRecoveryStep({ onContinue, onBack }: Props) {
       </div>
 
       <LifestyleIntakeBlock />
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1.5 h-4 w-4" />Back</Button>
-        <Button onClick={onContinue}>Continue<ArrowRight className="ml-2 h-4 w-4" /></Button>
+        <Button variant="ghost" disabled={saving || !ready} onClick={() => { void save().then(ok => { if (ok) onBack(); }); }}><ArrowLeft className="mr-1.5 h-4 w-4" />Back</Button>
+        <Button disabled={saving || !ready} onClick={() => { void save().then(ok => { if (ok) onContinue(); }); }}>{saving ? 'Saving…' : 'Continue'}<ArrowRight className="ml-2 h-4 w-4" /></Button>
       </div>
     </section>
   );

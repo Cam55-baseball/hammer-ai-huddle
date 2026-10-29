@@ -51,7 +51,7 @@ export default function VideoManager() {
       const result = await supabase.from('library_videos').update({ title: draft.title.trim(), tags, sport: [draft.sport], skill_domains: [draft.domain as SkillDomain],
         ...(!file ? { video_url: draft.url } : {}), distribution_tier: draft.active ? 'normal' : 'blocked' }).eq('id', id).select('id,tags,distribution_tier').single();
       if (result.error) throw result.error;
-      if (result.data.tags?.length !== tags.length) throw new Error('Video tags did not read back.');
+      if (result.data.tags?.length !== tags.length || !tags.every(tag => result.data.tags?.includes(tag))) throw new Error('Video tags did not read back.');
       await qc.invalidateQueries({ queryKey: ['owner-informational-videos'] });
       await qc.invalidateQueries({ queryKey: ['informational-videos'] });
       setDraft(null); setFile(null); toast({ title: 'Informational video saved' });
