@@ -3892,6 +3892,14 @@ const handler = async (req: Request): Promise<Response> => {
       fallbackCoveredCategories: fallbackCoveredSpeedCategories,
 
     });
+    if (!speedCertification.duplicateCheckOk) {
+      console.debug("[wk-generate-daily] speed composition", JSON.stringify(finalRxs.filter(r => r.slot === "speed").map(r => ({
+        slug: r.movement_slug, from: r.substituted_from_slug,
+        category: lib.find(m => m.slug === r.movement_slug)?.speed_category,
+        selectedCategory: (r.why_payload as any)?.speed_required_category,
+        governor: (r.why_payload as any)?.load_spike_protection,
+      }))));
+    }
     const batSpeedCertification = certifyBatSpeed({
       prescriptions: finalRxs as any,
       catalog: lib as any,
