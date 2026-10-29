@@ -4,7 +4,7 @@ import {useAuth}from '@/hooks/useAuth';
 import {useSubscription}from '@/hooks/useSubscription';
 import {readComposedWeek}from '@/lib/hammer/readComposedWeek';
 import {composedDayCategories}from '@/lib/hammer/composedWeek';
-import {isoShift}from '../../../../supabase/functions/_shared/wic/schedule/timeline';
+import {isoShift}from '../../../supabase/functions/_shared/wic/schedule/timeline';
 import {localIso}from '@/hooks/usePitcherSchedule';
 import { Button } from "@/components/ui/button";
 import { SeasonDatesDialog } from "@/components/hammer/SeasonDatesDialog";
