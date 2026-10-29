@@ -316,8 +316,8 @@ function eligibleFor(r, slots, ctx) {
 function ownerDrillsForSlot(slots, ctx) {
   return rows.filter((r) => eligibleFor(r, slots, ctx));
 }
-function mergeOwnerSlotDrills(drills, slots, ctxOrSport, day = /* @__PURE__ */ new Date()) {
-  const ctx = typeof ctxOrSport === "string" ? { sport: ctxOrSport, day } : ctxOrSport;
+function mergeOwnerSlotDrills(drills, slots, ctxOrSport, day2 = /* @__PURE__ */ new Date()) {
+  const ctx = typeof ctxOrSport === "string" ? { sport: ctxOrSport, day: day2 } : ctxOrSport;
   const pool = ownerDrillsForSlot(slots, ctx).sort((a, b) => a.id.localeCompare(b.id));
   if (pool.length === 0 || drills.length === 0) return drills;
   let target = -1;
@@ -329,7 +329,7 @@ function mergeOwnerSlotDrills(drills, slots, ctxOrSport, day = /* @__PURE__ */ n
     }
   }
   if (target < 0) return drills;
-  const dayIndex = Math.floor((ctx.day ?? day).getTime() / 864e5);
+  const dayIndex = Math.floor((ctx.day ?? day2).getTime() / 864e5);
   const pick = pool[dayIndex % pool.length];
   const owned = {
     name: pick.name,
@@ -347,10 +347,10 @@ function mergeOwnerSlotDrills(drills, slots, ctxOrSport, day = /* @__PURE__ */ n
   };
   return drills.map((drill, index) => index === target ? owned : drill);
 }
-var rotate = (pool, day) => {
+var rotate = (pool, day2) => {
   if (!pool.length) return null;
   const sorted = [...pool].sort((a, b) => a.id.localeCompare(b.id));
-  return sorted[Math.floor(day.getTime() / 864e5) % sorted.length];
+  return sorted[Math.floor(day2.getTime() / 864e5) % sorted.length];
 };
 function ownerBuntDrill(ctx) {
   return rotate(ownerDrillsForSlot(["hammers_today:bunting"], ctx).filter((r) => r.bunt_side === ctx.side && r.bunt_type === ctx.type), ctx.day ?? /* @__PURE__ */ new Date());
@@ -398,7 +398,7 @@ function buntingProgram(facts) {
   const under300 = facts.battingWindow !== void 0 ? validWindow && window2.hits / window2.atBats < lowAverage : games.length >= 2 && games.every((game) => game.hits / game.atBats < lowAverage);
   const sides = facts.bats === "S" ? ["R", "L"] : facts.bats ? [facts.bats] : [];
   const wantedSessions = facts.speedy === true || facts.lacksPower === true ? 3 : 2;
-  const weekdays = [...new Set(facts.legalWeekdays)].filter((day) => Number.isInteger(day) && day >= 0 && day <= 6).sort((a, b) => a - b).slice(0, 6);
+  const weekdays = [...new Set(facts.legalWeekdays)].filter((day2) => Number.isInteger(day2) && day2 >= 0 && day2 <= 6).sort((a, b) => a - b).slice(0, 6);
   const scheduled = included && sides.length ? weekdays.slice(0, wantedSessions) : [];
   const dose = (side, type) => {
     const floor = under300 || side === "L" && (facts.leftPower === true || facts.powerGoal === true) ? 7 : 5;
@@ -504,13 +504,65 @@ function missingGearAnswer(checked, note, known) {
   return [.../* @__PURE__ */ new Set([...selected, ...other ? [other] : []])];
 }
 
+// src/utils/tierAccess.ts
+function hasFeatureAccess(modules, feature) {
+  return modules.some((m) => {
+    switch (feature) {
+      case "hitting":
+        return m.includes("hitting") || m.includes("5tool") || m.includes("golden2way");
+      case "pitching":
+        return m.includes("pitching") || m.includes("pitcher") || m.includes("golden2way");
+      case "throwing":
+        return m.includes("throwing") || m.includes("5tool") || m.includes("golden2way");
+      default:
+        return false;
+    }
+  });
+}
+
+// supabase/functions/_shared/analysisTypes.ts
+var ANALYSIS_TYPES = ["hitting", "pitching", "throwing"];
+
+// src/lib/assessment/initialAssessment.ts
+function requiredAnalyses(modules) {
+  const m = [...modules];
+  return ANALYSIS_TYPES.filter((f) => hasFeatureAccess(m, f));
+}
+
+// src/lib/hammer/priorityAccess.ts
+function priorityAccess(modules, sport) {
+  const scoped = modules.flatMap((module) => module.startsWith(`${sport}_`) ? [module] : ["hitting", "pitching", "throwing"].includes(module) ? [`${sport}_${module}`] : []);
+  const included = requiredAnalyses(scoped);
+  return {
+    hasPitching: included.includes("pitching"),
+    hasHitting: included.includes("hitting"),
+    hasThrowing: included.includes("throwing")
+  };
+}
+
+// src/lib/hammer/prescription/subscriptionSchedule.ts
+function subscriptionSchedule(modules, sport) {
+  const access = priorityAccess(modules, sport);
+  const pitcher = modules.includes(`${sport}_pitcher`);
+  const position = modules.includes(`${sport}_5tool`) || modules.includes(`${sport}_golden2way`) || access.hasHitting && access.hasThrowing;
+  return {
+    ...access,
+    pitcherOnly: (pitcher || access.hasPitching) && !position && !access.hasHitting,
+    hasDefense: pitcher || position || access.hasThrowing,
+    hasBaserunning: position,
+    hasBunting: position,
+    hasPitching: access.hasPitching
+  };
+}
+
 // src/lib/hammer/prescription/buntingPlan.ts
 function buntIdentity(slug) {
   const match = /^bunt_([rl])_(squeeze|sac_3b|sac_1b|drag|push|hit)$/.exec(slug);
   return match ? { side: match[1] === "r" ? "R" : "L", type: match[2] } : null;
 }
 function applyBuntingPlan(blocks, facts, options) {
-  const program = buntingProgram(facts);
+  const access = subscriptionSchedule(facts.modules, facts.sport);
+  const program = buntingProgram({ ...facts, modules: access.hasBunting ? [`${facts.sport}_5tool`] : facts.modules });
   const owned = new Set(options.owned);
   for (const token of COMMON_SWAP_GEAR) if (missingGearAnswer([token], void 0, options.owned).some((g) => options.owned.includes(g))) owned.add(token);
   const sportBall = facts.sport === "softball" ? "softballs" : "baseballs";
@@ -1266,8 +1318,8 @@ function resolveWeeklyTemplate(proj) {
   const legal = new Set(availableTrainingDays(proj.weeklyAvailabilityDays));
   return {
     ...template,
-    perModality: Object.fromEntries(Object.entries(template.perModality).map(([key2, days]) => [key2, ANCHOR_MODALITIES.includes(key2) ? days : days.filter((day) => legal.has(day))])),
-    priorityDayOrder: Object.fromEntries(Object.entries(template.priorityDayOrder ?? {}).map(([key2, days]) => [key2, days.filter((day) => legal.has(day))])),
+    perModality: Object.fromEntries(Object.entries(template.perModality).map(([key2, days]) => [key2, ANCHOR_MODALITIES.includes(key2) ? days : days.filter((day2) => legal.has(day2))])),
+    priorityDayOrder: Object.fromEntries(Object.entries(template.priorityDayOrder ?? {}).map(([key2, days]) => [key2, days.filter((day2) => legal.has(day2))])),
     availableDays: [...legal]
   };
 }
@@ -1501,57 +1553,6 @@ function secondGoalFirst(blocks, proj) {
     out[slot] = shared[i];
   });
   return out;
-}
-
-// src/utils/tierAccess.ts
-function hasFeatureAccess(modules, feature) {
-  return modules.some((m) => {
-    switch (feature) {
-      case "hitting":
-        return m.includes("hitting") || m.includes("5tool") || m.includes("golden2way");
-      case "pitching":
-        return m.includes("pitching") || m.includes("pitcher") || m.includes("golden2way");
-      case "throwing":
-        return m.includes("throwing") || m.includes("5tool") || m.includes("golden2way");
-      default:
-        return false;
-    }
-  });
-}
-
-// supabase/functions/_shared/analysisTypes.ts
-var ANALYSIS_TYPES = ["hitting", "pitching", "throwing"];
-
-// src/lib/assessment/initialAssessment.ts
-function requiredAnalyses(modules) {
-  const m = [...modules];
-  return ANALYSIS_TYPES.filter((f) => hasFeatureAccess(m, f));
-}
-
-// src/lib/hammer/priorityAccess.ts
-function priorityAccess(modules, sport) {
-  const scoped = modules.flatMap((module) => module.startsWith(`${sport}_`) ? [module] : ["hitting", "pitching", "throwing"].includes(module) ? [`${sport}_${module}`] : []);
-  const included = requiredAnalyses(scoped);
-  return {
-    hasPitching: included.includes("pitching"),
-    hasHitting: included.includes("hitting"),
-    hasThrowing: included.includes("throwing")
-  };
-}
-
-// src/lib/hammer/prescription/subscriptionSchedule.ts
-function subscriptionSchedule(modules, sport) {
-  const access = priorityAccess(modules, sport);
-  const pitcher = modules.includes(`${sport}_pitcher`);
-  const position = modules.includes(`${sport}_5tool`) || modules.includes(`${sport}_golden2way`) || access.hasHitting && access.hasThrowing;
-  return {
-    ...access,
-    pitcherOnly: (pitcher || access.hasPitching) && !position && !access.hasHitting,
-    hasDefense: pitcher || position || access.hasThrowing,
-    hasBaserunning: position,
-    hasBunting: position,
-    hasPitching: access.hasPitching
-  };
 }
 
 // supabase/functions/_shared/planSwap/planningGear.ts
@@ -1920,17 +1921,17 @@ function throwUnits(events) {
 function windmillCheck(age, history, today, planned) {
   const w = ARM_DEFAULTS.windmill;
   const out = [];
-  const day = (d3) => Math.round(Date.parse(d3) / 864e5);
-  const t = day(today);
+  const day2 = (d3) => Math.round(Date.parse(d3) / 864e5);
+  const t = day2(today);
   if ((planned.gamePitches ?? []).some((g) => g > w.gameMax)) out.push(`No more than ${w.gameMax} pitches in a game.`);
   if (planned.pitches > w.dayMax) out.push(`No more than ${w.dayMax} pitches in a day.`);
-  const pitched = new Set(history.filter((h) => h.pitches > 0).map((h) => day(h.date)));
+  const pitched = new Set(history.filter((h) => h.pitches > 0).map((h) => day2(h.date)));
   let streak = 0;
   for (let d3 = t - 1; pitched.has(d3); d3--) streak++;
   if (streak >= w.maxConsecutiveDays) out.push(`No more than ${w.maxConsecutiveDays} days of pitching in a row.`);
   if (isYouth(age)) {
     if (planned.innings > w.youthDayInnings) out.push(`No more than ${w.youthDayInnings} innings in a day.`);
-    const y = history.find((h) => day(h.date) === t - 1);
+    const y = history.find((h) => day2(h.date) === t - 1);
     if (y && y.innings >= w.youthRestAfterInnings) out.push(`Rest day after ${w.youthRestAfterInnings} or more innings.`);
   }
   return out;
@@ -2006,7 +2007,103 @@ function u13ThrowBlockFrom(age, days, today) {
   return yr.blocked ? yr.reason : null;
 }
 
+// supabase/functions/_shared/wic/pitching/windmillProgram.ts
+var WINDMILL_PROGRAM_VERSION = "windmill_program_v1";
+var WINDMILL_LIBRARY = [
+  { slug: "wm_k_position_snap", name: "K-position wrist snap", kind: "drill", minAge: 8, sets: 2, reps: 8, equipment: ["softball"], cue: "Arm at the hip, snap the wrist through. Short distance, easy effort." },
+  { slug: "wm_half_circle_whip", name: "Half-circle whip", kind: "drill", minAge: 8, sets: 2, reps: 8, equipment: ["softball"], cue: "Start at 12 o'clock, whip down past the hip. Stay close to the body." },
+  { slug: "wm_drive_line_stride", name: "Drive and stride on the power line", kind: "drill", minAge: 8, sets: 2, reps: 5, equipment: [], cue: "Push hard off the drive leg and land on the power line, foot turned 0\u201345\xB0 toward your throwing side." },
+  { slug: "wm_walk_through", name: "Walk-through windmill", kind: "drill", minAge: 9, sets: 2, reps: 6, equipment: ["softball"], cue: "Step in, full circle, finish tall. Smooth, about 70% effort." },
+  { slug: "wm_band_resisted_circle", name: "Band-resisted arm circle", kind: "resisted", minAge: 13, sets: 2, reps: 8, equipment: ["bands"], cue: "Light band, full circle, slow and controlled. Never to fatigue." },
+  { slug: "wm_fastball_spots", name: "Fastball to spots", kind: "pitch", minAge: 8, sets: 1, reps: 10, pitchType: "fastball", equipment: ["softball"], cue: "Full pitch. Hit the glove \u2014 in, out, up, down." },
+  { slug: "wm_changeup", name: "Change-up", kind: "pitch", minAge: 10, sets: 1, reps: 6, pitchType: "change", equipment: ["softball"], cue: "Same arm speed as the fastball. Let the grip slow it." },
+  { slug: "wm_drop_ball", name: "Drop ball", kind: "pitch", minAge: 12, sets: 1, reps: 6, pitchType: "drop", equipment: ["softball"], cue: "Shorter stride, stay tall over the front side." },
+  { slug: "wm_curveball", name: "Curveball", kind: "pitch", minAge: 12, sets: 1, reps: 6, pitchType: "curve", equipment: ["softball"], cue: "Stride a little toward your throwing-arm side. Spin it, don't force it." },
+  { slug: "wm_rise_ball", name: "Rise ball", kind: "pitch", minAge: 14, sets: 1, reps: 6, pitchType: "rise", equipment: ["softball"], cue: "Longer stride, get under it. Stop if your shoulder or elbow complains." },
+  { slug: "wm_screwball", name: "Screwball", kind: "pitch", minAge: 14, sets: 1, reps: 6, pitchType: "screw", equipment: ["softball"], cue: "Stride a little toward your glove side. Smooth spin." },
+  { slug: "wm_game_sim", name: "Game simulation innings", kind: "pitch", minAge: 10, sets: 1, reps: 15, pitchType: "mixed", equipment: ["softball"], cue: "Pitch like it's a game: full routine between batters. Count every pitch." }
+];
+var none = (reasons) => ({ type: "none", rows: [], fullPitches: 0, drillThrows: 0, armUnits: 0, reasons, version: WINDMILL_PROGRAM_VERSION });
+var day = (d3) => Math.round(Date.parse(`${d3}T00:00:00Z`) / 864e5);
+var TARGET = { none: 0, drills: 0, build: 30, movement: 45, game_like: 60, maintain: 35, sharpen: 20 };
+function planWindmillSession(i) {
+  const reasons = [];
+  const phase = i.phase === "preseason" ? "pre_season" : i.phase;
+  if (i.armPain) return none(["Arm pain reported \u2014 no pitching today."]);
+  if (i.gameToday) return none(["Game today \u2014 the game is your pitching."]);
+  if (i.readiness != null && i.readiness < 40) return none(["Low readiness \u2014 no pitching today."]);
+  if (phase === "post_season") return none(["Post-season \u2014 the arm gets a break from pitching."]);
+  const y = i.history.find((h) => day(h.date) === day(i.planDate) - 1);
+  if (y && (y.pitches >= 60 || y.innings >= 4)) return none(["Big pitching day yesterday \u2014 recovery today."]);
+  const blocks = windmillCheck(i.age, i.history, i.planDate, { pitches: i.todayPitchesSoFar + 1, innings: 0 });
+  if (blocks.length) return none(blocks);
+  let type;
+  if (i.gameTomorrow) type = "sharpen";
+  else if (phase === "os_q1") type = "drills";
+  else if (phase === "os_q2") type = "build";
+  else if (phase === "os_q3") type = "movement";
+  else if (phase === "os_q4" || phase === "pre_season") type = "game_like";
+  else type = "maintain";
+  if (i.growthMode && (phase === "os_q1" || phase === "os_q2")) {
+    type = "drills";
+    reasons.push("Growth mode \u2014 drills only.");
+  }
+  const offSeason = phase.startsWith("os_");
+  if (type !== "drills" && type !== "sharpen" && offSeason && (i.priorFullSessionsThisWeek >= 3 || i.fullSessionYesterday)) {
+    type = "drills";
+    reasons.push(i.fullSessionYesterday ? "Pitched yesterday \u2014 drills today." : "Three pitching days already this week \u2014 drills today.");
+  }
+  const age = i.age ?? 14;
+  let scale = age < 13 ? 0.6 : age < 15 ? 0.8 : 1;
+  if (i.growthMode) scale *= 0.7;
+  if (i.readiness != null && i.readiness < 60) {
+    scale *= 0.5;
+    reasons.push("Readiness is middling \u2014 half the pitches.");
+  }
+  const room = Math.max(0, ARM_DEFAULTS.windmill.dayMax - i.todayPitchesSoFar);
+  let fullTarget = Math.min(room, Math.round(TARGET[type] * scale));
+  const has = (eq) => i.equipment == null || eq.every((e) => i.equipment.includes(e) || e === "softball");
+  const legal = (d3) => age >= d3.minAge && has(d3.equipment);
+  const pick = (slug) => WINDMILL_LIBRARY.find((d3) => d3.slug === slug);
+  const rows3 = [];
+  const add = (d3, reps = d3.reps, sets = d3.sets) => {
+    if (!legal(d3) || reps <= 0) return;
+    rows3.push({ slug: d3.slug, name: d3.name, kind: d3.kind, sets, reps, pitchType: d3.pitchType, countWeight: d3.kind === "pitch" ? 1 : d3.kind === "drill" && d3.equipment.includes("softball") ? 0.25 : 0, cue: d3.cue });
+  };
+  add(pick("wm_k_position_snap"), type === "sharpen" ? 6 : 8);
+  add(pick("wm_half_circle_whip"), type === "sharpen" ? 6 : 8);
+  add(pick("wm_drive_line_stride"));
+  if (type === "drills") {
+    add(pick("wm_walk_through"));
+    if (offSeason && age >= 13) add(pick("wm_band_resisted_circle"));
+  }
+  if (fullTarget > 0) {
+    const menu = type === "build" ? ["wm_fastball_spots", "wm_changeup"] : type === "movement" ? ["wm_fastball_spots", "wm_changeup", "wm_drop_ball", "wm_curveball", "wm_rise_ball", "wm_screwball"] : type === "game_like" ? ["wm_fastball_spots", "wm_game_sim", "wm_changeup", "wm_drop_ball", "wm_rise_ball"] : ["wm_fastball_spots", "wm_changeup", "wm_drop_ball", "wm_curveball", "wm_rise_ball"];
+    const usable = menu.map(pick).filter(legal);
+    let left = fullTarget;
+    usable.forEach((d3, idx) => {
+      if (left < 4) return;
+      const share = idx === 0 ? Math.max(4, Math.round(fullTarget * 0.4)) : Math.max(4, Math.round(left / (usable.length - idx)));
+      const n = Math.min(left, share);
+      add(d3, n, 1);
+      left -= n;
+    });
+    fullTarget -= left;
+  }
+  const fullPitches = rows3.filter((r) => r.kind === "pitch").reduce((s, r) => s + r.sets * r.reps, 0);
+  const drillThrows = rows3.filter((r) => r.countWeight === 0.25).reduce((s, r) => s + r.sets * r.reps, 0);
+  const armUnits = fullPitches + drillThrows * 0.25;
+  return { type, rows: rows3, fullPitches, drillThrows, armUnits, reasons, version: WINDMILL_PROGRAM_VERSION };
+}
+
 // src/lib/hammer/prescription/pitchingDay.ts
+function windmillPlanningDrills(input) {
+  if (!input.history || input.history.unavailable || input.age == null || input.armPain) return [];
+  const pitchRows = input.history.rows.filter((r) => r.source === "pitching" && !/skip|cancel|miss/i.test(r.status ?? ""));
+  const days = [...new Set(pitchRows.map((r) => r.entry_date))].map((date) => ({ date, pitches: pitchRows.filter((r) => r.entry_date === date).reduce((n, r) => n + (r.count ?? 0), 0), innings: 0 }));
+  const session = planWindmillSession({ planDate: input.date, phase: input.phase, age: input.age, readiness: input.readiness, armPain: input.armPain, growthMode: false, history: days, todayPitchesSoFar: days.find((d3) => d3.date === input.date)?.pitches ?? 0, gameToday: !!input.outings?.startsToday, gameTomorrow: !!input.outings?.startsTomorrow, priorFullSessionsThisWeek: days.filter((d3) => d3.date >= new Date(Date.parse(input.date) - 6 * 864e5).toISOString().slice(0, 10) && d3.pitches > 0).length, fullSessionYesterday: days.some((d3) => d3.date === new Date(Date.parse(input.date) - 864e5).toISOString().slice(0, 10) && d3.pitches > 0), equipment: input.equipment });
+  return session.rows.map((r) => ({ slug: r.slug, name: r.name, category: r.kind === "pitch" ? "position_skill" : r.countWeight > 0 ? "regulation" : "band_prep", overloadClass: r.countWeight > 0 ? "regulation" : void 0, intensity: r.kind === "pitch" ? "moderate" : "prep", stage: r.kind === "pitch" ? "full_go" : "prep", dosage: r.kind === "pitch" ? `${r.sets * r.reps} pitches` : `${r.sets}x${r.reps} reps`, cue: r.cue, stopIf: "Shoulder or elbow pain, fatigue or unsafe space \u2014 stop." }));
+}
 function eassArmEvent(drill) {
   if (["band_prep", "cooldown", "recovery"].includes(drill.category)) return null;
   if (drill.category === "position_skill" && drill.overloadClass == null) return null;
@@ -6763,7 +6860,7 @@ function drillsToSteps(drills) {
 function drillsToChecklist(drills) {
   return drills.map((d3) => `${d3.name} \u2014 ${d3.dosage}`);
 }
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, armHistory, planDate, armRole, positionThrowing, skillExecutionAllowed = true }) {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, planDate, armRole, positionThrowing, skillExecutionAllowed = true }) {
   const declaredPos = firstPositionToken(ctx.get("position_primary")?.value) ?? firstPositionToken(ctx.get("position")?.value) ?? null;
   const pos = firstPositionToken(positionOverride) ?? declaredPos;
   const liftingAge = proj.liftingAgeYears;
@@ -7276,6 +7373,11 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         readinessScore: readinessScore2
       };
       const eass = buildEassPrescription(eassCtx);
+      if (armRole && normalizeSport(sportRaw) === "softball") {
+        const care = eass.drills.filter((d3) => ["band_prep", "cooldown", "recovery"].includes(d3.category));
+        const phase = pitchingPhase ?? (seasonPhase === "off" ? "os_q1" : seasonPhase === "pre" ? "preseason" : seasonPhase === "in" ? "in_season" : "post_season");
+        eass.drills = [...care, ...planDate ? windmillPlanningDrills({ date: planDate, phase, age: ageYears, readiness: readinessScore2, armPain: armSore || injuryRegions.some((r) => ["shoulder", "elbow", "ucl", "forearm"].includes(r)), equipment: [...proj.equipmentList], history: armHistory, outings: pitcherOutings }) : []];
+      }
       if (armRole === "two_way") {
         const position = normalizePosition(declaredPos) === "pitcher" ? normalizePosition(ctx.get("position_secondary")?.value) : normalizePosition(declaredPos);
         const positionWork = buildEassPrescription({ ...eassCtx, position: position === "pitcher" ? "utility" : position, isThrowingDay: !pitcherOutings?.startsToday && !pitcherOutings?.startsTomorrow && !pitcherOutings?.pitchedYesterday, isRecoveryDay: eassCtx.isRecoveryDay || !!pitcherOutings?.startsToday || !!pitcherOutings?.startsTomorrow });
@@ -8199,6 +8301,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       positionOverride: m === "throwing" && access?.hasPitching || m === "defense" && access?.pitcherOnly ? "P" : positionOverrideArg,
       pitcherOutings: roadmapInputs.pitcherOutings,
       pitchingType: access?.hasPitching ? pitchingDay(today, sport, quarter, roadmapInputs.pitcherOutings) : void 0,
+      pitchingPhase: quarter.phase === "off" ? `os_q${quarter.quarter}` : quarter.phase === "pre" ? "preseason" : quarter.phase === "in" ? "in_season" : "post_season",
       armRole: access?.hasPitching ? access.pitcherOnly ? "pitcher" : "two_way" : void 0,
       positionThrowing: !!access && !access.hasPitching,
       armHistory: roadmapInputs.armHistory,
@@ -8217,7 +8320,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   );
   const weeklyTemplate = goalWeek.template;
   const microcycle = applyMicrocycle(weeklyTemplate, today, goalWeek.targets, planReadinessBand(ctx));
-  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, goalWeek.targets).map((day) => ({ ...day, modalities: day.modalities.filter((m) => allowed(m.key)) }));
+  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, goalWeek.targets).map((day2) => ({ ...day2, modalities: day2.modalities.filter((m) => allowed(m.key)) }));
   const activeToday = new Set(
     firstPass.filter((b) => b.status === "ready" || b.status === "awaiting-input").map((b) => b.modality)
   );
@@ -8271,7 +8374,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const reason = scheduleSignal.postureToday !== "normal" || b.status !== "ready" ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...b.because ?? [], reason] };
   }), focusProjection);
-  const fullRestDay = roadmapInputs.fullRestDay === true || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day) => day.isToday)?.restDay === true;
+  const fullRestDay = roadmapInputs.fullRestDay === true || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day2) => day2.isToday)?.restDay === true;
   const bunting = roadmapInputs.bunting;
   const masteryOrdered = applyMasteryFocus(goalOrdered, roadmapInputs.masteryFocus);
   const bunted = bunting ? applyBuntingPlan(masteryOrdered, {
@@ -8317,7 +8420,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const pitching = { ...b, drills: pitchingDrills, steps: drillsToSteps(pitchingDrills), modality: "pitching", title: `Pitching \u2014 ${sport === "softball" ? "windmill" : "baseball"} \xB7 ${type.replace(/_/g, " ")}`, route: "/practice?module=pitching", ctaLabel: "Open pitching", gamePlanTemplate: null, because: [...b.because ?? [], "Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."] };
     return [pitching, ...throwingDrills.length ? [{ ...b, drills: throwingDrills, steps: drillsToSteps(throwingDrills), title: "Throwing \u2014 position work within your shared arm budget", gamePlanTemplate: null }] : []];
   });
-  const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day) => ({ ...day, modalities: day.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
+  const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));
   }
@@ -10509,9 +10612,9 @@ function computePopTimeGrade(popTimeSec, scaleRows, opts) {
 var rows2 = (v) => Array.isArray(v) ? v.filter((r) => !!r && typeof r === "object" && !Array.isArray(r)) : [];
 function recordedDate(v) {
   if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}(?:$|T)/.test(v)) return null;
-  const day = v.slice(0, 10);
-  const time = Date.parse(`${day}T00:00:00Z`);
-  return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === day && Number.isFinite(Date.parse(v)) ? day : null;
+  const day2 = v.slice(0, 10);
+  const time = Date.parse(`${day2}T00:00:00Z`);
+  return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === day2 && Number.isFinite(Date.parse(v)) ? day2 : null;
 }
 var velocityPosition = (v) => {
   const p = String(v ?? "").toLowerCase();
