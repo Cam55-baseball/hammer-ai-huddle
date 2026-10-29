@@ -3400,7 +3400,6 @@ function pitchingDay(date, sport, quarter, facts) {
   if (facts?.startsToday) return "start";
   if (facts?.startsTomorrow) return "touch";
   if (facts?.relieverAvailableSoon) return "available";
-  if (date.getDay() === 6 && quarter.phase !== "post") return "bullpen";
   const cycle = buildPitchingMicrocycle({ sport, rung: "sustain", quarter, profile: DEFAULT_PITCHER_PROFILE, today: date, gameDows: [], preferredBullpenDow: null });
   const type = cycle.today.dayType;
   return type === "start" || type === "game" || type === "available" ? "bullpen" : type;
