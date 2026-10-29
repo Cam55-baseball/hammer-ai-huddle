@@ -3,10 +3,10 @@ import { CircleHelp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-export function MeaningTitle({ title, children, organization = false }: { title: string; children: ReactNode; organization?: boolean }) {
+export function MeaningTitle({ title, children, organization = false }: { title: ReactNode; children: ReactNode; organization?: boolean }) {
   const [open, setOpen] = useState(false);
   return <>
-    <Button variant="ghost" onClick={() => setOpen(true)} className="h-auto min-h-11 max-w-full justify-start gap-2 whitespace-normal px-0 text-left text-lg font-semibold" aria-label={organization ? `What does this mean? ${title}` : `What this means: ${title}`}>
+    <Button variant="ghost" onClick={() => setOpen(true)} className="h-auto min-h-11 max-w-full justify-start gap-2 whitespace-normal px-0 text-left text-lg font-semibold" aria-label={typeof title === 'string' ? (organization ? `What does this mean? ${title}` : `What this means: ${title}`) : 'What this means'}>
       {title}<CircleHelp className="h-4 w-4 shrink-0 text-muted-foreground" />
     </Button>
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[80dvh] overflow-y-auto"><DialogHeader>
