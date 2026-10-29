@@ -1,1 +1,2 @@
 - Actual-result labels read steps and mixed reps separately from canonical round measurements, preserving precise time and feet. Why: canonical count projections cannot distinguish steps from repetitions on their own.
+- Send catalog adapts existing Vault and sport drill declarations without fabricating template references; notifications project pending self-scoped prescriptions and Sent workouts reads canonical responses. Why: discovery must not introduce parallel invitations or logs.

@@ -1,327 +1,74 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Send, Lock, Loader2, Search, Package } from 'lucide-react';
-import { CustomActivityTemplate } from '@/types/customActivity';
-import { LockPreset, LOCK_PRESETS, LockableField } from '@/types/sentActivity';
-import { useSentActivities } from '@/hooks/useSentActivities';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Search, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { getActivityIcon } from '@/components/custom-activities/IconPicker';
-import { hexToRgba } from '@/hooks/useUserColors';
+import { useSentActivities } from '@/hooks/useSentActivities';
+import { useWorkoutCatalog } from '@/hooks/useWorkoutCatalog';
+import { SEND_CATEGORIES, sendCatalog, filterSendCatalog } from '@/lib/coachRx/sendCatalog';
+import type { CustomActivityTemplate } from '@/types/customActivity';
 
-interface BulkSendDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  selectedPlayerIds: string[];
-  selectedPlayerNames: string[];
-}
-
-export function BulkSendDialog({ 
-  open, 
-  onOpenChange, 
-  selectedPlayerIds,
-  selectedPlayerNames 
-}: BulkSendDialogProps) {
-  const { t } = useTranslation();
-  const { loading: sendLoading, sendActivityToPlayers } = useSentActivities();
-  
-  const [templates, setTemplates] = useState<CustomActivityTemplate[]>([]);
-  const [templatesLoading, setTemplatesLoading] = useState(false);
-  const [selectedTemplates, setSelectedTemplates] = useState<string[]>([]);
-  const [lockPreset, setLockPreset] = useState<LockPreset>('none');
-  const [message, setMessage] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sendingProgress, setSendingProgress] = useState(0);
-  const [isSending, setIsSending] = useState(false);
-
-  const fetchTemplates = useCallback(async () => {
-    setTemplatesLoading(true);
+interface BulkSendDialogProps { open: boolean; onOpenChange: (open: boolean) => void; selectedPlayerIds: string[]; selectedPlayerNames: string[]; }
+export function BulkSendDialog({ open, onOpenChange, selectedPlayerIds, selectedPlayerNames }: BulkSendDialogProps) {
+  const { user } = useAuth();
+  const { loading, sendActivityToPlayers } = useSentActivities();
+  const vault = useWorkoutCatalog();
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('all');
+  const [sport, setSport] = useState('baseball');
+  const [selected, setSelected] = useState<string[]>([]);
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA'));
+  const [sending, setSending] = useState(false);
+  const [sentIds, setSentIds] = useState<string[]>([]);
+  const templates = useQuery({ queryKey: ['coach-send-templates', user?.id], enabled: open && !!user, queryFn: async () => {
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) return [];
+    const { data, error } = await supabase.from('custom_activity_templates').select('*').eq('user_id', auth.user.id).is('deleted_at', null).order('title');
+    if (error) throw error;
+    return (data ?? []) as unknown as CustomActivityTemplate[];
+  } });
+  useEffect(() => { if (open) { setSearch(''); setCategory('all'); setSelected([]); setSentIds([]); setDate(new Date().toLocaleDateString('en-CA')); } }, [open]);
+  const items = sendCatalog(vault.data ?? [], templates.data ?? [], sport);
+  const filtered = filterSendCatalog(items, search, category);
+  const send = async () => {
+    setSending(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
-
-      const { data, error } = await supabase
-        .from('custom_activity_templates')
-        .select('*')
-        .eq('user_id', userData.user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setTemplates((data || []) as unknown as CustomActivityTemplate[]);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-    } finally {
-      setTemplatesLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (open) {
-      fetchTemplates();
-      setSelectedTemplates([]);
-      setLockPreset('none');
-      setMessage('');
-      setSearchTerm('');
-      setSendingProgress(0);
-      setIsSending(false);
-    }
-  }, [open, fetchTemplates]);
-
-  const handleTemplateToggle = (templateId: string) => {
-    setSelectedTemplates(prev => 
-      prev.includes(templateId) 
-        ? prev.filter(id => id !== templateId)
-        : [...prev, templateId]
-    );
-  };
-
-  const getLockedFields = (): LockableField[] => {
-    const preset = LOCK_PRESETS.find(p => p.key === lockPreset);
-    return preset?.fields || [];
-  };
-
-  const filteredTemplates = templates.filter(t => 
-    t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.activity_type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleBulkSend = async () => {
-    if (selectedTemplates.length === 0 || selectedPlayerIds.length === 0) return;
-    
-    setIsSending(true);
-    const lockedFields = getLockedFields();
-    let successCount = 0;
-    let failCount = 0;
-    
-    const totalOperations = selectedTemplates.length;
-    
-    for (let i = 0; i < selectedTemplates.length; i++) {
-      const templateId = selectedTemplates[i];
-      const template = templates.find(t => t.id === templateId);
-      
-      if (template) {
-        const success = await sendActivityToPlayers(
-          template,
-          selectedPlayerIds,
-          lockedFields,
-          message.trim() || undefined
-        );
-        
-        if (success) {
-          successCount++;
-        } else {
-          failCount++;
-        }
+      for (const id of selected.filter(id => !sentIds.includes(id))) {
+        const item = items.find(item => item.id === id);
+        if (!item) return;
+        const template = { id: item.templateId ?? crypto.randomUUID(), title: item.title, exercises: item.exercises } as CustomActivityTemplate;
+        const ok = await sendActivityToPlayers(template, selectedPlayerIds, [], undefined, { category: item.category, planDate: date, sourceTemplateId: item.templateId });
+        if (!ok) return;
+        setSentIds(previous => [...previous, id]);
       }
-      
-      setSendingProgress(((i + 1) / totalOperations) * 100);
-    }
-
-    setIsSending(false);
-    
-    if (failCount === 0) {
       onOpenChange(false);
-    }
+    } finally { setSending(false); }
   };
-
-  const totalSends = selectedTemplates.length * selectedPlayerIds.length;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] p-0">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-xl font-black flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            {t('coach.bulkSend', 'Send Activities to Players')}
-          </DialogTitle>
-        </DialogHeader>
-
-        <ScrollArea className="max-h-[calc(90vh-140px)] px-6">
-          <div className="space-y-6 py-4">
-            {/* Selected Players Summary */}
-            <Card className="border-primary/30 bg-primary/5">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">
-                    {t('coach.sendingTo', 'Sending to')}:
-                  </span>
-                  <Badge variant="default">
-                    {selectedPlayerIds.length} {t('coach.players', 'players')}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                  {selectedPlayerNames.join(', ')}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Separator />
-
-            {/* Activity Selection */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-bold">
-                  {t('coach.selectActivities', 'Select Activities')}
-                </Label>
-                {selectedTemplates.length > 0 && (
-                  <Badge variant="secondary">
-                    {selectedTemplates.length} {t('common.selected', 'selected')}
-                  </Badge>
-                )}
-              </div>
-
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={t('coach.searchActivities', 'Search activities...')}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-
-              {templatesLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : filteredTemplates.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">{t('coach.noActivities', 'No activities found')}</p>
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {filteredTemplates.map(template => {
-                    const Icon = getActivityIcon(template.icon);
-                    const isSelected = selectedTemplates.includes(template.id);
-                    
-                    return (
-                      <div 
-                        key={template.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                          isSelected 
-                            ? 'bg-primary/10 border-primary' 
-                            : 'hover:bg-muted/50'
-                        }`}
-                        onClick={() => handleTemplateToggle(template.id)}
-                      >
-                        <Checkbox 
-                          checked={isSelected}
-                          onCheckedChange={() => {}}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <div 
-                          className="p-1.5 rounded"
-                          style={{ backgroundColor: hexToRgba(template.color, 0.2) }}
-                        >
-                          {template.custom_logo_url ? (
-                            <img src={template.custom_logo_url} alt="" className="h-5 w-5 object-contain" />
-                          ) : (
-                            <Icon className="h-5 w-5" style={{ color: template.color }} />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{template.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {t(`customActivity.types.${template.activity_type}`)}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            <Separator />
-
-            {/* Lock Settings */}
-            <div className="space-y-4">
-              <Label className="text-sm font-bold flex items-center gap-2">
-                <Lock className="h-4 w-4" />
-                {t('sentActivity.lockSettings', 'Lock Settings')}
-              </Label>
-
-              <RadioGroup value={lockPreset} onValueChange={(v) => setLockPreset(v as LockPreset)}>
-                <div className="grid grid-cols-2 gap-2">
-                  {LOCK_PRESETS.filter(p => p.key !== 'custom').map(preset => (
-                    <div key={preset.key} className="flex items-center space-x-2">
-                      <RadioGroupItem value={preset.key} id={`bulk-${preset.key}`} />
-                      <Label htmlFor={`bulk-${preset.key}`} className="text-sm cursor-pointer">
-                        {t(preset.labelKey)}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </RadioGroup>
-            </div>
-
-            <Separator />
-
-            {/* Message */}
-            <div className="space-y-2">
-              <Label className="text-sm font-bold">
-                {t('sentActivity.message', 'Message (Optional)')}
-              </Label>
-              <Textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder={t('sentActivity.messagePlaceholder', 'Add a note for the players...')}
-                rows={3}
-              />
-            </div>
-
-            {/* Summary */}
-            {selectedTemplates.length > 0 && selectedPlayerIds.length > 0 && (
-              <Card className="border-primary/30 bg-primary/5">
-                <CardContent className="p-4">
-                  <p className="text-sm font-medium text-center">
-                    {t('coach.bulkSendSummary', 'This will send {{activities}} activities to {{players}} players ({{total}} total sends)', {
-                      activities: selectedTemplates.length,
-                      players: selectedPlayerIds.length,
-                      total: totalSends
-                    })}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </ScrollArea>
-
-        <div className="flex items-center justify-end gap-3 p-6 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSending}>
-            {t('common.cancel')}
-          </Button>
-          <Button 
-            onClick={handleBulkSend} 
-            disabled={sendLoading || isSending || selectedTemplates.length === 0}
-            className="gap-2"
-          >
-            {isSending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {Math.round(sendingProgress)}%
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                {t('coach.sendToPlayers', 'Send to {{count}} Players', { count: selectedPlayerIds.length })}
-              </>
-            )}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+  const toggle = (id: string) => setSelected(previous => previous.includes(id) ? previous.filter(value => value !== id) : [...previous, id]);
+  return <Dialog open={open} onOpenChange={next => { if (!sending) onOpenChange(next); }}>
+    <DialogContent className="flex max-h-[90dvh] max-w-lg flex-col overflow-hidden">
+      <DialogHeader><DialogTitle>Send activities</DialogTitle></DialogHeader>
+      <p className="text-sm break-words">To: {selectedPlayerNames.join(', ')}</p>
+      <div className="grid grid-cols-2 gap-2">
+        <Select value={sport} onValueChange={value => { setSport(value); setSelected([]); }}><SelectTrigger aria-label="Activity sport"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="baseball">Baseball</SelectItem><SelectItem value="softball">Softball</SelectItem></SelectContent></Select>
+        <Select value={category} onValueChange={setCategory}><SelectTrigger aria-label="Activity category"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All categories</SelectItem>{SEND_CATEGORIES.map(value => <SelectItem key={value} value={value}>{value === 'lift' ? 'Lifting' : value.charAt(0).toUpperCase() + value.slice(1)}</SelectItem>)}</SelectContent></Select>
+      </div>
+      <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input aria-label="Search Hammers activities" placeholder="Search Hammers activities…" value={search} onChange={event => setSearch(event.target.value)} className="pl-9" /></div>
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto" aria-label="Hammers activities">
+        {(vault.error || templates.error) && <p role="alert" className="text-sm text-destructive">Couldn't load all activities. Close and try again.</p>}
+        {vault.isLoading || templates.isLoading ? <Loader2 className="mx-auto h-5 w-5 animate-spin" /> : filtered.length === 0 ? <p className="text-sm text-muted-foreground">No activities found.</p> : filtered.map(item => <label key={item.id} className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3">
+          <Checkbox aria-label={`Pick ${item.title}`} checked={selected.includes(item.id)} disabled={sending || sentIds.includes(item.id)} onCheckedChange={() => toggle(item.id)} />
+          <span className="min-w-0 text-sm"><span className="block font-medium break-words">{item.title}</span><span className="block text-xs text-muted-foreground capitalize">{item.category} · {item.source}{sentIds.includes(item.id) ? ' · Sent' : ''}</span></span>
+        </label>)}
+      </div>
+      <Label htmlFor="coach-send-day">Day</Label><Input id="coach-send-day" type="date" min={new Date().toLocaleDateString('en-CA')} value={date} onChange={event => setDate(event.target.value)} disabled={sending} />
+      <div className="flex justify-end gap-2 border-t border-border pt-3"><Button variant="outline" disabled={sending} onClick={() => onOpenChange(false)}>Cancel</Button><Button disabled={sending || loading || !selected.length || !selectedPlayerIds.length || !date || !!vault.error || !!templates.error} onClick={() => void send()}>{sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}Send{selected.length ? ` (${selected.length})` : ''}</Button></div>
+    </DialogContent>
+  </Dialog>;
 }

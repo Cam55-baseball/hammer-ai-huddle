@@ -98,6 +98,7 @@ export function useCoachPrescriptions(planDate: string) {
         toast.success("Saved for later.");
       }
       qc.invalidateQueries({ queryKey });
+      qc.invalidateQueries({ queryKey: ["coach-rx-mine"] });
       qc.invalidateQueries({ queryKey: ["wk-rx"] });
       qc.invalidateQueries({ queryKey: ["saved-block-day"] });
     },
