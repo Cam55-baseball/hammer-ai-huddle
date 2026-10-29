@@ -116,6 +116,7 @@ export type ModalityKey =
   | "defense"
   | "baserunning"
   | "game_iq"
+  | "game"
   | "fueling"
   | "recovery";
 
@@ -1743,6 +1744,21 @@ export function blockKey(b: PrescribedBlock): string {
   return `${b.modality}:${b.side ?? ""}`;
 }
 
+/** The game itself as a card the player logs after playing. Light pre-game work and
+ * post-game recovery stay in their own cards; this adds no training dose. */
+export function gameDayCard(tournament: boolean): PrescribedBlock {
+  const title = tournament ? "Tournament — play your games" : "Game day — play and log your game";
+  return {
+    modality: "game", title,
+    why: "You have a game on your schedule today. The game is your main work, so the other cards are light.",
+    roadmapReason: "Game on your schedule", phase: "maintain",
+    steps: ["Do the light warm-up and pre-game cards first.", "Play your game.", "After the game, log it, then do the recovery card."],
+    drills: [], cues: ["Play loose — today is about competing, not training."], stopRules: ["If anything hurts, stop and tell your coach or a parent."],
+    durationMin: null, route: "/games", ctaLabel: "Log this game", status: "ready",
+    missing: [], missingContextKeys: [], gamePlanTemplate: null,
+  } as PrescribedBlock;
+}
+
 function applyScheduleModulation(
   blocks: ReadonlyArray<PrescribedBlock>,
   signal: ScheduleSignal,
@@ -2484,7 +2500,10 @@ export function buildHammerDailyPlan(
     preModulationOriginals,
     roadmapInputs.defenseFullOverride === true,
   );
-  const sided = applySideBias(modulated, sideBias);
+  // A scheduled game is its own loggable card: the game is the day's main work.
+  const withGame = scheduleSignal.postureToday === "game" || scheduleSignal.postureToday === "tournament"
+    ? [gameDayCard(scheduleSignal.postureToday === "tournament"), ...modulated] : modulated;
+  const sided = applySideBias(withGame, sideBias);
   const { blocks: biasedBlocks, tags: gpBiasTags } = applyGpSignalBias(
     sided, gpSignal,
     new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []),
