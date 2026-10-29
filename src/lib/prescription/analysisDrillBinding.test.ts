@@ -21,4 +21,14 @@ describe('analysis prescribed drill issue binding',()=>{
   expect(analysisDrillBinding({...d,sports:['softball']},{},['Barrel control'],[],'baseball')).toBeNull();
   expect(analysisDrillBinding({...d,sports:['softball']},{},['Barrel control'],[],'softball')?.goal_label).toBe('Barrel control');
  });
+ it('certifies every fault-prescribable analysis drill binds each of its issues, in every sport it serves',()=>{
+  const analysis=ELITE_DRILL_CATALOG.filter(d=>['hitting','pitching','throwing'].includes(d.category));
+  let bound=0;
+  for(const d of analysis)for(const sport of d.sports)for(const key of d.violationKeys){
+   expect(analysisDrillBinding(d,{improvements:[{fault_key:key}]},[],[],sport)?.issue_key).toBe(`fault:${key}`);bound++;
+  }
+  expect(bound).toBeGreaterThan(0);
+  // Drills with no declared issue can only bind to a saved goal, never an invented issue.
+  for(const d of analysis.filter(d=>!d.violationKeys.length))expect(analysisDrillBinding(d,{improvements:[{fault_key:'early_shoulder_rotation'}]},[])).toBeNull();
+ });
 });
