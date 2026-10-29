@@ -4488,3 +4488,4 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - Oct 28 batch: 6-day week for everyone in real plan (Sun rest, no ramp, low readiness → low-taxing), Mind done-log → Discipline + Tex Vision link, owner baserunning/bunting/Mind tags; conditioning tag open (no certified dose fields).
 - Oct 28 additions: embed links (TikTok/IG/X/FB + Watch-on), legal approved + cookie item queued, Mind placement, 14-day running readiness, 2/wk running-conditioning floor; conditioning tag still awaits owner choice.
 - Oct 29 round 2 (24 items): run 1 removed the 'Upload space cleared' toast; org sign-up already offers Both; items 1–8 and 10–24 open.
+- Oct 29 round 2 run 2: coaches' My Workouts now shows 'Send a workout' + 'Sent workouts' (item 6b); other P0 items still open.
