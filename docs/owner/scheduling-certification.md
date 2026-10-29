@@ -2,6 +2,12 @@
 
 **Verdict: OPEN — D, E and H are not fully server-certified.**
 
+## Close-out (4) re-check · October 29, 16:25 UTC
+
+Current full configured suite: 673 files, 5,373 passed, zero failed, two skipped after correcting obsolete test fixtures. Pitcher-only subscriptions no longer assert purchased hitting/baserunning; unknown equipment is not marked missing. Persistent missing answers still constrain work and the tests retain Sunday and protective-equipment checks. No production rule changed. These passes do not certify the missing 224 saved server dates. All twelve sample tables below remain local shared-builder evidence, with server-only work explicitly unverified; owner review cannot replace D/E/H acceptance.
+
+The named create-test-athlete helper rollout has since occurred; its fresh TEST assessment entry is proved, not complete first-week generation. Sunday/PFP, health and philosophy server changes remain staged without new named rollout authorization. See the current publish checklist for exact blockers.
+
 ## Evidence and limits
 
 - Added 25 shared-builder regression cases: 24 program/sport/level combinations × 28 dated game-week days = 672 shared skill days, plus a Sunday-game safety case. Explicit simulation inputs are not hosted schedules, outings or completed work.
@@ -191,7 +197,7 @@ Every listed card comes from an actual local shared-builder result. Dates are ex
 
 ## Remaining exact acceptance procedure
 
-1. Authorize only the necessary named TEST helper rollout and wk-generate-daily fixes; never reset existing TEST identities or alter real players.
+1. The named TEST helper rollout is live; authorize only any still-necessary named wk-generate-daily fixes; never reset existing TEST identities or alter real players.
 2. Prepare the exact eight isolated TEST personas through the existing owner-only path. Complete saved onboarding, entitlement, consent and starting safety inputs; use explicitly labeled TEST values, never call them measured maxima.
 3. As each player, enter four weeks of games through the schedule importer. Review and confirm all dates. For D’s other levels, enter their specified game densities too.
 4. Generate each dated day through the actual server and read back both wk_prescriptions and the composed saved sport day. Separate planned game from logged game and completed pitcher outing.

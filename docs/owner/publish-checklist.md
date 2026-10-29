@@ -51,7 +51,7 @@ Exact remaining work:
 - Published phone General: Performance opened at 390×844, no page exceptions/overflow. Direct authenticated read-only phase-state, saved prescriptions and initial missing-input judge each returned **200**; seven prescriptions read, nine missing-input labels returned. This proves read contracts, NOT a full first week or rebuilt week.
 - Preview owner/Training Intelligence/General checked at 1280×1800; initial owner loading capture discarded in favor of settled recapture. Published frontend is older than preview; successful reads do not establish that every new preview feature is already published.
 - Live function telemetry confirms phase-state responds successfully; wk-generate-daily remains deployed with 200/409 outcomes. Retained rollout records cover plan-swap, create-test-athlete and migrations 0154/0155/0156. Exact all-source deployment parity is **not certified**; staged changes were not redeployed.
-- **Full suite:** pending final bounded-batch summary. Write-dependent live test branches without credentials are not end-to-end passes.
+- **Full suite:** 23 bounded batches, 673 unique files; final consolidated result **5,373 passed, 0 failed, 2 skipped**, no omissions/extras/duplicates. Initial 44 failures were obsolete subscription/unknown-equipment/empty-reason test expectations in five files; corrected fixtures and reruns passed. No production safety rule was changed. Write-dependent live test branches without credentials are not end-to-end passes.
 - Automatic preview build succeeded at **16:24:00 UTC**, in sync with project tip; compiler diagnostics and failed targets empty. No manual build/typecheck.
 
 ## Part B — owner's human checks (nonblocking only)
