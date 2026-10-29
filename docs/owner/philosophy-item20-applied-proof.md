@@ -2,6 +2,17 @@
 
 **OPEN: partial canonical-setting implementation, not complete acceptance.**
 
+## October 29, 12:32 run — beyond-cue adapters: BLOCKED, not live
+
+- Reviewed the actual settings and their consumers; no Confirm/Undo adapter or live standard/tag proof is claimed in this run.
+- Standards are existing `mastery_identity_settings`, keyed only by `sport` (baseball/softball). Coaching Console's `MasterySettings` and `PitchingStandardsSettings` write these shared rows; `useMasteryIdentity` reads them for every athlete of that sport. There is no TEST athlete discriminator. Changing one shared standard with a TEST-only receipt still changes real players.
+- Existing drill tags/fix-it mappings are `owner_drills.placements`, `fault_keys`, `routine_role`, `skill_area`; `rowToDrills`/`mergeCatalog` and `ownerPlanDrills` consume them. These rows have no `visible_to` or equivalent athlete scope. Existing video tags are `library_videos.tags`/`formula_phases`, likewise without athlete allowlisting. A TEST name or receipt does not isolate either catalog.
+- Existing `wk_movement_catalog.visible_to` **does** support server-enforced TEST-only scope, but cannot substitute its fields for Coaching Console standards or skill-drill/video tags.
+- `engine_dynamic_weights` is used by `compute-hammer-state` and engine optimization, not the skill daily-plan prescription ranking. Editing it and calling it a prescription-weight adapter would misrepresent downstream behavior.
+- Weekly minimums remain canonical code: `src/lib/hammer/week/weeklyVolume.ts` (hitting 3, defense 4, baserunning 1, bunting 2 and conditioning 2); `weeklyGoalBlocks` uses existing saved goal order and safety/availability. No existing persisted prescription-weight/minimum editor was found. No floor was weakened or replaced with a parallel rule system.
+- Required next authorization: a **named additive TEST-isolation migration and existing-reader integration** for the current standards/drill/video surfaces, plus a named atomic multi-setting Confirm/Undo RPC. All affected client and deployed server readers must honor that scope before any standard+tag Confirm. Owner-selected new weight/minimum values are also needed when changing those binding rules; none were invented.
+- No migration, deployment, shared settings edit, real-player effect, or fabricated downstream proof occurred. Item20 remains OPEN; previous cue-only receipts below are retained as historical proof, not beyond-cue acceptance.
+
 ## Built and live
 - Existing `wk_movement_catalog.cue` is the actual setting, not a new rule catalog. Owner chooses an existing TEST-only exercise and enters exact replacement wording. Hammers asks clarifying questions; the proposal shows the current and replacement cue, and explicitly identifies unchanged settings.
 - Owner-only `owner_confirm_test_cue` locks the canonical catalog row, compares the reviewed old value, verifies every allowlisted account is marked TEST, writes the cue, append-only principle version, existing Vault audit and conversation receipt in one transaction. Any failure rolls the transaction back.
