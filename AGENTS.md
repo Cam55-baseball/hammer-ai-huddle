@@ -63,4 +63,3 @@
 - Read nested AGENTS.md (hooks, owner, hammer). Why: scoped rules.
 - Goal shelves resolve self-scoped readable IDs, never fault attribution. Goal editors save picks/order together with readback and shared pickRanking. Why: retain both goals and pass Start without inventing evidence.
 - Owner conditioning drills serve only the weekly running floor, validated by `_shared/wic/conditioning/ownerConditioning.ts` against `runRest.ts`. Why: owner numbers used as entered, no new limit or path.
-- TEST/demo identities are capped in-handler (one in flight, TEST_BUILD_CAP per 10 min, 429 Retry-After). Why: Oct 29 disk-IO outage; certification runs must be throttled.
