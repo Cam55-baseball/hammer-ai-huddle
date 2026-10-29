@@ -3,7 +3,7 @@ import { buildHammerDailyPlan } from './dailyPlan';
 import { contextFromEnvelope } from '../context/contextProjection';
 import { BUNT_TYPES, BUNT_WORDING } from '../../../../supabase/functions/_shared/wic/buntingProgram';
 import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
-import { guardArmDrills, eassArmEvent } from './pitchingDay';
+import { guardArmDrills, eassArmEvent, windmillPlanningDrills } from './pitchingDay';
 import { subscriptionSchedule } from './subscriptionSchedule';
 import type { BuntCatalogItem } from './buntingPlan';
 import type { EassDrill } from './eassLibrary';
@@ -47,6 +47,18 @@ describe('owner scheduling corrections A B C F G',()=>{
  });
  it('unavailable arm history never becomes a fresh arm',()=>{
   expect(guardArmDrills([prep,pitch],{date:'2026-06-03',sport:'softball',role:'pitcher',age:20,level:'college',history:{rows:[],unavailable:true}})).toEqual([prep]);
+ });
+ it('softball pitching uses canonical windmill rows, not baseball plyos',()=>{
+ const rows=windmillPlanningDrills({date:'2026-06-03',phase:'os_q2',age:20,readiness:80,armPain:false,equipment:['softball','bands'],history:{rows:[]}});
+ expect(rows.some(d=>d.slug==='wm_fastball_spots')).toBe(true);
+ expect(rows.every(d=>d.slug?.startsWith('wm_'))).toBe(true);
+ expect(windmillPlanningDrills({date:'2026-06-03',phase:'os_q2',age:20,readiness:80,armPain:true,equipment:['softball'],history:{rows:[]}})).toEqual([]);
+ });
+ it('pitcher fielding remains low-taxing and adds no throws',()=>{
+ const plan=buildHammerDailyPlan(ctx('baseball'),undefined,null,null,undefined,new Date(2026,5,3),{subscriptionModules:['baseball_pitcher'],armHistory:{rows:[]}});
+ const defense=plan.blocks.find(b=>b.modality==='defense');
+ expect(defense?.status).toBe('ready');
+ expect(defense?.drills.some(d=>d.stage==='full_go')).toBe(false);
  });
  it('declared quantities count pitches separately from warm-up throws',()=>{expect(eassArmEvent(pitch)?.count).toBe(30);expect(eassArmEvent(pitch)?.kind).toBe('pitch');});
 });
