@@ -85,6 +85,7 @@ import { readSideBias } from "@/lib/side/sideBias";
 import { useAuth } from "@/hooks/useAuth";
 import { useHammerChat } from "@/hooks/useHammerChat";
 import { HAMMER_KNOWLEDGE_GAPS } from "@/lib/hammer/onboarding/knowledgeGaps";
+import { savedWholePlanRest } from "../../../supabase/functions/_shared/wic/schedule/planDayScope";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import type { CustomActivityTemplate } from "@/types/customActivity";
 import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
@@ -808,7 +809,7 @@ function HammerDailyPlanBody({
         {
           recentCompletions: recentCompletions ?? [],
           phaseStartedAt: phaseStartedAt ?? null,
-          resolvedSeasonPhase: shortSeasonPhase(resolvedPhase),
+          resolvedSeasonPhase: shortSeasonPhase(wkRx.data?.find(row => row.phase)?.phase?.startsWith("os_") ? "off_season" : wkRx.data?.find(row => row.phase)?.phase ?? resolvedPhase),
           seasonPhaseSource: phaseSource ?? null,
           positionOverride: planAdjust.positionWorked,
           defenseFullOverride,
@@ -817,7 +818,7 @@ function HammerDailyPlanBody({
           subscriptionModules: modules,
           masteryFocus:masteryReady?masteryFocus:undefined,
           bunting: !hasSavedSportDay && buntHistory.data && !buntHistory.isError ? { ...buntHistory.data, age:buntAge, phase:resolvedPhase ?? '',userId:bodyUser?.id,traits:{...buntHistory.data.traits,powerGoal:hittingPowerGoal} } : undefined,
-          fullRestDay: wkRx.data?.some(row => (row.why_payload as any)?.rest_day?.allowed_class === "none" || ["recovery", "recovery_day", "off_day"].includes((row.why_payload as any)?.training_context?.day_type)) === true,
+          fullRestDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []),
         },
       ),
     [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady],
@@ -1032,7 +1033,15 @@ function HammerDailyPlanBody({
             );
           })}
         {/* Quarter / phase + weekly rhythm context */}
-        <WeeklyRoadmapStrip plan={plan} />
+        <WeeklyRoadmapStrip plan={plan}
+          savedPhase={wkRx.data?.find(row => row.phase)?.phase}
+          todayCategories={[...new Set([
+            ...plan.blocks.filter(block => block.status === "ready" && block.drills.length > 0 && !["warmup", "fueling", "game_iq", "strength", "speed"].includes(block.modality)).map(block => block.modality === "defense" ? "Defense" : block.modality === "hitting" ? "Hitting" : block.modality === "baserunning" ? "Baserunning" : block.modality === "throwing" ? "Throwing" : "Recovery"),
+            ...wkRx.grouped.speedCard.length ? ["Speed"] : [],
+            ...wkRx.grouped.batSpeedCard.length ? ["Bat speed"] : [],
+            ...wkRx.grouped.conditioningCard.length ? ["Conditioning"] : [],
+            ...wkRx.grouped.lifts.length ? ["Lift / tissue care"] : [],
+          ])]} />
       </BeforeYouStartSection>
     <Card id="hammer-plan" className="scroll-mt-24">
       <CardHeader className="pb-2" data-tour="today-plan-heading" data-tour-context>

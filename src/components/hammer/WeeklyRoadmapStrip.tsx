@@ -51,9 +51,11 @@ const INTENSITY_TONE: Record<ModalityIntensity, string> = {
 
 interface Props {
   readonly plan: Pick<HammerDailyPlanResult, "weeklyRoadmap" | "weeklyTemplate" | "microcycle" | "roadmap">;
+  readonly todayCategories?: readonly string[];
+  readonly savedPhase?: string | null;
 }
 
-export function WeeklyRoadmapStrip({ plan }: Props) {
+export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase }: Props) {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
@@ -77,12 +79,13 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
              <div className="text-xs text-muted-foreground">Your training steps: {roadmap.rung.label}</div>
             {!roadmap.quarter.quarterKnown ? (
               <div className="text-[11px] text-muted-foreground leading-tight">
+                {savedPhase && <span>Season: {savedPhase.replace(/_/g, " ")}. </span>}
                 {roadmap.quarter.phaseKnown ? "Your season phase is known, but its start date isn't. Add your season dates to show your week." : "Add your season dates to show where you are in your training block."}{' '}
                 <Button variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setSeasonDatesOpen(true)}>Set season dates</Button>
               </div>
             ) : (
                <div className="text-[11px] text-muted-foreground leading-tight">
-                 Where you are in the season: {season.resolvedPhase.replace(/_/g, " ")} {phaseWeek !== null ? `· Week ${phaseWeek}` : "· Add your season dates to show your week"}
+                 Where you are in the season: {(savedPhase ?? season.resolvedPhase).replace(/_/g, " ")} {phaseWeek !== null ? `· Week ${phaseWeek}` : "· Add your season dates to show your week"}
               </div>
             )}
 
@@ -114,18 +117,19 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
             day={day}
             onClick={() => setExpanded((cur) => (cur === idx ? null : idx))}
             active={expanded === idx}
+            todayCategories={day.isToday ? todayCategories : undefined}
           />
         ))}
       </div>
 
       {expanded !== null && weeklyRoadmap[expanded] && (
-        <DayDetail day={weeklyRoadmap[expanded]} />
+        <DayDetail day={weeklyRoadmap[expanded]} todayCategories={weeklyRoadmap[expanded].isToday ? todayCategories : undefined} />
       )}
 
       <div className="mt-2 flex items-start gap-2 rounded-md border border-muted/30 bg-muted/5 px-2 py-1.5 text-[11px] text-muted-foreground">
         <span className="font-medium text-foreground">Today:</span>
         <span>
-          {SCHEDULED_TODAY_LINE(plan.microcycle.perModality) ||
+          {(todayCategories ? todayCategories.join(" · ") : SCHEDULED_TODAY_LINE(plan.microcycle.perModality)) ||
             "Warm-up, fueling and recovery."}{" "}
           <span className="text-muted-foreground/70">
             Hammer spaces high-demand work and protects recovery.
@@ -147,10 +151,12 @@ function DayCell({
   day,
   onClick,
   active,
+  todayCategories,
 }: {
   day: RoadmapDay;
   onClick: () => void;
   active: boolean;
+  todayCategories?: readonly string[];
 }) {
   const primaryChips = day.modalities.filter(
     (m) => (m.key !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES) && (m.intensity === "primary" || m.intensity === "secondary"),
@@ -172,7 +178,7 @@ function DayCell({
         <span className="mt-1 text-[9px] text-muted-foreground/70">Rest</span>
       ) : (
         <div className="mt-1 flex flex-wrap justify-center gap-0.5">
-          {primaryChips.slice(0, 3).map((m) => (
+          {todayCategories ? todayCategories.slice(0, 3).map(category => <span key={category} className="text-[9px] leading-none text-foreground">{category === "Hitting" ? "HIT" : category === "Conditioning" ? "COND" : category === "Recovery" ? "REC" : category === "Lift / tissue care" ? "CARE" : category}</span>) : primaryChips.slice(0, 3).map((m) => (
             <span
               key={m.key}
               className={`rounded px-1 py-[1px] text-[9px] leading-none border ${INTENSITY_TONE[m.intensity]}`}
@@ -180,8 +186,8 @@ function DayCell({
               {MODALITY_ABBR[m.key]}
             </span>
           ))}
-          {primaryChips.length > 3 && (
-            <span className="text-[9px] text-muted-foreground">+{primaryChips.length - 3}</span>
+          {(todayCategories?.length ?? primaryChips.length) > 3 && (
+            <span className="text-[9px] text-muted-foreground">+{(todayCategories?.length ?? primaryChips.length) - 3}</span>
           )}
         </div>
       )}
@@ -189,7 +195,7 @@ function DayCell({
   );
 }
 
-function DayDetail({ day }: { day: RoadmapDay }) {
+function DayDetail({ day, todayCategories }: { day: RoadmapDay; todayCategories?: readonly string[] }) {
   if (day.restDay) {
     return (
       <div className="mt-2 rounded-md border border-muted/40 bg-muted/5 px-2 py-1.5 text-[11px] text-muted-foreground">
@@ -198,6 +204,7 @@ function DayDetail({ day }: { day: RoadmapDay }) {
       </div>
     );
   }
+  if (todayCategories) return <div className="mt-2 text-xs text-foreground">{day.short} — {todayCategories.join(" · ")}</div>;
   return (
     <div className="mt-2 space-y-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px]">
       <div className="text-xs font-semibold text-foreground">
