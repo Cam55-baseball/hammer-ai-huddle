@@ -996,6 +996,13 @@ function label(m) {
   return m === "baserunning" ? "Baserunning" : m.charAt(0).toUpperCase() + m.slice(1);
 }
 
+// supabase/functions/_shared/wic/schedule/availability.ts
+function availableTrainingDays(days) {
+  const count = typeof days === "number" && Number.isFinite(days) ? Math.max(1, Math.min(6, Math.floor(days))) : 6;
+  const order = [1, 3, 5, 2, 4, 6];
+  return order.slice(0, count).sort((a, b) => a - b);
+}
+
 // src/lib/hammer/prescription/weeklyMicrocycle.ts
 var SCHEDULABLE_MODALITIES = [
   "speed",
@@ -1246,6 +1253,16 @@ var PERMISSIVE_DAILY = {
   }
 };
 function resolveWeeklyTemplate(proj) {
+  const template = resolveBaseTemplate(proj);
+  const legal = new Set(availableTrainingDays(proj.weeklyAvailabilityDays));
+  return {
+    ...template,
+    perModality: Object.fromEntries(Object.entries(template.perModality).map(([key2, days]) => [key2, ANCHOR_MODALITIES.includes(key2) ? days : days.filter((day) => legal.has(day))])),
+    priorityDayOrder: Object.fromEntries(Object.entries(template.priorityDayOrder ?? {}).map(([key2, days]) => [key2, days.filter((day) => legal.has(day))])),
+    availableDays: [...legal]
+  };
+}
+function resolveBaseTemplate(proj) {
   const band = proj.lifecycleBand;
   const youngBand = band === "u10" || band === "u12" || band === "u14";
   const lowLiftingAge = typeof proj.liftingAgeYears === "number" && proj.liftingAgeYears < 1;
@@ -1288,15 +1305,16 @@ function resolveSkillDays(template, modality, target) {
   const baselineArr = template.perModality[modality] ?? [];
   const baseline = [...new Set(baselineArr)].sort((a, b) => a - b);
   const priority = template.priorityDayOrder?.[modality] ?? baseline;
-  const clamped = Math.max(0, Math.min(SKILL_DAYS_CEILING, target));
+  const allowed = new Set(template.availableDays ?? [1, 2, 3, 4, 5, 6]);
+  const clamped = Math.max(0, Math.min(SKILL_DAYS_CEILING, target, allowed.size));
   const picked = [];
   for (const d2 of priority) {
     if (picked.length >= clamped) break;
-    if (d2 === SIX_DAY_REST_DOW) continue;
+    if (d2 === SIX_DAY_REST_DOW || !allowed.has(d2)) continue;
     if (!picked.includes(d2)) picked.push(d2);
   }
   for (let d2 = 0; picked.length < clamped && d2 <= 6; d2 = d2 + 1) {
-    if (d2 !== SIX_DAY_REST_DOW && !picked.includes(d2)) picked.push(d2);
+    if (d2 !== SIX_DAY_REST_DOW && allowed.has(d2) && !picked.includes(d2)) picked.push(d2);
     if (d2 === 6) break;
   }
   const baselineSet = new Set(baseline);
