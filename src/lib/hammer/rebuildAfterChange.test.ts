@@ -22,3 +22,9 @@ it('future-effective changes rebuild their next seven dates rather than the curr
   await rebuildAfterChange('Season changed', '2026-10-29', '2026-11-05');
   expect(invoke.mock.calls.map(c => c[1].body.plan_date)).toEqual(['2026-11-05','2026-11-06','2026-11-07','2026-11-08','2026-11-09','2026-11-10','2026-11-11']);
 });
+it('a saved safe-session fallback is not a full-program rebuild', async () => {
+  invoke.mockResolvedValueOnce({data:{ok:true,degraded:true,safe_plan_tier:'safe_session'},error:null});
+  const result=await rebuildAfterChange('Availability changed','2026-10-29');
+  expect(result.ok).toBe(false);
+  expect(result.failed).toEqual(['2026-10-29']);
+});

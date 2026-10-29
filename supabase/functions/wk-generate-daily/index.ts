@@ -4757,7 +4757,10 @@ const handler = async (req: Request): Promise<Response> => {
         firstReport: validatorReport as any,
       });
 
-      const safeRows = (safePlan.rows as any[]).map((r, i) => ({
+      const restFallback = wholePlanRest(planDate, timelineToday.hold) || availabilityRest;
+      const fallbackRows = (safePlan.rows as any[]).filter(r => !restFallback || isSoftRecovery(r.movement_slug));
+      if (!fallbackRows.length) return json({ error: 'rest_recovery_unavailable', message: 'Rest today. No training was added; gentle recovery could not be saved.', issues: ['rest_fallback_without_soft_recovery'] }, 409);
+      const safeRows = fallbackRows.map((r, i) => ({
         slot: r.slot,
         sequence_order: typeof r.sequence_order === "number" ? r.sequence_order : i,
         sequence_role: r.sequence_role ?? null,
