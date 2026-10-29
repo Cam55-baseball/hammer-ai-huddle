@@ -147,7 +147,7 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
       const message = whatChanged({ entry, merged, heavyBefore, heavyAfter });
       await (supabase as any).from("schedule_timeline_entries").update({ summary: message }).eq("id", entry.id);
       const affectsPlan = !['NOTE', 'GOAL'].includes(draft.tag) || draft.payload.kind === 'availability';
-      const result = await announceChange(qc, user.id, affectsPlan ? describeChange(draft) : null);
+      const result = await announceChange(qc, user.id, affectsPlan ? describeChange(draft) : null, draft.start_date);
       return { merged, entry: { ...entry, summary: message }, message: result?.message ?? message };
     },
     [user?.id, entries, today, qc, gameDatesOutsideTimeline],
@@ -174,8 +174,8 @@ function describeChange(draft: EntryDraft) {
   return 'Your schedule or injury changed';
 }
 
-export async function announceChange(qc: ReturnType<typeof useQueryClient>, userId: string, reason: string | null) {
-  const result = reason === null ? null : await rebuildAfterChange(reason, getTodayDate());
+export async function announceChange(qc: ReturnType<typeof useQueryClient>, userId: string, reason: string | null, effectiveDate?: string) {
+  const result = reason === null ? null : await rebuildAfterChange(reason, getTodayDate(), effectiveDate);
   qc.invalidateQueries({ queryKey: [TIMELINE_QUERY_KEY, userId] });
   for (const k of [
     "schedule-window-games",

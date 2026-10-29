@@ -18,3 +18,7 @@ it('empty or unconfirmed responses are not successful rebuilds', async () => {
   invoke.mockResolvedValueOnce({ data: null, error: null });
   expect((await rebuildAfterChange('Season changed', '2026-10-29')).failed).toEqual(['2026-10-29']);
 });
+it('future-effective changes rebuild their next seven dates rather than the current week', async () => {
+  await rebuildAfterChange('Season changed', '2026-10-29', '2026-11-05');
+  expect(invoke.mock.calls.map(c => c[1].body.plan_date)).toEqual(['2026-11-05','2026-11-06','2026-11-07','2026-11-08','2026-11-09','2026-11-10','2026-11-11']);
+});

@@ -30,6 +30,7 @@ import { CalendarClock, Dumbbell, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { liftingPlanCopy } from "@/lib/hammer/notices/liftingPlanCopy";
+import { announceChange } from '@/hooks/useScheduleTimeline';
 
 export interface ScheduleNoticeData {
   headline?: string | null;
@@ -83,9 +84,11 @@ export function ScheduleAdjustmentNotice({
   const date = planDate ?? todayIso();
   const canOverride = schedule.override_available === true && !applied;
 
-  const refresh = () => {
-    qc.invalidateQueries({ queryKey: ["wk-rx"] });
-    qc.invalidateQueries({ queryKey: ["schedule-window-games"] });
+  const refresh = async (reason: string) => {
+    if (!user?.id) return;
+    const result = await announceChange(qc, user.id, reason);
+    if (result?.ok) toast.success(result.message);
+    else toast.warning(result?.message ?? 'Saved, but your plan could not be rebuilt. Try again.');
     onChanged?.();
   };
 
@@ -97,15 +100,12 @@ export function ScheduleAdjustmentNotice({
       .from(table)
       .update({ ignored_for_training: true })
       .eq("id", game.id);
-    setBusy(false);
     if (error) {
+      setBusy(false);
       toast.error("Couldn't update that game");
       return;
     }
-    toast.success("Got it — that game won't change your training.", {
-      description: "It stays on your schedule. Undo any time from the game itself.",
-    });
-    refresh();
+    try { await refresh("That game no longer changes your training"); } finally { setBusy(false); }
   };
 
   const liftAnyway = async () => {
@@ -122,14 +122,13 @@ export function ScheduleAdjustmentNotice({
         },
         { onConflict: "user_id,plan_date,kind" },
       );
-    setBusy(false);
     setConfirmOpen(false);
     if (error) {
+      setBusy(false);
       toast.error("Couldn't apply that");
       return;
     }
-    toast.success("Full session today.", { description: "Just today — tomorrow goes back to normal." });
-    refresh();
+    try { await refresh("Today's schedule preference saved; safety limits stay unchanged"); } finally { setBusy(false); }
   };
 
   const undoOverride = async () => {
@@ -141,13 +140,12 @@ export function ScheduleAdjustmentNotice({
       .eq("user_id", user.id)
       .eq("plan_date", date)
       .eq("kind", "lift_anyway");
-    setBusy(false);
     if (error) {
+      setBusy(false);
       toast.error("Couldn't undo that");
       return;
     }
-    toast.success("Back to the lighter session.");
-    refresh();
+    try { await refresh("Today's schedule preference undone"); } finally { setBusy(false); }
   };
 
   return (
