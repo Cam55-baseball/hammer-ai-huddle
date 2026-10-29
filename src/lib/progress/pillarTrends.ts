@@ -1,14 +1,22 @@
 import type { projectMasterySources } from '@/lib/intelligence/masteryProjection';
 import type { EvidencePoint } from '@/components/progress/EvidenceTrendChart';
+import { speedIdentity } from '../../../supabase/functions/_shared/wic/masteryIdentity';
 type Identity = ReturnType<typeof projectMasterySources>;
 export interface PillarSeries { id: string; title: string; unit: string; points: EvidencePoint[] }
 const shortDate = (date: string) => date.slice(5, 10);
 export function pillarTrends(d: Identity): PillarSeries[] {
+  const speedGroups = new Map<string, typeof d.recordedSpeedEvidence>();
+  for (const e of d.recordedSpeedEvidence) {
+    if (!speedIdentity([e]).evidence.length) continue;
+    const key = `${e.source} · ${e.measure}`;
+    speedGroups.set(key,[...(speedGroups.get(key) ?? []),e]);
+  }
+  const speedSeries: PillarSeries[] = [...speedGroups].map(([key,rows],i) => ({id:i===0?'speed':`speed-${i}`,title:`Speed · ${key}`,unit:'grade',points:rows.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>({label:shortDate(e.date),value:e.grade,date:e.date,sample:e.sample,source:key}))}));
   return [
     { id: 'contact', title: 'Contact', unit: 'batting average', points: d.batting.completed.map(w => ({ label: `AB ${w.end}`, value: w.hits / w.atBats, date: `${w.from}–${w.through}`, sample: w.atBats, source: 'Completed game at-bat window' })) },
     { id: 'power', title: 'Power', unit: 'HR per at-bat', points: d.batting.completed.map(w => ({ label: `AB ${w.end}`, value: w.homeRuns / w.atBats, date: `${w.from}–${w.through}`, sample: w.atBats, source: 'Completed game at-bat window' })) },
     { id: 'defense', title: 'Defense', unit: 'successful chances %', points: d.defense.completed.map(w => ({ label: `Chance ${w.end}`, value: w.successful / w.chances * 100, date: `${w.from}–${w.through}`, sample: w.chances, source: 'Scored game-chance window; supporting results, not a human grade' })) },
-    { id: 'speed', title: 'Speed', unit: 'grade', points: [...d.speed.evidence].sort((a,b) => a.date.localeCompare(b.date)).map(e => ({ label: shortDate(e.date), value: e.grade, date: e.date, sample: e.sample, source: `${e.source} · ${e.measure}` })) },
+    ...(speedSeries.length ? speedSeries : [{id:'speed',title:'Speed',unit:'grade',points:[]}]),
     { id: 'arm', title: 'Arm', unit: 'grade', points: d.arm.grade !== null && d.arm.source ? [{ label: 'Latest', value: d.arm.grade, date: d.arm.source, source: 'Position-matching measurement and human accuracy grade' }] : [] },
     { id: 'pitching', title: 'Pitching', unit: 'strikeouts / BF %', points: d.pitching.completed.map(w => ({ label: `BF ${w.end}`, value: w.k === null ? null : w.k * 100, date: `${w.from}–${w.through}`, sample: w.sample, source: 'Completed batters-faced window with recorded outcomes' })) },
   ];
@@ -18,7 +26,9 @@ export function weeklyPoints(points: EvidencePoint[]): EvidencePoint[] {
   const groups = new Map<string, EvidencePoint[]>();
   for (const p of points) {
     if (p.value === null || !Number.isFinite(p.value)) continue;
-    const date = p.date.slice(0, 10); const time = Date.parse(`${date}T00:00:00Z`);
+    const dates = p.date.match(/\d{4}-\d{2}-\d{2}/g); const date = dates?.[dates.length-1];
+    if (!date) continue;
+    const time = Date.parse(`${date}T00:00:00Z`);
     if (!Number.isFinite(time)) continue;
     const day = new Date(time); day.setUTCDate(day.getUTCDate() - (day.getUTCDay() + 6) % 7);
     const key = day.toISOString().slice(0,10); groups.set(key, [...(groups.get(key) ?? []), p]);

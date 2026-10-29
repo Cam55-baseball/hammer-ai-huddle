@@ -7,7 +7,7 @@ export function EvidenceTrendChart({ points, label, unit, bars = false }: { poin
   const usable = points.filter(p => p.value !== null && Number.isFinite(p.value));
   if (!usable.length) return <p className="py-6 text-base text-muted-foreground">Not enough recorded data for this graph yet.</p>;
   const latest = usable[usable.length - 1];
-  const axes = <><CartesianGrid vertical={false} /><XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={24} /><YAxis width={48} tickLine={false} axisLine={false} domain={['auto', 'auto']} /><ChartTooltip content={<ChartTooltipContent formatter={(value, _name, item) => <div className="space-y-1"><p className="font-semibold">{label}: {Number(value).toFixed(2)} {unit}</p><p>{item.payload.date}</p><p>{item.payload.source}</p>{item.payload.sample != null && <p>Sample: {item.payload.sample}</p>}</div>} />} /></>;
+  const axes = <><CartesianGrid vertical={false} /><XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={24} /><YAxis width={48} tickLine={false} axisLine={false} domain={bars ? [0, 'auto'] : ['auto', 'auto']} /><ChartTooltip content={<ChartTooltipContent formatter={(value, _name, item) => <div className="space-y-1"><p className="font-semibold">{label}: {Number(value).toFixed(2)} {unit}</p><p>{item.payload.date}</p><p>{item.payload.source}</p>{item.payload.sample != null && <p>Sample: {item.payload.sample}</p>}</div>} />} /></>;
   return <div className="min-w-0 space-y-2" aria-label={`${label} graph`}>
     <p className="text-base font-medium">{label} · {unit}</p>
     <ChartContainer className="h-48 w-full aspect-auto text-sm" config={{ value: { label, color: 'hsl(var(--primary))' } }}>
