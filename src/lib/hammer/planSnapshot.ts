@@ -51,6 +51,10 @@ export async function savePlanSnapshot(userId: string, plan: HammerDailyPlanResu
       p_payload: JSON.parse(JSON.stringify(planSnapshotPayload(plan, sport, planDate, masteryFocus))) as Json,
     });
     if (error) console.debug("[plan-snapshot] save failed", error.message);
+    if (!error) {
+      const rotation = await supabase.functions.invoke('plan-swap',{body:{action:'analysis_rotation',sport,planDate}});
+      if (rotation.error || rotation.data?.error) console.debug('[plan-snapshot] fix-it readback could not finish');
+    }
     return !error;
   } catch {
     console.debug("[plan-snapshot] request failed; no save confirmed");

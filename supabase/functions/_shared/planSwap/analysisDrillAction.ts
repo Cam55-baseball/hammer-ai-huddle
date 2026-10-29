@@ -1,4 +1,4 @@
-import { ELITE_DRILL_CATALOG, mergeCatalog, categoryGoals, matchGoalDrills, analysisDrillCategory, analysisDrillSlot, enrolledDrill, enrollmentBecause } from '../generated/analysisDrills.mjs';
+import { ELITE_DRILL_CATALOG, mergeCatalog, categoryGoals, matchGoalDrills, analysisDrillCategory, analysisDrillSlot, enrolledDrill, enrollmentBecause, applyAnalysisDrillRotation } from '../generated/analysisDrills.mjs';
 import { analysisDrillSafety } from './analysisDrillSafety.ts';
 import { isPlatformStaff } from '../authGuards.ts';
 import { needsTeenWaiver, ageOn } from '../legal/teenWaiverRules.ts';
@@ -6,9 +6,9 @@ type Row = Record<string, any>;
 const checked = async (query: any) => { const result = await query; if (result.error) throw result.error; return result.data; };
 
 /** Self-only action. Selection is checked from the report, never accepted from client prose. */
-export async function addAnalysisDrill(client: any, admin: any, uid: string, input: Row) {
+export async function addAnalysisDrill(client: any, admin: any, uid: string, input: Row, rotation = false) {
   const date = input.planDate;
-  if (date !== new Date().toISOString().slice(0,10)) throw new Error('Open today’s plan before adding this drill.');
+  if (!rotation && date !== new Date().toISOString().slice(0,10)) throw new Error('Open today’s plan before adding this drill.');
   const [video, snapshot, owners, safety, staff] = await Promise.all([
     checked(admin.from('videos').select('id,user_id,sport,module,status,created_at,temporary_until,ai_analysis').eq('id',input.videoId).eq('user_id',uid).maybeSingle()),
     checked(client.from('athlete_plan_snapshots').select('*').eq('user_id',uid).eq('plan_date',date).eq('sport',input.sport).maybeSingle()),
@@ -42,6 +42,7 @@ export async function addAnalysisDrill(client: any, admin: any, uid: string, inp
   const index = analysisDrillSlot(block.drills);
   if (index < 0) throw new Error('Today’s work has no changeable drill slot. Keep this drill saved.');
   const source = block.drills[index];
+  if (source.analysisEnrollment?.drillId === drill.id) return {saved:true,because:'Already in your fix-it slot.'};
   const safetyResult = analysisDrillSafety({...drill,sport:input.sport},block,safety,date);
   if (!safetyResult.acknowledged(input.acknowledged ?? [])) return { saved:false, warnings:safetyResult.warnings, warningKeys:safetyResult.keys };
   const enrollment = {sport:input.sport,category:video.module,drill_id:drill.id,video_id:video.id,issue_key:faultKey ? `fault:${faultKey}` : `goal:${goal}`,fault_key:faultKey ?? null,goal_label:goal ?? null,observed_at:video.created_at,created_at:new Date().toISOString()};
@@ -51,4 +52,29 @@ export async function addAnalysisDrill(client: any, admin: any, uid: string, inp
     p_enrollment:{...enrollment,because},p_expected_updated:snapshot.updated_at,p_safety:safety,p_warnings:safetyResult.warnings}));
   if (result?.saved !== true) throw new Error('The save was not confirmed.');
   return {...result,because};
+}
+
+/** Called only after the existing builder saved a new baseline day; no client-authored drill choices. */
+export async function rotateAnalysisDrills(client:any,admin:any,uid:string,input:Row) {
+  const enrollments = await checked(client.from('analysis_drill_enrollments').select('*').eq('user_id',uid).eq('sport',input.sport));
+  if (!enrollments?.length) return {saved:true,rotated:0};
+  const [snapshot,clips,owners] = await Promise.all([
+    checked(client.from('athlete_plan_snapshots').select('payload').eq('user_id',uid).eq('plan_date',input.planDate).eq('sport',input.sport).maybeSingle()),
+    checked(client.rpc('get_my_plan_clip_evidence',{p_sport:input.sport})),checked(client.from('owner_drills').select('*')),
+  ]);
+  if (!snapshot || clips?.length >=501) throw new Error('The complete saved plan and analysis history could not be checked.');
+  const catalog=mergeCatalog(ELITE_DRILL_CATALOG,owners ?? []);
+  const candidates=applyAnalysisDrillRotation({blocks:snapshot.payload.blocks,enrollments,catalog,sport:input.sport,equipment:catalog.flatMap((d:Row)=>d.equipment),
+    clips:(clips ?? []).map((c:Row)=>({video_id:c.id,module:c.module,created_at:c.created_at,violations:c.violations}))});
+  let rotated=0;
+  for(const block of candidates) {
+    const selected=block.drills.find((d:Row)=>d.analysisEnrollment);
+    if(!selected) continue;
+    const e=enrollments.find((e:Row)=>e.drill_id===selected.analysisEnrollment.drillId);
+    if(!e)continue;
+    // New days do not inherit yesterday's warning acknowledgements. Retain the legal baseline on any refusal.
+    try {const result=await addAnalysisDrill(client,admin,uid,{videoId:e.video_id,drillId:e.drill_id,sport:input.sport,planDate:input.planDate,acknowledged:[]},true);if(result.saved)rotated++;}
+    catch { /* Existing baseline stays; no restriction is waived. */ }
+  }
+  return {saved:true,rotated};
 }
