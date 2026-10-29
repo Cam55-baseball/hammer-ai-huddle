@@ -74,7 +74,7 @@ export function pitchingDay(date:Date,sport:'baseball'|'softball',quarter:Quarte
   if(facts?.startsToday)return 'start';
   if(facts?.startsTomorrow)return 'touch';
   if(facts?.relieverAvailableSoon)return 'available';
-  if(date.getDay()===6 && quarter.phase!=='post')return 'bullpen';
+  // No extra Saturday pen: the existing microcycle alone sets bullpen days (outing-equivalent + one pen).
   const cycle=buildPitchingMicrocycle({sport,rung:'sustain',quarter,profile:DEFAULT_PITCHER_PROFILE,today:date,gameDows:[],preferredBullpenDow:null});
   const type=cycle.today.dayType;
   return type==='start'||type==='game'||type==='available'?'bullpen':type;
