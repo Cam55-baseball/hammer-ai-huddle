@@ -623,7 +623,7 @@ const handler = async (req: Request): Promise<Response> => {
         ? { code: (rawBody as any).change_reason, text: String((rawBody as any).change_text ?? "").slice(0, 200) || "Your day changed" }
         : null;
     const { data: existingDayData } = await admin.from("wk_prescriptions")
-      .select("id, slot, sequence_role, movement_slug, status, phase, sets, reps, duration_seconds, distance_feet, total_reps")
+      .select("id, slot, sequence_role, movement_slug, status, phase, sets, reps, duration_seconds, distance_feet, total_reps, why_payload")
       .eq("user_id", user.id).eq("plan_date", planDate);
     const existingDay = (existingDayData ?? []) as any[];
     const isMarkedRow = (r: any) => r.status && r.status !== "planned" && r.status !== "pending";
