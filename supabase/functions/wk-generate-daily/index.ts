@@ -1,5 +1,6 @@
 // supabase/functions/wk-generate-daily/index.ts
 import { applyLiveTracking } from "../_shared/vault/tracking.ts";
+import { isPlanGameDay } from "../_shared/schedule/isGameDay.ts";
 // Hammer Workout & Speed — elite daily prescription generator.
 //
 // v2 rewrite:
