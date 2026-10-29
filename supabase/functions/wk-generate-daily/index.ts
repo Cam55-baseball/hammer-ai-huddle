@@ -399,6 +399,10 @@ import { conditioningFloorDue, isRunningConditioning, floorConditioningSlugs } f
 let servedARequest = false;
 const ISOLATE_ID = crypto.randomUUID().slice(0, 8);
 let inFlight = 0;
+/** TEST/demo builds allowed per account per 10 minutes per instance (one week = 7, plus a re-plan). */
+const TEST_BUILD_CAP = 16;
+const testBuildLog = new Map<string, number[]>();
+const testInFlight = new Map<string, number>();
 
 // -------- Movement catalog cache (read-only reference data) ----------------
 // The catalog is ~1,000 rows and identical for every athlete of a sport. It
@@ -510,6 +514,7 @@ const handler = async (req: Request): Promise<Response> => {
   servedARequest = true;
   const generationStartedAt = Date.now();
   inFlight++;
+  let testHeld: string | null = null;
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -5546,6 +5551,7 @@ const handler = async (req: Request): Promise<Response> => {
     return json({ error: (e as Error).message }, 500);
   } finally {
     inFlight--;
+    if (testHeld) testInFlight.delete(testHeld);
   }
 };
 
