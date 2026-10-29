@@ -10,6 +10,7 @@ vi.mock('@/hooks/useSeasonStatus', () => ({ useSeasonStatus: () => ({ resolvedPh
 vi.mock('@/hooks/useFoundationVideos', () => ({ useFoundationVideos: () => ({ results: [] }) }));
 vi.mock('@/hooks/useVideoFaultFeedback', () => ({ useVideoFaultFeedback: () => ({ canRecord: true, toggleSave: state.save, isSaved: () => false, isLiked: () => false }) }));
 vi.mock('@/components/video/VideoThumb', () => ({ VideoThumb: () => null }));
+vi.mock('@/components/video-suggestions/InformationalVideos', () => ({ InformationalVideos: () => null }));
 vi.mock('@/components/video/VideoLightbox', () => ({ VideoLightbox: ({ video }: any) => video ? <div role="dialog">{video.id} {video.video_url}</div> : null }));
 import { AnalysisVideoRecommendations } from '../AnalysisVideoRecommendations';
 const video = { id: 'canonical-video', title: 'Barrel instruction', video_url: 'https://example.test/current.mp4', thumbnail_url: null };

@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useOwnerAccess } from '@/hooks/useOwnerAccess';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { UpgradePrompt } from './UpgradePrompt';
 import { Skeleton } from '@/components/ui/skeleton';
 import { hasFeatureAccess } from '@/utils/tierAccess';
@@ -22,9 +23,12 @@ export function SubscriptionGate({
 }: SubscriptionGateProps) {
   const { modules, loading, initialized } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
+
+  if (isOwner || isAdmin) return <>{children}</>;
 
   // Show skeleton while loading
-  if (loading || !initialized || ownerLoading) {
+  if (loading || !initialized || ownerLoading || adminLoading) {
     return (
       <div className="space-y-4 p-6">
         <Skeleton className="h-8 w-48" />

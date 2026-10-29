@@ -84,6 +84,7 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "videos", label: "Recent Videos", icon: Video },
       { id: "video-library", label: "Video Library", icon: Library },
+      { id: 'video-library', label: 'Video Manager', icon: Video, href: '/owner/video-manager' },
       { id: "videos" as OwnerSection, label: "Game IQ Library", icon: Brain, href: "/owner/iq-library" },
       { id: "videos" as OwnerSection, label: "Skill drill builder", icon: Dumbbell, href: "/owner/drill-builder" },
       { id: "videos" as OwnerSection, label: "Exercise builder", icon: Dumbbell, href: "/owner/exercise-vault" },

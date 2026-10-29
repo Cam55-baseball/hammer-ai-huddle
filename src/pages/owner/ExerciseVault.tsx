@@ -23,6 +23,7 @@ import { softballDrills } from '@/data/softball/drillDefinitions';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BuilderLibraryLink } from '@/components/owner/BuilderLibraryLink';
+import { readCompleteCatalog } from '@/lib/vault/readCompleteCatalog';
 import { buntingVaultContent } from '../../../supabase/functions/_shared/vault/buntingContent';
 const BUNT_CONTENT = buntingVaultContent();
 
@@ -60,11 +61,13 @@ export default function ExerciseVault() {
   const { data = [], isLoading } = useQuery({
     queryKey: ["exercise-vault", "catalog"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("wk_movement_catalog")
-        .select("slug,name,category,sport_scope,position_scope,min_age_years,season_eligibility,equipment,equipment_alternatives,is_active,dosage_unit,default_sets,default_reps,cns_cost,training_age_legality,substitution_family,movement_category")
-        .order("name");
-      if (error) throw error;
-      const rows = (data ?? []) as unknown as Row[];
+      const rows = await readCompleteCatalog<Row>(async (from, to) => {
+        const { data, error } = await supabase.from('wk_movement_catalog')
+          .select('slug,name,category,sport_scope,position_scope,min_age_years,season_eligibility,equipment,equipment_alternatives,is_active,dosage_unit,default_sets,default_reps,cns_cost,training_age_legality,substitution_family,movement_category')
+          .order('name').order('slug').range(from, to);
+        if (error) throw error;
+        return (data ?? []) as unknown as Row[];
+      });
       // Every warm-up builder movement is taggable, even ones the catalog doesn't list.
       const extra = libraryOnlyRows(new Set(rows.map((r) => r.slug))) as Row[];
       const bunts = BUNT_CONTENT.filter(item => !rows.some(row => row.slug === item.slug)).map(item => ({ slug:item.slug, name:item.name, category:'hitting', sport_scope:'both', position_scope:null, min_age_years:item.min_age ?? null, season_eligibility:item.season_phases, equipment:item.equipment, equipment_alternatives:item.equipment_alternatives, is_active:false, dosage_unit:'attempts', default_sets:item.default_sets ?? null, default_reps:item.default_reps ?? null }));
@@ -128,14 +131,14 @@ export default function ExerciseVault() {
             <p className="text-sm text-muted-foreground">Every exercise that can appear on a card. Owner and admin only.</p>
           </div>
           {!adding && !selected && <BuilderLibraryLink />}
-          <button
+          <Button
             type="button"
             data-vault-add
             className="h-9 rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground"
             onClick={() => { setAdding(true); setSelected(null); }}
           >
-            Add new exercise
-          </button>
+            Create new
+          </Button>
         </div>
         <Input placeholder="Search by name or code" value={q} onChange={(e) => setQ(e.target.value)} />
         <section className="space-y-2 border-b border-border pb-4" aria-label="Fielding and baserunning issue drills">

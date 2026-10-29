@@ -12,7 +12,7 @@ export function resolveGoalVideos(matches: PrescriptionMatch[], videos: GoalLibr
   if (!['hitting', 'pitching', 'throwing'].includes(module) || !['baseball', 'softball'].includes(sport)) return [];
   const resolved = videos.flatMap(video => {
     if (!video.video_url?.trim() || normalizeTier(video.distribution_tier) === 'blocked'
-      || video.moderation_removed_at || video.video_class === 'foundation') return [];
+      || video.moderation_removed_at || video.video_class === 'foundation' || video.category === 'informational') return [];
     if (!video.sport?.length || (!video.sport.includes(sport) && !video.sport.includes('both'))) return [];
     if (video.skill_domains?.length ? !video.skill_domains.includes(module) : video.category !== module) return [];
     const scopes = video.positionScopes?.filter(scope => scope.length) ?? [];

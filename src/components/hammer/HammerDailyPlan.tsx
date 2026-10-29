@@ -1,5 +1,7 @@
 import { MindItemCard } from "./MindItemCard";
 import { RunningReadinessLine } from "./RunningReadinessLine";
+import { InformationalVideos } from '@/components/video-suggestions/InformationalVideos';
+import { stillRecurring } from '@/lib/wic/faultLedger/recurringIssues';
 /**
  * HammerDailyPlan — expandable, conversational daily prescription.
  *
@@ -992,6 +994,8 @@ function HammerDailyPlanBody({
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
         <ErrorBoundary><RunningReadinessLine /></ErrorBoundary>
         <ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary>
+        <ErrorBoundary><InformationalVideos placement="before_you_start" sport={sportKey} /></ErrorBoundary>
+        <ErrorBoundary><InformationalVideos placement="recurring" sport={sportKey} faultKeys={faultContext.data?.recurringIssues.filter(issue => stillRecurring(issue)).map(issue => issue.fault_key) ?? []} /></ErrorBoundary>
         {splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}
         {/* Owner order 2026-10-05: aim (with breath primer) → defensive video → coach advice → why the plan changed.
             Performance context moved to The General; Recall & Clarity moved to the identity drawer. */}
