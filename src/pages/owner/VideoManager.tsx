@@ -45,7 +45,7 @@ export default function VideoManager() {
         id = result.id;
         setDraft({ ...draft, id });
       }
-      const result = await supabase.from('library_videos').update({ title: draft.title.trim(), tags, sport: [draft.sport], skill_domains: [draft.domain],
+      const result = await supabase.from('library_videos').update({ title: draft.title.trim(), tags, sport: [draft.sport], skill_domains: [draft.domain as SkillDomain],
         ...(!file ? { video_url: draft.url } : {}), distribution_tier: draft.active ? 'normal' : 'blocked' }).eq('id', id).select('id,tags,distribution_tier').single();
       if (result.error) throw result.error;
       if (result.data.tags?.length !== tags.length) throw new Error('Video tags did not read back.');
