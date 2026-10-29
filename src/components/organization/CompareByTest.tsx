@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle } from "lucide-react";
 import { rankRows, rankingWarnings, ageOn, type RankFilters, type TestRankRow } from "@/lib/org/testRanking";
+import { EvidenceTrendChart } from '@/components/progress/EvidenceTrendChart';
+import { MeaningTitle } from '@/components/progress/SectionMeaning';
 
 const sel = "w-full rounded-md border border-input bg-background p-2 text-sm";
 
@@ -30,8 +32,8 @@ export function CompareByTest({ orgId }: { orgId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Rank by test</CardTitle>
-        <p className="text-xs text-muted-foreground">Each player's most recent result for the test you pick.</p>
+        <CardTitle><MeaningTitle organization title="Rank by Test">Each player contributes their latest recorded result for the selected test. Results keep their date and verification source. Choose whether higher or lower is better; mixed ages and positions need care.</MeaningTitle></CardTitle>
+        <p className="text-sm text-muted-foreground">Each player's most recent result for the test you pick.</p>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="space-y-1">
@@ -78,6 +80,7 @@ export function CompareByTest({ orgId }: { orgId: string }) {
             {warnings.map((w) => (
               <p key={w} className="flex items-start gap-2 text-sm text-muted-foreground"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />{w}</p>
             ))}
+            <EvidenceTrendChart bars label={test} unit="recorded test value" points={ranked.map(r=>({label:r.name,value:r.value,date:r.test_date,source:r.verified?'Facility-verified in person':'Athlete-entered'}))}/>
             <ol className="space-y-2">
               {ranked.map((r, i) => (
                 <li key={r.athlete_id} className="rounded-md border border-border p-3 text-sm">
