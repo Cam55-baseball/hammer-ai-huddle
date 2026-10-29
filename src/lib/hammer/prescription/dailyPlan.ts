@@ -1744,6 +1744,16 @@ export function blockKey(b: PrescribedBlock): string {
   return `${b.modality}:${b.side ?? ""}`;
 }
 
+/** Bunting days: non-rest, non-game days with full hitting first; when games take those, light
+ * hitting days fill up to the weekly bunting minimum (attempts still come out of that day's swings). */
+export function buntingWeekdays(roadmap: ReadonlyArray<{dow:number;restDay:boolean;modalities:ReadonlyArray<{key:string;intensity:string}>}>, gameDows: readonly number[], wanted: number): number[] {
+  const open = roadmap.filter(d => !d.restDay && !gameDows.includes(d.dow));
+  const full = open.filter(d => d.modalities.some(m => m.key === 'hitting' && m.intensity !== 'activation')).map(d => d.dow);
+  if (full.length >= wanted) return full;
+  const light = open.filter(d => !full.includes(d.dow) && d.modalities.some(m => m.key === 'hitting')).map(d => d.dow);
+  return [...full, ...light.slice(0, wanted - full.length)];
+}
+
 /** The game itself as a card the player logs after playing. Light pre-game work and
  * post-game recovery stay in their own cards; this adds no training dose. */
 export function gameDayCard(tournament: boolean): PrescribedBlock {
@@ -2534,7 +2544,7 @@ export function buildHammerDailyPlan(
     sport:normalizeSport(sportRaw)==='softball'?'softball':'baseball',modules:roadmapInputs.subscriptionModules??[],
     bats:identityOverride?.isSwitchHitter?'S':(['R','L','S'].includes(String(ctx.get('bats_hand')?.value))?ctx.get('bats_hand')?.value as 'R'|'L'|'S':null),
     ...bunting.traits,battingGames:bunting.evidence.battingGames,battingWindow:bunting.evidence.battingWindow,outcomes:bunting.evidence.outcomes,
-    legalWeekdays:weeklyRoadmap.filter(d=>!d.restDay&&!(bunting.gameWeekdays??[]).includes(d.dow)&&d.modalities.some(m=>m.key==='hitting'&&m.intensity!=='activation')).map(d=>d.dow),
+    legalWeekdays:buntingWeekdays(weeklyRoadmap,bunting.gameWeekdays??[],bunting.traits?.speedy===true||bunting.traits?.lacksPower===true?3:2),
     restDay:fullRestDay,gameDay:scheduleSignal.postureToday!=='normal',
   },{weekday:today.getDay(),weekIndex:Math.floor(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()-((today.getDay()+6)%7))/604800000),
     owned:proj.equipmentList,age:bunting.age,phase:bunting.phase,catalog:bunting.catalog,userId:bunting.userId}) : masteryOrdered;
