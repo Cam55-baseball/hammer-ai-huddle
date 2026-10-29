@@ -2,6 +2,24 @@
 
 ## Current verdict: OPEN, not publish-ready
 
+## Positive proof — eligible TEST, October 29, 12:28 UTC
+
+- Existing onboarding TEST `a283a732-dfca-4160-9c9b-55305e092572`, no context injury restriction and a ready hitting card. Session obtained only through owner-only TEST helper; no reset or erased restrictions.
+- Full uploaded IMG_7346.mov generated a genuine hitting report, explicitly saved to Players Club as `TEST Item13 positive real swing`; video `c2f2d6fa-2764-4a65-8e08-68390044f907`. The earlier trimmed clip's no-swing result was not counted.
+- 390×844: Closed-Shoulder Tee (Glove-Side Hold) heart → Saved drills shelf → reload, saved item count 1; reopened report heart remains true. Corrected the Saved drills URL and narrow deliberate-shelf demo diversion, not entitlement or training gates.
+- Add to Today → missing check-in/intensity/progression warnings → Okay → exact drill in today's hitting card. Its existing dose stayed unchanged; prep/full-go/log work remained. Issue-named Because: front shoulder opens early. Reload count 1; zero runtime errors. Screenshot inspected: `/tmp/browser/item13positive/today.png`.
+- Next-date exercise used the existing `buildHammerDailyPlan`, canonical envelope and `savePlanSnapshot` under the TEST session for October 30. Baseline hitting card saved/read back successfully. This is a sport-builder/save-path check, **not** a full seven-day physical generator or mounted future-date UI proof.
+- Live next-date rotation returned `rotated:0` with `This date needs a fresh warning acknowledgement.` Baseline remained intact. No warning was auto-accepted and no false next-day success claimed.
+
+### This run's pending changes and exact blocker
+
+- Shared exact issue binding covers stored improvements, tagged practice checks and canonical findings plus sport-scoped saved goals, without prose inference. Owner candidates reuse existing `eligibleFor`; execution and owner slots remain protected.
+- Added dated `analysis_rotation_ack` checking active enrollment, complete clean-clip history, saved day and fresh safety. Pending choices have drill/video/date identities and a Today review button; Okay uses the existing atomic action. No yesterday-to-tomorrow acknowledgment inheritance.
+- Generated shared server catalog packages 21 canonical sources and rejects browser-client imports. Focused regressions: 43 tests / 8 files passed; preview build OK 12:27:41 UTC.
+- **Not live:** updated `plan-swap` and migration `0154_analysis_drill_stored_issue_binding.sql`. Named owner authorization is required for these exact changes. After authorization, finish real next-date warning → Okay → saved fix-it/issue Because → reload, including mounted UI proof. Every-prescribed-drill coverage and full safety freshness acceptance remain open until that proof.
+- Evidence: `/tmp/browser/item13positive/positive.log`, `next-plan-readback.json`, `tests-final.log`, heart/shelf/warnings/add_result/today screenshots. TEST reports and selected work retained; no destructive cleanup.
+- No publish, deployment, migration application, cron or iOS changes this run. Prior evidence below is historical, not the current eligibility result.
+
 - Real 390×844 TEST session obtained through owner-only create-test-athlete session_only; no reseeding or removal of safety facts.
 - Supplied IMG_7346.mov contains actual hitting footage. A browser-compatible smaller extract generated a real report. Some attempts failed with a provider invalid-argument error; no synthetic report or finding was written.
 - Normal Save to Players Club → title `TEST Item13 real hitting analysis` → Upload to Library succeeded. Reopened through Players Club View.
