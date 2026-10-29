@@ -143,7 +143,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     [snapshot],
   );
 
-  const { catalog, historyCatalog, circulation, log, markDone, userId, ready, error: circulationError,
+  const { catalog, historyCatalog, circulation, log, userId, ready, error: circulationError,
     matches: goalMatches, isPending: goalsPending, goalError } = useAnalysisGoalDrills(module, sport);
   const frozenKey = historyKey ? `rx.frozen.v2:${userId ?? "anon"}:${historyKey}` : null;
   const checkMatches = useMemo(
@@ -187,7 +187,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
       }
     } catch { /* storage unavailable — live list */ }
     return live;
-  }, [frozenKey, live, historyCatalog, ready, goalsPending, checkMatches]);
+  }, [frozenKey, live, historyCatalog, ready, goalsPending, checkMatches, goalMatches]);
 
   const fallback = useMemo(
     // Maintenance work only when the clip genuinely had no faults.

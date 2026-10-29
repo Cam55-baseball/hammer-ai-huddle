@@ -13,7 +13,7 @@ export function useAnalysisGoalVideos(module: string | null | undefined, sport: 
   const positions = resolvePositionGroups(profile.profile?.position);
   const sourceError = goals.error ?? goals.goalError ?? profile.error;
   const library = useQuery({
-    queryKey: ['analysis-goal-videos', goals.userId, module, sport, ids, positions],
+    queryKey: ['analysis-goal-videos', goals.userId, module, sport, ids, positions, goals.goals],
     enabled: !!goals.userId && !goals.isPending && !sourceError && (ids.length > 0 || goals.goals?.length > 0) && !profile.loading,
     queryFn: async () => {
       // RLS remains authoritative; blocked, moderated and foundation assets stay off this shelf.

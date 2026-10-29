@@ -172,7 +172,7 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
           </div>)}
         </section> : null}
 
-      {!hasFeedbackKeys && goalPicks.length > 0 ? null : !hasFeedbackKeys ? (
+      {!hasFeedbackKeys && (goalPicks.length > 0 || goalVideos.isPending) ? null : !hasFeedbackKeys ? (
         <p className="text-sm text-muted-foreground">
           This analysis didn't flag a fault we can match a video to.
         </p>
