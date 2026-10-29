@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { MeaningTitle } from '@/components/progress/SectionMeaning';
 import {
   alertLine, checkinLine, headline, lastActiveLine, playerName, testsLine, todayLine, weekLine,
   type FacilityBoardRow,
@@ -45,7 +47,7 @@ export function FacilityBoard({ orgId }: { orgId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Players at a glance</CardTitle>
+        <CardTitle><MeaningTitle organization title="Players at a Glance">Each player keeps their existing recorded plan completion, test dates and activity status. Check-in attendance is visible here, but health answers require the player's health-sharing permission.</MeaningTitle></CardTitle>
         <p className="text-sm text-muted-foreground">
           One short line per player. Tap a name for details.
         </p>
@@ -76,19 +78,19 @@ export function FacilityBoard({ orgId }: { orgId: string }) {
             const isOpen = open === r.athlete_id;
             return (
               <li key={r.athlete_id}>
-                <button
+                <Button variant="ghost"
                   type="button"
-                  className="flex w-full items-center justify-between gap-2 py-2 text-left"
+                  className="flex h-auto min-h-11 w-full flex-wrap items-start justify-between gap-2 whitespace-normal px-0 py-3 text-left"
                   onClick={() => setOpen(isOpen ? null : r.athlete_id)}
                   aria-expanded={isOpen}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex min-w-0 flex-wrap items-center gap-2">
                     {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     <span className="font-medium">{playerName(r)}</span>
-                    {r.team_name && <span className="text-xs text-muted-foreground">· {r.team_name}</span>}
+                    {r.team_name && <span className="text-sm text-muted-foreground">· {r.team_name}</span>}
                   </span>
                   <span className="text-sm text-muted-foreground">{headline(r, todayISO)}</span>
-                </button>
+                </Button>
                 {isOpen && (
                   <div className="space-y-1 pb-3 pl-6 text-sm">
                     <p>{todayLine(r)}</p>

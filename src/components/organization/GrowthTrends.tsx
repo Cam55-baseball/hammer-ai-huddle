@@ -12,6 +12,8 @@ import {
   type Direction,
 } from "@/lib/org/growthTrends";
 import type { FacilityBoardRow } from "@/lib/org/facilityBoard";
+import { EvidenceTrendChart } from '@/components/progress/EvidenceTrendChart';
+import { MeaningTitle } from '@/components/progress/SectionMeaning';
 
 function fmtDate(iso: string | null | undefined): string {
   if (!iso) return "Not recorded";
@@ -20,8 +22,8 @@ function fmtDate(iso: string | null | undefined): string {
 }
 
 function DirectionIcon({ d }: { d: Direction }) {
-  if (d === "up") return <TrendingUp className="h-4 w-4 text-green-600" aria-label="going up" />;
-  if (d === "down") return <TrendingDown className="h-4 w-4 text-red-600" aria-label="going down" />;
+  if (d === "up") return <TrendingUp className="h-4 w-4 text-primary" aria-label="going up" />;
+  if (d === "down") return <TrendingDown className="h-4 w-4 text-destructive" aria-label="going down" />;
   if (d === "flat") return <Minus className="h-4 w-4 text-muted-foreground" aria-label="steady" />;
   return <HelpCircle className="h-4 w-4 text-muted-foreground" aria-label="not enough data" />;
 }
@@ -66,11 +68,9 @@ export function GrowthTrends({ orgId }: { orgId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Growth vs game trends</CardTitle>
+        <CardTitle><MeaningTitle organization title="Growth vs. Game Trends">Training completion is recorded cards done out of planned cards. Game outcomes use recorded scores: win 1, tie 0.5, loss 0. These measures are separate, and moving together is not proof of cause. Written video reports are not measurements.</MeaningTitle></CardTitle>
         <p className="text-sm text-muted-foreground">
-          Pick a player to see how their training, video analysis scores and game results moved over the same
-          stretch. When two things move the same way we say "these move together" — that never means one caused
-          the other.
+          Compare a player's recorded training completion and game results. Shared movement does not prove cause.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -95,7 +95,11 @@ export function GrowthTrends({ orgId }: { orgId: string }) {
 
         {trends && data && (
           <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+              <EvidenceTrendChart label="Training Completion" unit="%" points={[...data.training_weeks].sort((a,b)=>a.week_start.localeCompare(b.week_start)).map(w=>({label:w.week_start.slice(5),date:`Week of ${w.week_start}`,value:w.planned>0?w.done/w.planned*100:null,sample:w.planned,source:`Training plan logs · ${w.done} of ${w.planned} cards`}))}/>
+              <EvidenceTrendChart label="Game Outcomes" unit="win 1 · tie 0.5 · loss 0" points={[...data.games].sort((a,b)=>a.game_date.localeCompare(b.game_date)).map(g=>({label:g.game_date.slice(5),date:g.game_date,value:g.my_score===null||g.opp_score===null?null:g.my_score>g.opp_score?1:g.my_score===g.opp_score?0.5:0,source:`${g.verified?'Coach/org-verified':'Athlete-entered'} · ${g.opponent ?? 'Opponent not recorded'}`}))}/>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-md border p-3 space-y-1">
                 <div className="flex items-center gap-2 font-medium text-sm">
                   <DirectionIcon d={trends.training.direction} /> Training
@@ -103,15 +107,6 @@ export function GrowthTrends({ orgId }: { orgId: string }) {
                 <p className="text-sm text-muted-foreground">{trends.training.summary}</p>
                 <p className="text-xs text-muted-foreground">
                   Source: training plan log · {trends.training.points} week{trends.training.points === 1 ? "" : "s"} with planned work
-                </p>
-              </div>
-              <div className="rounded-md border p-3 space-y-1">
-                <div className="flex items-center gap-2 font-medium text-sm">
-                  <DirectionIcon d={trends.analysis.direction} /> Video analysis
-                </div>
-                <p className="text-sm text-muted-foreground">{trends.analysis.summary}</p>
-                <p className="text-xs text-muted-foreground">
-                  Source: video analysis reports · {trends.analysis.points} scored report{trends.analysis.points === 1 ? "" : "s"}
                 </p>
               </div>
               <div className="rounded-md border p-3 space-y-1">
@@ -127,7 +122,7 @@ export function GrowthTrends({ orgId }: { orgId: string }) {
 
             <div className="space-y-2">
               <p className="text-sm font-medium">How they move together</p>
-              {trends.pairs.map((p, i) => (
+              {trends.pairs.filter(p=>p.a==='Training'&&p.b==='Game results').map((p, i) => (
                 <div key={i} className="rounded-md border p-3">
                   <p className="text-sm font-medium">
                     {p.a} vs {p.b}: <span className="font-normal">{p.reading}</span>
