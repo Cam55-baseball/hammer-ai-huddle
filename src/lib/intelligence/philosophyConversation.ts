@@ -14,8 +14,8 @@ export function parsePhilosophyReply(raw: string): PhilosophyReply {
 export function philosophyChanges(p: PhilosophyProposal) {
   return [
     { title:'Rules', where:'Coaching Console → Your principles', change:`Save “${p.body}” for ${p.sport} / ${p.area}. Applies: ${p.applies_when}. Does not apply: ${p.not_when}.` },
-    { title:'Prescriptions', where:'Today → existing goal-drill selection', change:p.connected_work.trim() ? `Prefer only these existing eligible drill IDs: ${p.connected_work}. No extra work, changed dose or safety exceptions.` : 'No prescription change: no existing drills are linked.' },
-    { title:'Cues', where:'Today → explanation for a linked goal drill', change:p.connected_work.trim() ? 'Show the saved principle as the reason for choosing an eligible linked drill. Exercise cue text is unchanged.' : 'No cue change: no drill is linked.' },
+    { title:'Prescriptions', where:'Today → existing goal-drill order', change:p.connected_work.trim() && ['hitting','throwing','fielding'].includes(p.area) ? `Move already-prescribed eligible linked drills first: ${p.connected_work}. No new drill, extra work or dose change. When/exception text is saved for review, not an automatic scheduling rule.` : 'No prescription change: no supported existing drills are linked.' },
+    { title:'Cues', where:'Today → explanation for a linked goal drill', change:p.connected_work.trim() && ['hitting','throwing','fielding'].includes(p.area) ? 'When linked drills move first, show that saved coach guidance changed their order. The principle text and exercise cue text are not substituted.' : 'No cue change: no supported drill is linked.' },
     { title:'Standards', where:'Coaching Console → existing standards settings', change:'No standard or cutoff changes. Those require a separate explicit settings edit.' },
   ];
 }
