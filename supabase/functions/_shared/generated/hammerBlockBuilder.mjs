@@ -7939,6 +7939,13 @@ function gameDayDefensePrimer(b, original, tournament) {
 function blockKey(b) {
   return `${b.modality}:${b.side ?? ""}`;
 }
+function buntingWeekdays(roadmap, gameDows, wanted) {
+  const open = roadmap.filter((d3) => !d3.restDay && !gameDows.includes(d3.dow));
+  const full = open.filter((d3) => d3.modalities.some((m) => m.key === "hitting" && m.intensity !== "activation")).map((d3) => d3.dow);
+  if (full.length >= wanted) return full;
+  const light = open.filter((d3) => !full.includes(d3.dow) && d3.modalities.some((m) => m.key === "hitting")).map((d3) => d3.dow);
+  return [...full, ...light.slice(0, wanted - full.length)];
+}
 function gameDayCard(tournament) {
   const title = tournament ? "Tournament \u2014 play your games" : "Game day \u2014 play and log your game";
   return {
@@ -8479,7 +8486,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     battingGames: bunting.evidence.battingGames,
     battingWindow: bunting.evidence.battingWindow,
     outcomes: bunting.evidence.outcomes,
-    legalWeekdays: weeklyRoadmap.filter((d3) => !d3.restDay && !(bunting.gameWeekdays ?? []).includes(d3.dow) && d3.modalities.some((m) => m.key === "hitting" && m.intensity !== "activation")).map((d3) => d3.dow),
+    legalWeekdays: buntingWeekdays(weeklyRoadmap, bunting.gameWeekdays ?? [], bunting.traits?.speedy === true || bunting.traits?.lacksPower === true ? 3 : 2),
     restDay: fullRestDay,
     gameDay: scheduleSignal.postureToday !== "normal"
   }, {
