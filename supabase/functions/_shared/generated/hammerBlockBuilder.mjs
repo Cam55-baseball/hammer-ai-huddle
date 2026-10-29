@@ -7939,6 +7939,27 @@ function gameDayDefensePrimer(b, original, tournament) {
 function blockKey(b) {
   return `${b.modality}:${b.side ?? ""}`;
 }
+function gameDayCard(tournament) {
+  const title = tournament ? "Tournament \u2014 play your games" : "Game day \u2014 play and log your game";
+  return {
+    modality: "game",
+    title,
+    why: "You have a game on your schedule today. The game is your main work, so the other cards are light.",
+    roadmapReason: "Game on your schedule",
+    phase: "maintain",
+    steps: ["Do the light warm-up and pre-game cards first.", "Play your game.", "After the game, log it, then do the recovery card."],
+    drills: [],
+    cues: ["Play loose \u2014 today is about competing, not training."],
+    stopRules: ["If anything hurts, stop and tell your coach or a parent."],
+    durationMin: null,
+    route: "/games",
+    ctaLabel: "Log this game",
+    status: "ready",
+    missing: [],
+    missingContextKeys: [],
+    gamePlanTemplate: null
+  };
+}
 function applyScheduleModulation(blocks, signal, originals, defenseFullOverride = false) {
   if (signal.postureToday === "normal") return blocks;
   const rationale = signal.rationale;
@@ -8427,7 +8448,8 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     preModulationOriginals,
     roadmapInputs.defenseFullOverride === true
   );
-  const sided = applySideBias(modulated, sideBias);
+  const withGame = scheduleSignal.postureToday === "game" || scheduleSignal.postureToday === "tournament" ? [gameDayCard(scheduleSignal.postureToday === "tournament"), ...modulated] : modulated;
+  const sided = applySideBias(withGame, sideBias);
   const { blocks: biasedBlocks, tags: gpBiasTags } = applyGpSignalBias(
     sided,
     gpSignal,
