@@ -243,7 +243,8 @@ Deno.serve(async (req) => {
   const t0 = Date.now();
   // Total builds at once across all slices (SAFE_PARALLEL by default; a
   // token-holding caller may pass "parallel" 1–80 to measure load).
-  const parallel = Math.min(Math.max(Number((body as any).parallel ?? SAFE_PARALLEL) || SAFE_PARALLEL, 1), WORKERS * CONCURRENCY);
+  // Oct 29 outage: never above SAFE_PARALLEL, even when a caller asks for more.
+  const parallel = Math.min(Math.max(Number((body as any).parallel ?? SAFE_PARALLEL) || SAFE_PARALLEL, 1), SAFE_PARALLEL);
   const nSlices = Math.min(WORKERS, Math.ceil(parallel / CONCURRENCY), missing.length);
   const lanes = Math.ceil(parallel / Math.max(nSlices, 1));
   // Round 6: make the shared catalog copy once before the burst starts.
