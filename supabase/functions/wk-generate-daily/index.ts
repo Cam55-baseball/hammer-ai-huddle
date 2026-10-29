@@ -4553,7 +4553,10 @@ const handler = async (req: Request): Promise<Response> => {
       const s = computeWhyCompleteness(rx.why_v2);
       if (s < p1112_whyMinScore) p1112_whyMinScore = s;
     }
-    if (finalRxs.length === 0) p1112_whyMinScore = 0;
+    // A game day may legitimately carry no physical rows (lifting and
+    // conditioning are off; the game card itself is the day). Every other
+    // empty day stays an honest refusal.
+    if (finalRxs.length === 0 && !isGameDay) p1112_whyMinScore = 0;
     if (p1112_whyMinScore < 100) {
       validatorReport.issues.push({
         code: "why_v2_incomplete", severity: "fatal",
