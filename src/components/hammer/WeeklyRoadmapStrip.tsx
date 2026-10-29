@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SeasonDatesDialog } from "@/components/hammer/SeasonDatesDialog";
+import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 
 import { Calendar, Target } from "lucide-react";
@@ -137,6 +138,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
           In-season: strength maintains your base; speed stays fresh and skill work stays measured.
         </div>
       )}
+      <WeeklyBodyLoadBar embedded />
     </section>
   );
 }

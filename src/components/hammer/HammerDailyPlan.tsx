@@ -16,7 +16,6 @@ import { RunningReadinessLine } from "./RunningReadinessLine";
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
-import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
 import { FinishProfileCard } from "@/components/hammer/FinishProfileCard";
 import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
@@ -987,7 +986,6 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
-        <WeeklyBodyLoadBar />
         <WkRestDayBanner />
         <FinishProfileCard />
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
