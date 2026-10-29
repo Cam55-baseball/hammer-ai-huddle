@@ -48,3 +48,9 @@
 - **Failure found, not fixed:** both pitchers get only ONE real running-conditioning day in the Nov 2–7 week (most days are easy flush only), below the 2+ floor. certsbp Nov 9–10 were refused by the safety check for the same reason (flush-only day judged as Off-Day Conditioning; that check is correct and was left in place). Next: trace why pitcher conditioning collapses to flush-only on normal days.
 - Load: memory 65%, connections 24/60, no new DiskIO alert after 17:15 UTC.
 - **Saved and verified: 28 / 224** (certsb5). Saved but blocked by the conditioning floor: certhsp 28 (14 rebuilt), certsbp 12.
+
+## Run 8 — Oct 29 2026, 22:20–23:10 UTC (batch 4)
+- Fixed and live (approved `wk-generate-daily` redeploys, latest sha256 37441336…d98): load-spike trim keeps the required easy-base-run conditioning row; no lifting on any game day (dense weeks too); a game day may have no physical rows.
+- Built every remaining unit; refused days rebuilt after the fixes.
+- **Saved and verified: 224 / 224.** Sheet rewritten from saved data: docs/owner/scheduling-certification.md.
+- Open: 0 running sessions in 4–5-game weeks (owner decision); pitchers mostly easy flush; demo personas have no off-season week in the window.
