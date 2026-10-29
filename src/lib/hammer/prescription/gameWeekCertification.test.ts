@@ -34,8 +34,15 @@ describe('D/H real shared builder with explicit TEST game weeks',()=>{
     if(program==='5tool')expect(plan.blocks.some(b=>b.modality==='pitching')).toBe(false);
     samples.push({date:date.toISOString().slice(0,10),game,cards:plan.blocks.filter(b=>b.status==='ready'&&b.drills.length).map(b=>({modality:b.modality,title:b.title,phase:b.phase,drills:b.drills.map(d=>({name:d.name,dose:d.dosage,stage:d.stage}))}))});
    }
-   report[`${sport}/${program}/${level}`]=samples;
-   writeFileSync('/tmp/scheduling-game-shared.json',JSON.stringify(report,null,2));
+   const offSeason=Array.from({length:7},(_,offset)=>{
+    const date=new Date(2026,5,1+offset);
+    const envelope=Object.fromEntries(Object.entries({sport_primary:sport,position_primary:program==='5tool'?'SS':'P',bats_hand:'R',age_years:16,weekly_availability_days:6,season_phase:'off',lifecycle_band:'u18',lifting_age_years:2,injury_history:[],equipment_effective:null}).map(([key,value])=>[key,{value,source:'TEST off-season input',owner:'athlete' as const,missing:false,confidence:'high' as const,last_updated:null}]));
+    const modules=program==='pitcher'?[`${sport}_pitching`]:program==='5tool'?[`${sport}_hitting`,`${sport}_throwing`]:[`${sport}_hitting`,`${sport}_throwing`,`${sport}_pitching`];
+    const plan=buildHammerDailyPlan(contextFromEnvelope(envelope),NORMAL_SIGNAL,null,null,undefined,date,{subscriptionModules:modules,resolvedSeasonPhase:'off',armHistory:{rows:[]}});
+    return {date:date.toISOString().slice(0,10),cards:plan.blocks.filter(b=>b.status==='ready'&&b.drills.length).map(b=>({modality:b.modality,title:b.title,phase:b.phase,drills:b.drills.map(d=>({name:d.name,dose:d.dosage,stage:d.stage}))}))};
+   });
+   report[`${sport}/${program}/${level}`]={games:samples,offSeason};
+   if(process.env.SCHEDULING_CERTIFICATION_REPORT)writeFileSync(process.env.SCHEDULING_CERTIFICATION_REPORT,JSON.stringify(report,null,2));
   });
  }
  it('a scheduled Sunday game cannot reopen whole-day training',()=>{
