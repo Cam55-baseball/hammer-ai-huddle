@@ -48,6 +48,8 @@ import { LearningLoopList } from '@/components/intelligence/LearningLoopList';
 import { HealthFlagsCard } from '@/components/intelligence/HealthFlagsCard';
 import { WorkoutActuals } from '@/components/hammer/WorkoutActuals';
 import {MasteryIdentityPanel} from '@/components/intelligence/MasteryIdentityPanel';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { InformationalVideos } from '@/components/video-suggestions/InformationalVideos';
 
 function PracticeIntelligenceCard() {
   const { data: mpi } = useMPIScores();
@@ -138,6 +140,8 @@ export default function ProgressDashboard({ header, today, performance, gameIq, 
   const { modules } = useSubscription();
   const { isOwner } = useOwnerAccess();
   const { snapshot } = useHIESnapshot();
+  const { profile } = useUserProfile();
+  const developed = ['advanced', 'professional'].includes(profile?.experience_level?.toLowerCase() ?? '');
   const hasAdvancedAccess = isOwner || modules.length > 0;
   const selectedSport = (localStorage.getItem('selectedSport') as 'baseball' | 'softball') || 'baseball';
   const [bodyOpen, setBodyOpen] = useState(false);
@@ -265,6 +269,7 @@ Confidence: ${snapshot.development_confidence}%
             <HealthFlagsCard />
             {growth}
             <section id="growth" className="scroll-mt-20 space-y-6">
+              <InformationalVideos placement="growth" sport={selectedSport} developed={developed} />
               <ForecastPreview />
               <PracticeIntelligenceCard />
               <DualStreakDisplay />

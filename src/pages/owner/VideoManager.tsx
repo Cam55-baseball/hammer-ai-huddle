@@ -13,6 +13,7 @@ import { faultKeysFor } from '../../../supabase/functions/analyze-video/construc
 import { isAcceptedDrillVideoUrl } from '@/lib/prescription/drillVideoSource';
 import { toast } from '@/hooks/use-toast';
 import { VideoPlayer } from '@/components/video-library/VideoPlayer';
+import type { SkillDomain } from '@/lib/videoRecommendationEngine';
 
 type Draft = { id?: string; title: string; url: string; sport: string; domain: string; placements: InfoPlacement[]; faults: string[]; tags: string[]; active: boolean };
 const empty: Draft = { title: '', url: '', sport: 'both', domain: 'hitting', placements: [], faults: [], tags: [], active: true };
@@ -39,7 +40,7 @@ export default function VideoManager() {
       let id = draft.id;
       if (!id) {
         const result = await uploadVideo({ title: draft.title.trim(), tags, sport: [draft.sport], category: 'informational', skillDomains: [draft.domain],
-          videoType: file ? 'upload' : 'external', externalUrl: draft.url, videoFile: file ?? undefined });
+          videoType: file ? 'upload' : 'external', externalUrl: draft.url, videoFile: file ?? undefined, skillDomains: [draft.domain as SkillDomain] });
         if (!result) return;
         id = result.id;
         setDraft({ ...draft, id });
