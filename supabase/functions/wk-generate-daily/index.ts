@@ -1079,18 +1079,26 @@ const handler = async (req: Request): Promise<Response> => {
     // Merge both so an in-season athlete never gets Offseason Q1 by default.
     const mpi: any = mpiSettings ?? {};
     const ctxAny: any = ctx ?? {};
-    const seasonSettings = {
+    const { data: seasonTimeline, error: seasonTimelineError } = await admin.from('schedule_timeline_entries')
+      .select('id,tag,start_date,end_date,dates,source,payload,summary,created_at,undone_at')
+      .eq('user_id', user.id).eq('tag', 'SEASON').is('undone_at', null).lte('start_date', planDate)
+      .order('created_at', { ascending: false }).limit(1);
+    if (seasonTimelineError) throw seasonTimelineError;
+    const { seasonWithTimeline } = await import('../_shared/seasonTimeline.ts');
+    const { data: manualStamp } = await admin.from('athlete_mpi_settings').select('season_status_manual_at').eq('user_id', user.id).maybeSingle();
+    const seasonSettings = seasonWithTimeline({
       season_status: mpi.season_status ?? ctxAny.season_phase ?? null,
       // The athlete's hand-set phase outranks the date windows, here as well
       // as in the app, so the plan and the profile always say the same thing.
       season_status_manual: mpi.season_status_manual === true,
+      season_status_manual_at: manualStamp?.season_status_manual_at,
       preseason_start_date: mpi.preseason_start_date ?? null,
       preseason_end_date: mpi.preseason_end_date ?? null,
       in_season_start_date: mpi.in_season_start_date ?? null,
       in_season_end_date: mpi.in_season_end_date ?? null,
       post_season_start_date: mpi.post_season_start_date ?? null,
       post_season_end_date: mpi.post_season_end_date ?? null,
-    };
+    }, (seasonTimeline ?? []) as TimelineEntry[], planDate);
     // `planDate` is the athlete's own day — never the server's UTC day.
     const phaseRes = resolveWkPhase(seasonSettings, new Date(`${planDate}T12:00:00Z`), planDate);
     const isOffseason = phaseRes.phase.startsWith("os_");

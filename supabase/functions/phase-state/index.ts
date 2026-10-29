@@ -3,6 +3,7 @@
 // live = the resolver's answer right now (used to detect season edits).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolvePhaseState } from "../_shared/phaseState.ts";
+import { seasonWithTimeline } from '../_shared/seasonTimeline.ts';
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -25,12 +26,15 @@ Deno.serve(async (req) => {
   const { data: saved } = await admin.from("wk_prescriptions")
     .select("why_payload").eq("user_id", user.id).eq("plan_date", date).limit(20);
   const stamped = ((saved ?? []) as any[]).map((r) => r?.why_payload?.phase_state).find((p) => p && p.version);
-  const [{ data: s }, { data: h }] = await Promise.all([
-    admin.from("athlete_mpi_settings").select("season_status, season_status_manual, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date").eq("user_id", user.id).maybeSingle(),
+  const [{ data: s }, { data: h }, { data: timeline, error: timelineError }, { data: context }] = await Promise.all([
+    admin.from("athlete_mpi_settings").select("season_status, season_status_manual, season_status_manual_at, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date").eq("user_id", user.id).maybeSingle(),
     admin.from("athlete_height_checks").select("measured_on, inches").eq("user_id", user.id).lte("measured_on", date).order("measured_on").limit(60),
+    admin.from('schedule_timeline_entries').select('id,tag,start_date,end_date,dates,source,payload,summary,created_at,undone_at').eq('user_id', user.id).eq('tag', 'SEASON').is('undone_at', null).lte('start_date', date).order('created_at', { ascending: false }).limit(1),
+    admin.from('athlete_context').select('season_phase').eq('user_id', user.id).maybeSingle(),
   ]);
+  if (timelineError) return json({ error: 'Season changes could not be read' }, 503);
   const ps = resolvePhaseState({
-    settings: s as any, date,
+    settings: seasonWithTimeline({ ...s, season_status: s?.season_status ?? context?.season_phase }, timeline as any ?? [], date), date,
     heights: ((h ?? []) as any[]).map((x) => ({ date: x.measured_on, inches: Number(x.inches) })),
   });
   // The plan's own answer is what screens show; the live answer lets the app
