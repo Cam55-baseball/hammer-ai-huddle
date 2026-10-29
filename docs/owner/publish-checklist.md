@@ -1,6 +1,8 @@
-# Final publish checklist — October 29, 2026 · close-out (4)
+# Final publish checklist — October 29, 2026 · close-out (5)
 
 **Ready to publish: NO.** Functional gaps remain in **2, 3, 13, 18, 20 and scheduling D/E/H**. Named populated/entitled owner checks below are nonblocking; unfinished implementation or required functional proof is not a human check. This sheet supersedes stale blockers, not earlier evidence.
+
+**Close-out (5), 18:10 UTC:** the backend database has been unreachable since the last plan-builder deployment (status probe: `backend_unreachable_db`), so no live signed-in check, no saved server sample week and no TEST proof was possible. Full suite: 676 files in bounded batches, all passed (two long files run alone: 25 and 7 tests). Preview dev server serves the app. Only code change since close-out (4): the TEST settings screen restores its saved review turn (Item 20). Deployed functions: `wk-generate-daily` (latest, staged fixes); no function awaits deploy approval. A backend restart needs named owner approval. Part B "saved server sample weeks" cannot be reviewed yet: none exist.
 
 ## Part A — built and proven; unfinished work clearly separated
 
