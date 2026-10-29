@@ -1026,6 +1026,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           ? { ...d, name: planDate && new Date(`${planDate}T12:00:00Z`).getUTCDay() === 6 ? 'Live at-bats — existing pitch budget' : d.name,
             cue: `${d.cue} Pitch design: use your saved pitch types, change the target and count strikes. Live at-bats use this same pitch count, never an added round.` } : d);
       }
+      if(armRole && ['shoulder','elbow','ucl','forearm'].some(r=>injuryRegions.includes(r)))eass.drills=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
       if (planDate && armRole) eass.drills = guardArmDrills(eass.drills, {date:planDate,sport:normalizeSport(sportRaw),role:armRole,age:ageYears,level:ctx.get<string>('competition_level')?.value??null,history:armHistory});
       const outingReason = pitcherOutings?.pitchedYesterday
         ? "You pitched yesterday. Today's arm care is easy recovery work."
@@ -1040,7 +1041,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
 
       // Map EASS drills → DrillStep shape used by the UI.
       // Owner-approved narrow addition: swap one slot for an eligible owner drill.
-      const drills: DrillStep[] = mergeOwnerSlotDrills(eass.drills.map((d) => ({
+      const mappedDrills = eass.drills.map((d) => ({
         name: d.name,
         slug: (d as { slug?: string }).slug,
         setup: d.setup,
@@ -1050,7 +1051,9 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         cue: d.cue,
         stopIf: d.stopIf,
         guide: _guideForMovement((d as { slug?: string }).slug) ?? _guideForMovement(d.name) ?? undefined,
-      })), ["hammers_today:skill"], { sport: normalizeSport(sportRaw) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []), skill: "throwing" });
+      }));
+      // An unmeasured owner replacement cannot inherit a judged arm count.
+      const drills: DrillStep[] = armRole ? mappedDrills : mergeOwnerSlotDrills(mappedDrills, ["hammers_today:skill"], { sport: normalizeSport(sportRaw) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []), skill: "throwing" });
 
       // Anthropometric throwing cues + supplemental drills (additive overlay, non-authoritative).
       const thrOut = anthroSignal ? selectThrowingAdaptations(anthro) : {
@@ -2359,7 +2362,7 @@ export function buildHammerDailyPlan(
     builder({ modality: m, ctx, proj, speed, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
       pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings) : undefined,
       armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,armHistory:roadmapInputs.armHistory,
-      planDate:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,skillExecutionAllowed: scheduleSignal.postureToday === 'normal' }),
+      planDate:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,skillExecutionAllowed: scheduleSignal.postureToday === 'normal' && !(m==='defense'&&access?.pitcherOnly) }),
   );
   const goalAccess = roadmapInputs.subscriptionModules === undefined ? null
     : priorityAccess(roadmapInputs.subscriptionModules, normalizeSport(sportRaw) === 'softball' ? 'softball' : 'baseball');

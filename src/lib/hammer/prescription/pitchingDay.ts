@@ -28,7 +28,7 @@ export function eassArmEvent(drill: EassDrill): ThrowEvent | null {
 export function guardArmDrills(drills: readonly EassDrill[], input:{date:string;sport:'baseball'|'softball';role:ThrowRole;age:number|null;level:string|null;history?:PlanningArmHistory}): EassDrill[] {
   const history=input.history;
   const care=drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
-  if(history?.unavailable || input.age==null) return care;
+  if(!history || history.unavailable || input.age==null) return care;
   const rows=(history?.rows??[]).filter(r=>r.entry_date<=input.date && !/skip|missed|cancel/i.test(r.status??''));
   const by=equivalentsByDay(rows);
   const pitchRows=rows.filter(r=>r.source==='pitching'&&!/warm|catch|flat|off_mound/i.test(r.throw_type??''));
@@ -44,6 +44,7 @@ export function guardArmDrills(drills: readonly EassDrill[], input:{date:string;
   } else if(windmillCheck(input.age,priorDays.map(d=>({date:d.date,pitches:d.pitches,innings:0})),input.date,{pitches:pitchRows.filter(r=>r.entry_date===input.date).reduce((n,r)=>n+(r.count??0),0)+1,innings:0}).length)return care;
   const budget=armBudget({sport:input.sport,role:input.role,age:input.age});
   let room=Math.max(0,Math.min(budget.daily-(by.get(input.date)??0),budget.weekly-[...by].filter(([date])=>date>=new Date(Date.parse(input.date)-6*86400000).toISOString().slice(0,10)).reduce((n,[,v])=>n+v,0)));
+  let pitchRoom=Math.max(0,(input.sport==='baseball'&&pitchSmartApplies(input.age,input.level)?PITCH_SMART_BANDS[bandIndex(input.age)].dailyMax:budget.daily)-pitchRows.filter(r=>r.entry_date===input.date).reduce((n,r)=>n+(r.count??0),0));
   const kept=new Set<EassDrill>(care);
   // Reserve the already-declared pitching dose before off-mound supplements.
   for(const d of [...drills.filter(d=>d.stage==='full_go'),...drills.filter(d=>d.stage!=='full_go')]) {
@@ -51,7 +52,7 @@ export function guardArmDrills(drills: readonly EassDrill[], input:{date:string;
     const event=eassArmEvent(d);
     if(!event) { if(d.overloadClass==null && d.category==='position_skill')kept.add(d); continue; }
     const units=throwUnits([event]);
-    if(units<=room){kept.add(d);room-=units;}
+    if(units<=room && (event.kind!=='pitch'||event.count<=pitchRoom)){kept.add(d);room-=units;if(event.kind==='pitch')pitchRoom-=event.count;}
   }
   return drills.filter(d=>kept.has(d));
 }
