@@ -59,6 +59,7 @@ const GROUPS: { title: string; items: { token: string; label: string }[] }[] = [
   {
     title: "Baseball / softball",
     items: [
+      { token: "glove", label: "Glove or mitt" },
       { token: "gamer_bat", label: "Your game bat" },
       { token: "overload_bat", label: "Heavy (overload) bat" },
       { token: "underload_bat", label: "Light (underload) bat" },
