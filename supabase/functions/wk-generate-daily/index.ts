@@ -3751,6 +3751,14 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
 
+    // Owner rule (Oct 28/29): a whole rest day is soft recovery only (+ the
+    // display-placed Mind item). Keep only explicit gentle identities so no
+    // loaded/training row reaches a rest day; if none exist the existing
+    // honest refusal below still applies. Only ever makes the day lighter.
+    if (wholePlanRest(planDate, timelineToday.hold) || availabilityRest) {
+      const gentle = restSafeFallback(finalRxs as any[], true);
+      if (gentle.length) finalRxs = assignSequenceOrder(gentle as any) as typeof finalRxs;
+    }
     // -------- WIC Validation Engine — no publication without a passing report --------
     const validatorReport = wicValidate({
       phase: phaseRes.phase,
@@ -3836,7 +3844,8 @@ const handler = async (req: Request): Promise<Response> => {
         gameProximity.primerOnly === true ||
         gameProximity.removeLift === true ||
         tcsAdjust?.removeLift === true ||
-        timelineToday.hold === true,
+        timelineToday.hold === true ||
+        availabilityRest === true,
     });
 
 
