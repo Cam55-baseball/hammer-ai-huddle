@@ -4532,3 +4532,10 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 
 ## Oct 29 18:55 owner "APPROVE ALL"
 Deploys/additive migrations needed for 2, 3, 13, 18, 20 and server scheduling certification are approved (backward-compatible, named in report). No publish/cron/iOS. BLOCKED: database unreachable; backend restart not covered by this approval — waiting on owner.
+
+## Oct 29 21:01 UI proofs (open)
+- [ ] Item 2: owner defense floor 4 via safe fielding forms with reason; running conditioning 2+ on saved week
+- [ ] Item 3: four week changes rebuild + confirmation, democoach before/after, 390x844
+- [ ] Item 13: heart an owner drill; future-date Add to Today proof
+- [ ] Item 18: fresh TEST player sign-up -> Start -> 7 saved days -> reload
+- [ ] Item 20: on-screen Confirm/Undo, TEST weights reaching the plan; guide note: minimum at safety maximum is correct
