@@ -1,5 +1,5 @@
 import { sortByWarmupStage } from "./warmupStages";
-import { enforceSkillStageOrder } from './planSanity';
+import { enforceSkillStageOrder, validatePlanSanity } from './planSanity';
 import { recoveryDrills } from './recoveryDrills';
 import {applyMasteryFocus,masteryGoalWeights,type MasteryPlanFocus} from './masteryFocus';
 import { applyBuntingPlan, type BuntCatalogItem } from './buntingPlan';
@@ -2279,7 +2279,10 @@ export function buildHammerDailyPlan(
   today: Date = new Date(),
   roadmapInputs: RoadmapInputs = {},
 ): HammerDailyPlanResult {
-  const proj = projectEnvelope(ctx);
+  const envelopeProjection = projectEnvelope(ctx);
+  const proj = roadmapInputs.resolvedSeasonPhase
+    ? { ...envelopeProjection, seasonPhase: roadmapInputs.resolvedSeasonPhase }
+    : envelopeProjection;
   const focusProjection = { ...proj, categoryGoals: masteryGoalWeights(proj.categoryGoals, roadmapInputs.masteryFocus) };
   const speed = selectSpeedFocus(proj);
 
@@ -2462,6 +2465,7 @@ export function buildHammerDailyPlan(
   }
   return {
     blocks: enforceSkillStageOrder(blocks),
+    sanity: validatePlanSanity({ restDay: fullRestDay, work: blocks.filter(b => b.status === 'ready').flatMap(b => b.drills.map(d => ({ category: b.modality, slug: d.slug }))) }),
     practiceLoad,
     seasonPhase: proj.seasonPhase,
     missingnessCount: blocks.filter((b) => b.status === "awaiting-input").length,

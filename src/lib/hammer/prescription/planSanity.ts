@@ -1,4 +1,5 @@
 import type { PrescribedBlock } from './dailyPlan';
+export { validatePlanSanity, validatePlanWeek } from '../../../../supabase/functions/_shared/wic/planSanity';
 const ORDER = { prep: 0, drills: 1, full_go: 2, log: 3 } as const;
 /** Existing declared stages only; no name, dose or inferred intensity ranking. */
 export function enforceSkillStageOrder(blocks: readonly PrescribedBlock[]): PrescribedBlock[] {
