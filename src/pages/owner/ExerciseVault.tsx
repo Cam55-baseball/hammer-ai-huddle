@@ -60,11 +60,15 @@ export default function ExerciseVault() {
   const { data = [], isLoading } = useQuery({
     queryKey: ["exercise-vault", "catalog"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("wk_movement_catalog")
-        .select("slug,name,category,sport_scope,position_scope,min_age_years,season_eligibility,equipment,equipment_alternatives,is_active,dosage_unit,default_sets,default_reps,cns_cost,training_age_legality,substitution_family,movement_category")
-        .order("name");
-      if (error) throw error;
-      const rows = (data ?? []) as unknown as Row[];
+      const rows: Row[] = [];
+      for (let offset = 0; ; offset += 500) {
+        const { data, error } = await supabase.from('wk_movement_catalog')
+          .select('slug,name,category,sport_scope,position_scope,min_age_years,season_eligibility,equipment,equipment_alternatives,is_active,dosage_unit,default_sets,default_reps,cns_cost,training_age_legality,substitution_family,movement_category')
+          .order('name').order('slug').range(offset, offset + 499);
+        if (error) throw error;
+        rows.push(...((data ?? []) as unknown as Row[]));
+        if ((data?.length ?? 0) < 500) break;
+      }
       // Every warm-up builder movement is taggable, even ones the catalog doesn't list.
       const extra = libraryOnlyRows(new Set(rows.map((r) => r.slug))) as Row[];
       const bunts = BUNT_CONTENT.filter(item => !rows.some(row => row.slug === item.slug)).map(item => ({ slug:item.slug, name:item.name, category:'hitting', sport_scope:'both', position_scope:null, min_age_years:item.min_age ?? null, season_eligibility:item.season_phases, equipment:item.equipment, equipment_alternatives:item.equipment_alternatives, is_active:false, dosage_unit:'attempts', default_sets:item.default_sets ?? null, default_reps:item.default_reps ?? null }));
