@@ -5,12 +5,14 @@ import { missingGearAnswer, swapGearList } from "../_shared/planSwap/commonGear.
 import { blockKnownGear, blockSwapChoices } from "../_shared/planSwap/blockSwap.ts";
 import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, rememberedMissingGear, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
 import { speedRowSwap } from "../_shared/planSwap/speedRowSwap.ts";
+import { addAnalysisDrill } from '../_shared/planSwap/analysisDrillAction.ts';
 
 const base = { prescriptionId: z.string().uuid(), planDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   speedSetup: z.object({ spaceYards: z.number().finite().min(0).max(200).nullable(), hill: z.boolean(), sled: z.boolean(), band: z.boolean(), treadmill: z.boolean() }).strict().optional(),
   block: z.object({ modality: z.string().max(40), index: z.number().int().min(0), sport: z.enum(["baseball", "softball"]) }).optional(),
   missing: z.array(z.string().min(1).max(60)).max(40), note: z.string().max(300).optional() };
 const bodySchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal('analysis_drill'), videoId:z.string().uuid(),drillId:z.string().min(1).max(150),sport:z.enum(['baseball','softball']),planDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),acknowledged:z.array(z.string()).max(30).optional() }).strict(),
   z.object({ action: z.literal("options"), ...base }).strict(),
   z.object({ action: z.literal("swap"), ...base, toSlug: z.string().min(1).max(120),
     scope: z.enum(["today", "always"]) }).strict(),
@@ -38,6 +40,7 @@ Deno.serve(async req => {
     const input = bodySchema.safeParse(await req.json());
     if (!input.success) return reply({ error: "Check your Swap answer. Nothing was saved." }, 400);
     const body = input.data;
+    if (body.action === 'analysis_drill') return reply(await addAnalysisDrill(client,admin,uid,body));
     if (body.block) {
       const location = body.block;
       const { data: snapshot, error: snapshotError } = await client.from("athlete_plan_snapshots").select("*")
