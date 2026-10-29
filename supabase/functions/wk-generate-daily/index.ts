@@ -911,7 +911,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
     const timelineCancelled = cancelledDates(timelineEntries);
     const timelineToday = dayEffect(timelineEntries, planDate);
-    if (physio.recoveryOnly) timelineToday.hold = true;
+    // Recovery is the conservative allowed illness day. A low score alone
+    // cannot certify that every physical modality became light work.
+    if (physio.illnessActive) timelineToday.hold = true;
     const gameWindowRows: any[] = ((gamesToday ?? []) as any[]).filter(
       (g: any) => g.ignored_for_training !== true && !timelineCancelled.has(String(g.game_date)),
     );

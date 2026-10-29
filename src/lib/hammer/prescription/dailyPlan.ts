@@ -2515,9 +2515,16 @@ export function buildHammerDailyPlan(
   }) : bunted;
   // Pitching takes its own canonical card identity. This moves existing work,
   // never copies it into a second arm exposure.
-  const prehabbed = restFiltered.map(b => {
+  const illnessFiltered = physio.illnessActive ? restFiltered.map(b => {
+    if (["fueling", "game_iq"].includes(b.modality)) return b;
+    const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter(d => isSoftRecovery(d.slug)) : [];
+    return {...b, drills, steps:drills.length?drillsToSteps(drills):['Illness is still active. Recovery only until you mark yourself better.'],
+      status:drills.length?'ready' as const:'off-day' as const,offDayOverridable:false,gamePlanTemplate:null,durationMin:drills.length?b.durationMin:null,
+      why:'Illness is still active. Recovery only until you mark yourself better.'};
+  }) : restFiltered;
+  const prehabbed = illnessFiltered.map(b => {
     const notices = [...physio.cautions, ...(physio.professionalWarning ? [physio.professionalWarning] : []), ...(physio.illnessActive ? ['Illness is still active. Keep work light until you mark yourself better.'] : [])];
-    const available: DrillStep[] = b.modality === 'warmup' && b.status === 'ready' && !fullRestDay
+    const available: DrillStep[] = b.modality === 'warmup' && b.status === 'ready' && !fullRestDay && !physio.illnessActive
       ? [...new Set(physio.healedAreas.filter(a=>!physio.activeAreas.includes(a)).map(a=>PREHAB_SLUGS[a]))].flatMap(slug=>{
         if(b.drills.some(d=>d.slug===slug))return [];
         const drill=WARMUP_LIBRARY.find(d=>d.slug===slug);

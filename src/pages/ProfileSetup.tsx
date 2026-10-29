@@ -16,6 +16,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { PlusCircle, X } from "lucide-react";
 import { BirthDatePicker } from "@/components/ui/BirthDatePicker";
 import { format } from "date-fns";
+import { persistContextAnswer } from '@/lib/hammer/context/acquisition';
 
 const ProfileSetup = () => {
   const navigate = useNavigate();
@@ -314,6 +315,9 @@ const ProfileSetup = () => {
         .upsert(profileData);
 
       if (profileError) throw profileError;
+      if (isPlayer && (selectedSport === 'baseball' || selectedSport === 'softball')) {
+        await persistContextAnswer(user.id, 'sport_primary', selectedSport, 'profile_setup');
+      }
 
       // 2. Insert role. Admin/owner can never be self-assigned. Coach, scout and
       // recruiter are only REQUESTED here (status pending); the owner approves
