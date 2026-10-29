@@ -19,6 +19,8 @@ import { isSwitchOnFor } from "../../supabase/functions/_shared/wic/flags/featur
 import type { EntryDraft } from "@/lib/hammer/tellHammers/parse";
 import { recordPain } from "@/lib/hammer/injury/recordPain";
 import { FACE_SEVERITY } from "@/lib/hammer/tellHammers/parse";
+import { rebuildAfterChange } from '@/lib/hammer/rebuildAfterChange';
+import { persistContextAnswer } from '@/lib/hammer/context/acquisition';
 
 export const TIMELINE_QUERY_KEY = "schedule-timeline";
 export const SCHEDULE_CHANGED_EVENT = "hammer:schedule-changed";
@@ -63,7 +65,7 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
       const { data, error } = await supabase
         .from("schedule_timeline_entries" as any)
         .select("id, tag, start_date, end_date, dates, source, payload, summary, created_at, undone_at")
-        .eq("user_id", user!.id)
+        .eq("user_id", user?.id ?? '')
         .gte("end_date", isoShift(today, -30))
         .order("created_at", { ascending: false })
         .limit(200);
@@ -117,7 +119,7 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
           origin: source === "ask_hammer" ? "tell_hammers" : ((draft.payload.origin as any) ?? "tell_hammers"),
           date: draft.start_date, note: String(draft.payload.text ?? "Reported through Update Hammer"), queryClient: qc,
         });
-        const message = r.merged ? "You already told me this — I updated it." : "Saved to your pain log — tell a coach or parent too.";
+        const message = r.message ?? (r.merged ? "You already told me this — I updated it." : "Saved to your pain log — tell a coach or parent too.");
         return { merged: r.merged, entry: { ...draft, id: r.entryId, source: "inbox", summary: message, created_at: new Date().toISOString(), undone_at: null } as TimelineEntry, message };
       }
       const linkedRef: string | null = null;
@@ -136,10 +138,17 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
       if (error) throw error;
       const merged = !!data?.merged;
       const entry = data?.entry as TimelineEntry;
+      if (!entry?.id) throw new Error('Change was not saved');
+      // Dated season answers stay on their undoable timeline; both server
+      // readers project them through seasonWithTimeline, never a second write.
+      if (draft.tag === 'NOTE' && draft.payload.kind === 'availability') {
+        await persistContextAnswer(user.id, 'weekly_availability_days', draft.payload.days, 'tell_hammers');
+      }
       const message = whatChanged({ entry, merged, heavyBefore, heavyAfter });
       await (supabase as any).from("schedule_timeline_entries").update({ summary: message }).eq("id", entry.id);
-      announceChange(qc, user.id, message);
-      return { merged, entry: { ...entry, summary: message }, message };
+      const affectsPlan = !['NOTE', 'GOAL'].includes(draft.tag) || draft.payload.kind === 'availability';
+      const result = await announceChange(qc, user.id, affectsPlan ? describeChange(draft) : null);
+      return { merged, entry: { ...entry, summary: message }, message: result?.message ?? message };
     },
     [user?.id, entries, today, qc, gameDatesOutsideTimeline],
   );
@@ -149,7 +158,7 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
       if (!user?.id) return false;
       const { data, error } = await (supabase as any).rpc("tell_hammers_undo", { p_id: id });
       if (error) throw error;
-      if (data) announceChange(qc, user.id, "Undone — Hammer put your plan back.");
+      if (data) await announceChange(qc, user.id, 'Change undone');
       return !!data;
     },
     [user?.id, qc],
@@ -159,7 +168,14 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
 }
 
 /** Refresh every module that reads the schedule and ask today's plan to re-plan. */
-export function announceChange(qc: ReturnType<typeof useQueryClient>, userId: string, reason: string | null) {
+function describeChange(draft: EntryDraft) {
+  if (draft.tag === 'SEASON') return `Season switched to ${String(draft.payload.phase ?? (draft.payload.which === 'ends' ? 'offseason' : 'in season')).replace(/_/g, ' ')}`;
+  if (draft.payload.kind === 'availability') return `Available days changed to ${draft.payload.days} per week`;
+  return 'Your schedule or injury changed';
+}
+
+export async function announceChange(qc: ReturnType<typeof useQueryClient>, userId: string, reason: string | null) {
+  const result = reason === null ? null : await rebuildAfterChange(reason, getTodayDate());
   qc.invalidateQueries({ queryKey: [TIMELINE_QUERY_KEY, userId] });
   for (const k of [
     "schedule-window-games",
@@ -171,6 +187,8 @@ export function announceChange(qc: ReturnType<typeof useQueryClient>, userId: st
     "wk-rx-timeline",
     "calendar-projection",
     "hammer-daily-plan",
+    "season-status", "phase-state", "hammer-context-envelope",
+    "wk-rx", "wk-plan-changes", "saved-block-day", "coach-athlete-plan", "coach-athlete-summaries", "coach-roster-rows", "coach-athlete-glance", "coach-athlete-rows",
   ]) {
     qc.invalidateQueries({ queryKey: [k] });
   }
@@ -180,6 +198,7 @@ export function announceChange(qc: ReturnType<typeof useQueryClient>, userId: st
     .then(() => qc.invalidateQueries({ queryKey: ["adaptive-phase-plan", userId] }))
     .catch(() => undefined);
   if (reason !== null && typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent(SCHEDULE_CHANGED_EVENT, { detail: { reason } }));
+    window.dispatchEvent(new CustomEvent(SCHEDULE_CHANGED_EVENT, { detail: { reason: result?.message ?? reason, rebuilt: true, userId } }));
   }
+  return result;
 }

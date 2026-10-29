@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { noteProtectedEditing } from "@/lib/auth/protectedEditing";
 import { Loader2, CalendarPlus } from "lucide-react";
+import { announceChange } from '@/hooks/useScheduleTimeline';
 
 const KINDS: Array<{ value: string; label: string; hint: string; intensity: "light" | "standard" | "heavy" }> = [
   { value: "team", label: "Team practice", hint: "Club / school / travel team", intensity: "heavy" },
@@ -126,11 +127,9 @@ export function AddPracticeDialog({
       });
       if (error) throw error;
 
-      toast.success(
-        recurring
-          ? "Repeating practice saved — Hammer will plan around it every week."
-          : "Practice saved — today's plan will modulate around it.",
-      );
+      const result = await announceChange(qc, user.id, recurring ? 'Repeating practice saved' : 'Practice saved');
+      if (result?.ok) toast.success(result.message);
+      else if (result) toast.error(result.message);
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["calendar"] }),
         qc.invalidateQueries({ queryKey: ["hammer-daily-plan"] }),

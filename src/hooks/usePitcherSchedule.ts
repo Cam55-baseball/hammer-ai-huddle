@@ -7,6 +7,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { resolveOutingFacts } from "../../supabase/functions/_shared/wic/pitching/outingFacts";
+import { announceChange } from '@/hooks/useScheduleTimeline';
+import { toast } from 'sonner';
 
 export type PitcherRole = "starter" | "reliever" | "both";
 export interface PitcherSettings { role: PitcherRole; rotation_anchor_date: string | null; rotation_every_days: number | null; rotation_active: boolean }
@@ -51,7 +53,12 @@ export function usePitcherSchedule(planDate?: string) {
     },
   });
 
-  const done = () => {
+  const done = async () => {
+    if (user?.id) {
+      const result = await announceChange(qc, user.id, 'Pitching schedule changed');
+      if (result?.ok) toast.success(result.message);
+      else if (result) toast.error(result.message);
+    }
     for (const key of ["pitcher-schedule", "schedule-window-games", "wk-rx", "game-log-prompt"]) {
       qc.invalidateQueries({ queryKey: [key] });
     }

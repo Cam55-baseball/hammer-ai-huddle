@@ -13,6 +13,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from '@/hooks/useAuth';
+import { announceChange } from '@/hooks/useScheduleTimeline';
 
 export type EventKind = "game" | "practice";
 export type EventStatus = "scheduled" | "canceled";
@@ -40,6 +42,13 @@ function invalidateScheduleQueries(qc: ReturnType<typeof useQueryClient>) {
 
 export function useEventStatusMutation() {
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const rebuild = async (reason: string) => {
+    if (!user?.id) return;
+    const result = await announceChange(qc, user.id, reason);
+    if (result?.ok) toast.success(result.message);
+    else if (result) toast.error(result.message);
+  };
 
   const setStatus = useMutation({
     mutationFn: async ({
@@ -57,9 +66,9 @@ export function useEventStatusMutation() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: (_, vars) => {
+    onSuccess: async (_, vars) => {
       invalidateScheduleQueries(qc);
-      toast.success(vars.status === "canceled" ? "Event canceled" : "Event restored");
+      await rebuild(vars.status === "canceled" ? "Event canceled" : "Event restored");
     },
     onError: (err: any) => {
       toast.error(err?.message ?? "Could not update event");
@@ -86,9 +95,9 @@ export function useEventStatusMutation() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       invalidateScheduleQueries(qc);
-      toast.success("Event rescheduled");
+      await rebuild('Event rescheduled');
     },
     onError: (err: any) => {
       toast.error(err?.message ?? "Could not reschedule event");

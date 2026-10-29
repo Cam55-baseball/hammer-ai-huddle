@@ -43,6 +43,8 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
   const query = useQuery({
     queryKey: ["coach-athlete-plan", athleteId, today],
     staleTime: 60_000,
+    refetchInterval: 15_000,
+    refetchIntervalInBackground: false,
     queryFn: async (): Promise<SavedCoachPlan> => {
       const { data, error } = await supabase.rpc("coach_athlete_plan", { _athlete: athleteId, _date: today });
       if (error) throw error;

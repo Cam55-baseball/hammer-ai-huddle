@@ -87,8 +87,12 @@ export function SeasonDatesDialog({ open, onOpenChange }: Props) {
   const handleSave = async () => {
     setIsUpdating(true);
     try {
-      s.updateSeasonStatus(draft as any);
-      toast.success("Season dates updated");
+      for (const phase of PHASES) {
+        const start = (draft as any)[phase.startField];
+        const end = (draft as any)[phase.endField];
+        if (start && end && end < start) throw new Error(`${phase.label}: end date must follow start date`);
+      }
+      await s.updateSeasonStatusAsync({ ...draft, season_status_manual: false });
       qc.invalidateQueries({ queryKey: ["game-day-context"] });
       qc.invalidateQueries({ queryKey: ["hammer-daily-plan"] });
       onOpenChange(false);

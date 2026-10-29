@@ -31,6 +31,9 @@ import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 import { CompetitionLevelPicker } from "@/components/shared/CompetitionLevelPicker";
 import { detectInjuryPhrasing, type ReportInjuryRegionKey } from "@/lib/hammer/injury/reportInjury";
+import { useScheduleTimeline } from '@/hooks/useScheduleTimeline';
+import { parseScheduleRequest } from '@/lib/hammer/tellHammers/parse';
+import { getTodayDate } from '@/utils/dateUtils';
 
 interface Props {
   open: boolean;
@@ -49,6 +52,7 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
   const { user } = useAuth();
   const { sport } = useSportTheme();
   const { updateSeasonStatusAsync } = useSeasonStatus();
+  const timeline = useScheduleTimeline();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [level, setLevelState] = useState<string>("");
@@ -68,6 +72,12 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
     if (!user || !note.trim() || busy) return;
     setBusy(true);
     try {
+      const parsed = parseScheduleRequest(note, getTodayDate());
+      if (parsed.ok && (parsed.draft.tag !== 'NOTE' || parsed.draft.payload.kind === 'availability')) {
+        const result = await timeline.save(parsed.draft, 'ask_hammer');
+        toast.success(result.message);
+        setNote(''); onOpenChange(false); return;
+      }
       // Append the change into goal_summary as a self-report note. This is
       // intentional: keeps the lineage on the canonical spine column, and
       // Hammer's prompt already reads goal_summary.
@@ -89,7 +99,6 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
     setBusy(true);
     try {
       await updateSeasonStatusAsync({ season_status: v });
-      toast.success(`Season set to ${v.replace("_", "-")}.`);
     } catch { /* The canonical season save displays its error. */ }
     finally { setBusy(false); }
   }
