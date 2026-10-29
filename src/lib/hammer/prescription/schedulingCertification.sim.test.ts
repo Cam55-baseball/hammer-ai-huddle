@@ -60,9 +60,7 @@ describe('Scheduling certification: 6 programs × 4 levels × 8 weeks', () => {
           else problems.push(`week ${w + 1} ${date.toDateString()} is thin (no skill work)`);
           for (const b of skillReady) counts[b.modality] = (counts[b.modality] ?? 0) + 1;
           // Spill-over: skills not bought never appear as training.
-          // Complete Pitcher still receives the generic hitting card today; recorded
-          // for the owner's decision, not silently changed for every pitcher customer.
-          if (tier === 'pitcher' && skillReady.some(b => b.modality === 'hitting')) counts.pitcherHittingCards = (counts.pitcherHittingCards ?? 0) + 1;
+          if (tier === 'pitcher' && skillReady.some(b => ['hitting','baserunning'].includes(b.modality))) problems.push(`Complete Pitcher got unpurchased skills ${date.toDateString()}`);
           if (tier === '5tool' && skillReady.some(b => b.modality === 'pitching')) problems.push(`5Tool got pitching ${date.toDateString()}`);
           // Order of the day: warm-up first, recovery last.
           const ordered = blocks.filter(ready).map(b => b.modality);
@@ -79,6 +77,7 @@ describe('Scheduling certification: 6 programs × 4 levels × 8 weeks', () => {
         }
         weeks.push(counts);
         if (counts.trainingDays !== 6) problems.push(`week ${w + 1} has ${counts.trainingDays} training days`);
+        if ((counts.defense ?? 0) < 4) problems.push(`week ${w + 1} defense ${counts.defense ?? 0}/4`);
         if (tier !== 'pitcher') {
           if ((counts.hitting ?? 0) < 3) problems.push(`week ${w + 1} hitting ${counts.hitting ?? 0}/3`);
           if ((counts.defense ?? 0) < 4) problems.push(`week ${w + 1} defense ${counts.defense ?? 0}/4`);
