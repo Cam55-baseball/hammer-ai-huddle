@@ -20,6 +20,7 @@
  */
 import type { HammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { injuryHistoryToText } from "@/lib/hammer/context/normalizers";
+import { activeInjuryHistory } from '../../../../supabase/functions/_shared/health/physioMapping';
 import {
   normalizeCategoryGoals,
   type CategoryGoalsPayload,
@@ -73,7 +74,7 @@ const KNOWN_INJURY_REGIONS = [
  * no usable text — missingness is preserved, never fabricated.
  */
 function normalizeInjuryToText(raw: unknown): string | null {
-  const txt = injuryHistoryToText(raw);
+  const txt = injuryHistoryToText(activeInjuryHistory(raw));
   return txt === "" ? null : txt;
 }
 

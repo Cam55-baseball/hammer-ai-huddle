@@ -390,6 +390,7 @@ import { OS_ONLY_ECCENTRIC_SLUGS, IN_SEASON_BLOCKED_SLUGS } from "../_shared/wic
 import { isolationAllowed, robustnessAreas, robustnessPool, ROBUSTNESS_IN_SEASON_SETS, IN_SEASON_SESSION_SET_CAP, AREA_LABEL } from "../_shared/wic/lift/blueprint.ts";
 import { oppositeLowerPool } from "../_shared/wic/lift/areaMap.ts";
 import { runningReadiness, type ReadinessCheckin, type RunningReadiness } from "../_shared/readiness/runningReadiness.ts";
+import { readPhysioMapping } from '../_shared/health/readPhysioMapping.ts';
 import { conditioningFloorDue, isRunningConditioning, floorConditioningSlugs } from "../_shared/wic/conditioning/weeklyFloor.ts";
 
 // Step 20 C3 — the first request an isolate serves pays for loading the code.
@@ -845,6 +846,7 @@ const handler = async (req: Request): Promise<Response> => {
     ]);
 
     const p: any = profile ?? {};
+    const physio = await readPhysioMapping(userClient, user.id, planDate, ctx?.injury_history);
     // ONE age source (owner ruling 2026-10-06): profiles.date_of_birth only.
     const athleteAgeYears: number | null = ageFromDob(p.date_of_birth, planDate);
     // ONE growth rule: measured height only (docs/wic/training-intelligence-v1.md §10.2).
@@ -883,6 +885,7 @@ const handler = async (req: Request): Promise<Response> => {
     const trainingAgeYears = Number((ctx as any)?.lifting_age_years ?? p.years_lifting ?? p.training_age_years ?? 0);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
+    for (const region of physio.activeAreas) injurySlugs.add(region);
     // -------- Tell Hammers timeline (spec adaptive-phases-and-schedule-v1 §2) --------
     // Read only when the athlete's switch is on. Off → empty list → every line
     // below behaves exactly as before. Any read failure also degrades to empty.
@@ -908,6 +911,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
     const timelineCancelled = cancelledDates(timelineEntries);
     const timelineToday = dayEffect(timelineEntries, planDate);
+    if (physio.recoveryOnly) timelineToday.hold = true;
     const gameWindowRows: any[] = ((gamesToday ?? []) as any[]).filter(
       (g: any) => g.ignored_for_training !== true && !timelineCancelled.has(String(g.game_date)),
     );
@@ -1350,6 +1354,10 @@ const handler = async (req: Request): Promise<Response> => {
     if (running?.band === "low") {
       if (!reductions.some(r => r.reason === "sleep" || r.reason === "cns")) cnsCap = Math.max(1, cnsCap - 1);
       reductions.push({ reason: "running_readiness", detail: `Your last 14 days point to a lighter day${running.reasons.length ? ` (${running.reasons.join(", ")})` : ""}, so the hard work is dialled back.` });
+    }
+    if (physio.lowReadiness) {
+      if (!reductions.some(r=>['sleep','cns','running_readiness'].includes(r.reason))) cnsCap=Math.max(1,cnsCap-1);
+      reductions.push({reason:'running_readiness',detail:`Illness is active. Keep today light until you mark yourself better.${physio.professionalWarning ? ` ${physio.professionalWarning}.` : ''}`});
     }
     // Stage 3 (owner-authorised 2026-10-05) — the morning Day intent answer.
     // Read from the athlete's own dated row for this plan date. It can only
@@ -5291,7 +5299,7 @@ const handler = async (req: Request): Promise<Response> => {
     if(composeRequested){
       const posture=isTravelDay?'travel':isGameDay?'game':isHeavyPracticeDay?'team_practice':gameProximity.hoursToNearestGame!=null&&gameProximity.hoursToNearestGame>0&&gameProximity.hoursToNearestGame<=24?'taper':'normal';
       const phaseStart=phaseRes.phase.startsWith('os_')?seasonSettings.post_season_end_date:phaseRes.phase==='in_season'?seasonSettings.in_season_start_date:phaseRes.phase==='preseason'?seasonSettings.preseason_start_date:seasonSettings.post_season_start_date;
-      composed=await composeSportDay(userClient,{userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,alwaysMissingGear:[...alwaysMissing],injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null});
+      composed=await composeSportDay(userClient,{userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,alwaysMissingGear:[...alwaysMissing],injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null,physio});
     }
 
     // -------- Stated change to a day already built: adjust unmarked cards only --------
