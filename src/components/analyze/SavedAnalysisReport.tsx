@@ -20,10 +20,9 @@ export function SavedAnalysisReport({ report, module, libraryMatches }: { report
     <h3 className="font-semibold">Your analysis report</h3>
     {takeaway && <div><h4 className="font-medium">Top takeaway</h4><p className="text-sm">{takeaway}</p></div>}
     {findings.length > 0 && <div><h4 className="font-medium">Key findings</h4><ul className="list-disc pl-5 space-y-1 text-sm">{findings.map((value, i) => <li key={i}>{value}</li>)}</ul></div>}
-    {report.feedback && <p className="text-sm whitespace-pre-wrap">{report.feedback}</p>}
     {list(report.positives).length > 0 && <div><h4 className="font-medium">What went well</h4><ul className="list-disc pl-5 text-sm">{list(report.positives).map((value, i) => <li key={i}>{value}</li>)}</ul></div>}
-    {report.improvements?.length > 0 && <div className="space-y-3"><h4 className="font-medium">What to work on</h4>{report.improvements.map((item: any, i: number) => <div key={i} className="text-sm space-y-1"><p className="font-medium">{item.phase}: {item.fault}</p>{item.why && <p><span className="font-medium">Why it matters: </span>{item.why}</p>}{item.fix && <p><span className="font-medium">How to fix it: </span>{item.fix}</p>}</div>)}</div>}
-    {(report.improvements?.[0]?.fault || takeaway) && <div><h4 className="font-medium">Area to improve</h4><p className="text-sm">{report.improvements?.[0]?.fault || takeaway}</p></div>}
+    {report.feedback && <div><h4 className="font-medium">Detailed analysis</h4><p className="text-sm whitespace-pre-wrap">{report.feedback}</p></div>}
+    {(report.improvements?.length > 0 || takeaway) && <div className="space-y-3"><h4 className="font-medium">What to work on</h4>{report.improvements?.length > 0 ? report.improvements.map((item: any, i: number) => <div key={i} className="text-sm space-y-1"><p className="font-medium">{item.phase}: {item.fault}</p>{item.why && <p><span className="font-medium">Why it matters: </span>{item.why}</p>}{item.fix && <p><span className="font-medium">How to fix it: </span>{item.fix}</p>}</div>) : <p className="text-sm">{takeaway}</p>}</div>}
     {connected.length > 0 && <div><h4 className="font-medium">How this may connect to you</h4><p className="text-xs text-muted-foreground">Our best read from your profile and logs — not something the clip showed.</p><ul className="list-disc pl-5 text-sm">{connected.map((value, i) => <li key={i}>{value}</li>)}</ul></div>}
     {report.clean_reason && <p className="text-sm">{report.clean_reason}</p>}
     {libraryMatches}
