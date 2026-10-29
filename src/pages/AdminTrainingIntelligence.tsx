@@ -286,10 +286,11 @@ export default function AdminTrainingIntelligence() {
   ], watchNotes.filter(n => n.severity === "critical").length, watchNotes.filter(n => n.severity === "warn").length, readFailed);
   const healthGreen = Boolean(gateOk) && determinismOk === true && matrixOk === true;
   const attention = [
+    ...watchNotes.filter(n => n.severity === "critical").map(n => ({ title: n.title, action: "Review the recorded problem", target: "health" })),
     ...health.failed.map(c => ({ title: `${c.name} need checking.`, action: "Review the failed check", target: "health" })),
-    ...health.missing.map(c => ({ title: `${c.name} have no saved result for these settings.`, action: "Review available evidence", target: "health" })),
+    ...health.missing.map(c => ({ title: `No saved result: ${c.name.toLowerCase()} for these settings.`, action: "Review available evidence", target: "health" })),
     ...(readFailed ? [{ title: "Some system records could not be loaded.", action: "Refresh the records", target: "reload" }] : []),
-    ...watchNotes.filter(n => n.severity === "critical" || n.severity === "warn").map(n => ({ title: n.title, action: "Review the recorded warning", target: "health" })),
+    ...watchNotes.filter(n => n.severity === "warn").map(n => ({ title: n.title, action: "Review the recorded warning", target: "health" })),
   ];
 
   const modeAllowed = (mode: string): { ok: boolean; why: string; needsConfirm: boolean } => {
