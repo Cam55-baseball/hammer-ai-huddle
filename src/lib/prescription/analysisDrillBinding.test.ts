@@ -15,7 +15,8 @@ describe('analysis prescribed drill issue binding',()=>{
   expect(analysisDrillBinding(d,{feedback:'early_shoulder_rotation',violations_detected:{early_shoulder_rotation:false}},[])).toBeNull();
  });
  it('goal picks bind to the saved goal, never a fake clip issue',()=>{
-  const d=ELITE_DRILL_CATALOG.find(d=>d.id==='elite.hit.hands_inside_short_bat');if(!d)throw new Error('Missing catalog');
+  const entry=ELITE_DRILL_CATALOG.find(d=>d.id==='elite.hit.hands_inside_short_bat');if(!entry)throw new Error('Missing catalog');
+  const d={...entry,videoUrl:'https://example.test/existing-library.mp4'};
   expect(analysisDrillBinding(d,{},['Barrel control'])).toEqual({issue_key:'goal:Barrel control',fault_key:null,goal_label:'Barrel control'});
  });
 });

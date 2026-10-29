@@ -242,7 +242,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
             </p>
           )}
         </section>
-        <Button variant="outline" onClick={() => navigate('/vault?section=saved-items')}>Saved drills</Button>
+        <Button variant="outline" onClick={() => navigate('/vault?openSection=saved-items')}>Saved drills</Button>
 
         {hieActions.length > 0 && (
           <section className="space-y-2 border-t pt-4">
