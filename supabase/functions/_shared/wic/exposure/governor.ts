@@ -85,6 +85,8 @@ export function runGovernor(input: {
   rm28: Rm28;
   ctx: GovernorContext;
   alternatives?: GovAlternative[];
+  /** Caller preserves the composed row's legal intent when stepping down. */
+  canSubstitute?: (from: GovItem, alternative: GovAlternative) => boolean;
 }): GovernorResult {
   const items = input.items.map((i) => ({ ...i }));
   const trims: Trim[] = [];
@@ -156,7 +158,7 @@ export function runGovernor(input: {
         const before = { slug: it.slug, tier: it.tier, sets: it.sets, amount: amount(it) };
         const lowest = LOWEST_TIER[channel];
         if (it.tier !== lowest) {
-          const alt = pickAlternative(alternatives, it, channel, lowest);
+          const alt = pickAlternative(alternatives, it, channel, lowest, input.canSubstitute);
           if (alt) {
             items[idx] = { ...alt, sets: alt.floorSets, isTeamLoad: false } as GovItem;
             changed = true;
@@ -246,7 +248,7 @@ export function runGovernor(input: {
         // stepping lighter rather than leaving the spike in place.
         let alt: GovAlternative | null = null;
         for (let t = pos + 1; t < tiers.length && !alt; t++) {
-          alt = pickAlternative(alternatives, it, channel, tiers[t]);
+          alt = pickAlternative(alternatives, it, channel, tiers[t], input.canSubstitute);
         }
         if (!alt) continue;
         const before = { slug: it.slug, tier: it.tier, sets: it.sets, amount: amount(it) };
@@ -316,13 +318,15 @@ function pickAlternative(
   from: GovItem,
   channel: Channel,
   tier: string,
+  canSubstitute?: (from: GovItem, alternative: GovAlternative) => boolean,
 ): GovAlternative | null {
   const pool = alternatives
     .filter((a) =>
       a.channel === channel &&
       a.tier === tier &&
       a.substitutionFamily != null &&
-      a.substitutionFamily === from.substitutionFamily
+      a.substitutionFamily === from.substitutionFamily &&
+      (!canSubstitute || canSubstitute(from, a))
     )
     .sort((a, b) => a.amountPerSet - b.amountPerSet || a.slug.localeCompare(b.slug));
   return pool[0] ?? null;

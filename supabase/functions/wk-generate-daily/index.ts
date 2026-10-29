@@ -136,6 +136,7 @@ import {
 import { METHODS_VERSION } from "../_shared/wic/methods/catalog.ts";
 // Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
 import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
+import { preservesSpeedIntent } from "../_shared/wic/speed/governorComposition.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
@@ -3657,6 +3658,11 @@ const handler = async (req: Request): Promise<Response> => {
             pitchSmartRestDay: false,
           },
           alternatives,
+          canSubstitute: (from, alternative) => {
+            const row = finalRxs.find(r => r.movement_slug === from.slug);
+            return preservesSpeedIntent(row?.slot, lib.find(m => m.slug === from.slug)?.speed_category,
+              lib.find(m => m.slug === alternative.slug)?.speed_category);
+          },
         });
 
         if (gov.trims.length > 0) {
