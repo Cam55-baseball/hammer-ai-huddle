@@ -9,6 +9,7 @@ import {computeHomeToFirstGrade,type ScaleReferenceRow} from '@/lib/baserunning/
 import {computeThrowVeloGrade} from '@/lib/throwing/throwVeloGrade';
 import {computePopTimeGrade} from '@/lib/catching/popTimeGrade';
 import {nextThrowDate} from '../../../supabase/functions/_shared/wic/phases/nextThrowDate';
+import {projectArmHistory}from './armHistory';
 type RecordValue=Record<string,unknown>;
 const record=(v:unknown):RecordValue=>v&&typeof v==='object'&&!Array.isArray(v)?v as RecordValue:{};
 const list=(v:unknown):RecordValue[]=>Array.isArray(v)?v.map(record):[];
@@ -83,5 +84,5 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  const strategy=developmentStrategy({chosen:chosenGoalPillar(list(goals.goals)),age,pillars:pillarFacts.map(p=>({pillar:p.pillar as 'contact',status:p.status,grade:p.pillar==='defense'?defenseGrade:p.pillar==='arm'?armGrade:p.pillar==='speed'?speedGrade:null,progress:p.progress,sourceIds:p.sourceIds}))});
  const guidance={...masteryGuidance({contactStatus:contact.status,contactSourceIds:contact.sourceIds,speedStatus:speed.status,powerStatus:power.status,leftPower:traits.leftPower,leftPowerGoal:traits.powerGoal}),observedFocus:strategy.mode==='secure_natural'&&strategy.sourceIds.length?strategy.primary:steering.focus,sourceIds:strategy.mode==='secure_natural'&&strategy.sourceIds.length?strategy.sourceIds:steering.sourceIds,reason:strategy.mode==='secure_natural'&&strategy.sourceIds.length?strategy.reason:steering.reason,alternativeReason:steering.speedOrPower==='Need more data'?'Need more data for speed-or-power focus.':`Speed-or-power requirement: ${steering.speedOrPower}. ${steering.comparison}.`};
  const pitching=pitchingIdentity(list(source.pitcherGames).map(g=>({id:String(g.id),date:String(g.date),battersFaced:typeof g.battersFaced==='number'?g.battersFaced:null,complete:g.complete===true,pitches:list(g.pitches).map(p=>({id:String(p.id),opportunity:typeof p.opportunity==='number'?p.opportunity:null,outcome:typeof p.outcome==='string'?p.outcome:null}))})),standards,areaWindowPolicy(settings,'pitching'),sport==='softball'?'softball':'baseball',level);
- return {batting,speed,traits,policy,settings,sport,recordedSpeedEvidence:speedEvidence,defense,defensePillar,contact,power,arm,guidance,steering,strategy,pitching,level,standardsSource:IDENTITY_SOURCE};
+ return {batting,speed,traits,policy,settings,sport,recordedSpeedEvidence:speedEvidence,recordedArmEvidence:projectArmHistory(raw,sport),defense,defensePillar,contact,power,arm,guidance,steering,strategy,pitching,level,standardsSource:IDENTITY_SOURCE};
 }
