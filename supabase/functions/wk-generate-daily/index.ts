@@ -1006,7 +1006,12 @@ const handler = async (req: Request): Promise<Response> => {
         else scheduledGames.push({ id: `pitcher-start-${d}`, date: d, time: null, isStartingPitcher: true, status: null, declaredDoubleheader: false, ignored: false, label: "Pitching", source: "timeline" as const } as any);
       }
     }
-    const isPitcherAthlete = athletePositions.some((x) => /pitch|^p$|^rhp$|^lhp$|^sp$|^rp$/.test(x));
+    const {data: schedulingSubscription,error:schedulingSubscriptionError}=await admin.from('subscriptions').select('status,subscribed_modules').eq('user_id',user.id).maybeSingle();
+    if(schedulingSubscriptionError)throw schedulingSubscriptionError;
+    const schedulingModules:string[]=schedulingSubscription?.status==='active'?(schedulingSubscription.subscribed_modules??[]):[];
+    const purchasedPitcher=schedulingModules.some(m=>[`${sport}_pitcher`,`${sport}_golden2way`,`${sport}_pitching`].includes(m));
+    const positionProgram=schedulingModules.includes(`${sport}_5tool`);
+    const isPitcherAthlete = purchasedPitcher || (!positionProgram&&athletePositions.some((x) => /pitch|^p$|^rhp$|^lhp$|^sp$|^rp$/.test(x)));
     // Zero-exposure invariant input: the days in the last week on which the
     // athlete actually received a lift. Read-only, best-effort — a failure
     // here degrades to "no exposure known", which can only relax a removal to
@@ -3298,7 +3303,7 @@ const handler = async (req: Request): Promise<Response> => {
               if (template && eligible(template)) {
                 const { data: ownerRows } = await admin.from("owner_drills").select("*").eq("active", true)
                   .contains("placements", ["hammers_today:conditioning"]).limit(100);
-                const gear = new Set(declaredEquipment.map((e) => String(e).trim().toLowerCase()));
+                const gear = new Set(assumedEquipment.map((e) => String(e).trim().toLowerCase()));
                 const pool = ((ownerRows ?? []) as any[])
                   .filter((r) => ownerConditioningFits(r, { sport, isPitcher: isPitcherAthlete }))
                   .filter((r) => (r.equipment ?? []).every((e: string) => gear.has(String(e).trim().toLowerCase())))
@@ -3837,7 +3842,7 @@ const handler = async (req: Request): Promise<Response> => {
         isRecoveryDay: isWholeRestDayType(trainingContext.day_type),
         isReturnToPlay: false,
       },
-      availableEquipment: equipmentUnknown ? undefined : declaredEquipment,
+      availableEquipment: assumedEquipment,
       trainingAgeClass: (trainingAgeContext as any)?.classification,
       // The 48-hour pre-game primer window, a declared rest day and a Tell
       // Hammers hold all strip loaded work by law. On those days the template's
@@ -5017,7 +5022,7 @@ const handler = async (req: Request): Promise<Response> => {
           gameTomorrow: scheduledGames.some((g: any) => g.date === isoShift(planDate, 1) && g.ignored !== true),
           priorFullSessionsThisWeek: [...fullDays].filter((d) => d >= weekStart).length,
           fullSessionYesterday: fullDays.has(isoShift(planDate, -1)),
-          equipment: declaredEquipment.length ? declaredEquipment : null,
+          equipment: assumedEquipment,
         });
         const summary = { version: WINDMILL_PROGRAM_VERSION, type: wm.type, full_pitches: wm.fullPitches, drill_throws: wm.drillThrows, arm_units: wm.armUnits, reasons: wm.reasons };
         wm.rows.forEach((wr, idx) => {
@@ -5155,7 +5160,7 @@ const handler = async (req: Request): Promise<Response> => {
           planDate, phase: String(phaseRes.phase), sport,
           modules: (pcSub?.status === "active" ? (pcSub.subscribed_modules ?? []) : []).map(String),
           isPitcher: isPitcherAthlete, age: athleteAgeYears, growthMode: growthState.active, pain,
-          equipment: declaredEquipment.length ? declaredEquipment : null,
+          equipment: assumedEquipment,
           gameToday: gameOn(planDate), gameTomorrow: gameOn(isoShift(planDate, 1)),
           startToday: futStartsPc.includes(planDate), startTomorrow: futStartsPc.includes(isoShift(planDate, 1)),
           startYesterday: pastStartsPc.includes(isoShift(planDate, -1)),
@@ -5248,7 +5253,7 @@ const handler = async (req: Request): Promise<Response> => {
             realThrowDaysThisWeek: realDays,
             realThrowsEnabled: features.pap_real_throws === true,
             goals: [...(goalEmphasis.ranked ?? [])].map(String),
-            equipment: declaredEquipment.length ? declaredEquipment : null,
+            equipment: assumedEquipment,
             firstLift: { slug: String(first.movement_slug), name: String(first.movement_name ?? first.movement_slug), pattern, heavy },
           });
           if (pp.block) {

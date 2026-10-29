@@ -1033,6 +1033,9 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           ? { ...d, name: planDate && new Date(`${planDate}T12:00:00Z`).getUTCDay() === 6 ? 'Live at-bats — existing pitch budget' : d.name,
             cue: `${d.cue} Pitch design: use your saved pitch types, change the target and count strikes. Live at-bats use this same pitch count, never an added round.` } : d);
       }
+      if(pitchingType==='side'||pitchingType==='touch'){
+        eass.drills=eass.drills.filter(d=>d.category!=='intent'&&d.category!=='overload').map(d=>d.stage==='full_go'?{...d,name:'Flat-ground command — existing pitch budget',stage:'drills' as const,cue:`${d.cue} Flat ground only, easy feel; use the same listed count.`}:d);
+      }
       if(armRole && ['shoulder','elbow','ucl','forearm'].some(r=>injuryRegions.includes(r)))eass.drills=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
       if (planDate && armRole) eass.drills = guardArmDrills(eass.drills, {date:planDate,sport:normalizeSport(sportRaw),role:armRole,age:ageYears,level:ctx.get<string>('competition_level')?.value??null,history:armHistory});
       const outingReason = pitcherOutings?.pitchedYesterday
@@ -1189,12 +1192,15 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // nothing (unknown position + heavy injury gating). Never fabricate —
       // just keep the modality visible with a "come back tomorrow" note.
       // Owner-approved narrow addition: swap one slot for a switched-on owner drill.
-      const drills: DrillStep[] = structureSkillSession(mergeOwnerSlotDrills(prescription?.drills
-        ? [...prescription.drills]
+      const fieldingSource = prescription?.drills ? [...prescription.drills] : null;
+      const pitcherFielding = normalizePosition(pos)==='pitcher';
+      const lowTaxingFielding = pitcherFielding ? fieldingSource?.filter(d=>d.executionKind==='fielding_reads').map(d=>({...d,setup:[d.setup,'Low-taxing pitcher fielding: walk through the read, field and set your feet. No release or extra throw; all throwing belongs to the arm plan.'].filter(Boolean).join(' '),cue:'Read, field and set your feet at easy pace. Do not throw.'})) : fieldingSource;
+      const drills: DrillStep[] = structureSkillSession(mergeOwnerSlotDrills(lowTaxingFielding
+        ? lowTaxingFielding
         : [
             { name: "Pre-pitch + first-step reads", dosage: "20 reps", cue: "low athletic stance, weight on balls of feet" },
             { name: "Glove work — 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" },
-          ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: ownedDefense }), { skill: 'defense', sport: defenseSport, owned: ownedDefense, injuryRegions, recoveryDay: recoverDay || tournamentToday || !skillExecutionAllowed });
+          ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: ownedDefense }), { skill: 'defense', sport: defenseSport, owned: ownedDefense, injuryRegions, recoveryDay: recoverDay || tournamentToday || !skillExecutionAllowed || pitcherFielding });
       const safeDrills = missingGear.length ? drills.filter(d=>d.executionKind==='fielding_reads').map(d=>({...d,name:`${d.name} — dry footwork`,executionKind:undefined,stage:'drills' as const,setup:'Walk through the existing footwork without a ball or throw. Stay within your safe space; no diving, sprinting or catching.',cue:'Read an imaginary ball, set your feet, then reset. No throws.',stopIf:'Pain or unsafe space — stop.'})) : drills;
       const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
       const stopRules = [...(prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and update Hammer."]), "Use a glove, the correct ball and safe space. If something is missing, use Swap before starting; do not perform an unsafe rep."];
