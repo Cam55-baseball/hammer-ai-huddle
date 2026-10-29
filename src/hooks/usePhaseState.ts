@@ -37,7 +37,16 @@ export function usePhaseState() {
     enabled: !!user?.id,
     staleTime: 60_000,
     queryFn: async (): Promise<{ shown: PhaseState | null; live: PhaseState | null } | null> => {
-      const { data, error } = await supabase.functions.invoke('phase-state', { body: { date } });
+      const call = () => supabase.functions.invoke('phase-state', { body: { date } });
+      let { data, error } = await call();
+      const status = (error as any)?.context?.status;
+      if (error && status === 401) {
+        // Session token was stale (e.g. account switch). Refresh once, then retry.
+        const { data: s } = await supabase.auth.refreshSession();
+        if (!s?.session) return null;
+        ({ data, error } = await call());
+        if (error && (error as any)?.context?.status === 401) return null;
+      }
       if (error) throw error;
       const out = { shown: (data as any)?.phase_state ?? null, live: (data as any)?.live ?? null };
       try { if (out.shown && user?.id) localStorage.setItem(cacheKey(user.id), JSON.stringify(out)); } catch { /* ignore */ }
