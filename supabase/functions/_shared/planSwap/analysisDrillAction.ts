@@ -42,8 +42,8 @@ export async function addAnalysisDrill(client: any, admin: any, uid: string, inp
   const index = analysisDrillSlot(block.drills);
   if (index < 0) throw new Error('Today’s work has no changeable drill slot. Keep this drill saved.');
   const source = block.drills[index];
-  if (source.analysisEnrollment?.drillId === drill.id) return {saved:true,because:'Already in your fix-it slot.'};
   const safetyResult = analysisDrillSafety({...drill,sport:input.sport},block,safety,date);
+  if (source.analysisEnrollment?.drillId === drill.id) return {saved:true,because:'Already in your fix-it slot.'};
   if (!safetyResult.acknowledged(input.acknowledged ?? [])) return { saved:false, warnings:safetyResult.warnings, warningKeys:safetyResult.keys };
   const enrollment = {sport:input.sport,category:video.module,drill_id:drill.id,video_id:video.id,issue_key:faultKey ? `fault:${faultKey}` : `goal:${goal}`,fault_key:faultKey ?? null,goal_label:goal ?? null,observed_at:video.created_at,created_at:new Date().toISOString()};
   const replacement = enrolledDrill(source,drill,enrollment);
@@ -58,23 +58,28 @@ export async function addAnalysisDrill(client: any, admin: any, uid: string, inp
 export async function rotateAnalysisDrills(client:any,admin:any,uid:string,input:Row) {
   const enrollments = await checked(client.from('analysis_drill_enrollments').select('*').eq('user_id',uid).eq('sport',input.sport));
   if (!enrollments?.length) return {saved:true,rotated:0};
-  const [snapshot,clips,owners] = await Promise.all([
+  const [snapshot,clips,owners,safety] = await Promise.all([
     checked(client.from('athlete_plan_snapshots').select('payload').eq('user_id',uid).eq('plan_date',input.planDate).eq('sport',input.sport).maybeSingle()),
     checked(client.rpc('get_my_plan_clip_evidence',{p_sport:input.sport})),checked(client.from('owner_drills').select('*')),
+    checked(admin.rpc('analysis_drill_safety_revision',{p_user:uid,p_date:input.planDate})),
   ]);
   if (!snapshot || clips?.length >=501) throw new Error('The complete saved plan and analysis history could not be checked.');
   const catalog=mergeCatalog(ELITE_DRILL_CATALOG,owners ?? []);
-  const candidates=applyAnalysisDrillRotation({blocks:snapshot.payload.blocks,enrollments,catalog,sport:input.sport,equipment:catalog.flatMap((d:Row)=>d.equipment),
+  const owned=new Set<string>((safety.gear ?? []).slice().reverse().find((r:Row)=>!r.valid_until || Date.parse(r.valid_until)>Date.now())?.equipment ?? []);
+  const missing=new Set<string>();
+  for(const m of safety.memory ?? []) {for(const g of m.confirmed_have ?? []){owned.add(g);missing.delete(g);}for(const g of m.confirmed_lacks ?? []){owned.delete(g);missing.add(g);}}
+  const candidates=applyAnalysisDrillRotation({blocks:snapshot.payload.blocks,enrollments,catalog,sport:input.sport,equipment:owned,missing,
     clips:(clips ?? []).map((c:Row)=>({video_id:c.id,module:c.module,created_at:c.created_at,violations:c.violations}))});
   let rotated=0;
+  const pending:string[]=[];
   for(const block of candidates) {
     const selected=block.drills.find((d:Row)=>d.analysisEnrollment);
     if(!selected) continue;
     const e=enrollments.find((e:Row)=>e.drill_id===selected.analysisEnrollment.drillId);
     if(!e)continue;
     // New days do not inherit yesterday's warning acknowledgements. Retain the legal baseline on any refusal.
-    try {const result=await addAnalysisDrill(client,admin,uid,{videoId:e.video_id,drillId:e.drill_id,sport:input.sport,planDate:input.planDate,acknowledged:[]},true);if(result.saved)rotated++;}
-    catch { /* Existing baseline stays; no restriction is waived. */ }
+    try {const result=await addAnalysisDrill(client,admin,uid,{videoId:e.video_id,drillId:e.drill_id,sport:input.sport,planDate:input.planDate,acknowledged:[]},true);if(result.saved)rotated++;else pending.push('This date needs a fresh warning acknowledgement.');}
+    catch(e) {pending.push(e instanceof Error ? e.message : 'Fix-it work could not be checked.');}
   }
-  return {saved:true,rotated};
+  return {saved:true,rotated,pending};
 }
