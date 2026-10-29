@@ -52,7 +52,7 @@ export type WeeklyTemplate = {
   readonly id: string;
   readonly availableDays?: ReadonlyArray<Dow>;
   readonly label: string;
-  readonly perModality: Record<ModalityKey, ReadonlyArray<Dow>>;
+  readonly perModality: Partial<Record<ModalityKey, ReadonlyArray<Dow>>>;
   /**
    * Optional intensity accent per (modality, dow).  When absent the day
    * defaults to `primary`.

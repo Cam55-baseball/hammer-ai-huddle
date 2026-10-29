@@ -8,6 +8,8 @@ import type { BuntingFacts } from '../../../../supabase/functions/_shared/wic/bu
 import { isSoftRecovery } from "../../../../supabase/functions/_shared/wic/schedule/softRecovery";
 import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
 import { priorityAccess } from '../priorityAccess';
+import { subscriptionSchedule } from './subscriptionSchedule';
+import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
 import { structureSkillSession } from './skillSessionStructure';
 import { applyPracticePlanContext } from './practicePlanContext';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
@@ -105,6 +107,7 @@ export type ModalityKey =
   | "strength"
   | "hitting"
   | "throwing"
+  | "pitching"
   | "defense"
   | "baserunning"
   | "game_iq"
@@ -1091,11 +1094,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const ownedDefense = new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []);
       // This catalog includes catching/throwing and live-field work. Merely
       // declining to promote full_go does not make its existing reps gear-free.
-      const missingGear = [
-        ...(!ownedDefense.has('field') && !ownedDefense.has('open_space') ? ['safe field space'] : []),
-        ...(!ownedDefense.has('glove') ? ['glove'] : []),
-        ...(!ownedDefense.has('ball') ? ['ball'] : []),
-      ];
+      const missingGear: string[] = [];
       if (missingGear.length) return {
         modality,
         title: pos ? `Defense — ${pos}` : 'Defense — general fundamentals',
@@ -1167,7 +1166,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
             { name: "Glove work — 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" },
           ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: ownedDefense }), { skill: 'defense', sport: defenseSport, owned: ownedDefense, injuryRegions, recoveryDay: recoverDay || tournamentToday || !skillExecutionAllowed });
       const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
-      const stopRules = prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and update Hammer."];
+      const stopRules = [...(prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and update Hammer."]), "Use a glove, the correct ball and safe space. If something is missing, use Swap before starting; do not perform an unsafe rep."];
       const durationMin = prescription?.durationMin ?? (inSeason ? 15 : offSeason ? 35 : 25);
       const title = prescription?.title ?? `Defense — ${pos}`;
       const why = prescription?.why
@@ -2259,6 +2258,7 @@ export interface RoadmapInputs {
   readonly defenseFullOverride?: boolean;
   /** Current subscription modules; an explicit empty list permits no purchased skill boost. */
   readonly subscriptionModules?: readonly string[];
+  readonly alwaysMissingGear?: readonly string[];
   readonly bunting?: {evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
@@ -2282,9 +2282,13 @@ export function buildHammerDailyPlan(
   roadmapInputs: RoadmapInputs = {},
 ): HammerDailyPlanResult {
   const envelopeProjection = projectEnvelope(ctx);
-  const proj = roadmapInputs.resolvedSeasonPhase
+  const phaseProjection = roadmapInputs.resolvedSeasonPhase
     ? { ...envelopeProjection, seasonPhase: roadmapInputs.resolvedSeasonPhase }
     : envelopeProjection;
+  const assumedGear = planningGear(phaseProjection.equipmentList, roadmapInputs.alwaysMissingGear ?? []);
+  const proj = { ...phaseProjection, equipmentList: assumedGear };
+  const sport = normalizeSport(ctx.get('sport_primary')?.value);
+  const access = roadmapInputs.subscriptionModules === undefined ? null : subscriptionSchedule(roadmapInputs.subscriptionModules, sport);
   const focusProjection = { ...proj, categoryGoals: masteryGoalWeights(proj.categoryGoals, roadmapInputs.masteryFocus) };
   const speed = selectSpeedFocus(proj);
 
@@ -2328,8 +2332,9 @@ export function buildHammerDailyPlan(
 
   // Resolve the weekly microcycle NEXT so we can thread its label into blocks.
   const positionOverrideArg = roadmapInputs.positionOverride ?? null;
-  const firstPass = ALL_MODALITIES.map((m) =>
-    builder({ modality: m, ctx, proj, speed, positionOverride: positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings, skillExecutionAllowed: scheduleSignal.postureToday === 'normal' }),
+  const allowed = (m: ModalityKey) => !access || (m === 'hitting' ? access.hasHitting : m === 'baserunning' ? access.hasBaserunning : m === 'defense' ? access.hasDefense : m === 'throwing' ? access.hasThrowing || access.hasPitching : true);
+  const firstPass = ALL_MODALITIES.filter(allowed).map((m) =>
+    builder({ modality: m, ctx, proj, speed, positionOverride: m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings, skillExecutionAllowed: scheduleSignal.postureToday === 'normal' }),
   );
   const goalAccess = roadmapInputs.subscriptionModules === undefined ? null
     : priorityAccess(roadmapInputs.subscriptionModules, normalizeSport(sportRaw) === 'softball' ? 'softball' : 'baseball');
@@ -2341,7 +2346,7 @@ export function buildHammerDailyPlan(
     new Set(firstPass.filter(b => b.status === 'ready' && goalEligible(b.modality)).map(b => b.modality)));
   const weeklyTemplate = goalWeek.template;
   const microcycle = applyMicrocycle(weeklyTemplate, today, goalWeek.targets, planReadinessBand(ctx));
-  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, goalWeek.targets);
+  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, goalWeek.targets).map(day => ({...day, modalities:day.modalities.filter(m=>allowed(m.key))}));
   // Warm-up bias is derived from the slots that actually landed in today's
   // plan — a lift day gets lift prep, a speed day gets speed prep. Priority
   // mirrors CNS cost: speed > lift > throwing > hitting. When nothing
@@ -2435,7 +2440,7 @@ export function buildHammerDailyPlan(
     restDay:fullRestDay,gameDay:scheduleSignal.postureToday!=='normal',
   },{weekday:today.getDay(),weekIndex:Math.floor(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()-((today.getDay()+6)%7))/604800000),
     owned:proj.equipmentList,age:bunting.age,phase:bunting.phase,catalog:bunting.catalog,userId:bunting.userId}) : masteryOrdered;
-  const blocks = fullRestDay ? bunted.map(b => {
+  const restFiltered = fullRestDay ? bunted.map(b => {
     if (["fueling", "game_iq"].includes(b.modality)) return b;
     const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter(d => isSoftRecovery(d.slug)) : [];
     return { ...b, drills, steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
@@ -2444,6 +2449,11 @@ export function buildHammerDailyPlan(
       why: "Rest today — gentle recovery only. Save real training for your next training day.",
       roadmapReason: "Full rest day — soft recovery only.", durationMin: drills.length ? b.durationMin : null };
   }) : bunted;
+  // Pitching takes its own canonical card identity. This moves existing work,
+  // never copies it into a second arm exposure.
+  const blocks = restFiltered.map(b => access?.hasPitching && b.modality === 'throwing'
+    ? {...b, modality:'pitching' as const, title:b.title.replace('EASS Throwing','Pitching'), route:'/practice?module=pitching', ctaLabel:'Open pitching'} : b);
+  const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
@@ -2477,7 +2487,7 @@ export function buildHammerDailyPlan(
     sideBias,
     gpBiasTags,
     microcycle,
-    weeklyRoadmap,
+    weeklyRoadmap: savedRoadmap,
     weeklyTemplate,
     roadmap: {
       rung: rung.descriptor,

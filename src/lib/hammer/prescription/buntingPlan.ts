@@ -33,7 +33,7 @@ export function applyBuntingPlan(blocks:readonly PrescribedBlock[], facts:Buntin
   const index=((options.weekIndex*program.scheduled.length+program.scheduled.indexOf(options.weekday))%eligible.length+eligible.length)%eligible.length;
   const pick=eligible[index];const identity=pick?buntIdentity(pick.slug):null;if(!pick||!identity)return block;
   const dose=program.dose(side,identity.type);
-  const slot=block.drills.findIndex(d=>d.stage==='drills'&&d.prescriptionOrigin!=='owner'&&/^\d+ swings(?:\s|$)/i.test(d.dosage));
+ const slot=block.drills.findIndex(d=>d.stage==='drills'&&d.prescriptionOrigin!=='owner'&&/^\d+ swings(?:\s|$)/i.test(d.dosage));
   const original=block.drills[slot];const budget=original?Number(/^(\d+) swings/i.exec(original.dosage)?.[1]):0;
   if(!original||budget<dose.floor)return block;
   const attempts=Math.min(dose.reps,budget,20);
