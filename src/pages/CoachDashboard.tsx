@@ -1,3 +1,4 @@
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { SendAthleteRequest } from "@/components/connections/SendAthleteRequest";
 import { CoachProgramCard } from "@/components/coach/CoachProgramCard";
@@ -160,7 +161,7 @@ export default function CoachDashboard() {
       setLoading(true);
       const { data, error } = await supabase.functions.invoke('get-following-players');
       if (error) throw error;
-      setFollowing(data?.results || []);
+      setFollowing((data?.results || []).map((player: Player) => ({ ...player, full_name: player.full_name?.trim() || 'Name not provided' })));
     } catch (error) {
       console.error('Error in fetchFollowing:', error);
       toast({ title: t('common.error'), description: t('coach.failedToLoadPlayers', 'Failed to load your players'), variant: "destructive" });
@@ -311,29 +312,26 @@ export default function CoachDashboard() {
             ) : (
               <div className="space-y-3">
                 {following.map((player) => (
-                  <div key={player.id} className="flex items-center justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors flex-wrap">
+                  <div key={player.id} data-player-row className="grid min-w-0 grid-cols-1 gap-3 border-b border-border py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <Checkbox
+                        aria-label={`Select ${player.full_name}`}
+                        className="shrink-0"
                         checked={selectedPlayers.includes(player.id)}
                         onCheckedChange={(checked) => {
                           if (checked) setSelectedPlayers(prev => [...prev, player.id]);
                           else setSelectedPlayers(prev => prev.filter(id => id !== player.id));
                         }}
                       />
-                      <div className="flex-shrink-0">
-                        {player.avatar_url ? (
-                          <img src={player.avatar_url} alt={player.full_name} className="h-12 w-12 rounded-full object-cover" />
-                        ) : (
-                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <GraduationCap className="h-6 w-6 text-primary" />
-                          </div>
-                        )}
-                      </div>
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={player.avatar_url ?? undefined} alt={`${player.full_name} profile photo`} className="object-cover" />
+                        <AvatarFallback className="bg-muted text-lg font-semibold">{player.full_name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()}</AvatarFallback>
+                      </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-semibold break-words">{player.full_name}</p>
+                          <p className="min-w-0 text-lg font-semibold break-words [overflow-wrap:anywhere]">{player.full_name}</p>
                           {player.sport && (
-                            <Badge variant="outline" className={player.sport === 'baseball' ? "border-blue-500 text-blue-600 text-xs" : player.sport === 'softball' ? "border-pink-500 text-pink-600 text-xs" : "border-purple-500 text-purple-600 text-xs"}>
+                            <Badge variant="outline" className="text-sm">
                               {player.sport === 'baseball' && '⚾ Baseball'}
                               {player.sport === 'softball' && '🥎 Softball'}
                               {player.sport === 'both' && '⚾🥎 Both'}
@@ -343,20 +341,20 @@ export default function CoachDashboard() {
                       </div>
                     </div>
                     <div className="flex w-full flex-wrap gap-2 items-center sm:w-auto">
-                      <Button onClick={() => navigate(`/profile?userId=${player.id}`)} size="sm" variant="outline" className="flex-shrink-0">
+                      <Button aria-label={`View profile: ${player.full_name}`} title="View profile" onClick={() => navigate(`/profile?userId=${player.id}`)} size="sm" variant="outline" className="flex-shrink-0">
                         <User className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.viewProfile', 'View Profile')}</span>
                       </Button>
-                      <Button onClick={() => navigate(`/players-club?playerId=${player.id}`)} size="sm" variant="outline" className="flex-shrink-0">
+                      <Button aria-label={`View library: ${player.full_name}`} title="View library" onClick={() => navigate(`/players-club?playerId=${player.id}`)} size="sm" variant="outline" className="flex-shrink-0">
                         <BookMarked className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.viewLibrary', 'View Library')}</span>
                       </Button>
-                      <Button data-tour="coach-send" onClick={() => navigate('/my-custom-activities?tab=templates')} size="sm" variant="default" className="flex-shrink-0">
+                      <Button aria-label={`Send activity: ${player.full_name}`} title="Send activity" data-tour="coach-send" onClick={() => navigate('/my-custom-activities?tab=templates')} size="sm" variant="default" className="flex-shrink-0">
                         <Send className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.sendActivity', 'Send Activity')}</span>
                       </Button>
                       {player.id !== ownerId && (
-                        <Button onClick={() => handleUnfollowClick(player)} size="sm" variant="destructive" className="flex-shrink-0">
+                        <Button aria-label={`Remove player: ${player.full_name}`} title="Remove player" onClick={() => handleUnfollowClick(player)} size="sm" variant="destructive" className="flex-shrink-0">
                           <UserMinus className="h-4 w-4 sm:mr-2" />
                           <span className="hidden sm:inline">{t('coach.remove', 'Remove')}</span>
                         </Button>

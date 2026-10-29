@@ -1,5 +1,8 @@
 /** Owner's Coaching Console (Intelligence step 7) — owner/admin only. */
 import { useState } from "react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { OwnerAgreement } from '@/components/intelligence/OwnerAgreement';
+import { PhilosophyConversation } from '@/components/intelligence/PhilosophyConversation';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,12 +111,19 @@ export default function CoachingConsole() {
     <div className="mx-auto max-w-2xl space-y-4 p-4 pt-16">
       <h1 className="text-2xl font-bold">Coaching Console</h1>
       <p className="text-sm text-muted-foreground">Teach Hammers what you believe. Edits make a new version; old versions are kept.</p>
+      <Tabs defaultValue="principles">
+        <TabsList className="grid h-auto w-full grid-cols-2"><TabsTrigger value="principles">Your Philosophy</TabsTrigger><TabsTrigger value="agreement">Do you agree?</TabsTrigger></TabsList>
+        <TabsContent value="agreement"><OwnerAgreement /></TabsContent>
+        <TabsContent value="principles" className="space-y-5">
+      <PhilosophyConversation onSaved={()=>{void refresh();void qc.invalidateQueries({queryKey:['active-principle-picks']});}} />
+      <details><summary className="cursor-pointer py-3 text-lg font-semibold">Standards & Starting Settings</summary>
       <MasterySettings />
       <PitchingStandardsSettings />
-      <section aria-label="Development philosophy" className="space-y-1 py-2"><h2 className="text-lg font-semibold">Secure what's natural first</h2><p className="text-sm text-muted-foreground">{NATURAL_FIRST_PRINCIPLE}</p></section>
+      </details>
+      <section aria-label="Development philosophy" className="space-y-1 py-2"><h2 className="text-lg font-semibold">Secure What's Natural First</h2><p className="text-base text-muted-foreground">{NATURAL_FIRST_PRINCIPLE}</p></section>
 
+      <details open><summary className="cursor-pointer py-3 text-lg font-semibold">Questions for the Owner</summary>
       <section className="space-y-3 border-b border-border pb-4" aria-label="Questions for the owner">
-        <h2 className="text-lg font-semibold">Questions for the owner</h2>
         {isLoading ? <p className="text-sm text-muted-foreground">Loading saved answers…</p> : isError ?
           <p role="alert" className="text-sm text-destructive">Couldn't check saved answers. Try again later.</p> :
           OWNER_QUESTIONS.map(question => {
@@ -135,7 +145,9 @@ export default function CoachingConsole() {
             </div>;
           })}
       </section>
+      </details>
 
+      <details open={!!editing || undefined}><summary className="cursor-pointer py-3 text-lg font-semibold">Write or Edit a Principle Directly</summary>
       <Card className="space-y-3 p-4" aria-label="Write a principle">
         <h2 className="font-semibold">{editing ? "Edit principle (saves a new version)" : "Write a principle"}</h2>
         <div className="space-y-1"><Label htmlFor="cp-body">Principle</Label>
@@ -165,6 +177,7 @@ export default function CoachingConsole() {
           {editing && <Button variant="outline" onClick={() => { setEditing(null); setForm(EMPTY); }}>Cancel</Button>}
         </div>
       </Card>
+      </details>
 
       {isLoading ? null : isError ? (
         <p role="alert" className="text-sm text-muted-foreground">We couldn't load your principles. Please try again later.</p>
@@ -218,6 +231,8 @@ export default function CoachingConsole() {
           })}
         </section>
       )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
