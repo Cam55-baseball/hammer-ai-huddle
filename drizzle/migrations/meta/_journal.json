@@ -1065,6 +1065,13 @@
       "when": 1793250596136,
       "tag": "0151_analysis_drill_safety_start_phase",
       "breakpoints": true
+    },
+    {
+      "idx": 152,
+      "version": "7",
+      "when": 1793251632392,
+      "tag": "0152_initial_plan_complete_readiness",
+      "breakpoints": true
     }
   ]
 }

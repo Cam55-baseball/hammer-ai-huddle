@@ -10355,6 +10355,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           current_step: number
+          initial_input_answers: Json | null
           last_season_saved_at: string | null
           last_season_skipped_at: string | null
           last_season_stats: Json | null
@@ -10374,6 +10375,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           current_step?: number
+          initial_input_answers?: Json | null
           last_season_saved_at?: string | null
           last_season_skipped_at?: string | null
           last_season_stats?: Json | null
@@ -10393,6 +10395,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           current_step?: number
+          initial_input_answers?: Json | null
           last_season_saved_at?: string | null
           last_season_skipped_at?: string | null
           last_season_stats?: Json | null
@@ -24241,6 +24244,7 @@ export type Database = {
         Args: { _plan?: string; _user: string }
         Returns: boolean
       }
+      initial_plan_missing: { Args: { p_user?: string }; Returns: Json }
       insert_training_block_atomic:
         | {
             Args: {
