@@ -5,6 +5,7 @@ import { useOptionalAuth } from "@/hooks/useAuth";
 import { ELITE_DRILL_CATALOG, type EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import { mergeCatalog, type CirculationInput } from "@/lib/prescription/ownerDrills";
 import { DRILL_HISTORY_LIMIT, readDrillCirculation } from '@/lib/prescription/drillCirculationRead';
+import {testSettingsFor} from '@/lib/intelligence/testSettings';
 
 /** Self-keyed, complete owner/rotation reads. A failure cannot revive switched-off built-ins. */
 export function useDrillCirculation() {
@@ -25,7 +26,7 @@ export function useDrillCirculation() {
     },
   });
   const ready = !user || query.isSuccess;
-  const rows = query.data?.rows ?? [];
+  const rows = useMemo(()=>(query.data?.rows??[]).map(row=>testSettingsFor(row,user?.id)),[query.data?.rows,user?.id]);
   const completedOn = query.data?.completedOn ?? {};
 
   const catalog: EliteDrill[] = useMemo(() => ready ? mergeCatalog(ELITE_DRILL_CATALOG, rows) : [], [ready, rows]);

@@ -1,5 +1,15 @@
 # Item 20 — applied philosophy, October 29
 
+## October 29, 16:05 run — isolated standard/tag Confirm and Undo
+
+- Authorized additive migration `0156_philosophy_test_settings_isolation.sql` applied live. Existing standards, owner drill metadata/fix-it fields, library tags and engine weights now have per-athlete `test_overrides`. RPCs permit only the two exact marked TEST identities, reject stale/duplicate changes, and atomically append principle version, Vault audit and conversation receipt. Undo restores the previous overlay or removes the field when none existed. Global values are not overwritten; TEST principles remain excluded from global picks.
+- Existing Coaching Console conversation has a settings review section: saved old value, exact entered new value, Hammers review/clarification, explicit Confirm and receipt/Undo. Reader integrations are preview-only until publishing; server composer integrations are staged, not redeployed.
+- Actual 390×844 owner review changed TEST standard **65 → 70** plus eligible video `7438efa4-434b-4704-937e-490c9b45b16a` tags by removing **Contact Hitting / Contact Point**. Confirm returned version 2. The affected TEST player's real saved swing report no longer offered “Executing Elite Contact with Manny” for its Barrel control/Contact Rate goals; other eligible tagged videos filled the shelf. No new clip, measurement or finding was invented. Earlier blocked informational-video attempt was undone, never unblocked or counted as matching playback proof.
+- Undo returned version 3; fresh TEST login/reload restored General's **Elite 65+** and the Manny goal video. An earlier fresh signed-in General read explicitly showed **Elite 70+** during Confirm, then 65+ after Undo. The last standard screenshot caught loading and is not counted as visual standard proof. Screenshots/logs: `/tmp/browser/item20-settings/`; changed goal shelf was inspected visually, restored values through UI and canonical readback. Runtime page errors: zero.
+- Global baseball/softball `elite_grade` remained 65; original library tag arrays stayed unchanged throughout. Scoped changes were undone. 8 focused files / **70 tests passed**; automatic preview build OK 16:19:15 UTC. No publish, edge redeploy, cron, iOS or real-player changes.
+
+**Still OPEN:** minimum changes currently cannot increase the sustain ceiling (six days, youth/injury limits preserved); bunting/conditioning minimum consumers are not wired to the scoped values. Engine-dynamic weights have storage/Confirm isolation but no new daily-prescription consumer is claimed. Drill/fix-it and prescription-weight server integrations are staged and need a separately named rollout plus real downstream acceptance. This run proves the standard/tag path, not full adapter completeness or a fresh next-plan/server-analysis build.
+
 **OPEN: partial canonical-setting implementation, not complete acceptance.**
 
 ## October 29, 12:32 run — beyond-cue adapters: BLOCKED, not live

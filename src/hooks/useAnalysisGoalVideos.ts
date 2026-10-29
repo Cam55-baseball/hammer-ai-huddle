@@ -5,6 +5,7 @@ import { useAnalysisGoalDrills } from './useAnalysisGoalDrills';
 import { useUserProfile } from './useUserProfile';
 import { resolvePositionGroups } from '@/lib/hammer/positions/positionGroups';
 import { resolveGoalVideos, type GoalLibraryVideo } from '@/lib/prescription/analysisGoalVideos';
+import {testSettingsFor} from '@/lib/intelligence/testSettings';
 
 export function useAnalysisGoalVideos(module: string | null | undefined, sport: string | null | undefined) {
   const goals = useAnalysisGoalDrills(module, sport);
@@ -18,7 +19,7 @@ export function useAnalysisGoalVideos(module: string | null | undefined, sport: 
     queryFn: async () => {
       // RLS remains authoritative; blocked, moderated and foundation assets stay off this shelf.
       let read = supabase.from('library_videos')
-        .select('id,title,video_url,thumbnail_url,sport,skill_domains,category,distribution_tier,moderation_removed_at,video_class,tags')
+        .select('id,title,video_url,thumbnail_url,sport,skill_domains,category,distribution_tier,moderation_removed_at,video_class,tags,test_overrides')
         .neq('distribution_tier', 'blocked').is('moderation_removed_at', null).or('video_class.is.null,video_class.eq.application');
       read = goals.goals?.length ? read.contains('skill_domains', [module ?? '']) : read.in('id', ids);
       const { data, error } = await read.limit(1000);
@@ -29,7 +30,7 @@ export function useAnalysisGoalVideos(module: string | null | undefined, sport: 
       const { data: tags, error: tagError } = await supabase.from('video_tag_assignments')
         .select('video_id,video_tag_taxonomy(position_scope)').in('video_id', readIds);
       if (tagError) throw tagError;
-      return (data ?? []).map(video => ({ ...video, positionScopes: (tags ?? [])
+      return (data ?? []).map(video => ({ ...testSettingsFor(video,goals.userId??undefined), positionScopes: (tags ?? [])
         .filter(tag => tag.video_id === video.id).map(tag => tag.video_tag_taxonomy?.position_scope ?? []) })) as GoalLibraryVideo[];
     },
   });

@@ -1,0 +1,42 @@
+import {useEffect,useState} from 'react';
+import {supabase} from '@/integrations/supabase/client';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Textarea} from '@/components/ui/textarea';
+import {Label} from '@/components/ui/label';
+import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
+import {latestThreadId} from '@/lib/hammer/oneConversation';
+import {PHILOSOPHY_TEST_USERS,settingsChanges,type SettingChange,type SettingsReceipt} from '@/lib/intelligence/testSettings';
+import {PHILOSOPHY_ENTRY,parsePhilosophyReply} from '@/lib/intelligence/philosophyConversation';
+const TARGETS={mastery_identity_settings:['elite_grade','pitching_standards','prescription_weights','weekly_minimums'],library_videos:['tags'],owner_drills:['fault_keys','placements','routine_role'],engine_dynamic_weights:['weight']};
+export function PhilosophySettingsConversation({onSaved}:{onSaved:()=>void}){
+ const [uid,setUid]=useState<string>(PHILOSOPHY_TEST_USERS[0]),[target,setTarget]=useState<SettingChange['target']>('mastery_identity_settings'),[id,setId]=useState('baseball'),[field,setField]=useState('elite_grade');
+ const [before,setBefore]=useState<unknown>(),[after,setAfter]=useState(''),[changes,setChanges]=useState<SettingChange[]>([]),[point,setPoint]=useState(''),[reply,setReply]=useState(''),[proposal,setProposal]=useState<{body:string;benefit:string;sport:string;area:string}|null>(null),[receipt,setReceipt]=useState<SettingsReceipt|null>(null),[thread,setThread]=useState<string|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ useEffect(()=>{void(async()=>{try{const s=await supabase.auth.getSession();const owner=s.data.session?.user.id;if(!owner)return;const tid=await latestThreadId(owner);setThread(tid);if(tid){const r=await supabase.from('recall_messages').select('parts').eq('thread_id',tid).eq('user_id',owner).order('created_at',{ascending:false}).limit(100);if(r.error)throw r.error;for(const row of r.data??[]){const parts=row.parts as unknown as {receipt?:SettingsReceipt}[];const rec=Array.isArray(parts)?parts[0]?.receipt:null;if(rec?.test_user){setReceipt(rec);break;}}}}catch{setError('Could not load saved settings receipts.');}})();},[]);
+ const act=async(fn:()=>Promise<void>)=>{setBusy(true);setError('');try{await fn();}catch(e){setError(e instanceof Error?e.message:String((e as {message?:string})?.message??'Nothing was confirmed.'));}finally{setBusy(false);}};
+ const review=()=>act(async()=>{const r=await supabase.rpc('owner_review_test_setting',{p_user:uid,p_target:target,p_id:id,p_field:field});if(r.error)throw r.error;const v=(r.data as {value?:unknown})?.value;setBefore(v);setAfter(JSON.stringify(v,null,2));});
+ const add=()=>{try{const c=settingsChanges([...changes,{target,id,field,before,after:JSON.parse(after)}]);setChanges(c);setProposal(null);setReceipt(null);setBefore(undefined);}catch(e){setError(e instanceof Error?e.message:'Enter valid values.');}};
+ const send=()=>act(async()=>{
+  const owner=(await supabase.auth.getSession()).data.session?.user.id;if(!owner)throw Error('Sign in again.');
+  let tid=thread;if(!tid){const r=await supabase.from('recall_threads').insert({user_id:owner,title:'Owner philosophy conversation'}).select('id').single();if(r.error)throw r.error;tid=r.data.id;setThread(tid);}
+  const instruction=`Return only JSON {reply,questions,proposal}. Review owner philosophy, not athlete advice. Exact TEST changes are ${JSON.stringify(changes)}. Do not invent values or alter targets. Ask clarifying questions until intent, sport and category are clear. Proposal null while questions remain; otherwise {body,sport,area,applies_when:'Exact TEST account',not_when:'Real players or any safety override',connected_work:'',benefit,changes:[]}. Sport baseball/softball, area hitting/pitching/throwing/fielding/baserunning. Summarize potential benefit without certainty. Nothing applied. Previous reply: ${reply}`;
+  const r=await supabase.functions.invoke('hammer-chat',{body:{messages:[{role:'user',content:`${instruction}\nOwner says: ${point}`}]}});if(r.error)throw r.error;
+  const parsed=parsePhilosophyReply(r.data?.reply??'');
+  const saved=await supabase.from('recall_messages').insert([{thread_id:tid,user_id:owner,role:'user',parts:[{type:'text',entry:PHILOSOPHY_ENTRY,text:point}]},{thread_id:tid,user_id:owner,role:'assistant',parts:[{type:'text',entry:PHILOSOPHY_ENTRY,text:parsed.reply,settings_review:JSON.parse(JSON.stringify(changes)),questions:parsed.questions}]}]);if(saved.error)throw saved.error;
+  setReply([parsed.reply,...parsed.questions].join('\n'));setProposal(parsed.proposal);setPoint('');
+ });
+ const confirm=()=>act(async()=>{if(!proposal||!thread)throw Error('Save the review first.');const r=await supabase.rpc('owner_confirm_test_settings',{p_thread:thread,p_user:uid,p_body:proposal.body,p_sport:proposal.sport,p_area:proposal.area,p_changes:JSON.parse(JSON.stringify(settingsChanges(changes)))});if(r.error)throw r.error;setReceipt(r.data as unknown as SettingsReceipt);setProposal(null);onSaved();});
+ const undo=()=>act(async()=>{if(!receipt)return;const r=await supabase.rpc('owner_undo_test_settings',{p_version:receipt.version_id});if(r.error)throw r.error;setReceipt(r.data as unknown as SettingsReceipt);onSaved();});
+ return <section aria-label="TEST philosophy settings" className="space-y-4 border-y border-border py-5"><h2 className="text-xl font-semibold">Standards, Tags & Plan Settings — TEST Only</h2>
+ <Label htmlFor="philosophy-test-player">TEST player</Label><Select value={uid} onValueChange={v=>{setUid(v);setChanges([]);setProposal(null);setBefore(undefined);}}><SelectTrigger id="philosophy-test-player"><SelectValue/></SelectTrigger><SelectContent>{PHILOSOPHY_TEST_USERS.map((v,i)=><SelectItem key={v} value={v}>{i===0?'TEST Onboarding 18':'TEST Fresh Onboarding 18'}</SelectItem>)}</SelectContent></Select>
+ <Label htmlFor="test-setting-target">Existing setting group</Label><Select value={target} onValueChange={v=>{const t=v as SettingChange['target'];setTarget(t);setField(TARGETS[t][0]);setId(t==='mastery_identity_settings'?'baseball':'');setBefore(undefined);}}><SelectTrigger id="test-setting-target"><SelectValue/></SelectTrigger><SelectContent>{Object.keys(TARGETS).map(t=><SelectItem key={t} value={t}>{t.replace(/_/g,' ')}</SelectItem>)}</SelectContent></Select>
+ <Label htmlFor="test-setting-id">Saved sport, item ID or weight axis</Label><Input id="test-setting-id" value={id} onChange={e=>{setId(e.target.value);setBefore(undefined);}}/>
+ <Label htmlFor="test-setting-field">Setting</Label><Select value={field} onValueChange={v=>{setField(v);setBefore(undefined);}}><SelectTrigger id="test-setting-field"><SelectValue/></SelectTrigger><SelectContent>{TARGETS[target].map(f=><SelectItem key={f} value={f}>{f.replace(/_/g,' ')}</SelectItem>)}</SelectContent></Select>
+ <Button variant="outline" disabled={busy||!id} onClick={review}>Read saved value</Button>
+ {before!==undefined&&<><p className="break-all">From: {JSON.stringify(before)}</p><Label htmlFor="test-setting-after">Exact new value (JSON)</Label><Textarea id="test-setting-after" value={after} onChange={e=>setAfter(e.target.value)}/><Button variant="outline" onClick={add}>Add to review</Button></>}
+ {changes.map(c=><div key={`${c.target}/${c.id}/${c.field}`} className="space-y-1"><h3 className="font-semibold break-all">{c.target} → {c.field}</h3><p className="break-all">From: {JSON.stringify(c.before)}</p><p className="break-all">To: {JSON.stringify(c.after)}</p></div>)}
+ <Label htmlFor="test-philosophy-point">Your settings philosophy or answer</Label><Textarea id="test-philosophy-point" value={point} onChange={e=>setPoint(e.target.value)}/><Button onClick={send} disabled={busy||!point.trim()||!changes.length}>Review with Hammers</Button>
+ {reply&&<p className="whitespace-pre-wrap">{reply}</p>}{proposal&&<><p>What it could help: {proposal.benefit}</p><p>Only the selected TEST player. Sport, subscriptions, pain, equipment, season, rest and dose limits still win.</p><Button disabled={busy} onClick={confirm}>Confirm settings</Button></>}
+ {receipt&&<div role="status"><p>Settings receipt · version {receipt.version} · {receipt.undone?'Exact previous settings restored':'TEST settings applied'}</p>{!receipt.undone&&<Button variant="outline" disabled={busy} onClick={undo}>Undo settings</Button>}</div>}{error&&<p role="alert" className="text-destructive break-words">{error}</p>}
+ </section>;
+}

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { PHILOSOPHY_ENTRY, PHILOSOPHY_REQUEST, parsePhilosophyReply, type PhilosophyReply } from '@/lib/intelligence/philosophyConversation';
 import { latestThreadId } from '@/lib/hammer/oneConversation';
 import { cueChanges, type PhilosophyReceipt } from '@/lib/intelligence/philosophySettings';
+import {PhilosophySettingsConversation} from './PhilosophySettingsConversation';
 type Turn = {role:'user'|'assistant';text:string;review?:PhilosophyReply;confirmed?:string;receipt?:PhilosophyReceipt};
 export function PhilosophyConversation({onSaved}:{onSaved:()=>void}) {
   const [turns,setTurns]=useState<Turn[]>([]),[draft,setDraft]=useState(''),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(''),[thread,setThread]=useState<string|null>(null);
@@ -43,7 +44,7 @@ export function PhilosophyConversation({onSaved}:{onSaved:()=>void}) {
     onSaved();
   }catch(e){setError(e instanceof Error?e.message:'The principle could not be saved. Nothing was confirmed.');}finally{setBusy(false);}};
   const undo=async()=>{if(!receipt||receipt.undone||busy)return;setBusy(true);setError('');try{const {data,error}=await supabase.rpc('owner_undo_test_cue',{p_version:receipt.version_id});if(error||!data)throw error??Error('Undo was not confirmed.');const r=data as unknown as PhilosophyReceipt;setReceipt(r);setTurns(old=>[...old,{role:'assistant',text:'Undone — the exact previous TEST cue is restored.',receipt:r}]);onSaved();}catch(e){setError(e instanceof Error?e.message:'Undo failed.');}finally{setBusy(false);}};
-  return <section aria-label="Philosophy conversation" className="space-y-4 border-y border-border py-5">
+  return <><PhilosophySettingsConversation onSaved={onSaved}/><section aria-label="Philosophy conversation" className="space-y-4 border-y border-border py-5">
     <h2 className="text-xl font-semibold">Philosophy Conversation</h2>
     {loading?<p>Opening your saved conversation…</p>:turns.map((t,i)=><div key={i} className="space-y-2 border-b border-border py-3"><p className="text-sm font-semibold text-muted-foreground">{t.role==='user'?'You':'Hammers'}</p><p className="whitespace-pre-wrap break-words text-base">{t.text}</p>{t.review?.questions.map(q=><p className="font-medium" key={q}>{q}</p>)}</div>)}
     {proposal&&!saved&&<div className="space-y-4 py-3" aria-label="Proposed changes"><h3 className="text-lg font-semibold">Exactly What Would Change</h3>{proposal.changes?.map(c=><div key={c.id}><h4 className="font-semibold">Exercise builder → Key cue · TEST accounts only</h4><p className="break-words">From: {c.before}</p><p className="break-words">To: {c.after}</p></div>)}<p>Principle: new version in Coaching Console. Standards, tags, fix-it selection, weights and minimums: unchanged.</p><p><strong>What it could help:</strong> {proposal.benefit}</p><p className="text-muted-foreground">Nothing applied yet. Existing sport, equipment, pain, rest and season rules still win.</p><Button disabled={busy||!proposal.changes?.length} onClick={confirm}>Confirm</Button></div>}
@@ -53,5 +54,5 @@ export function PhilosophyConversation({onSaved}:{onSaved:()=>void}) {
     <Label htmlFor="philosophy-point">Your philosophy point or answer</Label><Textarea id="philosophy-point" className="min-h-28 text-base" value={draft} onChange={e=>setDraft(e.target.value)} />
     {error&&<p role="alert" className="break-words text-destructive">{error}</p>}
     <Button onClick={send} disabled={loading||busy||!draft.trim()}>{busy?'Working…':'Send to Hammers'}</Button>
-  </section>;
+  </section></>;
 }

@@ -8331,8 +8331,18 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       proj.lifecycleBand,
       proj.liftingAgeYears
     );
+    const requested = roadmapInputs.testPreferences?.weekly_minimums?.[m];
+    if (typeof requested === "number" && Number.isInteger(requested) && requested >= 0 && requested <= 6) acc[m] = Math.min(acc[m] ?? 0, Math.max(acc[m] ?? 0, requested));
     return acc;
   }, {});
+  const weights = roadmapInputs.testPreferences?.prescription_weights;
+  if (weights && focusProjection.categoryGoals) {
+    const categoryWeight = (category) => weights[category === "fielding" ? "defense" : category === "speed" ? "baserunning" : category === "throwing" ? "pitching" : category] ?? 1;
+    focusProjection.categoryGoals = { ...focusProjection.categoryGoals, goals: [...focusProjection.categoryGoals.goals].sort((a, b) => {
+      const wa = categoryWeight(a.category), wb = categoryWeight(b.category);
+      return (Number.isFinite(wb) && wb >= 0.5 && wb <= 2 ? wb : 1) - (Number.isFinite(wa) && wa >= 0.5 && wa <= 2 ? wa : 1) || a.rank - b.rank;
+    }).map((g, i) => ({ ...g, rank: i + 1 })) };
+  }
   const earnedDaysByModality = countEarnedSkillDays(roadmapInputs.recentCompletions ?? [], today);
   const rungIdx = RUNG_ORDER.indexOf(rung.descriptor.rung);
   const nextRung = rungIdx >= 0 && rungIdx < RUNG_ORDER.length - 1 ? RUNG_ORDER[rungIdx + 1] : null;
