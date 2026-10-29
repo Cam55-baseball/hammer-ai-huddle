@@ -739,7 +739,7 @@ function HammerDailyPlanBody({
   const sportIsBaseball = (ctx.get<unknown>("sport_primary")?.value ?? "baseball") !== "softball";
   const { user: bodyUser } = useAuth();
   const { modules } = useSubscription();
-  const showPitching = shouldShowPitchingCard(
+  const showPitching = (modules.includes(`${sportIsBaseball?'baseball':'softball'}_pitcher`) || modules.includes(`${sportIsBaseball?'baseball':'softball'}_golden2way`)) && shouldShowPitchingCard(
     readPitcherProfile(bodyUser?.id),
     ctx.get<unknown>("position_primary")?.value ?? null,
     ctx.get<unknown>("position_secondary")?.value ?? null,
@@ -1278,7 +1278,7 @@ function HammerDailyPlanBody({
               <ErrorBoundary label="pitcher-schedule">
                 <PitcherScheduleGate />
               </ErrorBoundary>
-              {showPitching && plan.blocks.some(b => b.modality === "throwing" && prescribedToday(b)) && (
+              {showPitching && !plan.blocks.some(b=>b.modality==='pitching') && plan.blocks.some(b => b.modality === "throwing" && prescribedToday(b)) && (
                 <ErrorBoundary label="pitching-card">
                   <PocketCard
                     id="pitching"
@@ -1436,7 +1436,7 @@ function progressOf(items: ReadonlyArray<{ status?: string | null }>): { done: n
   return { done: items.filter((r) => r.status === "completed").length, total: items.length };
 }
 const BLOCK_CATEGORY: Record<string, string> = {
-  warmup: "Warm-up", hitting: "Hitting", throwing: "Throwing", defense: "Defense",
+  warmup: "Warm-up", hitting: "Hitting", throwing: "Throwing", pitching: "Pitching", defense: "Defense",
   baserunning: "Base running", recovery: "Recovery", game_iq: "Game IQ", fueling: "Fuel",
   mobility: "Mobility", regeneration: "Recovery", sleep: "Sleep",
 };
@@ -1753,6 +1753,8 @@ function BlockCard({
 
           {block.modality === "throwing" && <ArmThrowsPanel source="position" planDate={planDate} />}
           {block.modality === "throwing" && <ThrowPacingGuide />}
+          {block.modality === "pitching" && <ArmThrowsPanel source="pitching" planDate={planDate} />}
+          {block.modality === "pitching" && <ThrowPacingGuide />}
 
           {block.drills.length > 0 && (
             <div className="space-y-1.5" hidden={focusState.active}>

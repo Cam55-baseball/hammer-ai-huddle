@@ -885,7 +885,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const ownedHitting = new Set(
         (proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? [],
       );
-      const equipmentUnknown = !equipment && ownedHitting.size === 0;
+      const equipmentUnknown = proj.equipmentScope === null && (ctx.get<unknown>('equipment_effective')?.value == null || Array.isArray(ctx.get('equipment_effective')?.value) && (ctx.get<string[]>('equipment_effective')?.value?.length ?? 0) === 0);
       const inSeason = seasonPhase === "in";
       const offSeason = seasonPhase === "off";
       // NOTE: switch-hitter split is handled downstream by splitLateralityBlocks,
@@ -1107,8 +1107,12 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const ownedDefense = new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []);
       // This catalog includes catching/throwing and live-field work. Merely
       // declining to promote full_go does not make its existing reps gear-free.
-      const missingGear: string[] = [];
-      if (missingGear.length) return {
+      const missingGear = [
+        ...(!ownedDefense.has('field') && !ownedDefense.has('open_space') ? ['safe field space'] : []),
+        ...(!ownedDefense.has('glove') ? ['glove'] : []),
+        ...(!ownedDefense.has('ball') ? ['ball'] : []),
+      ];
+      if (missingGear.length && !pos) return {
         modality,
         title: pos ? `Defense — ${pos}` : 'Defense — general fundamentals',
         why: 'Fielding equipment has not been confirmed.',
@@ -1178,6 +1182,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
             { name: "Pre-pitch + first-step reads", dosage: "20 reps", cue: "low athletic stance, weight on balls of feet" },
             { name: "Glove work — 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" },
           ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: ownedDefense }), { skill: 'defense', sport: defenseSport, owned: ownedDefense, injuryRegions, recoveryDay: recoverDay || tournamentToday || !skillExecutionAllowed });
+      const safeDrills = missingGear.length ? drills.filter(d=>d.executionKind==='fielding_reads').map(d=>({...d,name:`${d.name} — dry footwork`,executionKind:undefined,stage:'drills' as const,setup:'Walk through the existing footwork without a ball or throw. Stay within your safe space; no diving, sprinting or catching.',cue:'Read an imaginary ball, set your feet, then reset. No throws.',stopIf:'Pain or unsafe space — stop.'})) : drills;
       const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
       const stopRules = [...(prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and update Hammer."]), "Use a glove, the correct ball and safe space. If something is missing, use Swap before starting; do not perform an unsafe rep."];
       const durationMin = prescription?.durationMin ?? (inSeason ? 15 : offSeason ? 35 : 25);
@@ -1197,8 +1202,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
               ? "Off-season — load volume + range."
               : "Pre-season — sharpen reads and finishes.",
         phase: inSeason ? "sharpen" : tournamentToday ? "maintain" : "build",
-        steps: drillsToSteps(drills),
-        drills,
+        steps: drillsToSteps(safeDrills),
+        drills: safeDrills,
         cues,
         stopRules,
         durationMin,
@@ -1214,7 +1219,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           color: "#10b981",
           durationMinutes: durationMin,
           description: `Defensive block for ${pos} (${defenseSport}).`,
-          checklist: drillsToChecklist(drills),
+          checklist: drillsToChecklist(safeDrills),
           source: "internal",
         },
       };

@@ -156,10 +156,10 @@ describe("game-day defense", () => {
     const plan = buildHammerDailyPlan(NO_EQUIPMENT_NO_HISTORY, gameDay(posture), null, null, undefined,
       new Date('2026-06-10T12:00:00Z'), { defenseFullOverride: true });
     const defense = plan.blocks.find(b => b.modality === 'defense');
-    expect(defense?.status).toBe('awaiting-input');
-    expect(defense?.drills).toEqual([]);
+    expect(defense?.status).toBe('ready');
+    expect(defense?.drills.length).toBeGreaterThan(0);
     expect(defense?.gameDayPrimer).not.toBe(true);
-    expect(defense?.gamePlanTemplate).toBeNull();
+    expect(defense?.stopRules.length).toBeGreaterThan(0);
   });
 });
 
