@@ -1,8 +1,8 @@
-# Final publish checklist — October 29, 2026 · close-out (5)
+# Final publish checklist — October 29, 2026 · close-out (6)
 
-**Ready to publish: NO.** Functional gaps remain in **2, 3, 13, 18, 20 and scheduling D/E/H**. Named populated/entitled owner checks below are nonblocking; unfinished implementation or required functional proof is not a human check. This sheet supersedes stale blockers, not earlier evidence.
+**Ready to publish: NO.** Functional gaps remain in **2, 3, 13, 18, 20 and scheduling D/E/H (0 of 224 saved server dates certified)**. Named populated/entitled owner checks below are nonblocking; unfinished implementation or required functional proof is not a human check.
 
-**Close-out (5), 18:10 UTC:** the backend database has been unreachable since the last plan-builder deployment (status probe: `backend_unreachable_db`), so no live signed-in check, no saved server sample week and no TEST proof was possible. Full suite: 676 files in bounded batches, all passed (two long files run alone: 25 and 7 tests). Preview dev server serves the app. Only code change since close-out (4): the TEST settings screen restores its saved review turn (Item 20). Deployed functions: `wk-generate-daily` (latest, staged fixes); no function awaits deploy approval. A backend restart needs named owner approval. Part B "saved server sample weeks" cannot be reviewed yet: none exist.
+**Close-out (6), 20:30 UTC:** backend healthy (memory 54%, connections 23/60; last disk-IO alert 17:15 UTC). Scheduling certification could not continue: only 3 of the 8 required personas exist in the live TEST helper, and the first build (HS shortstop) was correctly refused for unfinished starting details. Live app signed in as the owner on hammersmodality.org at 390×844: dashboard loaded with real data, zero page errors. Full suite: all 676 files passed in bounded batches (slow files run alone). No code changes this run.
 
 ## Part A — built and proven; unfinished work clearly separated
 
@@ -29,15 +29,15 @@
 | 17 | Defensive plays history | PASS | Retained drawer and populated history proof. |
 | 18 | Complete onboarding / Start | OPEN | Named create-test-athlete rollout live; fresh unstarted TEST reached assessment. Full assessment, Start, validated first seven dates/reload, explicit better action and exact healed-area prehab/health readback remain unfinished; health generator changes are not deployed. Owner health decisions already supplied. |
 | 19 | Owner health / attention / actions | PASS | Retained two-size interactions; fresh owner and Training Intelligence reads. Health color is not publish readiness. |
-| 20 | Philosophy Confirm / receipt / Undo | OPEN | 0156 TEST isolation live; standard 65→70 plus existing video tags Confirm/Undo and real TEST saved-report shelf effect proved. Scoped minimum/weight consumers, settings-thread restoration and fresh next-plan/analysis acceptance remain incomplete; server readers staged only. |
+| 20 | Philosophy Confirm / receipt / Undo | OPEN | Standard/tag Confirm/Undo proved; TEST weight 1→2 reached saved Nov 2–3 plans and Undo restored them (wk-generate-daily deployed); thread restores on reload. Remaining: Confirm/Undo pressed on screen, and weekly minimum overrides have no effect because days already sit at the safety maximum. |
 | 21 | Informational Video Manager | HUMAN | Manager and Before you start placement built/proved; genuine matching-analysis playback is owner-only. |
 | 22 | My Players photos / readable names | HUMAN | Retained readable coach rows at both sizes; genuine authorized photo acceptance remains owner-only. |
 | 23 | Guest analysis access | PASS | Retained coach button→guest route proof; no fresh guest upload claimed. |
 | 24 | Organization hierarchy / trends | HUMAN | Six groups/explanations built; labeled local chart fixtures are not populated hosted proof. |
 
-### Scheduling certification: OPEN — not 224 saved server days
+### Scheduling certification: OPEN — 0 of 224 saved server days
 
-A/B/C/F/G corrections have retained authorized live builder rollout and focused/parity tests. D/E/H have 25 shared game-week cases, physical safety coverage and one real high-school baseball schedule import/readback. **Neither passing algorithms nor the twelve local sample weeks certify the requested eight TEST personas × four server-built weeks.** Sunday/PFP corrections, health and philosophy server changes are staged and require their own named rollout authorization.
+Blockers: (1) live TEST helper allowlist has only HS 5Tool baseball, HS Golden 2Way baseball and pro 5Tool baseball; HS Complete Pitcher baseball, HS 5Tool / Complete Pitcher / Golden 2Way softball and college Golden 2Way softball need adding plus a **named create-test-athlete redeploy**; (2) every persona must finish the starting assessment in the app before the server builds (correctly enforced). Then 7-date units with a load check between, at most 8 units/hour (≥4 hours total). The twelve local sample weeks are not server certification.
 
 Exact remaining work:
 - **2:** retain compatible safe defense without erasing injuries and certify every purchased weekly floor, including running conditioning, on saved combined dates.
@@ -49,12 +49,10 @@ Exact remaining work:
 
 ### Live and preview verification — this run
 
-- Signed in as the owner on **hammersmodality.org**. Owner overview, General and Players Club settled with real account data, no captured page exceptions or failed backend requests, and no horizontal overflow. A real saved report was opened; no new clip or work was written.
-- Published phone General: Performance opened at 390×844, no page exceptions/overflow. Direct authenticated read-only phase-state, saved prescriptions and initial missing-input judge each returned **200**; seven prescriptions read, nine missing-input labels returned. This proves read contracts, NOT a full first week or rebuilt week.
-- Preview owner/Training Intelligence/General checked at 1280×1800; initial owner loading capture discarded in favor of settled recapture. Published frontend is older than preview; successful reads do not establish that every new preview feature is already published.
-- Live function telemetry confirms phase-state responds successfully; wk-generate-daily remains deployed with 200/409 outcomes. Retained rollout records cover plan-swap, create-test-athlete and migrations 0154/0155/0156. Exact all-source deployment parity is **not certified**; staged changes were not redeployed.
-- **Full suite:** 23 bounded batches, 673 unique files; final consolidated result **5,373 passed, 0 failed, 2 skipped**, no omissions/extras/duplicates. Initial 44 failures were obsolete subscription/unknown-equipment/empty-reason test expectations in five files; corrected fixtures and reruns passed. No production safety rule was changed. Write-dependent live test branches without credentials are not end-to-end passes.
-- Automatic preview build succeeded at **16:24:00 UTC**, in sync with project tip; compiler diagnostics and failed targets empty. No manual build/typecheck.
+- Published hammersmodality.org signed in as the owner at 390×844: dashboard settled with real account data, no page exceptions.
+- Full suite: 676 unique files, all passed (12 bounded batches; timed-out batches split and the two slowest files run alone with 25 and 7 tests passing).
+- Preview: no build errors recorded; no code changed this run.
+- No publish, migration, redeploy, cron, iOS or destructive change. One TEST-only helper call reseeded the HS shortstop persona idempotently (no deletes).
 
 ## Part B — owner's human checks (nonblocking only)
 
@@ -73,7 +71,7 @@ Use consenting, entitled accounts and genuine records. Never bypass age, health,
 
 ### Review the sample weeks by program and sport
 
-Open **docs/owner/scheduling-certification.md**. Review all **12 tables**: baseball and softball × Complete Pitcher, 5Tool, Golden 2Way × off-season and in-season with games.
+Open **docs/owner/scheduling-certification.md**. Saved server sample weeks do not exist yet (0/224). Until then, review all **12 local tables**: baseball and softball × Complete Pitcher, 5Tool, Golden 2Way × off-season and in-season with games.
 
 1. Read each Monday–Sunday date/card row; compare the two phases. These are **local shared-builder samples**, not completed server certification; all unverified columns stay unverified.
 2. Complete Pitcher: pitching owns its card; baseball throwing and softball windmill remain separate. No hitting, baserunning or bunting; retain safe PFP/defense, pitcher conditioning, lifting and Mind.
