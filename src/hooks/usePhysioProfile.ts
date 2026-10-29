@@ -94,17 +94,10 @@ export function usePhysioProfile() {
   }, [user, queryClient]);
 
   const updateIllness = useCallback(async (illness: string | null) => {
-    if (!user) return;
-    await supabase
-      .from('physio_health_profiles')
-      .upsert({ 
-        user_id: user.id, 
-        active_illness: illness,
-        illness_started_at: illness ? new Date().toISOString().split('T')[0] : null,
-      }, { onConflict: 'user_id' });
-    queryClient.invalidateQueries({ queryKey: ['physioProfile'] });
-    queryClient.invalidateQueries({ queryKey: ['physioGamePlanBadges'] });
-  }, [user, queryClient]);
+    // Changing symptoms must not restart the illness clock. Only explicit better clears it.
+    return saveProfile({ active_illness: illness,
+      illness_started_at: illness ? profile?.illness_started_at ?? new Date().toISOString().split('T')[0] : null });
+  }, [saveProfile, profile?.illness_started_at]);
 
   const enableAdultFeatures = useCallback(async () => {
     if (!user) return { success: false };

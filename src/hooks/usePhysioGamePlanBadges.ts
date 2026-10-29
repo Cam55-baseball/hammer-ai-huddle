@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { usePhysioDailyReport } from './usePhysioDailyReport';
 import { usePhysioProfile } from './usePhysioProfile';
+import { mapPhysio } from '../../supabase/functions/_shared/health/physioMapping';
 
 export interface PhysioBadge {
   taskId: string;
@@ -19,11 +20,10 @@ export function usePhysioGamePlanBadges() {
   const { profile } = usePhysioProfile();
 
   const badges = useMemo((): PhysioBadge[] => {
-    if (!report) return [];
-    
     const result: PhysioBadge[] = [];
-    const { regulation_color, fuel_score, restriction_score } = report;
+    const { regulation_color, fuel_score, restriction_score } = report ?? {};
     const hasActiveIllness = !!profile?.active_illness;
+    const health = mapPhysio({ activeIllness:profile?.active_illness, illnessStartedAt:profile?.illness_started_at, today:new Date().toISOString().slice(0,10) });
 
     // Recovery badge: red regulation → workout tasks
     if (regulation_color === 'red') {
@@ -60,7 +60,7 @@ export function usePhysioGamePlanBadges() {
             taskId,
             type: 'load_reduction',
             label: 'Illness Protocol',
-            message: `Active illness detected (${profile?.active_illness}). Reduce training load to ~60% of normal. Focus on movement quality over intensity.`,
+            message: `${health.recoveryOnly ? 'Recovery only today.' : 'Keep today light or choose recovery.'} Keep this limit until you mark yourself better.${health.professionalWarning ? ` ${health.professionalWarning}.` : ''}`,
             color: 'orange',
           });
         }
