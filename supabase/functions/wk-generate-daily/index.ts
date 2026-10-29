@@ -1009,9 +1009,9 @@ const handler = async (req: Request): Promise<Response> => {
     const {data: schedulingSubscription,error:schedulingSubscriptionError}=await admin.from('subscriptions').select('status,subscribed_modules').eq('user_id',user.id).maybeSingle();
     if(schedulingSubscriptionError)throw schedulingSubscriptionError;
     const schedulingModules:string[]=schedulingSubscription?.status==='active'?(schedulingSubscription.subscribed_modules??[]):[];
-    const purchasedPitcher=schedulingModules.some(m=>[`${sport}_pitcher`,`${sport}_golden2way`,`${sport}_pitching`].includes(m));
+    const purchasedPitcher=schedulingModules.some(m=>[`${sport}_pitcher`,`${sport}_golden2way`,`${sport}_pitching`,'pitching'].includes(m));
     const positionProgram=schedulingModules.includes(`${sport}_5tool`);
-    const isPitcherAthlete = purchasedPitcher || (!positionProgram&&athletePositions.some((x) => /pitch|^p$|^rhp$|^lhp$|^sp$|^rp$/.test(x)));
+    const isPitcherAthlete = purchasedPitcher && !positionProgram;
     // Zero-exposure invariant input: the days in the last week on which the
     // athlete actually received a lift. Read-only, best-effort — a failure
     // here degrades to "no exposure known", which can only relax a removal to
