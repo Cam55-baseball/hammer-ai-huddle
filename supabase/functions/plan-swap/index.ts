@@ -40,7 +40,10 @@ Deno.serve(async req => {
     const input = bodySchema.safeParse(await req.json());
     if (!input.success) return reply({ error: "Check your Swap answer. Nothing was saved." }, 400);
     const body = input.data;
-    if (body.action === 'analysis_drill') return reply(await addAnalysisDrill(client,admin,uid,body));
+    if (body.action === 'analysis_drill') {
+      try { return reply(await addAnalysisDrill(client,admin,uid,body)); }
+      catch(e) {return reply({error:e instanceof Error ? e.message : 'Nothing was saved. Try again.'},409);}
+    }
     if (body.block) {
       const location = body.block;
       const { data: snapshot, error: snapshotError } = await client.from("athlete_plan_snapshots").select("*")

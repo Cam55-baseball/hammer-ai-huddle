@@ -27,6 +27,10 @@ export async function addAnalysisDrill(client: any, admin: any, uid: string, inp
   const catalog = mergeCatalog(ELITE_DRILL_CATALOG,owners ?? []);
   const drill = catalog.find((d: Row) => d.id === input.drillId && d.category === video.module && d.sports.includes(input.sport));
   if (!drill) throw new Error('This drill is no longer available.');
+  if (drill.ownerRowId) {
+    // Keep owner content on its existing ownerPlanDrills route; metadata alone is not certification.
+    throw new Error('This owner drill needs its declared Hammers Today placement before it can be added. Keep it in Saved drills.');
+  }
   const violations = video.ai_analysis?.violations_detected ?? {};
   const findings = await checked(admin.from('analysis_fault_findings').select('fault_key').eq('user_id',uid).eq('video_id',video.id).eq('sport',input.sport));
   const faultKey = drill.violationKeys.find((key: string) => violations[key] === true || findings?.some((f: Row) => f.fault_key === key));
