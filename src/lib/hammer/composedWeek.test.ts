@@ -1,0 +1,9 @@
+import {describe,expect,it}from 'vitest';
+import {certifyComposedWeek,type ComposedDayEvidence}from './composedWeek';
+const make=(i:number):ComposedDayEvidence=>({date:`2026-10-${19+i}`,sport:'baseball',phase:'os_q1',restDay:i===6,blocks:i===6?[]:[...(['hitting','defense','baserunning'] as const).map(modality=>({modality,status:'ready',drills:[{...(modality==='hitting'&&i<2?{bunt:{side:'R'}}:{})}]}))],physical:i<2?[{slot:'conditioning',phase:'os_q1'}]:[]});
+describe('saved seven-day composition certification',()=>{
+ it('enforces exact owner floors on seven distinct actual saved dates',()=>{const result=certifyComposedWeek(Array.from({length:7},(_,i)=>make(i)),'baseball',true);expect(result.ok).toBe(true);expect(result.counts).toMatchObject({Hitting:6,Defense:6,Baserunning:6,Conditioning:2,Bunting:2});});
+ it('does not substitute missing-gear confirmations for four defense sessions',()=>{const days=Array.from({length:7},(_,i)=>({...make(i),blocks:make(i).blocks.map(b=>b.modality==='defense'?{...b,status:'awaiting-input',drills:[]}:b)}));expect(certifyComposedWeek(days,'baseball',true).issues).toContain('Defense:0/4');});
+ it('fails each exact shortfall without weakening safety',()=>{const days=Array.from({length:7},(_,i)=>({...make(i),blocks:[],physical:[]}));expect(certifyComposedWeek(days,'baseball',true).issues).toEqual(expect.arrayContaining(['Hitting:0/3','Defense:0/4','Baserunning:0/1','Conditioning:0/2','Bunting:0/2']));});
+ it('does not require unpurchased bunting or count a duplicate date',()=>{const days=Array.from({length:7},(_,i)=>make(i));days[6]=make(5);const r=certifyComposedWeek(days,'baseball',false);expect(r.issues).toContain('seven_distinct_saved_dates_required');expect(r.issues.some(i=>i.startsWith('Bunting:'))).toBe(false);});
+});

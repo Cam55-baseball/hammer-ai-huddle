@@ -122,6 +122,7 @@ import { AnalysisRecordingPrompts } from "@/components/hammer/AnalysisRecordingP
 import { analysisGoalOrder } from "@/lib/hammer/analysisGoalOrder";
 import { hittingMechanicsGoal } from "@/lib/hammer/goals/mechanicsGoal";
 import { planSnapshotPayload, savePlanSnapshot } from "@/lib/hammer/planSnapshot";
+import { composedPlanReadback } from '@/lib/hammer/composedPlanReadback';
 import {masteryPlanReadback,masterySnapshotReady} from '@/lib/hammer/masteryPlanReadback';
 import {masteryPlanGuidance} from '../../../supabase/functions/_shared/wic/masteryPlanContext';
 import { categorySignalEvidence } from "@/lib/hammer/prescription/categorySignalEvidence";
@@ -807,7 +808,7 @@ function HammerDailyPlanBody({
         sideBias,
         gpForPlan,
         identityOverride,
-        new Date(),
+        new Date(`${bodyPlanDate}T12:00:00`),
         {
           recentCompletions: recentCompletions ?? [],
           phaseStartedAt: phaseStartedAt ?? null,
@@ -902,7 +903,7 @@ function HammerDailyPlanBody({
       if (saved?.replacedByCoachRx) return { ...block, drills: [], steps: [], status: "suppressed" as const, why: "Replaced by coach workout — not missed", roadmapReason: "Replaced by coach workout — not missed" };
       return saved && block.status === "ready" ? { ...block, drills: saved.drills,because:saved.because??block.because } : block;
     }) } : computedPlan;
-  const plan=masteryPlanReadback(reconciledPlan,savedPayload,sportKey,bodyPlanDate);
+  const plan=composedPlanReadback(masteryPlanReadback(reconciledPlan,savedPayload,sportKey,bodyPlanDate),savedPayload,sportKey,bodyPlanDate);
   const persistedFocus=masteryFocus??masteryPlanGuidance({guidance:(savedPayload as unknown as {masteryFocus?:unknown})?.masteryFocus});
 
   const influencedDrillIds = useMemo(
@@ -920,13 +921,14 @@ function HammerDailyPlanBody({
   const snapshotKey = useMemo(() => JSON.stringify(planSnapshotPayload(plan, sportKey, snapshotDate,persistedFocus)), [plan, sportKey, snapshotDate,persistedFocus]);
   const snapshotSaved = useRef("");
   useEffect(() => {
+    if(savedPayload && 'composition_version' in savedPayload)return;
     if (!snapshotUser?.id || !snapshotKey || snapshotSaved.current === snapshotKey || !masteryReady || ((has5Tool || hasG2W) && buntHistory.isPending)) return;
     snapshotSaved.current = snapshotKey;
     void savePlanSnapshot(snapshotUser.id, plan, sportKey, snapshotDate,persistedFocus).then((saved) => {
       if(!saved){if(snapshotSaved.current===snapshotKey)snapshotSaved.current='';return;}
       void queryClient.invalidateQueries({ queryKey: ["saved-block-day", snapshotUser.id, snapshotDate] });
     });
-  }, [snapshotUser?.id, snapshotKey, plan, sportKey, snapshotDate,has5Tool,hasG2W,buntHistory.isPending,masteryReady,persistedFocus]);
+  }, [snapshotUser?.id, snapshotKey, plan, sportKey, snapshotDate,has5Tool,hasG2W,buntHistory.isPending,masteryReady,persistedFocus,savedPayload]);
   useEffect(() => {
     if (!influencedServeKey || influencedLoggedServe.current === influencedServeKey) return;
     influencedLoggedServe.current = influencedServeKey;
