@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isPlanGameDay } from "./isGameDay";
+import { isPlanGameDay } from "../../../supabase/functions/_shared/schedule/isGameDay";
 const base = { gpGames: [], calendarGames: [], timelineGamesToday: 0, cancelled: new Set<string>() };
 describe("isPlanGameDay", () => {
   it("a calendar game on the date makes it a game day", () =>
