@@ -2804,7 +2804,10 @@ const handler = async (req: Request): Promise<Response> => {
     // At four or more games in a rolling seven days the 48-hour rule cannot be
     // satisfied, so a game day still earns a primer rather than nothing at all
     // — `primerOnly` above has already capped what can appear.
-    if ((!isGameDay || gameProximity.highDensity || gameProximity.overrideApplied) && !gameProximity.removeLift) {
+    // The validator never allows a lift row on a game day (any density), so a
+    // dense game week keeps lifting on its non-game days only; otherwise the
+    // whole game day failed and the player got the stand-in session.
+    if (!isGameDay && !gameProximity.removeLift) {
       // WIC strength engine — full-body roles.
       // 1) Arm care — every session, non-negotiable. Elite picker draws from full seeded catalog.
       const daySeedForArmCare = Math.floor(new Date(planDate + "T00:00:00").getTime() / 86400000);
