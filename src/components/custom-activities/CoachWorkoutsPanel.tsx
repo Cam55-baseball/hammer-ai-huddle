@@ -41,7 +41,7 @@ function dayLabel(rx: CoachPrescription, today: string): string {
 }
 
 export function CoachWorkoutsPanel({ shelf }: { shelf?: "from-coaches" | "saved" }) {
-  const { fromCoaches, savedForLater, isLoading, error, today, activate, activating } = useMyCoachWorkouts();
+  const { fromCoaches, savedForLater, answered, isLoading, error, today, activate, activating } = useMyCoachWorkouts();
   const [blocked, setBlocked] = useState<Record<string, { reasons: string[]; safeOption: string | null }>>({});
 
   if (isLoading) return <p role="status" className="text-sm text-muted-foreground">Loading workouts…</p>;
@@ -115,6 +115,10 @@ export function CoachWorkoutsPanel({ shelf }: { shelf?: "from-coaches" | "saved"
           ) : (
             fromCoaches.map(renderCard)
           )}
+          {answered.length > 0 && <div className="space-y-2 border-t border-border pt-3">
+            <p className="text-sm font-bold">Your responses</p>
+            {answered.map(rx => <div key={rx.id} data-coach-workout-response={rx.id} className="text-sm"><p className="font-medium break-words">{rx.title}</p><p className="text-xs text-muted-foreground">{rx.plan_date} · {rx.status === 'used_instead' ? 'Used instead' : rx.status === 'added_alongside' ? 'Added alongside' : 'Declined'}</p></div>)}
+          </div>}
       </section>}
 
       {shelf !== "from-coaches" && <section className="space-y-3">

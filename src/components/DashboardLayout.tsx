@@ -18,6 +18,7 @@ import { useHydrationReminders } from "@/hooks/useHydrationReminders";
 import { useUnifiedDataSync } from "@/hooks/useUnifiedDataSync";
 import { OnboardingResumeBanner } from "@/components/onboarding/OnboardingResumeBanner";
 import { StaffOnboardingResumeBanner } from "@/components/onboarding/StaffOnboardingResumeBanner";
+import { CoachWorkoutNotification } from "@/components/coach/CoachWorkoutNotification";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -49,6 +50,7 @@ function DashboardHeader({ tutorialCompleted, user, onTutorialOpen }: {
       </div>
       <div className="ml-auto flex items-center gap-2">
         <SeasonPhaseChip className="hidden sm:inline-flex" />
+        {user && <CoachWorkoutNotification />}
         {/* Refresh Button - Always visible for troubleshooting */}
         <Button
           variant="ghost"

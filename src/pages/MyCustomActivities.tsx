@@ -11,6 +11,7 @@ import { WorkoutTemplatesLibrary } from '@/components/custom-activities/WorkoutT
 import { ReceivedActivitiesList } from '@/components/custom-activities/ReceivedActivitiesList';
 import { CoachWorkoutsPanel } from '@/components/custom-activities/CoachWorkoutsPanel';
 import { SentActivitiesHistory } from '@/components/coach/SentActivitiesHistory';
+import { CoachPrescriptionStatus } from '@/components/coach/CoachPrescriptionStatus';
 import { useMyCoachWorkouts } from '@/hooks/useCoachPrescriptions';
 import { RecentlyDeletedList } from '@/components/custom-activities/RecentlyDeletedList';
 import { PresetLibrary } from '@/components/elite-workout/presets/PresetLibrary';
@@ -91,7 +92,7 @@ export default function MyCustomActivities() {
   const tabs = [
     isCoach
       ? { value: 'coach-workouts', icon: ClipboardList, label: 'Send a workout', badge: 0 }
-      : { value: 'coach-workouts', icon: ClipboardList, label: 'From my coaches', badge: coachWorkoutsWaiting.length },
+      : { value: 'coach-workouts', icon: ClipboardList, label: 'Coach workouts', badge: coachWorkoutsWaiting.length },
     isCoach
       ? { value: 'saved-coach-workouts', icon: Inbox, label: 'Sent workouts' }
       : { value: 'saved-coach-workouts', icon: Inbox, label: 'Saved for later' },
@@ -225,7 +226,7 @@ export default function MyCustomActivities() {
                   </div>
                 </TabsContent>
                 <TabsContent value="saved-coach-workouts" className="mt-0 animate-fade-in">
-                  <SentActivitiesHistory />
+                  <CoachPrescriptionStatus />
                 </TabsContent>
               </>
             ) : (

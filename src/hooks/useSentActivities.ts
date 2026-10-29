@@ -69,7 +69,7 @@ export function useSentActivities() {
     playerIds: string[],
     lockedFields: LockableField[],
     message?: string,
-    rxOptions?: { category: string; planDate: string; schedule?: ScheduleInput }
+    rxOptions?: { category: string; planDate: string; schedule?: ScheduleInput; sourceTemplateId?: string | null }
   ): Promise<boolean> => {
     if (playerIds.length === 0) {
       toast.error(t('sentActivity.selectPlayer', 'Please select at least one player'));
@@ -132,9 +132,9 @@ export function useSentActivities() {
             title: template.title,
             exercises: templateSnapshot.exercises ?? [],
             gear_labels: (templateSnapshot.exercises ?? []).flatMap((e: any) => e?.gear ? [String(e.gear)] : []),
-            source_template_id: template.id,
+            source_template_id: rxOptions.sourceTemplateId === undefined ? template.id : rxOptions.sourceTemplateId,
             team_send_id: teamSendId,
-            safety_result: { intensity: template.intensity ?? 'standard' },
+            safety_result: { intensity: template.intensity === 'moderate' ? 'standard' : template.intensity ?? 'standard' },
             ...scheduleMeta,
           }))
         );
