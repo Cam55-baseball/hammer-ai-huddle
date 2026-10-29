@@ -2,6 +2,15 @@
 
 ## Status: both OPEN
 
+## Current continuation — 11:55 UTC, preview-only
+- Added a pending dated sport composer using the packaged existing daily builder, final issue/principle overlays, and a combined-day transaction draft in `docs/owner/combined-plan-day.pending.sql`. Neither the draft nor the function change was applied live this run. Source parity: six sport/equipment cases and missingness passed.
+- The seven-date caller requests combined composition, rejects physical-only/fallback success, and reads saved rows back before certifying hitting 3, defense 4, baserunning 1, running conditioning 2 and purchased bunting 2. Restricted work is not counted toward floors. The strip can read actual saved combined categories; coach refresh retains the existing gated RPC.
+- Fresh owner `--self` and retained onboarding TEST sessions at 390×844 both loaded without page errors. October 29–November 4 owner readback: seven physical dates, only October 29 sport snapshot, zero composed dates. TEST: six physical dates (Sunday absent), only October 29 sport snapshot, zero composed dates. These are failures to certify, not full-week proof.
+- TEST Update Hammer opened at phone size; no alternate change was submitted against the not-yet-deployed combined writer. No completed Schedule & What Changed/Tell Hammers or connected democoach before/after proof this continuation.
+- Focused regressions: 48 passed in seven files. Preview OK at 11:54:35 UTC. Draft server composer still requires source-contract and complete overlay parity review; local frontend tests do not certify the hosted function or SQL.
+- Live proof is blocked on named owner authorization for **`wk_commit_composed_day` migration and `wk-generate-daily` redeploy**, followed by owner/TEST seven-day builds and alternate-form/coach verification. No publication, deployment, migration, cron or iOS changes this continuation.
+- Evidence: `/tmp/browser/items23/owner_before.png`, `test_before.png`, `test_update_open.png`, `owner_readback.json`, `test_readback.json`; no synthetic plan rows or safety bypass.
+
 No publish, migration, cron, iOS or safety-switch change. Only `wk-generate-daily` redeployed with the owner's named authorization; final submitted source SHA-256 `71c1e5f3dd28a6bbd5ac65114712b461b8ef72a7276ff0a18e706cb116fad454`. Frontend is preview-only.
 
 ## Item 2: actual owner --self

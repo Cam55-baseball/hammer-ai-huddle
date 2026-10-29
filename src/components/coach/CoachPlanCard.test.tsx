@@ -36,6 +36,11 @@ describe('coach saved-plan scope', () => {
       '2026-10-20', '2026-10-19', '2026-10-18', '2026-10-17', '2026-10-16', '2026-10-15', '2026-10-14']);
     expect(state.calls.every(call => call.args._athlete === 'test-a')).toBe(true);
   });
+  it('refreshes the saved day through the same authorized RPC',async()=>{
+    mount();fireEvent.click(await screen.findByRole('button',{name:"Refresh player's saved plan"}));
+    await waitFor(()=>expect(state.calls.filter(c=>c.name==='coach_athlete_plan')).toHaveLength(2));
+    expect(state.calls.filter(c=>c.name==='coach_athlete_plan')[1]?.args).toEqual({_athlete:'test-a',_date:'2026-10-20'});
+  });
   it('does not carry an expanded history to a different player', async () => {
     const { rerender, tree } = mount();
     fireEvent.click(await screen.findByRole('button', { name: 'Saved work — last 7 days' }));

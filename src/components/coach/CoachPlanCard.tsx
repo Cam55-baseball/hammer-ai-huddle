@@ -7,7 +7,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from "@/integrations/supabase/client";
 import { localIso } from "@/hooks/usePitcherSchedule";
@@ -118,7 +118,9 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
     <section className="space-y-3 rounded-xl border border-border p-4" aria-label="Hammers' plan for this player">
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-sm font-semibold">Hammers' plan for this player</h3>
-        <span className="text-xs text-muted-foreground">Today{plan.sport ? ` · ${plan.sport}` : ""}</span>
+        <div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">Today{plan.sport ? ` · ${plan.sport}` : ""}</span>
+          <Button variant="ghost" size="icon" aria-label="Refresh player's saved plan" title="Refresh player's saved plan" disabled={query.isFetching} onClick={()=>void query.refetch()}><RefreshCw className="h-4 w-4" /></Button>
+        </div>
       </div>
       {plan.health_shared === false && (
         <p className="text-xs text-muted-foreground">Health details stay private — the player hasn't turned on health sharing.</p>
