@@ -129,6 +129,7 @@ export interface DrillStep {
   readonly bunt?: {side:'R'|'L';type:import('../../../../supabase/functions/_shared/wic/buntingProgram').BuntType;attempts:number;sourceAttempts:number;sourceSuccesses:number};
   readonly name: string;
   readonly armEvent?: import('../../../../supabase/functions/_shared/wic/phases/armLedger').ThrowEvent;
+  readonly armCard?: 'pitching'|'throwing';
   readonly slug?: string;
   readonly setup?: string;
   readonly dosage: string;
@@ -246,6 +247,7 @@ interface BuilderArgs {
   readonly armHistory?: PlanningArmHistory;
   readonly planDate?: string;
   readonly armRole?: 'pitcher'|'two_way';
+  readonly positionThrowing?: boolean;
   readonly skillExecutionAllowed?: boolean;
   readonly pitcherOutings?: OutingFacts | null;
   readonly modality: ModalityKey;
@@ -345,7 +347,7 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, armHistory, planDate, armRole, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, armHistory, planDate, armRole, positionThrowing, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
   const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
@@ -1003,7 +1005,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
 
       const eassCtx: EassContext = {
         sport: normalizeSport(sportRaw),
-        position: normalizePosition(pos),
+        position: positionThrowing && normalizePosition(pos)==='pitcher' ? 'utility' : normalizePosition(pos),
         seasonPhase: seasonPhase as EassContext["seasonPhase"],
         ageYears,
         trainingAgeYears: liftingAge ?? null,
@@ -1019,6 +1021,11 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       };
 
       const eass = buildEassPrescription(eassCtx);
+      if(armRole==='two_way') {
+        const position=normalizePosition(declaredPos)==='pitcher'?normalizePosition(ctx.get('position_secondary')?.value):normalizePosition(declaredPos);
+        const positionWork=buildEassPrescription({...eassCtx,position:position==='pitcher'?'utility':position,isThrowingDay:!pitcherOutings?.startsToday&&!pitcherOutings?.startsTomorrow&&!pitcherOutings?.pitchedYesterday,isRecoveryDay:eassCtx.isRecoveryDay||!!pitcherOutings?.startsToday||!!pitcherOutings?.startsTomorrow});
+        eass.drills=[...eass.drills.map(d=>({...d,armCard:'pitching' as const})),...positionWork.drills.filter(d=>!['band_prep','cooldown','recovery'].includes(d.category)).map(d=>({...d,armCard:'throwing' as const}))];
+      }
       if (pitchingType) {
         // The existing full-go pitch budget rotates between bullpen/design and
         // live counts; never create a second pitch dose for a presentation stage.
@@ -1047,6 +1054,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         setup: d.setup,
         dosage: d.dosage,
         stage: d.stage ?? (d.intensity === 'prep' ? 'prep' : 'drills'),
+        armCard:d.armCard,
         ...(armRole && eassArmEvent(d) ? {armEvent:eassArmEvent(d)??undefined} : {}),
         cue: d.cue,
         stopIf: d.stopIf,
@@ -2361,7 +2369,7 @@ export function buildHammerDailyPlan(
   const firstPass = ALL_MODALITIES.filter(allowed).map((m) =>
     builder({ modality: m, ctx, proj, speed, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
       pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings) : undefined,
-      armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,armHistory:roadmapInputs.armHistory,
+      armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,positionThrowing:!!access&&!access.hasPitching,armHistory:roadmapInputs.armHistory,
       planDate:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,skillExecutionAllowed: scheduleSignal.postureToday === 'normal' && !(m==='defense'&&access?.pitcherOnly) }),
   );
   const goalAccess = roadmapInputs.subscriptionModules === undefined ? null
@@ -2479,10 +2487,13 @@ export function buildHammerDailyPlan(
   }) : bunted;
   // Pitching takes its own canonical card identity. This moves existing work,
   // never copies it into a second arm exposure.
-  const blocks = restFiltered.map(b => {
-    if(!access?.hasPitching || b.modality!=='throwing')return b;
+  const blocks = restFiltered.flatMap(b => {
+    if(!access?.hasPitching || b.modality!=='throwing')return [b];
     const type=pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings);
-    return {...b,modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
+    const pitchingDrills=b.drills.filter(d=>d.armCard!=='throwing');
+    const throwingDrills=b.drills.filter(d=>d.armCard==='throwing');
+    const pitching={...b,drills:pitchingDrills,steps:drillsToSteps(pitchingDrills),modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
+    return [pitching,...(throwingDrills.length?[{...b,drills:throwingDrills,steps:drillsToSteps(throwingDrills),title:'Throwing — position work within your shared arm budget',gamePlanTemplate:null}]:[])];
   });
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 

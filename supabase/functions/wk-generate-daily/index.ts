@@ -16,6 +16,7 @@ import { applyLiveTracking } from "../_shared/vault/tracking.ts";
 import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
 import { masteryContext } from "../_shared/masteryContext.ts";
 import { composeSportDay } from '../_shared/composeSportDay.ts';
+import { planningGear } from '../_shared/planSwap/planningGear.ts';
 import { masteryPlanGuidance, masterySavedGuidance } from "../_shared/wic/masteryPlanContext.ts";
 import { checkInReductions, latestCheckInValues } from "../_shared/wic/checkInReductions.ts";
 import { BASE_REST_TEXT, prescribedBases, sprintRestSeconds, sprintRestWhy, type DeclaredBaseRoute } from "../_shared/wic/runRest.ts";
@@ -1245,6 +1246,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     } catch (error) { throw error; }
     const libBase = alwaysMissing.size === 0 ? libBase0 : libBase0.filter(m => avoidsMissingGear(m, alwaysMissing));
+    const assumedEquipment=planningGear(declaredEquipment,[...alwaysMissing],libBase as any[]);
     // -------- Upper-Body Plyo v1 — live legality filter (E2E WP4 item 1) --------
     // Filter-only, gated by ub_plyo_hand_wrist: removes U2/U3 rows the athlete is
     // not cleared for today (phase, age, training age, growth, earned history,
@@ -3889,7 +3891,7 @@ const handler = async (req: Request): Promise<Response> => {
     const isPracticeDayCtx = String((trainingContext as any)?.day_type ?? "").startsWith("practice");
     const environmentCtx = (athleteContext as any)?.environment?.location ?? undefined;
     // Unknown gear is passed as `undefined` (unknown), never as `[]` (none).
-    const availableEquipmentCtx = equipmentUnknown ? undefined : declaredEquipment;
+    const availableEquipmentCtx = assumedEquipment;
 
     const speedCertification = certifySpeed({
       prescriptions: finalRxs as any,
@@ -4988,7 +4990,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Softball pitchers only. Its own card (slot "windmill"); limits come from
     // the windmill arm rules; the final check below still runs on every row.
     try {
-      if (features.windmill_program === true && sport === "softball" && isPitcherAthlete) {
+      if (!composeRequested && features.windmill_program === true && sport === "softball" && isPitcherAthlete) {
         const [{ data: wmLedger }, { data: wmPrior }] = await Promise.all([
           admin.from("arm_ledger_entries").select("entry_date, source, throw_type, count, status")
             .eq("user_id", user.id).gte("entry_date", isoShift(planDate, -14)).lte("entry_date", planDate).limit(2000),
