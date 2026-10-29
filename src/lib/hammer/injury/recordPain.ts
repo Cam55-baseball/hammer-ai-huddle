@@ -63,7 +63,7 @@ export function painDraft(args: { region: ReportInjuryRegionKey; severity: Repor
   };
 }
 
-export interface RecordPainResult { merged: boolean; entryId: string; ranPainRules: boolean }
+export interface RecordPainResult { merged: boolean; entryId: string; ranPainRules: boolean; message?: string }
 
 export async function recordPain(args: {
   userId: string;
@@ -114,6 +114,6 @@ export async function recordPain(args: {
   await (supabase as any).from("schedule_timeline_entries").update({ summary: msg }).eq("id", entry.id);
   // Re-plan exactly as a timeline save does.
   const { announceChange } = await import("@/hooks/useScheduleTimeline");
-  announceChange(args.queryClient as any, args.userId, msg);
-  return { merged, entryId: entry.id, ranPainRules: worse };
+  const result = await announceChange(args.queryClient as any, args.userId, msg);
+  return { merged, entryId: entry.id, ranPainRules: worse, message: result?.message };
 }

@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from '@/lib/seasonPhase';
 import { usePhaseState } from '@/hooks/usePhaseState';
+import { announceChange } from '@/hooks/useScheduleTimeline';
 
 export type SeasonStatus = 'in_season' | 'preseason' | 'post_season' | 'off_season';
 
@@ -86,11 +87,19 @@ export function useSeasonStatus() {
         rest.season_status !== undefined && rest.season_status_manual === undefined && !__silent
           ? { ...rest, season_status_manual: true, season_status_manual_at: new Date().toISOString() }
           : rest;
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('athlete_mpi_settings')
-        .update(payload)
-        .eq('user_id', user.id);
+        .upsert({ user_id: user.id, ...payload }, { onConflict: 'user_id' })
+        .select('season_status, preseason_start_date, in_season_start_date, in_season_end_date, post_season_end_date')
+        .single();
       if (error) throw error;
+      if (!data) throw new Error('Season change was not saved');
+      if (!__silent) {
+        const reason = rest.season_status ? `Season switched to ${rest.season_status.replace(/_/g, ' ')}` : 'Season dates changed';
+        const result = await announceChange(queryClient, user.id, reason);
+        if (result?.ok) toast.success(result.message);
+        else if (result) toast.error(result.message);
+      }
     },
     onMutate: async (updates) => {
       await queryClient.cancelQueries({ queryKey });

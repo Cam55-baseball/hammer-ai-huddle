@@ -498,7 +498,9 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   useEffect(() => {
     if (!tellHammersOn) return;
     const onChange = (ev: Event) => {
-      const reason = (ev as CustomEvent<{ reason?: string }>).detail?.reason ?? null;
+      const detail = (ev as CustomEvent<{ reason?: string; rebuilt?: boolean; userId?: string }>).detail;
+      if (detail?.userId && detail.userId !== user?.id) return;
+      const reason = detail?.reason ?? null;
       if (reason) setReplanReason(reason);
       if (user?.id) {
         for (let d = 0; d <= 7; d++) {
@@ -510,6 +512,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       }
       const key = `timeline-event:${Date.now()}`;
       autoTriedKey.current = key;
+      if (detail?.rebuilt) return;
       void generateRef.current({ reason: "player_request", text: reason ?? "You updated Hammer, so we adjusted what's left today.", key });
     };
     window.addEventListener(SCHEDULE_CHANGED_EVENT, onChange);

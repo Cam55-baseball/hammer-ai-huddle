@@ -89,7 +89,6 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
     setBusy(true);
     try {
       await updateSeasonStatusAsync({ season_status: v });
-      toast.success(`Season set to ${v.replace("_", "-")}.`);
     } catch { /* The canonical season save displays its error. */ }
     finally { setBusy(false); }
   }
