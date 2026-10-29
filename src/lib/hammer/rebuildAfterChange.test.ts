@@ -14,3 +14,7 @@ it('a rejected day never confirms successful rebuilding', async () => {
   const result = await rebuildAfterChange('Schedule changed', '2026-10-29');
   expect(result.ok).toBe(false); expect(result.failed).toEqual(['2026-10-29']);
 });
+it('empty or unconfirmed responses are not successful rebuilds', async () => {
+  invoke.mockResolvedValueOnce({ data: null, error: null });
+  expect((await rebuildAfterChange('Season changed', '2026-10-29')).failed).toEqual(['2026-10-29']);
+});

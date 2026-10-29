@@ -11,7 +11,7 @@ export async function rebuildAfterChange(reason: string, today: string) {
       const { data, error } = await supabase.functions.invoke('wk-generate-daily', {
         body: { plan_date: date, change_reason: 'player_request', change_text: reason, change_key: `${key}:${date}` },
       });
-      if (error || data?.error) failed.push(date);
+      if (error || data?.ok !== true) failed.push(date);
     } catch { failed.push(date); }
   }
   return { ok: failed.length === 0, failed, message: failed.length
