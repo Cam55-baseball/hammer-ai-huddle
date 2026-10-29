@@ -168,7 +168,7 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
       if (!user?.id) return false;
       const { data, error } = await (supabase as any).rpc("tell_hammers_undo", { p_id: id });
       if (error) throw error;
-      if (data) announceChange(qc, user.id, "Undone — Hammer put your plan back.");
+      if (data) await announceChange(qc, user.id, 'Change undone');
       return !!data;
     },
     [user?.id, qc],
@@ -198,7 +198,7 @@ export async function announceChange(qc: ReturnType<typeof useQueryClient>, user
     "calendar-projection",
     "hammer-daily-plan",
     "season-status", "phase-state", "hammer-context-envelope",
-    "wk-rx", "wk-plan-changes", "saved-block-day", "coach-athlete-summaries", "coach-roster-rows",
+    "wk-rx", "wk-plan-changes", "saved-block-day", "coach-athlete-summaries", "coach-roster-rows", "coach-athlete-glance", "coach-athlete-rows",
   ]) {
     qc.invalidateQueries({ queryKey: [k] });
   }
