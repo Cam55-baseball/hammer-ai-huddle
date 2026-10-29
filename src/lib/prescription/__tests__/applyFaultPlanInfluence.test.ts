@@ -66,6 +66,11 @@ describe("analysis influence on Hammers Today", () => {
   });
 });
 describe('execution protected from analysis overlays', () => {
+  it('never replaces a side-specific bunt or counted arm exposure',()=>{
+    const before={...block(),drills:[{name:'Bunt',dosage:'5 attempts',stage:'drills' as const,bunt:{side:'R' as const,type:'squeeze' as const,attempts:5,sourceAttempts:0,sourceSuccesses:0}},{name:'Counted throws',dosage:'10 throws',stage:'drills' as const,armEvent:{kind:'practice' as const,intent:'low' as const,count:10}},{name:'Issue slot',dosage:'10 swings',stage:'drills' as const}]};
+    const [after]=apply([before]);
+    expect(after.drills[0]).toBe(before.drills[0]);expect(after.drills[1]).toBe(before.drills[1]);expect(after.drills[2].name).toBe('Analysis Match');
+  });
   it('preserves prep, full-go and logging while replacing one issue slot', () => {
     const before = { ...block(), drills: [
       { name: 'Prep', dosage: '8 reps', stage: 'prep' as const },

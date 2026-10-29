@@ -2063,7 +2063,7 @@ function splitLateralityBlocks(
       );
       continue;
     }
-    if (isAmbi && b.modality === "throwing") {
+    if (isAmbi && b.modality === "throwing" && !b.drills.some(d=>d.armEvent)) {
       out.push(
         cloneSide(b, "R", "Dominant arm", {
           extraCue: "Ambidextrous thrower — dominant-arm workload. Full EASS envelope.",
