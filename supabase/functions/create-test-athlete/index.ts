@@ -52,6 +52,11 @@ function personas(): Record<string, Persona> {
   const t = TODAY();
   const weeks18 = add(t, 18 * 7);
   return {
+    demogoals29: {
+      email: "hammersmodality+demogoals29@gmail.com", name: "TEST — Goal Picker Oct29", dob: "2005-03-01", sport: "baseball",
+      position: "CF", level: "d1", season: "off_season", inStart: weeks18, inEnd: add(weeks18, 120), tier: "5tool",
+      events: [], arm: [],
+    },
     demo13: {
       email: "hammersmodality+demo13@gmail.com", name: "Demo — 13U Offseason", dob: "2013-05-10", sport: "baseball",
       position: "CF", level: "travel", season: "off_season", inStart: "2027-03-01", inEnd: "2027-07-15", tier: "5tool",
