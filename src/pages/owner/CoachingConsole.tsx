@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { OwnerAgreement } from '@/components/intelligence/OwnerAgreement';
 import { PhilosophyConversation } from '@/components/intelligence/PhilosophyConversation';
-import { PhilosophySettingsConversation } from '@/components/intelligence/PhilosophySettingsConversation';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,7 +116,6 @@ export default function CoachingConsole() {
         <TabsList className="grid h-auto w-full grid-cols-2"><TabsTrigger value="principles">Your Philosophy</TabsTrigger><TabsTrigger value="agreement">Do you agree?</TabsTrigger></TabsList>
         <TabsContent value="agreement"><OwnerAgreement /></TabsContent>
         <TabsContent value="principles" className="space-y-5">
-      <PhilosophySettingsConversation onSaved={()=>{void refresh();}} />
       <PhilosophyConversation onSaved={()=>{void refresh();void qc.invalidateQueries({queryKey:['active-principle-picks']});}} />
       <details><summary className="cursor-pointer py-3 text-lg font-semibold">Standards & Starting Settings</summary>
       <MasterySettings />
