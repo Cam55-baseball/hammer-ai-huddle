@@ -17,6 +17,8 @@
 - **Bunting** cards, **routine/fix-it rotation over 8 weeks**, and **block/season card + strip matching** were not part of this simulation; the fix-it rotation and card match were proved on the TEST player for single days only.
 - **Defense needs a glove:** players who never confirmed a glove get a "Confirm my equipment" card instead of defense. The glove choice was added to sign-up today; existing players must confirm it.
 
+- **Off-season vs in-season:** weekly card counts are the same in both (your six-day, no-ramp rule). This run did not certify the differences inside the cards (lifting phase, doses).
+
 ## Needs your decision
 - **Complete Pitcher players get hitting, defense and baserunning cards every training day** (they did not buy hitting). Pitching work arrives inside the throwing card. Should Complete Pitcher days drop the hitting card? I did not change this because it changes every pitcher customer's day.
 
