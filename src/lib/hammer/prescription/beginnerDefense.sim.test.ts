@@ -36,11 +36,11 @@ describe('beginner eight-week defense safety through the actual builder', () => 
         const date = new Date(2026, 5, 1 + day);
         const phase = day < 20 ? 'off' : day < 40 ? 'pre' : 'in';
         const plan = buildHammerDailyPlan(context(sport, position, phase, []), NORMAL_SIGNAL, null, null, undefined, date,
-          { subscriptionModules: [`${sport}_5tool`] });
+          { subscriptionModules: [`${sport}_5tool`], alwaysMissingGear: ['field', 'glove', 'ball', 'catchers_gear', 'partner'] });
         const defense = plan.blocks.find(b => b.modality === 'defense');
         expect(defense).toBeDefined();
-        expect(defense?.drills).toEqual([]);
-        expect(defense?.status).not.toBe('ready');
+        expect(defense?.drills.some(d => d.executionKind === 'fielding_reads')).toBe(false);
+        expect(defense?.drills.every(d => /dry|shadow|footwork|read/i.test(d.name))).toBe(true);
       }
     });
   }

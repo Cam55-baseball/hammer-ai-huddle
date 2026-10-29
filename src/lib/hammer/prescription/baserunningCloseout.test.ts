@@ -24,7 +24,7 @@ for(const sport of ['baseball','softball']) for(const tier of ['pitcher','5tool'
         expect(block.drills.some(d=>d.executionKind==='baserunning_scenarios')).toBe(true);
         expect(splitBaserunning([block]).mental.every(b=>b.route==='/practice?module=baserunning')).toBe(true);
       }
-      weeks.push(count);expect(count).toBeGreaterThanOrEqual(1);
+      weeks.push(count);if(tier==='pitcher') expect(count).toBe(0);else expect(count).toBeGreaterThanOrEqual(1);
     }
     const cond=selectConditioning({sport:sport as 'baseball'|'softball',position:tier==='pitcher'?'pitcher':'SS',phase:'offseason',isTournamentDay:false,hoursToNearestGame:null,pitcherStartedYesterday:false,returningAfterGap:false,dialDownReasons:[],isPitcher:tier!=='5tool',outingSource:'schedule'});
     expect(cond.slugs).toEqual(sport==='baseball'?['repeat_90ft_bb','bases_home_2nd']:['repeat_43ft_sb','bases_double_sb']);

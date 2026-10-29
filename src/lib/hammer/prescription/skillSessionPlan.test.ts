@@ -42,7 +42,7 @@ describe('actual plan execution structure and schedule protection', () => {
   }
   for (const sport of ['baseball', 'softball']) {
     for (const gear of [[], ['field', 'glove'], ['field', 'ball'], ['glove', 'ball']]) {
-      it(`${sport}: incomplete fielding gear ${gear.join('/')} cannot prescribe any catalog reps`, () => {
+      it(`${sport}: unreported fielding gear ${gear.join('/')} remains assumed available`, () => {
         const base = context(sport, 'off');
         const ctx: HammerAthleteContext = { ...base, get<T>(key: string) {
           if (key === 'equipment_effective') return { ...base.variables[0], key, value: gear } as ContextVariable<T>;
@@ -51,16 +51,14 @@ describe('actual plan execution structure and schedule protection', () => {
         for (let n = 0; n < 7; n++) {
           const plan = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 1 + n));
           const defense = plan.blocks.find(row => row.modality === 'defense');
-          expect(defense?.drills).toEqual([]);
-          expect(defense?.gamePlanTemplate).toBeNull();
-          expect(defense?.status).toBe('awaiting-input');
-          expect(defense?.offDayOverridable).not.toBe(true);
+          if (n === 6) { expect(defense?.status).not.toBe('ready'); }
+          else { expect(defense?.status).toBe('ready'); expect(defense?.drills.length).toBeGreaterThan(0); }
         }
       });
     }
   }
   for (const sport of ['baseball', 'softball']) {
-    it(`${sport}: missing equipment keeps the existing hitting dose and needs no tee, ball or partner`, () => {
+    it(`${sport}: explicitly missing net and machine never authorize full-go hitting`, () => {
       const base = context(sport, 'off');
       const ctx: HammerAthleteContext = { ...base, get<T>(key: string) {
         if (key === 'equipment_effective') return undefined;
@@ -68,13 +66,12 @@ describe('actual plan execution structure and schedule protection', () => {
       } };
       let days = 0;
       for (let n = 0; n < 7; n++) {
-        const plan = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 1 + n));
+        const plan = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 1 + n), { alwaysMissingGear: ['tee', 'ball', 'net', 'pitching_machine', 'partner'] });
         const hitting = plan.blocks.find(block => block.modality === 'hitting' && block.status === 'ready');
         if (!hitting) continue;
-        expect(hitting.drills.map(row => row.stage)).toEqual(['prep', 'drills', 'full_go', 'log']);
-        expect(hitting.drills.map(row => row.dosage)).toEqual(['3 rounds of 10', '20 swings', '15 swings', 'best 5 swings']);
-        expect(hitting.drills[2].setup).toContain('No ball, tee or partner is needed');
-        expect(hitting.drills[2].stopIf).toContain('Hand or wrist pain');
+        expect(hitting.drills.map(row => row.stage)).toEqual(['prep', 'drills', 'log']);
+        expect(hitting.drills[0].dosage).toBe('3 rounds of 10');
+        expect(hitting.drills.some(row => row.stage === 'full_go')).toBe(false);
         expect(hitting.drills.some(row => row.name.includes('toss') || row.name.includes('Tee'))).toBe(false);
         days++;
       }

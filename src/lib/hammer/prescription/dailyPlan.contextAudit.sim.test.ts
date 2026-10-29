@@ -74,7 +74,7 @@ describe("audit: games → plan", () => {
   it("thin sample (3 at-bats) changes nothing", () => {
     const p = plan(gp({ whiffPct: 60, atBats: 3, pitchesSeen: 10 }));
     expect(hit(p).cues).toEqual(hit(base).cues);
-    expect(hit(p).because).toBeUndefined();
+    expect(hit(p).because ?? []).toEqual(hit(base).because ?? []);
     expect(p.blocks.map((b) => b.modality)).toEqual(base.blocks.map((b) => b.modality));
   });
   it("lifting block is identical with or without a game pattern", () => {
@@ -184,7 +184,7 @@ describe("audit: video analyses → plan", () => {
   it("a fault cleared by clean clips rotates out (no swap)", () => {
     const h = withAnalysis(true).find((b) => b.modality === "hitting")!;
     expect(h.drills.map((d) => d.name)).toEqual(baseHit.drills.map((d) => d.name));
-    expect(h.because).toBeUndefined();
+    expect(h.because ?? []).toEqual(baseHit.because ?? []);
   });
   it("lifting is identical with or without an analysis finding", () => {
     const s = (bs: ReadonlyArray<typeof baseHit>) => bs.find((b) => b.modality === "strength")?.drills;

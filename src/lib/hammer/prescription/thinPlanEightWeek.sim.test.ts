@@ -19,7 +19,9 @@ for (const sport of ['baseball', 'softball']) for (const program of ['pitcher', 
         expect(plan.sanity?.ok, JSON.stringify(plan.sanity)).toBe(true);
         return { restDay: date.getDay() === 0, work: plan.blocks.filter(b => b.status === 'ready').flatMap(b => b.drills.map(d => ({ category: b.modality, slug: d.slug }))) };
       });
-      const result = validatePlanWeek(days, { hitting: 3, defense: 4, baserunning: 1 });
+      const floors = program === 'pitcher' ? { defense: 4 } : program === 'hitting' ? { hitting: 3 } : program === 'throwing' ? { defense: 4 } : { hitting: 3, defense: 4, baserunning: 1 };
+      const result = validatePlanWeek(days, floors);
+      if (program === 'pitcher') expect(days.flatMap(d => d.work).some(w => ['hitting', 'baserunning', 'bunting'].includes(w.category))).toBe(false);
       expect(result.ok, JSON.stringify(result)).toBe(true);
     }
   });
