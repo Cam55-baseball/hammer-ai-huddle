@@ -84,6 +84,45 @@ function sortByWarmupStage(items, slugOf, roleOf) {
   return keyed.map((k) => k.it);
 }
 
+// supabase/functions/_shared/wic/schedule/softRecovery.ts
+var SOFT_RECOVERY_SLUGS = /* @__PURE__ */ new Set([
+  "rc_breathing_reset",
+  "ac_recovery_belly_breathing",
+  "wu_crocodile_breathing",
+  "wu_9020_reset",
+  "wu_foam_roll_tspine",
+  "thoracic_foam_roll",
+  "plantar_fascia_release",
+  "wu_lacrosse_ball_pec",
+  "wu_lacrosse_ball_glute",
+  "wu_calf_softball_pin",
+  "wu_tspine_open_book",
+  "wu_thoracic_windmill",
+  "wu_thread_the_needle_slow",
+  "wu_lateral_line_reach",
+  "wu_ankle_cars",
+  "wu_wrist_cars",
+  "wu_90_90_switch"
+]);
+function isSoftRecovery(slug) {
+  return typeof slug === "string" && SOFT_RECOVERY_SLUGS.has(slug);
+}
+
+// supabase/functions/_shared/wic/planSanity.ts
+var ANCHORS = /* @__PURE__ */ new Set(["warmup", "recovery", "fueling", "game_iq", "mobility", "mental"]);
+function validatePlanSanity(input) {
+  const issues = [];
+  const real = input.work.filter((w) => !ANCHORS.has(w.category) && !w.primer && !w.recovery && !isSoftRecovery(w.slug));
+  if (!input.restDay && !real.length) issues.push("training_day_without_session");
+  if (input.work.some((w) => w.primer) && !real.length) issues.push("primer_without_session");
+  if (input.phase && input.work.some((w) => w.phase && w.phase !== input.phase)) issues.push("season_mismatch");
+  const categories = new Set(real.map((w) => w.category));
+  for (const category of input.expectedCategories ?? []) {
+    if (!categories.has(category) && !(input.exclusions ?? []).includes(category)) issues.push(`missing_category:${category}`);
+  }
+  return { ok: issues.length === 0, issues };
+}
+
 // src/lib/hammer/prescription/planSanity.ts
 var ORDER = { prep: 0, drills: 1, full_go: 2, log: 3 };
 function enforceSkillStageOrder(blocks) {
@@ -163,6 +202,38 @@ function applyMasteryFocus(blocks, focus) {
   return out;
 }
 
+// supabase/functions/_shared/wic/runRest.ts
+function sprintRestSeconds(distanceFeet) {
+  if (typeof distanceFeet !== "number" || !Number.isFinite(distanceFeet) || distanceFeet <= 0) return null;
+  return Math.min(300, Math.ceil(distanceFeet / 30) * 60);
+}
+
+// supabase/functions/_shared/wic/conditioning/ownerConditioning.ts
+var int = (v, lo, hi) => typeof v === "number" && Number.isInteger(v) && v >= lo && v <= hi;
+var sportBaseFeet = (sport) => sport === "softball" ? 60 : 90;
+function ownerConditioningProblems(r) {
+  const out = [];
+  const kind = r.conditioning_kind;
+  if (kind !== "run" && kind !== "base_route") return ["a conditioning type (run or base route)"];
+  if (!int(r.rounds, 1, 20)) out.push("rounds (1 to 20)");
+  if (!int(r.work_seconds, 1, 600)) out.push("a work time (1 to 600 seconds)");
+  if (!int(r.rest_seconds, 0, 600)) out.push("a rest time (0 to 600 seconds)");
+  if (kind === "run") {
+    if (!int(r.distance_feet, 1, 1200)) out.push("a run distance in feet");
+    else {
+      const min = sprintRestSeconds(r.distance_feet);
+      if (int(r.rest_seconds, 0, 600) && r.rest_seconds < min) out.push(`at least ${min} seconds rest for ${r.distance_feet} ft (1 minute per 10 yards, up to 5)`);
+    }
+  } else {
+    const sports = r.sports ?? [];
+    if (sports.length !== 1) out.push("exactly one sport (base distance is 90 ft baseball, 60 ft softball)");
+    else if (r.base_distance_feet !== sportBaseFeet(sports[0])) out.push(`a ${sportBaseFeet(sports[0])} ft base distance for ${sports[0]}`);
+    if (!int(r.bases_per_rep, 1, 4)) out.push("bases per rep (1 to 4)");
+    if (int(r.rest_seconds, 0, 600) && r.rest_seconds < 30) out.push("at least 30 seconds rest between base reps");
+  }
+  return out;
+}
+
 // src/lib/prescription/ownerPlanDrills.ts
 var PLAN_SLOTS = [
   "hammers_today:skill",
@@ -171,7 +242,8 @@ var PLAN_SLOTS = [
   "defensive_library",
   "hammers_today:baserunning",
   "hammers_today:bunting",
-  "hammers_today:mind"
+  "hammers_today:mind",
+  "hammers_today:conditioning"
 ];
 var rows = [];
 function setOwnerPlanDrills(next) {
@@ -202,6 +274,7 @@ function missingForPlacement(r, slot) {
     if (!["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"].includes(clean(r.bunt_type))) miss.push("a bunt type");
     if (!["R", "L"].includes(clean(r.bunt_side))) miss.push("a bunt side");
   }
+  if (slot === "hammers_today:conditioning") miss.push(...ownerConditioningProblems(r));
   if (slot === "hammers_today:mind" && r.equipment.length > 0) miss.push("no equipment (Mind items are non-physical)");
   return miss;
 }
@@ -470,30 +543,6 @@ function applyBuntingPlan(blocks, facts, options) {
     const because = `${attempts} ${side === "R" ? "right" : "left"}-handed bunt attempts replace ${attempts} swings from today's skill work.${sample.under300 ? sample.window ? ` Completed batting window ${sample.window.start}\u2013${sample.window.end}: ${sample.hits} hits in ${sample.atBats} at-bats, below ${(facts.lowAverage ?? 0.3).toFixed(3)}; source: entered game at-bats.` : ` Entered batting sample: ${sample.hits} hits in ${sample.atBats} at-bats across ${sample.games} games; each entered game was below ${(facts.lowAverage ?? 0.3).toFixed(3)}.` : ""}${dose.attempts ? ` This bunt: ${dose.successes} successful out of ${dose.attempts} entered attempts.` : ""}`;
     return { ...block, drills, steps: drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`), because: [...block.because ?? [], because], gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist: drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`) } : null };
   });
-}
-
-// supabase/functions/_shared/wic/schedule/softRecovery.ts
-var SOFT_RECOVERY_SLUGS = /* @__PURE__ */ new Set([
-  "rc_breathing_reset",
-  "ac_recovery_belly_breathing",
-  "wu_crocodile_breathing",
-  "wu_9020_reset",
-  "wu_foam_roll_tspine",
-  "thoracic_foam_roll",
-  "plantar_fascia_release",
-  "wu_lacrosse_ball_pec",
-  "wu_lacrosse_ball_glute",
-  "wu_calf_softball_pin",
-  "wu_tspine_open_book",
-  "wu_thoracic_windmill",
-  "wu_thread_the_needle_slow",
-  "wu_lateral_line_reach",
-  "wu_ankle_cars",
-  "wu_wrist_cars",
-  "wu_90_90_switch"
-]);
-function isSoftRecovery(slug) {
-  return typeof slug === "string" && SOFT_RECOVERY_SLUGS.has(slug);
 }
 
 // src/lib/hammer/goals/subGoalCatalog.ts
@@ -7508,7 +7557,8 @@ function planReadinessBand(ctx) {
   return "normal";
 }
 function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = null, gpSignal = null, identityOverride, today = /* @__PURE__ */ new Date(), roadmapInputs = {}) {
-  const proj = projectEnvelope(ctx);
+  const envelopeProjection = projectEnvelope(ctx);
+  const proj = roadmapInputs.resolvedSeasonPhase ? { ...envelopeProjection, seasonPhase: roadmapInputs.resolvedSeasonPhase } : envelopeProjection;
   const focusProjection = { ...proj, categoryGoals: masteryGoalWeights(proj.categoryGoals, roadmapInputs.masteryFocus) };
   const speed = selectSpeedFocus(proj);
   const rung = resolveRoadmapRung(proj);
@@ -7672,6 +7722,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   }
   return {
     blocks: enforceSkillStageOrder(blocks),
+    sanity: validatePlanSanity({ restDay: fullRestDay, work: blocks.filter((b) => b.status === "ready").flatMap((b) => b.drills.map((d2) => ({ category: b.modality, slug: d2.slug }))) }),
     practiceLoad,
     seasonPhase: proj.seasonPhase,
     missingnessCount: blocks.filter((b) => b.status === "awaiting-input").length,
