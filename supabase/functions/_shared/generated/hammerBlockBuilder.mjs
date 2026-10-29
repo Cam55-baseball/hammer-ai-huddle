@@ -84,6 +84,559 @@ function sortByWarmupStage(items, slugOf, roleOf) {
   return keyed.map((k) => k.it);
 }
 
+// supabase/functions/_shared/health/physioMapping.ts
+function physioDefaults(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  return {
+    illnessMode: r.illnessMode === "recovery" ? "recovery" : "light",
+    professionalAfterDays: typeof r.professionalAfterDays === "number" && Number.isInteger(r.professionalAfterDays) && r.professionalAfterDays >= 1 && r.professionalAfterDays <= 3 ? r.professionalAfterDays : 3
+  };
+}
+var AREAS = /* @__PURE__ */ new Set(["shoulder", "elbow", "wrist", "hip", "knee", "ankle", "back"]);
+var PREHAB_SLUGS = {
+  shoulder: "wu_shoulder_cars",
+  wrist: "wu_wrist_cars",
+  hip: "wu_hip_cars",
+  ankle: "wu_ankle_cars",
+  back: "wu_thoracic_windmill"
+};
+function mapPhysio(input) {
+  const defaults = physioDefaults(input.defaults);
+  const illnessActive = typeof input.activeIllness === "string" && input.activeIllness.trim().length > 0;
+  const fever = input.activeIllness === "Fever";
+  const start = typeof input.illnessStartedAt === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input.illnessStartedAt) ? input.illnessStartedAt : null;
+  const elapsed = start ? (Date.parse(`${input.today}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 864e5 + 1 : null;
+  const healed = /* @__PURE__ */ new Set(), active = /* @__PURE__ */ new Set();
+  for (const item of Array.isArray(input.injuries) ? input.injuries : []) {
+    if (!item || typeof item !== "object") continue;
+    const r = item;
+    if (typeof r.region !== "string" || !AREAS.has(r.region)) continue;
+    if (r.recovery_status === "healed") healed.add(r.region);
+    if (r.recovery_status === "active" || r.recovery_status === "pain") active.add(r.region);
+  }
+  for (const area of input.painAreas ?? []) if (AREAS.has(area)) active.add(area);
+  return {
+    illnessActive,
+    lowReadiness: illnessActive,
+    recoveryOnly: illnessActive && (fever || defaults.illnessMode === "recovery"),
+    professionalWarning: illnessActive && elapsed !== null && elapsed >= defaults.professionalAfterDays ? "Please talk to a professional" : null,
+    healedAreas: [...healed],
+    activeAreas: [...active],
+    cautions: [...healed].filter((a) => active.has(a)).map((a) => `Pain is back in your ${a}. Stop work that hurts and update Hammers.`)
+  };
+}
+function activeInjuryHistory(raw) {
+  return Array.isArray(raw) ? raw.filter((r) => !r || typeof r !== "object" || r.recovery_status !== "healed") : raw;
+}
+
+// src/lib/hammer/prescription/movementGuide.ts
+function norm(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+}
+var GUIDES = {
+  cuff_scap_activation_low_intensity: {
+    what: "Gentle shoulder rotation and shoulder-blade movement with a light band.",
+    setup: "Use a light resistance band with a secure anchor. ER means rotate your forearm away from your body; IR means rotate it toward your body. Keep your elbow bent and close to your side. For scap pulls, gently draw your shoulder blades back without shrugging.",
+    goodRep: ["Turn your forearm slowly away from your body for ER, then toward your body for IR.", "Keep your elbow close to your side and your shoulder relaxed.", "For scap pulls, gently draw your shoulder blades back without shrugging.", "Follow the sets and repetitions shown on your prescription."],
+    badRep: ["Forcing the movement or working through pain.", "Adding resistance, repetitions or time beyond the prescription."],
+    feel: "Easy, comfortable movement, not a hard shoulder workout.",
+    whyToday: "Gentle movement on your arm-recovery day.",
+    nextLink: "Continue with the next prescribed recovery item.",
+    stopIf: "Stop for shoulder or elbow pain, pinching, numbness or tingling. Follow your professional\u2019s injury instructions."
+  },
+  wrist_forearm_mobility_flush: {
+    what: "Slow wrist circles and gentle forearm massage.",
+    setup: "Sit or stand comfortably with your forearm supported. Make slow wrist circles in each direction, then gently massage the forearm with your opposite hand.",
+    goodRep: ["Circle your wrist slowly in each direction without forcing the range.", "Use your opposite hand to massage your forearm with light pressure.", "Follow each time and side shown on your prescription."],
+    badRep: ["Forcing the movement or working through pain.", "Adding resistance, repetitions or time beyond the prescription."],
+    feel: "Gentle movement and light pressure, not pain.",
+    whyToday: "Easy wrist and forearm movement during recovery.",
+    nextLink: "Continue with the next prescribed recovery item.",
+    stopIf: "Stop for pain, numbness or tingling. Do not press into an injured or painful area."
+  },
+  sleeper_cross_body_stretch: {
+    what: "Two gentle shoulder stretches, only within a comfortable range.",
+    setup: "For the sleeper stretch, lie on your side with your elbow bent and gently guide your forearm toward the floor with your other hand. For cross-body, bring your arm across your chest and support it with your opposite hand. Use only a comfortable range.",
+    goodRep: ["For the sleeper stretch, gently guide your forearm down without pushing into the shoulder.", "For cross-body, support your arm across your chest without pulling hard.", "Breathe gently and follow the holds and sides shown on your prescription."],
+    badRep: ["Forcing the movement or working through pain.", "Adding resistance, repetitions or time beyond the prescription."],
+    feel: "A comfortable stretch, never a pinch.",
+    whyToday: "Gentle shoulder mobility during recovery.",
+    nextLink: "Continue with the next prescribed recovery item.",
+    stopIf: "Stop for shoulder pain, pinching, numbness or tingling. Never force the stretch; follow your professional\u2019s injury instructions."
+  },
+  // ============ Neural priming / reaction drills ============
+  wu_reaction_ball_wall: {
+    what: "A small, uneven rubber ball is thrown at a wall. Because it is uneven, it bounces back in an unpredictable direction, and your job is to catch it before it hits the ground a second time.",
+    setup: "Stand facing a solid wall, 6\u201310 feet away, with a reaction ball (a lumpy rubber ball about the size of a baseball). If you don't have one, a small rubber pinky ball or a lacrosse ball works. Feet shoulder-width apart, knees slightly bent, weight on the balls of your feet, hands open in front of your chest.",
+    goodRep: [
+      "Eyes track the ball the whole time \u2014 no blinking away.",
+      "Your first movement is your hands going toward the ball, not away from it.",
+      "You stay balanced \u2014 you shuffle to the ball, you don't fall into it.",
+      "Two hands make the catch, soft and quiet."
+    ],
+    badRep: [
+      "Waiting flat-footed for the ball to come to you.",
+      "Reaching with one hand and stabbing at it.",
+      "Standing straight up \u2014 losing your athletic stance between throws."
+    ],
+    feel: "Light on your feet, alert, the same way you feel when a pitch is about to be thrown or a batted ball is coming your way. Your hands should feel quick and your eyes should feel busy.",
+    whyToday: "Wakes up your hand-eye timing and fires your fast-twitch nervous system before you go into speed, throwing, or hitting work. Cheap on the body, big on alertness.",
+    nextLink: "Go straight into your speed or throwing block \u2014 your nervous system is now switched on and will get more out of each rep.",
+    stopIf: "You roll an ankle, your shoulder pinches, or you feel dizzy from tracking."
+  },
+  wu_reaction_drop_catch: {
+    what: "A partner (or a wall drop) releases a ball without any warning and you catch it before the second bounce. Trains pure reaction time.",
+    setup: "Partner stands 4\u20136 feet in front of you holding a tennis ball at shoulder height. You stand in an athletic stance \u2014 feet shoulder-width, knees soft, hands ready at chest height, eyes on the ball.",
+    goodRep: [
+      "You are still and quiet before the drop, but ready.",
+      "First movement is a snap of the hand toward the ball.",
+      "You catch it cleanly before it can bounce twice.",
+      "Reset to stance immediately \u2014 no wasted movement."
+    ],
+    badRep: [
+      "Trying to guess when the drop is coming (fake-starts).",
+      "Body tense \u2014 you cannot react when you're tight.",
+      "Lunging forward and losing balance."
+    ],
+    feel: "Relaxed but coiled \u2014 like a defender waiting to break on a ball.",
+    whyToday: "Pure CNS wake-up. No load, big reaction benefit.",
+    nextLink: "Move into fast-twitch work while the nervous system is hot."
+  },
+  // ============ Speed / rhythm ============
+  wu_wickets_low: {
+    what: "You run at a controlled 75% speed over a line of low hurdles that are spaced perfectly for your natural stride. The wickets don't get jumped \u2014 they get run through. This teaches your legs to cycle in a clean rhythm.",
+    setup: "Line up 8 mini-hurdles (6\u20138 inches tall) in a straight line, exactly 5 feet apart \u2014 about 40 feet total. If you have no hurdles, use rolled towels, shoes, or cones as markers. Give yourself a 10-yard jog-in before the first hurdle so you build speed cleanly.",
+    goodRep: [
+      "Jog in and hit the first hurdle at about 75% speed.",
+      "Stay tall \u2014 chest up, eyes forward, arms drive front-to-back.",
+      "Each foot lands cleanly between the hurdles.",
+      "Knees pick straight up and the foot cycles down under your hip."
+    ],
+    badRep: [
+      "Reaching or stretching your stride to hit a hurdle.",
+      "Looking down at your feet \u2014 always makes you slower.",
+      "Landing on your heel, or landing on the hurdle itself."
+    ],
+    feel: "Rhythmic and light \u2014 like your feet are ticking a metronome. If you feel choppy or heavy, back off the speed until the rhythm returns.",
+    whyToday: "Teaches clean sprint mechanics without you having to think about them \u2014 the hurdle spacing does the coaching for you.",
+    nextLink: "Now go into your sprint or acceleration work \u2014 you have a rhythm to keep.",
+    stopIf: "You clip a hurdle in a way that jars your ankle or hip, or a hamstring or calf grabs."
+  },
+  wu_a_skip: {
+    what: "A running warm-up drill: you skip forward while driving one knee up to hip height and stepping down under your body. It's the shape of a good sprint stride, done at low speed.",
+    setup: "Open space, 20 yards of turf or track. Feet under hips, tall posture.",
+    goodRep: [
+      "Skip rhythm \u2014 bounce-step, bounce-step.",
+      "Front knee drives up to hip height, toe pulled up.",
+      "Same-side arm swings up in sync (opposite arm on the down side).",
+      "Foot lands directly under your hip, quiet and quick."
+    ],
+    badRep: [
+      "Kicking your foot out in front of your body.",
+      "Bending forward at the waist.",
+      "Slapping the foot down loudly."
+    ],
+    feel: "Tall, springy, coordinated. Not a hard workout \u2014 a mechanics rehearsal.",
+    whyToday: "Grooves the sprint stride cheap and clean.",
+    nextLink: "Feeds directly into B-skip and sprint work."
+  },
+  wu_b_skip: {
+    what: "Same rhythm as A-skip, but as the knee drives up, you extend the lower leg out and paw it back down and under your body \u2014 teaching the leg to actively pull the ground behind you at full sprint.",
+    setup: "Same as A-skip. 20 yards of open space.",
+    goodRep: [
+      "Skip \u2192 knee up \u2192 leg extends out \u2192 paw the ground down and back.",
+      "Tall posture the whole time.",
+      "Land under your hip, not in front of your body."
+    ],
+    badRep: [
+      "Kicking the foot out and letting it slap the ground.",
+      "Losing the skip rhythm.",
+      "Reaching forward with the foot instead of pawing back."
+    ],
+    feel: "You are 'pulling the ground' backward under your body.",
+    whyToday: "Locks in the pawing action of top-speed running.",
+    nextLink: "Move to falling starts or sprints."
+  },
+  wu_pogo_double: {
+    what: "Short, stiff-ankled hops in place on two feet. Each hop is quick \u2014 the ground is 'hot' and you're only on it for a fraction of a second.",
+    setup: "Feet hip-width, arms relaxed at your sides or bent at 90\xB0. Soft flat surface (turf, gym floor, or grass).",
+    goodRep: [
+      "Ankles stay stiff \u2014 most of the bounce comes from your calves and Achilles.",
+      "Ground contact is less than 0.2 seconds (like the floor is hot).",
+      "Land in the same spot you took off from.",
+      "Chest up, eyes forward."
+    ],
+    badRep: [
+      "Squatting between hops (that means the knees are absorbing, not the ankles).",
+      "Long, floaty jumps.",
+      "Landing on heels."
+    ],
+    feel: "Springy and quick, like your Achilles is a coiled spring.",
+    whyToday: "Wakes up the elastic system in your ankles and calves \u2014 the same system that powers first-step quickness.",
+    nextLink: "Go into sprint or lateral work while the calves are primed.",
+    stopIf: "Sharp pain in the shin, calf, or Achilles."
+  },
+  wu_ankle_bounce_series: {
+    what: "Rapid, low bounces on stiff ankles \u2014 a smaller and faster version of a pogo hop, meant purely to prime the ankle stiffness that makes you fast.",
+    setup: "Feet hip-width, tall posture, arms relaxed.",
+    goodRep: [
+      "Bounces are tiny \u2014 1\u20132 inches off the ground.",
+      "Ankles do all the work \u2014 knees and hips barely move.",
+      "Rhythm is fast and constant."
+    ],
+    badRep: [
+      "Big jumps.",
+      "Bending the knees.",
+      "Slow tempo."
+    ],
+    feel: "Your calves and the arch of your foot 'wake up' \u2014 light and springy.",
+    whyToday: "Primes the same tissue you'll use for first-step acceleration.",
+    nextLink: "Line hops, then pogos, then sprints."
+  },
+  // ============ ARM CARE (owned by throwing block on throwing days) ============
+  wu_jband_full: {
+    what: "A full circuit of light elastic-band exercises that wake up the rotator cuff and shoulder-blade muscles. This is the full arm-care band chart \u2014 the standard daily shoulder-prep circuit.",
+    setup: "Anchor a light arm-care band (or a light resistance band) to a fence, pole, or door hinge at about chest height. Stand facing sideways so the band is level with your throwing arm.",
+    goodRep: [
+      "Go through the full chart \u2014 external rotation, internal rotation, scap pull, retractions, forward flexion.",
+      "Every rep is slow, especially on the way back (the eccentric).",
+      "Elbow stays at the correct height for each movement.",
+      "Breathe out on the pull."
+    ],
+    badRep: [
+      "Snapping the band back fast.",
+      "Using a heavy band \u2014 this is a wake-up, not a workout.",
+      "Rushing through reps."
+    ],
+    feel: "A gentle warmth in the back of the shoulder and the shoulder blade. You should never feel this in the front of the shoulder.",
+    whyToday: "This is the entire arm-care allotment for your throwing day \u2014 the shoulder complex is now primed for real throws.",
+    nextLink: "Straight into tennis-ball whip throws \u2192 underload \u2192 catch-play.",
+    stopIf: "Sharp pain in the front of the shoulder or any elbow pinch \u2014 stop and message Hammer."
+  },
+  wu_crossover_symmetry_full: {
+    what: "A branded chart of band exercises (band activation) that hits the rotator cuff and scap stabilizers in a specific order. Same purpose as arm-care band, different pattern.",
+    setup: "Crossover bands anchored at chest height. Chest square to the anchor.",
+    goodRep: [
+      "Shoulder blades set FIRST \u2014 you feel them squeeze slightly \u2014 then the arms move.",
+      "Slow, smooth reps, especially the return.",
+      "Full range each rep \u2014 don't cheat the finish."
+    ],
+    badRep: [
+      "Arms firing before the shoulder blade sets.",
+      "Any shrug \u2014 shoulders stay away from the ears.",
+      "Fast, snappy reps."
+    ],
+    feel: "The back of the shoulder and mid-back working. Front of the shoulder should stay quiet.",
+    whyToday: "Complete arm-care activation before any throwing \u2014 this is your one and only arm-care block today.",
+    nextLink: "Move into fast-object throws.",
+    stopIf: "Any front-of-shoulder pain or elbow twinge."
+  },
+  wu_prone_tyw: {
+    what: "You lie face-down on a bench or floor and make the letters T, Y, and W with your arms while holding a light weight or nothing. Trains the muscles between your shoulder blades that keep the shoulder joint centered when you throw.",
+    setup: "Lie face-down on a bench (or on the floor with a rolled towel under your forehead so you can breathe). Arms hang toward the floor, thumbs pointing up.",
+    goodRep: [
+      "T: arms straight out to the sides, thumbs up, squeeze shoulder blades.",
+      "Y: arms overhead in a Y shape, thumbs up.",
+      "W: elbows bent, upper arms straight out, forearms up \u2014 squeeze blades together.",
+      "Slow, controlled, thumbs stay up the whole time."
+    ],
+    badRep: [
+      "Using momentum or arching your low back.",
+      "Thumbs pointing down (loads the front of the shoulder wrong).",
+      "Any weight over 3 lbs \u2014 this is activation, not strength."
+    ],
+    feel: "Small burn between the shoulder blades. That's exactly right.",
+    whyToday: "Primes the mid-back so your shoulder joint sits in its healthy position when you throw.",
+    nextLink: "Straight into scap push-ups or band pulls."
+  },
+  wu_er_at_90: {
+    what: "You stand with your throwing-arm elbow bent to 90\xB0 and out to the side, and slowly rotate your forearm from parallel-to-the-ground up to overhead against light band tension. This trains the deep rotator cuff.",
+    setup: "Anchor a light band at elbow height. Stand sideways so the band pulls across your body. Elbow bent 90\xB0, upper arm out to the side at shoulder height, forearm parallel to the ground.",
+    goodRep: [
+      "Elbow stays exactly at shoulder height.",
+      "Forearm rotates up smoothly.",
+      "Slow return \u2014 3 seconds on the way down."
+    ],
+    badRep: [
+      "Elbow drops or drifts down.",
+      "Shoulder shrugs up toward the ear.",
+      "Snapping the band on the return."
+    ],
+    feel: "Deep in the back of the shoulder \u2014 small, controlled, warm.",
+    whyToday: "Directly primes the muscles that decelerate your throwing arm \u2014 the ones that break down when you don't warm them up.",
+    nextLink: "Feeds into T/Y/W or straight into throwing prep.",
+    stopIf: "Any pinch in the front of the shoulder."
+  },
+  wu_scap_pushup: {
+    what: "A push-up where you keep your elbows locked straight and only move your shoulder blades \u2014 squeezing them together, then pushing them apart. Trains the muscle that stabilizes the shoulder blade against your ribcage.",
+    setup: "Standard push-up position \u2014 hands under shoulders, body in a straight line from head to heels.",
+    goodRep: [
+      "Elbows stay LOCKED \u2014 no bend.",
+      "Shoulder blades pinch together (chest drops slightly toward the floor).",
+      "Then push the floor away \u2014 shoulder blades spread wide and your upper back rounds slightly."
+    ],
+    badRep: [
+      "Bending the elbows (that's a regular push-up).",
+      "Hips sagging.",
+      "Head dropping."
+    ],
+    feel: "The muscle just below your armpit (serratus) working. That's the money muscle for throwers.",
+    whyToday: "Locks the shoulder blade to the ribcage so your arm has a stable base to fire from.",
+    nextLink: "Straight into T/Y/W or band face pulls."
+  },
+  wu_face_pull_band: {
+    what: "You pull a band at eye level toward your face while keeping your elbows high and rotating your hands so your thumbs point behind you. Trains the muscles that pull your shoulders into good posture.",
+    setup: "Anchor a band at eye level. Grab both ends with palms facing down. Step back so the band is under light tension. Feet hip-width, tall posture.",
+    goodRep: [
+      "Elbows lead the pull and stay HIGH \u2014 at ear level.",
+      "Hands finish by your ears with thumbs rotating back.",
+      "Squeeze the back of your shoulders together at the end.",
+      "Slow return."
+    ],
+    badRep: [
+      "Elbows dropping toward your ribs.",
+      "Pulling to your chest instead of your face.",
+      "Yanking with your low back."
+    ],
+    feel: "Back of the shoulders and upper back working. Neck stays quiet.",
+    whyToday: "Balances all the internal-rotation pull of throwing \u2014 protects your shoulder for the long haul.",
+    nextLink: "Straight into throwing prep or arm-care cooldown."
+  },
+  wu_forearm_pump: {
+    what: "High-rep flexion and extension of the wrist against light resistance to flush blood into the forearm \u2014 the last accelerator of every throw.",
+    setup: "Sit or stand with a light dumbbell (2\u20135 lbs) or a band. Forearm rests on your thigh, palm up for flexion / palm down for extension.",
+    goodRep: [
+      "Slow, full range each rep.",
+      "Wrist is the only thing that moves \u2014 forearm stays still.",
+      "High reps (20+) \u2014 this is a flush, not a strength lift."
+    ],
+    badRep: [
+      "Moving the elbow or shoulder.",
+      "Heavy weight \u2014 that turns it into strength work."
+    ],
+    feel: "A pump in the forearm and a warmth in the wrist.",
+    whyToday: "The wrist is the last thing that moves in every throw \u2014 warming it prevents forearm strains.",
+    nextLink: "Straight into throwing prep."
+  },
+  // ============ Weightless coordination (WOST) ============
+  wu_scarf_cross_body_catch: {
+    what: "You toss a light silk scarf across your body from one hand to the other. Because a scarf floats slowly, your eyes and hands get a long moment to track and catch it \u2014 perfect for coordination.",
+    setup: "Stand tall with one light silk scarf (or a napkin) in your RIGHT hand at hip level. Feet shoulder-width, hips facing forward. Hips STAY facing forward the entire drill \u2014 only the arms and ribcage rotate.",
+    goodRep: [
+      "Toss the scarf up and across your body toward your LEFT shoulder so it floats above your head.",
+      "Reach across the midline of your body and catch it in your LEFT hand before it drops below your waist.",
+      "Immediately toss it back across to the RIGHT.",
+      "Slow and smooth \u2014 no missed catches."
+    ],
+    badRep: [
+      "Hips turning with the arms \u2014 the whole point is to isolate the upper body.",
+      "Throwing so high the scarf hits the ceiling.",
+      "Dropping the scarf and rushing to grab it off the floor."
+    ],
+    feel: "Playful. This is a low-stress hand-eye drill \u2014 treat it like a game.",
+    whyToday: "Trains cross-body coordination that transfers directly to hitting and throwing rhythm.",
+    nextLink: "Move into a fast-twitch or throwing drill while the CNS is coordinated."
+  },
+  // ============ Tennis-ball throws (EASS Tier 1) ============
+  eass_tennis_ball_whip_bb: {
+    what: "Throwing a tennis ball at full arm speed to a partner or wall. Because the ball weighs almost nothing, your arm has nothing to fight \u2014 so you teach the arm to fire FAST.",
+    setup: "Partner or wall at 20\u201330 feet. Standard throwing setup \u2014 glove-side leg forward, back foot loaded, arms in your normal arm slot.",
+    goodRep: [
+      "Full arm circle \u2014 no shortening the back-side of the arc.",
+      "Whip finish out in front \u2014 your hand ends up chasing the ball.",
+      "Ball leaves your fingers cleanly \u2014 no wobble.",
+      "Full body works together \u2014 this isn't an arm-only throw even though the ball is light."
+    ],
+    badRep: [
+      "Throwing at half-speed 'to save it' \u2014 the whole point is speed.",
+      "Arm-only throwing \u2014 the ball is light so you can get away with it, but that defeats the drill.",
+      "Short-arming the back-side of the throw."
+    ],
+    feel: "Fast, clean, effortless. The arm should feel free.",
+    whyToday: "Teaches the nervous system what fast feels like without any load. First step in the EASS throwing hierarchy.",
+    nextLink: "Move into underload plyo throws (3.5 or 4 oz).",
+    stopIf: "Any elbow or shoulder pinch."
+  },
+  // Generic cool-down guide reused by arm-care cooldowns
+  eass_cooldown_universal: {
+    what: "A short arm-care cooldown after throwing: a stretch that opens the back of the shoulder (sleeper stretch), a cross-body stretch to lengthen the outside of the shoulder, and a light forearm massage to flush the working tissue.",
+    setup: "Lie on your throwing-arm side (sleeper stretch), or stand tall for cross-body and forearm work. No equipment required.",
+    goodRep: [
+      "Sleeper stretch: lying on your throwing side, elbow bent 90\xB0, gently push forearm toward the floor with the other hand.",
+      "Cross-body: pull throwing arm across your chest with the opposite hand, elbow at shoulder height.",
+      "Forearm massage: 2 minutes, thumb-press along the meat of the forearm.",
+      "Long, slow exhales the whole time."
+    ],
+    badRep: [
+      "Forcing the sleeper stretch \u2014 you should feel a mild pull, never pain.",
+      "Rushing \u2014 this is a downshift."
+    ],
+    feel: "Warmth spreads through the back of the shoulder. Breathing slows down.",
+    whyToday: "Downshifts the nervous system and helps the shoulder recover so tomorrow's arm feels fresh.",
+    nextLink: "You're done for the day \u2014 hydrate and refuel."
+  },
+  // ============ Pitcher & recovery conditioning (owner-authorised 2026-10-05) ============
+  // Basis per drill lives in wk_movement_catalog.evidence_note. No drill sets an
+  // arm slot or a "correct" shape — the athlete moves the way their body moves.
+  pc_pretension_hold_bb: {
+    what: "A standing hold where you stretch tall and press the floor away, to wake up the long lines of your body before you pitch.",
+    setup: "Short split stance, glove-side foot forward. Reach both arms overhead like you're grabbing a bar.",
+    goodRep: ["Press the floor away with both feet.", "Reach up and slightly back, long through the front of your body.", "Breathe slowly the whole time."],
+    badRep: ["Arching your low back instead of getting long.", "Holding your breath.", "Forcing it into pain."],
+    feel: "A stretch-tension line from your front foot, up through your stomach, to your fingers.",
+    whyToday: "You pitch soon. This gets you loaded and springy without tiring anything. 20 seconds each stance, twice.",
+    nextLink: "Straight into your pogos or ready series.",
+    stopIf: "Pinching in your low back or shoulder."
+  },
+  pc_ankle_pogos_bb: {
+    what: "Small, quick bounces off the balls of your feet. Your feet and calves work like springs.",
+    setup: "Feet hip-width apart, knees soft, standing tall, arms relaxed.",
+    goodRep: ["Ground touches short and quiet.", "Stay tall.", "Bounce, don't jump high."],
+    badRep: ["Heavy landings or heels crashing down.", "Knees bending a lot.", "Going high instead of quick."],
+    feel: "A bouncy rhythm in your feet and calves. Light, not tiring.",
+    whyToday: "Springy legs drive a pitch. 15 bounces, twice. Stop the set as soon as the landings stop being quiet.",
+    nextLink: "Walk a few steps, then your strides.",
+    stopIf: "Any sharp pain in your foot, ankle, shin or knee."
+  },
+  pc_buildup_strides_bb: {
+    what: "Relaxed runs where you build up speed smoothly and then float to a stop.",
+    setup: "30 yards of flat ground.",
+    goodRep: ["Start with a jog.", "Build smoothly to fast but relaxed by the middle.", "Float out the last third.", "Walk all the way back before the next one."],
+    badRep: ["Turning it into a race.", "Tight shoulders and face.", "Starting the next one out of breath."],
+    feel: "Quick, loose and ready, not tired.",
+    whyToday: "Short fast runs keep you sharp. Long slow runs don't help a pitcher. 3 strides.",
+    nextLink: "You're primed. Hydrate.",
+    stopIf: "Any grab in your hamstring or calf."
+  },
+  rp_ready_series_bb: {
+    what: "A short series that keeps a reliever switched on: a tall hold, a few pogos, and a couple of easy turns.",
+    setup: "A small space and nothing else.",
+    goodRep: ["20-second tall hold, reaching long.", "10 quiet pogos.", "4 easy turns side to side, letting your arms swing loose.", "Go through it twice."],
+    badRep: ["Working hard, so you're tired if you get the call.", "Rushing through it."],
+    feel: "Warm, loose and awake. Like you could go in right now.",
+    whyToday: "You might pitch today. This keeps you ready without spending anything you need on the mound.",
+    nextLink: "Stay warm and stay loose.",
+    stopIf: "Any pain that changes how you move."
+  },
+  sp_drive_bounds_sb: {
+    what: "Low, springy bounds pushing off one leg, to prime the push off your drive leg that starts every windmill pitch.",
+    setup: "10 yards of space. Stand on your drive leg (the same side as your pitching arm).",
+    goodRep: ["Push the ground away hard: hip, knee and ankle all straighten.", "Bound forward low, not high.", "Land softly on the other foot and reset."],
+    badRep: ["Jumping up instead of driving forward.", "Knee caving in when you push.", "Doing lots of them. This is quality, not volume."],
+    feel: "A strong push through your glute and the ball of your foot.",
+    whyToday: "The windmill starts with your drive leg. 5 bounds, twice, full rest between.",
+    nextLink: "Then your stride and stick.",
+    stopIf: "Any pain in your knee, hip or low back."
+  },
+  sp_stride_stick_sb: {
+    what: "Take your pitching stride, land, and hold it still. This builds a steady landing.",
+    setup: "Flat ground. Your normal pitching stance, no ball.",
+    goodRep: ["Drive out into your normal stride.", "Land and hold for a count of three.", "Knee stays in line over your foot."],
+    badRep: ["Knee caving in when you land.", "Wobbling or stepping out.", "Changing your stride to look a certain way. Use the one that's yours."],
+    feel: "Solid and balanced on your landing leg.",
+    whyToday: "A steady landing lets every pitch land the same. 4 each, twice.",
+    nextLink: "You're primed. Hydrate.",
+    stopIf: "Any pain in your landing knee or ankle."
+  },
+  sp_arm_circle_rhythm_sb: {
+    what: "Easy full arm circles, no ball, to warm up your windmill circle.",
+    setup: "Stand in your pitching stance with plenty of space around your arm.",
+    goodRep: ["Make slow, loose circles to start.", "Let them get a little quicker each time.", "Let your arm brush past your hip at the bottom with a relaxed snap."],
+    badRep: ["Forcing a big or stiff circle.", "Trying to make it look like someone else's.", "Muscling it."],
+    feel: "Loose, warm shoulder and a whippy finish.",
+    whyToday: "Your circle is yours. This just wakes it up. 8 circles, twice.",
+    nextLink: "Into your throwing warm-up.",
+    stopIf: "Any pinching or pain in your shoulder or elbow."
+  },
+  rp_ready_series_sb: {
+    what: "A short series that keeps a windmill reliever switched on: a drive-leg push, a stride and stick, and easy arm circles.",
+    setup: "A small space and nothing else.",
+    goodRep: ["3 easy drive-leg pushes.", "2 stride-and-sticks.", "6 loose arm circles.", "Go through it twice."],
+    badRep: ["Working hard, so you're tired if you get the call.", "Rushing through it."],
+    feel: "Warm, loose and awake. Like you could go in right now.",
+    whyToday: "You might pitch today. This keeps you ready without spending anything you need in the circle.",
+    nextLink: "Stay warm and stay loose.",
+    stopIf: "Any pain that changes how you move."
+  },
+  rc_easy_flush: {
+    what: "Easy biking or walking to get blood moving after a hard day.",
+    setup: "A bike or a flat walk outside.",
+    goodRep: ["Go at a pace where you can talk in full sentences.", "Keep it steady.", "Breathe through your nose if you can."],
+    badRep: ["Turning it into a workout.", "Breathing hard or sweating a lot."],
+    feel: "Warm, loose, and a bit better than when you started.",
+    whyToday: "Today is about recovering, not adding work. About 9 minutes.",
+    nextLink: "Then your long reach walk.",
+    stopIf: "You feel dizzy or unwell."
+  },
+  rc_long_reach_walk: {
+    what: "A slow walk where you reach the opposite arm up and long with every step.",
+    setup: "10 yards of space.",
+    goodRep: ["Take a slow walking step.", "Reach the opposite arm up and long.", "Feel the stretch run from your back foot to your reaching hand. Switch sides each step."],
+    badRep: ["Pushing into pain to get loose.", "Rushing."],
+    feel: "A gentle full-body stretch with no strain.",
+    whyToday: "Easy length through your whole body after hard work. 10 yards, twice.",
+    nextLink: "You're done. Eat and sleep well.",
+    stopIf: "Pinching in your shoulder or back."
+  },
+  rc_breathing_reset: {
+    what: "Slow breathing lying down to help your body switch off.",
+    setup: "Lie on your back, knees bent, feet flat.",
+    goodRep: ["Breathe in through your nose for 4.", "Breathe out slowly for 6.", "Let your ribs drop on every breath out."],
+    badRep: ["Rushing.", "Forcing big breaths."],
+    feel: "Calm and heavy on the floor.",
+    whyToday: "Helps you settle after travel or a long day. 2 minutes.",
+    nextLink: "You're done.",
+    stopIf: "You feel dizzy. Breathe normally."
+  },
+  rc_postgame_flush: {
+    what: "A short, easy cool-down the night of a game: walk, reach long, then breathe slowly.",
+    setup: "Any space after the game, in uniform is fine.",
+    goodRep: ["Walk easily and add comfortable long reaches as you go.", "Finish with gentle breathing and a relaxed, longer exhale; do not hold your breath.", "Follow the time shown on your prescription for the whole sequence."],
+    badRep: ["Skipping it to sit straight down for the drive home.", "Turning it into extra running."],
+    feel: "Your heart rate settles and your legs feel lighter.",
+    whyToday: "You played tonight. A short easy cool-down tonight helps you feel better tomorrow.",
+    nextLink: "Eat, drink water, and sleep.",
+    stopIf: "Something hurts. Tell a coach or parent."
+  },
+  rc_travel_reset: {
+    what: "Easy walking and long reaches to undo the stiffness of a long trip.",
+    setup: "Any space when you arrive, or a rest stop on the way.",
+    goodRep: ["Walk easily and reach overhead and to each side within a comfortable range.", "Keep your breathing gentle; do not force deep breaths or hold your breath.", "Follow the time shown on your prescription for the whole sequence."],
+    badRep: ["Doing a hard workout after sitting for hours.", "Skipping it and staying stiff."],
+    feel: "Looser hips and back, and more awake.",
+    whyToday: "You're travelling, so today is about moving easy, not training hard.",
+    nextLink: "Then your breathing reset.",
+    stopIf: "Any pain that changes how you move."
+  }
+};
+function guideFor(slugOrName) {
+  if (!slugOrName) return null;
+  const direct = GUIDES[slugOrName];
+  if (direct) return direct;
+  const n = norm(slugOrName);
+  if (GUIDES[n]) return GUIDES[n];
+  const aliases = {
+    reaction_ball_vs_wall: "wu_reaction_ball_wall",
+    low_wicket_runs_rhythm: "wu_wickets_low",
+    a_skip: "wu_a_skip",
+    b_skip: "wu_b_skip",
+    pogo_hops_double_leg: "wu_pogo_double",
+    ankle_bounce_series_stiff_ankles: "wu_ankle_bounce_series",
+    j_band_full_arm_care_chart: "wu_jband_full",
+    crossover_symmetry_activation_chart: "wu_crossover_symmetry_full",
+    prone_t_y_w: "wu_prone_tyw",
+    external_rotation_at_90: "wu_er_at_90",
+    scapular_push_up: "wu_scap_pushup",
+    band_face_pull: "wu_face_pull_band",
+    forearm_flexor_extensor_pump: "wu_forearm_pump",
+    scarf_cross_body_catch: "wu_scarf_cross_body_catch",
+    tennis_ball_whip_throws_teach_fast_object_finish: "eass_tennis_ball_whip_bb",
+    arm_care_cooldown: "eass_cooldown_universal"
+  };
+  const aliased = aliases[n];
+  return aliased ? GUIDES[aliased] ?? null : null;
+}
+
 // supabase/functions/_shared/wic/schedule/softRecovery.ts
 var SOFT_RECOVERY_SLUGS = /* @__PURE__ */ new Set([
   "rc_breathing_reset",
@@ -107,6 +660,687 @@ var SOFT_RECOVERY_SLUGS = /* @__PURE__ */ new Set([
 function isSoftRecovery(slug) {
   return typeof slug === "string" && SOFT_RECOVERY_SLUGS.has(slug);
 }
+
+// src/lib/hammer/prescription/warmupLibrary.ts
+var WARMUP_LIBRARY = [
+  // Breathwork
+  { slug: "wu_crocodile_breathing", name: "Crocodile breathing (prone diaphragm reset)", role: "breathwork", setup: "prone, forehead on hands", cue: "expand ribs 360\xB0, exhale twice as long", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 slow breaths" },
+  { slug: "wu_9020_reset", name: "Feet-on-Wall Breathing Reset", role: "breathwork", setup: "back on floor, feet on wall, hips/knees 90\xB0", cue: "ribs down, exhale fully before inhaling", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "6 breaths" },
+  // Tissue prep / ECM
+  { slug: "wu_tissue_prep_roll_and_rhythm", name: "Tissue prep \u2014 rolling + rhythmic movement", role: "tissue_prep", setup: "Use a tennis ball or your hands for gentle pressure, then clear space for easy swings and bounces.", cue: "Roll the major areas, then use easy oscillations, bounces, and swings before faster work.", stopIf: "sharp pain, numbness, tingling, or bruising pressure", gameDayLegal: true, minLifecycle: "youth", source: "owner_tissue_prep_law", baseDose: "5 minutes total" },
+  { slug: "wu_tissue_prep_rhythmic_shake", name: "Tissue prep 2 \u2014 bounces, swings and shake-outs", role: "tissue_prep", setup: "Open space; a wall or fence for balance on leg swings.", cue: "Small quick ankle bounces, then loose leg swings, arm swings and a shake-out.", stopIf: "sharp pain or a pinching joint", gameDayLegal: true, minLifecycle: "youth", source: "owner_tissue_prep_law", baseDose: "2 minutes total", equipment: [] },
+  { slug: "wu_foam_roll_tspine", name: "T-spine foam roll extensions", role: "tissue_prep", setup: "roller under mid-back", cue: "small ranges, exhale into extension", stopIf: "pinch or sharp pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 slow reps" },
+  { slug: "wu_lacrosse_ball_pec", name: "Lacrosse ball pec minor pin", role: "tissue_prep", setup: "ball against wall on pec minor", cue: "search-hold-move \u2014 arm slow figure-8", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "30-45 sec per side" },
+  { slug: "wu_lacrosse_ball_glute", name: "Lacrosse ball glute pin-and-stretch", role: "tissue_prep", cue: "find a hotspot, then flex/extend hip", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "45 sec per side" },
+  { slug: "wu_barefoot_towel_scrunch", name: "Barefoot towel scrunch (foot fascia)", role: "tissue_prep", setup: "towel under bare foot", cue: "drag toward you with toes \u2014 arch stays lifted", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "30 sec per foot" },
+  { slug: "wu_calf_softball_pin", name: "Soleus ball pin (calf ECM hydration)", role: "tissue_prep", cue: "pin, then dorsiflex/plantarflex the ankle", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "45 sec per side" },
+  // Fascial rotation
+  { slug: "wu_spinal_wave_standing", name: "Standing spinal wave", role: "fascial_rotation", cue: "sequence segment by segment \u2014 no muscling", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "6 reps each direction", beginnerDose: "4 reps each direction" },
+  { slug: "wu_arm_line_spiral", name: "Arm-line fascial spiral", role: "fascial_rotation", setup: "half-kneeling", cue: "reach across body, let ribcage rotate through", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "6 per side" },
+  { slug: "wu_thoracic_windmill", name: "Thoracic windmill (side-lying open book)", role: "fascial_rotation", setup: "side-lying, knees stacked at 90\xB0", cue: "reach long, exhale into the twist", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 per side" },
+  { slug: "wu_thread_the_needle_slow", name: "Thread-the-needle slow flow", role: "fascial_rotation", cue: "quadruped rotate \u2014 chase length not depth", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "6 per side" },
+  { slug: "wu_lateral_line_reach", name: "Lateral line reach + side bend", role: "fascial_rotation", cue: "long from foot to fingertip \u2014 feel the whole side stretch", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per side" },
+  { slug: "wu_medball_rot_toss_wall", name: "Med-ball rotational toss (fascial spring)", role: "fascial_rotation", setup: "6-8 lb ball vs wall", cue: "load the back hip, let fascia snap through", stopIf: "any rib/oblique tweak", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 x 4 per side", beginnerDose: "2 x 3 per side", eliteDose: "3 x 5 per side max intent" },
+  // CARs
+  { slug: "wu_hip_cars", name: "Controlled hip circles", role: "cars", cue: "biggest circle you own \u2014 no compensations", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 per direction per side" },
+  { slug: "wu_shoulder_cars", name: "Controlled shoulder circles", role: "cars", cue: "full end-range, no rib flare", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 per direction per side" },
+  { slug: "wu_spine_cars", name: "Slow back bends and turns", role: "cars", cue: "cat-cow then side bend then rotation \u2014 one segment at a time", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 slow reps" },
+  { slug: "wu_ankle_cars", name: "Seated ankle circles", role: "cars", cue: "maximum circle, keep shin still", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per direction per side" },
+  { slug: "wu_wrist_cars", name: "Controlled wrist circles", role: "cars", cue: "big circles, elbow locked", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per direction per side" },
+  { slug: "wu_scapular_cars", name: "Shoulder-blade circles", role: "cars", cue: "trace a square with the shoulder blade only", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "5 per direction per side" },
+  // Mobility
+  { slug: "wu_90_90_switch", name: "Seated Bent-Knee Hip Switches", role: "mobility_joint", cue: "sit tall, drive knees down slowly \u2014 no hands", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 per side" },
+  { slug: "wu_shin_box_get_up", name: "Shin-box get-up", role: "mobility_joint", cue: "rise without hands \u2014 control both hips", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "4 per side" },
+  { slug: "wu_cossack_squat", name: "Cossack squat flow", role: "mobility_joint", cue: "shift weight foot-to-foot \u2014 heel of extended leg stays down", stopIf: "knee or groin sharp pain", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "6 per side" },
+  { slug: "wu_worlds_greatest_stretch", name: "World's greatest stretch", role: "mobility_joint", cue: "elbow to instep, then reach up to open thorax", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per side" },
+  { slug: "wu_spiderman_reach", name: "Spiderman + rotational reach", role: "mobility_joint", cue: "reach the top hand for the ceiling \u2014 eyes chase it", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per side" },
+  { slug: "wu_frog_rock", name: "Frog stretch rock-back", role: "mobility_joint", setup: "quadruped, knees wide", cue: "rock slow, keep back flat", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "8 slow rocks" },
+  { slug: "wu_hip_airplane", name: "Hip airplanes (SL hinge + rotation)", role: "mobility_joint", cue: "square the hips, then open, then square \u2014 no wobble", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "5 per side", beginnerDose: "3 per side with wall support" },
+  { slug: "wu_adductor_rock", name: "Adductor rock-back", role: "mobility_joint", setup: "half-kneeling, one leg extended lateral", cue: "hips back and down, chest tall", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 per side" },
+  { slug: "wu_couch_stretch_active", name: "Active couch stretch + posterior tilt", role: "mobility_joint", setup: "rear foot elevated behind you", cue: "squeeze glute, tuck tail, breathe", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "30 sec + 5 reps per side" },
+  { slug: "wu_tspine_open_book", name: "T-spine open book", role: "mobility_joint", cue: "reach long, follow with your eyes", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "6 per side" },
+  { slug: "wu_wall_hip_flexor_slide", name: "Wall-assisted hip flexor slide", role: "mobility_joint", cue: "posterior tilt drives the stretch, not the lean", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "5 per side" },
+  // Activation
+  { slug: "wu_miniband_lat_walk", name: "Mini-band lateral walk", role: "activation", setup: "light mini-band above knees", cue: "knees track toes, hips stay level", stopIf: "knee tracking pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10 steps each way" },
+  { slug: "wu_miniband_monster_walk", name: "Mini-band monster walk", role: "activation", setup: "band above knees", cue: "athletic stance, small steps, tension the whole time", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8 forward + 8 back" },
+  { slug: "wu_glute_bridge_walkout", name: "Glute bridge walkout", role: "activation", setup: "hips up, walk feet out then back in", cue: "hips stay level, don't let one side drop", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 6 steps" },
+  { slug: "wu_deadbug_band_press", name: "Dead-bug w/ band overhead press iso", role: "activation", cue: "ribs locked down, exhale as leg extends", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 5 per side" },
+  { slug: "wu_bird_dog_slow", name: "Bird-dog slow tempo", role: "activation", cue: "no hip shift when the leg extends", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 5 per side" },
+  { slug: "wu_prone_hip_ext_iso", name: "Prone glute-only hip extension", role: "activation", cue: "lift the leg with the glute, not the low back", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 6 per side" },
+  { slug: "wu_singleleg_glute_bridge", name: "Single-leg glute bridge", role: "activation", cue: "drive through the heel, keep hips level", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 6 per side" },
+  // Stability
+  { slug: "wu_pallof_press_iso", name: "Resist-Turning Press Hold", role: "stability", cue: "arms extend, ribs stay square to cable", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 20 sec per side" },
+  { slug: "wu_copenhagen_short_lever", name: "Short-lever Copenhagen plank", role: "stability", cue: "top knee on bench, drive it down into the pad", stopIf: "groin pain", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "2 x 15 sec per side", eliteDose: "2 x 25 sec per side" },
+  { slug: "wu_sl_rdl_reach", name: "Single-leg RDL balance reach", role: "stability", cue: "hips square, reach long, no wobble", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 5 per side" },
+  { slug: "wu_split_stance_iso_hold", name: "Split-stance iso hold + march", role: "stability", cue: "vertical shin, ribs stacked over pelvis", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 sec per side" },
+  { slug: "wu_serratus_wall_slide", name: "Serratus wall slide", role: "stability", setup: "forearms on wall", cue: "reach long at the top, don't shrug", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8" },
+  // Neural priming
+  { slug: "wu_ankle_bounce_series", name: "Ankle bounce series (stiff ankles)", role: "neural_priming", cue: "ground is hot, minimum contact time", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 15 sec" },
+  { slug: "wu_line_hops_forward_back", name: "Line hops forward-back", role: "neural_priming", cue: "quick feet, both directions clean", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 20 sec" },
+  { slug: "wu_line_hops_lateral", name: "Line hops lateral", role: "neural_priming", cue: "stiff ankles, don't drift", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 20 sec" },
+  { slug: "wu_a_skip", name: "A-skip", role: "neural_priming", cue: "tall posture, front-side mechanics \u2014 knee up, toe up", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 yards" },
+  { slug: "wu_b_skip", name: "B-skip", role: "neural_priming", cue: "same as A, but paw the ground down and back", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "2 x 20 yards" },
+  { slug: "wu_wickets_low", name: "Low wicket runs (rhythm)", role: "neural_priming", setup: "Line up 8 mini hurdles (6-8 inches tall) in a straight line, exactly 5 feet apart \u2014 about 40 feet total. If you have no hurdles, use rolled towels or shoes as markers.", cue: "Jog in and start running at 75% speed as you hit the first hurdle. Stay tall (chest up, eyes forward). Let each foot land BETWEEN the hurdles \u2014 pick the knee straight up and let it cycle down under your hip. Do not stride out to reach for a hurdle. Walk back to the start between reps.", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 runs through \u2014 walk back between each" },
+  { slug: "wu_reaction_ball_wall", name: "Reaction ball vs wall", role: "neural_priming", setup: "Stand 6-10 ft from a solid wall with a reaction ball (lumpy rubber ball) or a lacrosse/pinky ball. Feet shoulder-width, athletic stance.", cue: "Throw the ball into the wall, then catch it with two hands before it bounces twice. The ball will kick unpredictably \u2014 react early, stay light on your feet, and reset your stance between throws.", stopIf: "rolled ankle, shoulder pinch, or dizziness", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 rounds of 20 sec \u2014 reset between" },
+  // Fast-twitch primer
+  { slug: "wu_pogo_double", name: "Pogo hops (double-leg)", role: "fast_twitch", axis: "bilateral", regions: ["ankle", "calf", "achilles"], setup: "Stand tall on a firm, flat surface with feet hip-width, shoes on. Arms bent at your sides \u2014 they stay quiet the whole set.", cue: "Bounce straight up and down off the balls of both feet, keeping the knees almost locked so the ankle does the work. The ground is hot \u2014 get off it fast. Each contact should sound short and crisp, not a thud. Stop the set the moment contacts start getting slow or loud.", stopIf: "shin or achilles pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 12 contacts", beginnerDose: "2 x 8 contacts" },
+  { slug: "wu_pogo_single", name: "Single-leg pogo (symmetry)", role: "fast_twitch", axis: "single_leg", regions: ["ankle", "calf", "achilles", "knee"], setup: "Balance on one foot, other knee bent so the free foot is behind you. Fingertips can touch a wall for balance the first few reps.", cue: "Bounce in place on that one foot with a stiff ankle and a nearly straight knee. Hold the same spot on the floor \u2014 no drifting. Count the reps on each side and make the second side match the first in height and rhythm. If one side is clearly lower, that is the side telling you where your ground force is leaking.", stopIf: "any strain", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 6 per side" },
+  { slug: "wu_pogo_lateral", name: "Lateral pogo (skater rhythm)", role: "fast_twitch", axis: "single_leg", regions: ["ankle", "knee", "groin"], setup: "Stand tall with about 6 feet of clear floor to each side.", cue: "Hop sideways foot to foot, covering roughly one foot of ground each hop. Land on the ball of the foot with a stiff ankle and immediately push back the other way \u2014 no pausing between hops. Chest stays up, hips stay level.", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 10 per side" },
+  { slug: "wu_snap_jump", name: "Snap jump (rapid concentric)", role: "fast_twitch", axis: "bilateral", regions: ["knee", "hip"], setup: "Feet hip-width in an athletic stance with room overhead.", cue: "Drop fast into a quarter squat and reverse it instantly into a jump \u2014 the down and the up are one motion, not two. Land soft, reset your stance, then go again. Quality over count: end the set when the reversal stops feeling snappy.", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "3 x 4" },
+  { slug: "wu_med_ball_scoop_toss", name: "Med-ball scoop toss (rear-hip explosive)", role: "fast_twitch", axis: "bilateral", equipment: ["med_ball"], fallbackSlug: "wu_sl_broad_hop_stick", regions: ["hip", "back"], setup: "6-8 lb med ball held low between the knees in an athletic stance, facing open space or a high wall.", cue: "Dip the hips, then rip them open and throw the ball straight up and forward like you are scooping it out of the ground. The arms are ropes \u2014 the hips do the work. Reset fully between reps.", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 x 4" },
+  { slug: "wu_med_ball_shot_put", name: "Med-ball rotational shot-put", role: "fast_twitch", axis: "bilateral", equipment: ["med_ball", "wall"], fallbackSlug: "wu_dry_swing_burst", regions: ["hip", "back", "shoulder"], setup: "6-8 lb med ball at the chest, standing side-on about 8 feet from a solid wall.", cue: "Load into the back hip, then turn the back hip through and shove the ball into the wall at full intent. Small volume, maximum quality \u2014 every throw is meant to be your hardest.", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 3 per side" },
+  { slug: "wu_broad_jump_prep", name: "Broad jump \u2014 60% intent primer", role: "fast_twitch", axis: "bilateral", regions: ["knee", "hip", "hamstring"], setup: "Clear 10-12 feet of flat ground in front of you.", cue: "Swing the arms back, hinge the hips, and jump forward at about 60% of your best \u2014 this is a primer, not a test. Land in an athletic stance and hold the landing for a beat before walking back.", gameDayLegal: false, minLifecycle: "beginner", source: "internal", baseDose: "4 x 1" },
+  { slug: "wu_altitude_drop", name: "Altitude drop landing (RSI primer)", role: "fast_twitch", axis: "bilateral", equipment: ["box"], fallbackSlug: "wu_sl_curb_drop_stick", regions: ["knee", "ankle", "achilles"], setup: "Stand on a 6-12 inch box or sturdy step with the toes at the edge.", cue: "Step off \u2014 do not jump off \u2014 and land on both feet with stiff ankles and quiet knees. Absorb and freeze for two seconds. There is no rebound today; the goal is to teach the leg to accept force fast.", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "3 x 3" },
+  { slug: "wu_falling_start", name: "Falling start (10 yd)", role: "fast_twitch", axis: "single_leg", regions: ["hamstring", "calf"], setup: "Stand tall at one end of 15 yards of clear, flat ground.", cue: "Stay straight as a board and let yourself tip forward from the ankles. The instant you feel like you would fall, punch one foot into the ground and sprint 10 yards. Fastest first step wins. Walk all the way back before the next rep.", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 10 yds" },
+  { slug: "wu_split_snap_jump", name: "Split-stance snap-switch jump", role: "fast_twitch", axis: "single_leg", regions: ["knee", "hip", "groin"], setup: "Start in a split stance \u2014 one foot forward, one back, both knees soft.", cue: "Jump just high enough to switch the feet in the air and land back in a split stance. Land quiet, immediately switch again. Power comes from pushing the ground away, not from lifting the knees.", stopIf: "any knee pain", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "3 x 4 per side" },
+  // ── Ladder quickness (Marinovich reflex canon / Zone28 · Pow3R Plus repeat bursts)
+  { slug: "wu_ladder_one_in_each", name: "Ladder \u2014 one foot in each box", role: "ladder_quickness", axis: "single_leg", equipment: ["ladder"], fallbackSlug: "wu_chalk_line_one_in_each", regions: ["ankle", "calf"], setup: "Lay an agility ladder flat on level ground and stand at one end with feet hip-width, weight on the balls of the feet, hands ready in front of your chest.", cue: "Run the ladder placing exactly one foot in every box \u2014 right, left, right, left \u2014 all the way to the far end. Stay tall, look up the ladder rather than down at your feet, and pump the arms in rhythm with the feet. Ground contacts should be light and fast, not stomps. Walk back to the start between runs and reset your posture before you go again.", stopIf: "ankle roll, shin pain, or feet losing their rhythm two runs in a row", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "4 runs \u2014 walk back between", beginnerDose: "3 runs \u2014 walk back between", eliteDose: "5 runs at maximum turnover" },
+  { slug: "wu_ladder_two_in_each", name: "Ladder \u2014 two feet in each box (icky rhythm)", role: "ladder_quickness", axis: "bilateral", equipment: ["ladder"], fallbackSlug: "wu_chalk_line_two_in_each", regions: ["ankle", "calf"], setup: "Ladder flat on the ground, standing at one end in an athletic stance with knees soft.", cue: "Put both feet into each box before moving to the next \u2014 right in, left in, right out, left out. Keep the hips low and square down the ladder and do not let the feet cross. Speed comes second: hit the pattern clean twice, then push the tempo on the remaining runs.", stopIf: "pattern breaks down or the feet start clipping the rungs", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "4 runs \u2014 walk back between", beginnerDose: "3 runs", eliteDose: "5 runs, last two at max turnover" },
+  { slug: "wu_ladder_lateral_shuffle", name: "Ladder \u2014 lateral in-in-out-out", role: "ladder_quickness", axis: "bilateral", equipment: ["ladder"], fallbackSlug: "wu_chalk_line_lateral", regions: ["ankle", "groin", "knee"], setup: "Stand side-on at one end of the ladder with the ladder running to your right, feet shoulder-width, hips low.", cue: "Step the lead foot in, the trail foot in, then the lead foot out beyond the ladder and the trail foot out \u2014 that is one box. Travel sideways down the whole ladder without ever turning the shoulders. Keep the chest up and the hips level; if you start bobbing up and down, slow down and reclaim the level hips. Run it down and back so both sides lead equally.", stopIf: "groin tightness or knees collapsing inward", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 trips down and back", beginnerDose: "2 trips down and back", eliteDose: "4 trips down and back" },
+  { slug: "wu_ladder_single_leg_hop_through", name: "Ladder \u2014 single-leg hop through", role: "ladder_quickness", axis: "single_leg", equipment: ["ladder"], fallbackSlug: "wu_chalk_line_sl_hop", regions: ["ankle", "calf", "achilles", "knee"], setup: "Stand on one foot at the end of the ladder, other knee bent behind you, arms ready to help with rhythm.", cue: "Hop forward on that one foot, landing once in each box, all the way to the end. Land on the ball of the foot with a stiff ankle and get off the ground instantly \u2014 you are looking for a machine-gun rhythm, not big hops. Complete the run on one leg, walk back, then run it on the other leg. Both sides get the same number of runs, always.", stopIf: "any achilles, shin, or knee pain, or the landing side collapsing inward", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 runs per leg \u2014 walk back between", beginnerDose: "2 runs per leg", eliteDose: "4 runs per leg at max turnover" },
+  { slug: "wu_ladder_in_out_hops", name: "Ladder \u2014 single-leg in-out zig hops", role: "ladder_quickness", axis: "single_leg", equipment: ["ladder"], fallbackSlug: "wu_chalk_line_sl_zig", regions: ["ankle", "knee", "groin"], setup: "Stand on one foot beside the first box of the ladder.", cue: "Hop diagonally into the box, then diagonally out to the other side of the ladder, then back in \u2014 zig-zagging down the ladder on that single leg. Land on the ball of the foot each time and keep the knee tracking over the toe. This is the drill that teaches the ankle and hip to redirect force sideways at speed. Same number of runs on each leg.", stopIf: "knee caving in, ankle pain, or any landing you cannot control", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "2 runs per leg", beginnerDose: "1 run per leg", eliteDose: "3 runs per leg" },
+  { slug: "wu_chalk_line_one_in_each", name: "Line pattern \u2014 one foot in each space (no ladder)", role: "ladder_quickness", axis: "single_leg", regions: ["ankle", "calf"], setup: "Mark 8-10 short lines about 18 inches apart on the ground using chalk, tape, sticks, socks, or shoes \u2014 anything that gives you a visual box. Stand at one end in an athletic stance.", cue: "Run the pattern putting exactly one foot in each space \u2014 right, left, right, left. Look ahead, stay tall on the balls of the feet, and pump the arms in rhythm. The markers are only a guide: what matters is fast, light, accurate feet. Walk back between runs.", stopIf: "ankle roll, shin pain, or rhythm falling apart", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "4 runs \u2014 walk back between", beginnerDose: "3 runs", eliteDose: "5 runs at max turnover" },
+  { slug: "wu_chalk_line_two_in_each", name: "Line pattern \u2014 two feet in each space (no ladder)", role: "ladder_quickness", axis: "bilateral", regions: ["ankle", "calf"], setup: "Mark 8-10 spaces about 18 inches apart with chalk, tape, or any flat markers. Athletic stance at one end.", cue: "Both feet touch down in each space before you move on \u2014 right in, left in, right out, left out. Hips stay low and square, feet never cross. Clean pattern first, then speed on the later runs.", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "4 runs \u2014 walk back between", beginnerDose: "3 runs", eliteDose: "5 runs" },
+  { slug: "wu_chalk_line_lateral", name: "Line pattern \u2014 lateral in-in-out-out (no ladder)", role: "ladder_quickness", axis: "bilateral", regions: ["ankle", "groin", "knee"], setup: "Mark a straight line 10-15 feet long on the ground, or use a field chalk line, a seam in the floor, or a rope.", cue: "Stand side-on with the line to your right. Step both feet across the line, then both feet back \u2014 travelling down the line sideways without turning the shoulders. Chest up, hips level, quick and quiet feet. Travel down and back so both sides lead.", stopIf: "groin tightness or knees caving in", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 trips down and back", beginnerDose: "2 trips", eliteDose: "4 trips" },
+  { slug: "wu_chalk_line_sl_hop", name: "Line pattern \u2014 single-leg hop through (no ladder)", role: "ladder_quickness", axis: "single_leg", regions: ["ankle", "calf", "achilles", "knee"], setup: "Mark 6-8 spaces about 18 inches apart, or simply use a straight line on the ground. Stand on one foot at one end.", cue: "Hop forward on that one foot, touching down once per space, all the way through. Stiff ankle, ball of the foot, off the ground immediately \u2014 quick machine-gun rhythm, not big hops. Walk back and repeat on the other leg for the same number of runs.", stopIf: "achilles, shin, or knee pain, or the landing leg collapsing", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 runs per leg", beginnerDose: "2 runs per leg", eliteDose: "4 runs per leg" },
+  { slug: "wu_chalk_line_sl_zig", name: "Line pattern \u2014 single-leg zig-zag hops (no ladder)", role: "ladder_quickness", axis: "single_leg", regions: ["ankle", "knee", "groin"], setup: "Use any straight line on the ground \u2014 a chalk line, floor seam, rope, or a row of markers 10-12 feet long. Stand on one foot beside one end.", cue: "Hop diagonally across the line, then diagonally back, zig-zagging down the line on that single leg. Land on the ball of the foot, knee tracking over the toe, and redirect instantly. Same number of runs on each leg.", stopIf: "knee caving in, ankle pain, or any landing you cannot control", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "2 runs per leg", beginnerDose: "1 run per leg", eliteDose: "3 runs per leg" },
+  // ── Single-leg twitch (the majority of the twitch layer)
+  { slug: "wu_sl_line_hop_fb", name: "Single-leg line hops \u2014 forward and back", role: "single_leg_twitch", axis: "single_leg", regions: ["ankle", "calf", "achilles"], setup: "Find any line on the ground \u2014 a floor seam, chalk line, or a piece of tape. Stand on one foot just behind it.", cue: "Hop forward over the line and immediately back, over and over, for the full time. Stay on the ball of the foot with a stiff ankle and the knee only slightly bent. The line should be crossed by inches, not feet \u2014 this is about speed off the ground, not distance. Equal time on both legs.", stopIf: "shin or achilles pain, or the hops getting slow and heavy", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 12 sec per leg", beginnerDose: "2 x 8 sec per leg", eliteDose: "3 x 15 sec per leg" },
+  { slug: "wu_sl_line_hop_lateral", name: "Single-leg line hops \u2014 lateral", role: "single_leg_twitch", axis: "single_leg", regions: ["ankle", "knee", "groin"], setup: "Stand on one foot beside a line on the ground, hips square, arms ready.", cue: "Hop sideways over the line and straight back, again and again. Keep the knee tracking over the toe and refuse to let it cave inward \u2014 the moment it does, the set is over. Land quiet on the ball of the foot. Equal time on both legs.", stopIf: "knee caving in, groin tightness, or ankle pain", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 x 12 sec per leg", beginnerDose: "2 x 8 sec per leg", eliteDose: "3 x 15 sec per leg" },
+  { slug: "wu_sl_ankle_stiffness_bounce", name: "Single-leg ankle stiffness bounce", role: "single_leg_twitch", axis: "single_leg", regions: ["ankle", "calf", "achilles"], setup: "Stand on one foot on a firm surface. Fingertips may rest on a wall for balance.", cue: "Bounce in place on that foot with a near-straight knee so the ankle alone stores and returns the energy. Tiny hops, maximum speed \u2014 you are trying to make the shortest possible time on the ground. Count the contacts and match the second leg exactly.", stopIf: "achilles or shin pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 10 contacts per leg", beginnerDose: "2 x 8 contacts per leg", eliteDose: "3 x 15 contacts per leg" },
+  { slug: "wu_sl_snap_hop_stick", name: "Single-leg snap hop and stick", role: "single_leg_twitch", axis: "single_leg", regions: ["knee", "ankle", "hip"], setup: "Stand on one foot with 3-4 feet of clear space in front of you.", cue: "Dip fast into a quarter-bend and immediately hop forward a short distance on that same leg, then stick the landing completely still for two full seconds. If you have to hop or stumble to catch the landing, the hop was too big \u2014 shorten it. Same reps both legs.", stopIf: "knee pain or any landing you cannot control", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 4 per leg", beginnerDose: "2 x 3 per leg", eliteDose: "3 x 5 per leg" },
+  { slug: "wu_sl_broad_hop_stick", name: "Single-leg broad hop and stick", role: "single_leg_twitch", axis: "single_leg", regions: ["knee", "hip", "hamstring"], setup: "Stand on one foot with 8-10 feet of clear, flat ground ahead.", cue: "Swing the arms, hinge slightly, and hop forward on one leg at about 70% of your maximum distance. Land on the same leg and freeze \u2014 chest up, knee over toe, no wobble. Walk back between reps. Equal reps both legs, and if one side cannot stick the landing, cut the distance on both.", stopIf: "knee or hamstring pain, or repeated failed landings", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 3 per leg", beginnerDose: "2 x 2 per leg", eliteDose: "3 x 4 per leg" },
+  { slug: "wu_sl_curb_drop_stick", name: "Single-leg curb drop and stick", role: "single_leg_twitch", axis: "single_leg", regions: ["ankle", "knee", "achilles"], setup: "Stand on a curb, low step, or 6-8 inch surface on one foot, toes near the edge.", cue: "Step off \u2014 never jump off \u2014 and land on that same single leg with a stiff ankle and a quiet knee. Freeze the landing for two seconds before stepping back up. This teaches the leg to accept force instantly, which is exactly what a first step and a hard cut demand. Equal reps both legs.", stopIf: "any knee, achilles, or ankle pain", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 3 per leg", beginnerDose: "2 x 2 per leg", eliteDose: "3 x 4 per leg" },
+  { slug: "wu_sl_skater_bound_stick", name: "Skater bound and stick", role: "single_leg_twitch", axis: "single_leg", regions: ["knee", "groin", "ankle"], setup: "Stand on one foot with 6-8 feet of clear space to each side.", cue: "Push off the outside of the standing foot and bound sideways onto the other foot, then hold that landing completely still for two seconds. Chest up, hips level, knee over toe. Bound back the other way. This is the exact pattern of a hard lateral break in the field.", stopIf: "knee caving in, groin pain, or unstable landings", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 4 per side", beginnerDose: "2 x 3 per side", eliteDose: "3 x 5 per side" },
+  { slug: "wu_sl_split_switch_burst", name: "Split-stance switch burst", role: "single_leg_twitch", axis: "single_leg", regions: ["hip", "knee", "groin"], setup: "Start in a split stance \u2014 one foot forward, one back, both knees soft, chest tall.", cue: "Jump just high enough to switch the feet in the air, land soft in a split stance, and switch again immediately. Short, quick switches \u2014 the power comes from pushing the ground away, not from lifting the knees. Keep the torso quiet the whole set.", stopIf: "knee or groin pain", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "3 x 6 switches", beginnerDose: "2 x 4 switches", eliteDose: "3 x 8 switches" },
+  { slug: "wu_sl_march_pop", name: "Single-leg march pop (ground-force march)", role: "single_leg_twitch", axis: "single_leg", regions: ["hip", "calf", "ankle"], setup: "Stand tall with 15 yards of clear ground ahead. Arms bent at 90 degrees.", cue: "March forward slowly but punch each foot into the ground hard enough that you pop slightly off the floor each step. Knee up, toe up, tall through the spine. This is a low-cost way to teach the leg to hit the ground hard without sprinting.", stopIf: "calf or hip flexor tightness", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 15 yds", beginnerDose: "2 x 10 yds", eliteDose: "3 x 20 yds" },
+  // ── Ground force (short maximal contacts — the sport is a burst sport)
+  { slug: "wu_gf_wall_drive_single", name: "Wall drive \u2014 single-leg punch", role: "ground_force", axis: "single_leg", equipment: ["wall"], fallbackSlug: "wu_gf_seated_start", regions: ["hip", "calf"], setup: "Lean into a wall with both hands at shoulder height, body in a straight line from head to heel at about a 45-degree angle. One knee is driven up to hip height.", cue: "Punch the down foot into the floor and switch legs, holding the new knee up for a full second. The body line never breaks \u2014 no sagging hips, no bending at the waist. Each punch should be violent and short. Alternate legs for the prescribed count.", stopIf: "hip flexor or calf strain", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 x 6 per leg", beginnerDose: "2 x 4 per leg", eliteDose: "3 x 8 per leg" },
+  { slug: "wu_gf_seated_start", name: "Seated-to-sprint start (8 yd)", role: "ground_force", axis: "single_leg", regions: ["hamstring", "calf", "hip"], setup: "Sit on the ground facing 15 yards of clear, flat running space, legs out in front, hands beside your hips.", cue: "From dead still, get up and sprint 8 yards as fast as you can. Because you start with zero momentum, every bit of speed has to come from how hard you hit the ground. Walk all the way back and rest until your breathing is normal before the next rep \u2014 this is a quality drill, not conditioning.", stopIf: "any hamstring or calf grab \u2014 shut the whole set down", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 8 yds \u2014 full rest between", beginnerDose: "2 x 8 yds", eliteDose: "4 x 8 yds" },
+  { slug: "wu_gf_band_resisted_step", name: "Band-resisted first step", role: "ground_force", axis: "single_leg", equipment: ["bands", "partner"], fallbackSlug: "wu_gf_seated_start", regions: ["hip", "hamstring", "calf"], setup: "Loop a long resistance band around your waist with a partner holding the other end behind you, or anchor it to a fixed post. Set up in an athletic stance with the band already under light tension.", cue: "Drive out against the band for 3-4 hard steps, pushing the ground back at a forward body angle \u2014 not standing up tall. Each step is a separate maximal effort. Walk back to the start and let the band go slack before the next rep.", stopIf: "hamstring or hip strain, or the body angle collapsing upright", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "4 x 4 steps", beginnerDose: "3 x 3 steps", eliteDose: "5 x 4 steps" },
+  { slug: "wu_gf_repeat_burst", name: "Repeat 5-second burst (Zone28 rhythm)", role: "ground_force", axis: "single_leg", regions: ["hamstring", "calf", "hip"], setup: "Clear 20 yards of flat ground. This drill mirrors the real demand of baseball and softball: an all-out burst, then a full reset.", cue: "Sprint hard for 5 seconds \u2014 roughly 20 yards \u2014 then walk back slowly and rest a full 45 seconds before the next one. Every burst should be as fast as the first. The second a burst is noticeably slower, the set is finished, no matter how many reps are left.", stopIf: "any grab in the hamstring or calf, or a burst that is clearly slower than the first", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "4 bursts \u2014 45 sec rest between", beginnerDose: "3 bursts", eliteDose: "5 bursts" },
+  { slug: "wu_gf_hip_lock_hold", name: "Sprint hip-lock hold", role: "ground_force", axis: "single_leg", regions: ["hip", "calf"], setup: "Stand tall next to a wall or post you can touch for balance.", cue: "Drive one knee up to hip height with the toe pulled up, and hold that exact sprint position for the prescribed seconds while pushing the standing foot hard into the ground. Hips stay square and level, spine tall. Switch legs. This teaches the position your body has to hold at top speed.", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 10 sec per leg", beginnerDose: "2 x 8 sec per leg", eliteDose: "3 x 15 sec per leg" },
+  { slug: "wu_dry_swing_burst", name: "Dry-swing burst ladder", role: "ground_force", axis: "bilateral", equipment: ["bat"], fallbackSlug: "wu_gf_hip_lock_hold", regions: ["hip", "back"], setup: "Take your bat into open space with room to swing safely in every direction.", cue: "Take three swings in a row: the first at 50%, the second at 75%, the third at 100% intent. The rear hip fires first on every one. Rest 20 seconds, then repeat the ladder. This wakes the rotational burst without spending your best swings.", stopIf: "any rib, oblique, or low-back tweak", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 ladders of 3 swings per side", beginnerDose: "2 ladders of 3 swings per side", eliteDose: "3 ladders of 3 swings per side at full intent" },
+  // Weightless Object Sport Training (WOST) — coordination, hand-eye, rhythm, no load
+  { slug: "wu_tennis_ball_reaction_toss", name: "Tennis ball reaction toss", role: "weightless_coordination", setup: "facing wall or partner 6-10 ft away", cue: "catch it on the first bounce \u2014 no extra steps", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
+  { slug: "wu_tennis_ball_self_rally", name: "Tennis ball self-rally", role: "weightless_coordination", setup: "small space, one hand only", cue: "bounce, catch, repeat \u2014 smooth rhythm", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
+  { slug: "wu_tennis_ball_one_hand_catch", name: "Tennis ball one-hand catch", role: "weightless_coordination", setup: "toss and catch with one hand", cue: "no bobbling \u2014 stick the catch", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 12 per side", beginnerDose: "2 x 8 per side", eliteDose: "1 x 12 per side" },
+  { slug: "wu_tennis_ball_cross_body_catch", name: "Tennis ball cross-body catch", role: "weightless_coordination", cue: "reach across the midline \u2014 let the ribcage rotate", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10 per side", beginnerDose: "2 x 6 per side", eliteDose: "1 x 10 per side" },
+  { slug: "wu_tennis_ball_clap_catch", name: "Tennis ball clap-catch", role: "weightless_coordination", cue: "toss, clap, catch \u2014 one bounce", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10", beginnerDose: "2 x 6", eliteDose: "1 x 10" },
+  { slug: "wu_scarf_juggle", name: "Scarf juggling (2-3 scarves)", role: "weightless_coordination", cue: "toss slowly, track the arc with eyes", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 30 sec", beginnerDose: "2 x 30 sec", eliteDose: "1 x 30 sec" },
+  { slug: "wu_scarf_cross_body_catch", name: "Scarf cross-body catch", role: "weightless_coordination", setup: "Stand tall with one light silk/juggling scarf (or a light cloth napkin) held in your RIGHT hand at hip level. Feet shoulder-width, hips facing forward \u2014 they stay facing forward the entire drill.", cue: "Toss the scarf up and across your body toward your LEFT shoulder so it floats above head height, then let it fall. Reach across your midline and catch it in your LEFT hand before it drops below your waist. Immediately toss it back across to the RIGHT and catch with the RIGHT hand. That is 1 rep per side. Keep hips square \u2014 only the arms and ribcage rotate. Slow, smooth, no missed catches.", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 sets x 8 catches per side", beginnerDose: "2 sets x 5 catches per side", eliteDose: "1 set x 8 catches per side" },
+  { slug: "wu_scarf_toss_and_move", name: "Scarf toss and move under", role: "weightless_coordination", cue: "toss high, shuffle under it, catch at the peak", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 6", beginnerDose: "2 x 4", eliteDose: "1 x 6" },
+  { slug: "wu_scarf_one_hand_snatch", name: "Scarf one-hand snatch", role: "weightless_coordination", cue: "snatch it out of the air with one hand \u2014 quick exchange", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8 per side", beginnerDose: "2 x 5 per side", eliteDose: "1 x 8 per side" },
+  { slug: "wu_balloon_keep_up", name: "Balloon keep-up", role: "weightless_coordination", setup: "hand or forearm only", cue: "keep it alive with minimal force \u2014 read the float", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 45 sec", beginnerDose: "2 x 30 sec", eliteDose: "1 x 45 sec" },
+  { slug: "wu_balloon_hand_switch", name: "Balloon hand-switch keep-up", role: "weightless_coordination", cue: "alternate hands, no double taps", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
+  { slug: "wu_balloon_partner_volley", name: "Balloon partner volley", role: "weightless_coordination", setup: "with a partner, no spiking", cue: "soft, controlled, read the arc", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 45 sec", beginnerDose: "2 x 30 sec", eliteDose: "1 x 45 sec" },
+  { slug: "wu_beanbag_toss_and_catch", name: "Beanbag toss and catch", role: "weightless_coordination", cue: "catch it soft \u2014 no sound on landing", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 12", beginnerDose: "2 x 8", eliteDose: "1 x 12" },
+  { slug: "wu_beanbag_balance_walk", name: "Beanbag balance walk", role: "weightless_coordination", setup: "beanbag on top of the head", cue: "tall posture, walk heel-to-toe", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 yds", beginnerDose: "2 x 10 yds", eliteDose: "1 x 20 yds" },
+  { slug: "wu_beanbag_foot_flip", name: "Beanbag foot flip", role: "weightless_coordination", cue: "flip it up with the foot, catch it with the same-side hand", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 6 per side", beginnerDose: "2 x 4 per side", eliteDose: "1 x 6 per side" },
+  { slug: "wu_reaction_drop_catch", name: "Reaction drop-catch", role: "weightless_coordination", setup: "partner drops the ball without warning", cue: "explode the hand \u2014 catch before the second bounce", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10", beginnerDose: "2 x 6", eliteDose: "1 x 10" },
+  { slug: "wu_coin_finger_roll", name: "Coin finger roll", role: "weightless_coordination", setup: "coin on back of hand, flip and catch", cue: "quiet fingers, smooth arc", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 10 per side", beginnerDose: "2 x 6 per side", eliteDose: "1 x 10 per side" },
+  { slug: "wu_rhythm_ball_tap", name: "Rhythm ball tap", role: "weightless_coordination", setup: "bounce a tennis ball to a metronome or beat", cue: "same spot every bounce \u2014 no chasing", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
+  { slug: "wu_mini_frisbee_toss", name: "Mini frisbee toss and catch", role: "weightless_coordination", cue: "soft throw, read the spin, clean catch", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10", beginnerDose: "2 x 6", eliteDose: "1 x 10" },
+  { slug: "wu_mini_frisbee_roll_catch", name: "Mini frisbee roll catch", role: "weightless_coordination", cue: "roll it, let it spin, catch it on the return", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8", beginnerDose: "2 x 5", eliteDose: "1 x 8" },
+  { slug: "wu_mirror_me_ball_toss", name: "Mirror-me partner ball toss", role: "weightless_coordination", setup: "face partner, mirror their movement as they toss", cue: "read the release, catch, mirror the next throw", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
+  { slug: "wu_light_bat_shadow_tap", name: "Light bat shadow tap", role: "weightless_coordination", setup: "light bat or dowel", cue: "tap the end of the bat to the wall with the eyes tracking", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10 per side", beginnerDose: "2 x 6 per side", eliteDose: "1 x 10 per side" },
+  { slug: "wu_shuttle_tap_up", name: "Badminton shuttle tap-up", role: "weightless_coordination", cue: "tap the shuttle straight up \u2014 no sideways drift", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 sec", beginnerDose: "2 x 15 sec", eliteDose: "1 x 20 sec" },
+  { slug: "wu_partner_alternating_catch", name: "Partner alternating rapid catch", role: "weightless_coordination", setup: "two balls, two partners", cue: "catch one, toss the other \u2014 no gaps", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
+  // Movement bridge
+  { slug: "wu_dry_swing_progressive", name: "Progressive dry swings (intent ladder)", role: "movement_bridge", cue: "swing 1 at 50%, swing 2 at 75%, swing 3 at 100% \u2014 feel the elastic snap", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 3 per side" },
+  { slug: "wu_mirror_throw_prep", name: "Dry throw arm-swing prep", role: "movement_bridge", cue: "half-speed rehearsal \u2014 pattern first, intent last", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 6" },
+  { slug: "wu_shuffle_change_direction", name: "Shuffle \u2192 change of direction", role: "movement_bridge", cue: "athletic stance, react like a defender", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 sec each way" },
+  { slug: "wu_crossover_run", name: "Crossover run (open the hip)", role: "movement_bridge", cue: "cross over long, don't hop", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 15 yds each way" },
+  // Arm care
+  { slug: "wu_jband_full", name: "Arm-care band chart", role: "arm_care", setup: "arm-care band anchored at chest height", cue: "control the eccentric \u2014 every rep", stopIf: "shoulder sharp pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "full chart @ 1 x 10 each" },
+  { slug: "wu_crossover_symmetry_full", name: "Band activation chart", role: "arm_care", cue: "smooth reps, exhale on pull", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "full chart @ 1 x 10 each" },
+  { slug: "wu_prone_tyw", name: "Prone T / Y / W", role: "arm_care", cue: "thumbs up, squeeze the shoulder blades", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8 each letter" },
+  { slug: "wu_er_at_90", name: "External rotation at 90\xB0", role: "arm_care", setup: "band anchored elbow height", cue: "elbow high, slow eccentric", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 12 per side" },
+  { slug: "wu_scap_pushup", name: "Scapular push-up", role: "arm_care", cue: "protract/retract only \u2014 no elbow bend", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10" },
+  { slug: "wu_face_pull_band", name: "Band face pull", role: "arm_care", setup: "band at eye level", cue: "elbows high, pull the band apart, external rotate", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 12" },
+  { slug: "wu_forearm_pump", name: "Forearm flexor/extensor pump", role: "arm_care", cue: "band or light weight, high reps to flush", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "1 x 20 each direction" }
+];
+function doseFor(drill, lifecycle) {
+  if (lifecycle === "youth" || lifecycle === "beginner") return drill.beginnerDose ?? drill.baseDose;
+  if (lifecycle === "elite") return drill.eliteDose ?? drill.baseDose;
+  return drill.baseDose;
+}
+var EQUIPMENT_OVERRIDES = {
+  wu_foam_roll_tspine: { equipment: ["foam_roller"], fallbackSlug: "wu_tspine_open_book" },
+  wu_lacrosse_ball_pec: { equipment: ["massage_ball", "wall"], fallbackSlug: "wu_serratus_wall_slide" },
+  wu_lacrosse_ball_glute: { equipment: ["massage_ball"], fallbackSlug: "wu_frog_rock" },
+  wu_calf_softball_pin: { equipment: ["massage_ball"], fallbackSlug: "wu_barefoot_towel_scrunch" },
+  wu_medball_rot_toss_wall: { equipment: ["med_ball", "wall"], fallbackSlug: "wu_thoracic_windmill" },
+  wu_miniband_lat_walk: { equipment: ["mini_band"], fallbackSlug: "wu_glute_bridge_walkout" },
+  wu_miniband_monster_walk: { equipment: ["mini_band"], fallbackSlug: "wu_singleleg_glute_bridge" },
+  wu_deadbug_band_press: { equipment: ["bands"], fallbackSlug: "wu_bird_dog_slow" },
+  wu_pallof_press_iso: { equipment: ["bands"], fallbackSlug: "wu_split_stance_iso_hold" },
+  wu_copenhagen_short_lever: { equipment: ["bench"], fallbackSlug: "wu_sl_rdl_reach" },
+  wu_wickets_low: { equipment: ["hurdles"], fallbackSlug: "wu_a_skip" },
+  wu_reaction_ball_wall: { equipment: ["tennis_ball", "wall"], fallbackSlug: "wu_line_hops_lateral" },
+  wu_couch_stretch_active: { equipment: ["bench"], fallbackSlug: "wu_wall_hip_flexor_slide" },
+  wu_tennis_ball_reaction_toss: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_tennis_ball_self_rally: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_tennis_ball_one_hand_catch: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_tennis_ball_cross_body_catch: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_tennis_ball_clap_catch: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_rhythm_ball_tap: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_reaction_drop_catch: { equipment: ["tennis_ball", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_scarf_juggle: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_scarf_cross_body_catch: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_scarf_toss_and_move: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_scarf_one_hand_snatch: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_balloon_keep_up: { equipment: ["balloon"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_balloon_hand_switch: { equipment: ["balloon"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_balloon_partner_volley: { equipment: ["balloon", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_beanbag_toss_and_catch: { equipment: ["beanbag"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_beanbag_balance_walk: { equipment: ["beanbag"], fallbackSlug: "wu_crossover_run" },
+  wu_beanbag_foot_flip: { equipment: ["beanbag"], fallbackSlug: "wu_crossover_run" },
+  wu_mini_frisbee_toss: { equipment: ["frisbee"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_mini_frisbee_roll_catch: { equipment: ["frisbee"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_shuttle_tap_up: { equipment: ["shuttle"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_coin_finger_roll: { equipment: ["coin"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_mirror_me_ball_toss: { equipment: ["tennis_ball", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_partner_alternating_catch: { equipment: ["tennis_ball", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_light_bat_shadow_tap: { equipment: ["bat"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_dry_swing_progressive: { equipment: ["bat"], fallbackSlug: "wu_shuffle_change_direction" },
+  wu_jband_full: { equipment: ["jband"], fallbackSlug: "wu_prone_tyw" },
+  wu_crossover_symmetry_full: { equipment: ["bands"], fallbackSlug: "wu_prone_tyw" },
+  wu_er_at_90: { equipment: ["bands"], fallbackSlug: "wu_prone_tyw" },
+  wu_face_pull_band: { equipment: ["bands"], fallbackSlug: "wu_scap_pushup" },
+  wu_forearm_pump: { equipment: ["bands"], fallbackSlug: "wu_scap_pushup" },
+  wu_barefoot_towel_scrunch: { equipment: ["towel"] },
+  wu_med_ball_scoop_toss: { equipment: ["med_ball"], fallbackSlug: "wu_sl_broad_hop_stick" },
+  wu_med_ball_shot_put: { equipment: ["med_ball", "wall"], fallbackSlug: "wu_dry_swing_burst" },
+  wu_altitude_drop: { equipment: ["box"], fallbackSlug: "wu_sl_curb_drop_stick" }
+};
+var BASELINE_EQUIPMENT = ["wall", "open_space", "floor", "towel"];
+var VENUE_EXPANSIONS = {
+  full_gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench", "ladder", "hurdles", "jband", "bat"],
+  commercial_gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench", "ladder", "jband"],
+  gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench"],
+  home_gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "bench"],
+  team_facility: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench", "ladder", "hurdles", "jband", "bat", "tennis_ball", "partner"],
+  field: ["bat", "tennis_ball", "partner", "ladder"],
+  field_only: ["bat", "tennis_ball", "partner"],
+  bands: ["bands", "mini_band", "jband"],
+  hotel: [],
+  travel: [],
+  bodyweight: []
+};
+var EQUIPMENT_SYNONYMS = {
+  agility_ladder: "ladder",
+  speed_ladder: "ladder",
+  mini_hurdles: "hurdles",
+  hurdle: "hurdles",
+  resistance_bands: "bands",
+  band: "bands",
+  jbands: "jband",
+  j_band: "jband",
+  j_bands: "jband",
+  crossover_symmetry: "bands",
+  medicine_ball: "med_ball",
+  medball: "med_ball",
+  plyo_box: "box",
+  jump_box: "box",
+  step: "box",
+  lacrosse_ball: "massage_ball",
+  massage_gun: "massage_ball",
+  roller: "foam_roller",
+  bats: "bat",
+  tennis_balls: "tennis_ball",
+  training_partner: "partner",
+  catch_partner: "partner"
+};
+function normalizeEquipmentToken(raw) {
+  const t = raw.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  return EQUIPMENT_SYNONYMS[t] ?? t;
+}
+function expandEquipment(declared, venue) {
+  const out = new Set(BASELINE_EQUIPMENT);
+  for (const raw of declared ?? []) {
+    const token = normalizeEquipmentToken(String(raw));
+    out.add(token);
+    for (const extra of VENUE_EXPANSIONS[token] ?? []) out.add(extra);
+  }
+  if (venue) {
+    const v = normalizeEquipmentToken(venue);
+    out.add(v);
+    for (const extra of VENUE_EXPANSIONS[v] ?? []) out.add(extra);
+  }
+  return out;
+}
+function equipmentFor(drill) {
+  return drill.equipment ?? EQUIPMENT_OVERRIDES[drill.slug]?.equipment ?? [];
+}
+function fallbackFor(drill) {
+  return drill.fallbackSlug ?? EQUIPMENT_OVERRIDES[drill.slug]?.fallbackSlug ?? null;
+}
+function bySlug(slug) {
+  return WARMUP_LIBRARY.find((d3) => d3.slug === slug) ?? null;
+}
+function hasEquipment(drill, available) {
+  return equipmentFor(drill).every((need) => available.has(need));
+}
+function equipmentNoteFor(drill) {
+  const needs = equipmentFor(drill).filter((e) => !BASELINE_EQUIPMENT.includes(e));
+  if (needs.length === 0) return void 0;
+  const labels = {
+    ladder: "agility ladder",
+    hurdles: "mini hurdles",
+    box: "box or step",
+    bands: "resistance band",
+    mini_band: "mini band",
+    med_ball: "medicine ball",
+    massage_ball: "lacrosse or massage ball",
+    foam_roller: "foam roller",
+    jband: "arm-care band",
+    tennis_ball: "tennis ball",
+    beanbag: "beanbag",
+    scarf: "juggling scarf",
+    balloon: "balloon",
+    frisbee: "mini frisbee",
+    shuttle: "badminton shuttle",
+    coin: "coin",
+    bat: "bat",
+    bench: "bench or chair",
+    partner: "a partner"
+  };
+  return needs.map((n) => labels[n] ?? n.replace(/_/g, " ")).join(", ");
+}
+var TEMPLATES = {
+  game_day: [
+    "breathwork",
+    "tissue_prep",
+    "cars",
+    "fascial_rotation",
+    "activation",
+    "weightless_coordination",
+    "ladder_quickness",
+    "neural_priming",
+    "arm_care",
+    "movement_bridge"
+  ],
+  in_season_practice: [
+    "tissue_prep",
+    "cars",
+    "fascial_rotation",
+    "mobility_joint",
+    "activation",
+    "weightless_coordination",
+    "ladder_quickness",
+    "neural_priming",
+    "single_leg_twitch",
+    "movement_bridge",
+    "arm_care"
+  ],
+  in_season_default: [
+    "breathwork",
+    "cars",
+    "fascial_rotation",
+    "activation",
+    "weightless_coordination",
+    "ladder_quickness",
+    "neural_priming",
+    "single_leg_twitch",
+    "arm_care"
+  ],
+  speed_day: [
+    "tissue_prep",
+    "cars",
+    "mobility_joint",
+    "activation",
+    "weightless_coordination",
+    "neural_priming",
+    "ladder_quickness",
+    "single_leg_twitch",
+    "single_leg_twitch",
+    "ground_force",
+    "fast_twitch",
+    "movement_bridge"
+  ],
+  lift_day: [
+    "breathwork",
+    "tissue_prep",
+    "cars",
+    "mobility_joint",
+    "activation",
+    "weightless_coordination",
+    "stability",
+    "neural_priming",
+    "ladder_quickness",
+    "single_leg_twitch",
+    "fast_twitch"
+  ],
+  // Throwing days: arm care is OWNED BY THE THROWING BLOCK (EASS band prep + cooldown).
+  // The warmup does NOT include arm_care on throwing days — that keeps arm care to exactly
+  // one exposure per day. See ArmCareBudgetContext.
+  // Legs stay fresh for the arm: ladder quickness only, no ground-force bursts.
+  throwing_day: [
+    "tissue_prep",
+    "cars",
+    "fascial_rotation",
+    "mobility_joint",
+    "activation",
+    "weightless_coordination",
+    "ladder_quickness",
+    "movement_bridge"
+  ],
+  hitting_day: [
+    "tissue_prep",
+    "cars",
+    "fascial_rotation",
+    "mobility_joint",
+    "activation",
+    "weightless_coordination",
+    "ladder_quickness",
+    "single_leg_twitch",
+    "fast_twitch",
+    "movement_bridge"
+  ],
+  offseason_extended: [
+    "breathwork",
+    "tissue_prep",
+    "tissue_prep",
+    "cars",
+    "cars",
+    "fascial_rotation",
+    "mobility_joint",
+    "mobility_joint",
+    "activation",
+    "stability",
+    "weightless_coordination",
+    "weightless_coordination",
+    "neural_priming",
+    "ladder_quickness",
+    "ladder_quickness",
+    "single_leg_twitch",
+    "single_leg_twitch",
+    "ground_force",
+    "fast_twitch",
+    "movement_bridge",
+    "arm_care"
+  ],
+  recovery_day: [
+    "breathwork",
+    "tissue_prep",
+    "cars",
+    "mobility_joint",
+    "activation"
+  ],
+  travel_day: [
+    "breathwork",
+    "cars",
+    "mobility_joint",
+    "activation",
+    "weightless_coordination"
+  ],
+  default: [
+    "tissue_prep",
+    "cars",
+    "fascial_rotation",
+    "mobility_joint",
+    "activation",
+    "weightless_coordination",
+    "neural_priming",
+    "ladder_quickness",
+    "single_leg_twitch",
+    "fast_twitch"
+  ]
+};
+var TWITCH_ROLES = [
+  "ladder_quickness",
+  "single_leg_twitch",
+  "ground_force",
+  "fast_twitch"
+];
+var SINGLE_LEG_MIN_SHARE = 0.6;
+function templateFor(context, lifecycle) {
+  const base2 = TEMPLATES[context] ?? TEMPLATES.default;
+  const rank = { youth: 0, beginner: 1, intermediate: 2, advanced: 3, elite: 4 };
+  if (rank[lifecycle] > 1) return base2;
+  const out = [...base2];
+  const idx = out.indexOf("weightless_coordination");
+  if (idx !== -1) out.splice(idx + 1, 0, "weightless_coordination", "weightless_coordination");
+  else if (context !== "recovery_day") {
+    const activationIdx = out.indexOf("activation");
+    if (activationIdx !== -1) out.splice(activationIdx + 1, 0, "weightless_coordination", "weightless_coordination");
+  }
+  return out;
+}
+var LIFECYCLE_RANK = {
+  youth: 0,
+  beginner: 1,
+  intermediate: 2,
+  advanced: 3,
+  elite: 4
+};
+function isEligible(d3, f) {
+  if (LIFECYCLE_RANK[f.lifecycle] < LIFECYCLE_RANK[d3.minLifecycle]) return false;
+  if (f.gameDay && !d3.gameDayLegal) return false;
+  if (f.axis && (d3.axis ?? "bilateral") !== f.axis) return false;
+  if (d3.regions && f.injuryRegions.length > 0) {
+    if (d3.regions.some((r) => f.injuryRegions.includes(r))) return false;
+  }
+  return true;
+}
+function resolveEquipmentSafe(d3, f) {
+  if (hasEquipment(d3, f.available)) return { drill: d3, substituted: false };
+  const fb = fallbackFor(d3);
+  if (!fb) return null;
+  const sib = bySlug(fb);
+  if (!sib) return null;
+  if (!isEligible(sib, { ...f, axis: void 0 })) return null;
+  return hasEquipment(sib, f.available) ? { drill: sib, substituted: true } : null;
+}
+function poolForRole(role, f) {
+  return WARMUP_LIBRARY.filter((d3) => d3.role === role && isEligible(d3, f));
+}
+function pickForRole(role, f, seed, seen, diagnostics) {
+  const pool = poolForRole(role, f);
+  if (pool.length === 0) return null;
+  const start = Math.abs(seed) % pool.length;
+  for (let i = 0; i < pool.length; i++) {
+    const candidate = pool[(start + i) % pool.length];
+    const resolved = resolveEquipmentSafe(candidate, f);
+    if (!resolved || seen.has(resolved.drill.slug)) continue;
+    if (resolved.substituted) {
+      diagnostics?.push({
+        code: "equipment_substitution",
+        role,
+        from: candidate.slug,
+        to: resolved.drill.slug,
+        detail: `${candidate.name} needs ${equipmentFor(candidate).join(", ")} \u2014 swapped to the equipment-free ${resolved.drill.name}.`
+      });
+    }
+    return resolved.drill;
+  }
+  return null;
+}
+function tissuePrepBlock(input, available) {
+  const hasBall = available.has("tennis_ball") || available.has("lacrosse_ball") || available.has("softball");
+  const thrower = input.isThrower !== false;
+  const softball = input.sport === "softball";
+  const tool = hasBall ? "a tennis ball" : "your hands (no ball today)";
+  const upper = thrower ? " Then the chest (pec) against a wall, the side of your back under your armpit (lat), and the forearm on a table \u2014 about 20 seconds each, throwing arm first." : "";
+  const where = "Feet: stand and roll the ball under each foot, heel to toes \u2014 30 seconds per foot. Calves: sit, ball under the calf, rock the leg side to side \u2014 30 seconds per leg. Hips/glutes: sit on the ball, lean onto one glute and make small circles \u2014 30 seconds per side. Upper back: lie with the ball between your shoulder blade and spine, roll a few inches up and down \u2014 30 seconds per side.";
+  const rolling = {
+    slug: "wu_tissue_prep_roll_and_rhythm",
+    name: "Tissue prep 1 \u2014 tennis-ball rolling",
+    role: "tissue_prep",
+    setup: hasBall ? "Use a tennis ball on the floor or against a wall. Press with medium pressure \u2014 about a 4 out of 10: firm enough to feel it, never painful." : "No ball today: press and knead with your hands at about a 4 out of 10 pressure \u2014 firm, never painful.",
+    dosage: "3 minutes total",
+    cue: `${where}${upper}`,
+    stopIf: "You feel sharp pain, numbness, tingling, or bruising pressure.",
+    source: "owner_tissue_prep_law",
+    equipmentNote: hasBall ? "You need: a tennis ball." : void 0,
+    guide: {
+      what: `Roll your feet, calves, hips/glutes and upper back with ${tool} at medium pressure (about 4 out of 10), about 30 seconds per spot.${thrower ? " Throwers also roll the chest, lat and forearm." : ""}`,
+      setup: hasBall ? "Tennis ball on the floor or against a wall." : "Use your hands for pressure.",
+      goodRep: [where, ...thrower ? [upper.trim()] : [], "Keep breathing slowly; pressure stays about 4 out of 10."],
+      badRep: ["Grinding hard on one sore spot.", "Rolling over bone or the back of the knee."],
+      feel: "Warmer and less stiff.",
+      whyToday: "Tissue stiffens while you sit still. Pressure and movement loosen it so it can stretch and spring.",
+      nextLink: "Go straight into the rhythmic movements.",
+      stopIf: "Sharp pain, numbness, tingling, or bruising pressure."
+    }
+  };
+  const swings2 = thrower ? "10 easy arm swings across the chest and 10 big arm circles each way" : "10 easy arm swings across the chest";
+  const rhythm = {
+    slug: "wu_tissue_prep_rhythmic_shake",
+    name: "Tissue prep 2 \u2014 bounces, swings and shake-outs",
+    role: "tissue_prep",
+    setup: "Stand tall in open space with room to swing your arms and legs. Hold a wall or fence for the leg swings.",
+    dosage: "2 minutes total",
+    cue: `Do 20 quick, small ankle bounces (heels barely leave the ground), then 10 front-to-back leg swings and 10 side-to-side leg swings on each leg, then ${swings2}, then shake out your arms and legs loosely for 15 seconds.${softball && thrower ? " Pitchers add 10 slow windmill circles each way." : ""}`,
+    stopIf: "You feel sharp pain or a joint pinches.",
+    source: "owner_tissue_prep_law",
+    guide: {
+      what: "Quick ankle bounces, then loose leg and arm swings and a shake-out. The rhythm breaks up stiffness so the body moves freely before faster work.",
+      setup: "Open space; a wall or fence for balance on leg swings.",
+      goodRep: ["20 small, springy ankle bounces.", "10 front-to-back and 10 side-to-side leg swings per leg.", `${swings2[0].toUpperCase()}${swings2.slice(1)}.`, "Shake out arms and legs for 15 seconds."],
+      badRep: ["Forcing the swings to the end of your range.", "Bouncing high and heavy instead of small and quick."],
+      feel: "Loose and springy.",
+      whyToday: "Rhythmic movement right after rolling turns the loosened tissue into easy, springy motion.",
+      nextLink: "Continue into the rest of today's warm-up.",
+      stopIf: "Sharp pain or a pinching joint."
+    }
+  };
+  return [rolling, rhythm];
+}
+function toBuilt(d3, lifecycle) {
+  return {
+    slug: d3.slug,
+    name: d3.name,
+    role: d3.role,
+    setup: d3.setup,
+    dosage: doseFor(d3, lifecycle),
+    cue: d3.cue,
+    stopIf: d3.stopIf,
+    source: d3.source,
+    guide: guideFor(d3.slug) ?? guideFor(d3.name) ?? void 0,
+    equipmentNote: equipmentNoteFor(d3),
+    axis: d3.axis
+  };
+}
+function buildWarmup(input) {
+  const diagnostics = [];
+  if (input.context === "recovery_day") {
+    const available = expandEquipment(input.equipment, input.venue);
+    const drills2 = WARMUP_LIBRARY.filter((d3) => isSoftRecovery(d3.slug) && equipmentFor(d3).every((e) => available.has(e)) && !(d3.regions ?? []).some((r) => (input.injuryRegions ?? []).includes(r))).slice(0, 3).map((d3) => toBuilt(d3, input.lifecycle));
+    const ordered2 = input.orderByStage === false ? drills2 : sortByWarmupStage(drills2, (d3) => d3.slug, (d3) => d3.role);
+    return {
+      context: input.context,
+      drills: ordered2,
+      estMinutes: drills2.length ? 5 : 0,
+      singleLegShare: null,
+      diagnostics: [{ code: "twitch_suppressed", detail: "Full rest day \u2014 gentle recovery only; training warm-up withheld." }]
+    };
+  }
+  const injuryRegions = (input.injuryRegions ?? []).map((r) => r.toLowerCase());
+  const filtersBase = {
+    lifecycle: input.lifecycle,
+    gameDay: input.gameDay,
+    available: expandEquipment(input.equipment, input.venue),
+    injuryRegions
+  };
+  if (injuryRegions.length > 0) {
+    diagnostics.push({
+      code: "injury_veto",
+      detail: `Drills loading ${injuryRegions.join(", ")} were withheld \u2014 reported injury region.`
+    });
+  }
+  const fullTemplate = templateFor(input.context, input.lifecycle);
+  const roles = fullTemplate.filter((r) => {
+    if (input.suppressArmCare && r === "arm_care") return false;
+    if (input.suppressTwitch && TWITCH_ROLES.includes(r)) return false;
+    return true;
+  });
+  if (input.suppressTwitch && fullTemplate.some((r) => TWITCH_ROLES.includes(r))) {
+    diagnostics.push({
+      code: "twitch_suppressed",
+      detail: "Fast-twitch layer withheld today \u2014 recovery, travel or low readiness. Prep only, no CNS spend."
+    });
+  }
+  const seedBase = input.daySeed ?? 0;
+  const seen = /* @__PURE__ */ new Set();
+  const drills = [...tissuePrepBlock(input, filtersBase.available)];
+  seen.add(drills[0].slug);
+  roles.forEach((role, i) => {
+    if (role === "tissue_prep") return;
+    const seed = seedBase + i * 7 + role.length * 3;
+    const pick = pickForRole(role, filtersBase, seed, seen, diagnostics);
+    if (!pick) {
+      diagnostics.push({
+        code: "equipment_role_skipped",
+        role,
+        detail: `No ${role.replace(/_/g, " ")} drill is legal with today's equipment, age and injury state \u2014 the role was skipped rather than half-shipped.`
+      });
+      return;
+    }
+    seen.add(pick.slug);
+    drills.push(toBuilt(pick, input.lifecycle));
+  });
+  const twitchIdx = drills.map((d3, i) => ({ d: d3, i })).filter(({ d: d3 }) => TWITCH_ROLES.includes(d3.role));
+  if (twitchIdx.length > 0) {
+    const needed = Math.ceil(twitchIdx.length * SINGLE_LEG_MIN_SHARE);
+    let single = twitchIdx.filter(({ d: d3 }) => d3.axis === "single_leg").length;
+    const bilateral = twitchIdx.filter(({ d: d3 }) => d3.axis !== "single_leg").reverse();
+    for (const { d: d3, i } of bilateral) {
+      if (single >= needed) break;
+      const slFilters = { ...filtersBase, axis: "single_leg" };
+      const replacement = pickForRole(d3.role, slFilters, seedBase + i * 13 + 5, seen, diagnostics) ?? pickForRole("single_leg_twitch", slFilters, seedBase + i * 13 + 5, seen, diagnostics);
+      if (!replacement) continue;
+      seen.delete(d3.slug);
+      seen.add(replacement.slug);
+      drills[i] = toBuilt(replacement, input.lifecycle);
+      diagnostics.push({
+        code: "single_leg_swap",
+        role: replacement.role,
+        from: d3.slug,
+        to: replacement.slug,
+        detail: `Single-leg majority law \u2014 ${d3.name} swapped for ${replacement.name} so most of the twitch work runs through one leg.`
+      });
+      single++;
+    }
+  }
+  const twitchFinal = drills.filter((d3) => TWITCH_ROLES.includes(d3.role));
+  const singleLegShare = twitchFinal.length === 0 ? null : twitchFinal.filter((d3) => d3.axis === "single_leg").length / twitchFinal.length;
+  if (singleLegShare !== null && singleLegShare < SINGLE_LEG_MIN_SHARE) {
+    diagnostics.push({
+      code: "single_leg_short",
+      detail: `Single-leg share is ${Math.round(singleLegShare * 100)}% \u2014 no legal single-leg replacement was available today.`
+    });
+  }
+  const est = Math.max(8, 5 + Math.round((drills.length - 1) * 90 / 60));
+  const ordered = input.orderByStage === false ? drills : sortByWarmupStage(drills, (d3) => d3.slug, (d3) => d3.role);
+  return { context: input.context, drills: ordered, estMinutes: est, singleLegShare, diagnostics };
+}
+function resolveWarmupContext(input) {
+  if (input.isGameDay) return "game_day";
+  if (input.isRecoveryDay) return "recovery_day";
+  if (input.isTravelDay) return "travel_day";
+  if (input.modalityBias === "speed") return "speed_day";
+  if (input.modalityBias === "lift") return "lift_day";
+  if (input.modalityBias === "throwing") return "throwing_day";
+  if (input.modalityBias === "hitting") return "hitting_day";
+  if (input.seasonPhase === "off") return "offseason_extended";
+  if (input.seasonPhase === "in") {
+    return input.isPracticeDay ? "in_season_practice" : "in_season_default";
+  }
+  return "default";
+}
+function lifecycleFor(band, liftingAgeYears) {
+  if (band === "u10" || band === "u12") return "youth";
+  if (band === "u14") return "beginner";
+  if (liftingAgeYears === null) return "beginner";
+  if (liftingAgeYears >= 8) return "elite";
+  if (liftingAgeYears >= 4) return "advanced";
+  if (liftingAgeYears >= 2) return "intermediate";
+  if (liftingAgeYears >= 1) return "beginner";
+  return "youth";
+}
+registerWarmupRoles(WARMUP_LIBRARY);
 
 // supabase/functions/_shared/wic/planSanity.ts
 var ANCHORS = /* @__PURE__ */ new Set(["warmup", "recovery", "fueling", "game_iq", "mobility", "mental"]);
@@ -278,7 +1512,7 @@ function missingForPlacement(r, slot) {
   if (slot === "hammers_today:mind" && r.equipment.length > 0) miss.push("no equipment (Mind items are non-physical)");
   return miss;
 }
-var norm = (s) => s.trim().toLowerCase();
+var norm2 = (s) => s.trim().toLowerCase();
 var TAG_SLOT = {
   "hammers_today:hitting": "hammers_today:skill",
   "hammers_today:bat_speed_weighted": "hammers_today:skill",
@@ -306,9 +1540,9 @@ function eligibleFor(r, slots, ctx) {
   if (missingForPlacement(r, slot).length > 0) return false;
   if (!r.sports.includes(ctx.sport)) return false;
   if (slot === "hammers_today:skill" && (!ctx.skill || !skillBlocksOf(r).includes(ctx.skill))) return false;
-  const need = r.equipment.map(norm).filter(Boolean);
+  const need = r.equipment.map(norm2).filter(Boolean);
   if (need.length > 0) {
-    const owned = new Set([...ctx.owned ?? []].map(norm));
+    const owned = new Set([...ctx.owned ?? []].map(norm2));
     if (!need.every((e) => owned.has(e))) return false;
   }
   return true;
@@ -2376,7 +3610,7 @@ var KNOWN_INJURY_REGIONS = [
   "achilles"
 ];
 function normalizeInjuryToText(raw) {
-  const txt = injuryHistoryToText(raw);
+  const txt = injuryHistoryToText(activeInjuryHistory(raw));
   return txt === "" ? null : txt;
 }
 var VENUE_EQUIPMENT_TOKENS = /* @__PURE__ */ new Set([
@@ -2726,1195 +3960,6 @@ function selectThrowingAdaptations(profile) {
   const rationale = `Throwing tuned to your lever profile (${profile.archetype})${profile.apeIndex != null ? ` \u2014 ape index ${profile.apeIndex.toFixed(2)}` : ""}.`;
   return { cues, supplemental, rationale };
 }
-
-// src/lib/hammer/prescription/movementGuide.ts
-function norm2(s) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-}
-var GUIDES = {
-  cuff_scap_activation_low_intensity: {
-    what: "Gentle shoulder rotation and shoulder-blade movement with a light band.",
-    setup: "Use a light resistance band with a secure anchor. ER means rotate your forearm away from your body; IR means rotate it toward your body. Keep your elbow bent and close to your side. For scap pulls, gently draw your shoulder blades back without shrugging.",
-    goodRep: ["Turn your forearm slowly away from your body for ER, then toward your body for IR.", "Keep your elbow close to your side and your shoulder relaxed.", "For scap pulls, gently draw your shoulder blades back without shrugging.", "Follow the sets and repetitions shown on your prescription."],
-    badRep: ["Forcing the movement or working through pain.", "Adding resistance, repetitions or time beyond the prescription."],
-    feel: "Easy, comfortable movement, not a hard shoulder workout.",
-    whyToday: "Gentle movement on your arm-recovery day.",
-    nextLink: "Continue with the next prescribed recovery item.",
-    stopIf: "Stop for shoulder or elbow pain, pinching, numbness or tingling. Follow your professional\u2019s injury instructions."
-  },
-  wrist_forearm_mobility_flush: {
-    what: "Slow wrist circles and gentle forearm massage.",
-    setup: "Sit or stand comfortably with your forearm supported. Make slow wrist circles in each direction, then gently massage the forearm with your opposite hand.",
-    goodRep: ["Circle your wrist slowly in each direction without forcing the range.", "Use your opposite hand to massage your forearm with light pressure.", "Follow each time and side shown on your prescription."],
-    badRep: ["Forcing the movement or working through pain.", "Adding resistance, repetitions or time beyond the prescription."],
-    feel: "Gentle movement and light pressure, not pain.",
-    whyToday: "Easy wrist and forearm movement during recovery.",
-    nextLink: "Continue with the next prescribed recovery item.",
-    stopIf: "Stop for pain, numbness or tingling. Do not press into an injured or painful area."
-  },
-  sleeper_cross_body_stretch: {
-    what: "Two gentle shoulder stretches, only within a comfortable range.",
-    setup: "For the sleeper stretch, lie on your side with your elbow bent and gently guide your forearm toward the floor with your other hand. For cross-body, bring your arm across your chest and support it with your opposite hand. Use only a comfortable range.",
-    goodRep: ["For the sleeper stretch, gently guide your forearm down without pushing into the shoulder.", "For cross-body, support your arm across your chest without pulling hard.", "Breathe gently and follow the holds and sides shown on your prescription."],
-    badRep: ["Forcing the movement or working through pain.", "Adding resistance, repetitions or time beyond the prescription."],
-    feel: "A comfortable stretch, never a pinch.",
-    whyToday: "Gentle shoulder mobility during recovery.",
-    nextLink: "Continue with the next prescribed recovery item.",
-    stopIf: "Stop for shoulder pain, pinching, numbness or tingling. Never force the stretch; follow your professional\u2019s injury instructions."
-  },
-  // ============ Neural priming / reaction drills ============
-  wu_reaction_ball_wall: {
-    what: "A small, uneven rubber ball is thrown at a wall. Because it is uneven, it bounces back in an unpredictable direction, and your job is to catch it before it hits the ground a second time.",
-    setup: "Stand facing a solid wall, 6\u201310 feet away, with a reaction ball (a lumpy rubber ball about the size of a baseball). If you don't have one, a small rubber pinky ball or a lacrosse ball works. Feet shoulder-width apart, knees slightly bent, weight on the balls of your feet, hands open in front of your chest.",
-    goodRep: [
-      "Eyes track the ball the whole time \u2014 no blinking away.",
-      "Your first movement is your hands going toward the ball, not away from it.",
-      "You stay balanced \u2014 you shuffle to the ball, you don't fall into it.",
-      "Two hands make the catch, soft and quiet."
-    ],
-    badRep: [
-      "Waiting flat-footed for the ball to come to you.",
-      "Reaching with one hand and stabbing at it.",
-      "Standing straight up \u2014 losing your athletic stance between throws."
-    ],
-    feel: "Light on your feet, alert, the same way you feel when a pitch is about to be thrown or a batted ball is coming your way. Your hands should feel quick and your eyes should feel busy.",
-    whyToday: "Wakes up your hand-eye timing and fires your fast-twitch nervous system before you go into speed, throwing, or hitting work. Cheap on the body, big on alertness.",
-    nextLink: "Go straight into your speed or throwing block \u2014 your nervous system is now switched on and will get more out of each rep.",
-    stopIf: "You roll an ankle, your shoulder pinches, or you feel dizzy from tracking."
-  },
-  wu_reaction_drop_catch: {
-    what: "A partner (or a wall drop) releases a ball without any warning and you catch it before the second bounce. Trains pure reaction time.",
-    setup: "Partner stands 4\u20136 feet in front of you holding a tennis ball at shoulder height. You stand in an athletic stance \u2014 feet shoulder-width, knees soft, hands ready at chest height, eyes on the ball.",
-    goodRep: [
-      "You are still and quiet before the drop, but ready.",
-      "First movement is a snap of the hand toward the ball.",
-      "You catch it cleanly before it can bounce twice.",
-      "Reset to stance immediately \u2014 no wasted movement."
-    ],
-    badRep: [
-      "Trying to guess when the drop is coming (fake-starts).",
-      "Body tense \u2014 you cannot react when you're tight.",
-      "Lunging forward and losing balance."
-    ],
-    feel: "Relaxed but coiled \u2014 like a defender waiting to break on a ball.",
-    whyToday: "Pure CNS wake-up. No load, big reaction benefit.",
-    nextLink: "Move into fast-twitch work while the nervous system is hot."
-  },
-  // ============ Speed / rhythm ============
-  wu_wickets_low: {
-    what: "You run at a controlled 75% speed over a line of low hurdles that are spaced perfectly for your natural stride. The wickets don't get jumped \u2014 they get run through. This teaches your legs to cycle in a clean rhythm.",
-    setup: "Line up 8 mini-hurdles (6\u20138 inches tall) in a straight line, exactly 5 feet apart \u2014 about 40 feet total. If you have no hurdles, use rolled towels, shoes, or cones as markers. Give yourself a 10-yard jog-in before the first hurdle so you build speed cleanly.",
-    goodRep: [
-      "Jog in and hit the first hurdle at about 75% speed.",
-      "Stay tall \u2014 chest up, eyes forward, arms drive front-to-back.",
-      "Each foot lands cleanly between the hurdles.",
-      "Knees pick straight up and the foot cycles down under your hip."
-    ],
-    badRep: [
-      "Reaching or stretching your stride to hit a hurdle.",
-      "Looking down at your feet \u2014 always makes you slower.",
-      "Landing on your heel, or landing on the hurdle itself."
-    ],
-    feel: "Rhythmic and light \u2014 like your feet are ticking a metronome. If you feel choppy or heavy, back off the speed until the rhythm returns.",
-    whyToday: "Teaches clean sprint mechanics without you having to think about them \u2014 the hurdle spacing does the coaching for you.",
-    nextLink: "Now go into your sprint or acceleration work \u2014 you have a rhythm to keep.",
-    stopIf: "You clip a hurdle in a way that jars your ankle or hip, or a hamstring or calf grabs."
-  },
-  wu_a_skip: {
-    what: "A running warm-up drill: you skip forward while driving one knee up to hip height and stepping down under your body. It's the shape of a good sprint stride, done at low speed.",
-    setup: "Open space, 20 yards of turf or track. Feet under hips, tall posture.",
-    goodRep: [
-      "Skip rhythm \u2014 bounce-step, bounce-step.",
-      "Front knee drives up to hip height, toe pulled up.",
-      "Same-side arm swings up in sync (opposite arm on the down side).",
-      "Foot lands directly under your hip, quiet and quick."
-    ],
-    badRep: [
-      "Kicking your foot out in front of your body.",
-      "Bending forward at the waist.",
-      "Slapping the foot down loudly."
-    ],
-    feel: "Tall, springy, coordinated. Not a hard workout \u2014 a mechanics rehearsal.",
-    whyToday: "Grooves the sprint stride cheap and clean.",
-    nextLink: "Feeds directly into B-skip and sprint work."
-  },
-  wu_b_skip: {
-    what: "Same rhythm as A-skip, but as the knee drives up, you extend the lower leg out and paw it back down and under your body \u2014 teaching the leg to actively pull the ground behind you at full sprint.",
-    setup: "Same as A-skip. 20 yards of open space.",
-    goodRep: [
-      "Skip \u2192 knee up \u2192 leg extends out \u2192 paw the ground down and back.",
-      "Tall posture the whole time.",
-      "Land under your hip, not in front of your body."
-    ],
-    badRep: [
-      "Kicking the foot out and letting it slap the ground.",
-      "Losing the skip rhythm.",
-      "Reaching forward with the foot instead of pawing back."
-    ],
-    feel: "You are 'pulling the ground' backward under your body.",
-    whyToday: "Locks in the pawing action of top-speed running.",
-    nextLink: "Move to falling starts or sprints."
-  },
-  wu_pogo_double: {
-    what: "Short, stiff-ankled hops in place on two feet. Each hop is quick \u2014 the ground is 'hot' and you're only on it for a fraction of a second.",
-    setup: "Feet hip-width, arms relaxed at your sides or bent at 90\xB0. Soft flat surface (turf, gym floor, or grass).",
-    goodRep: [
-      "Ankles stay stiff \u2014 most of the bounce comes from your calves and Achilles.",
-      "Ground contact is less than 0.2 seconds (like the floor is hot).",
-      "Land in the same spot you took off from.",
-      "Chest up, eyes forward."
-    ],
-    badRep: [
-      "Squatting between hops (that means the knees are absorbing, not the ankles).",
-      "Long, floaty jumps.",
-      "Landing on heels."
-    ],
-    feel: "Springy and quick, like your Achilles is a coiled spring.",
-    whyToday: "Wakes up the elastic system in your ankles and calves \u2014 the same system that powers first-step quickness.",
-    nextLink: "Go into sprint or lateral work while the calves are primed.",
-    stopIf: "Sharp pain in the shin, calf, or Achilles."
-  },
-  wu_ankle_bounce_series: {
-    what: "Rapid, low bounces on stiff ankles \u2014 a smaller and faster version of a pogo hop, meant purely to prime the ankle stiffness that makes you fast.",
-    setup: "Feet hip-width, tall posture, arms relaxed.",
-    goodRep: [
-      "Bounces are tiny \u2014 1\u20132 inches off the ground.",
-      "Ankles do all the work \u2014 knees and hips barely move.",
-      "Rhythm is fast and constant."
-    ],
-    badRep: [
-      "Big jumps.",
-      "Bending the knees.",
-      "Slow tempo."
-    ],
-    feel: "Your calves and the arch of your foot 'wake up' \u2014 light and springy.",
-    whyToday: "Primes the same tissue you'll use for first-step acceleration.",
-    nextLink: "Line hops, then pogos, then sprints."
-  },
-  // ============ ARM CARE (owned by throwing block on throwing days) ============
-  wu_jband_full: {
-    what: "A full circuit of light elastic-band exercises that wake up the rotator cuff and shoulder-blade muscles. This is the full arm-care band chart \u2014 the standard daily shoulder-prep circuit.",
-    setup: "Anchor a light arm-care band (or a light resistance band) to a fence, pole, or door hinge at about chest height. Stand facing sideways so the band is level with your throwing arm.",
-    goodRep: [
-      "Go through the full chart \u2014 external rotation, internal rotation, scap pull, retractions, forward flexion.",
-      "Every rep is slow, especially on the way back (the eccentric).",
-      "Elbow stays at the correct height for each movement.",
-      "Breathe out on the pull."
-    ],
-    badRep: [
-      "Snapping the band back fast.",
-      "Using a heavy band \u2014 this is a wake-up, not a workout.",
-      "Rushing through reps."
-    ],
-    feel: "A gentle warmth in the back of the shoulder and the shoulder blade. You should never feel this in the front of the shoulder.",
-    whyToday: "This is the entire arm-care allotment for your throwing day \u2014 the shoulder complex is now primed for real throws.",
-    nextLink: "Straight into tennis-ball whip throws \u2192 underload \u2192 catch-play.",
-    stopIf: "Sharp pain in the front of the shoulder or any elbow pinch \u2014 stop and message Hammer."
-  },
-  wu_crossover_symmetry_full: {
-    what: "A branded chart of band exercises (band activation) that hits the rotator cuff and scap stabilizers in a specific order. Same purpose as arm-care band, different pattern.",
-    setup: "Crossover bands anchored at chest height. Chest square to the anchor.",
-    goodRep: [
-      "Shoulder blades set FIRST \u2014 you feel them squeeze slightly \u2014 then the arms move.",
-      "Slow, smooth reps, especially the return.",
-      "Full range each rep \u2014 don't cheat the finish."
-    ],
-    badRep: [
-      "Arms firing before the shoulder blade sets.",
-      "Any shrug \u2014 shoulders stay away from the ears.",
-      "Fast, snappy reps."
-    ],
-    feel: "The back of the shoulder and mid-back working. Front of the shoulder should stay quiet.",
-    whyToday: "Complete arm-care activation before any throwing \u2014 this is your one and only arm-care block today.",
-    nextLink: "Move into fast-object throws.",
-    stopIf: "Any front-of-shoulder pain or elbow twinge."
-  },
-  wu_prone_tyw: {
-    what: "You lie face-down on a bench or floor and make the letters T, Y, and W with your arms while holding a light weight or nothing. Trains the muscles between your shoulder blades that keep the shoulder joint centered when you throw.",
-    setup: "Lie face-down on a bench (or on the floor with a rolled towel under your forehead so you can breathe). Arms hang toward the floor, thumbs pointing up.",
-    goodRep: [
-      "T: arms straight out to the sides, thumbs up, squeeze shoulder blades.",
-      "Y: arms overhead in a Y shape, thumbs up.",
-      "W: elbows bent, upper arms straight out, forearms up \u2014 squeeze blades together.",
-      "Slow, controlled, thumbs stay up the whole time."
-    ],
-    badRep: [
-      "Using momentum or arching your low back.",
-      "Thumbs pointing down (loads the front of the shoulder wrong).",
-      "Any weight over 3 lbs \u2014 this is activation, not strength."
-    ],
-    feel: "Small burn between the shoulder blades. That's exactly right.",
-    whyToday: "Primes the mid-back so your shoulder joint sits in its healthy position when you throw.",
-    nextLink: "Straight into scap push-ups or band pulls."
-  },
-  wu_er_at_90: {
-    what: "You stand with your throwing-arm elbow bent to 90\xB0 and out to the side, and slowly rotate your forearm from parallel-to-the-ground up to overhead against light band tension. This trains the deep rotator cuff.",
-    setup: "Anchor a light band at elbow height. Stand sideways so the band pulls across your body. Elbow bent 90\xB0, upper arm out to the side at shoulder height, forearm parallel to the ground.",
-    goodRep: [
-      "Elbow stays exactly at shoulder height.",
-      "Forearm rotates up smoothly.",
-      "Slow return \u2014 3 seconds on the way down."
-    ],
-    badRep: [
-      "Elbow drops or drifts down.",
-      "Shoulder shrugs up toward the ear.",
-      "Snapping the band on the return."
-    ],
-    feel: "Deep in the back of the shoulder \u2014 small, controlled, warm.",
-    whyToday: "Directly primes the muscles that decelerate your throwing arm \u2014 the ones that break down when you don't warm them up.",
-    nextLink: "Feeds into T/Y/W or straight into throwing prep.",
-    stopIf: "Any pinch in the front of the shoulder."
-  },
-  wu_scap_pushup: {
-    what: "A push-up where you keep your elbows locked straight and only move your shoulder blades \u2014 squeezing them together, then pushing them apart. Trains the muscle that stabilizes the shoulder blade against your ribcage.",
-    setup: "Standard push-up position \u2014 hands under shoulders, body in a straight line from head to heels.",
-    goodRep: [
-      "Elbows stay LOCKED \u2014 no bend.",
-      "Shoulder blades pinch together (chest drops slightly toward the floor).",
-      "Then push the floor away \u2014 shoulder blades spread wide and your upper back rounds slightly."
-    ],
-    badRep: [
-      "Bending the elbows (that's a regular push-up).",
-      "Hips sagging.",
-      "Head dropping."
-    ],
-    feel: "The muscle just below your armpit (serratus) working. That's the money muscle for throwers.",
-    whyToday: "Locks the shoulder blade to the ribcage so your arm has a stable base to fire from.",
-    nextLink: "Straight into T/Y/W or band face pulls."
-  },
-  wu_face_pull_band: {
-    what: "You pull a band at eye level toward your face while keeping your elbows high and rotating your hands so your thumbs point behind you. Trains the muscles that pull your shoulders into good posture.",
-    setup: "Anchor a band at eye level. Grab both ends with palms facing down. Step back so the band is under light tension. Feet hip-width, tall posture.",
-    goodRep: [
-      "Elbows lead the pull and stay HIGH \u2014 at ear level.",
-      "Hands finish by your ears with thumbs rotating back.",
-      "Squeeze the back of your shoulders together at the end.",
-      "Slow return."
-    ],
-    badRep: [
-      "Elbows dropping toward your ribs.",
-      "Pulling to your chest instead of your face.",
-      "Yanking with your low back."
-    ],
-    feel: "Back of the shoulders and upper back working. Neck stays quiet.",
-    whyToday: "Balances all the internal-rotation pull of throwing \u2014 protects your shoulder for the long haul.",
-    nextLink: "Straight into throwing prep or arm-care cooldown."
-  },
-  wu_forearm_pump: {
-    what: "High-rep flexion and extension of the wrist against light resistance to flush blood into the forearm \u2014 the last accelerator of every throw.",
-    setup: "Sit or stand with a light dumbbell (2\u20135 lbs) or a band. Forearm rests on your thigh, palm up for flexion / palm down for extension.",
-    goodRep: [
-      "Slow, full range each rep.",
-      "Wrist is the only thing that moves \u2014 forearm stays still.",
-      "High reps (20+) \u2014 this is a flush, not a strength lift."
-    ],
-    badRep: [
-      "Moving the elbow or shoulder.",
-      "Heavy weight \u2014 that turns it into strength work."
-    ],
-    feel: "A pump in the forearm and a warmth in the wrist.",
-    whyToday: "The wrist is the last thing that moves in every throw \u2014 warming it prevents forearm strains.",
-    nextLink: "Straight into throwing prep."
-  },
-  // ============ Weightless coordination (WOST) ============
-  wu_scarf_cross_body_catch: {
-    what: "You toss a light silk scarf across your body from one hand to the other. Because a scarf floats slowly, your eyes and hands get a long moment to track and catch it \u2014 perfect for coordination.",
-    setup: "Stand tall with one light silk scarf (or a napkin) in your RIGHT hand at hip level. Feet shoulder-width, hips facing forward. Hips STAY facing forward the entire drill \u2014 only the arms and ribcage rotate.",
-    goodRep: [
-      "Toss the scarf up and across your body toward your LEFT shoulder so it floats above your head.",
-      "Reach across the midline of your body and catch it in your LEFT hand before it drops below your waist.",
-      "Immediately toss it back across to the RIGHT.",
-      "Slow and smooth \u2014 no missed catches."
-    ],
-    badRep: [
-      "Hips turning with the arms \u2014 the whole point is to isolate the upper body.",
-      "Throwing so high the scarf hits the ceiling.",
-      "Dropping the scarf and rushing to grab it off the floor."
-    ],
-    feel: "Playful. This is a low-stress hand-eye drill \u2014 treat it like a game.",
-    whyToday: "Trains cross-body coordination that transfers directly to hitting and throwing rhythm.",
-    nextLink: "Move into a fast-twitch or throwing drill while the CNS is coordinated."
-  },
-  // ============ Tennis-ball throws (EASS Tier 1) ============
-  eass_tennis_ball_whip_bb: {
-    what: "Throwing a tennis ball at full arm speed to a partner or wall. Because the ball weighs almost nothing, your arm has nothing to fight \u2014 so you teach the arm to fire FAST.",
-    setup: "Partner or wall at 20\u201330 feet. Standard throwing setup \u2014 glove-side leg forward, back foot loaded, arms in your normal arm slot.",
-    goodRep: [
-      "Full arm circle \u2014 no shortening the back-side of the arc.",
-      "Whip finish out in front \u2014 your hand ends up chasing the ball.",
-      "Ball leaves your fingers cleanly \u2014 no wobble.",
-      "Full body works together \u2014 this isn't an arm-only throw even though the ball is light."
-    ],
-    badRep: [
-      "Throwing at half-speed 'to save it' \u2014 the whole point is speed.",
-      "Arm-only throwing \u2014 the ball is light so you can get away with it, but that defeats the drill.",
-      "Short-arming the back-side of the throw."
-    ],
-    feel: "Fast, clean, effortless. The arm should feel free.",
-    whyToday: "Teaches the nervous system what fast feels like without any load. First step in the EASS throwing hierarchy.",
-    nextLink: "Move into underload plyo throws (3.5 or 4 oz).",
-    stopIf: "Any elbow or shoulder pinch."
-  },
-  // Generic cool-down guide reused by arm-care cooldowns
-  eass_cooldown_universal: {
-    what: "A short arm-care cooldown after throwing: a stretch that opens the back of the shoulder (sleeper stretch), a cross-body stretch to lengthen the outside of the shoulder, and a light forearm massage to flush the working tissue.",
-    setup: "Lie on your throwing-arm side (sleeper stretch), or stand tall for cross-body and forearm work. No equipment required.",
-    goodRep: [
-      "Sleeper stretch: lying on your throwing side, elbow bent 90\xB0, gently push forearm toward the floor with the other hand.",
-      "Cross-body: pull throwing arm across your chest with the opposite hand, elbow at shoulder height.",
-      "Forearm massage: 2 minutes, thumb-press along the meat of the forearm.",
-      "Long, slow exhales the whole time."
-    ],
-    badRep: [
-      "Forcing the sleeper stretch \u2014 you should feel a mild pull, never pain.",
-      "Rushing \u2014 this is a downshift."
-    ],
-    feel: "Warmth spreads through the back of the shoulder. Breathing slows down.",
-    whyToday: "Downshifts the nervous system and helps the shoulder recover so tomorrow's arm feels fresh.",
-    nextLink: "You're done for the day \u2014 hydrate and refuel."
-  },
-  // ============ Pitcher & recovery conditioning (owner-authorised 2026-10-05) ============
-  // Basis per drill lives in wk_movement_catalog.evidence_note. No drill sets an
-  // arm slot or a "correct" shape — the athlete moves the way their body moves.
-  pc_pretension_hold_bb: {
-    what: "A standing hold where you stretch tall and press the floor away, to wake up the long lines of your body before you pitch.",
-    setup: "Short split stance, glove-side foot forward. Reach both arms overhead like you're grabbing a bar.",
-    goodRep: ["Press the floor away with both feet.", "Reach up and slightly back, long through the front of your body.", "Breathe slowly the whole time."],
-    badRep: ["Arching your low back instead of getting long.", "Holding your breath.", "Forcing it into pain."],
-    feel: "A stretch-tension line from your front foot, up through your stomach, to your fingers.",
-    whyToday: "You pitch soon. This gets you loaded and springy without tiring anything. 20 seconds each stance, twice.",
-    nextLink: "Straight into your pogos or ready series.",
-    stopIf: "Pinching in your low back or shoulder."
-  },
-  pc_ankle_pogos_bb: {
-    what: "Small, quick bounces off the balls of your feet. Your feet and calves work like springs.",
-    setup: "Feet hip-width apart, knees soft, standing tall, arms relaxed.",
-    goodRep: ["Ground touches short and quiet.", "Stay tall.", "Bounce, don't jump high."],
-    badRep: ["Heavy landings or heels crashing down.", "Knees bending a lot.", "Going high instead of quick."],
-    feel: "A bouncy rhythm in your feet and calves. Light, not tiring.",
-    whyToday: "Springy legs drive a pitch. 15 bounces, twice. Stop the set as soon as the landings stop being quiet.",
-    nextLink: "Walk a few steps, then your strides.",
-    stopIf: "Any sharp pain in your foot, ankle, shin or knee."
-  },
-  pc_buildup_strides_bb: {
-    what: "Relaxed runs where you build up speed smoothly and then float to a stop.",
-    setup: "30 yards of flat ground.",
-    goodRep: ["Start with a jog.", "Build smoothly to fast but relaxed by the middle.", "Float out the last third.", "Walk all the way back before the next one."],
-    badRep: ["Turning it into a race.", "Tight shoulders and face.", "Starting the next one out of breath."],
-    feel: "Quick, loose and ready, not tired.",
-    whyToday: "Short fast runs keep you sharp. Long slow runs don't help a pitcher. 3 strides.",
-    nextLink: "You're primed. Hydrate.",
-    stopIf: "Any grab in your hamstring or calf."
-  },
-  rp_ready_series_bb: {
-    what: "A short series that keeps a reliever switched on: a tall hold, a few pogos, and a couple of easy turns.",
-    setup: "A small space and nothing else.",
-    goodRep: ["20-second tall hold, reaching long.", "10 quiet pogos.", "4 easy turns side to side, letting your arms swing loose.", "Go through it twice."],
-    badRep: ["Working hard, so you're tired if you get the call.", "Rushing through it."],
-    feel: "Warm, loose and awake. Like you could go in right now.",
-    whyToday: "You might pitch today. This keeps you ready without spending anything you need on the mound.",
-    nextLink: "Stay warm and stay loose.",
-    stopIf: "Any pain that changes how you move."
-  },
-  sp_drive_bounds_sb: {
-    what: "Low, springy bounds pushing off one leg, to prime the push off your drive leg that starts every windmill pitch.",
-    setup: "10 yards of space. Stand on your drive leg (the same side as your pitching arm).",
-    goodRep: ["Push the ground away hard: hip, knee and ankle all straighten.", "Bound forward low, not high.", "Land softly on the other foot and reset."],
-    badRep: ["Jumping up instead of driving forward.", "Knee caving in when you push.", "Doing lots of them. This is quality, not volume."],
-    feel: "A strong push through your glute and the ball of your foot.",
-    whyToday: "The windmill starts with your drive leg. 5 bounds, twice, full rest between.",
-    nextLink: "Then your stride and stick.",
-    stopIf: "Any pain in your knee, hip or low back."
-  },
-  sp_stride_stick_sb: {
-    what: "Take your pitching stride, land, and hold it still. This builds a steady landing.",
-    setup: "Flat ground. Your normal pitching stance, no ball.",
-    goodRep: ["Drive out into your normal stride.", "Land and hold for a count of three.", "Knee stays in line over your foot."],
-    badRep: ["Knee caving in when you land.", "Wobbling or stepping out.", "Changing your stride to look a certain way. Use the one that's yours."],
-    feel: "Solid and balanced on your landing leg.",
-    whyToday: "A steady landing lets every pitch land the same. 4 each, twice.",
-    nextLink: "You're primed. Hydrate.",
-    stopIf: "Any pain in your landing knee or ankle."
-  },
-  sp_arm_circle_rhythm_sb: {
-    what: "Easy full arm circles, no ball, to warm up your windmill circle.",
-    setup: "Stand in your pitching stance with plenty of space around your arm.",
-    goodRep: ["Make slow, loose circles to start.", "Let them get a little quicker each time.", "Let your arm brush past your hip at the bottom with a relaxed snap."],
-    badRep: ["Forcing a big or stiff circle.", "Trying to make it look like someone else's.", "Muscling it."],
-    feel: "Loose, warm shoulder and a whippy finish.",
-    whyToday: "Your circle is yours. This just wakes it up. 8 circles, twice.",
-    nextLink: "Into your throwing warm-up.",
-    stopIf: "Any pinching or pain in your shoulder or elbow."
-  },
-  rp_ready_series_sb: {
-    what: "A short series that keeps a windmill reliever switched on: a drive-leg push, a stride and stick, and easy arm circles.",
-    setup: "A small space and nothing else.",
-    goodRep: ["3 easy drive-leg pushes.", "2 stride-and-sticks.", "6 loose arm circles.", "Go through it twice."],
-    badRep: ["Working hard, so you're tired if you get the call.", "Rushing through it."],
-    feel: "Warm, loose and awake. Like you could go in right now.",
-    whyToday: "You might pitch today. This keeps you ready without spending anything you need in the circle.",
-    nextLink: "Stay warm and stay loose.",
-    stopIf: "Any pain that changes how you move."
-  },
-  rc_easy_flush: {
-    what: "Easy biking or walking to get blood moving after a hard day.",
-    setup: "A bike or a flat walk outside.",
-    goodRep: ["Go at a pace where you can talk in full sentences.", "Keep it steady.", "Breathe through your nose if you can."],
-    badRep: ["Turning it into a workout.", "Breathing hard or sweating a lot."],
-    feel: "Warm, loose, and a bit better than when you started.",
-    whyToday: "Today is about recovering, not adding work. About 9 minutes.",
-    nextLink: "Then your long reach walk.",
-    stopIf: "You feel dizzy or unwell."
-  },
-  rc_long_reach_walk: {
-    what: "A slow walk where you reach the opposite arm up and long with every step.",
-    setup: "10 yards of space.",
-    goodRep: ["Take a slow walking step.", "Reach the opposite arm up and long.", "Feel the stretch run from your back foot to your reaching hand. Switch sides each step."],
-    badRep: ["Pushing into pain to get loose.", "Rushing."],
-    feel: "A gentle full-body stretch with no strain.",
-    whyToday: "Easy length through your whole body after hard work. 10 yards, twice.",
-    nextLink: "You're done. Eat and sleep well.",
-    stopIf: "Pinching in your shoulder or back."
-  },
-  rc_breathing_reset: {
-    what: "Slow breathing lying down to help your body switch off.",
-    setup: "Lie on your back, knees bent, feet flat.",
-    goodRep: ["Breathe in through your nose for 4.", "Breathe out slowly for 6.", "Let your ribs drop on every breath out."],
-    badRep: ["Rushing.", "Forcing big breaths."],
-    feel: "Calm and heavy on the floor.",
-    whyToday: "Helps you settle after travel or a long day. 2 minutes.",
-    nextLink: "You're done.",
-    stopIf: "You feel dizzy. Breathe normally."
-  },
-  rc_postgame_flush: {
-    what: "A short, easy cool-down the night of a game: walk, reach long, then breathe slowly.",
-    setup: "Any space after the game, in uniform is fine.",
-    goodRep: ["Walk easily and add comfortable long reaches as you go.", "Finish with gentle breathing and a relaxed, longer exhale; do not hold your breath.", "Follow the time shown on your prescription for the whole sequence."],
-    badRep: ["Skipping it to sit straight down for the drive home.", "Turning it into extra running."],
-    feel: "Your heart rate settles and your legs feel lighter.",
-    whyToday: "You played tonight. A short easy cool-down tonight helps you feel better tomorrow.",
-    nextLink: "Eat, drink water, and sleep.",
-    stopIf: "Something hurts. Tell a coach or parent."
-  },
-  rc_travel_reset: {
-    what: "Easy walking and long reaches to undo the stiffness of a long trip.",
-    setup: "Any space when you arrive, or a rest stop on the way.",
-    goodRep: ["Walk easily and reach overhead and to each side within a comfortable range.", "Keep your breathing gentle; do not force deep breaths or hold your breath.", "Follow the time shown on your prescription for the whole sequence."],
-    badRep: ["Doing a hard workout after sitting for hours.", "Skipping it and staying stiff."],
-    feel: "Looser hips and back, and more awake.",
-    whyToday: "You're travelling, so today is about moving easy, not training hard.",
-    nextLink: "Then your breathing reset.",
-    stopIf: "Any pain that changes how you move."
-  }
-};
-function guideFor(slugOrName) {
-  if (!slugOrName) return null;
-  const direct = GUIDES[slugOrName];
-  if (direct) return direct;
-  const n = norm2(slugOrName);
-  if (GUIDES[n]) return GUIDES[n];
-  const aliases = {
-    reaction_ball_vs_wall: "wu_reaction_ball_wall",
-    low_wicket_runs_rhythm: "wu_wickets_low",
-    a_skip: "wu_a_skip",
-    b_skip: "wu_b_skip",
-    pogo_hops_double_leg: "wu_pogo_double",
-    ankle_bounce_series_stiff_ankles: "wu_ankle_bounce_series",
-    j_band_full_arm_care_chart: "wu_jband_full",
-    crossover_symmetry_activation_chart: "wu_crossover_symmetry_full",
-    prone_t_y_w: "wu_prone_tyw",
-    external_rotation_at_90: "wu_er_at_90",
-    scapular_push_up: "wu_scap_pushup",
-    band_face_pull: "wu_face_pull_band",
-    forearm_flexor_extensor_pump: "wu_forearm_pump",
-    scarf_cross_body_catch: "wu_scarf_cross_body_catch",
-    tennis_ball_whip_throws_teach_fast_object_finish: "eass_tennis_ball_whip_bb",
-    arm_care_cooldown: "eass_cooldown_universal"
-  };
-  const aliased = aliases[n];
-  return aliased ? GUIDES[aliased] ?? null : null;
-}
-
-// src/lib/hammer/prescription/warmupLibrary.ts
-var WARMUP_LIBRARY = [
-  // Breathwork
-  { slug: "wu_crocodile_breathing", name: "Crocodile breathing (prone diaphragm reset)", role: "breathwork", setup: "prone, forehead on hands", cue: "expand ribs 360\xB0, exhale twice as long", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 slow breaths" },
-  { slug: "wu_9020_reset", name: "Feet-on-Wall Breathing Reset", role: "breathwork", setup: "back on floor, feet on wall, hips/knees 90\xB0", cue: "ribs down, exhale fully before inhaling", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "6 breaths" },
-  // Tissue prep / ECM
-  { slug: "wu_tissue_prep_roll_and_rhythm", name: "Tissue prep \u2014 rolling + rhythmic movement", role: "tissue_prep", setup: "Use a tennis ball or your hands for gentle pressure, then clear space for easy swings and bounces.", cue: "Roll the major areas, then use easy oscillations, bounces, and swings before faster work.", stopIf: "sharp pain, numbness, tingling, or bruising pressure", gameDayLegal: true, minLifecycle: "youth", source: "owner_tissue_prep_law", baseDose: "5 minutes total" },
-  { slug: "wu_tissue_prep_rhythmic_shake", name: "Tissue prep 2 \u2014 bounces, swings and shake-outs", role: "tissue_prep", setup: "Open space; a wall or fence for balance on leg swings.", cue: "Small quick ankle bounces, then loose leg swings, arm swings and a shake-out.", stopIf: "sharp pain or a pinching joint", gameDayLegal: true, minLifecycle: "youth", source: "owner_tissue_prep_law", baseDose: "2 minutes total", equipment: [] },
-  { slug: "wu_foam_roll_tspine", name: "T-spine foam roll extensions", role: "tissue_prep", setup: "roller under mid-back", cue: "small ranges, exhale into extension", stopIf: "pinch or sharp pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 slow reps" },
-  { slug: "wu_lacrosse_ball_pec", name: "Lacrosse ball pec minor pin", role: "tissue_prep", setup: "ball against wall on pec minor", cue: "search-hold-move \u2014 arm slow figure-8", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "30-45 sec per side" },
-  { slug: "wu_lacrosse_ball_glute", name: "Lacrosse ball glute pin-and-stretch", role: "tissue_prep", cue: "find a hotspot, then flex/extend hip", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "45 sec per side" },
-  { slug: "wu_barefoot_towel_scrunch", name: "Barefoot towel scrunch (foot fascia)", role: "tissue_prep", setup: "towel under bare foot", cue: "drag toward you with toes \u2014 arch stays lifted", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "30 sec per foot" },
-  { slug: "wu_calf_softball_pin", name: "Soleus ball pin (calf ECM hydration)", role: "tissue_prep", cue: "pin, then dorsiflex/plantarflex the ankle", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "45 sec per side" },
-  // Fascial rotation
-  { slug: "wu_spinal_wave_standing", name: "Standing spinal wave", role: "fascial_rotation", cue: "sequence segment by segment \u2014 no muscling", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "6 reps each direction", beginnerDose: "4 reps each direction" },
-  { slug: "wu_arm_line_spiral", name: "Arm-line fascial spiral", role: "fascial_rotation", setup: "half-kneeling", cue: "reach across body, let ribcage rotate through", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "6 per side" },
-  { slug: "wu_thoracic_windmill", name: "Thoracic windmill (side-lying open book)", role: "fascial_rotation", setup: "side-lying, knees stacked at 90\xB0", cue: "reach long, exhale into the twist", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 per side" },
-  { slug: "wu_thread_the_needle_slow", name: "Thread-the-needle slow flow", role: "fascial_rotation", cue: "quadruped rotate \u2014 chase length not depth", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "6 per side" },
-  { slug: "wu_lateral_line_reach", name: "Lateral line reach + side bend", role: "fascial_rotation", cue: "long from foot to fingertip \u2014 feel the whole side stretch", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per side" },
-  { slug: "wu_medball_rot_toss_wall", name: "Med-ball rotational toss (fascial spring)", role: "fascial_rotation", setup: "6-8 lb ball vs wall", cue: "load the back hip, let fascia snap through", stopIf: "any rib/oblique tweak", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 x 4 per side", beginnerDose: "2 x 3 per side", eliteDose: "3 x 5 per side max intent" },
-  // CARs
-  { slug: "wu_hip_cars", name: "Controlled hip circles", role: "cars", cue: "biggest circle you own \u2014 no compensations", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 per direction per side" },
-  { slug: "wu_shoulder_cars", name: "Controlled shoulder circles", role: "cars", cue: "full end-range, no rib flare", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 per direction per side" },
-  { slug: "wu_spine_cars", name: "Slow back bends and turns", role: "cars", cue: "cat-cow then side bend then rotation \u2014 one segment at a time", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 slow reps" },
-  { slug: "wu_ankle_cars", name: "Seated ankle circles", role: "cars", cue: "maximum circle, keep shin still", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per direction per side" },
-  { slug: "wu_wrist_cars", name: "Controlled wrist circles", role: "cars", cue: "big circles, elbow locked", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per direction per side" },
-  { slug: "wu_scapular_cars", name: "Shoulder-blade circles", role: "cars", cue: "trace a square with the shoulder blade only", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "5 per direction per side" },
-  // Mobility
-  { slug: "wu_90_90_switch", name: "Seated Bent-Knee Hip Switches", role: "mobility_joint", cue: "sit tall, drive knees down slowly \u2014 no hands", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 per side" },
-  { slug: "wu_shin_box_get_up", name: "Shin-box get-up", role: "mobility_joint", cue: "rise without hands \u2014 control both hips", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "4 per side" },
-  { slug: "wu_cossack_squat", name: "Cossack squat flow", role: "mobility_joint", cue: "shift weight foot-to-foot \u2014 heel of extended leg stays down", stopIf: "knee or groin sharp pain", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "6 per side" },
-  { slug: "wu_worlds_greatest_stretch", name: "World's greatest stretch", role: "mobility_joint", cue: "elbow to instep, then reach up to open thorax", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per side" },
-  { slug: "wu_spiderman_reach", name: "Spiderman + rotational reach", role: "mobility_joint", cue: "reach the top hand for the ceiling \u2014 eyes chase it", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per side" },
-  { slug: "wu_frog_rock", name: "Frog stretch rock-back", role: "mobility_joint", setup: "quadruped, knees wide", cue: "rock slow, keep back flat", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "8 slow rocks" },
-  { slug: "wu_hip_airplane", name: "Hip airplanes (SL hinge + rotation)", role: "mobility_joint", cue: "square the hips, then open, then square \u2014 no wobble", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "5 per side", beginnerDose: "3 per side with wall support" },
-  { slug: "wu_adductor_rock", name: "Adductor rock-back", role: "mobility_joint", setup: "half-kneeling, one leg extended lateral", cue: "hips back and down, chest tall", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 per side" },
-  { slug: "wu_couch_stretch_active", name: "Active couch stretch + posterior tilt", role: "mobility_joint", setup: "rear foot elevated behind you", cue: "squeeze glute, tuck tail, breathe", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "30 sec + 5 reps per side" },
-  { slug: "wu_tspine_open_book", name: "T-spine open book", role: "mobility_joint", cue: "reach long, follow with your eyes", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "6 per side" },
-  { slug: "wu_wall_hip_flexor_slide", name: "Wall-assisted hip flexor slide", role: "mobility_joint", cue: "posterior tilt drives the stretch, not the lean", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "5 per side" },
-  // Activation
-  { slug: "wu_miniband_lat_walk", name: "Mini-band lateral walk", role: "activation", setup: "light mini-band above knees", cue: "knees track toes, hips stay level", stopIf: "knee tracking pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10 steps each way" },
-  { slug: "wu_miniband_monster_walk", name: "Mini-band monster walk", role: "activation", setup: "band above knees", cue: "athletic stance, small steps, tension the whole time", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8 forward + 8 back" },
-  { slug: "wu_glute_bridge_walkout", name: "Glute bridge walkout", role: "activation", setup: "hips up, walk feet out then back in", cue: "hips stay level, don't let one side drop", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 6 steps" },
-  { slug: "wu_deadbug_band_press", name: "Dead-bug w/ band overhead press iso", role: "activation", cue: "ribs locked down, exhale as leg extends", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 5 per side" },
-  { slug: "wu_bird_dog_slow", name: "Bird-dog slow tempo", role: "activation", cue: "no hip shift when the leg extends", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 5 per side" },
-  { slug: "wu_prone_hip_ext_iso", name: "Prone glute-only hip extension", role: "activation", cue: "lift the leg with the glute, not the low back", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 6 per side" },
-  { slug: "wu_singleleg_glute_bridge", name: "Single-leg glute bridge", role: "activation", cue: "drive through the heel, keep hips level", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 6 per side" },
-  // Stability
-  { slug: "wu_pallof_press_iso", name: "Resist-Turning Press Hold", role: "stability", cue: "arms extend, ribs stay square to cable", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 20 sec per side" },
-  { slug: "wu_copenhagen_short_lever", name: "Short-lever Copenhagen plank", role: "stability", cue: "top knee on bench, drive it down into the pad", stopIf: "groin pain", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "2 x 15 sec per side", eliteDose: "2 x 25 sec per side" },
-  { slug: "wu_sl_rdl_reach", name: "Single-leg RDL balance reach", role: "stability", cue: "hips square, reach long, no wobble", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 5 per side" },
-  { slug: "wu_split_stance_iso_hold", name: "Split-stance iso hold + march", role: "stability", cue: "vertical shin, ribs stacked over pelvis", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 sec per side" },
-  { slug: "wu_serratus_wall_slide", name: "Serratus wall slide", role: "stability", setup: "forearms on wall", cue: "reach long at the top, don't shrug", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8" },
-  // Neural priming
-  { slug: "wu_ankle_bounce_series", name: "Ankle bounce series (stiff ankles)", role: "neural_priming", cue: "ground is hot, minimum contact time", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 15 sec" },
-  { slug: "wu_line_hops_forward_back", name: "Line hops forward-back", role: "neural_priming", cue: "quick feet, both directions clean", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 20 sec" },
-  { slug: "wu_line_hops_lateral", name: "Line hops lateral", role: "neural_priming", cue: "stiff ankles, don't drift", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 20 sec" },
-  { slug: "wu_a_skip", name: "A-skip", role: "neural_priming", cue: "tall posture, front-side mechanics \u2014 knee up, toe up", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 yards" },
-  { slug: "wu_b_skip", name: "B-skip", role: "neural_priming", cue: "same as A, but paw the ground down and back", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "2 x 20 yards" },
-  { slug: "wu_wickets_low", name: "Low wicket runs (rhythm)", role: "neural_priming", setup: "Line up 8 mini hurdles (6-8 inches tall) in a straight line, exactly 5 feet apart \u2014 about 40 feet total. If you have no hurdles, use rolled towels or shoes as markers.", cue: "Jog in and start running at 75% speed as you hit the first hurdle. Stay tall (chest up, eyes forward). Let each foot land BETWEEN the hurdles \u2014 pick the knee straight up and let it cycle down under your hip. Do not stride out to reach for a hurdle. Walk back to the start between reps.", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 runs through \u2014 walk back between each" },
-  { slug: "wu_reaction_ball_wall", name: "Reaction ball vs wall", role: "neural_priming", setup: "Stand 6-10 ft from a solid wall with a reaction ball (lumpy rubber ball) or a lacrosse/pinky ball. Feet shoulder-width, athletic stance.", cue: "Throw the ball into the wall, then catch it with two hands before it bounces twice. The ball will kick unpredictably \u2014 react early, stay light on your feet, and reset your stance between throws.", stopIf: "rolled ankle, shoulder pinch, or dizziness", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 rounds of 20 sec \u2014 reset between" },
-  // Fast-twitch primer
-  { slug: "wu_pogo_double", name: "Pogo hops (double-leg)", role: "fast_twitch", axis: "bilateral", regions: ["ankle", "calf", "achilles"], setup: "Stand tall on a firm, flat surface with feet hip-width, shoes on. Arms bent at your sides \u2014 they stay quiet the whole set.", cue: "Bounce straight up and down off the balls of both feet, keeping the knees almost locked so the ankle does the work. The ground is hot \u2014 get off it fast. Each contact should sound short and crisp, not a thud. Stop the set the moment contacts start getting slow or loud.", stopIf: "shin or achilles pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 12 contacts", beginnerDose: "2 x 8 contacts" },
-  { slug: "wu_pogo_single", name: "Single-leg pogo (symmetry)", role: "fast_twitch", axis: "single_leg", regions: ["ankle", "calf", "achilles", "knee"], setup: "Balance on one foot, other knee bent so the free foot is behind you. Fingertips can touch a wall for balance the first few reps.", cue: "Bounce in place on that one foot with a stiff ankle and a nearly straight knee. Hold the same spot on the floor \u2014 no drifting. Count the reps on each side and make the second side match the first in height and rhythm. If one side is clearly lower, that is the side telling you where your ground force is leaking.", stopIf: "any strain", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 6 per side" },
-  { slug: "wu_pogo_lateral", name: "Lateral pogo (skater rhythm)", role: "fast_twitch", axis: "single_leg", regions: ["ankle", "knee", "groin"], setup: "Stand tall with about 6 feet of clear floor to each side.", cue: "Hop sideways foot to foot, covering roughly one foot of ground each hop. Land on the ball of the foot with a stiff ankle and immediately push back the other way \u2014 no pausing between hops. Chest stays up, hips stay level.", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 10 per side" },
-  { slug: "wu_snap_jump", name: "Snap jump (rapid concentric)", role: "fast_twitch", axis: "bilateral", regions: ["knee", "hip"], setup: "Feet hip-width in an athletic stance with room overhead.", cue: "Drop fast into a quarter squat and reverse it instantly into a jump \u2014 the down and the up are one motion, not two. Land soft, reset your stance, then go again. Quality over count: end the set when the reversal stops feeling snappy.", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "3 x 4" },
-  { slug: "wu_med_ball_scoop_toss", name: "Med-ball scoop toss (rear-hip explosive)", role: "fast_twitch", axis: "bilateral", equipment: ["med_ball"], fallbackSlug: "wu_sl_broad_hop_stick", regions: ["hip", "back"], setup: "6-8 lb med ball held low between the knees in an athletic stance, facing open space or a high wall.", cue: "Dip the hips, then rip them open and throw the ball straight up and forward like you are scooping it out of the ground. The arms are ropes \u2014 the hips do the work. Reset fully between reps.", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 x 4" },
-  { slug: "wu_med_ball_shot_put", name: "Med-ball rotational shot-put", role: "fast_twitch", axis: "bilateral", equipment: ["med_ball", "wall"], fallbackSlug: "wu_dry_swing_burst", regions: ["hip", "back", "shoulder"], setup: "6-8 lb med ball at the chest, standing side-on about 8 feet from a solid wall.", cue: "Load into the back hip, then turn the back hip through and shove the ball into the wall at full intent. Small volume, maximum quality \u2014 every throw is meant to be your hardest.", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 3 per side" },
-  { slug: "wu_broad_jump_prep", name: "Broad jump \u2014 60% intent primer", role: "fast_twitch", axis: "bilateral", regions: ["knee", "hip", "hamstring"], setup: "Clear 10-12 feet of flat ground in front of you.", cue: "Swing the arms back, hinge the hips, and jump forward at about 60% of your best \u2014 this is a primer, not a test. Land in an athletic stance and hold the landing for a beat before walking back.", gameDayLegal: false, minLifecycle: "beginner", source: "internal", baseDose: "4 x 1" },
-  { slug: "wu_altitude_drop", name: "Altitude drop landing (RSI primer)", role: "fast_twitch", axis: "bilateral", equipment: ["box"], fallbackSlug: "wu_sl_curb_drop_stick", regions: ["knee", "ankle", "achilles"], setup: "Stand on a 6-12 inch box or sturdy step with the toes at the edge.", cue: "Step off \u2014 do not jump off \u2014 and land on both feet with stiff ankles and quiet knees. Absorb and freeze for two seconds. There is no rebound today; the goal is to teach the leg to accept force fast.", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "3 x 3" },
-  { slug: "wu_falling_start", name: "Falling start (10 yd)", role: "fast_twitch", axis: "single_leg", regions: ["hamstring", "calf"], setup: "Stand tall at one end of 15 yards of clear, flat ground.", cue: "Stay straight as a board and let yourself tip forward from the ankles. The instant you feel like you would fall, punch one foot into the ground and sprint 10 yards. Fastest first step wins. Walk all the way back before the next rep.", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 10 yds" },
-  { slug: "wu_split_snap_jump", name: "Split-stance snap-switch jump", role: "fast_twitch", axis: "single_leg", regions: ["knee", "hip", "groin"], setup: "Start in a split stance \u2014 one foot forward, one back, both knees soft.", cue: "Jump just high enough to switch the feet in the air and land back in a split stance. Land quiet, immediately switch again. Power comes from pushing the ground away, not from lifting the knees.", stopIf: "any knee pain", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "3 x 4 per side" },
-  // ── Ladder quickness (Marinovich reflex canon / Zone28 · Pow3R Plus repeat bursts)
-  { slug: "wu_ladder_one_in_each", name: "Ladder \u2014 one foot in each box", role: "ladder_quickness", axis: "single_leg", equipment: ["ladder"], fallbackSlug: "wu_chalk_line_one_in_each", regions: ["ankle", "calf"], setup: "Lay an agility ladder flat on level ground and stand at one end with feet hip-width, weight on the balls of the feet, hands ready in front of your chest.", cue: "Run the ladder placing exactly one foot in every box \u2014 right, left, right, left \u2014 all the way to the far end. Stay tall, look up the ladder rather than down at your feet, and pump the arms in rhythm with the feet. Ground contacts should be light and fast, not stomps. Walk back to the start between runs and reset your posture before you go again.", stopIf: "ankle roll, shin pain, or feet losing their rhythm two runs in a row", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "4 runs \u2014 walk back between", beginnerDose: "3 runs \u2014 walk back between", eliteDose: "5 runs at maximum turnover" },
-  { slug: "wu_ladder_two_in_each", name: "Ladder \u2014 two feet in each box (icky rhythm)", role: "ladder_quickness", axis: "bilateral", equipment: ["ladder"], fallbackSlug: "wu_chalk_line_two_in_each", regions: ["ankle", "calf"], setup: "Ladder flat on the ground, standing at one end in an athletic stance with knees soft.", cue: "Put both feet into each box before moving to the next \u2014 right in, left in, right out, left out. Keep the hips low and square down the ladder and do not let the feet cross. Speed comes second: hit the pattern clean twice, then push the tempo on the remaining runs.", stopIf: "pattern breaks down or the feet start clipping the rungs", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "4 runs \u2014 walk back between", beginnerDose: "3 runs", eliteDose: "5 runs, last two at max turnover" },
-  { slug: "wu_ladder_lateral_shuffle", name: "Ladder \u2014 lateral in-in-out-out", role: "ladder_quickness", axis: "bilateral", equipment: ["ladder"], fallbackSlug: "wu_chalk_line_lateral", regions: ["ankle", "groin", "knee"], setup: "Stand side-on at one end of the ladder with the ladder running to your right, feet shoulder-width, hips low.", cue: "Step the lead foot in, the trail foot in, then the lead foot out beyond the ladder and the trail foot out \u2014 that is one box. Travel sideways down the whole ladder without ever turning the shoulders. Keep the chest up and the hips level; if you start bobbing up and down, slow down and reclaim the level hips. Run it down and back so both sides lead equally.", stopIf: "groin tightness or knees collapsing inward", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 trips down and back", beginnerDose: "2 trips down and back", eliteDose: "4 trips down and back" },
-  { slug: "wu_ladder_single_leg_hop_through", name: "Ladder \u2014 single-leg hop through", role: "ladder_quickness", axis: "single_leg", equipment: ["ladder"], fallbackSlug: "wu_chalk_line_sl_hop", regions: ["ankle", "calf", "achilles", "knee"], setup: "Stand on one foot at the end of the ladder, other knee bent behind you, arms ready to help with rhythm.", cue: "Hop forward on that one foot, landing once in each box, all the way to the end. Land on the ball of the foot with a stiff ankle and get off the ground instantly \u2014 you are looking for a machine-gun rhythm, not big hops. Complete the run on one leg, walk back, then run it on the other leg. Both sides get the same number of runs, always.", stopIf: "any achilles, shin, or knee pain, or the landing side collapsing inward", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 runs per leg \u2014 walk back between", beginnerDose: "2 runs per leg", eliteDose: "4 runs per leg at max turnover" },
-  { slug: "wu_ladder_in_out_hops", name: "Ladder \u2014 single-leg in-out zig hops", role: "ladder_quickness", axis: "single_leg", equipment: ["ladder"], fallbackSlug: "wu_chalk_line_sl_zig", regions: ["ankle", "knee", "groin"], setup: "Stand on one foot beside the first box of the ladder.", cue: "Hop diagonally into the box, then diagonally out to the other side of the ladder, then back in \u2014 zig-zagging down the ladder on that single leg. Land on the ball of the foot each time and keep the knee tracking over the toe. This is the drill that teaches the ankle and hip to redirect force sideways at speed. Same number of runs on each leg.", stopIf: "knee caving in, ankle pain, or any landing you cannot control", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "2 runs per leg", beginnerDose: "1 run per leg", eliteDose: "3 runs per leg" },
-  { slug: "wu_chalk_line_one_in_each", name: "Line pattern \u2014 one foot in each space (no ladder)", role: "ladder_quickness", axis: "single_leg", regions: ["ankle", "calf"], setup: "Mark 8-10 short lines about 18 inches apart on the ground using chalk, tape, sticks, socks, or shoes \u2014 anything that gives you a visual box. Stand at one end in an athletic stance.", cue: "Run the pattern putting exactly one foot in each space \u2014 right, left, right, left. Look ahead, stay tall on the balls of the feet, and pump the arms in rhythm. The markers are only a guide: what matters is fast, light, accurate feet. Walk back between runs.", stopIf: "ankle roll, shin pain, or rhythm falling apart", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "4 runs \u2014 walk back between", beginnerDose: "3 runs", eliteDose: "5 runs at max turnover" },
-  { slug: "wu_chalk_line_two_in_each", name: "Line pattern \u2014 two feet in each space (no ladder)", role: "ladder_quickness", axis: "bilateral", regions: ["ankle", "calf"], setup: "Mark 8-10 spaces about 18 inches apart with chalk, tape, or any flat markers. Athletic stance at one end.", cue: "Both feet touch down in each space before you move on \u2014 right in, left in, right out, left out. Hips stay low and square, feet never cross. Clean pattern first, then speed on the later runs.", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "4 runs \u2014 walk back between", beginnerDose: "3 runs", eliteDose: "5 runs" },
-  { slug: "wu_chalk_line_lateral", name: "Line pattern \u2014 lateral in-in-out-out (no ladder)", role: "ladder_quickness", axis: "bilateral", regions: ["ankle", "groin", "knee"], setup: "Mark a straight line 10-15 feet long on the ground, or use a field chalk line, a seam in the floor, or a rope.", cue: "Stand side-on with the line to your right. Step both feet across the line, then both feet back \u2014 travelling down the line sideways without turning the shoulders. Chest up, hips level, quick and quiet feet. Travel down and back so both sides lead.", stopIf: "groin tightness or knees caving in", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 trips down and back", beginnerDose: "2 trips", eliteDose: "4 trips" },
-  { slug: "wu_chalk_line_sl_hop", name: "Line pattern \u2014 single-leg hop through (no ladder)", role: "ladder_quickness", axis: "single_leg", regions: ["ankle", "calf", "achilles", "knee"], setup: "Mark 6-8 spaces about 18 inches apart, or simply use a straight line on the ground. Stand on one foot at one end.", cue: "Hop forward on that one foot, touching down once per space, all the way through. Stiff ankle, ball of the foot, off the ground immediately \u2014 quick machine-gun rhythm, not big hops. Walk back and repeat on the other leg for the same number of runs.", stopIf: "achilles, shin, or knee pain, or the landing leg collapsing", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 runs per leg", beginnerDose: "2 runs per leg", eliteDose: "4 runs per leg" },
-  { slug: "wu_chalk_line_sl_zig", name: "Line pattern \u2014 single-leg zig-zag hops (no ladder)", role: "ladder_quickness", axis: "single_leg", regions: ["ankle", "knee", "groin"], setup: "Use any straight line on the ground \u2014 a chalk line, floor seam, rope, or a row of markers 10-12 feet long. Stand on one foot beside one end.", cue: "Hop diagonally across the line, then diagonally back, zig-zagging down the line on that single leg. Land on the ball of the foot, knee tracking over the toe, and redirect instantly. Same number of runs on each leg.", stopIf: "knee caving in, ankle pain, or any landing you cannot control", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "2 runs per leg", beginnerDose: "1 run per leg", eliteDose: "3 runs per leg" },
-  // ── Single-leg twitch (the majority of the twitch layer)
-  { slug: "wu_sl_line_hop_fb", name: "Single-leg line hops \u2014 forward and back", role: "single_leg_twitch", axis: "single_leg", regions: ["ankle", "calf", "achilles"], setup: "Find any line on the ground \u2014 a floor seam, chalk line, or a piece of tape. Stand on one foot just behind it.", cue: "Hop forward over the line and immediately back, over and over, for the full time. Stay on the ball of the foot with a stiff ankle and the knee only slightly bent. The line should be crossed by inches, not feet \u2014 this is about speed off the ground, not distance. Equal time on both legs.", stopIf: "shin or achilles pain, or the hops getting slow and heavy", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 12 sec per leg", beginnerDose: "2 x 8 sec per leg", eliteDose: "3 x 15 sec per leg" },
-  { slug: "wu_sl_line_hop_lateral", name: "Single-leg line hops \u2014 lateral", role: "single_leg_twitch", axis: "single_leg", regions: ["ankle", "knee", "groin"], setup: "Stand on one foot beside a line on the ground, hips square, arms ready.", cue: "Hop sideways over the line and straight back, again and again. Keep the knee tracking over the toe and refuse to let it cave inward \u2014 the moment it does, the set is over. Land quiet on the ball of the foot. Equal time on both legs.", stopIf: "knee caving in, groin tightness, or ankle pain", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 x 12 sec per leg", beginnerDose: "2 x 8 sec per leg", eliteDose: "3 x 15 sec per leg" },
-  { slug: "wu_sl_ankle_stiffness_bounce", name: "Single-leg ankle stiffness bounce", role: "single_leg_twitch", axis: "single_leg", regions: ["ankle", "calf", "achilles"], setup: "Stand on one foot on a firm surface. Fingertips may rest on a wall for balance.", cue: "Bounce in place on that foot with a near-straight knee so the ankle alone stores and returns the energy. Tiny hops, maximum speed \u2014 you are trying to make the shortest possible time on the ground. Count the contacts and match the second leg exactly.", stopIf: "achilles or shin pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 10 contacts per leg", beginnerDose: "2 x 8 contacts per leg", eliteDose: "3 x 15 contacts per leg" },
-  { slug: "wu_sl_snap_hop_stick", name: "Single-leg snap hop and stick", role: "single_leg_twitch", axis: "single_leg", regions: ["knee", "ankle", "hip"], setup: "Stand on one foot with 3-4 feet of clear space in front of you.", cue: "Dip fast into a quarter-bend and immediately hop forward a short distance on that same leg, then stick the landing completely still for two full seconds. If you have to hop or stumble to catch the landing, the hop was too big \u2014 shorten it. Same reps both legs.", stopIf: "knee pain or any landing you cannot control", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 4 per leg", beginnerDose: "2 x 3 per leg", eliteDose: "3 x 5 per leg" },
-  { slug: "wu_sl_broad_hop_stick", name: "Single-leg broad hop and stick", role: "single_leg_twitch", axis: "single_leg", regions: ["knee", "hip", "hamstring"], setup: "Stand on one foot with 8-10 feet of clear, flat ground ahead.", cue: "Swing the arms, hinge slightly, and hop forward on one leg at about 70% of your maximum distance. Land on the same leg and freeze \u2014 chest up, knee over toe, no wobble. Walk back between reps. Equal reps both legs, and if one side cannot stick the landing, cut the distance on both.", stopIf: "knee or hamstring pain, or repeated failed landings", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 3 per leg", beginnerDose: "2 x 2 per leg", eliteDose: "3 x 4 per leg" },
-  { slug: "wu_sl_curb_drop_stick", name: "Single-leg curb drop and stick", role: "single_leg_twitch", axis: "single_leg", regions: ["ankle", "knee", "achilles"], setup: "Stand on a curb, low step, or 6-8 inch surface on one foot, toes near the edge.", cue: "Step off \u2014 never jump off \u2014 and land on that same single leg with a stiff ankle and a quiet knee. Freeze the landing for two seconds before stepping back up. This teaches the leg to accept force instantly, which is exactly what a first step and a hard cut demand. Equal reps both legs.", stopIf: "any knee, achilles, or ankle pain", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 3 per leg", beginnerDose: "2 x 2 per leg", eliteDose: "3 x 4 per leg" },
-  { slug: "wu_sl_skater_bound_stick", name: "Skater bound and stick", role: "single_leg_twitch", axis: "single_leg", regions: ["knee", "groin", "ankle"], setup: "Stand on one foot with 6-8 feet of clear space to each side.", cue: "Push off the outside of the standing foot and bound sideways onto the other foot, then hold that landing completely still for two seconds. Chest up, hips level, knee over toe. Bound back the other way. This is the exact pattern of a hard lateral break in the field.", stopIf: "knee caving in, groin pain, or unstable landings", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 4 per side", beginnerDose: "2 x 3 per side", eliteDose: "3 x 5 per side" },
-  { slug: "wu_sl_split_switch_burst", name: "Split-stance switch burst", role: "single_leg_twitch", axis: "single_leg", regions: ["hip", "knee", "groin"], setup: "Start in a split stance \u2014 one foot forward, one back, both knees soft, chest tall.", cue: "Jump just high enough to switch the feet in the air, land soft in a split stance, and switch again immediately. Short, quick switches \u2014 the power comes from pushing the ground away, not from lifting the knees. Keep the torso quiet the whole set.", stopIf: "knee or groin pain", gameDayLegal: false, minLifecycle: "advanced", source: "internal", baseDose: "3 x 6 switches", beginnerDose: "2 x 4 switches", eliteDose: "3 x 8 switches" },
-  { slug: "wu_sl_march_pop", name: "Single-leg march pop (ground-force march)", role: "single_leg_twitch", axis: "single_leg", regions: ["hip", "calf", "ankle"], setup: "Stand tall with 15 yards of clear ground ahead. Arms bent at 90 degrees.", cue: "March forward slowly but punch each foot into the ground hard enough that you pop slightly off the floor each step. Knee up, toe up, tall through the spine. This is a low-cost way to teach the leg to hit the ground hard without sprinting.", stopIf: "calf or hip flexor tightness", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 15 yds", beginnerDose: "2 x 10 yds", eliteDose: "3 x 20 yds" },
-  // ── Ground force (short maximal contacts — the sport is a burst sport)
-  { slug: "wu_gf_wall_drive_single", name: "Wall drive \u2014 single-leg punch", role: "ground_force", axis: "single_leg", equipment: ["wall"], fallbackSlug: "wu_gf_seated_start", regions: ["hip", "calf"], setup: "Lean into a wall with both hands at shoulder height, body in a straight line from head to heel at about a 45-degree angle. One knee is driven up to hip height.", cue: "Punch the down foot into the floor and switch legs, holding the new knee up for a full second. The body line never breaks \u2014 no sagging hips, no bending at the waist. Each punch should be violent and short. Alternate legs for the prescribed count.", stopIf: "hip flexor or calf strain", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 x 6 per leg", beginnerDose: "2 x 4 per leg", eliteDose: "3 x 8 per leg" },
-  { slug: "wu_gf_seated_start", name: "Seated-to-sprint start (8 yd)", role: "ground_force", axis: "single_leg", regions: ["hamstring", "calf", "hip"], setup: "Sit on the ground facing 15 yards of clear, flat running space, legs out in front, hands beside your hips.", cue: "From dead still, get up and sprint 8 yards as fast as you can. Because you start with zero momentum, every bit of speed has to come from how hard you hit the ground. Walk all the way back and rest until your breathing is normal before the next rep \u2014 this is a quality drill, not conditioning.", stopIf: "any hamstring or calf grab \u2014 shut the whole set down", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "3 x 8 yds \u2014 full rest between", beginnerDose: "2 x 8 yds", eliteDose: "4 x 8 yds" },
-  { slug: "wu_gf_band_resisted_step", name: "Band-resisted first step", role: "ground_force", axis: "single_leg", equipment: ["bands", "partner"], fallbackSlug: "wu_gf_seated_start", regions: ["hip", "hamstring", "calf"], setup: "Loop a long resistance band around your waist with a partner holding the other end behind you, or anchor it to a fixed post. Set up in an athletic stance with the band already under light tension.", cue: "Drive out against the band for 3-4 hard steps, pushing the ground back at a forward body angle \u2014 not standing up tall. Each step is a separate maximal effort. Walk back to the start and let the band go slack before the next rep.", stopIf: "hamstring or hip strain, or the body angle collapsing upright", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "4 x 4 steps", beginnerDose: "3 x 3 steps", eliteDose: "5 x 4 steps" },
-  { slug: "wu_gf_repeat_burst", name: "Repeat 5-second burst (Zone28 rhythm)", role: "ground_force", axis: "single_leg", regions: ["hamstring", "calf", "hip"], setup: "Clear 20 yards of flat ground. This drill mirrors the real demand of baseball and softball: an all-out burst, then a full reset.", cue: "Sprint hard for 5 seconds \u2014 roughly 20 yards \u2014 then walk back slowly and rest a full 45 seconds before the next one. Every burst should be as fast as the first. The second a burst is noticeably slower, the set is finished, no matter how many reps are left.", stopIf: "any grab in the hamstring or calf, or a burst that is clearly slower than the first", gameDayLegal: false, minLifecycle: "intermediate", source: "internal", baseDose: "4 bursts \u2014 45 sec rest between", beginnerDose: "3 bursts", eliteDose: "5 bursts" },
-  { slug: "wu_gf_hip_lock_hold", name: "Sprint hip-lock hold", role: "ground_force", axis: "single_leg", regions: ["hip", "calf"], setup: "Stand tall next to a wall or post you can touch for balance.", cue: "Drive one knee up to hip height with the toe pulled up, and hold that exact sprint position for the prescribed seconds while pushing the standing foot hard into the ground. Hips stay square and level, spine tall. Switch legs. This teaches the position your body has to hold at top speed.", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 10 sec per leg", beginnerDose: "2 x 8 sec per leg", eliteDose: "3 x 15 sec per leg" },
-  { slug: "wu_dry_swing_burst", name: "Dry-swing burst ladder", role: "ground_force", axis: "bilateral", equipment: ["bat"], fallbackSlug: "wu_gf_hip_lock_hold", regions: ["hip", "back"], setup: "Take your bat into open space with room to swing safely in every direction.", cue: "Take three swings in a row: the first at 50%, the second at 75%, the third at 100% intent. The rear hip fires first on every one. Rest 20 seconds, then repeat the ladder. This wakes the rotational burst without spending your best swings.", stopIf: "any rib, oblique, or low-back tweak", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 ladders of 3 swings per side", beginnerDose: "2 ladders of 3 swings per side", eliteDose: "3 ladders of 3 swings per side at full intent" },
-  // Weightless Object Sport Training (WOST) — coordination, hand-eye, rhythm, no load
-  { slug: "wu_tennis_ball_reaction_toss", name: "Tennis ball reaction toss", role: "weightless_coordination", setup: "facing wall or partner 6-10 ft away", cue: "catch it on the first bounce \u2014 no extra steps", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
-  { slug: "wu_tennis_ball_self_rally", name: "Tennis ball self-rally", role: "weightless_coordination", setup: "small space, one hand only", cue: "bounce, catch, repeat \u2014 smooth rhythm", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
-  { slug: "wu_tennis_ball_one_hand_catch", name: "Tennis ball one-hand catch", role: "weightless_coordination", setup: "toss and catch with one hand", cue: "no bobbling \u2014 stick the catch", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 12 per side", beginnerDose: "2 x 8 per side", eliteDose: "1 x 12 per side" },
-  { slug: "wu_tennis_ball_cross_body_catch", name: "Tennis ball cross-body catch", role: "weightless_coordination", cue: "reach across the midline \u2014 let the ribcage rotate", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10 per side", beginnerDose: "2 x 6 per side", eliteDose: "1 x 10 per side" },
-  { slug: "wu_tennis_ball_clap_catch", name: "Tennis ball clap-catch", role: "weightless_coordination", cue: "toss, clap, catch \u2014 one bounce", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10", beginnerDose: "2 x 6", eliteDose: "1 x 10" },
-  { slug: "wu_scarf_juggle", name: "Scarf juggling (2-3 scarves)", role: "weightless_coordination", cue: "toss slowly, track the arc with eyes", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 30 sec", beginnerDose: "2 x 30 sec", eliteDose: "1 x 30 sec" },
-  { slug: "wu_scarf_cross_body_catch", name: "Scarf cross-body catch", role: "weightless_coordination", setup: "Stand tall with one light silk/juggling scarf (or a light cloth napkin) held in your RIGHT hand at hip level. Feet shoulder-width, hips facing forward \u2014 they stay facing forward the entire drill.", cue: "Toss the scarf up and across your body toward your LEFT shoulder so it floats above head height, then let it fall. Reach across your midline and catch it in your LEFT hand before it drops below your waist. Immediately toss it back across to the RIGHT and catch with the RIGHT hand. That is 1 rep per side. Keep hips square \u2014 only the arms and ribcage rotate. Slow, smooth, no missed catches.", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 sets x 8 catches per side", beginnerDose: "2 sets x 5 catches per side", eliteDose: "1 set x 8 catches per side" },
-  { slug: "wu_scarf_toss_and_move", name: "Scarf toss and move under", role: "weightless_coordination", cue: "toss high, shuffle under it, catch at the peak", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 6", beginnerDose: "2 x 4", eliteDose: "1 x 6" },
-  { slug: "wu_scarf_one_hand_snatch", name: "Scarf one-hand snatch", role: "weightless_coordination", cue: "snatch it out of the air with one hand \u2014 quick exchange", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8 per side", beginnerDose: "2 x 5 per side", eliteDose: "1 x 8 per side" },
-  { slug: "wu_balloon_keep_up", name: "Balloon keep-up", role: "weightless_coordination", setup: "hand or forearm only", cue: "keep it alive with minimal force \u2014 read the float", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 45 sec", beginnerDose: "2 x 30 sec", eliteDose: "1 x 45 sec" },
-  { slug: "wu_balloon_hand_switch", name: "Balloon hand-switch keep-up", role: "weightless_coordination", cue: "alternate hands, no double taps", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
-  { slug: "wu_balloon_partner_volley", name: "Balloon partner volley", role: "weightless_coordination", setup: "with a partner, no spiking", cue: "soft, controlled, read the arc", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 45 sec", beginnerDose: "2 x 30 sec", eliteDose: "1 x 45 sec" },
-  { slug: "wu_beanbag_toss_and_catch", name: "Beanbag toss and catch", role: "weightless_coordination", cue: "catch it soft \u2014 no sound on landing", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 12", beginnerDose: "2 x 8", eliteDose: "1 x 12" },
-  { slug: "wu_beanbag_balance_walk", name: "Beanbag balance walk", role: "weightless_coordination", setup: "beanbag on top of the head", cue: "tall posture, walk heel-to-toe", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 yds", beginnerDose: "2 x 10 yds", eliteDose: "1 x 20 yds" },
-  { slug: "wu_beanbag_foot_flip", name: "Beanbag foot flip", role: "weightless_coordination", cue: "flip it up with the foot, catch it with the same-side hand", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 6 per side", beginnerDose: "2 x 4 per side", eliteDose: "1 x 6 per side" },
-  { slug: "wu_reaction_drop_catch", name: "Reaction drop-catch", role: "weightless_coordination", setup: "partner drops the ball without warning", cue: "explode the hand \u2014 catch before the second bounce", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10", beginnerDose: "2 x 6", eliteDose: "1 x 10" },
-  { slug: "wu_coin_finger_roll", name: "Coin finger roll", role: "weightless_coordination", setup: "coin on back of hand, flip and catch", cue: "quiet fingers, smooth arc", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 10 per side", beginnerDose: "2 x 6 per side", eliteDose: "1 x 10 per side" },
-  { slug: "wu_rhythm_ball_tap", name: "Rhythm ball tap", role: "weightless_coordination", setup: "bounce a tennis ball to a metronome or beat", cue: "same spot every bounce \u2014 no chasing", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
-  { slug: "wu_mini_frisbee_toss", name: "Mini frisbee toss and catch", role: "weightless_coordination", cue: "soft throw, read the spin, clean catch", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10", beginnerDose: "2 x 6", eliteDose: "1 x 10" },
-  { slug: "wu_mini_frisbee_roll_catch", name: "Mini frisbee roll catch", role: "weightless_coordination", cue: "roll it, let it spin, catch it on the return", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8", beginnerDose: "2 x 5", eliteDose: "1 x 8" },
-  { slug: "wu_mirror_me_ball_toss", name: "Mirror-me partner ball toss", role: "weightless_coordination", setup: "face partner, mirror their movement as they toss", cue: "read the release, catch, mirror the next throw", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
-  { slug: "wu_light_bat_shadow_tap", name: "Light bat shadow tap", role: "weightless_coordination", setup: "light bat or dowel", cue: "tap the end of the bat to the wall with the eyes tracking", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10 per side", beginnerDose: "2 x 6 per side", eliteDose: "1 x 10 per side" },
-  { slug: "wu_shuttle_tap_up", name: "Badminton shuttle tap-up", role: "weightless_coordination", cue: "tap the shuttle straight up \u2014 no sideways drift", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 sec", beginnerDose: "2 x 15 sec", eliteDose: "1 x 20 sec" },
-  { slug: "wu_partner_alternating_catch", name: "Partner alternating rapid catch", role: "weightless_coordination", setup: "two balls, two partners", cue: "catch one, toss the other \u2014 no gaps", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 30 sec", beginnerDose: "2 x 20 sec", eliteDose: "1 x 30 sec" },
-  // Movement bridge
-  { slug: "wu_dry_swing_progressive", name: "Progressive dry swings (intent ladder)", role: "movement_bridge", cue: "swing 1 at 50%, swing 2 at 75%, swing 3 at 100% \u2014 feel the elastic snap", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "3 x 3 per side" },
-  { slug: "wu_mirror_throw_prep", name: "Dry throw arm-swing prep", role: "movement_bridge", cue: "half-speed rehearsal \u2014 pattern first, intent last", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 6" },
-  { slug: "wu_shuffle_change_direction", name: "Shuffle \u2192 change of direction", role: "movement_bridge", cue: "athletic stance, react like a defender", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 sec each way" },
-  { slug: "wu_crossover_run", name: "Crossover run (open the hip)", role: "movement_bridge", cue: "cross over long, don't hop", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 15 yds each way" },
-  // Arm care
-  { slug: "wu_jband_full", name: "Arm-care band chart", role: "arm_care", setup: "arm-care band anchored at chest height", cue: "control the eccentric \u2014 every rep", stopIf: "shoulder sharp pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "full chart @ 1 x 10 each" },
-  { slug: "wu_crossover_symmetry_full", name: "Band activation chart", role: "arm_care", cue: "smooth reps, exhale on pull", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "full chart @ 1 x 10 each" },
-  { slug: "wu_prone_tyw", name: "Prone T / Y / W", role: "arm_care", cue: "thumbs up, squeeze the shoulder blades", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8 each letter" },
-  { slug: "wu_er_at_90", name: "External rotation at 90\xB0", role: "arm_care", setup: "band anchored elbow height", cue: "elbow high, slow eccentric", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 12 per side" },
-  { slug: "wu_scap_pushup", name: "Scapular push-up", role: "arm_care", cue: "protract/retract only \u2014 no elbow bend", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10" },
-  { slug: "wu_face_pull_band", name: "Band face pull", role: "arm_care", setup: "band at eye level", cue: "elbows high, pull the band apart, external rotate", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 12" },
-  { slug: "wu_forearm_pump", name: "Forearm flexor/extensor pump", role: "arm_care", cue: "band or light weight, high reps to flush", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "1 x 20 each direction" }
-];
-function doseFor(drill, lifecycle) {
-  if (lifecycle === "youth" || lifecycle === "beginner") return drill.beginnerDose ?? drill.baseDose;
-  if (lifecycle === "elite") return drill.eliteDose ?? drill.baseDose;
-  return drill.baseDose;
-}
-var EQUIPMENT_OVERRIDES = {
-  wu_foam_roll_tspine: { equipment: ["foam_roller"], fallbackSlug: "wu_tspine_open_book" },
-  wu_lacrosse_ball_pec: { equipment: ["massage_ball", "wall"], fallbackSlug: "wu_serratus_wall_slide" },
-  wu_lacrosse_ball_glute: { equipment: ["massage_ball"], fallbackSlug: "wu_frog_rock" },
-  wu_calf_softball_pin: { equipment: ["massage_ball"], fallbackSlug: "wu_barefoot_towel_scrunch" },
-  wu_medball_rot_toss_wall: { equipment: ["med_ball", "wall"], fallbackSlug: "wu_thoracic_windmill" },
-  wu_miniband_lat_walk: { equipment: ["mini_band"], fallbackSlug: "wu_glute_bridge_walkout" },
-  wu_miniband_monster_walk: { equipment: ["mini_band"], fallbackSlug: "wu_singleleg_glute_bridge" },
-  wu_deadbug_band_press: { equipment: ["bands"], fallbackSlug: "wu_bird_dog_slow" },
-  wu_pallof_press_iso: { equipment: ["bands"], fallbackSlug: "wu_split_stance_iso_hold" },
-  wu_copenhagen_short_lever: { equipment: ["bench"], fallbackSlug: "wu_sl_rdl_reach" },
-  wu_wickets_low: { equipment: ["hurdles"], fallbackSlug: "wu_a_skip" },
-  wu_reaction_ball_wall: { equipment: ["tennis_ball", "wall"], fallbackSlug: "wu_line_hops_lateral" },
-  wu_couch_stretch_active: { equipment: ["bench"], fallbackSlug: "wu_wall_hip_flexor_slide" },
-  wu_tennis_ball_reaction_toss: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_tennis_ball_self_rally: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_tennis_ball_one_hand_catch: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_tennis_ball_cross_body_catch: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_tennis_ball_clap_catch: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_rhythm_ball_tap: { equipment: ["tennis_ball"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_reaction_drop_catch: { equipment: ["tennis_ball", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_scarf_juggle: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_scarf_cross_body_catch: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_scarf_toss_and_move: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_scarf_one_hand_snatch: { equipment: ["scarf"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_balloon_keep_up: { equipment: ["balloon"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_balloon_hand_switch: { equipment: ["balloon"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_balloon_partner_volley: { equipment: ["balloon", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_beanbag_toss_and_catch: { equipment: ["beanbag"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_beanbag_balance_walk: { equipment: ["beanbag"], fallbackSlug: "wu_crossover_run" },
-  wu_beanbag_foot_flip: { equipment: ["beanbag"], fallbackSlug: "wu_crossover_run" },
-  wu_mini_frisbee_toss: { equipment: ["frisbee"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_mini_frisbee_roll_catch: { equipment: ["frisbee"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_shuttle_tap_up: { equipment: ["shuttle"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_coin_finger_roll: { equipment: ["coin"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_mirror_me_ball_toss: { equipment: ["tennis_ball", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_partner_alternating_catch: { equipment: ["tennis_ball", "partner"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_light_bat_shadow_tap: { equipment: ["bat"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_dry_swing_progressive: { equipment: ["bat"], fallbackSlug: "wu_shuffle_change_direction" },
-  wu_jband_full: { equipment: ["jband"], fallbackSlug: "wu_prone_tyw" },
-  wu_crossover_symmetry_full: { equipment: ["bands"], fallbackSlug: "wu_prone_tyw" },
-  wu_er_at_90: { equipment: ["bands"], fallbackSlug: "wu_prone_tyw" },
-  wu_face_pull_band: { equipment: ["bands"], fallbackSlug: "wu_scap_pushup" },
-  wu_forearm_pump: { equipment: ["bands"], fallbackSlug: "wu_scap_pushup" },
-  wu_barefoot_towel_scrunch: { equipment: ["towel"] },
-  wu_med_ball_scoop_toss: { equipment: ["med_ball"], fallbackSlug: "wu_sl_broad_hop_stick" },
-  wu_med_ball_shot_put: { equipment: ["med_ball", "wall"], fallbackSlug: "wu_dry_swing_burst" },
-  wu_altitude_drop: { equipment: ["box"], fallbackSlug: "wu_sl_curb_drop_stick" }
-};
-var BASELINE_EQUIPMENT = ["wall", "open_space", "floor", "towel"];
-var VENUE_EXPANSIONS = {
-  full_gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench", "ladder", "hurdles", "jband", "bat"],
-  commercial_gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench", "ladder", "jband"],
-  gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench"],
-  home_gym: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "bench"],
-  team_facility: ["foam_roller", "massage_ball", "mini_band", "bands", "med_ball", "box", "bench", "ladder", "hurdles", "jband", "bat", "tennis_ball", "partner"],
-  field: ["bat", "tennis_ball", "partner", "ladder"],
-  field_only: ["bat", "tennis_ball", "partner"],
-  bands: ["bands", "mini_band", "jband"],
-  hotel: [],
-  travel: [],
-  bodyweight: []
-};
-var EQUIPMENT_SYNONYMS = {
-  agility_ladder: "ladder",
-  speed_ladder: "ladder",
-  mini_hurdles: "hurdles",
-  hurdle: "hurdles",
-  resistance_bands: "bands",
-  band: "bands",
-  jbands: "jband",
-  j_band: "jband",
-  j_bands: "jband",
-  crossover_symmetry: "bands",
-  medicine_ball: "med_ball",
-  medball: "med_ball",
-  plyo_box: "box",
-  jump_box: "box",
-  step: "box",
-  lacrosse_ball: "massage_ball",
-  massage_gun: "massage_ball",
-  roller: "foam_roller",
-  bats: "bat",
-  tennis_balls: "tennis_ball",
-  training_partner: "partner",
-  catch_partner: "partner"
-};
-function normalizeEquipmentToken(raw) {
-  const t = raw.trim().toLowerCase().replace(/[\s-]+/g, "_");
-  return EQUIPMENT_SYNONYMS[t] ?? t;
-}
-function expandEquipment(declared, venue) {
-  const out = new Set(BASELINE_EQUIPMENT);
-  for (const raw of declared ?? []) {
-    const token = normalizeEquipmentToken(String(raw));
-    out.add(token);
-    for (const extra of VENUE_EXPANSIONS[token] ?? []) out.add(extra);
-  }
-  if (venue) {
-    const v = normalizeEquipmentToken(venue);
-    out.add(v);
-    for (const extra of VENUE_EXPANSIONS[v] ?? []) out.add(extra);
-  }
-  return out;
-}
-function equipmentFor(drill) {
-  return drill.equipment ?? EQUIPMENT_OVERRIDES[drill.slug]?.equipment ?? [];
-}
-function fallbackFor(drill) {
-  return drill.fallbackSlug ?? EQUIPMENT_OVERRIDES[drill.slug]?.fallbackSlug ?? null;
-}
-function bySlug(slug) {
-  return WARMUP_LIBRARY.find((d3) => d3.slug === slug) ?? null;
-}
-function hasEquipment(drill, available) {
-  return equipmentFor(drill).every((need) => available.has(need));
-}
-function equipmentNoteFor(drill) {
-  const needs = equipmentFor(drill).filter((e) => !BASELINE_EQUIPMENT.includes(e));
-  if (needs.length === 0) return void 0;
-  const labels = {
-    ladder: "agility ladder",
-    hurdles: "mini hurdles",
-    box: "box or step",
-    bands: "resistance band",
-    mini_band: "mini band",
-    med_ball: "medicine ball",
-    massage_ball: "lacrosse or massage ball",
-    foam_roller: "foam roller",
-    jband: "arm-care band",
-    tennis_ball: "tennis ball",
-    beanbag: "beanbag",
-    scarf: "juggling scarf",
-    balloon: "balloon",
-    frisbee: "mini frisbee",
-    shuttle: "badminton shuttle",
-    coin: "coin",
-    bat: "bat",
-    bench: "bench or chair",
-    partner: "a partner"
-  };
-  return needs.map((n) => labels[n] ?? n.replace(/_/g, " ")).join(", ");
-}
-var TEMPLATES = {
-  game_day: [
-    "breathwork",
-    "tissue_prep",
-    "cars",
-    "fascial_rotation",
-    "activation",
-    "weightless_coordination",
-    "ladder_quickness",
-    "neural_priming",
-    "arm_care",
-    "movement_bridge"
-  ],
-  in_season_practice: [
-    "tissue_prep",
-    "cars",
-    "fascial_rotation",
-    "mobility_joint",
-    "activation",
-    "weightless_coordination",
-    "ladder_quickness",
-    "neural_priming",
-    "single_leg_twitch",
-    "movement_bridge",
-    "arm_care"
-  ],
-  in_season_default: [
-    "breathwork",
-    "cars",
-    "fascial_rotation",
-    "activation",
-    "weightless_coordination",
-    "ladder_quickness",
-    "neural_priming",
-    "single_leg_twitch",
-    "arm_care"
-  ],
-  speed_day: [
-    "tissue_prep",
-    "cars",
-    "mobility_joint",
-    "activation",
-    "weightless_coordination",
-    "neural_priming",
-    "ladder_quickness",
-    "single_leg_twitch",
-    "single_leg_twitch",
-    "ground_force",
-    "fast_twitch",
-    "movement_bridge"
-  ],
-  lift_day: [
-    "breathwork",
-    "tissue_prep",
-    "cars",
-    "mobility_joint",
-    "activation",
-    "weightless_coordination",
-    "stability",
-    "neural_priming",
-    "ladder_quickness",
-    "single_leg_twitch",
-    "fast_twitch"
-  ],
-  // Throwing days: arm care is OWNED BY THE THROWING BLOCK (EASS band prep + cooldown).
-  // The warmup does NOT include arm_care on throwing days — that keeps arm care to exactly
-  // one exposure per day. See ArmCareBudgetContext.
-  // Legs stay fresh for the arm: ladder quickness only, no ground-force bursts.
-  throwing_day: [
-    "tissue_prep",
-    "cars",
-    "fascial_rotation",
-    "mobility_joint",
-    "activation",
-    "weightless_coordination",
-    "ladder_quickness",
-    "movement_bridge"
-  ],
-  hitting_day: [
-    "tissue_prep",
-    "cars",
-    "fascial_rotation",
-    "mobility_joint",
-    "activation",
-    "weightless_coordination",
-    "ladder_quickness",
-    "single_leg_twitch",
-    "fast_twitch",
-    "movement_bridge"
-  ],
-  offseason_extended: [
-    "breathwork",
-    "tissue_prep",
-    "tissue_prep",
-    "cars",
-    "cars",
-    "fascial_rotation",
-    "mobility_joint",
-    "mobility_joint",
-    "activation",
-    "stability",
-    "weightless_coordination",
-    "weightless_coordination",
-    "neural_priming",
-    "ladder_quickness",
-    "ladder_quickness",
-    "single_leg_twitch",
-    "single_leg_twitch",
-    "ground_force",
-    "fast_twitch",
-    "movement_bridge",
-    "arm_care"
-  ],
-  recovery_day: [
-    "breathwork",
-    "tissue_prep",
-    "cars",
-    "mobility_joint",
-    "activation"
-  ],
-  travel_day: [
-    "breathwork",
-    "cars",
-    "mobility_joint",
-    "activation",
-    "weightless_coordination"
-  ],
-  default: [
-    "tissue_prep",
-    "cars",
-    "fascial_rotation",
-    "mobility_joint",
-    "activation",
-    "weightless_coordination",
-    "neural_priming",
-    "ladder_quickness",
-    "single_leg_twitch",
-    "fast_twitch"
-  ]
-};
-var TWITCH_ROLES = [
-  "ladder_quickness",
-  "single_leg_twitch",
-  "ground_force",
-  "fast_twitch"
-];
-var SINGLE_LEG_MIN_SHARE = 0.6;
-function templateFor(context, lifecycle) {
-  const base2 = TEMPLATES[context] ?? TEMPLATES.default;
-  const rank = { youth: 0, beginner: 1, intermediate: 2, advanced: 3, elite: 4 };
-  if (rank[lifecycle] > 1) return base2;
-  const out = [...base2];
-  const idx = out.indexOf("weightless_coordination");
-  if (idx !== -1) out.splice(idx + 1, 0, "weightless_coordination", "weightless_coordination");
-  else if (context !== "recovery_day") {
-    const activationIdx = out.indexOf("activation");
-    if (activationIdx !== -1) out.splice(activationIdx + 1, 0, "weightless_coordination", "weightless_coordination");
-  }
-  return out;
-}
-var LIFECYCLE_RANK = {
-  youth: 0,
-  beginner: 1,
-  intermediate: 2,
-  advanced: 3,
-  elite: 4
-};
-function isEligible(d3, f) {
-  if (LIFECYCLE_RANK[f.lifecycle] < LIFECYCLE_RANK[d3.minLifecycle]) return false;
-  if (f.gameDay && !d3.gameDayLegal) return false;
-  if (f.axis && (d3.axis ?? "bilateral") !== f.axis) return false;
-  if (d3.regions && f.injuryRegions.length > 0) {
-    if (d3.regions.some((r) => f.injuryRegions.includes(r))) return false;
-  }
-  return true;
-}
-function resolveEquipmentSafe(d3, f) {
-  if (hasEquipment(d3, f.available)) return { drill: d3, substituted: false };
-  const fb = fallbackFor(d3);
-  if (!fb) return null;
-  const sib = bySlug(fb);
-  if (!sib) return null;
-  if (!isEligible(sib, { ...f, axis: void 0 })) return null;
-  return hasEquipment(sib, f.available) ? { drill: sib, substituted: true } : null;
-}
-function poolForRole(role, f) {
-  return WARMUP_LIBRARY.filter((d3) => d3.role === role && isEligible(d3, f));
-}
-function pickForRole(role, f, seed, seen, diagnostics) {
-  const pool = poolForRole(role, f);
-  if (pool.length === 0) return null;
-  const start = Math.abs(seed) % pool.length;
-  for (let i = 0; i < pool.length; i++) {
-    const candidate = pool[(start + i) % pool.length];
-    const resolved = resolveEquipmentSafe(candidate, f);
-    if (!resolved || seen.has(resolved.drill.slug)) continue;
-    if (resolved.substituted) {
-      diagnostics?.push({
-        code: "equipment_substitution",
-        role,
-        from: candidate.slug,
-        to: resolved.drill.slug,
-        detail: `${candidate.name} needs ${equipmentFor(candidate).join(", ")} \u2014 swapped to the equipment-free ${resolved.drill.name}.`
-      });
-    }
-    return resolved.drill;
-  }
-  return null;
-}
-function tissuePrepBlock(input, available) {
-  const hasBall = available.has("tennis_ball") || available.has("lacrosse_ball") || available.has("softball");
-  const thrower = input.isThrower !== false;
-  const softball = input.sport === "softball";
-  const tool = hasBall ? "a tennis ball" : "your hands (no ball today)";
-  const upper = thrower ? " Then the chest (pec) against a wall, the side of your back under your armpit (lat), and the forearm on a table \u2014 about 20 seconds each, throwing arm first." : "";
-  const where = "Feet: stand and roll the ball under each foot, heel to toes \u2014 30 seconds per foot. Calves: sit, ball under the calf, rock the leg side to side \u2014 30 seconds per leg. Hips/glutes: sit on the ball, lean onto one glute and make small circles \u2014 30 seconds per side. Upper back: lie with the ball between your shoulder blade and spine, roll a few inches up and down \u2014 30 seconds per side.";
-  const rolling = {
-    slug: "wu_tissue_prep_roll_and_rhythm",
-    name: "Tissue prep 1 \u2014 tennis-ball rolling",
-    role: "tissue_prep",
-    setup: hasBall ? "Use a tennis ball on the floor or against a wall. Press with medium pressure \u2014 about a 4 out of 10: firm enough to feel it, never painful." : "No ball today: press and knead with your hands at about a 4 out of 10 pressure \u2014 firm, never painful.",
-    dosage: "3 minutes total",
-    cue: `${where}${upper}`,
-    stopIf: "You feel sharp pain, numbness, tingling, or bruising pressure.",
-    source: "owner_tissue_prep_law",
-    equipmentNote: hasBall ? "You need: a tennis ball." : void 0,
-    guide: {
-      what: `Roll your feet, calves, hips/glutes and upper back with ${tool} at medium pressure (about 4 out of 10), about 30 seconds per spot.${thrower ? " Throwers also roll the chest, lat and forearm." : ""}`,
-      setup: hasBall ? "Tennis ball on the floor or against a wall." : "Use your hands for pressure.",
-      goodRep: [where, ...thrower ? [upper.trim()] : [], "Keep breathing slowly; pressure stays about 4 out of 10."],
-      badRep: ["Grinding hard on one sore spot.", "Rolling over bone or the back of the knee."],
-      feel: "Warmer and less stiff.",
-      whyToday: "Tissue stiffens while you sit still. Pressure and movement loosen it so it can stretch and spring.",
-      nextLink: "Go straight into the rhythmic movements.",
-      stopIf: "Sharp pain, numbness, tingling, or bruising pressure."
-    }
-  };
-  const swings2 = thrower ? "10 easy arm swings across the chest and 10 big arm circles each way" : "10 easy arm swings across the chest";
-  const rhythm = {
-    slug: "wu_tissue_prep_rhythmic_shake",
-    name: "Tissue prep 2 \u2014 bounces, swings and shake-outs",
-    role: "tissue_prep",
-    setup: "Stand tall in open space with room to swing your arms and legs. Hold a wall or fence for the leg swings.",
-    dosage: "2 minutes total",
-    cue: `Do 20 quick, small ankle bounces (heels barely leave the ground), then 10 front-to-back leg swings and 10 side-to-side leg swings on each leg, then ${swings2}, then shake out your arms and legs loosely for 15 seconds.${softball && thrower ? " Pitchers add 10 slow windmill circles each way." : ""}`,
-    stopIf: "You feel sharp pain or a joint pinches.",
-    source: "owner_tissue_prep_law",
-    guide: {
-      what: "Quick ankle bounces, then loose leg and arm swings and a shake-out. The rhythm breaks up stiffness so the body moves freely before faster work.",
-      setup: "Open space; a wall or fence for balance on leg swings.",
-      goodRep: ["20 small, springy ankle bounces.", "10 front-to-back and 10 side-to-side leg swings per leg.", `${swings2[0].toUpperCase()}${swings2.slice(1)}.`, "Shake out arms and legs for 15 seconds."],
-      badRep: ["Forcing the swings to the end of your range.", "Bouncing high and heavy instead of small and quick."],
-      feel: "Loose and springy.",
-      whyToday: "Rhythmic movement right after rolling turns the loosened tissue into easy, springy motion.",
-      nextLink: "Continue into the rest of today's warm-up.",
-      stopIf: "Sharp pain or a pinching joint."
-    }
-  };
-  return [rolling, rhythm];
-}
-function toBuilt(d3, lifecycle) {
-  return {
-    slug: d3.slug,
-    name: d3.name,
-    role: d3.role,
-    setup: d3.setup,
-    dosage: doseFor(d3, lifecycle),
-    cue: d3.cue,
-    stopIf: d3.stopIf,
-    source: d3.source,
-    guide: guideFor(d3.slug) ?? guideFor(d3.name) ?? void 0,
-    equipmentNote: equipmentNoteFor(d3),
-    axis: d3.axis
-  };
-}
-function buildWarmup(input) {
-  const diagnostics = [];
-  if (input.context === "recovery_day") {
-    const available = expandEquipment(input.equipment, input.venue);
-    const drills2 = WARMUP_LIBRARY.filter((d3) => isSoftRecovery(d3.slug) && equipmentFor(d3).every((e) => available.has(e)) && !(d3.regions ?? []).some((r) => (input.injuryRegions ?? []).includes(r))).slice(0, 3).map((d3) => toBuilt(d3, input.lifecycle));
-    const ordered2 = input.orderByStage === false ? drills2 : sortByWarmupStage(drills2, (d3) => d3.slug, (d3) => d3.role);
-    return {
-      context: input.context,
-      drills: ordered2,
-      estMinutes: drills2.length ? 5 : 0,
-      singleLegShare: null,
-      diagnostics: [{ code: "twitch_suppressed", detail: "Full rest day \u2014 gentle recovery only; training warm-up withheld." }]
-    };
-  }
-  const injuryRegions = (input.injuryRegions ?? []).map((r) => r.toLowerCase());
-  const filtersBase = {
-    lifecycle: input.lifecycle,
-    gameDay: input.gameDay,
-    available: expandEquipment(input.equipment, input.venue),
-    injuryRegions
-  };
-  if (injuryRegions.length > 0) {
-    diagnostics.push({
-      code: "injury_veto",
-      detail: `Drills loading ${injuryRegions.join(", ")} were withheld \u2014 reported injury region.`
-    });
-  }
-  const fullTemplate = templateFor(input.context, input.lifecycle);
-  const roles = fullTemplate.filter((r) => {
-    if (input.suppressArmCare && r === "arm_care") return false;
-    if (input.suppressTwitch && TWITCH_ROLES.includes(r)) return false;
-    return true;
-  });
-  if (input.suppressTwitch && fullTemplate.some((r) => TWITCH_ROLES.includes(r))) {
-    diagnostics.push({
-      code: "twitch_suppressed",
-      detail: "Fast-twitch layer withheld today \u2014 recovery, travel or low readiness. Prep only, no CNS spend."
-    });
-  }
-  const seedBase = input.daySeed ?? 0;
-  const seen = /* @__PURE__ */ new Set();
-  const drills = [...tissuePrepBlock(input, filtersBase.available)];
-  seen.add(drills[0].slug);
-  roles.forEach((role, i) => {
-    if (role === "tissue_prep") return;
-    const seed = seedBase + i * 7 + role.length * 3;
-    const pick = pickForRole(role, filtersBase, seed, seen, diagnostics);
-    if (!pick) {
-      diagnostics.push({
-        code: "equipment_role_skipped",
-        role,
-        detail: `No ${role.replace(/_/g, " ")} drill is legal with today's equipment, age and injury state \u2014 the role was skipped rather than half-shipped.`
-      });
-      return;
-    }
-    seen.add(pick.slug);
-    drills.push(toBuilt(pick, input.lifecycle));
-  });
-  const twitchIdx = drills.map((d3, i) => ({ d: d3, i })).filter(({ d: d3 }) => TWITCH_ROLES.includes(d3.role));
-  if (twitchIdx.length > 0) {
-    const needed = Math.ceil(twitchIdx.length * SINGLE_LEG_MIN_SHARE);
-    let single = twitchIdx.filter(({ d: d3 }) => d3.axis === "single_leg").length;
-    const bilateral = twitchIdx.filter(({ d: d3 }) => d3.axis !== "single_leg").reverse();
-    for (const { d: d3, i } of bilateral) {
-      if (single >= needed) break;
-      const slFilters = { ...filtersBase, axis: "single_leg" };
-      const replacement = pickForRole(d3.role, slFilters, seedBase + i * 13 + 5, seen, diagnostics) ?? pickForRole("single_leg_twitch", slFilters, seedBase + i * 13 + 5, seen, diagnostics);
-      if (!replacement) continue;
-      seen.delete(d3.slug);
-      seen.add(replacement.slug);
-      drills[i] = toBuilt(replacement, input.lifecycle);
-      diagnostics.push({
-        code: "single_leg_swap",
-        role: replacement.role,
-        from: d3.slug,
-        to: replacement.slug,
-        detail: `Single-leg majority law \u2014 ${d3.name} swapped for ${replacement.name} so most of the twitch work runs through one leg.`
-      });
-      single++;
-    }
-  }
-  const twitchFinal = drills.filter((d3) => TWITCH_ROLES.includes(d3.role));
-  const singleLegShare = twitchFinal.length === 0 ? null : twitchFinal.filter((d3) => d3.axis === "single_leg").length / twitchFinal.length;
-  if (singleLegShare !== null && singleLegShare < SINGLE_LEG_MIN_SHARE) {
-    diagnostics.push({
-      code: "single_leg_short",
-      detail: `Single-leg share is ${Math.round(singleLegShare * 100)}% \u2014 no legal single-leg replacement was available today.`
-    });
-  }
-  const est = Math.max(8, 5 + Math.round((drills.length - 1) * 90 / 60));
-  const ordered = input.orderByStage === false ? drills : sortByWarmupStage(drills, (d3) => d3.slug, (d3) => d3.role);
-  return { context: input.context, drills: ordered, estMinutes: est, singleLegShare, diagnostics };
-}
-function resolveWarmupContext(input) {
-  if (input.isGameDay) return "game_day";
-  if (input.isRecoveryDay) return "recovery_day";
-  if (input.isTravelDay) return "travel_day";
-  if (input.modalityBias === "speed") return "speed_day";
-  if (input.modalityBias === "lift") return "lift_day";
-  if (input.modalityBias === "throwing") return "throwing_day";
-  if (input.modalityBias === "hitting") return "hitting_day";
-  if (input.seasonPhase === "off") return "offseason_extended";
-  if (input.seasonPhase === "in") {
-    return input.isPracticeDay ? "in_season_practice" : "in_season_default";
-  }
-  return "default";
-}
-function lifecycleFor(band, liftingAgeYears) {
-  if (band === "u10" || band === "u12") return "youth";
-  if (band === "u14") return "beginner";
-  if (liftingAgeYears === null) return "beginner";
-  if (liftingAgeYears >= 8) return "elite";
-  if (liftingAgeYears >= 4) return "advanced";
-  if (liftingAgeYears >= 2) return "intermediate";
-  if (liftingAgeYears >= 1) return "beginner";
-  return "youth";
-}
-registerWarmupRoles(WARMUP_LIBRARY);
 
 // src/lib/seasonPhase.ts
 var VALID = ["preseason", "in_season", "post_season", "off_season"];
@@ -8247,6 +8292,14 @@ function planReadinessBand(ctx) {
   return "normal";
 }
 function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = null, gpSignal = null, identityOverride, today = /* @__PURE__ */ new Date(), roadmapInputs = {}) {
+  const physio = roadmapInputs.physio ?? mapPhysio({ injuries: ctx.get("injury_history")?.value, today: today.toLocaleDateString("en-CA") });
+  if (physio.lowReadiness) {
+    const original = ctx;
+    ctx = { ...original, get(key2) {
+      if (key2 === "readiness") return { key: key2, label: "Readiness", domain: "physiology", value: 0.2, source: "active illness", confidence: "high", missing: false, lastUpdated: null, lineage: { owner: "athlete", source: "active illness", rawConfidence: "high" } };
+      return original.get(key2);
+    } };
+  }
   const envelopeProjection = projectEnvelope(ctx);
   const phaseProjection = roadmapInputs.resolvedSeasonPhase ? { ...envelopeProjection, seasonPhase: roadmapInputs.resolvedSeasonPhase } : envelopeProjection;
   const assumedGear = planningGear(phaseProjection.equipmentList, roadmapInputs.alwaysMissingGear ?? []);
@@ -8375,7 +8428,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const reason = scheduleSignal.postureToday !== "normal" || b.status !== "ready" ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...b.because ?? [], reason] };
   }), focusProjection);
-  const fullRestDay = roadmapInputs.fullRestDay === true || today.getDay() === SIX_DAY_REST_DOW || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day2) => day2.isToday)?.restDay === true;
+  const fullRestDay = roadmapInputs.fullRestDay === true || physio.recoveryOnly || today.getDay() === SIX_DAY_REST_DOW || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day2) => day2.isToday)?.restDay === true;
   const bunting = roadmapInputs.bunting;
   const masteryOrdered = applyMasteryFocus(goalOrdered, roadmapInputs.masteryFocus);
   const bunted = bunting ? applyBuntingPlan(masteryOrdered, {
@@ -8413,7 +8466,31 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       durationMin: drills.length ? b.durationMin : null
     };
   }) : bunted;
-  const blocks = restFiltered.flatMap((b) => {
+  const illnessFiltered = physio.illnessActive ? restFiltered.map((b) => {
+    if (["fueling", "game_iq"].includes(b.modality)) return b;
+    const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter((d3) => isSoftRecovery(d3.slug)) : [];
+    return {
+      ...b,
+      drills,
+      steps: drills.length ? drillsToSteps(drills) : ["Illness is still active. Recovery only until you mark yourself better."],
+      status: drills.length ? "ready" : "off-day",
+      offDayOverridable: false,
+      gamePlanTemplate: null,
+      durationMin: drills.length ? b.durationMin : null,
+      why: "Illness is still active. Recovery only until you mark yourself better."
+    };
+  }) : restFiltered;
+  const prehabbed = illnessFiltered.map((b) => {
+    const notices = [...physio.cautions, ...physio.professionalWarning ? [physio.professionalWarning] : [], ...physio.illnessActive ? ["Illness is still active. Keep work light until you mark yourself better."] : []];
+    const available = b.modality === "warmup" && b.status === "ready" && !fullRestDay && !physio.illnessActive ? [...new Set(physio.healedAreas.filter((a) => !physio.activeAreas.includes(a)).map((a) => PREHAB_SLUGS[a]))].flatMap((slug) => {
+      if (b.drills.some((d3) => d3.slug === slug)) return [];
+      const drill = WARMUP_LIBRARY.find((d3) => d3.slug === slug);
+      return drill ? [{ slug: drill.slug, name: drill.name, dosage: drill.baseDose, setup: drill.setup, cue: drill.cue, stopIf: drill.stopIf ?? "Stop if this hurts.", stage: "prep" }] : [];
+    }) : [];
+    const drills = available.length ? sortByWarmupStage([...b.drills, ...available], (d3) => d3.slug ?? "") : b.drills;
+    return { ...b, drills, steps: available.length ? drillsToSteps(drills) : b.steps, because: [...b.because ?? [], ...notices] };
+  });
+  const blocks = prehabbed.flatMap((b) => {
     if (!access?.hasPitching || b.modality !== "throwing") return [b];
     const type = pitchingDay(today, sport, quarter, roadmapInputs.pitcherOutings);
     const pitchingDrills = b.drills.filter((d3) => d3.armCard !== "throwing");

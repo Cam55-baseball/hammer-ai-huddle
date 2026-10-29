@@ -3,7 +3,7 @@
 - Server block Swap uses packaged copies of existing sport drills and declared warm-up equipment siblings; regenerate them when source declarations change. Why: edge deployments cannot import browser project paths and must not invent a second catalog.
 - No-field acceleration mixes use the explicit speed Swap catalog and save child reps/distance/rest within the existing block item via the same day-lock transaction; fresh canonical readiness/CNS and player-confirmed space constrain selection. Why: no new save path or disguised max-velocity/tempo substitution may alter the day's dose.
 - Owner creation identity/defaults and common gear mapping live in `_shared/vault/ownerDefaults.ts`, imported by the Vault editor; unknown equipment remains visible for review. Why: automatic fields must use Swap vocabulary without silently discarding owner words or claiming safety certification.
-- `create-test-athlete` is owner-only and the only way to run the real generator as the demo test pitcher. Why: no approval-free session mint exists for other users.
+- `create-test-athlete` is owner-only; freshPersona has exact unstarted TEST identities and never reseeds them. Why: real generator proof cannot impersonate or reset players.
 - Measurements use `public.ledger_record` (source triggers + tiles); trigger errors never cost a clip.
 - Read scoped AGENTS.md. Movement: training+health consent, never dose. Vault/Swap tracking resolves by plan date, no dose conversion. Reports: `_shared/practiceReport.ts`. Why: scoped sources.
 <!-- LOVABLE:BEGIN -->

@@ -1,4 +1,6 @@
 import { sortByWarmupStage } from "./warmupStages";
+import { mapPhysio, PREHAB_SLUGS, type PhysioMapping } from '../../../../supabase/functions/_shared/health/physioMapping';
+import { WARMUP_LIBRARY } from './warmupLibrary';
 import { enforceSkillStageOrder, validatePlanSanity } from './planSanity';
 import { recoveryDrills } from './recoveryDrills';
 import {applyMasteryFocus,masteryGoalWeights,type MasteryPlanFocus} from './masteryFocus';
@@ -31,7 +33,7 @@ import type { OutingFacts } from "../../../../supabase/functions/_shared/wic/pit
  *
  * Every block remains pure (no I/O), preserves missingness, never fabricates.
  */
-import type { HammerAthleteContext } from "@/lib/hammer/context/athleteContext";
+import type { HammerAthleteContext, ContextVariable } from "@/lib/hammer/context/athleteContext";
 import {
   projectEnvelope,
   selectSpeedFocus,
@@ -2287,6 +2289,7 @@ function scaleDosageLabel(dosage: string, scale: number): string {
 
 
 export interface RoadmapInputs {
+  readonly physio?: PhysioMapping;
   readonly masteryFocus?:MasteryPlanFocus;
   /** Current server's whole-day rest verdict; never inferred from lift spacing alone. */
   readonly fullRestDay?: boolean;
@@ -2328,6 +2331,14 @@ export function buildHammerDailyPlan(
   today: Date = new Date(),
   roadmapInputs: RoadmapInputs = {},
 ): HammerDailyPlanResult {
+  const physio = roadmapInputs.physio ?? mapPhysio({ injuries:ctx.get('injury_history')?.value, today:today.toLocaleDateString('en-CA') });
+  if (physio.lowReadiness) {
+    const original = ctx;
+    ctx = { ...original, get<T>(key: string): ContextVariable<T> | undefined {
+      if (key === 'readiness') return { key, label:'Readiness',domain:'physiology',value:0.2 as T,source:'active illness',confidence:'high',missing:false,lastUpdated:null,lineage:{owner:'athlete',source:'active illness',rawConfidence:'high'} };
+      return original.get<T>(key);
+    } };
+  }
   const envelopeProjection = projectEnvelope(ctx);
   const phaseProjection = roadmapInputs.resolvedSeasonPhase
     ? { ...envelopeProjection, seasonPhase: roadmapInputs.resolvedSeasonPhase }
@@ -2479,6 +2490,7 @@ export function buildHammerDailyPlan(
     return { ...b, because: [...(b.because ?? []), reason] };
   }), focusProjection);
   const fullRestDay = roadmapInputs.fullRestDay === true ||
+    physio.recoveryOnly ||
     today.getDay() === SIX_DAY_REST_DOW ||
     (scheduleSignal.postureToday === "normal" && weeklyRoadmap.find(day => day.isToday)?.restDay === true);
   // Last composition boundary: laterality, owner slots, overrides and warm-up anchors cannot reopen rest.
@@ -2503,7 +2515,25 @@ export function buildHammerDailyPlan(
   }) : bunted;
   // Pitching takes its own canonical card identity. This moves existing work,
   // never copies it into a second arm exposure.
-  const blocks = restFiltered.flatMap(b => {
+  const illnessFiltered = physio.illnessActive ? restFiltered.map(b => {
+    if (["fueling", "game_iq"].includes(b.modality)) return b;
+    const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter(d => isSoftRecovery(d.slug)) : [];
+    return {...b, drills, steps:drills.length?drillsToSteps(drills):['Illness is still active. Recovery only until you mark yourself better.'],
+      status:drills.length?'ready' as const:'off-day' as const,offDayOverridable:false,gamePlanTemplate:null,durationMin:drills.length?b.durationMin:null,
+      why:'Illness is still active. Recovery only until you mark yourself better.'};
+  }) : restFiltered;
+  const prehabbed = illnessFiltered.map(b => {
+    const notices = [...physio.cautions, ...(physio.professionalWarning ? [physio.professionalWarning] : []), ...(physio.illnessActive ? ['Illness is still active. Keep work light until you mark yourself better.'] : [])];
+    const available: DrillStep[] = b.modality === 'warmup' && b.status === 'ready' && !fullRestDay && !physio.illnessActive
+      ? [...new Set(physio.healedAreas.filter(a=>!physio.activeAreas.includes(a)).map(a=>PREHAB_SLUGS[a]))].flatMap(slug=>{
+        if(b.drills.some(d=>d.slug===slug))return [];
+        const drill=WARMUP_LIBRARY.find(d=>d.slug===slug);
+        return drill ? [{slug:drill.slug,name:drill.name,dosage:drill.baseDose,setup:drill.setup,cue:drill.cue,stopIf:drill.stopIf??'Stop if this hurts.',stage:'prep' as const}] : [];
+      }) : [];
+    const drills=available.length?sortByWarmupStage([...b.drills,...available],d=>d.slug??''):b.drills;
+    return {...b,drills,steps:available.length?drillsToSteps(drills):b.steps,because:[...(b.because??[]),...notices]};
+  });
+  const blocks = prehabbed.flatMap(b => {
     if(!access?.hasPitching || b.modality!=='throwing')return [b];
     const type=pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings);
     const pitchingDrills=b.drills.filter(d=>d.armCard!=='throwing');

@@ -1,5 +1,9 @@
 # Item 3 — Update Hammer, October 29
 
+## Latest run — October 29, 16:01 UTC
+
+**Still open.** Fresh Item 18 setup reached the initial assessment, not a validated started week. This run did not exercise the four requested changes or connected democoach before/after views. Historical proof below remains historical, not new acceptance. No new Item 3 completion or live rollout is claimed.
+
 ## Root causes and changes
 1. Manual season writes used UPDATE with no returned row: absent MPI settings silently changed nothing. They now upsert with the athlete's saved sport and require a returned record.
 2. Tell Hammers SEASON entries were saved but the season resolver never consumed them. `seasonWithTimeline` now projects explicit effective, active entries into both `phase-state` and `wk-generate-daily`. Future changes remain future; newer manual answers win; undo removes the timeline projection without a second settings write.

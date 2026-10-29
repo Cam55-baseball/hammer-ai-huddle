@@ -47,6 +47,7 @@ import {
   loadEngagement,
 } from "@/lib/hammer/prescription/dailyEngagement";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { readPhysioMapping } from '../../../supabase/functions/_shared/health/readPhysioMapping';
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -752,6 +753,10 @@ function HammerDailyPlanBody({
   const hasG2W = modules.includes(`${sportKey}_golden2way`);
 
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
+  const physioMapping=useQuery({queryKey:['physio-plan-mapping',bodyUser?.id,bodyPlanDate],enabled:!!bodyUser,queryFn:async()=>{
+    if(!bodyUser)throw new Error('Sign in to check health');
+    return readPhysioMapping(supabase,bodyUser.id,bodyPlanDate,ctx.get('injury_history')?.value);
+  }});
   const armHistory=usePlanningArmHistory(bodyUser?.id,bodyPlanDate,sportKey,modules.includes(`${sportKey}_pitcher`)||hasG2W);
   const gearMemory=useQuery({queryKey:['planning-gear-memory',bodyUser?.id],enabled:!!bodyUser,queryFn:async()=>{
     if(!bodyUser)throw new Error('Sign in to check saved equipment');
@@ -821,6 +826,7 @@ function HammerDailyPlanBody({
         new Date(`${bodyPlanDate}T12:00:00`),
         {
           recentCompletions: recentCompletions ?? [],
+          physio:physioMapping.data,
           phaseStartedAt: phaseStartedAt ?? null,
           resolvedSeasonPhase: shortSeasonPhase(wkRx.data?.find(row => row.phase)?.phase?.startsWith("os_") ? "off_season" : wkRx.data?.find(row => row.phase)?.phase ?? resolvedPhase),
           seasonPhaseSource: phaseSource ?? null,
@@ -836,7 +842,7 @@ function HammerDailyPlanBody({
           fullRestDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []),
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady,armHistory.data,gearMemory.data],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady,armHistory.data,gearMemory.data,physioMapping.data],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
