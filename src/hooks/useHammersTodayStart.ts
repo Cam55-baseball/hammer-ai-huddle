@@ -8,8 +8,8 @@ import { type StartMissingItem } from "../../supabase/functions/_shared/startRea
 
 /**
  * Once-per-account "Start Hammers Today Plan" state.
- * The start date lives on the profile (same on every device). The gate only
- * applies while the `hammers_today_start_gate` switch is on for this person.
+ * The start date lives on the profile (same on every device). New accounts
+ * require Start and canonical saved answers; existing starts remain once-only.
  */
 export function useHammersTodayStart() {
   const { user } = useAuth();
