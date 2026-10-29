@@ -50,6 +50,7 @@ export interface ModalityDayDecision {
 /** Template = for each modality, the ordered set of days-of-week it runs. */
 export type WeeklyTemplate = {
   readonly id: string;
+  readonly availableDays?: ReadonlyArray<Dow>;
   readonly label: string;
   readonly perModality: Record<ModalityKey, ReadonlyArray<Dow>>;
   /**
@@ -426,18 +427,19 @@ export function resolveSkillDays(
   const baselineArr = template.perModality[modality] ?? [];
   const baseline = [...new Set(baselineArr)].sort((a, b) => a - b);
   const priority = template.priorityDayOrder?.[modality] ?? baseline;
-  const clamped = Math.max(0, Math.min(SKILL_DAYS_CEILING, target));
+  const allowed = new Set(template.availableDays ?? [1,2,3,4,5,6]);
+  const clamped = Math.max(0, Math.min(SKILL_DAYS_CEILING, target, allowed.size));
   // Deterministic pick: dedupe while preserving priority order.
   const picked: Dow[] = [];
   for (const d of priority) {
     if (picked.length >= clamped) break;
-    if (d === SIX_DAY_REST_DOW) continue;
+    if (d === SIX_DAY_REST_DOW || !allowed.has(d)) continue;
     if (!picked.includes(d)) picked.push(d);
   }
   // If priority list doesn't cover the target, top up from the remaining
   // days of the week in ascending order so the result is fully deterministic.
   for (let d = 0 as Dow; picked.length < clamped && d <= 6; d = (d + 1) as Dow) {
-    if (d !== SIX_DAY_REST_DOW && !picked.includes(d)) picked.push(d);
+    if (d !== SIX_DAY_REST_DOW && allowed.has(d) && !picked.includes(d)) picked.push(d);
     if (d === 6) break;
   }
   const baselineSet = new Set(baseline);

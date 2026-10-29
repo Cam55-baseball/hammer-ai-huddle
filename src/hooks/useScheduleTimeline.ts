@@ -198,7 +198,7 @@ export async function announceChange(qc: ReturnType<typeof useQueryClient>, user
     .then(() => qc.invalidateQueries({ queryKey: ["adaptive-phase-plan", userId] }))
     .catch(() => undefined);
   if (reason !== null && typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent(SCHEDULE_CHANGED_EVENT, { detail: { reason: result?.message ?? reason, rebuilt: true, userId } }));
+    window.dispatchEvent(new CustomEvent(SCHEDULE_CHANGED_EVENT, { detail: { reason: result?.message ?? reason, rebuilt: result?.ok === true, userId } }));
   }
   return result;
 }
