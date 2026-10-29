@@ -42,7 +42,7 @@ it('today with marked work is kept, not reported as a failure to retry',async()=
   invoke.mockResolvedValueOnce({data:null,error:httpError({error:'adjust_failed',message:'Saved chosen or marked work is protected; no whole-day replacement'})});
   const r=await rebuildAfterChange('Season changed','2026-10-29');
   expect(r.failed).toEqual([]);expect(r.kept).toEqual(['2026-10-29']);
-  expect(r.message).toContain('rebuilt for the other 6 days');expect(r.message).toContain('Today kept the work you already marked done');
+  expect(r.message).toContain('rebuilt for the next 7 days');expect(invoke).toHaveBeenCalledTimes(8);expect(readWeek).toHaveBeenCalledWith('test-self','2026-10-30','2026-11-05','baseball',true);expect(r.message).toContain('Today kept the work you already marked done');
 });
 it('missing starting details stop the rebuild with a plain reason',async()=>{
   invoke.mockResolvedValue({data:null,error:httpError({error:'initial_inputs_missing'})});

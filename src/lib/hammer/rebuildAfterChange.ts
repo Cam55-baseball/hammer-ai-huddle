@@ -12,7 +12,8 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
   let boughtBunting=false;
   let missingInputs=false;
   const kept: string[] = [];
-  for (let offset = 0; offset < 7; offset++) {
+  // Seven changeable dates: a day whose marked work is kept is replaced by the next date, so the week check stays a full seven.
+  for (let offset = 0; offset < 7 + kept.length && offset < 14; offset++) {
     const date = isoShift(firstDate, offset);
     try {
       const { data, error } = await supabase.functions.invoke('wk-generate-daily', {
@@ -31,7 +32,7 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
   let weekIssues:string[]=[];
   if(!failed.length){
     if(!sport||!userId)weekIssues=['saved_week_identity_unconfirmed'];
-    else try {weekIssues=(await readComposedWeek(userId,firstDate,isoShift(firstDate,6),sport,boughtBunting)).issues;}catch{weekIssues=['saved_week_readback_unavailable'];}
+    else try {const start=kept.length&&kept.every((d,i)=>d===isoShift(firstDate,i))?isoShift(firstDate,kept.length):firstDate;weekIssues=(await readComposedWeek(userId,start,isoShift(start,6),sport,boughtBunting)).issues;}catch{weekIssues=['saved_week_readback_unavailable'];}
   }
   const keptNote = kept.length ? ` ${kept.length === 1 && kept[0] === today ? 'Today' : `${kept.length} day${kept.length === 1 ? '' : 's'}`} kept the work you already marked done.` : '';
   return { ok: failed.length === 0&&!weekIssues.length, failed, kept, weekIssues, missingInputs, message: (missingInputs
@@ -39,6 +40,6 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
     : failed.length
     ? `${reason} — saved, but ${failed.length} day${failed.length === 1 ? '' : 's'} could not be rebuilt. Try rebuilding again.`
     : weekIssues.length?`${reason} — saved days were rebuilt, but your weekly minimums could not be confirmed. Equipment, injury and schedule limits still apply.`
-      : kept.length ? `${reason} — your plan was rebuilt for the other ${7 - kept.length} days.`
+      : kept.length ? `${reason} — your plan was rebuilt for the next 7 days.`
       : `${reason} — your plan was rebuilt for ${firstDate === today ? 'today and the next 6 days' : `${firstDate} and the next 6 days`}.`) + (failed.length || missingInputs ? '' : keptNote) };
 }
