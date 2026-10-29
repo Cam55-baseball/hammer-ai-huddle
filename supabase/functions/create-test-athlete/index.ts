@@ -309,6 +309,26 @@ Deno.serve(async (req) => {
     if (!isOwner) return json({ error: "Owner only" }, 403);
 
     const body = await req.json().catch(() => ({}));
+    // Item 18 proof: one named, pristine TEST identity. Never refresh/reset it,
+    // seed answers, start flags, assessments, measurements or training history.
+    if (body?.persona === 'onboarding18_oct29') {
+      const email = 'hammersmodality+onboarding18oct29@gmail.com';
+      const existing = await findUser(admin, email);
+      if (existing) {
+        const { data: profile } = await admin.from('profiles').select('is_system_account').eq('id', existing).single();
+        if (profile?.is_system_account !== true || body?.session_only !== true) return json({ error: 'Existing TEST identity is not reset; use session_only.' }, 409);
+      } else {
+        const { data: created, error } = await admin.auth.admin.createUser({ email, password: crypto.randomUUID() + 'Aa1!', email_confirm: true, user_metadata: { full_name: 'TEST Onboarding 18', test_account: true } });
+        if (error || !created.user) return json({ error: error?.message ?? 'Could not create TEST account' }, 500);
+        const id = created.user.id;
+        const { error: markError } = await admin.from('profiles').update({ is_system_account: true }).eq('id', id);
+        if (markError) return json({ error: markError.message }, 500);
+        const { error: subscriptionError } = await admin.from('subscriptions').insert({ user_id: id, plan: 'free', status: 'active', tier: '5tool', subscribed_modules: MODULES['5tool'].baseball, current_period_end: new Date(Date.now() + 365 * 86400000).toISOString() });
+        if (subscriptionError) return json({ error: subscriptionError.message }, 500);
+      }
+      const session = await oneTimeSession(admin, url, email);
+      return json({ ...session, created: !existing });
+    }
     const all = personas();
     const staff = staffPersonas();
     if (body?.list) return json({

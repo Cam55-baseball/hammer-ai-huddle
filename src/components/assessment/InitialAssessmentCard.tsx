@@ -70,8 +70,14 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
     if (!user) return false;
     setSaving(true); setSaveError(null);
     try {
-      const { error } = await supabase.from("initial_assessments").upsert({ user_id: user.id, updated_at: new Date().toISOString(), ...patch });
+      const { data: saved, error } = await supabase.from("initial_assessments").upsert({ user_id: user.id, updated_at: new Date().toISOString(), ...patch }).select('*').single();
       if (error) throw error;
+      if (!saved || Object.entries(patch).some(([key, value]) => {
+        const actual = (saved as Record<string, unknown>)[key];
+        if (key.endsWith('_at') && typeof actual === 'string' && typeof value === 'string') return Date.parse(actual) !== Date.parse(value);
+        const normalize = (v: unknown): unknown => Array.isArray(v) ? v.map(normalize) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).sort(([a],[b]) => a.localeCompare(b)).map(([k,x]) => [k, normalize(x)])) : v;
+        return JSON.stringify(normalize(actual)) !== JSON.stringify(normalize(value));
+      })) throw new Error('Assessment readback did not match.');
       await qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] });
       await qc.invalidateQueries({ queryKey: ["assessment-start", user.id] });
       return true;
