@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Heart, Shield, Users, ChevronRight, Check, CalendarIcon, Info } from 'lucide-react';
 import { normalizeInjuryHistory } from '@/lib/hammer/context/normalizers';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface PhysioHealthIntakeDialogProps {
   open: boolean;
@@ -119,6 +120,8 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
   const [medicationsText, setMedicationsText] = useState('');
   const [conditions, setConditions] = useState<string[]>([]);
   const [injuryText, setInjuryText] = useState('');
+  const [injuryArea,setInjuryArea]=useState('');
+  const [injuryStatus,setInjuryStatus]=useState<'healed'|'active'>('healed');
   const [supplementsText, setSupplementsText] = useState('');
 
   // Step 3
@@ -218,6 +221,16 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
       if (!saved.success) {
         setSaveError("Couldn't save your health profile. Your answers are still here. Try again.");
         return;
+      }
+      if (injuryArea && user) {
+        const current=await supabase.from('athlete_context').select('injury_history').eq('user_id',user.id).maybeSingle();
+        if(current.error)throw current.error;
+        const previous=Array.isArray(current.data?.injury_history)?current.data.injury_history:[];
+        const entry={region:injuryArea,recovery_status:injuryStatus,note:`Player reported ${injuryStatus} ${injuryArea} history`,reported_at:new Date().toISOString()};
+        const history=[...previous,entry];
+        const result=await supabase.from('athlete_context').upsert({user_id:user.id,injury_history:history},{onConflict:'user_id'}).select('injury_history').single();
+        if(result.error||JSON.stringify(result.data?.injury_history)!==JSON.stringify(history))throw new Error('Could not confirm injury status.');
+        setInjuryArea('');
       }
       if (enableAdult && isAdultEligible) {
         const enabled = await enableAdultFeatures();
@@ -357,6 +370,12 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
                 onChange={e => setInjuryText(e.target.value)}
                 placeholder="e.g. ACL tear 2022, rotator cuff 2021"
               />
+              <p className="text-xs text-muted-foreground">Notes stay in your history. They are never treated as a diagnosis.</p>
+              <Label htmlFor="health-injury-area">Injury area (optional)</Label>
+              <Select value={injuryArea} onValueChange={setInjuryArea}><SelectTrigger id="health-injury-area"><SelectValue placeholder="Choose an area" /></SelectTrigger><SelectContent>{['shoulder','elbow','wrist','hip','knee','ankle','back'].map(area=><SelectItem key={area} value={area}>{area[0].toUpperCase()+area.slice(1)}</SelectItem>)}</SelectContent></Select>
+              <Label htmlFor="health-injury-status">Current status</Label>
+              <Select value={injuryStatus} onValueChange={v=>setInjuryStatus(v==='active'?'active':'healed')}><SelectTrigger id="health-injury-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="healed">Healed past injury — history only</SelectItem><SelectItem value="active">Active injury or pain</SelectItem></SelectContent></Select>
+              <p className="text-xs text-muted-foreground">A healed history entry never clears a separate active injury or return-to-play restriction.</p>
             </div>
             <div className="space-y-2">
               <Label>Regular Supplements (comma-separated)</Label>

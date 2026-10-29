@@ -8,8 +8,8 @@ export function physioDefaults(raw: unknown): PhysioDefaults {
 }
 const AREAS = new Set(['shoulder', 'elbow', 'wrist', 'hip', 'knee', 'ankle', 'back']);
 export const PREHAB_SLUGS: Record<string, string> = {
-  shoulder: 'wu_shoulder_cars', elbow: 'wu_wrist_cars', wrist: 'wu_wrist_cars',
-  hip: 'wu_hip_cars', knee: 'wu_90_90_switch', ankle: 'wu_ankle_cars', back: 'wu_thoracic_windmill',
+  shoulder: 'wu_shoulder_cars', wrist: 'wu_wrist_cars',
+  hip: 'wu_hip_cars', ankle: 'wu_ankle_cars', back: 'wu_thoracic_windmill',
 };
 export type PhysioMapping = { illnessActive: boolean; lowReadiness: boolean; recoveryOnly: boolean;
   professionalWarning: string | null; healedAreas: string[]; activeAreas: string[]; cautions: string[] };
