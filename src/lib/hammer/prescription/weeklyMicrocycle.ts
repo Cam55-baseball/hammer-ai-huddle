@@ -22,6 +22,7 @@
  */
 import type { AthleteContextProjection } from "@/lib/hammer/context/decisionFilters";
 import type { ModalityKey } from "./dailyPlan";
+import { availableTrainingDays } from '../../../../supabase/functions/_shared/wic/schedule/availability';
 import {
   SKILL_MODALITIES,
   SKILL_DAYS_CEILING,
@@ -330,6 +331,19 @@ const PERMISSIVE_DAILY: WeeklyTemplate = {
 /* ── Resolver ───────────────────────────────────────────────────────────── */
 
 export function resolveWeeklyTemplate(proj: AthleteContextProjection): WeeklyTemplate {
+  const template = resolveBaseTemplate(proj);
+  const legal = new Set(availableTrainingDays(proj.weeklyAvailabilityDays));
+  return {
+    ...template,
+    perModality: Object.fromEntries(Object.entries(template.perModality).map(([key, days]) =>
+      [key, ANCHOR_MODALITIES.includes(key as ModalityKey) ? days : days.filter(day => legal.has(day))])) as WeeklyTemplate['perModality'],
+    priorityDayOrder: Object.fromEntries(Object.entries(template.priorityDayOrder ?? {}).map(([key, days]) =>
+      [key, days.filter(day => legal.has(day))])),
+    availableDays: [...legal] as Dow[],
+  };
+}
+
+function resolveBaseTemplate(proj: AthleteContextProjection): WeeklyTemplate {
   const band = proj.lifecycleBand;
   const youngBand = band === "u10" || band === "u12" || band === "u14";
   const lowLiftingAge = typeof proj.liftingAgeYears === "number" && proj.liftingAgeYears < 1;
