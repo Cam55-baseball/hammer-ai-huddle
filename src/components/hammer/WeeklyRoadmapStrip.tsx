@@ -116,6 +116,7 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase }: Props)
             day={day}
             onClick={() => setExpanded((cur) => (cur === idx ? null : idx))}
             active={expanded === idx}
+            todayCategories={day.isToday ? todayCategories : undefined}
           />
         ))}
       </div>
@@ -149,10 +150,12 @@ function DayCell({
   day,
   onClick,
   active,
+  todayCategories,
 }: {
   day: RoadmapDay;
   onClick: () => void;
   active: boolean;
+  todayCategories?: readonly string[];
 }) {
   const primaryChips = day.modalities.filter(
     (m) => (m.key !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES) && (m.intensity === "primary" || m.intensity === "secondary"),
@@ -174,7 +177,7 @@ function DayCell({
         <span className="mt-1 text-[9px] text-muted-foreground/70">Rest</span>
       ) : (
         <div className="mt-1 flex flex-wrap justify-center gap-0.5">
-          {primaryChips.slice(0, 3).map((m) => (
+          {todayCategories ? todayCategories.slice(0, 3).map(category => <span key={category} className="text-[9px] leading-none text-foreground">{category === "Hitting" ? "HIT" : category === "Conditioning" ? "COND" : category === "Recovery" ? "REC" : category === "Lift / tissue care" ? "CARE" : category}</span>) : primaryChips.slice(0, 3).map((m) => (
             <span
               key={m.key}
               className={`rounded px-1 py-[1px] text-[9px] leading-none border ${INTENSITY_TONE[m.intensity]}`}
@@ -182,8 +185,8 @@ function DayCell({
               {MODALITY_ABBR[m.key]}
             </span>
           ))}
-          {primaryChips.length > 3 && (
-            <span className="text-[9px] text-muted-foreground">+{primaryChips.length - 3}</span>
+          {(todayCategories?.length ?? primaryChips.length) > 3 && (
+            <span className="text-[9px] text-muted-foreground">+{(todayCategories?.length ?? primaryChips.length) - 3}</span>
           )}
         </div>
       )}
