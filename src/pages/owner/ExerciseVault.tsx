@@ -128,14 +128,14 @@ export default function ExerciseVault() {
             <p className="text-sm text-muted-foreground">Every exercise that can appear on a card. Owner and admin only.</p>
           </div>
           {!adding && !selected && <BuilderLibraryLink />}
-          <button
+          <Button
             type="button"
             data-vault-add
             className="h-9 rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground"
             onClick={() => { setAdding(true); setSelected(null); }}
           >
-            Add new exercise
-          </button>
+            Create new
+          </Button>
         </div>
         <Input placeholder="Search by name or code" value={q} onChange={(e) => setQ(e.target.value)} />
         <section className="space-y-2 border-b border-border pb-4" aria-label="Fielding and baserunning issue drills">

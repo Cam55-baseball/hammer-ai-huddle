@@ -217,7 +217,7 @@ export default function DrillBuilder() {
     toast({ title: "Drill saved" });
     setDraft(null);
     setVideoFile(null);
-    void load();
+    await load();
     } catch (error) {
       toast({ title: "Couldn't save drill", description: error instanceof Error ? error.message : "Try again." });
     } finally { setSaving(false); }
@@ -258,7 +258,7 @@ export default function DrillBuilder() {
           <div className="flex flex-wrap gap-2">
             <BuilderLibraryLink />
             <Button variant="outline" onClick={() => setRequestOpen(true)}>Request a new fault</Button>
-            <Button onClick={() => setDraft({ ...EMPTY, steps: [""] })}><Plus className="mr-1 h-4 w-4" />New drill</Button>
+            <Button onClick={() => { if (params.get('library') === 'legacy') { const next = new URLSearchParams(params); next.set('library', 'skills'); setParams(next); } setDraft({ ...EMPTY, steps: [""] }); }}><Plus className="mr-1 h-4 w-4" />Create new</Button>
           </div>
         </div>
 

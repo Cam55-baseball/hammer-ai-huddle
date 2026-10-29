@@ -113,6 +113,9 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
       if (data?.error) throw new Error(data.error);
       setMsg(action === "save_draft" ? "Draft saved." : action === "make_live" ? "Made live — applies from the next plan." : "Undone — the previous version is live again.");
       qc.invalidateQueries({ queryKey: ["vault-history", slug] });
+      if (action === 'make_live') {
+        await qc.invalidateQueries({ queryKey: ['exercise-vault', 'catalog'] });
+      }
     } catch (err) {
       setMsg(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
