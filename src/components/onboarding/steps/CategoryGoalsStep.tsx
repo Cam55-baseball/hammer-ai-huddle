@@ -22,12 +22,16 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Plus, X, Info } from "lucide-react";
+import { ArrowRight, ArrowUp, Plus, X, Info } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toggleGoalPick, prioritizeGoalPick } from "@/lib/hammer/goals/pickRanking";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
   CATEGORY_LABELS,
+  CATEGORY_KEYS,
+  normalizeCategoryOrder,
   normalizeCategoryGoalsV2,
   type CategoryGoalsPayloadV2,
   type DisciplineGoals,
@@ -79,16 +83,19 @@ const RANK_BADGE: Record<GoalRank, { label: string; tone: string }> = {
 interface DraftShape {
   panes: PaneId[];
   picks: Record<string, DisciplineGoals>;
+  categoryOrder?: string[];
 }
 
 export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush }: Props) {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
   const [panes, setPanes] = useState<PaneId[]>([]);
   const [picksByPane, setPicksByPane] = useState<Record<string, DisciplineGoals>>({});
   const [activePane, setActivePane] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
 
   /** Which Side discipline applies to a given goal category, if any.
    *  Returns null when the category is bilaterally neutral (Speed, Fielding)
@@ -107,7 +114,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
     if (!user?.id || loaded) return;
     (async () => {
       try {
-        const [{ data: ctxRow }, { data: profile }, draft] = await Promise.all([
+        const [{ data: ctxRow, error: ctxError }, { data: profile, error: profileError }, draft] = await Promise.all([
           supabase
             .from("athlete_context")
             .select("category_goals")
@@ -120,6 +127,8 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
             .maybeSingle(),
           readDraftSlot<DraftShape>(user.id, "category-goals-wizard"),
         ]);
+        if (ctxError) throw ctxError;
+        if (profileError) throw profileError;
 
         const existingV2 = normalizeCategoryGoalsV2(
           (ctxRow as { category_goals?: unknown } | null)?.category_goals,
@@ -160,6 +169,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
 
         setPanes(initialPanes);
         setPicksByPane(initialPicks);
+        setCategoryOrder(normalizeCategoryOrder(draft?.categoryOrder) ?? existingV2?.categoryOrder?.slice() ?? []);
         setActivePane(initialPanes[0] ? paneKey(initialPanes[0]) : null);
       } catch (e) {
         console.warn("[onboarding] category_goals hydrate failed", e);
@@ -173,8 +183,8 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
   // ── Debounced draft autosave whenever picks / panes change ───────────────
   useEffect(() => {
     if (!user?.id || !loaded) return;
-    writeDraftSlot<DraftShape>(user.id, "category-goals-wizard", { panes, picks: picksByPane });
-  }, [user?.id, loaded, panes, picksByPane]);
+    writeDraftSlot<DraftShape>(user.id, "category-goals-wizard", { panes, picks: picksByPane, categoryOrder });
+  }, [user?.id, loaded, panes, picksByPane, categoryOrder]);
 
   // ── Pane management ──────────────────────────────────────────────────────
   const addPane = (p: PaneId) => {
@@ -203,24 +213,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
       setPicksByPane((s) => {
         const pane: DisciplineGoals = s[key] ?? {};
         const slot = (pane[category as keyof DisciplineGoals] as ReadonlyArray<SubGoalPick> | undefined) ?? [];
-        const existing = slot.find((p) => p.id === subGoalId);
-        let nextSlot: SubGoalPick[];
-        if (!existing) {
-          // Add as primary if none, else secondary.
-          const hasPrimary = slot.some((p) => p.rank === "primary");
-          if (slot.length >= 2) return s; // cap reached
-          nextSlot = [...slot, { id: subGoalId, rank: hasPrimary ? "secondary" : "primary" }];
-        } else if (existing.rank === "primary") {
-          // Demote: primary → secondary (and promote any existing secondary to primary if alone).
-          nextSlot = slot.map((p) =>
-            p.id === subGoalId ? { ...p, rank: "secondary" as const } : { ...p, rank: "primary" as const },
-          );
-        } else {
-          // Remove.
-          nextSlot = slot.filter((p) => p.id !== subGoalId);
-          // Ensure remaining pick is primary.
-          nextSlot = nextSlot.map((p, i) => ({ ...p, rank: i === 0 ? "primary" : "secondary" }));
-        }
+        const nextSlot = toggleGoalPick(slot, subGoalId);
         return { ...s, [key]: { ...pane, [category]: nextSlot } };
       });
     },
@@ -252,8 +245,9 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
       sportBucket[p.discipline] = dg;
       buckets[p.sport] = sportBucket;
     }
-    return { version: 2, updatedAt: new Date().toISOString(), ...buckets };
-  }, [panes, picksByPane]);
+    const order = normalizeCategoryOrder(categoryOrder);
+    return { version: 2, updatedAt: new Date().toISOString(), ...buckets, ...(order ? { categoryOrder: order } : {}) };
+  }, [panes, picksByPane, categoryOrder]);
 
   const totalPicks = useMemo(
     () =>
@@ -265,25 +259,31 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
   );
 
   const handleSave = async (advance = true): Promise<boolean> => {
-    if (!user?.id) return false;
+    if (!user?.id || saving || !loaded) return false;
     if (totalPicks === 0) {
       toast.error("Pick at least one sub-goal before saving.");
       return false;
     }
+    if (!payload.categoryOrder) {
+      toast.error("Rank all five training areas before saving.");
+      return false;
+    }
     setSaving(true);
     try {
-      // Keep the athlete's goal ranking (saved by the rank-your-goals card).
-      const { data: prev } = await supabase.from("athlete_context").select("category_goals").eq("user_id", user.id).maybeSingle();
-      const prevOrder = (prev as { category_goals?: { categoryOrder?: unknown } } | null)?.category_goals?.categoryOrder;
-      const merged = Array.isArray(prevOrder) ? { ...(payload as object), categoryOrder: prevOrder } : payload;
       const { error } = await supabase
         .from("athlete_context")
         .upsert(
-          { user_id: user.id, category_goals: merged as unknown as never },
+          { user_id: user.id, category_goals: payload as unknown as never },
           { onConflict: "user_id" },
         );
       if (error) throw error;
+      const { data: saved, error: readError } = await supabase.from("athlete_context").select("category_goals").eq("user_id", user.id).single();
+      if (readError) throw readError;
+      const expected = normalizeCategoryGoalsV2(payload);
+      const actual = normalizeCategoryGoalsV2(saved.category_goals);
+      if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("Your saved goals could not be confirmed. Try again.");
       clearDraftSlot(user.id, "category-goals-wizard");
+      await Promise.all(["goal-ranking", "hammer-context-envelope", "athlete-onboarding-state", "hammers-today-start", "onboarding-answer-status"].map(key => qc.invalidateQueries({ queryKey: [key, user.id] })));
       toast.success("Goals saved. Hammer will plan around them.");
       if (advance) onContinue();
       return true;
@@ -308,7 +308,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
 
   const handleSaveDraft = async () => {
     if (!user?.id) return;
-    writeDraftSlot<DraftShape>(user.id, "category-goals-wizard", { panes, picks: picksByPane });
+    writeDraftSlot<DraftShape>(user.id, "category-goals-wizard", { panes, picks: picksByPane, categoryOrder });
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -327,10 +327,18 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
         <h2 className="text-lg font-semibold">Pick the goals that matter most</h2>
         <p className="text-sm text-muted-foreground">
           Choose <span className="font-medium">1 or 2 sub-goals per category</span>.
-          First tap = <span className="font-medium">primary (70%)</span>, second tap
-          = <span className="font-medium">secondary (30%)</span>, third = remove.
-          Hammer weights every plan by these.
         </p>
+      </div>
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold">Your training priorities</h3>
+        <div className="flex flex-wrap gap-2">
+          {CATEGORY_KEYS.map(cat => <Button key={cat} type="button" variant="outline" size="sm" disabled={saving || !loaded}
+            aria-label={`${CATEGORY_LABELS[cat]} priority${categoryOrder.includes(cat) ? ` ${categoryOrder.indexOf(cat) + 1}` : ''}`}
+            onClick={() => setCategoryOrder(order => order.includes(cat) ? order.filter(x => x !== cat) : [...order, cat])}>
+            {categoryOrder.includes(cat) ? `${categoryOrder.indexOf(cat) + 1}. ` : ''}{CATEGORY_LABELS[cat]}
+          </Button>)}
+        </div>
+        {categoryOrder.length > 0 && <Button type="button" variant="ghost" size="sm" disabled={saving} onClick={() => setCategoryOrder([])}>Reset order</Button>}
       </div>
 
       {/* Pane tabs */}
@@ -408,10 +416,13 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
                     const pick = picks.find((p) => p.id === sg.id);
                     const active = !!pick;
                     return (
-                      <button
+                      <Button
                         key={sg.id}
                         type="button"
-                        onClick={() => togglePick(panes.find((x) => paneKey(x) === activePane)!, cat, sg.id)}
+                        variant="outline"
+                        disabled={saving || !loaded || (!pick && picks.length >= 2)}
+                        aria-pressed={!!pick}
+                        onClick={() => togglePick(active, cat, sg.id)}
                         title={sg.helpText}
                         className={`group inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition ${
                           active
@@ -423,10 +434,17 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
                       >
                         <span className="truncate">{sg.label}</span>
                         <Info className="h-3 w-3 opacity-60 group-hover:opacity-100" />
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
+                <ol className="mt-2 space-y-1">
+                  {[...picks].sort((a, b) => Number(a.rank === 'secondary') - Number(b.rank === 'secondary')).map(p => <li key={p.id} className="flex items-center justify-between gap-2 text-xs">
+                    <span>{p.rank === 'primary' ? '1' : '2'}. {sgs.find(sg => sg.id === p.id)?.label ?? p.id}</span>
+                    {p.rank === 'secondary' && <Button type="button" size="icon" variant="ghost" disabled={saving} aria-label={`Make ${sgs.find(sg => sg.id === p.id)?.label ?? p.id} primary`} title="Make primary"
+                      onClick={() => setPicksByPane(s => ({ ...s, [paneKey(active)]: { ...s[paneKey(active)], [cat]: prioritizeGoalPick(picks, p.id) } }))}><ArrowUp className="h-4 w-4" /></Button>}
+                  </li>)}
+                </ol>
                 {picks.length === 0 && (
                   <p className="mt-1.5 text-[11px] text-muted-foreground">
                     Tap any chip to make it your <span className="font-medium">primary</span>. Tap a second chip for a <span className="font-medium">secondary</span> focus.
@@ -453,7 +471,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
                               <button
                                 key={opt}
                                 type="button"
-                                onClick={() => setPickSide(active!, cat, p.id, opt)}
+                                onClick={() => setPickSide(active, cat, p.id, opt)}
                                 aria-pressed={side === opt}
                                 className={`px-2 py-0.5 text-[10px] font-semibold transition-colors ${
                                   side === opt
@@ -482,7 +500,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
           onBack={onBack}
           onSaveAndExit={handleSaveDraft}
           continueLabel="Save & continue"
-          continueDisabled={totalPicks === 0}
+          continueDisabled={!loaded || totalPicks === 0 || !payload.categoryOrder}
           saving={saving}
         />
       )}
@@ -491,7 +509,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
           {onBack && (
             <Button variant="ghost" onClick={onBack}>Back</Button>
           )}
-          <Button onClick={() => { void handleSave(); }} disabled={saving || totalPicks === 0}>
+          <Button onClick={() => { void handleSave(); }} disabled={!loaded || saving || totalPicks === 0 || !payload.categoryOrder}>
             {saving ? "Saving…" : "Save"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
