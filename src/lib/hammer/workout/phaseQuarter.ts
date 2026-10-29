@@ -27,7 +27,7 @@ export interface WkPhaseResolution {
   daysUntilNextQuarter: number | null;
 }
 
-const QUARTER_LABEL: Record<WkPhase, string> = {
+export const QUARTER_LABEL: Record<WkPhase, string> = {
   os_q1: 'Offseason Q1 — Strength & Capacity',
   os_q2: 'Offseason Q2 — Power Build',
   os_q3: 'Offseason Q3 — Elastic Transfer',
