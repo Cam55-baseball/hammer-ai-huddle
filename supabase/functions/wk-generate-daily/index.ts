@@ -556,6 +556,26 @@ const handler = async (req: Request): Promise<Response> => {
       user = authUser;
     }
 
+    // Oct 29 outage guard: TEST/demo identities (hammersmodality+…@gmail.com)
+    // build one plan at a time and at most TEST_BUILD_CAP per 10 minutes per
+    // instance; extra calls get 429 + Retry-After instead of hitting the disk.
+    {
+      const email = String((user as any).email ?? "").toLowerCase();
+      if (/^hammersmodality\+[^@]+@gmail\.com$/.test(email)) {
+        const now = Date.now();
+        const recent = (testBuildLog.get(user.id) ?? []).filter((t) => now - t < 600_000);
+        if ((testInFlight.get(user.id) ?? 0) > 0 || recent.length >= TEST_BUILD_CAP) {
+          return new Response(JSON.stringify({ error: "test_build_cap", retry_after_s: 60 }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" },
+          });
+        }
+        recent.push(now);
+        testBuildLog.set(user.id, recent);
+        testInFlight.set(user.id, 1);
+        testHeld = user.id;
+      }
+    }
+
     // A training plan belongs to the athlete doing the training, and only to an
     // account that actually holds a prescription. Enforced here, not just in the
     // interface, so no caller can generate one by asking directly.
