@@ -1692,6 +1692,31 @@ function checkDrillSafety(drill, athlete) {
   return { ok: reasons.length === 0, reasons };
 }
 
+// src/lib/prescription/practiceCheckDrills.ts
+function taggedPracticeChecks(report) {
+  const list = report?.practice_checks;
+  if (!Array.isArray(list)) return [];
+  return list.filter((item) => !!item && typeof item === "object" && Array.isArray(item.finding_tags));
+}
+
+// src/lib/prescription/analysisDrillBinding.ts
+function analysisDrillBinding(drill, report, goals, findings = []) {
+  const r = report && typeof report === "object" ? report : {};
+  const violations = r.violations_detected && typeof r.violations_detected === "object" ? r.violations_detected : {};
+  const keys = new Set(Object.entries(violations).filter(([, v]) => v === true).map(([k]) => k));
+  for (const f of findings) keys.add(f.fault_key);
+  if (Array.isArray(r.improvements)) for (const f of r.improvements) {
+    if (f && typeof f === "object" && typeof f.fault_key === "string" && f.fault_key !== "other") keys.add(f.fault_key);
+  }
+  for (const check of taggedPracticeChecks(r)) if (Array.isArray(check.finding_tags)) {
+    for (const key2 of check.finding_tags) if (typeof key2 === "string") keys.add(key2.trim());
+  }
+  const fault = drill.violationKeys.find((key2) => keys.has(key2));
+  if (fault) return { issue_key: `fault:${fault}`, fault_key: fault, goal_label: null };
+  const goal = matchGoalDrills([drill], goals, drill.category, drill.sports[0])[0]?.reasons[0]?.replace(/^Your goal: /, "");
+  return goal ? { issue_key: `goal:${goal}`, fault_key: null, goal_label: goal } : null;
+}
+
 // src/lib/wic/faultLedger/cleanClipFade.ts
 var CLEAN_CLIP_FADE_VERSION = "clean_clip_fade_v1";
 var ONE_CLEAN_CLIP_WEIGHT = 0.5;
@@ -1861,6 +1886,7 @@ function applyAnalysisDrillRotation(input) {
 }
 export {
   ELITE_DRILL_CATALOG,
+  analysisDrillBinding,
   analysisDrillCategory,
   analysisDrillSlot,
   applyAnalysisDrillRotation,
