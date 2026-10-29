@@ -77,13 +77,14 @@ export function usePhysioProfile() {
   const saveProfile = useCallback(async (updates: Partial<PhysioHealthProfile> & { setup_completed?: boolean }) => {
     if (!user) return { success: false, error: 'Not authenticated' };
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('physio_health_profiles')
         .upsert({ 
           user_id: user.id, 
           ...updates 
-        }, { onConflict: 'user_id' });
+        }, { onConflict: 'user_id' }).select('*').single();
       if (error) throw error;
+      if (!data || Object.entries(updates).some(([key, value]) => JSON.stringify((data as Record<string, unknown>)[key]) !== JSON.stringify(value))) throw new Error('Health save was not confirmed.');
       queryClient.invalidateQueries({ queryKey: ['physioProfile'] });
       queryClient.invalidateQueries({ queryKey: ['physioGamePlanBadges'] });
       return { success: true };
