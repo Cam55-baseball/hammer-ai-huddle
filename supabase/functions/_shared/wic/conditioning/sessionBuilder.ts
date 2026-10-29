@@ -150,7 +150,7 @@ export function certifyConditioning(input: CertifyConditioningInput): CertifyCon
 
 export { CONDITIONING_TEMPLATES, resolveConditioningTemplate };
 
-/** A recovery-only day that kept only flush work is certified as a recovery flush session. */
+/** A recovery-only, dialed-down or low-readiness floor day that kept only flush work is certified as a recovery flush session. */
 export function certifiedConditioningTemplate(
   chosen: ConditioningTemplateId | undefined, primaryAdaptation: string | null | undefined,
   rows: readonly { slot: string; movement_slug: string }[], categoryOf: (slug: string) => string | null | undefined,
