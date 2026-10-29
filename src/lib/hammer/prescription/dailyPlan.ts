@@ -2381,7 +2381,7 @@ export function buildHammerDailyPlan(
   const firstPass = ALL_MODALITIES.filter(allowed).map((m) =>
     builder({ modality: m, ctx, proj, speed, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
       pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings) : undefined,
-      pitchingPhase:quarter.key,
+      pitchingPhase:quarter.phase==='off'?`os_q${quarter.quarter}`:quarter.phase==='pre'?'preseason':quarter.phase==='in'?'in_season':'post_season',
       armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,positionThrowing:!!access&&!access.hasPitching,armHistory:roadmapInputs.armHistory,
       planDate:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,skillExecutionAllowed: scheduleSignal.postureToday === 'normal' && !(m==='defense'&&access?.pitcherOnly) }),
   );
