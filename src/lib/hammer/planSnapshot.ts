@@ -52,8 +52,12 @@ export async function savePlanSnapshot(userId: string, plan: HammerDailyPlanResu
     });
     if (error) console.debug("[plan-snapshot] save failed", error.message);
     if (!error) {
-      const rotation = await supabase.functions.invoke('plan-swap',{body:{action:'analysis_rotation',sport,planDate}});
-      if (rotation.error || rotation.data?.error) console.debug('[plan-snapshot] fix-it readback could not finish');
+      try {
+        const rotation = await supabase.functions.invoke('plan-swap',{body:{action:'analysis_rotation',sport,planDate}});
+        if (rotation.error || rotation.data?.error) console.debug('[plan-snapshot] fix-it readback could not finish');
+      } catch {
+        console.debug('[plan-snapshot] fix-it readback could not finish');
+      }
     }
     return !error;
   } catch {
