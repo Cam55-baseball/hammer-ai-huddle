@@ -24,3 +24,11 @@
 ## Run 4 — Oct 29 2026, 21:15 UTC
 - Units 3–4 (certhsp Nov 13–26): 14/14 saved and validated; load steady (memory 69%, 24/60 connections, no new DiskIO alert).
 - Built and saved: 28 / 224 dates. These dates are NOT yet floor-certified: the saved days carry a Game IQ card, bands-only strength and 3 off-season bullpens (see scheduling-certification.md).
+
+## Run 5 — Oct 29 2026, 21:28–21:45 UTC (batch 1 of remaining personas)
+- Fixed: unreleased Game IQ was saved into every player day → removed from player plans while the release switch is off (test `dailyPlan.noGameIq.test.ts`; old matrix updated).
+- Fixed: a saved "bands" token outranked saved barbell/rack/dumbbells, so Strength fell to "bodyweight (bands)" → loadable gear now wins; bands alone stays bands; unknown stays unknown (test `decisionFilters.loadGear.test.ts`).
+- 1,143 plan/coach/Today tests pass; bundle parity passes; approved `wk-generate-daily` redeploy live (sha256 8d66f495…8538).
+- certsb5 (softball 5Tool) Oct 30–Nov 12: 14/14 saved. Checked from saved data: Sunday rest only, no Game IQ, no pitching card, bunting on every training day, off-season strength, 2+ running conditioning in the Oct 26–31 and Nov 2–7 weeks. Not checked from saved data: Primer numbers, Mind item (shown on screen, not saved in the day).
+- Still open: in-season game cards (bug 4) and bullpen frequency (bug 3); certhsp's 28 days must be rebuilt after those fixes.
+- Load: memory 53%, connections 23/60, no new DiskIO alert.
