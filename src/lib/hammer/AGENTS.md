@@ -15,3 +15,4 @@
 - Testing-day details resolve only from the current successful self/date notice read; unavailable data is visible failure. Why: a stale dialog must not preserve a cancelled day or another player's schedule.
 - First mastery snapshot waits for this visit's identity read; matching saved focus restores skill order/reasons only when current legal drill-dose signatures match, never overriding safety reductions. Why: pending evidence cannot erase focus, and saved focus cannot reopen training.
 - Start and full athlete builds use the canonical `initial_plan_missing` RPC; `_shared/startReadiness.ts` mirrors its contract for regression tests only. Why: linked missing answers and server program eligibility must agree without a client authorization path.
+- Declared smaller weeks use `_shared/wic/schedule/availability.ts` in the skill microcycle and physical rest boundary. Why: days available must constrain both planners without adding dose or reopening Sunday.
