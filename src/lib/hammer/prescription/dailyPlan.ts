@@ -116,6 +116,7 @@ export type ModalityKey =
   | "defense"
   | "baserunning"
   | "game_iq"
+  | "game"
   | "fueling"
   | "recovery";
 
@@ -1743,6 +1744,31 @@ export function blockKey(b: PrescribedBlock): string {
   return `${b.modality}:${b.side ?? ""}`;
 }
 
+/** Bunting days: non-rest, non-game days with full hitting first; when games take those, light
+ * hitting days fill up to the weekly bunting minimum (attempts still come out of that day's swings). */
+export function buntingWeekdays(roadmap: ReadonlyArray<{dow:number;restDay:boolean;modalities:ReadonlyArray<{key:string;intensity:string}>}>, gameDows: readonly number[], wanted: number): number[] {
+  const open = roadmap.filter(d => !d.restDay && !gameDows.includes(d.dow));
+  const full = open.filter(d => d.modalities.some(m => m.key === 'hitting' && m.intensity !== 'activation')).map(d => d.dow);
+  if (full.length >= wanted) return full;
+  const light = open.filter(d => !full.includes(d.dow) && d.modalities.some(m => m.key === 'hitting')).map(d => d.dow);
+  return [...full, ...light.slice(0, wanted - full.length)];
+}
+
+/** The game itself as a card the player logs after playing. Light pre-game work and
+ * post-game recovery stay in their own cards; this adds no training dose. */
+export function gameDayCard(tournament: boolean): PrescribedBlock {
+  const title = tournament ? "Tournament — play your games" : "Game day — play and log your game";
+  return {
+    modality: "game", title,
+    why: "You have a game on your schedule today. The game is your main work, so the other cards are light.",
+    roadmapReason: "Game on your schedule", phase: "maintain",
+    steps: ["Do the light warm-up and pre-game cards first.", "Play your game.", "After the game, log it, then do the recovery card."],
+    drills: [], cues: ["Play loose — today is about competing, not training."], stopRules: ["If anything hurts, stop and tell your coach or a parent."],
+    durationMin: null, route: "/games", ctaLabel: "Log this game", status: "ready",
+    missing: [], missingContextKeys: [], gamePlanTemplate: null,
+  } as PrescribedBlock;
+}
+
 function applyScheduleModulation(
   blocks: ReadonlyArray<PrescribedBlock>,
   signal: ScheduleSignal,
@@ -2311,7 +2337,7 @@ export interface RoadmapInputs {
   readonly subscriptionModules?: readonly string[];
   readonly alwaysMissingGear?: readonly string[];
   readonly armHistory?: PlanningArmHistory;
-  readonly bunting?: {evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
+  readonly bunting?: {gameWeekdays?:readonly number[];evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
 /** Perceived readiness (check-in score 0–1). Missing → normal, never "low". */
@@ -2484,7 +2510,10 @@ export function buildHammerDailyPlan(
     preModulationOriginals,
     roadmapInputs.defenseFullOverride === true,
   );
-  const sided = applySideBias(modulated, sideBias);
+  // A scheduled game is its own loggable card: the game is the day's main work.
+  const withGame = scheduleSignal.postureToday === "game" || scheduleSignal.postureToday === "tournament"
+    ? [gameDayCard(scheduleSignal.postureToday === "tournament"), ...modulated] : modulated;
+  const sided = applySideBias(withGame, sideBias);
   const { blocks: biasedBlocks, tags: gpBiasTags } = applyGpSignalBias(
     sided, gpSignal,
     new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []),
@@ -2515,7 +2544,7 @@ export function buildHammerDailyPlan(
     sport:normalizeSport(sportRaw)==='softball'?'softball':'baseball',modules:roadmapInputs.subscriptionModules??[],
     bats:identityOverride?.isSwitchHitter?'S':(['R','L','S'].includes(String(ctx.get('bats_hand')?.value))?ctx.get('bats_hand')?.value as 'R'|'L'|'S':null),
     ...bunting.traits,battingGames:bunting.evidence.battingGames,battingWindow:bunting.evidence.battingWindow,outcomes:bunting.evidence.outcomes,
-    legalWeekdays:weeklyRoadmap.filter(d=>!d.restDay&&d.modalities.some(m=>m.key==='hitting'&&m.intensity!=='activation')).map(d=>d.dow),
+    legalWeekdays:buntingWeekdays(weeklyRoadmap,bunting.gameWeekdays??[],bunting.traits?.speedy===true||bunting.traits?.lacksPower===true?3:2),
     restDay:fullRestDay,gameDay:scheduleSignal.postureToday!=='normal',
   },{weekday:today.getDay(),weekIndex:Math.floor(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()-((today.getDay()+6)%7))/604800000),
     owned:proj.equipmentList,age:bunting.age,phase:bunting.phase,catalog:bunting.catalog,userId:bunting.userId}) : masteryOrdered;

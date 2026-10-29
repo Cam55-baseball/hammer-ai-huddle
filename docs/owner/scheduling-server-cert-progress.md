@@ -32,3 +32,12 @@
 - certsb5 (softball 5Tool) Oct 30–Nov 12: 14/14 saved. Checked from saved data: Sunday rest only, no Game IQ, no pitching card, bunting on every training day, off-season strength, 2+ running conditioning in the Oct 26–31 and Nov 2–7 weeks. Not checked from saved data: Primer numbers, Mind item (shown on screen, not saved in the day).
 - Still open: in-season game cards (bug 4) and bullpen frequency (bug 3); certhsp's 28 days must be rebuilt after those fixes.
 - Load: memory 53%, connections 23/60, no new DiskIO alert.
+
+## Run 6 — Oct 29 2026, 21:46–22:30 UTC (batch 2)
+- **Fixed (bug 4):** games entered in the app's calendar were not counted as game days (only Game Plan games and Tell Hammers were), so game days were built as ordinary "taper" days. Shared rule `_shared/schedule/isGameDay.ts` now counts all three; ignored/cancelled games never count (4 tests).
+- **Fixed:** a game day now carries its own loggable card "Game day — play and log your game" (opens Games, adds no training dose); light pre-game defense primer, strength/speed off and post-game recovery are unchanged (1 test).
+- **Fixed:** bunting fell to 1 session in game weeks because in-season full-hitting days were the game days. Bunting now skips game days and, if needed, fills the 2+ minimum from light-hitting days; attempts still come out of that day's swings (3 tests).
+- 769 plan tests pass; server builder bundle regenerated; approved `wk-generate-daily` redeploys live (latest sha256 c17a2965…e6cf).
+- certsb5 Nov 13–19 rebuilt and Nov 20–26 built: game cards on all 5 calendar games (Nov 13, 16, 20, 23, 25); Sunday rest only; no Game IQ; no pitching; Nov 16–22 week: bunting Tue/Wed, conditioning Tue/Wed/Sat. Nov 23–29 week continues past the window (Nov 27–29 not in scope).
+- Load: memory 70%, connections 25/60, disk 45%, no new DiskIO alert after 17:15 UTC.
+- **Saved and verified: 28 / 224 (certsb5 complete).** certhsp's 28 saved days still await the bullpen-frequency fix (bug 3) and a rebuild. Next: certsbp Oct 30–Nov 5.

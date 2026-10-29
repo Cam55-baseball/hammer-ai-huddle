@@ -88,6 +88,14 @@ export async function composeSportDay(db: any, input: {
     whiffPct:swings.length>=20?Math.round(swings.filter((p:any)=>p.result==='swinging_strike').length/swings.length*100):null,
     chasePct:outside.length>=20?Math.round(outside.filter(isSwing).length/outside.length*100):null,miscueClusters:Object.entries(errors).filter(([,n])=>n>=2).map(([position,errors])=>({position,errors}))};
   const posture=input.posture;
+  // Game weekdays of this Mon–Sun week from the app's schedule: bunting moves to non-game days.
+  const monday=isoShift(date,-((day.getUTCDay()+6)%7)),sunday=isoShift(monday,6);
+  const [calWeek,gpWeek]=await Promise.all([
+    db.from('calendar_events').select('event_date,ignored_for_training').eq('user_id',uid).is('deleted_at',null).in('event_type',['game','tournament','scrimmage']).gte('event_date',monday).lte('event_date',sunday).limit(50),
+    db.from('gp_games').select('game_date,ignored_for_training').eq('user_id',uid).is('deleted_at',null).gte('game_date',monday).lte('game_date',sunday).limit(50),
+  ]);
+  const gameWeekdays=[...(calWeek.data??[]).map((e:any)=>e.ignored_for_training===true?null:e.event_date),...(gpWeek.data??[]).map((g:any)=>g.ignored_for_training===true?null:g.game_date)]
+    .filter(Boolean).map((d:string)=>new Date(`${d}T12:00:00Z`).getUTCDay());
   const schedule={todayKinds:[],tomorrowKinds:[],isGameToday:posture==='game',isTournamentToday:posture==='tournament',isCampToday:false,isTravelToday:posture==='travel',hasTeamPracticeToday:posture==='team_practice',isGameTomorrow:input.gameTomorrow,isTournamentTomorrow:false,tournamentWindow:null,tournamentDayLabel:null,postureToday:posture,eventLabel:null,rationale:posture==='normal'?'':`Your saved schedule: ${posture.replace(/_/g,' ')}.`};
   const adjRows=complete(adjustments);
   setOwnerPlanDrills(circulation.rows);
@@ -95,7 +103,7 @@ export async function composeSportDay(db: any, input: {
   const evidence=projectBuntingEvidence(sessionRows,abRows,pitchRows.filter((p:any)=>p.perspective==='hitter'&&['bunt_foul','bunt_in_play'].includes(p.result)),complete(tasks),sport);
   const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
     alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,physio:input.physio,testPreferences,
-    bunting:access.hasHitting?{evidence,catalog:complete(bunts),age,userId:uid,phase:input.phase}:undefined});
+    bunting:access.hasHitting?{gameWeekdays,evidence,catalog:complete(bunts),age,userId:uid,phase:input.phase}:undefined});
   const plan=finalizeDatedPlan(raw,{sport,now:day,cnsHigh:input.cns>=7,adjustments:adjRows,clips:clipRows,games:gp,principles:complete(principles),rankedFaults:accessiblePlanFaults(faults.rankedFaults,modules,sport,{clips:clipRows,now:day.getTime()}),signalScopes:faults.signalScopes,recurringIssues:accessibleRecurringIssues(issues,modules,sport),ownedEquipment:new Set(planningGear(input.equipment,input.alwaysMissingGear??[])),catalog:mergeCatalog(ELITE_DRILL_CATALOG,circulation.rows),circulation:{servedToUser:circulation.served,usage:circulation.usage}});
   if(plan.sanity?.ok===false&&!input.rest)throw new Error('Sport day failed structural validation');
   return {payload:{composition_version:'sport_physical_v1',sport,plan_date:date,engine_version:ENGINE_CONTRACT.version,seasonPhase:plan.seasonPhase,physicalPhase:input.phase,restDay:input.rest,weeklyRoadmap:plan.weeklyRoadmap,weeklyTemplate:plan.weeklyTemplate,microcycle:plan.microcycle,roadmap:plan.roadmap,blocks:plan.blocks},expectedSnapshot:snapshot.data?.updated_at??null,engine:ENGINE_CONTRACT.version};

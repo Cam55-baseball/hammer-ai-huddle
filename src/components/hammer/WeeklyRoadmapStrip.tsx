@@ -33,6 +33,7 @@ const MODALITY_ABBR: Record<ModalityKey, string> = {
   defense: "DEF",
   baserunning: "BR",
   game_iq: "IQ",
+  game: "GAME",
   fueling: "FUEL",
   recovery: "REC",
 };
@@ -47,6 +48,7 @@ const MODALITY_LABEL: Record<ModalityKey, string> = {
   defense: "Defense",
   baserunning: "Baserunning",
   game_iq: "Game IQ",
+  game: "Game",
   fueling: "Fueling",
   recovery: "Recovery",
 };
