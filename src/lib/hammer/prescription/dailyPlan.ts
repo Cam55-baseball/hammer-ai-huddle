@@ -2327,7 +2327,7 @@ export interface RoadmapInputs {
   readonly subscriptionModules?: readonly string[];
   readonly alwaysMissingGear?: readonly string[];
   readonly armHistory?: PlanningArmHistory;
-  readonly bunting?: {evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
+  readonly bunting?: {gameWeekdays?:readonly number[];evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
 /** Perceived readiness (check-in score 0–1). Missing → normal, never "low". */
@@ -2534,7 +2534,7 @@ export function buildHammerDailyPlan(
     sport:normalizeSport(sportRaw)==='softball'?'softball':'baseball',modules:roadmapInputs.subscriptionModules??[],
     bats:identityOverride?.isSwitchHitter?'S':(['R','L','S'].includes(String(ctx.get('bats_hand')?.value))?ctx.get('bats_hand')?.value as 'R'|'L'|'S':null),
     ...bunting.traits,battingGames:bunting.evidence.battingGames,battingWindow:bunting.evidence.battingWindow,outcomes:bunting.evidence.outcomes,
-    legalWeekdays:weeklyRoadmap.filter(d=>!d.restDay&&d.modalities.some(m=>m.key==='hitting'&&m.intensity!=='activation')).map(d=>d.dow),
+    legalWeekdays:weeklyRoadmap.filter(d=>!d.restDay&&!(bunting.gameWeekdays??[]).includes(d.dow)&&d.modalities.some(m=>m.key==='hitting'&&m.intensity!=='activation')).map(d=>d.dow),
     restDay:fullRestDay,gameDay:scheduleSignal.postureToday!=='normal',
   },{weekday:today.getDay(),weekIndex:Math.floor(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()-((today.getDay()+6)%7))/604800000),
     owned:proj.equipmentList,age:bunting.age,phase:bunting.phase,catalog:bunting.catalog,userId:bunting.userId}) : masteryOrdered;
