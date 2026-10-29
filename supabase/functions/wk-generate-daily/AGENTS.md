@@ -1,0 +1,1 @@
+- TEST/demo identities are capped in-handler (one in flight, TEST_BUILD_CAP per 10 min, 429 Retry-After). Why: Oct 29 disk-IO outage; certification must be throttled.

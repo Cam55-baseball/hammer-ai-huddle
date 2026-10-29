@@ -399,6 +399,10 @@ import { conditioningFloorDue, isRunningConditioning, floorConditioningSlugs } f
 let servedARequest = false;
 const ISOLATE_ID = crypto.randomUUID().slice(0, 8);
 let inFlight = 0;
+/** TEST/demo builds allowed per account per 10 minutes per instance (one week = 7, plus a re-plan). */
+const TEST_BUILD_CAP = 16;
+const testBuildLog = new Map<string, number[]>();
+const testInFlight = new Map<string, number>();
 
 // -------- Movement catalog cache (read-only reference data) ----------------
 // The catalog is ~1,000 rows and identical for every athlete of a sport. It
@@ -510,6 +514,7 @@ const handler = async (req: Request): Promise<Response> => {
   servedARequest = true;
   const generationStartedAt = Date.now();
   inFlight++;
+  let testHeld: string | null = null;
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -554,6 +559,26 @@ const handler = async (req: Request): Promise<Response> => {
       const { data: { user: authUser }, error: authErr } = await userClient.auth.getUser();
       if (authErr || !authUser) return json({ error: "Unauthenticated" }, 401);
       user = authUser;
+    }
+
+    // Oct 29 outage guard: TEST/demo identities (hammersmodality+…@gmail.com)
+    // build one plan at a time and at most TEST_BUILD_CAP per 10 minutes per
+    // instance; extra calls get 429 + Retry-After instead of hitting the disk.
+    {
+      const email = String((user as any).email ?? "").toLowerCase();
+      if (/^hammersmodality\+[^@]+@gmail\.com$/.test(email)) {
+        const now = Date.now();
+        const recent = (testBuildLog.get(user.id) ?? []).filter((t) => now - t < 600_000);
+        if ((testInFlight.get(user.id) ?? 0) > 0 || recent.length >= TEST_BUILD_CAP) {
+          return new Response(JSON.stringify({ error: "test_build_cap", retry_after_s: 60 }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" },
+          });
+        }
+        recent.push(now);
+        testBuildLog.set(user.id, recent);
+        testInFlight.set(user.id, 1);
+        testHeld = user.id;
+      }
     }
 
     // A training plan belongs to the athlete doing the training, and only to an
@@ -5526,6 +5551,7 @@ const handler = async (req: Request): Promise<Response> => {
     return json({ error: (e as Error).message }, 500);
   } finally {
     inFlight--;
+    if (testHeld) testInFlight.delete(testHeld);
   }
 };
 
