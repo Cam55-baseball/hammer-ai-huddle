@@ -10,7 +10,7 @@ import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
 import { priorityAccess } from '../priorityAccess';
 import { subscriptionSchedule } from './subscriptionSchedule';
 import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
-import { pitchingDay, guardArmDrills, eassArmEvent, type PlanningArmHistory } from './pitchingDay';
+import { pitchingDay, guardArmDrills, eassArmEvent, windmillPlanningDrills, type PlanningArmHistory } from './pitchingDay';
 import { structureSkillSession } from './skillSessionStructure';
 import { applyPracticePlanContext } from './practicePlanContext';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
@@ -1021,6 +1021,11 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       };
 
       const eass = buildEassPrescription(eassCtx);
+      if(armRole && normalizeSport(sportRaw)==='softball'){
+        const care=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
+        const phase=seasonPhase==='off'?'os_q2':seasonPhase==='pre'?'preseason':seasonPhase==='in'?'in_season':'post_season';
+        eass.drills=[...care,...windmillPlanningDrills({date:planDate??todayIso(),phase,age:ageYears,readiness:readinessScore,armPain:armSore||injuryRegions.some(r=>['shoulder','elbow','ucl','forearm'].includes(r)),equipment:[...proj.equipmentList],history:armHistory,outings:pitcherOutings})];
+      }
       if(armRole==='two_way') {
         const position=normalizePosition(declaredPos)==='pitcher'?normalizePosition(ctx.get('position_secondary')?.value):normalizePosition(declaredPos);
         const positionWork=buildEassPrescription({...eassCtx,position:position==='pitcher'?'utility':position,isThrowingDay:!pitcherOutings?.startsToday&&!pitcherOutings?.startsTomorrow&&!pitcherOutings?.pitchedYesterday,isRecoveryDay:eassCtx.isRecoveryDay||!!pitcherOutings?.startsToday||!!pitcherOutings?.startsTomorrow});
