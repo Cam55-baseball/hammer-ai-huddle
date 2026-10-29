@@ -8,7 +8,7 @@
  *      cross-sport two-way athletes (rare baseball+softball case).
  *   2) Per pane, one card per category (Speed / Power / Throwing or Pitching /
  *      Hitting / Fielding). Each card shows mechanism-level sub-goal chips.
- *      Tap = primary, second tap = secondary, third = deselect. Max 2 per
+ *      Tap selects or removes; a separate priority action ranks both. Max 2 per
  *      category, with a visible 70 / 30 weight badge.
  *   3) Save writes V2 payload to `athlete_context.category_goals` and clears
  *      the draft slot. Resume via `draftStore` if user exits mid-flow.
@@ -170,8 +170,6 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
         console.warn("[onboarding] category_goals hydrate failed", e);
         toast.error("Couldn't load your goals. Reload to try again.");
         return;
-      } finally {
-        // Failed reads must not enable a blank overwrite.
       }
       setLoaded(true);
     })();
@@ -204,7 +202,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
     setActivePane(cur => cur === key ? (remaining ? paneKey(remaining) : null) : cur);
   };
 
-  // ── Pick toggling (primary → secondary → off) ────────────────────────────
+  // ── Selection is independent of priority ────────────────────────────────
   const togglePick = useCallback(
     (paneId: PaneId, category: CategoryKey, subGoalId: string) => {
       const key = paneKey(paneId);
