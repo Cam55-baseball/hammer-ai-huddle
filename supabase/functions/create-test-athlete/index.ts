@@ -13,6 +13,7 @@
 // Sessions come from a one-time magic-link token, so passwords are NEVER changed:
 // the owner keeps control of the plus-addressed inboxes via "Forgot password".
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
+import { freshPersona } from './freshPersona.ts';
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -311,8 +312,9 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     // Item 18 proof: one named, pristine TEST identity. Never refresh/reset it,
     // seed answers, start flags, assessments, measurements or training history.
-    if (body?.persona === 'onboarding18_oct29') {
-      const email = 'hammersmodality+onboarding18oct29@gmail.com';
+    const fresh = freshPersona(body?.persona);
+    if (fresh) {
+      const email = fresh.email;
       const existing = await findUser(admin, email);
       if (existing) {
         const { data: profile } = await admin.from('profiles').select('is_system_account').eq('id', existing).single();
@@ -324,7 +326,7 @@ Deno.serve(async (req) => {
           if (grantError) return json({ error:grantError.message },500);
         }
       } else {
-        const { data: created, error } = await admin.auth.admin.createUser({ email, password: crypto.randomUUID() + 'Aa1!', email_confirm: true, user_metadata: { full_name: 'TEST Onboarding 18', test_account: true } });
+        const { data: created, error } = await admin.auth.admin.createUser({ email, password: crypto.randomUUID() + 'Aa1!', email_confirm: true, user_metadata: { full_name: fresh.name, test_account: true } });
         if (error || !created.user) return json({ error: error?.message ?? 'Could not create TEST account' }, 500);
         const id = created.user.id;
         const { error: markError } = await admin.from('profiles').update({ is_system_account: true }).eq('id', id);
