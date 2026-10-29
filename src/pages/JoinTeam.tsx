@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const REASONS: Record<string, string> = {
   not_found: "That invite code doesn't match a team.",
-  not_verified: "This organization is waiting for verification, so it can't add players yet.",
+  not_verified: "This organization wasn't found. Check the invite code.",
   parent_required: 'A parent needs to join for you.',
 };
 

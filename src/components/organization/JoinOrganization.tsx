@@ -18,7 +18,7 @@ export function JoinOrganization() {
 
   const REASONS: Record<string, string> = {
     not_found: 'No team or organization uses that code.',
-    not_verified: "This organization can't add players right now. Ask its admin.",
+    not_verified: "This organization wasn't found. Check the invite code.",
     parent_required: 'A parent needs to join for you.',
   };
 
