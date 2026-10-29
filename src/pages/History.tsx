@@ -7,7 +7,19 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Archive, Dumbbell, Trophy, FileText, LineChart, ChevronDown, Loader2 } from 'lucide-react';
+import { Archive, Dumbbell, Trophy, FileText, LineChart, ChevronDown, Loader2, Shield } from 'lucide-react';
+import { useAthleteDefensivePlays } from '@/hooks/useDefensivePlays';
+import { DefensivePlayList } from '@/components/defense/DefensivePlayList';
+
+function DefensePlaysDrawer({ userId }: { userId: string }) {
+  const { rows, loading } = useAthleteDefensivePlays(userId);
+  return (
+    <div className="space-y-3 py-2">
+      <DefensivePlayList rows={rows} loading={loading} emptyLabel="No defensive plays have been logged about you yet." />
+      <Button asChild size="sm" variant="outline"><Link to="/defense/plays">Open full defensive plays page</Link></Button>
+    </div>
+  );
+}
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatGrade, ratingBand } from '@/lib/benchmarks/gradeScale';
@@ -152,11 +164,6 @@ export default function History() {
             </Link>
             .
           </p>
-          <p className="mt-1 text-sm">
-            <Link to="/defense/plays" className="text-primary hover:underline">
-              My defensive plays
-            </Link>
-          </p>
         </header>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -181,6 +188,14 @@ export default function History() {
         <div className="space-y-3">
           <InjuryContinuityCard userId={userId} />
           <WorkoutActuals from={from} to={to} search={query} />
+          <HistorySection
+            title="My defensive plays"
+            icon={<Shield className="h-4 w-4 text-primary" />}
+            open={!!open.defense}
+            onOpenChange={toggle('defense')}
+          >
+            {open.defense && <DefensePlaysDrawer userId={userId ?? ''} />}
+          </HistorySection>
 
 
 
