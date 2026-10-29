@@ -5244,7 +5244,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // -------- Stated change to a day already built: adjust unmarked cards only --------
     if (existingDay.length > 0 && changeReason) {
-      const sig = (rs: any[]) => rs.map((r) => [r.phase ?? '', r.movement_slug, r.sets ?? "", r.reps ?? "", r.duration_seconds ?? "", r.distance_feet ?? "", r.total_reps ?? ""].join(":")).sort().join("|");
+      const { planChangeSignature: sig } = await import('../_shared/planChangeSignature.ts');
       const bySlot = (rs: any[]) => { const m = new Map<string, any[]>(); for (const r of rs) m.set(String(r.slot), [...(m.get(String(r.slot)) ?? []), r]); return m; };
       const oldBy = bySlot(existingDay), newBy = bySlot(rows as any[]);
       const replace = [...new Set([...oldBy.keys(), ...newBy.keys()])].filter((sl) => sig(oldBy.get(sl) ?? []) !== sig(newBy.get(sl) ?? []));
