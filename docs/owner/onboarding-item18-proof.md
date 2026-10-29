@@ -92,3 +92,10 @@ The Input map above plus this inventory separates genuine physical-plan readers,
 ### First seven days
 
 No passing saved seven-day full program has been verified after the correction. A plain-language week cannot be truthfully supplied from the old safe fallback or the unit-test composition. Pending: named corrected function deployment → fresh TEST Start/full first-plan validation → canonical seven-date save/readback and phone reload → actual week summary. Item 18 remains OPEN.
+## October 29 23:03 run — fresh TEST player end to end (390×844)
+
+- `create-test-athlete` redeployed under the owner's named approval with one new exact identity `onboarding18_oct29_2303` (user `e0425d2d-2597-459e-8029-8a35dc570d64`); created unstarted.
+- Through the real UI: birthday, updated terms + health consent + adult release, 12-step sign-up, the full assessment (15 gear items, ranked goals, training/season/nutrition inputs, health & physio with a healed ankle history), all six steps → nothing missing → Start.
+- Fixed two blockers: the new-player tour could open on top of the assessment where its Exit can't be tapped (`DemoButton.tsx`); the health save falsely failed when an injury area was chosen because the database reorders JSON keys (`PhysioHealthIntakeDialog.tsx`). That bug left two identical healed-ankle entries on this TEST player; kept, not deleted.
+- First Start gave a full 10-card day. Next six dates built by the real server builder; today re-saved through the existing Update Hammer path because the first-Start save is not in the full-week format (server gap; needs a named `wk-generate-daily` redeploy to fix).
+- Saved-week check Oct 29–Nov 4: ok, no issues, 7 days; Defense 6, Hitting 6, Baserunning 6, Throwing 6, Conditioning 6, Lifts 6, Bunting 2; Sunday rest. Reload kept the plan. Screenshots `/tmp/browser/i18/`. 16 tests passed; build OK.

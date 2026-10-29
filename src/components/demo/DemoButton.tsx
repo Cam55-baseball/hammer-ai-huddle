@@ -112,6 +112,9 @@ export function DemoTourHost() {
         if (window.location.pathname !== '/dashboard') { window.clearInterval(wait); return stop('left the dashboard before it finished loading'); }
         if (Date.now() - started > 45000) { window.clearInterval(wait); return stop('dashboard did not finish loading within 45 seconds'); }
         if (!document.querySelector(LANDING_READY)) return;
+        // Never open over another open window (e.g. the assessment): its
+        // modal blocks taps outside it, so the tour's Exit could not be pressed.
+        if (document.querySelector('[role="dialog"][data-state="open"]')) return;
         if (!landingAt) landingAt = Date.now();
         const { isCoach: c, isScout: sc } = roleRef.current;
         // Athletes: also wait for today's plan, but never more than 10s extra.
@@ -121,6 +124,7 @@ export function DemoTourHost() {
         // closing the app) still counts and it never re-triggers.
         window.setTimeout(() => {
           if (window.location.pathname !== '/dashboard') return stop('left the dashboard before the tour opened');
+          if (document.querySelector('[role="dialog"][data-state="open"]')) return stop('another window opened before the tour');
           try { localStorage.setItem(`hm-tour:${user.id}:auto`, JSON.stringify({ result: 'shown', at: Date.now() })); } catch { /* noop */ }
           void supabase.auth.updateUser({ data: { [AUTO_FLAG]: new Date().toISOString() } }).catch(() => {});
           autoDiag('started');
