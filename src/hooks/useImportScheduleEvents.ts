@@ -14,6 +14,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { announceChange } from '@/hooks/useScheduleTimeline';
+import { toast } from 'sonner';
 
 export type ParsedKind =
   | "game"
@@ -211,7 +213,12 @@ export function useImportScheduleEvents() {
 
       return summary;
     },
-    onSuccess: () => {
+    onSuccess: async (summary) => {
+      if (summary.inserted > 0 && user?.id) {
+        const result = await announceChange(qc, user.id, 'Schedule changed');
+        if (result?.ok) toast.success(result.message);
+        else if (result) toast.error(result.message);
+      }
       qc.invalidateQueries({ queryKey: ["calendar-projection"] });
       qc.invalidateQueries({ queryKey: ["schedule-window-games"] });
       qc.invalidateQueries({ queryKey: ["schedule-window-practices"] });

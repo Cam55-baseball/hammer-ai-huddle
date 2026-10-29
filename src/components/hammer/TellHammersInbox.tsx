@@ -104,7 +104,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     const prefix: Partial<Record<Flow, string>> = { break: "break ", travel: "travel ", games: "games ", cancelled: "games cancelled ", season: `season ${which ?? "starts"} `, event: `${eventKind ?? "showcase"} `, resume: "back to normal " };
     const parsed = parseScheduleRequest(`${prefix[flow ?? "ask"] ?? ""}${words}`, today);
     const hasTime = extractDates(words, today).length > 0 || /\b(\d+|one|two|three|four|a)\s*(days?|weeks?)\b/i.test(words);
-    if (hasTime && parsed.ok && parsed.draft.tag !== "NOTE" && parsed.draft.tag !== "GOAL") {
+    if (parsed.ok && (hasTime || parsed.draft.tag === 'SEASON' || parsed.draft.payload.kind === 'availability') && (parsed.draft.tag !== "NOTE" || parsed.draft.payload.kind === 'availability') && parsed.draft.tag !== "GOAL") {
       // Never let a different category in free text silently replace the selected option.
       const expected: Partial<Record<Flow, EntryDraft["tag"]>> = { break: "HOLD", travel: "HOLD", games: "GAME", cancelled: "CANCELLED", season: "SEASON", event: "EVENT", resume: "RESUME" };
       if (!flow || flow === "ask" || parsed.draft.tag === expected[flow]) {

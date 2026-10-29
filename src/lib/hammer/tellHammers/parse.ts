@@ -115,6 +115,13 @@ export function parseScheduleRequest(text: string, today: string): ParseResult {
     if (!first) return { ok: false, reason: "Which dates got cancelled?" };
     return { ok: true, draft: { tag: "CANCELLED", ...range(first, dates[1]), dates: null, payload: {} } };
   }
+  const phaseWord = t.match(/\b(off[ -]?season|pre[ -]?season|in[ -]?season|post[ -]?season)\b/);
+  if (phaseWord) {
+    const phase = phaseWord[1].replace(/[ -]/g, '').replace('offseason', 'off_season').replace('inseason', 'in_season').replace('postseason', 'post_season');
+    return { ok: true, draft: { tag: 'SEASON', ...range(first ?? today), dates: null, payload: { phase, which: phase === 'off_season' ? 'ends' : 'starts' } } };
+  }
+  const available = t.match(/\b(?:available|availability|can train|train)\s*(?:for|on)?\s*([1-7])\s*days?\s*(?:a|per|each)?\s*week\b/);
+  if (available) return { ok: true, draft: { tag: 'NOTE', ...range(today), dates: null, payload: { kind: 'availability', days: Number(available[1]), text: text.trim() } } };
   if (/season (start|begin|end|finish|over)/.test(t)) {
     if (!first) return { ok: false, reason: "What date?" };
     const which = /end|finish|over/.test(t) ? "ends" : "starts";
