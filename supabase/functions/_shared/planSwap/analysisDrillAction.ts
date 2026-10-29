@@ -1,4 +1,4 @@
-import { ELITE_DRILL_CATALOG, mergeCatalog, categoryGoals, matchGoalDrills, analysisDrillCategory, analysisDrillSlot, enrolledDrill, enrollmentBecause, applyAnalysisDrillRotation } from '../generated/analysisDrills.mjs';
+import { ELITE_DRILL_CATALOG, mergeCatalog, categoryGoals, analysisDrillBinding, analysisDrillCategory, analysisDrillSlot, enrolledDrill, enrollmentBecause, applyAnalysisDrillRotation } from '../generated/analysisDrills.mjs';
 import { analysisDrillSafety } from './analysisDrillSafety.ts';
 import { isPlatformStaff } from '../authGuards.ts';
 import { needsTeenWaiver, ageOn } from '../legal/teenWaiverRules.ts';
@@ -31,12 +31,10 @@ export async function addAnalysisDrill(client: any, admin: any, uid: string, inp
     // Keep owner content on its existing ownerPlanDrills route; metadata alone is not certification.
     throw new Error('This owner drill needs its declared Hammers Today placement before it can be added. Keep it in Saved drills.');
   }
-  const violations = video.ai_analysis?.violations_detected ?? {};
   const findings = await checked(admin.from('analysis_fault_findings').select('fault_key').eq('user_id',uid).eq('video_id',video.id).eq('sport',input.sport));
-  const faultKey = drill.violationKeys.find((key: string) => violations[key] === true || findings?.some((f: Row) => f.fault_key === key));
   const goals = categoryGoals(safety.context?.category_goals,video.module,input.sport,safety.context?.position_primary);
-  const goal = matchGoalDrills([drill],goals,video.module,input.sport)[0]?.reasons[0]?.replace(/^Your goal: /,'');
-  if (!faultKey && !goal) throw new Error('This drill could not be linked to this clip or your saved goals.');
+  const binding=analysisDrillBinding(drill,video.ai_analysis,goals,findings??[]);
+  if (!binding) throw new Error('This drill could not be linked to this clip or your saved goals.');
   const block = snapshot.payload?.blocks?.find((b: Row) => analysisDrillCategory(b) === video.module && b.status === 'ready');
   if (!block) throw new Error('There is no safe card for this category today. Keep it in Saved drills.');
   const index = analysisDrillSlot(block.drills);
@@ -45,7 +43,7 @@ export async function addAnalysisDrill(client: any, admin: any, uid: string, inp
   const safetyResult = analysisDrillSafety({...drill,sport:input.sport},block,safety,date);
   if (source.analysisEnrollment?.drillId === drill.id) return {saved:true,because:'Already in your fix-it slot.'};
   if (!safetyResult.acknowledged(input.acknowledged ?? [])) return { saved:false, warnings:safetyResult.warnings, warningKeys:safetyResult.keys };
-  const enrollment = {sport:input.sport,category:video.module,drill_id:drill.id,video_id:video.id,issue_key:faultKey ? `fault:${faultKey}` : `goal:${goal}`,fault_key:faultKey ?? null,goal_label:goal ?? null,observed_at:video.created_at,created_at:new Date().toISOString()};
+  const enrollment = {sport:input.sport,category:video.module,drill_id:drill.id,video_id:video.id,...binding,observed_at:video.created_at,created_at:new Date().toISOString()};
   const replacement = enrolledDrill(source,drill,enrollment);
   const because = enrollmentBecause(enrollment,drill.name);
   const result = await checked(admin.rpc('wk_analysis_drill_atomic',{p_user:uid,p_date:date,p_id:snapshot.id,p_sport:input.sport,p_modality:block.modality,p_index:index,p_expected:source,p_replacement:replacement,
