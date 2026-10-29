@@ -4,7 +4,7 @@ export const NUTRITION_FIELDS = [
 ] as const;
 export function assessmentPlanMissing(context: Record<string, unknown>, nutrition: unknown, health: { setup_completed?: boolean } | null) {
   const missing: Array<{ key: string; label: string; to: string }> = [];
-  const add = (key: string, label: string) => missing.push({ key, label, to: '/assessment' });
+  const add = (key: string, label: string) => missing.push({ key, label, to: '/assessment?review=profile' });
   if (!['L', 'R', 'S'].includes(String(context.bats_hand))) add('bats', 'Which side you bat from');
   if (!['L', 'R', 'S'].includes(String(context.throws_hand))) add('throws', 'Which hand you throw with');
   const body = context.anthropometrics as Record<string, unknown> | null;

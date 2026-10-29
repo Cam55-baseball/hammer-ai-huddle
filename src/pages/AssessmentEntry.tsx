@@ -5,12 +5,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { InitialAssessmentCard } from "@/components/assessment/InitialAssessmentCard";
 import { assessmentEntryAllowed, assessmentEntrySport } from "@/lib/assessment/entryRules";
+import { AssessmentProfileReview } from '@/components/assessment/AssessmentProfileReview';
 
 export default function AssessmentEntry() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [admitted, setAdmitted] = useState(false);
+  const reviewProfile = params.get('review') === 'profile';
+  const [review, setReview] = useState({ full_name: '', position: '' });
   const q = useQuery({ queryKey: ["assessment-entry", user?.id], enabled: !!user, queryFn: async () => {
     if (!user) return null;
     const [assessment, profile, sub, context] = await Promise.all([
@@ -24,12 +27,16 @@ export default function AssessmentEntry() {
   }});
   const sport = assessmentEntrySport(q.data?.sport, params.get("sport"));
   useEffect(() => {
-    if (!q.data || admitted) return;
+    if (!q.data || admitted || reviewProfile) return;
     if (!assessmentEntryAllowed({ paid: q.data.paid, started: !!q.data.started, completed: !!q.data.assessment?.completed_at, opened: !!q.data.assessment?.mode_opened_at, explicitResume: true })) navigate("/dashboard", { replace: true });
     else setAdmitted(true);
-  }, [q.data, admitted, navigate]);
+  }, [q.data, admitted, navigate, reviewProfile]);
   if (q.error) return <p role="alert" className="p-6 text-destructive">Couldn't load your assessment. Please try again.</p>;
   if (q.data && !sport) return <p role="alert" className="p-6 text-destructive">Open the assessment for your saved sport. If no sport is saved, finish your profile first.</p>;
+  if (reviewProfile && q.data?.paid) return <div className="mx-auto max-w-3xl space-y-4 p-5">
+    <h1 className="text-2xl font-semibold">Your starting details</h1>
+    <AssessmentProfileReview profile={review} onChange={setReview} detailsOnly />
+  </div>;
   if (!admitted) return null;
   if (!sport) return null;
   return <InitialAssessmentCard sport={sport} autoOpen onClose={() => navigate("/dashboard", { replace: true })} />;

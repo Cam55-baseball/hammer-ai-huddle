@@ -11,7 +11,7 @@ import type { DraftFlush, RegisterDraftFlush } from "@/lib/assessment/draftFlush
 type Profile = { full_name: string; position: string };
 type Section = "body" | "equipment" | "goals" | "planning";
 /** Existing self-scoped answer forms, not assessment-only copies. */
-export function AssessmentProfileReview({ profile, onChange, registerFlush }: { profile: Profile; onChange: (profile: Profile) => void; registerFlush?: RegisterDraftFlush }) {
+export function AssessmentProfileReview({ profile, onChange, registerFlush, detailsOnly = false }: { profile: Profile; onChange: (profile: Profile) => void; registerFlush?: RegisterDraftFlush; detailsOnly?: boolean }) {
   const [section, setSection] = useState<Section | null>(null);
   const childFlush = useRef<DraftFlush | null>(null);
   const registerChild: RegisterDraftFlush = flush => { childFlush.current = flush; registerFlush?.(flush); };
@@ -25,7 +25,7 @@ export function AssessmentProfileReview({ profile, onChange, registerFlush }: { 
     {section === "planning" && <AssessmentPlanInputs onBack={savedBack} registerFlush={registerChild} />}
   </div>;
   return <div className="space-y-5">
-    {(["full_name", "position"] as const).map(key => <div key={key} className="space-y-2">
+    {!detailsOnly && (["full_name", "position"] as const).map(key => <div key={key} className="space-y-2">
       <Label htmlFor={`assessment-${key}`}>{key === "full_name" ? "Your name" : "Position"}</Label>
       <Input id={`assessment-${key}`} value={profile[key]} onChange={e => onChange({ ...profile, [key]: e.target.value })} />
     </div>)}
