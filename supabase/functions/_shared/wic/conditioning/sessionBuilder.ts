@@ -1,6 +1,6 @@
 // Phase 10 — Conditioning Session Builder / Certifier
 
-import type { ConditioningTemplateResolutionInput } from "./templates.ts";
+import type { ConditioningTemplateResolutionInput, ConditioningTemplateId } from "./templates.ts";
 import { CONDITIONING_TEMPLATES, resolveConditioningTemplate } from "./templates.ts";
 import type { ConditioningCategory } from "./movementCategories.ts";
 import { coverageOf, missingCategories } from "./movementCategories.ts";
