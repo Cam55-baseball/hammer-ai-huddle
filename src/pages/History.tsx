@@ -188,6 +188,14 @@ export default function History() {
         <div className="space-y-3">
           <InjuryContinuityCard userId={userId} />
           <WorkoutActuals from={from} to={to} search={query} />
+          <HistorySection
+            title="My defensive plays"
+            icon={<Shield className="h-4 w-4 text-primary" />}
+            open={!!open.defense}
+            onOpenChange={toggle('defense')}
+          >
+            {open.defense && <DefensePlaysDrawer userId={userId ?? ''} />}
+          </HistorySection>
 
 
 
