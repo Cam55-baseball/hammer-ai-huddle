@@ -61,7 +61,7 @@ export function CoachPrescriptionStatus() {
             <div key={rx.id} className="space-y-1.5 rounded-md border border-border px-3 py-2 text-sm" data-sent-rx={rx.id}>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{rx.title}</p>
+                  <p className="break-words font-medium">{rx.title}</p>
                   <p className="text-xs text-muted-foreground capitalize">
                     {rx.recipient_name} · {rx.category} · {fmtDay(rx.plan_date)}
                     {rx.cancelled_at && " · cancelled"}

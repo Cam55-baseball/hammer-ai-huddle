@@ -98,8 +98,10 @@ export function useCoachPrescriptions(planDate: string) {
         toast.success("Saved for later.");
       }
       qc.invalidateQueries({ queryKey });
+      qc.invalidateQueries({ queryKey: ["coach-rx-mine"] });
       qc.invalidateQueries({ queryKey: ["wk-rx"] });
       qc.invalidateQueries({ queryKey: ["saved-block-day"] });
+      qc.invalidateQueries({ queryKey: ["saved-block-day", user?.id] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save your choice"),
   });

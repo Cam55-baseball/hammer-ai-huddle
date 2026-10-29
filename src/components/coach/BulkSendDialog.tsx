@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import type { CustomActivityTemplate } from '@/types/customActivity';
 
 interface BulkSendDialogProps { open: boolean; onOpenChange: (open: boolean) => void; selectedPlayerIds: string[]; selectedPlayerNames: string[]; }
 export function BulkSendDialog({ open, onOpenChange, selectedPlayerIds, selectedPlayerNames }: BulkSendDialogProps) {
+  const { user } = useAuth();
   const { loading, sendActivityToPlayers } = useSentActivities();
   const vault = useWorkoutCatalog();
   const [search, setSearch] = useState('');
@@ -24,7 +26,7 @@ export function BulkSendDialog({ open, onOpenChange, selectedPlayerIds, selected
   const [date, setDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [sending, setSending] = useState(false);
   const [sentIds, setSentIds] = useState<string[]>([]);
-  const templates = useQuery({ queryKey: ['coach-send-templates'], enabled: open, queryFn: async () => {
+  const templates = useQuery({ queryKey: ['coach-send-templates', user?.id], enabled: open && !!user, queryFn: async () => {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return [];
     const { data, error } = await supabase.from('custom_activity_templates').select('*').eq('user_id', auth.user.id).is('deleted_at', null).order('title');
