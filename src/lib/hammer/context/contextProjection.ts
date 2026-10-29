@@ -93,6 +93,7 @@ function fromEnvelope<T>(
 export function spineVariables(env: AthleteContextEnvelope | null): ContextVariable[] {
   return [
     fromEnvelope(env, "sport_primary", "Sport", "identity"),
+    fromEnvelope(env, "date_of_birth", "Birthday", "identity"),
     fromEnvelope(env, "goal_summary", "Primary goal", "goals"),
     fromEnvelope(env, "goal_horizon", "Goal horizon", "goals"),
     fromEnvelope(env, "category_goals", "Ranked category goals", "goals"),

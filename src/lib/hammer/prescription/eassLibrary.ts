@@ -68,6 +68,8 @@ export type EassMode =
   | "arm_protected";
 
 export interface EassDrill {
+  slug?: string;
+  armCard?: 'pitching'|'throwing';
   name: string;
   category: EassCategory;
   setup?: string;
@@ -520,10 +522,10 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
   // position skill — enough to keep the arm healthy without a pitcher's volume.
   const isPositionPlayer = !isPitcher;
 
-  const prep = isSoftball ? BAND_PREP_SOFTBALL_WINDMILL : BAND_PREP_BASEBALL;
-  const tennisBall = isSoftball ? TENNIS_BALL_SOFTBALL : TENNIS_BALL_BASEBALL;
+  const prep = isSoftball && isPitcher ? BAND_PREP_SOFTBALL_WINDMILL : BAND_PREP_BASEBALL;
+  const tennisBall = isSoftball && isPitcher ? TENNIS_BALL_SOFTBALL : TENNIS_BALL_BASEBALL;
   const underload = isSoftball ? UNDERLOAD_SOFTBALL : UNDERLOAD_BASEBALL;
-  const regulation = isSoftball ? regulationSoftball(inSeason) : regulationBaseball(inSeason, isPitcher);
+  const regulation = isSoftball ? regulationSoftball(inSeason).map(d=>isPitcher?d:{...d,cue:'Overhand position throw: set your feet, turn through the target, finish balanced.'}) : regulationBaseball(inSeason, isPitcher);
   // A sore arm never gets full-go work: athlete-reported pain outranks the plan.
   const positionSkill = (isSoftball ? positionSkillSoftball(ctx.position, inSeason)
                                     : positionSkillBaseball(ctx.position, inSeason))

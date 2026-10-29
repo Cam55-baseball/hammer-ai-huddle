@@ -8,6 +8,9 @@ import type { BuntingFacts } from '../../../../supabase/functions/_shared/wic/bu
 import { isSoftRecovery } from "../../../../supabase/functions/_shared/wic/schedule/softRecovery";
 import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
 import { priorityAccess } from '../priorityAccess';
+import { subscriptionSchedule } from './subscriptionSchedule';
+import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
+import { pitchingDay, guardArmDrills, eassArmEvent, windmillPlanningDrills, type PlanningArmHistory } from './pitchingDay';
 import { structureSkillSession } from './skillSessionStructure';
 import { applyPracticePlanContext } from './practicePlanContext';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
@@ -105,6 +108,7 @@ export type ModalityKey =
   | "strength"
   | "hitting"
   | "throwing"
+  | "pitching"
   | "defense"
   | "baserunning"
   | "game_iq"
@@ -124,6 +128,8 @@ export interface DrillStep {
   readonly libraryVideoId?: string | null;
   readonly bunt?: {side:'R'|'L';type:import('../../../../supabase/functions/_shared/wic/buntingProgram').BuntType;attempts:number;sourceAttempts:number;sourceSuccesses:number};
   readonly name: string;
+  readonly armEvent?: import('../../../../supabase/functions/_shared/wic/phases/armLedger').ThrowEvent;
+  readonly armCard?: 'pitching'|'throwing';
   readonly slug?: string;
   readonly setup?: string;
   readonly dosage: string;
@@ -237,6 +243,12 @@ const ALL_MODALITIES: ModalityKey[] = [
 ];
 
 interface BuilderArgs {
+  readonly pitchingType?: ReturnType<typeof pitchingDay>;
+  readonly armHistory?: PlanningArmHistory;
+  readonly planDate?: string;
+  readonly armRole?: 'pitcher'|'two_way';
+  readonly positionThrowing?: boolean;
+  readonly pitchingPhase?: string;
   readonly skillExecutionAllowed?: boolean;
   readonly pitcherOutings?: OutingFacts | null;
   readonly modality: ModalityKey;
@@ -336,7 +348,7 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, planDate, armRole, positionThrowing, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
   const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
@@ -877,7 +889,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const ownedHitting = new Set(
         (proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? [],
       );
-      const equipmentUnknown = !equipment && ownedHitting.size === 0;
+      const equipmentUnknown = proj.equipmentScope === null && (ctx.get<unknown>('equipment_effective')?.value == null || Array.isArray(ctx.get('equipment_effective')?.value) && (ctx.get<string[]>('equipment_effective')?.value?.length ?? 0) === 0);
       const inSeason = seasonPhase === "in";
       const offSeason = seasonPhase === "off";
       // NOTE: switch-hitter split is handled downstream by splitLateralityBlocks,
@@ -987,29 +999,51 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const sched = scheduleAny?.schedule ?? {};
       const armSore = !!(ctx.get<{ arm_sore?: boolean }>("daily_log")?.value as { arm_sore?: boolean })?.arm_sore;
       const ageYears = (ctx.get<number>("age_years")?.value as number | null) ?? null;
-      const readinessScore =
+      const readinessScore = typeof readiness === 'number' ? readiness :
         typeof (readiness as { score?: number })?.score === "number"
           ? (readiness as { score: number }).score
           : null;
 
       const eassCtx: EassContext = {
         sport: normalizeSport(sportRaw),
-        position: normalizePosition(pos),
+        position: positionThrowing && normalizePosition(pos)==='pitcher' ? 'utility' : normalizePosition(pos),
         seasonPhase: seasonPhase as EassContext["seasonPhase"],
         ageYears,
         trainingAgeYears: liftingAge ?? null,
         injuryRegions: [...injuryRegions],
         armSore,
-        isGameDay: !!sched.isGameDay || !!pitcherOutings?.startsToday,
+        isGameDay: !!sched.isGameDay || !!pitcherOutings?.startsToday || pitchingType === 'available',
         // If schedule doesn't declare throwing day explicitly, treat non-game days as throwing days
         // when the athlete's development priorities include throwing/velocity, otherwise alternate.
         isThrowingDay: pitcherOutings?.startsTomorrow || pitcherOutings?.relieverAvailableSoon
-          ? false : sched.isThrowingDay ?? !sched.isGameDay,
-        isRecoveryDay: !!sched.isRecoveryDay || recoverDay || !!pitcherOutings?.pitchedYesterday,
+          ? false : pitchingType ? ['bullpen','side','long_toss'].includes(pitchingType) : sched.isThrowingDay ?? !sched.isGameDay,
+        isRecoveryDay: !!sched.isRecoveryDay || recoverDay || !!pitcherOutings?.pitchedYesterday || pitchingType === 'flush' || pitchingType === 'rest',
         readinessScore,
       };
 
       const eass = buildEassPrescription(eassCtx);
+      if(armRole && normalizeSport(sportRaw)==='softball'){
+        const care=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
+        const phase=pitchingPhase??(seasonPhase==='off'?'os_q1':seasonPhase==='pre'?'preseason':seasonPhase==='in'?'in_season':'post_season');
+        eass.drills=[...care,...(planDate?windmillPlanningDrills({date:planDate,phase,age:ageYears,readiness:readinessScore,armPain:armSore||injuryRegions.some(r=>['shoulder','elbow','ucl','forearm'].includes(r)),equipment:[...proj.equipmentList],history:armHistory,outings:pitcherOutings}):[])];
+      }
+      if(armRole==='two_way') {
+        const position=normalizePosition(declaredPos)==='pitcher'?normalizePosition(ctx.get('position_secondary')?.value):normalizePosition(declaredPos);
+        const positionWork=buildEassPrescription({...eassCtx,position:position==='pitcher'?'utility':position,isThrowingDay:!pitcherOutings?.startsToday&&!pitcherOutings?.startsTomorrow&&!pitcherOutings?.pitchedYesterday,isRecoveryDay:eassCtx.isRecoveryDay||!!pitcherOutings?.startsToday||!!pitcherOutings?.startsTomorrow});
+        eass.drills=[...eass.drills.map(d=>({...d,armCard:'pitching' as const})),...positionWork.drills.filter(d=>!['band_prep','cooldown','recovery'].includes(d.category)).map(d=>({...d,armCard:'throwing' as const}))];
+      }
+      if (pitchingType) {
+        // The existing full-go pitch budget rotates between bullpen/design and
+        // live counts; never create a second pitch dose for a presentation stage.
+        eass.drills = eass.drills.map(d => d.stage === 'full_go' && pitchingType === 'bullpen'
+          ? { ...d, name: planDate && new Date(`${planDate}T12:00:00Z`).getUTCDay() === 6 ? 'Live at-bats — existing pitch budget' : d.name,
+            cue: `${d.cue} Pitch design: use your saved pitch types, change the target and count strikes. Live at-bats use this same pitch count, never an added round.` } : d);
+      }
+      if(pitchingType==='side'||pitchingType==='touch'){
+        eass.drills=eass.drills.filter(d=>d.category!=='intent'&&d.category!=='overload').map(d=>d.stage==='full_go'?{...d,name:'Flat-ground command — existing pitch budget',stage:'drills' as const,cue:`${d.cue} Flat ground only, easy feel; use the same listed count.`}:d);
+      }
+      if(armRole && ['shoulder','elbow','ucl','forearm'].some(r=>injuryRegions.includes(r)))eass.drills=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
+      if (planDate && armRole) eass.drills = guardArmDrills(eass.drills, {date:planDate,sport:normalizeSport(sportRaw),role:armRole,age:ageYears,level:ctx.get<string>('competition_level')?.value??null,history:armHistory});
       const outingReason = pitcherOutings?.pitchedYesterday
         ? "You pitched yesterday. Today's arm care is easy recovery work."
         : pitcherOutings?.startsToday ? "You start today. Save your throwing work for the outing."
@@ -1023,16 +1057,20 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
 
       // Map EASS drills → DrillStep shape used by the UI.
       // Owner-approved narrow addition: swap one slot for an eligible owner drill.
-      const drills: DrillStep[] = mergeOwnerSlotDrills(eass.drills.map((d) => ({
+      const mappedDrills = eass.drills.map((d) => ({
         name: d.name,
         slug: (d as { slug?: string }).slug,
         setup: d.setup,
         dosage: d.dosage,
         stage: d.stage ?? (d.intensity === 'prep' ? 'prep' : 'drills'),
+        armCard:d.armCard,
+        ...(armRole && eassArmEvent(d) ? {armEvent:eassArmEvent(d)??undefined} : {}),
         cue: d.cue,
         stopIf: d.stopIf,
         guide: _guideForMovement((d as { slug?: string }).slug) ?? _guideForMovement(d.name) ?? undefined,
-      })), ["hammers_today:skill"], { sport: normalizeSport(sportRaw) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []), skill: "throwing" });
+      }));
+      // An unmeasured owner replacement cannot inherit a judged arm count.
+      const drills: DrillStep[] = armRole ? mappedDrills : mergeOwnerSlotDrills(mappedDrills, ["hammers_today:skill"], { sport: normalizeSport(sportRaw) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []), skill: "throwing" });
 
       // Anthropometric throwing cues + supplemental drills (additive overlay, non-authoritative).
       const thrOut = anthroSignal ? selectThrowingAdaptations(anthro) : {
@@ -1040,7 +1078,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         supplemental: [] as ReturnType<typeof selectThrowingAdaptations>["supplemental"],
         rationale: null,
       };
-      for (const s of thrOut.supplemental) {
+      for (const s of armRole ? [] : thrOut.supplemental) {
         drills.push({
           name: s.name,
           dosage: s.dosage,
@@ -1096,7 +1134,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         ...(!ownedDefense.has('glove') ? ['glove'] : []),
         ...(!ownedDefense.has('ball') ? ['ball'] : []),
       ];
-      if (missingGear.length) return {
+      if (missingGear.length && !pos) return {
         modality,
         title: pos ? `Defense — ${pos}` : 'Defense — general fundamentals',
         why: 'Fielding equipment has not been confirmed.',
@@ -1160,14 +1198,19 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // nothing (unknown position + heavy injury gating). Never fabricate —
       // just keep the modality visible with a "come back tomorrow" note.
       // Owner-approved narrow addition: swap one slot for a switched-on owner drill.
-      const drills: DrillStep[] = structureSkillSession(mergeOwnerSlotDrills(prescription?.drills
-        ? [...prescription.drills]
+      const fieldingSource = prescription?.drills ? [...prescription.drills] : null;
+      const pitcherFielding = normalizePosition(pos)==='pitcher';
+      const lowTaxingFielding = pitcherFielding ? fieldingSource?.filter(d=>d.executionKind==='fielding_reads').map(d=>({...d,setup:[d.setup,'Low-taxing pitcher fielding: walk through the read, field and set your feet. No release or extra throw; all throwing belongs to the arm plan.'].filter(Boolean).join(' '),cue:'Read, field and set your feet at easy pace. Do not throw.'})) : fieldingSource;
+      const drills: DrillStep[] = structureSkillSession(mergeOwnerSlotDrills(lowTaxingFielding
+        ? lowTaxingFielding
         : [
             { name: "Pre-pitch + first-step reads", dosage: "20 reps", cue: "low athletic stance, weight on balls of feet" },
             { name: "Glove work — 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" },
-          ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: ownedDefense }), { skill: 'defense', sport: defenseSport, owned: ownedDefense, injuryRegions, recoveryDay: recoverDay || tournamentToday || !skillExecutionAllowed });
+          ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: ownedDefense }), { skill: 'defense', sport: defenseSport, owned: ownedDefense, injuryRegions, recoveryDay: recoverDay || tournamentToday || !skillExecutionAllowed || pitcherFielding });
+      const armProtected=injuryRegions.some(r=>['shoulder','elbow','ucl','forearm'].includes(r));
+      const safeDrills = missingGear.length || armProtected ? drills.filter(d=>d.executionKind==='fielding_reads').map(d=>({...d,name:`${d.name} — dry footwork`,executionKind:undefined,stage:'drills' as const,setup:'Walk through the existing footwork without a ball or throw. Stay within your safe space; no diving, sprinting or catching.',cue:'Read an imaginary ball, set your feet, then reset. No throws.',stopIf:'Pain or unsafe space — stop.'})) : drills;
       const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
-      const stopRules = prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and update Hammer."];
+      const stopRules = [...(prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and update Hammer."]), "Use a glove, the correct ball and safe space. If something is missing, use Swap before starting; do not perform an unsafe rep."];
       const durationMin = prescription?.durationMin ?? (inSeason ? 15 : offSeason ? 35 : 25);
       const title = prescription?.title ?? `Defense — ${pos}`;
       const why = prescription?.why
@@ -1185,8 +1228,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
               ? "Off-season — load volume + range."
               : "Pre-season — sharpen reads and finishes.",
         phase: inSeason ? "sharpen" : tournamentToday ? "maintain" : "build",
-        steps: drillsToSteps(drills),
-        drills,
+        steps: drillsToSteps(safeDrills),
+        drills: safeDrills,
         cues,
         stopRules,
         durationMin,
@@ -1202,7 +1245,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           color: "#10b981",
           durationMinutes: durationMin,
           description: `Defensive block for ${pos} (${defenseSport}).`,
-          checklist: drillsToChecklist(drills),
+          checklist: drillsToChecklist(safeDrills),
           source: "internal",
         },
       };
@@ -2020,7 +2063,7 @@ function splitLateralityBlocks(
       );
       continue;
     }
-    if (isAmbi && b.modality === "throwing") {
+    if (isAmbi && b.modality === "throwing" && !b.drills.some(d=>d.armEvent)) {
       out.push(
         cloneSide(b, "R", "Dominant arm", {
           extraCue: "Ambidextrous thrower — dominant-arm workload. Full EASS envelope.",
@@ -2125,6 +2168,7 @@ function labelForModality(m: ModalityKey): string {
     case "strength": return "Strength";
     case "hitting": return "Hitting";
     case "throwing": return "Throwing";
+    case "pitching": return "Pitching";
     case "defense": return "Defense";
     case "baserunning": return "Baserunning";
     case "game_iq": return "Game IQ";
@@ -2259,6 +2303,8 @@ export interface RoadmapInputs {
   readonly defenseFullOverride?: boolean;
   /** Current subscription modules; an explicit empty list permits no purchased skill boost. */
   readonly subscriptionModules?: readonly string[];
+  readonly alwaysMissingGear?: readonly string[];
+  readonly armHistory?: PlanningArmHistory;
   readonly bunting?: {evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
@@ -2282,9 +2328,13 @@ export function buildHammerDailyPlan(
   roadmapInputs: RoadmapInputs = {},
 ): HammerDailyPlanResult {
   const envelopeProjection = projectEnvelope(ctx);
-  const proj = roadmapInputs.resolvedSeasonPhase
+  const phaseProjection = roadmapInputs.resolvedSeasonPhase
     ? { ...envelopeProjection, seasonPhase: roadmapInputs.resolvedSeasonPhase }
     : envelopeProjection;
+  const assumedGear = planningGear(phaseProjection.equipmentList, roadmapInputs.alwaysMissingGear ?? []);
+  const proj = { ...phaseProjection, equipmentList: assumedGear };
+  const sport = normalizeSport(ctx.get('sport_primary')?.value);
+  const access = roadmapInputs.subscriptionModules === undefined ? null : subscriptionSchedule(roadmapInputs.subscriptionModules, sport);
   const focusProjection = { ...proj, categoryGoals: masteryGoalWeights(proj.categoryGoals, roadmapInputs.masteryFocus) };
   const speed = selectSpeedFocus(proj);
 
@@ -2328,8 +2378,13 @@ export function buildHammerDailyPlan(
 
   // Resolve the weekly microcycle NEXT so we can thread its label into blocks.
   const positionOverrideArg = roadmapInputs.positionOverride ?? null;
-  const firstPass = ALL_MODALITIES.map((m) =>
-    builder({ modality: m, ctx, proj, speed, positionOverride: positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings, skillExecutionAllowed: scheduleSignal.postureToday === 'normal' }),
+  const allowed = (m: ModalityKey) => !access || (m === 'hitting' ? access.hasHitting : m === 'baserunning' ? access.hasBaserunning : m === 'defense' ? access.hasDefense : m === 'throwing' ? access.hasThrowing || access.hasPitching : true);
+  const firstPass = ALL_MODALITIES.filter(allowed).map((m) =>
+    builder({ modality: m, ctx, proj, speed, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
+      pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings) : undefined,
+      pitchingPhase:quarter.phase==='off'?`os_q${quarter.quarter}`:quarter.phase==='pre'?'preseason':quarter.phase==='in'?'in_season':'post_season',
+      armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,positionThrowing:!!access&&!access.hasPitching,armHistory:roadmapInputs.armHistory,
+      planDate:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,skillExecutionAllowed: scheduleSignal.postureToday === 'normal' && !(m==='defense'&&access?.pitcherOnly) }),
   );
   const goalAccess = roadmapInputs.subscriptionModules === undefined ? null
     : priorityAccess(roadmapInputs.subscriptionModules, normalizeSport(sportRaw) === 'softball' ? 'softball' : 'baseball');
@@ -2341,7 +2396,7 @@ export function buildHammerDailyPlan(
     new Set(firstPass.filter(b => b.status === 'ready' && goalEligible(b.modality)).map(b => b.modality)));
   const weeklyTemplate = goalWeek.template;
   const microcycle = applyMicrocycle(weeklyTemplate, today, goalWeek.targets, planReadinessBand(ctx));
-  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, goalWeek.targets);
+  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, goalWeek.targets).map(day => ({...day, modalities:day.modalities.filter(m=>allowed(m.key))}));
   // Warm-up bias is derived from the slots that actually landed in today's
   // plan — a lift day gets lift prep, a speed day gets speed prep. Priority
   // mirrors CNS cost: speed > lift > throwing > hitting. When nothing
@@ -2435,7 +2490,7 @@ export function buildHammerDailyPlan(
     restDay:fullRestDay,gameDay:scheduleSignal.postureToday!=='normal',
   },{weekday:today.getDay(),weekIndex:Math.floor(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()-((today.getDay()+6)%7))/604800000),
     owned:proj.equipmentList,age:bunting.age,phase:bunting.phase,catalog:bunting.catalog,userId:bunting.userId}) : masteryOrdered;
-  const blocks = fullRestDay ? bunted.map(b => {
+  const restFiltered = fullRestDay ? bunted.map(b => {
     if (["fueling", "game_iq"].includes(b.modality)) return b;
     const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter(d => isSoftRecovery(d.slug)) : [];
     return { ...b, drills, steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
@@ -2444,6 +2499,17 @@ export function buildHammerDailyPlan(
       why: "Rest today — gentle recovery only. Save real training for your next training day.",
       roadmapReason: "Full rest day — soft recovery only.", durationMin: drills.length ? b.durationMin : null };
   }) : bunted;
+  // Pitching takes its own canonical card identity. This moves existing work,
+  // never copies it into a second arm exposure.
+  const blocks = restFiltered.flatMap(b => {
+    if(!access?.hasPitching || b.modality!=='throwing')return [b];
+    const type=pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings);
+    const pitchingDrills=b.drills.filter(d=>d.armCard!=='throwing');
+    const throwingDrills=b.drills.filter(d=>d.armCard==='throwing');
+    const pitching={...b,drills:pitchingDrills,steps:drillsToSteps(pitchingDrills),modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
+    return [pitching,...(throwingDrills.length?[{...b,drills:throwingDrills,steps:drillsToSteps(throwingDrills),title:'Throwing — position work within your shared arm budget',gamePlanTemplate:null}]:[])];
+  });
+  const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
@@ -2477,7 +2543,7 @@ export function buildHammerDailyPlan(
     sideBias,
     gpBiasTags,
     microcycle,
-    weeklyRoadmap,
+    weeklyRoadmap: savedRoadmap,
     weeklyTemplate,
     roadmap: {
       rung: rung.descriptor,

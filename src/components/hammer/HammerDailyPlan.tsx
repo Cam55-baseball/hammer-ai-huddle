@@ -1,5 +1,7 @@
 import { MindItemCard } from "./MindItemCard";
 import { RunningReadinessLine } from "./RunningReadinessLine";
+import { usePlanningArmHistory } from '@/hooks/usePlanningArmHistory';
+import { rememberedMissingGear } from '../../../supabase/functions/_shared/planSwap/simpleSwap';
 import { InformationalVideos } from '@/components/video-suggestions/InformationalVideos';
 import { stillRecurring } from '@/lib/wic/faultLedger/recurringIssues';
 /**
@@ -739,7 +741,7 @@ function HammerDailyPlanBody({
   const sportIsBaseball = (ctx.get<unknown>("sport_primary")?.value ?? "baseball") !== "softball";
   const { user: bodyUser } = useAuth();
   const { modules } = useSubscription();
-  const showPitching = shouldShowPitchingCard(
+  const showPitching = (modules.includes(`${sportIsBaseball?'baseball':'softball'}_pitcher`) || modules.includes(`${sportIsBaseball?'baseball':'softball'}_golden2way`)) && shouldShowPitchingCard(
     readPitcherProfile(bodyUser?.id),
     ctx.get<unknown>("position_primary")?.value ?? null,
     ctx.get<unknown>("position_secondary")?.value ?? null,
@@ -750,6 +752,13 @@ function HammerDailyPlanBody({
   const hasG2W = modules.includes(`${sportKey}_golden2way`);
 
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
+  const armHistory=usePlanningArmHistory(bodyUser?.id,bodyPlanDate,sportKey,modules.includes(`${sportKey}_pitcher`)||hasG2W);
+  const gearMemory=useQuery({queryKey:['planning-gear-memory',bodyUser?.id],enabled:!!bodyUser,queryFn:async()=>{
+    if(!bodyUser)throw new Error('Sign in to check saved equipment');
+    const {data,error}=await supabase.from('athlete_equipment_memory').select('confirmed_have,confirmed_lacks,created_at').eq('user_id',bodyUser.id).eq('scope','always').order('created_at',{ascending:true}).limit(200);
+    if(error)throw error;if(!data||data.length>=200)throw new Error('Complete equipment answers unavailable');
+    return [...rememberedMissingGear(data)];
+  }});
   const savedDay = useQuery({ queryKey: ["saved-block-day", bodyUser?.id, bodyPlanDate], enabled: !!bodyUser,
     queryFn: async () => {
       const { data, error } = await supabase.from("athlete_plan_snapshots").select("id,payload,sport").eq("user_id", bodyUser?.id ?? "").eq("plan_date", bodyPlanDate);
@@ -820,12 +829,14 @@ function HammerDailyPlanBody({
           pitcherOutings: pitcherSchedule.facts,
           practiceRecords: practiceLoadHistory.data,
           subscriptionModules: modules,
+          alwaysMissingGear:gearMemory.data??[],
+          armHistory:armHistory.data??{rows:[],unavailable:true},
           masteryFocus:masteryReady?masteryFocus:undefined,
           bunting: !hasSavedSportDay && buntHistory.data && !buntHistory.isError ? { ...buntHistory.data, age:buntAge, phase:resolvedPhase ?? '',userId:bodyUser?.id,traits:{...buntHistory.data.traits,powerGoal:hittingPowerGoal} } : undefined,
           fullRestDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []),
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady,armHistory.data,gearMemory.data],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
@@ -1278,7 +1289,7 @@ function HammerDailyPlanBody({
               <ErrorBoundary label="pitcher-schedule">
                 <PitcherScheduleGate />
               </ErrorBoundary>
-              {showPitching && plan.blocks.some(b => b.modality === "throwing" && prescribedToday(b)) && (
+              {showPitching && !plan.blocks.some(b=>b.modality==='pitching') && plan.blocks.some(b => b.modality === "throwing" && prescribedToday(b)) && (
                 <ErrorBoundary label="pitching-card">
                   <PocketCard
                     id="pitching"
@@ -1436,7 +1447,7 @@ function progressOf(items: ReadonlyArray<{ status?: string | null }>): { done: n
   return { done: items.filter((r) => r.status === "completed").length, total: items.length };
 }
 const BLOCK_CATEGORY: Record<string, string> = {
-  warmup: "Warm-up", hitting: "Hitting", throwing: "Throwing", defense: "Defense",
+  warmup: "Warm-up", hitting: "Hitting", throwing: "Throwing", pitching: "Pitching", defense: "Defense",
   baserunning: "Base running", recovery: "Recovery", game_iq: "Game IQ", fueling: "Fuel",
   mobility: "Mobility", regeneration: "Recovery", sleep: "Sleep",
 };
@@ -1753,6 +1764,8 @@ function BlockCard({
 
           {block.modality === "throwing" && <ArmThrowsPanel source="position" planDate={planDate} />}
           {block.modality === "throwing" && <ThrowPacingGuide />}
+          {block.modality === "pitching" && <ArmThrowsPanel source="pitching" planDate={planDate} />}
+          {block.modality === "pitching" && <ThrowPacingGuide />}
 
           {block.drills.length > 0 && (
             <div className="space-y-1.5" hidden={focusState.active}>

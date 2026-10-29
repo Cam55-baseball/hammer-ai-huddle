@@ -1,10 +1,10 @@
 export interface ComposedDayEvidence { date:string; sport:string; phase:string; restDay:boolean; blocks:readonly {modality:string;status:string;drills:readonly {bunt?:unknown}[]}[]; physical:readonly {slot:string;phase:string;slug?:string|null}[]; }
-const skillCategories=new Set(['hitting','throwing','defense','baserunning']);
+const skillCategories=new Set(['hitting','pitching','throwing','defense','baserunning']);
 export function composedDayCategories(day:ComposedDayEvidence):string[]{
   if(day.restDay)return ['Recovery'];
   const out=new Set<string>();
   for(const b of day.blocks)if(b.status==='ready'&&b.drills.length&&skillCategories.has(b.modality)){
-    out.add(b.modality==='defense'?'Defense':b.modality==='baserunning'?'Baserunning':b.modality==='throwing'?'Throwing':'Hitting');
+    out.add(b.modality==='defense'?'Defense':b.modality==='baserunning'?'Baserunning':b.modality==='throwing'?'Throwing':b.modality==='pitching'?'Pitching':'Hitting');
     if(b.modality==='hitting'&&b.drills.some(d=>!!d.bunt))out.add('Bunting');
   }
   for(const r of day.physical){if(r.slot==='lift')out.add('Lifts');if(r.slot==='speed')out.add('Speed');if(r.slot==='conditioning')out.add('Conditioning');}

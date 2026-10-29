@@ -72,6 +72,7 @@ function withCleanClipNote(block: PrescribedBlock, discipline: Discipline, ranke
 /** Exact category only: an overhand throwing card is not a pitching prescription. */
 function disciplinesForBlock(block: PrescribedBlock): Discipline[] {
   if (block.modality === "hitting") return ["hitting"];
+  if (block.modality === "pitching") return ["pitching"];
   if (block.modality === "throwing") {
     const module = new URL(block.route, 'https://local.invalid').searchParams.get('module');
     return module === 'pitching' ? ['pitching'] : ['throwing'];
@@ -126,7 +127,7 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
 
     const replacementIndex = block.drills.findIndex(
       (drill) => (drill as InfluencedDrillStep).prescriptionOrigin !== "owner" &&
-        (drill.stage === undefined || drill.stage === "drills"),
+        !drill.bunt && !drill.armEvent && (drill.stage === undefined || drill.stage === "drills"),
     );
     if (replacementIndex < 0) return block;
     const displaced = block.drills[replacementIndex];
@@ -180,7 +181,7 @@ function applyRecurring(block: PrescribedBlock, disciplines: Discipline[], input
       circulation: input.circulation, faultKeys: [issue.fault_key], module: MODULE_FOR[discipline], sport: input.sport, max: 1,
     });
     if (!match || !match.drill.violationKeys.includes(issue.fault_key)) continue;
-    const idx = block.drills.findIndex((d) => (d as InfluencedDrillStep).prescriptionOrigin !== "owner" && (d.stage === undefined || d.stage === "drills"));
+    const idx = block.drills.findIndex((d) => (d as InfluencedDrillStep).prescriptionOrigin !== "owner" && !d.bunt && !d.armEvent && (d.stage === undefined || d.stage === "drills"));
     if (idx < 0) return null;
     const displaced = block.drills[idx];
     const replacement: InfluencedDrillStep = {

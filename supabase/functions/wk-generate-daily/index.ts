@@ -16,6 +16,7 @@ import { applyLiveTracking } from "../_shared/vault/tracking.ts";
 import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
 import { masteryContext } from "../_shared/masteryContext.ts";
 import { composeSportDay } from '../_shared/composeSportDay.ts';
+import { planningGear } from '../_shared/planSwap/planningGear.ts';
 import { masteryPlanGuidance, masterySavedGuidance } from "../_shared/wic/masteryPlanContext.ts";
 import { checkInReductions, latestCheckInValues } from "../_shared/wic/checkInReductions.ts";
 import { BASE_REST_TEXT, prescribedBases, sprintRestSeconds, sprintRestWhy, type DeclaredBaseRoute } from "../_shared/wic/runRest.ts";
@@ -1005,7 +1006,12 @@ const handler = async (req: Request): Promise<Response> => {
         else scheduledGames.push({ id: `pitcher-start-${d}`, date: d, time: null, isStartingPitcher: true, status: null, declaredDoubleheader: false, ignored: false, label: "Pitching", source: "timeline" as const } as any);
       }
     }
-    const isPitcherAthlete = athletePositions.some((x) => /pitch|^p$|^rhp$|^lhp$|^sp$|^rp$/.test(x));
+    const {data: schedulingSubscription,error:schedulingSubscriptionError}=await admin.from('subscriptions').select('status,subscribed_modules').eq('user_id',user.id).maybeSingle();
+    if(schedulingSubscriptionError)throw schedulingSubscriptionError;
+    const schedulingModules:string[]=schedulingSubscription?.status==='active'?(schedulingSubscription.subscribed_modules??[]):[];
+    const purchasedPitcher=schedulingModules.some(m=>[`${sport}_pitcher`,`${sport}_golden2way`,`${sport}_pitching`,'pitching'].includes(m));
+    const positionProgram=schedulingModules.includes(`${sport}_5tool`);
+    const isPitcherAthlete = purchasedPitcher && !positionProgram;
     // Zero-exposure invariant input: the days in the last week on which the
     // athlete actually received a lift. Read-only, best-effort — a failure
     // here degrades to "no exposure known", which can only relax a removal to
@@ -1225,7 +1231,7 @@ const handler = async (req: Request): Promise<Response> => {
       };
       return [...rows].sort((a, b) => rank(a) - rank(b));
     };
-    const libBase0 = equipmentUnknown ? gearFreeFirst(catalog ?? []) : (catalog ?? []);
+    const libBase0 = catalog ?? [];
     // Simple Swap "always missing" memory: drop movements needing gear the
     // player said is always missing, even when no same-family fallback exists.
     // Existing legal selection/fallback rules still decide the work and dose.
@@ -1245,6 +1251,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     } catch (error) { throw error; }
     const libBase = alwaysMissing.size === 0 ? libBase0 : libBase0.filter(m => avoidsMissingGear(m, alwaysMissing));
+    const assumedEquipment=planningGear(declaredEquipment,[...alwaysMissing],libBase as any[]);
     // -------- Upper-Body Plyo v1 — live legality filter (E2E WP4 item 1) --------
     // Filter-only, gated by ub_plyo_hand_wrist: removes U2/U3 rows the athlete is
     // not cleared for today (phase, age, training age, growth, earned history,
@@ -2246,10 +2253,8 @@ const handler = async (req: Request): Promise<Response> => {
       // Prescribe best first with the player's own saved gear: when any legal
       // candidate needs only gear they said they have, pick among those. If none
       // does, the earlier choice stands unchanged (never an empty role).
-      if (!equipmentUnknown) {
-        const owned = cands.filter((c) => ownsAllGear(c.item as any, declaredEquipment, UNIVERSAL_GEAR));
-        if (owned.length) cands = owned;
-      }
+      // Unknown ownership does not lower the best legal selection. Only the
+      // explicit Always missing filter above constrains generated equipment.
       // Non-lift slots keep strict rank-1 behaviour — this pass changes lifts only.
       if (!rotateKey) {
         return cands.reduce((a, b) => (b.score > a.score ? b : a), cands[0]).item;
@@ -3298,7 +3303,7 @@ const handler = async (req: Request): Promise<Response> => {
               if (template && eligible(template)) {
                 const { data: ownerRows } = await admin.from("owner_drills").select("*").eq("active", true)
                   .contains("placements", ["hammers_today:conditioning"]).limit(100);
-                const gear = new Set(declaredEquipment.map((e) => String(e).trim().toLowerCase()));
+                const gear = new Set(assumedEquipment.map((e) => String(e).trim().toLowerCase()));
                 const pool = ((ownerRows ?? []) as any[])
                   .filter((r) => ownerConditioningFits(r, { sport, isPitcher: isPitcherAthlete }))
                   .filter((r) => (r.equipment ?? []).every((e: string) => gear.has(String(e).trim().toLowerCase())))
@@ -3837,7 +3842,7 @@ const handler = async (req: Request): Promise<Response> => {
         isRecoveryDay: isWholeRestDayType(trainingContext.day_type),
         isReturnToPlay: false,
       },
-      availableEquipment: equipmentUnknown ? undefined : declaredEquipment,
+      availableEquipment: assumedEquipment,
       trainingAgeClass: (trainingAgeContext as any)?.classification,
       // The 48-hour pre-game primer window, a declared rest day and a Tell
       // Hammers hold all strip loaded work by law. On those days the template's
@@ -3891,7 +3896,7 @@ const handler = async (req: Request): Promise<Response> => {
     const isPracticeDayCtx = String((trainingContext as any)?.day_type ?? "").startsWith("practice");
     const environmentCtx = (athleteContext as any)?.environment?.location ?? undefined;
     // Unknown gear is passed as `undefined` (unknown), never as `[]` (none).
-    const availableEquipmentCtx = equipmentUnknown ? undefined : declaredEquipment;
+    const availableEquipmentCtx = assumedEquipment;
 
     const speedCertification = certifySpeed({
       prescriptions: finalRxs as any,
@@ -4990,7 +4995,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Softball pitchers only. Its own card (slot "windmill"); limits come from
     // the windmill arm rules; the final check below still runs on every row.
     try {
-      if (features.windmill_program === true && sport === "softball" && isPitcherAthlete) {
+      if (!composeRequested && features.windmill_program === true && sport === "softball" && isPitcherAthlete) {
         const [{ data: wmLedger }, { data: wmPrior }] = await Promise.all([
           admin.from("arm_ledger_entries").select("entry_date, source, throw_type, count, status")
             .eq("user_id", user.id).gte("entry_date", isoShift(planDate, -14)).lte("entry_date", planDate).limit(2000),
@@ -5017,7 +5022,7 @@ const handler = async (req: Request): Promise<Response> => {
           gameTomorrow: scheduledGames.some((g: any) => g.date === isoShift(planDate, 1) && g.ignored !== true),
           priorFullSessionsThisWeek: [...fullDays].filter((d) => d >= weekStart).length,
           fullSessionYesterday: fullDays.has(isoShift(planDate, -1)),
-          equipment: declaredEquipment.length ? declaredEquipment : null,
+          equipment: assumedEquipment,
         });
         const summary = { version: WINDMILL_PROGRAM_VERSION, type: wm.type, full_pitches: wm.fullPitches, drill_throws: wm.drillThrows, arm_units: wm.armUnits, reasons: wm.reasons };
         wm.rows.forEach((wr, idx) => {
@@ -5155,7 +5160,7 @@ const handler = async (req: Request): Promise<Response> => {
           planDate, phase: String(phaseRes.phase), sport,
           modules: (pcSub?.status === "active" ? (pcSub.subscribed_modules ?? []) : []).map(String),
           isPitcher: isPitcherAthlete, age: athleteAgeYears, growthMode: growthState.active, pain,
-          equipment: declaredEquipment.length ? declaredEquipment : null,
+          equipment: assumedEquipment,
           gameToday: gameOn(planDate), gameTomorrow: gameOn(isoShift(planDate, 1)),
           startToday: futStartsPc.includes(planDate), startTomorrow: futStartsPc.includes(isoShift(planDate, 1)),
           startYesterday: pastStartsPc.includes(isoShift(planDate, -1)),
@@ -5248,7 +5253,7 @@ const handler = async (req: Request): Promise<Response> => {
             realThrowDaysThisWeek: realDays,
             realThrowsEnabled: features.pap_real_throws === true,
             goals: [...(goalEmphasis.ranked ?? [])].map(String),
-            equipment: declaredEquipment.length ? declaredEquipment : null,
+            equipment: assumedEquipment,
             firstLift: { slug: String(first.movement_slug), name: String(first.movement_name ?? first.movement_slug), pattern, heavy },
           });
           if (pp.block) {
@@ -5286,7 +5291,7 @@ const handler = async (req: Request): Promise<Response> => {
     if(composeRequested){
       const posture=isTravelDay?'travel':isGameDay?'game':isHeavyPracticeDay?'team_practice':gameProximity.hoursToNearestGame!=null&&gameProximity.hoursToNearestGame>0&&gameProximity.hoursToNearestGame<=24?'taper':'normal';
       const phaseStart=phaseRes.phase.startsWith('os_')?seasonSettings.post_season_end_date:phaseRes.phase==='in_season'?seasonSettings.in_season_start_date:phaseRes.phase==='preseason'?seasonSettings.preseason_start_date:seasonSettings.post_season_start_date;
-      composed=await composeSportDay(userClient,{userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null});
+      composed=await composeSportDay(userClient,{userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,alwaysMissingGear:[...alwaysMissing],injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null});
     }
 
     // -------- Stated change to a day already built: adjust unmarked cards only --------
@@ -5303,7 +5308,7 @@ const handler = async (req: Request): Promise<Response> => {
         ...(composed?{p_sport:sport,p_engine:composed.engine,p_payload:composed.payload,p_expected_rows:expectedDayRows,p_expected_snapshot:composed.expectedSnapshot,p_diag:{},p_shared:{}}:{}),
       });
       if (adjErr) return json({ error: "adjust_failed", message: adjErr.message }, 500);
-      return json({ ok: true, adjusted: true, plan_date: planDate, ...(adj as any),...(composed?{user_id:user.id,bunting_entitled:bsModules.includes(`${sport}_5tool`)||bsModules.includes(`${sport}_golden2way`)}:{}) }, 200);
+      return json({ ok: true, adjusted: true, plan_date: planDate, ...(adj as any),...(composed?{user_id:user.id,bunting_entitled:bsModules.includes(`${sport}_5tool`)||bsModules.includes(`${sport}_golden2way`)||['hitting',`${sport}_hitting`].some(m=>bsModules.includes(m))&&['throwing',`${sport}_throwing`].some(m=>bsModules.includes(m))}: {}) }, 200);
     }
 
     stampPhase(rows as any[]);
@@ -5463,7 +5468,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
     return json({
       ok: true,
-      ...(composed?{composed:true,sport,plan_date:planDate,user_id:user.id,bunting_entitled:bsModules.includes(`${sport}_5tool`)||bsModules.includes(`${sport}_golden2way`)}:{}),
+      ...(composed?{composed:true,sport,plan_date:planDate,user_id:user.id,bunting_entitled:bsModules.includes(`${sport}_5tool`)||bsModules.includes(`${sport}_golden2way`)||['hitting',`${sport}_hitting`].some(m=>bsModules.includes(m))&&['throwing',`${sport}_throwing`].some(m=>bsModules.includes(m))}:{}),
       phase: phaseRes.phase,
       phase_display: phaseRes.displayName,
       adaptation: adaptationDecision.primary,

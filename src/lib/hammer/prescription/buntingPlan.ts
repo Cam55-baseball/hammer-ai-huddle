@@ -4,6 +4,7 @@ import { ownsAllGear } from '../../../../supabase/functions/_shared/planSwap/sim
 import { missingGearAnswer, COMMON_SWAP_GEAR } from '../../../../supabase/functions/_shared/planSwap/commonGear';
 import type { PrescribedBlock, DrillStep } from './dailyPlan';
 import { buntGuidance, LEFT_POWER_GUIDANCE } from '../../../../supabase/functions/_shared/wic/buntingMastery';
+import { subscriptionSchedule } from './subscriptionSchedule';
 export interface BuntCatalogItem { slug:string; name:string; cue:string; is_active:boolean; dosage_unit:string|null; equipment_requirements:string[]|null; equipment:string[]|null; equipment_alternatives:unknown; sport_scope:string; min_age_years:number|null; season_eligibility:string[]|null; visible_to:string[]|null; }
 export function buntIdentity(slug:string):{side:BuntSide;type:BuntType}|null {
  const match=/^bunt_([rl])_(squeeze|sac_3b|sac_1b|drag|push|hit)$/.exec(slug);
@@ -11,7 +12,8 @@ export function buntIdentity(slug:string):{side:BuntSide;type:BuntType}|null {
 }
 /** One declared skill slot, one side/type; the bunt attempts replace that slot's swings, never add volume. */
 export function applyBuntingPlan(blocks:readonly PrescribedBlock[], facts:BuntingFacts, options:{weekday:number;weekIndex:number;owned:readonly string[];age:number|null;phase:string;catalog:readonly BuntCatalogItem[];userId?:string}):readonly PrescribedBlock[]{
- const program=buntingProgram(facts);
+ const access=subscriptionSchedule(facts.modules,facts.sport);
+ const program=buntingProgram({...facts,modules:access.hasBunting?[`${facts.sport}_5tool`]:facts.modules});
  // Expand only the existing common-gear vocabulary's declared identical labels.
  const owned=new Set(options.owned);
  for(const token of COMMON_SWAP_GEAR)if(missingGearAnswer([token],undefined,options.owned).some(g=>options.owned.includes(g)))owned.add(token);
@@ -33,7 +35,7 @@ export function applyBuntingPlan(blocks:readonly PrescribedBlock[], facts:Buntin
   const index=((options.weekIndex*program.scheduled.length+program.scheduled.indexOf(options.weekday))%eligible.length+eligible.length)%eligible.length;
   const pick=eligible[index];const identity=pick?buntIdentity(pick.slug):null;if(!pick||!identity)return block;
   const dose=program.dose(side,identity.type);
-  const slot=block.drills.findIndex(d=>d.stage==='drills'&&d.prescriptionOrigin!=='owner'&&/^\d+ swings(?:\s|$)/i.test(d.dosage));
+ const slot=block.drills.findIndex(d=>d.stage==='drills'&&d.prescriptionOrigin!=='owner'&&/^\d+ swings(?:\s|$)/i.test(d.dosage));
   const original=block.drills[slot];const budget=original?Number(/^(\d+) swings/i.exec(original.dosage)?.[1]):0;
   if(!original||budget<dose.floor)return block;
   const attempts=Math.min(dose.reps,budget,20);
