@@ -119,7 +119,7 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
           origin: source === "ask_hammer" ? "tell_hammers" : ((draft.payload.origin as any) ?? "tell_hammers"),
           date: draft.start_date, note: String(draft.payload.text ?? "Reported through Update Hammer"), queryClient: qc,
         });
-        const message = r.merged ? "You already told me this — I updated it." : "Saved to your pain log — tell a coach or parent too.";
+        const message = r.message ?? (r.merged ? "You already told me this — I updated it." : "Saved to your pain log — tell a coach or parent too.");
         return { merged: r.merged, entry: { ...draft, id: r.entryId, source: "inbox", summary: message, created_at: new Date().toISOString(), undone_at: null } as TimelineEntry, message };
       }
       const linkedRef: string | null = null;
@@ -148,7 +148,7 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
             ? { in_season_end_date: isoShift(draft.start_date, -1), season_status_manual: false }
             : { in_season_start_date: draft.start_date, season_status_manual: false };
         const { error: settingsError } = await (supabase as any).from('athlete_mpi_settings')
-          .upsert({ user_id: user.id, ...settings }, { onConflict: 'user_id' });
+          .upsert({ user_id: user.id, sport: (await supabase.from('athlete_context').select('sport_primary').eq('user_id', user.id).single()).data?.sport_primary, ...settings }, { onConflict: 'user_id' });
         if (settingsError) throw new Error('Your date was saved, but the season could not be updated. Try again.');
       }
       if (draft.tag === 'NOTE' && draft.payload.kind === 'availability') {
@@ -197,7 +197,7 @@ export async function announceChange(qc: ReturnType<typeof useQueryClient>, user
     "wk-rx-timeline",
     "calendar-projection",
     "hammer-daily-plan",
-    "season-status", "phase-state", "athlete-context", "athlete-envelope",
+    "season-status", "phase-state", "hammer-context-envelope",
     "wk-rx", "wk-plan-changes", "saved-block-day", "coach-athlete-summaries", "coach-roster-rows",
   ]) {
     qc.invalidateQueries({ queryKey: [k] });
