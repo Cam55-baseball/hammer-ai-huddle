@@ -29,7 +29,7 @@ export async function addAnalysisDrill(client: any, admin: any, uid: string, inp
   if (!drill) throw new Error('This drill is no longer available.');
   const findings = await checked(admin.from('analysis_fault_findings').select('fault_key').eq('user_id',uid).eq('video_id',video.id).eq('sport',input.sport));
   const goals = categoryGoals(safety.context?.category_goals,video.module,input.sport,safety.context?.position_primary);
-  const binding=analysisDrillBinding(drill,video.ai_analysis,goals,findings??[]);
+  const binding=analysisDrillBinding(drill,video.ai_analysis,goals,findings??[],input.sport);
   if (!binding) throw new Error('This drill could not be linked to this clip or your saved goals.');
   const block = snapshot.payload?.blocks?.find((b: Row) => analysisDrillCategory(b) === video.module && b.status === 'ready');
   if (!block) throw new Error('There is no safe card for this category today. Keep it in Saved drills.');
@@ -90,8 +90,10 @@ export async function acknowledgeAnalysisRotation(client:any,admin:any,uid:strin
   // Clearing is checked through the same pure rotation before attempting any save.
   const owners=await checked(client.from('owner_drills').select('*'));
   const safety=await checked(admin.rpc('analysis_drill_safety_revision',{p_user:uid,p_date:input.planDate}));
-  const equipment=(safety.gear??[]).slice().reverse().find((g:Row)=>!g.valid_until||Date.parse(g.valid_until)>Date.now())?.equipment??[];
-  const candidate=applyAnalysisDrillRotation({blocks:snapshot.payload.blocks,enrollments:[enrollment],catalog:mergeCatalog(ELITE_DRILL_CATALOG,owners??[]),sport:input.sport,equipment,owners:owners??[],date:input.planDate,clips:clips.map((c:Row)=>({video_id:c.id,module:c.module,created_at:c.created_at,violations:c.violations}))});
-  if(!candidate.some((b:Row)=>b.drills.some((d:Row)=>d.analysisEnrollment?.issueKey===enrollment.issue_key)))throw new Error('This issue has moved on or is not eligible for this day.');
+  const equipment=new Set<string>((safety.gear??[]).slice().reverse().find((g:Row)=>!g.valid_until||Date.parse(g.valid_until)>Date.now())?.equipment??[]);
+  const missing=new Set<string>();
+  for(const m of safety.memory??[]){for(const g of m.confirmed_have??[]){equipment.add(g);missing.delete(g);}for(const g of m.confirmed_lacks??[]){equipment.delete(g);missing.add(g);}}
+  const candidate=applyAnalysisDrillRotation({blocks:snapshot.payload.blocks,enrollments:[enrollment],catalog:mergeCatalog(ELITE_DRILL_CATALOG,owners??[]),sport:input.sport,equipment,missing,owners:owners??[],date:input.planDate,clips:clips.map((c:Row)=>({video_id:c.id,module:c.module,created_at:c.created_at,violations:c.violations}))});
+  if(!candidate.some((b:Row,i:number)=>b!==snapshot.payload.blocks[i]&&b.drills.some((d:Row)=>d.analysisEnrollment?.issueKey===enrollment.issue_key)))throw new Error('This issue has moved on or is not eligible for this day.');
   return addAnalysisDrill(client,admin,uid,input,true);
 }
