@@ -124,6 +124,7 @@ export function DemoTourHost() {
         // closing the app) still counts and it never re-triggers.
         window.setTimeout(() => {
           if (window.location.pathname !== '/dashboard') return stop('left the dashboard before the tour opened');
+          if (document.querySelector('[role="dialog"][data-state="open"]')) return stop('another window opened before the tour');
           try { localStorage.setItem(`hm-tour:${user.id}:auto`, JSON.stringify({ result: 'shown', at: Date.now() })); } catch { /* noop */ }
           void supabase.auth.updateUser({ data: { [AUTO_FLAG]: new Date().toISOString() } }).catch(() => {});
           autoDiag('started');
