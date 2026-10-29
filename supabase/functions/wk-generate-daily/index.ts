@@ -591,6 +591,18 @@ const handler = async (req: Request): Promise<Response> => {
     };
     const planDate = body.plan_date ?? todayStr();
 
+    // Saved verification is read/trim-only. Every new full build needs the same
+    // canonical saved-answer judge that Start and its linked checklist use.
+    if ((rawBody as any).verify_saved !== true && !isPrivileged) {
+      const { data: missing, error: readinessError } = await admin.rpc('initial_plan_missing', { p_user: user.id });
+      if (readinessError) return json({ error: 'initial_inputs_unavailable', message: 'Could not check your saved starting details. Try again.' }, 503);
+      if (!Array.isArray(missing)) return json({ error: 'initial_inputs_unavailable' }, 503);
+      if (missing.length) return json({ error: 'initial_inputs_missing', message: 'Finish your missing starting details first.', missing }, 409);
+      const { data: started, error: startedError } = await admin.from('profiles').select('hammers_today_started_at').eq('id', user.id).single();
+      if (startedError) return json({ error: 'initial_inputs_unavailable' }, 503);
+      if (!started.hammers_today_started_at) return json({ error: 'not_started', message: 'Tap Start Hammers Today Plan to begin.' }, 409);
+    }
+
     // -------- Start gate (switch `hammers_today_start_gate`, built OFF) --------
     // When the switch is on for this athlete, no plan is built until they have
     // tapped "Start Hammers Today Plan" — from the app or from any job.
@@ -840,7 +852,7 @@ const handler = async (req: Request): Promise<Response> => {
     const growthState = growthMode(heightReadings, planDate);
     // profiles has no sport column — the player's sport lives in athlete_context.sport_primary.
     const sport = (String(p.sport ?? (ctx as any)?.sport_primary ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball") as "baseball" | "softball";
-    const position = p.primary_position ?? p.position ?? null;
+    const position = (ctx as any)?.position_primary ?? p.primary_position ?? p.position ?? null;
     // Every position label the athlete holds, for the domain scope gate.
     const athletePositions: string[] = Array.from(
       new Set(
@@ -848,6 +860,7 @@ const handler = async (req: Request): Promise<Response> => {
           position,
           ...(Array.isArray((p as any).positions) ? (p as any).positions : []),
           ...(Array.isArray((p as any).secondary_positions) ? (p as any).secondary_positions : []),
+          ...(Array.isArray((ctx as any)?.position_secondary) ? (ctx as any).position_secondary : []),
         ]
           .filter((v) => typeof v === "string" && v.trim() !== "")
           .map((v) => String(v).trim().toLowerCase()),
@@ -856,11 +869,11 @@ const handler = async (req: Request): Promise<Response> => {
     // Unknown training age is unknown, not zero. Defaulting to 0 excluded
     // every movement with any `min_training_age_years`, which silently deleted
     // most of the catalog for an athlete who simply had not answered.
-    const trainingAgeKnown =
+    const trainingAgeKnown = (ctx as any)?.lifting_age_years != null ||
       p.years_lifting !== null && p.years_lifting !== undefined
         ? true
         : p.training_age_years !== null && p.training_age_years !== undefined;
-    const trainingAgeYears = Number(p.years_lifting ?? p.training_age_years ?? 0);
+    const trainingAgeYears = Number((ctx as any)?.lifting_age_years ?? p.years_lifting ?? p.training_age_years ?? 0);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
     // -------- Tell Hammers timeline (spec adaptive-phases-and-schedule-v1 §2) --------
