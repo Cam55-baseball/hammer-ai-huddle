@@ -1576,9 +1576,9 @@ var OBJECT_POSITION_KEYS = [
 function pushToken(tokens, seen, raw) {
   const cleaned = raw.trim();
   if (!cleaned) return;
-  const key = cleaned.toUpperCase();
-  if (seen.has(key)) return;
-  seen.add(key);
+  const key2 = cleaned.toUpperCase();
+  if (seen.has(key2)) return;
+  seen.add(key2);
   tokens.push(cleaned);
 }
 function coercePositionTokens(value) {
@@ -1600,8 +1600,8 @@ function coercePositionTokens(value) {
     }
     if (typeof input === "object") {
       const record = input;
-      for (const key of OBJECT_POSITION_KEYS) {
-        if (key in record) visit(record[key], depth + 1);
+      for (const key2 of OBJECT_POSITION_KEYS) {
+        if (key2 in record) visit(record[key2], depth + 1);
       }
     }
   };
@@ -1660,6 +1660,86 @@ function matchGoalDrills(catalog, goals, module, sport, max = 2) {
   }).filter((d2) => d2.score > 0).sort((a, b) => b.score - a.score || a.drill.id.localeCompare(b.drill.id)).slice(0, max);
 }
 
+// src/lib/coach/drillSafety.ts
+function maxLevelForAge(ageYears) {
+  if (ageYears == null) return 5;
+  if (ageYears < 8) return 2;
+  if (ageYears <= 11) return 3;
+  if (ageYears <= 13) return 4;
+  if (ageYears <= 17) return 5;
+  return 7;
+}
+var norm = (s) => s.trim().toLowerCase();
+function checkDrillSafety(drill, athlete) {
+  const reasons = [];
+  const level = drill.progression_level ?? 4;
+  const max = maxLevelForAge(athlete.ageYears);
+  if (level > max) {
+    reasons.push(
+      athlete.ageYears == null ? "Too advanced \u2014 this drill is above high-school level and we don't know the player's age." : `Too advanced for a ${athlete.ageYears}-year-old.`
+    );
+  }
+  const dSport = drill.sport ? norm(drill.sport) : null;
+  const aSport = athlete.sport ? norm(athlete.sport) : null;
+  if (dSport && aSport && dSport !== "both" && dSport !== aSport) {
+    reasons.push(`Made for ${drill.sport}, not ${athlete.sport}.`);
+  }
+  const owned = new Set(athlete.equipment.map(norm));
+  const missing = drill.requiredEquipment.filter((e) => !owned.has(norm(e)));
+  if (missing.length > 0) {
+    reasons.push(`Needs equipment the player doesn't have: ${missing.join(", ")}.`);
+  }
+  return { ok: reasons.length === 0, reasons };
+}
+
+// src/lib/wic/faultLedger/cleanClipFade.ts
+var CLEAN_CLIP_FADE_VERSION = "clean_clip_fade_v1";
+var ONE_CLEAN_CLIP_WEIGHT = 0.5;
+var CLEAN_CLIPS_TO_CLEAR = 2;
+var FADEABLE_SOURCE = "video_analysis";
+var ASSESSED_FAULTS = {
+  hitting: ["early_shoulder_rotation", "hands_pass_elbow_early", "front_shoulder_opens_early"],
+  throwing: ["early_shoulder_rotation", "shoulders_not_aligned", "back_leg_not_facing_target"],
+  pitching: ["early_shoulder_rotation", "shoulders_not_aligned", "back_leg_not_facing_target"]
+};
+var NONE = {
+  version: CLEAN_CLIP_FADE_VERSION,
+  cleanClips: 0,
+  multiplier: 1,
+  status: "none",
+  cleanClipIds: [],
+  latestCleanClipAt: null
+};
+function isAssessedBy(skill, faultKey) {
+  return (ASSESSED_FAULTS[skill] ?? []).includes(faultKey);
+}
+function fadeForSignal(signal, clips) {
+  if (signal.source !== FADEABLE_SOURCE) return NONE;
+  if (!isAssessedBy(signal.discipline, signal.fault_key)) return NONE;
+  const seenAt = new Date(signal.observed_at).getTime();
+  if (!Number.isFinite(seenAt)) return NONE;
+  const later = clips.filter((c) => c.module === signal.discipline).filter((c) => {
+    const t = new Date(c.created_at).getTime();
+    return Number.isFinite(t) && t > seenAt;
+  }).slice().sort((a, b) => a.created_at.localeCompare(b.created_at) || a.video_id.localeCompare(b.video_id));
+  let clean = [];
+  for (const clip of later) {
+    const answer = clip.violations ? clip.violations[signal.fault_key] : void 0;
+    if (answer === true) clean = [];
+    else if (answer === false) clean.push(clip);
+  }
+  if (clean.length === 0) return NONE;
+  const cleared = clean.length >= CLEAN_CLIPS_TO_CLEAR;
+  return {
+    version: CLEAN_CLIP_FADE_VERSION,
+    cleanClips: clean.length,
+    multiplier: cleared ? 0 : ONE_CLEAN_CLIP_WEIGHT,
+    status: cleared ? "cleared" : "eased",
+    cleanClipIds: clean.map((c) => c.video_id),
+    latestCleanClipAt: clean[clean.length - 1].created_at
+  };
+}
+
 // supabase/functions/_shared/wic/season.ts
 var OS_ONLY_ECCENTRIC_SLUGS = /* @__PURE__ */ new Set([
   "back_squat_double_ecc",
@@ -1681,6 +1761,36 @@ var IN_SEASON_BLOCKED_SLUGS = /* @__PURE__ */ new Set([
   "sissy_squat",
   "slide_lunge"
 ]);
+
+// supabase/functions/_shared/planSwap/simpleSwap.ts
+var key = (v) => v.trim().toLowerCase().replace(/[\s-]+/g, "_");
+var IGNORED = /* @__PURE__ */ new Set(["none", "bodyweight", ""]);
+var ALIASES = { bat: "gamer_bat", cable: "cable_stack", band: "bands", dumbbells: "dumbbell", db: "dumbbell", kb: "kettlebell", medicine_ball: "med_ball", plate: "plates", rack: "squat_rack", pins: "safety_pins", smith: "smith_machine", light_bat: "underload_bat", pullup_bar: "pull_up_bar" };
+var gearKey = (value) => ALIASES[key(value)] ?? key(value);
+function equipmentGroups(row) {
+  const value = row.equipment_alternatives;
+  if (value == null) return [];
+  if (!Array.isArray(value)) return null;
+  if (value.some((group) => !Array.isArray(group) || !group.length || group.some((g) => typeof g !== "string" || !g.trim()))) return null;
+  return value.map((group) => group.map(gearKey));
+}
+function mandatoryGear(row) {
+  const arrays = [row.equipment_requirements ?? [], row.equipment ?? []];
+  if (arrays.some((value) => !Array.isArray(value) || value.some((g) => typeof g !== "string" || !g.trim()))) return null;
+  return [...new Set(arrays.flat().map(gearKey))].filter((g) => !IGNORED.has(g));
+}
+function ownsAllGear(row, owned, universal = []) {
+  const have = new Set([...owned, ...universal].map(gearKey));
+  const groups = equipmentGroups(row);
+  const mandatory = mandatoryGear(row);
+  return groups !== null && mandatory !== null && mandatory.every((g) => have.has(g)) && (groups.length === 0 || groups.some((group) => group.every((g) => IGNORED.has(g) || have.has(g))));
+}
+function avoidsMissingGear(row, missing) {
+  const lacks = new Set([...missing].map(gearKey));
+  const groups = equipmentGroups(row);
+  const mandatory = mandatoryGear(row);
+  return groups !== null && mandatory !== null && mandatory.every((g) => !lacks.has(g)) && (groups.length === 0 || groups.some((group) => group.every((g) => !lacks.has(g))));
+}
 
 // src/lib/prescription/analysisDrillRotation.ts
 function analysisDrillCategory(block) {
@@ -1713,11 +1823,49 @@ function enrolledDrill(source, drill, enrollment) {
     analysisEnrollment: { videoId: enrollment.video_id, issueKey: enrollment.issue_key, drillId: drill.id }
   };
 }
+function applyAnalysisDrillRotation(input) {
+  return input.blocks.map((block) => {
+    if (block.status !== "ready") return block;
+    const index = analysisDrillSlot(block.drills);
+    if (index < 0) return block;
+    const category = analysisDrillCategory(block);
+    const choices = input.enrollments.filter((e) => e.sport === input.sport && e.category === category).slice().sort((a, b) => b.created_at.localeCompare(a.created_at));
+    for (const enrollment of choices) {
+      if (enrollment.fault_key && fadeForSignal({
+        source: "video_analysis",
+        discipline: enrollment.category,
+        fault_key: enrollment.fault_key,
+        observed_at: enrollment.observed_at
+      }, input.clips).status === "cleared") continue;
+      const drill = input.catalog.find((d2) => d2.id === enrollment.drill_id && d2.category === category && d2.sports.includes(input.sport));
+      if (!drill) continue;
+      if ("ownerRowId" in drill) {
+        const placements = drill.placements;
+        if (!placements.includes("hammers_today:skill") && !placements.includes(`hammers_today:${category}`)) continue;
+      }
+      const gear = { equipment_requirements: drill.equipment };
+      if (!ownsAllGear(gear, input.equipment) || !avoidsMissingGear(gear, input.missing ?? [])) continue;
+      const drills = block.drills.slice();
+      drills[index] = enrolledDrill(drills[index], drill, enrollment);
+      const checklist = drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`);
+      return {
+        ...block,
+        drills,
+        steps: checklist,
+        because: [...block.because ?? [], enrollmentBecause(enrollment, drill.name)],
+        gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist } : null
+      };
+    }
+    return block;
+  });
+}
 export {
   ELITE_DRILL_CATALOG,
   analysisDrillCategory,
   analysisDrillSlot,
+  applyAnalysisDrillRotation,
   categoryGoals,
+  checkDrillSafety,
   enrolledDrill,
   enrollmentBecause,
   matchGoalDrills,
