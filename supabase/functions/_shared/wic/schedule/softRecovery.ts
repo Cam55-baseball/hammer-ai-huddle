@@ -9,6 +9,9 @@ export const SOFT_RECOVERY_SLUGS = new Set([
 export function isSoftRecovery(slug: string | null | undefined): boolean {
   return typeof slug === "string" && SOFT_RECOVERY_SLUGS.has(slug);
 }
+export function restSafeFallback<T extends { movement_slug?: string | null }>(rows: readonly T[], rest: boolean): T[] {
+  return rows.filter(row => !rest || isSoftRecovery(row.movement_slug));
+}
 /** Read legacy saved context as well as the canonical current builder spelling. */
 export function isWholeRestDayType(dayType: unknown): boolean {
   return dayType === "recovery" || dayType === "recovery_day" || dayType === "off_day";

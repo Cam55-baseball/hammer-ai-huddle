@@ -95,7 +95,7 @@ describe('weekly goal blocks — owner replacement, both sports and six cohorts 
   it('counts existing lift and sprint days against weekly availability before adding a skill block', () => {
     const p = projection('baseball', order, { weekly_availability_days: 3 });
     const original = resolveWeeklyTemplate(p);
-    const template = { ...original, perModality: { ...original.perModality,
+    const template = { ...original, availableDays: [1,2,3] as const, perModality: { ...original.perModality,
       defense: [1, 2, 3] as const, hitting: [1, 2, 3] as const,
       strength: [4] as const, speed: [5] as const },
       priorityDayOrder: { ...original.priorityDayOrder, defense: [1, 2, 3] as const, hitting: [1, 2, 3] as const } };

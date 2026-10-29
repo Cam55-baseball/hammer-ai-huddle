@@ -42,6 +42,7 @@ import {
 // TCS stage S4 — rest-day calculator, gated by the `rest_day_calculator` switch.
 import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
 import { wholePlanRest, savedWholePlanRest } from "../_shared/wic/schedule/planDayScope.ts";
+import { unavailableTrainingDate } from '../_shared/wic/schedule/availability.ts';
 import { validatePlanSanity } from "../_shared/wic/planSanity.ts";
 // Step 20 C2 — every row resolves an intensity class, stored or derived from
 // the documented mapping, so the ceiling always compares like with like.
@@ -236,7 +237,7 @@ import {
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 import { finalRuleCheck, nextEligibleDates, dayKinds, rowKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
-import { isSoftRecovery, isWholeRestDayType } from "../_shared/wic/schedule/softRecovery.ts";
+import { isSoftRecovery, isWholeRestDayType, restSafeFallback } from "../_shared/wic/schedule/softRecovery.ts";
 import { loadU13ThrowBlock, loadU13ThrowState } from "../_shared/wic/phases/u13ThrowGate.ts";
 import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
@@ -1705,7 +1706,8 @@ const handler = async (req: Request): Promise<Response> => {
     // day, stated once here like the rest-day calculator's "none", so the
     // session template becomes the recovery template and never demands
     // compound lifts the day must not contain. Only ever makes the day lighter.
-    if (wholePlanRest(planDate, timelineToday.hold)) {
+    const availabilityRest = unavailableTrainingDate(planDate, (ctx as any)?.weekly_availability_days);
+    if (wholePlanRest(planDate, timelineToday.hold) || availabilityRest) {
       trainingContext.day_type = "recovery_day";
       trainingContext.day_type_display = "Recovery Day";
     }
@@ -2956,7 +2958,7 @@ const handler = async (req: Request): Promise<Response> => {
     } catch (_e) { trendDecision = null; }
     // ONE SYSTEM, ONE PHASE: the one answer every card of this day carries.
     const phaseState = resolvePhaseState({ settings: seasonSettings as any, date: planDate, heights: heightReadings, plannedDeload: !!progression.isDeloadWeek, trendLighter: !!trendDecision?.apply && !progression.isDeloadWeek });
-    const stampPhase = (rs: any[]) => { for (const r of rs) r.why_payload = { ...(r.why_payload ?? {}), phase_state: phaseState, full_plan_rest: wholePlanRest(planDate, timelineToday.hold) }; return rs; };
+    const stampPhase = (rs: any[]) => { for (const r of rs) r.why_payload = { ...(r.why_payload ?? {}), phase_state: phaseState, full_plan_rest: wholePlanRest(planDate, timelineToday.hold) || availabilityRest }; return rs; };
 
     const dayOfYearSeed = Math.floor(
       (new Date(planDate + "T00:00:00").getTime() - new Date(new Date(planDate).getFullYear(), 0, 0).getTime()) / 86400000,
@@ -4755,7 +4757,10 @@ const handler = async (req: Request): Promise<Response> => {
         firstReport: validatorReport as any,
       });
 
-      const safeRows = (safePlan.rows as any[]).map((r, i) => ({
+      const restFallback = wholePlanRest(planDate, timelineToday.hold) || availabilityRest;
+      const fallbackRows = restSafeFallback(safePlan.rows as any[], restFallback);
+      if (!fallbackRows.length) return json({ error: 'rest_recovery_unavailable', message: 'Rest today. No training was added; gentle recovery could not be saved.', issues: ['rest_fallback_without_soft_recovery'] }, 409);
+      const safeRows = fallbackRows.map((r, i) => ({
         slot: r.slot,
         sequence_order: typeof r.sequence_order === "number" ? r.sequence_order : i,
         sequence_role: r.sequence_role ?? null,
@@ -5248,7 +5253,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Final structural validation runs AFTER safety trimming. A missing-input
     // recovery-only result is not a successfully built training day.
     const planSanity = validatePlanSanity({
-      restDay: wholePlanRest(planDate, timelineToday.hold),
+      restDay: wholePlanRest(planDate, timelineToday.hold) || availabilityRest,
       phase: phaseRes.phase,
       work: rows.map((r: any) => ({ category: String(r.slot), slug: r.movement_slug,
         phase: r.phase, primer: r.slot === "ub_primer" || r.sequence_role === "trunk_primer" })),

@@ -9,8 +9,8 @@
 | # | Requirement | Status | Current result / exact remaining limit |
 |---|---|---|---|
 | 1 | Goal picker and Start | PASS | Retained fresh TEST two-goal/rank/save/reload/Start proof; current suite passes. |
-| 2 | Full Today matching block/season | OPEN | Thin-day fix and 8-week tests retained; combined floors/running identity and all seven saved day/card matches not certified. |
-| 3 | Update Hammer immediately everywhere | OPEN | Season/rebuild fixes retained; availability consumption, future sport snapshots, alternate forms and connected-coach proof incomplete. |
+| 2 | Full Today matching block/season | OPEN | Fresh owner --self app rebuild all seven dates/readback 59 rows now os_q1; only today has a sport snapshot. Combined purchased floors and seven strip/card matches unproven; owner fielding gear unconfirmed/restrictions preserved. See items2-3-finish-proof.md. |
+| 3 | Update Hammer immediately everywhere | OPEN | Shared availability consumed by skill/physical planners; TEST phone 4-day save/reload and 6-day restore observed. Degraded replies now refuse full-success and rest fallback cannot prescribe training. Future rebuild windows and shared alternate-override refresh built; future sport snapshots, all alternate UI journeys, eligible full-plan and connected-coach before/after still open. 71 focused tests/preview OK; authorized wk-generate-daily redeployed only. |
 | 4 | Organization sport: Both | CHECK | Shared registration includes Both; all edit paths and persisted Both organization not fully proven. |
 | 5 | Sign-up terms overlay and Back | PASS | Fresh nested overlay → Close/Back preserves fields, agreement and same route at 390×844; zero runtime errors. |
 | 6 | Coach send / Sent / player choices | PASS | Retained real coach→player→coach send/use/save-for-later proof. Fresh coach Sent workouts tab at both sizes; live transaction regression skipped this suite. |
