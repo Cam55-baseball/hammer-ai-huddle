@@ -13,7 +13,7 @@ export function PhilosophyConversation({onSaved}:{onSaved:()=>void}) {
   useEffect(()=>{let alive=true;void(async()=>{try{
     const {data}=await supabase.auth.getSession();const uid=data.session?.user.id;if(!uid)throw Error('Sign in to open your saved conversation.');
     const tid=await latestThreadId(uid);if(!alive)return;setThread(tid);
-    if(tid){const {data:rows,error}=await supabase.from('recall_messages').select('role,parts').eq('thread_id',tid).eq('user_id',uid).contains('parts',[{entry:PHILOSOPHY_ENTRY}]).order('created_at',{ascending:true}).order('role',{ascending:false});if(error)throw error;
+    if(tid){const {data:rows,error}=await supabase.from('recall_messages').select('role,parts').eq('thread_id',tid).eq('user_id',uid).filter('parts','cs',JSON.stringify([{entry:PHILOSOPHY_ENTRY}])).order('created_at',{ascending:true}).order('role',{ascending:false});if(error)throw error;
       const history:Turn[]=[];for(const row of rows??[]){const parts=row.parts as unknown as Array<{entry?:string;text?:string;review?:PhilosophyReply;confirmed?:string}>;const p=Array.isArray(parts)?parts[0]:null;if(p?.entry===PHILOSOPHY_ENTRY&&p.text)history.push({role:row.role==='assistant'?'assistant':'user',text:p.text,review:p.review,confirmed:p.confirmed});}
       if(alive){setTurns(history);setSaved(history[history.length-1]?.confirmed??null);}
     }
