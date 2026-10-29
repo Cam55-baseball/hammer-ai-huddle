@@ -1469,6 +1469,7 @@ import {
 } from "@/lib/hammer/prescription/scheduleContext";
 
 export interface HammerDailyPlanResult {
+  readonly sanity?: { ok: boolean; issues: string[] };
   readonly practiceLoad?: ReadonlyArray<CategoryPracticeLoad>;
   readonly blocks: ReadonlyArray<PrescribedBlock>;
   readonly seasonPhase: string | null;

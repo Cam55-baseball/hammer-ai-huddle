@@ -42,6 +42,7 @@ import {
 // TCS stage S4 — rest-day calculator, gated by the `rest_day_calculator` switch.
 import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
 import { wholePlanRest, savedWholePlanRest } from "../_shared/wic/schedule/planDayScope.ts";
+import { validatePlanSanity } from "../_shared/wic/planSanity.ts";
 // Step 20 C2 — every row resolves an intensity class, stored or derived from
 // the documented mapping, so the ceiling always compares like with like.
 import { resolveIntensityClass } from "../_shared/wic/catalog/safetyAudit.ts";
@@ -5222,6 +5223,16 @@ const handler = async (req: Request): Promise<Response> => {
         console.debug("[wk-generate-daily] identity unavailable; no new focus certified");
       }
     }
+
+    // Final structural validation runs AFTER safety trimming. A missing-input
+    // recovery-only result is not a successfully built training day.
+    const planSanity = validatePlanSanity({
+      restDay: wholePlanRest(planDate, timelineToday.hold),
+      phase: phaseRes.phase,
+      work: rows.map((r: any) => ({ category: String(r.slot), slug: r.movement_slug,
+        phase: r.phase, primer: r.slot === "ub_primer" || r.sequence_role === "trunk_primer" })),
+    });
+    if (!planSanity.ok) return json({ error: "incomplete_training_plan", message: "Today's training could not be built safely. Check your equipment and training details, then try again.", issues: planSanity.issues }, 409);
 
     // -------- Stated change to a day already built: adjust unmarked cards only --------
     if (existingDay.length > 0 && changeReason) {
