@@ -8,3 +8,8 @@
 - **Failure found:** on recovery-only days the conditioning check still used the off-day session (needs aerobic base) although only an easy flush remained, so the day failed and the player got the reduced safe session. **Fix staged** (`certifiedConditioningTemplate`, 3 tests pass): such a day is certified as a Recovery Flush (stricter, no hard work). **Not live**: needs a named `wk-generate-daily` redeploy.
 - Other observations to verify before certifying: Strength shows "bodyweight (bands)" despite saved barbell gear; a "Game IQ" block appears on the saved day; four of seven days were recovery-only for a fresh pitcher.
 - **Certified saved dates: 0 / 224.**
+
+## Run 2 — Oct 29 2026, 21:02 UTC
+- Recovery Flush fix (3 tests pass) made live with the approved `wk-generate-daily` redeploy (source sha256 2d4e5718…f1ec).
+- No units built: the persona runner from run 1 was lost when the workspace reset; it must be rebuilt before unit 1 is redone (Oct 31, Nov 3–5 for certhsp).
+- **Certified saved dates: 0 / 224.**
