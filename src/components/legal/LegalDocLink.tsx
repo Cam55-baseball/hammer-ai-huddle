@@ -36,11 +36,11 @@ export function LegalDocLink({ slug, children, className }: { slug: string; chil
 
   return (
     <>
-      <Button type="button" variant="link" className={className ?? "h-auto p-0 text-primary underline"} onClick={(e) => { e.preventDefault(); e.stopPropagation(); openLegalOverlay(id); setOpen(true); }}>
+      <Button type="button" variant="link" className={`inline h-auto whitespace-normal p-0 align-baseline ${className ?? "text-primary underline"}`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); openLegalOverlay(id); setOpen(true); }}>
         {children}
       </Button>
       <Dialog open={open} onOpenChange={(next) => { if (!next) dismiss(); }}>
-        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="max-h-[85dvh] w-[calc(100%-2rem)] max-w-2xl overflow-x-hidden overflow-y-auto break-words [&>*]:min-w-0">
           <DialogHeader><DialogTitle>{doc?.title ?? "Loading…"}</DialogTitle></DialogHeader>
           {doc === null && <p className="text-sm text-muted-foreground">This document couldn't load. Please try again.</p>}
           {doc && <>
