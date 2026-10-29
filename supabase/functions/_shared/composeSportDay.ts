@@ -61,7 +61,8 @@ export async function composeSportDay(db: any, input: {
   const envelope={...env.data};
   const entry=(value:unknown,source:string)=>({value,source,owner:'canonical',confidence:'derived',missing:value==null,last_updated:null});
   envelope.equipment_effective=entry(input.equipment,'dated equipment resolver');
-  envelope.injury_history=entry([envelope.injury_history?.value,...input.injuries].filter(Boolean),'canonical active injury/context');
+  const existingInjuries=envelope.injury_history?.value;
+  envelope.injury_history=entry([...(Array.isArray(existingInjuries)?existingInjuries:existingInjuries?[existingInjuries]:[]),...input.injuries].filter(Boolean),'canonical active injury/context');
   const age=ageFromDob(input.birthday,date);
   const extra=['date_of_birth','readiness','age_years'].map(key=>({key,label:key,domain:'identity',value:key==='readiness'?input.readiness:key==='age_years'?age:input.birthday,source:key==='readiness'?'canonical rolling/check-in readiness':'profiles.date_of_birth',confidence:'high',missing:(key==='readiness'?input.readiness:key==='age_years'?age:input.birthday)==null,lastUpdated:null,lineage:{owner:'canonical',source:key,rawConfidence:'derived'}}));
   const context=contextFromEnvelope(envelope,extra);

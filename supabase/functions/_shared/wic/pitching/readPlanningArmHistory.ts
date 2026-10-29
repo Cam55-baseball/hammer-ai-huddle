@@ -23,13 +23,14 @@ export async function readPlanningArmHistory(db:any,userId:string,date:string,sp
   }
   // Prior planned arm work reserves a budget, but never claims an actual outing.
   for(const snapshot of complete(saved,20)){
+    const actual=result.filter(r=>r.entry_date===snapshot.plan_date&&r.status!=='planned');
     const blocks=snapshot.payload?.blocks;
     if(!Array.isArray(blocks))continue;
     for(const block of blocks)for(const drill of block.drills??[]){
       const event=drill.armEvent;
       if(block.status!=='ready'||!event||!(event.count>0))continue;
       const type=event.kind==='pitch'?'mound_pitch':event.kind==='warmup'?'catch_play':event.intent==='high'?'quick_release':'position_throws';
-      if(result.some(r=>r.entry_date===snapshot.plan_date&&r.throw_type===type))continue;
+      if(actual.some(r=>r.throw_type===type))continue;
       result.push({entry_date:snapshot.plan_date,source:event.kind==='pitch'?'pitching':'position',throw_type:event.kind==='pitch'?'mound_pitch':event.kind==='warmup'?'catch_play':event.intent==='high'?'quick_release':'position_throws',count:event.count,status:'planned'});
     }
   }
