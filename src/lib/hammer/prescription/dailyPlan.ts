@@ -10,6 +10,7 @@ import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
 import { priorityAccess } from '../priorityAccess';
 import { subscriptionSchedule } from './subscriptionSchedule';
 import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
+import { pitchingDay, guardArmDrills, type PlanningArmHistory } from './pitchingDay';
 import { structureSkillSession } from './skillSessionStructure';
 import { applyPracticePlanContext } from './practicePlanContext';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
@@ -2259,6 +2260,7 @@ export interface RoadmapInputs {
   /** Current subscription modules; an explicit empty list permits no purchased skill boost. */
   readonly subscriptionModules?: readonly string[];
   readonly alwaysMissingGear?: readonly string[];
+  readonly armHistory?: PlanningArmHistory;
   readonly bunting?: {evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
@@ -2451,8 +2453,14 @@ export function buildHammerDailyPlan(
   }) : bunted;
   // Pitching takes its own canonical card identity. This moves existing work,
   // never copies it into a second arm exposure.
-  const blocks = restFiltered.map(b => access?.hasPitching && b.modality === 'throwing'
-    ? {...b, modality:'pitching' as const, title:b.title.replace('EASS Throwing','Pitching'), route:'/practice?module=pitching', ctaLabel:'Open pitching'} : b);
+  const blocks = restFiltered.map(b => {
+    if(!access?.hasPitching || b.modality!=='throwing')return b;
+    const type=pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings);
+    const source=buildEassPrescription({sport,position:'pitcher',seasonPhase:proj.seasonPhase as EassContext['seasonPhase'],ageYears:ctx.get<number>('age_years')?.value??null,trainingAgeYears:proj.liftingAgeYears,injuryRegions:[...proj.injuryRegions],armSore:ctx.get<{arm_sore?:boolean}>('daily_log')?.value?.arm_sore===true,isGameDay:type==='start'||type==='available',isRecoveryDay:fullRestDay||type==='flush'||type==='rest'||proj.readinessScore!==null&&proj.readinessScore<0.4,isThrowingDay:['bullpen','side','long_toss'].includes(type),readinessScore:proj.readinessScore});
+    const guarded=guardArmDrills(source.drills,{date:today.toLocaleDateString('en-CA'),sport,role:access.pitcherOnly?'pitcher':'two_way',age:ctx.get<number>('age_years')?.value??null,level:ctx.get<string>('competition_level')?.value??null,history:roadmapInputs.armHistory});
+    const drills=fullRestDay?[]:guarded.map(d=>({name:d.name,dosage:d.dosage,setup:d.setup,cue:d.cue,stopIf:d.stopIf,stage:d.stage??(d.intensity==='prep'?'prep' as const:'drills' as const)}));
+    return {...b,modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,drills,steps:drillsToSteps(drills),route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),source.why,"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
+  });
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
