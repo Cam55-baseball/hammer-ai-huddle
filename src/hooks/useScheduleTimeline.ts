@@ -188,7 +188,7 @@ export async function announceChange(qc: ReturnType<typeof useQueryClient>, user
     "calendar-projection",
     "hammer-daily-plan",
     "season-status", "phase-state", "hammer-context-envelope",
-    "wk-rx", "wk-plan-changes", "saved-block-day", "coach-athlete-summaries", "coach-roster-rows", "coach-athlete-glance", "coach-athlete-rows",
+    "wk-rx", "wk-plan-changes", "saved-block-day", "coach-athlete-plan", "coach-athlete-summaries", "coach-roster-rows", "coach-athlete-glance", "coach-athlete-rows",
   ]) {
     qc.invalidateQueries({ queryKey: [k] });
   }
