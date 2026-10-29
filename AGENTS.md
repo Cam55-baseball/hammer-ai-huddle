@@ -18,7 +18,7 @@
 - Never prescribe or recommend an athlete action that the affected athlete cannot open; keep unreleased Game IQ suppressed at one presentation switch until its routes open to athletes. Why: inaccessible prescriptions look broken.
 - Use 14-year-old wording; translate plan reasons at display and label every athlete-facing value by kind. Why: no guessing or bare values.
 - Demo auto-start outcomes and inspector state/events: console.debug only, never app UI. Why: diagnostics aren't for users.
-- Start gate requires hammers_today_started_at; no provider before Start; job builds missing started days only. Whole rest uses planDayScope, not lift spacing; final work uses planSanity. Why: one start, no erased skills or breathing-only training.
+- Start requires hammers_today_started_at; no provider before Start; job builds missing started days only. Whole rest: planDayScope; final work: planSanity. Update Hammer: rebuildAfterChange seven-day day-lock path, seasonTimeline in both readers. Why: no false saves/rebuilds or erased skills.
 - Sessions end only by explicit Sign out (`signOut({ scope: 'local' })`) or server end; `/` and `/auth` forward signed-in players after session load; native auth key mirrored to `@capacitor/preferences` (`src/lib/auth/nativeSessionStore.ts`), restored in `main.tsx`. Why: iOS may clear WebView storage.
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
