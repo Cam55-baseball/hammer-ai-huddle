@@ -4493,3 +4493,4 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - Oct 29 r2-run3: item 23 'Analyze a guest' button on Coach Dashboard; item 22 My Players names wrap, actions own row on phone. 18–21, 24 open.
 - Oct 29 r2-run4: item 17 My defensive plays is now a History drawer (link removed).
 - Oct 29 r2-run5: item 10 plain upload checklist (type/size, one rep, full body, side/front, light) before upload.
+- Oct 29 r2-run6: item 15 Develop This Week + Recent Development Picks moved off dashboard into The General drawers.

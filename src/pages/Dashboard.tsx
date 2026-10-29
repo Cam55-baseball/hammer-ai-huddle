@@ -32,8 +32,6 @@ import { PostGameLogPrompt } from "@/components/games/PostGameLogPrompt";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
 import { CommunicationAI } from "@/components/dashboard/CommunicationAI";
-import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
-import { DevelopThisWeek } from "@/components/dashboard/DevelopThisWeek";
 import { TodaysHammerPick } from "@/components/dashboard/TodaysHammerPick";
 import { HammerDailyPlan } from "@/components/hammer/HammerDailyPlan";
 // HumanPerformanceCard now rendered inside HammerDailyPlan itself.
