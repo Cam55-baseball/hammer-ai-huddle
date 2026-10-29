@@ -7021,6 +7021,7 @@ export type Database = {
           axis: string
           last_run_id: string | null
           metadata: Json
+          test_overrides: Json
           updated_at: string
           weight: number
         }
@@ -7028,6 +7029,7 @@ export type Database = {
           axis: string
           last_run_id?: string | null
           metadata?: Json
+          test_overrides?: Json
           updated_at?: string
           weight?: number
         }
@@ -7035,6 +7037,7 @@ export type Database = {
           axis?: string
           last_run_id?: string | null
           metadata?: Json
+          test_overrides?: Json
           updated_at?: string
           weight?: number
         }
@@ -11714,6 +11717,7 @@ export type Database = {
             | null
           sport: string[]
           tags: string[]
+          test_overrides: Json
           thumbnail_url: string | null
           tier_rank: number
           title: string
@@ -11748,6 +11752,7 @@ export type Database = {
             | null
           sport?: string[]
           tags?: string[]
+          test_overrides?: Json
           thumbnail_url?: string | null
           tier_rank?: number
           title: string
@@ -11782,6 +11787,7 @@ export type Database = {
             | null
           sport?: string[]
           tags?: string[]
+          test_overrides?: Json
           thumbnail_url?: string | null
           tier_rank?: number
           title?: string
@@ -11894,6 +11900,7 @@ export type Database = {
           speed_minimum_samples: number | null
           sport: string
           standards_source: string
+          test_overrides: Json
           transition_at: number
           updated_at: string
           updated_by: string | null
@@ -11937,6 +11944,7 @@ export type Database = {
           speed_minimum_samples?: number | null
           sport: string
           standards_source?: string
+          test_overrides?: Json
           transition_at?: number
           updated_at?: string
           updated_by?: string | null
@@ -11980,6 +11988,7 @@ export type Database = {
           speed_minimum_samples?: number | null
           sport?: string
           standards_source?: string
+          test_overrides?: Json
           transition_at?: number
           updated_at?: string
           updated_by?: string | null
@@ -13475,6 +13484,7 @@ export type Database = {
           skill_area: string | null
           sports: string[]
           steps: string[]
+          test_overrides: Json
           updated_at: string
           video_url: string | null
           work_seconds: number | null
@@ -13512,6 +13522,7 @@ export type Database = {
           skill_area?: string | null
           sports?: string[]
           steps?: string[]
+          test_overrides?: Json
           updated_at?: string
           video_url?: string | null
           work_seconds?: number | null
@@ -13549,6 +13560,7 @@ export type Database = {
           skill_area?: string | null
           sports?: string[]
           steps?: string[]
+          test_overrides?: Json
           updated_at?: string
           video_url?: string | null
           work_seconds?: number | null
@@ -24467,6 +24479,17 @@ export type Database = {
         }
         Returns: Json
       }
+      owner_confirm_test_settings: {
+        Args: {
+          p_area: string
+          p_body: string
+          p_changes: Json
+          p_sport: string
+          p_thread: string
+          p_user: string
+        }
+        Returns: Json
+      }
       owner_principle_population_stats: {
         Args: never
         Returns: {
@@ -24494,6 +24517,15 @@ export type Database = {
           worked: number
         }[]
       }
+      owner_review_test_setting: {
+        Args: {
+          p_field: string
+          p_id: string
+          p_target: string
+          p_user: string
+        }
+        Returns: Json
+      }
       owner_save_principle: {
         Args: {
           _applies_when: string
@@ -24510,6 +24542,7 @@ export type Database = {
         Returns: string
       }
       owner_undo_test_cue: { Args: { p_version: string }; Returns: Json }
+      owner_undo_test_settings: { Args: { p_version: string }; Returns: Json }
       owns_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
       parent_optional_sharing: {
         Args: { _athlete: string }
@@ -24518,6 +24551,19 @@ export type Database = {
           optional_sharing: boolean
           signed_at: string
         }[]
+      }
+      philosophy_test_account: { Args: { p_user: string }; Returns: boolean }
+      philosophy_test_setting: {
+        Args: {
+          p_field: string
+          p_id: string
+          p_remove?: boolean
+          p_target: string
+          p_user: string
+          p_value?: Json
+          p_write?: boolean
+        }
+        Returns: Json
       }
       player_resolve_coach_entry: {
         Args: {
