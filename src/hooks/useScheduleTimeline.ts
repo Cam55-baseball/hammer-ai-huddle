@@ -139,18 +139,8 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
       const merged = !!data?.merged;
       const entry = data?.entry as TimelineEntry;
       if (!entry?.id) throw new Error('Change was not saved');
-      if (draft.tag === 'SEASON') {
-        const phase = String(draft.payload.phase ?? (draft.payload.which === 'ends' ? 'off_season' : 'in_season'));
-        const current = draft.start_date <= today;
-        const settings = current
-          ? { season_status: phase, season_status_manual: true, season_status_manual_at: new Date().toISOString() }
-          : draft.payload.which === 'ends'
-            ? { in_season_end_date: isoShift(draft.start_date, -1), season_status_manual: false }
-            : { in_season_start_date: draft.start_date, season_status_manual: false };
-        const { error: settingsError } = await (supabase as any).from('athlete_mpi_settings')
-          .upsert({ user_id: user.id, sport: (await supabase.from('athlete_context').select('sport_primary').eq('user_id', user.id).single()).data?.sport_primary, ...settings }, { onConflict: 'user_id' });
-        if (settingsError) throw new Error('Your date was saved, but the season could not be updated. Try again.');
-      }
+      // Dated season answers stay on their undoable timeline; both server
+      // readers project them through seasonWithTimeline, never a second write.
       if (draft.tag === 'NOTE' && draft.payload.kind === 'availability') {
         await persistContextAnswer(user.id, 'weekly_availability_days', draft.payload.days, 'tell_hammers');
       }
