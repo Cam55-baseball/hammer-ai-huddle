@@ -987,7 +987,6 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
-        <WeeklyBodyLoadBar />
         <WkRestDayBanner />
         <FinishProfileCard />
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />

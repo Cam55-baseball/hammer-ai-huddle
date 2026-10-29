@@ -11,7 +11,7 @@ const HARD = new Set(["lift", "speed", "conditioning", "plyo", "jumps", "bat_spe
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-export function WeeklyBodyLoadBar() {
+export function WeeklyBodyLoadBar({ embedded = false }: { embedded?: boolean } = {}) {
   const { user } = useOptionalAuth();
   const now = new Date();
   const monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
@@ -37,8 +37,8 @@ export function WeeklyBodyLoadBar() {
   const done = hardDays.filter((d) => data.logged.has(d)).length;
   const today = iso(now);
   return (
-    <div data-weekly-body-load className="rounded-lg border border-border p-3">
-      <p className="text-sm font-semibold text-foreground">Body load this week: {done} of {hardDays.length} hard days done</p>
+    <div data-weekly-body-load className={embedded ? "mt-2 border-t border-border pt-2" : "rounded-lg border border-border p-3"}>
+      <p className={embedded ? "text-xs font-semibold text-foreground" : "text-sm font-semibold text-foreground"}>Body load this week: {done} of {hardDays.length} hard days done</p>
       <div className="mt-2 grid grid-cols-7 gap-1">
         {days.map((d, i) => {
           const hard = (data.planned.get(d) ?? 0) > 0;
