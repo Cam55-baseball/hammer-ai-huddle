@@ -8394,7 +8394,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   );
   const lateralized = splitLateralityBlocks(rawBlocks, ctx, identityOverride);
   const guarded = applyMinorParentSupremacy(lateralized, proj);
-  const ordered = applyCategoryGoalOrdering(guarded, proj);
+  const ordered = applyCategoryGoalOrdering(guarded, weights && focusProjection.categoryGoals ? { ...proj, categoryGoals: focusProjection.categoryGoals } : proj);
   const cycled = applyWeeklyMicrocycle(ordered, microcycle);
   const recovered = applyRecoveryWindows(
     cycled,

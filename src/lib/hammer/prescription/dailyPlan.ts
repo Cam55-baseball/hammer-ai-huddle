@@ -2445,7 +2445,7 @@ export function buildHammerDailyPlan(
       );
   const lateralized = splitLateralityBlocks(rawBlocks, ctx, identityOverride);
   const guarded = applyMinorParentSupremacy(lateralized, proj);
-  const ordered = applyCategoryGoalOrdering(guarded, proj);
+  const ordered = applyCategoryGoalOrdering(guarded, weights && focusProjection.categoryGoals ? { ...proj, categoryGoals: focusProjection.categoryGoals } : proj);
 
   // Weekly microcycle turns not-scheduled-today modalities into off-day cards
   // and trims activation/secondary volume. Runs BEFORE schedule modulation so
