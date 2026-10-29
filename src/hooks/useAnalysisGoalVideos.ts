@@ -34,5 +34,6 @@ export function useAnalysisGoalVideos(module: string | null | undefined, sport: 
   const suggestions = useMemo(() => !goals.userId || error || isPending ? []
     : resolveGoalVideos(goals.matches, library.data ?? [], module ?? '', sport ?? '', positions),
     [goals.userId, error, isPending, goals.matches, library.data, module, sport, positions.join(',')]);
-  return { suggestions, error, isPending };
+  return { suggestions, error, isPending, goals: error || isPending ? [] : goals.goals,
+    developed: !profile.loading && !profile.error && ['advanced', 'professional'].includes(profile.profile?.experience_level?.toLowerCase() ?? '') };
 }

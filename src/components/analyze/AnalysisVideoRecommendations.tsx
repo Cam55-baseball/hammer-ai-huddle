@@ -136,7 +136,8 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
         <Sparkles className="h-4 w-4 text-primary" />
         <h3 className="font-semibold text-sm">Watch this next</h3>
       </div>
-      <InformationalVideos placement="after_analysis" sport={tagSport} domain={skillDomain ?? undefined} faultKeys={analysisInfoKeys(analysis, skillDomain ?? '', tagSport)} />
+      <InformationalVideos placement="after_analysis" sport={tagSport} domain={skillDomain ?? undefined} faultKeys={analysisInfoKeys(analysis, skillDomain ?? '', tagSport)} goals={goalVideos.goals} />
+      {goalVideos.developed && <InformationalVideos placement="growth" sport={tagSport} domain={skillDomain ?? undefined} developed goals={goalVideos.goals} />}
 
       {persistenceError && (
         <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
