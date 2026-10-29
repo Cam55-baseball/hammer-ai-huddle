@@ -136,6 +136,7 @@ import {
 import { METHODS_VERSION } from "../_shared/wic/methods/catalog.ts";
 // Phase 9 — Explosive Performance Engine (Speed + Bat Speed) certifiers.
 import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
+import { preservesSpeedIntent } from "../_shared/wic/speed/governorComposition.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
@@ -3657,6 +3658,11 @@ const handler = async (req: Request): Promise<Response> => {
             pitchSmartRestDay: false,
           },
           alternatives,
+          canSubstitute: (from, alternative) => {
+            const row = finalRxs.find(r => r.movement_slug === from.slug);
+            return preservesSpeedIntent(row?.slot, catalogMap[from.slug]?.speed_category,
+              catalogMap[alternative.slug]?.speed_category);
+          },
         });
 
         if (gov.trims.length > 0) {
@@ -3892,14 +3898,6 @@ const handler = async (req: Request): Promise<Response> => {
       fallbackCoveredCategories: fallbackCoveredSpeedCategories,
 
     });
-    if (!speedCertification.duplicateCheckOk) {
-      console.debug("[wk-generate-daily] speed composition", JSON.stringify(finalRxs.filter(r => r.slot === "speed").map(r => ({
-        slug: r.movement_slug, from: r.substituted_from_slug,
-        category: lib.find(m => m.slug === r.movement_slug)?.speed_category,
-        selectedCategory: (r.why_payload as any)?.speed_required_category,
-        governor: (r.why_payload as any)?.load_spike_protection,
-      }))));
-    }
     const batSpeedCertification = certifyBatSpeed({
       prescriptions: finalRxs as any,
       catalog: lib as any,
