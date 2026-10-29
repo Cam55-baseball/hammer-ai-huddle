@@ -11,7 +11,7 @@ type Row = Record<string, any>;
 /** Uses the existing physical-work judge; no coach override or new dose authority. */
 export function analysisDrillSafety(drill: Row, block: Row, facts: Row, date: string) {
   const age = ageFromDob(facts.profile?.dob, date);
-  if (age == null || !facts.context?.hammers_today_started_at) throw new Error('Confirm your player details and Start your plan first.');
+  if (age == null || !facts.profile?.hammers_today_started_at) throw new Error('Confirm your player details and Start your plan first.');
   if (facts.context.sport_primary !== drill.sport || !drill.sports.includes(drill.sport)) throw new Error('This drill is for a different sport.');
   const owned = new Set<string>((facts.gear ?? []).slice().reverse().find((r: Row) => !r.valid_until || Date.parse(r.valid_until) > Date.now())?.equipment ?? []);
   for (const answer of facts.memory ?? []) {
@@ -46,5 +46,6 @@ export function analysisDrillSafety(drill: Row, block: Row, facts: Row, date: st
   if (verdict.verdict !== 'allow') throw new Error(verdict.reasons.join(' '));
   const warnings = typeof readiness === 'number' ? [] : [missingCoachFactWarning(date, 'check_in')];
   if (!declaredIntensity) warnings.push({code:'missing_facts',date,rule:'This drill’s intensity and workload values are not recorded. Those values could not be checked. Proceed with the same planned amount?'});
+  if (drill.progression_level == null) warnings.push({code:'missing_facts',date,rule:'This drill’s age-progression level is not recorded, so the catalog’s usual age check could not be completed. Proceed?'});
   return { warnings, keys: warningKeys(warnings), acknowledged: (keys: unknown) => warningsAcknowledged(warnings, keys) };
 }
