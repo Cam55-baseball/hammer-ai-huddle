@@ -13,3 +13,10 @@
 - Recovery Flush fix (3 tests pass) made live with the approved `wk-generate-daily` redeploy (source sha256 2d4e5718…f1ec).
 - No units built: the persona runner from run 1 was lost when the workspace reset; it must be rebuilt before unit 1 is redone (Oct 31, Nov 3–5 for certhsp).
 - **Certified saved dates: 0 / 224.**
+
+## Run 3 — Oct 29 2026, 21:04–21:20 UTC
+- Runner rebuilt (/tmp/cert/unit.py: one date per call, waits for each reply, 60 s + load check between units).
+- **Failure fixed:** a "go easier" day whose hard sprint became an easy flush (and the pitcher drill wasn't available) was still checked as Off-Day Conditioning, so Nov 5 failed. Such flush-only days are now checked as a Recovery Flush (no hard work allowed). 5 tests pass; approved `wk-generate-daily` redeploy live (sha256 e5adb908…f07d).
+- Unit 1 (certhsp Oct 30–Nov 5): 7/7 saved and validated, readback confirmed. Unit 2 (certhsp Nov 6–12): 7/7 saved and validated.
+- Load: memory 64–67%, connections 24–25/60, no new DiskIO alert after 17:15 UTC.
+- **Certified saved dates: 14 / 224.** Next: certhsp Nov 13–19.

@@ -13,4 +13,10 @@ describe("recovery-only conditioning certification", () => {
   it("never relabels a normal training day", () => {
     expect(certifiedConditioningTemplate("cond.off_day", "muscle_capacity", [{ slot: "conditioning", movement_slug: "rc_easy_flush" }], cat)).toBe("cond.off_day");
   });
+  it("certifies the low-readiness weekly-minimum easy run as a recovery flush", () => {
+    expect(certifiedConditioningTemplate("cond.off_day", "muscle_capacity", [{ slot: "conditioning", movement_slug: "rc_easy_flush" }], cat, true)).toBe("cond.recovery_flush");
+  });
+  it("keeps the chosen session when the easy run sits beside real work", () => {
+    expect(certifiedConditioningTemplate("cond.off_day", "muscle_capacity", [{ slot: "conditioning", movement_slug: "rc_easy_flush" }, { slot: "conditioning", movement_slug: "bases_1st_3rd" }], cat, true)).toBe("cond.off_day");
+  });
 });
