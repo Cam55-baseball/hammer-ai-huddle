@@ -2111,6 +2111,56 @@ export type Database = {
         }
         Relationships: []
       }
+      analysis_drill_enrollments: {
+        Row: {
+          category: string
+          created_at: string
+          drill_id: string
+          fault_key: string | null
+          goal_label: string | null
+          id: string
+          issue_key: string
+          observed_at: string
+          sport: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          drill_id: string
+          fault_key?: string | null
+          goal_label?: string | null
+          id?: string
+          issue_key: string
+          observed_at: string
+          sport: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          drill_id?: string
+          fault_key?: string | null
+          goal_label?: string | null
+          id?: string
+          issue_key?: string
+          observed_at?: string
+          sport?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_drill_enrollments_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analysis_fault_findings: {
         Row: {
           correction_key: string | null
@@ -23632,6 +23682,10 @@ export type Database = {
         }[]
       }
       all_checked: { Args: { cb: Json }; Returns: boolean }
+      analysis_drill_safety_revision: {
+        Args: { p_date: string; p_user: string }
+        Returns: Json
+      }
       anon_age_band: { Args: { _age: number }; Returns: string }
       anon_pid: { Args: { _user: string }; Returns: string }
       anon_training_eligible: { Args: { _user: string }; Returns: boolean }
@@ -24684,6 +24738,23 @@ export type Database = {
           p_replace_slots: string[]
           p_rows: Json
           p_user: string
+        }
+        Returns: Json
+      }
+      wk_analysis_drill_atomic: {
+        Args: {
+          p_date: string
+          p_enrollment: Json
+          p_expected: Json
+          p_expected_updated: string
+          p_id: string
+          p_index: number
+          p_modality: string
+          p_replacement: Json
+          p_safety: Json
+          p_sport: string
+          p_user: string
+          p_warnings: Json
         }
         Returns: Json
       }

@@ -1051,6 +1051,20 @@
       "when": 1793243089993,
       "tag": "0149_coach_rx_save_for_later_status",
       "breakpoints": true
+    },
+    {
+      "idx": 150,
+      "version": "7",
+      "when": 1793249689890,
+      "tag": "0150_analysis_drill_today_rotation",
+      "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1793250596136,
+      "tag": "0151_analysis_drill_safety_start_phase",
+      "breakpoints": true
     }
   ]
 }

@@ -896,7 +896,7 @@ function HammerDailyPlanBody({
   }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation, drillCirculation.ready, modules, sportKey, gpForPlan, principlePicks.data]);
 
   const savedPayload = savedDay.data?.find(row => row.sport === sportKey)?.payload as unknown as { blocks?: Array<{ modality: string; side?:'R'|'L'|null; drills: DrillStep[]; because?:string[]; replacedByCoachRx?: string; coachRx?: string }> } | undefined;
-  const reconciledPlan = savedPayload?.blocks?.some(block => block.replacedByCoachRx || block.drills.some(drill=>!!drill.bunt) || (swapV2.enabled && block.drills.some(drill => "swapReason" in drill)))
+  const reconciledPlan = savedPayload?.blocks?.some(block => block.replacedByCoachRx || block.drills.some(drill=>!!drill.bunt || !!drill.analysisEnrollment) || (swapV2.enabled && block.drills.some(drill => "swapReason" in drill)))
     ? { ...computedPlan, blocks: computedPlan.blocks.map(block => {
       const saved = savedPayload.blocks?.find(item => item.modality === block.modality && (item.side??null)===(block.side??null) && !item.coachRx);
       if (saved?.replacedByCoachRx) return { ...block, drills: [], steps: [], status: "suppressed" as const, why: "Replaced by coach workout — not missed", roadmapReason: "Replaced by coach workout — not missed" };

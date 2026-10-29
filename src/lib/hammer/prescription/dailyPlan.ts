@@ -139,6 +139,7 @@ export interface DrillStep {
   readonly guide?: import("./movementGuide").MovementGuide;
   /** Keeps owner routing and downstream analysis overlays auditable. */
   readonly prescriptionOrigin?: "owner" | "analysis";
+  readonly analysisEnrollment?: { videoId: string; issueKey: string; drillId: string };
   readonly analysisInfluence?: import("@/lib/prescription/applyFaultPlanInfluence").AnalysisInfluenceTrace;
 }
 
