@@ -19,7 +19,8 @@ describe('D/H real shared builder with explicit TEST game weeks',()=>{
     const signal:ScheduleSignal={...NORMAL_SIGNAL,postureToday:game?'game':'normal',isGameToday:game,todayKinds:game?['game']:[],eventLabel:game?'TEST scheduled game':null,rationale:game?'TEST scheduled game — save your work for the game.':''};
     const age=level==='youth'?11:level==='high_school'?16:level==='college'?20:26;
     const envelope=Object.fromEntries(Object.entries({sport_primary:sport,position_primary:program==='5tool'?'SS':'P',bats_hand:'R',age_years:age,weekly_availability_days:6,season_phase:'in',lifecycle_band:age<13?'u12':age<18?'u18':'adult',lifting_age_years:age<13?0:2,injury_history:[],equipment_effective:null}).map(([key,value])=>[key,{value,source:'TEST game input',owner:'athlete',missing:false,confidence:'high',last_updated:null}]));
-    const plan=buildHammerDailyPlan(contextFromEnvelope(envelope),signal,null,null,undefined,date,{subscriptionModules:[`${sport}_${program}`],resolvedSeasonPhase:'in',armHistory:{rows:[]}});
+    const modules=program==='pitcher'?[`${sport}_pitching`]:program==='5tool'?[`${sport}_hitting`,`${sport}_throwing`]:[`${sport}_hitting`,`${sport}_throwing`,`${sport}_pitching`];
+    const plan=buildHammerDailyPlan(contextFromEnvelope(envelope),signal,null,null,undefined,date,{subscriptionModules:modules,resolvedSeasonPhase:'in',armHistory:{rows:[]}});
     if(dow===0)expect(plan.blocks.filter(b=>b.status==='ready'&&['hitting','pitching','defense','baserunning','throwing'].includes(b.modality))).toEqual([]);
     if(game){
      const defense=plan.blocks.find(b=>b.modality==='defense');
@@ -37,4 +38,9 @@ describe('D/H real shared builder with explicit TEST game weeks',()=>{
    writeFileSync('/tmp/scheduling-game-shared.json',JSON.stringify(report,null,2));
   });
  }
+ it('a scheduled Sunday game cannot reopen whole-day training',()=>{
+  const envelope=Object.fromEntries(Object.entries({sport_primary:'baseball',position_primary:'SS',age_years:16,weekly_availability_days:6,season_phase:'in',lifecycle_band:'u18',lifting_age_years:2,injury_history:[],equipment_effective:null}).map(([key,value])=>[key,{value,source:'TEST Sunday game',owner:'athlete',missing:false,confidence:'high',last_updated:null}]));
+  const plan=buildHammerDailyPlan(contextFromEnvelope(envelope),{...NORMAL_SIGNAL,postureToday:'game',isGameToday:true,todayKinds:['game']},null,null,undefined,new Date(2026,5,7),{subscriptionModules:['baseball_hitting','baseball_throwing'],resolvedSeasonPhase:'in'});
+  expect(plan.blocks.filter(b=>b.status==='ready'&&['hitting','throwing','pitching','defense','baserunning','strength','speed'].includes(b.modality))).toEqual([]);
+ });
 });
