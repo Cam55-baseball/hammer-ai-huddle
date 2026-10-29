@@ -6,6 +6,7 @@ import {
 } from './generated/hammerBlockBuilder.mjs';
 import { isoShift } from './wic/schedule/timeline.ts';
 import { ageFromDob } from './age/ageFromDob.ts';
+import { planningGear } from './planSwap/planningGear.ts';
 
 /** Self JWT reads only; service jobs do not acquire an athlete's identity/health authority. */
 export async function composeSportDay(db: any, input: {
@@ -13,6 +14,7 @@ export async function composeSportDay(db: any, input: {
   rest: boolean; cns: number; equipment: string[]; injuries: string[]; birthday: string|null;
   outingFacts: unknown; posture: string; gameTomorrow: boolean; warmupStages: Record<string,unknown>;
   readiness: unknown; phaseStartedAt: string|null;
+  alwaysMissingGear?: string[];
 }) {
   const { userId: uid, date, sport } = input;
   const day = new Date(`${date}T12:00:00Z`);
@@ -22,7 +24,7 @@ export async function composeSportDay(db: any, input: {
     if(!Array.isArray(r.data)||r.data.length>=limit) throw new Error('Complete dated planning evidence unavailable');
     return r.data;
   };
-  const [env, sub, snapshot, sessions, logs, games, bunts, tasks, signals, findings, clips, recurring, adjustments, principles, side] = await Promise.all([
+  const [env, sub, snapshot, sessions, logs, games, bunts, tasks, signals, findings, clips, recurring, adjustments, principles, side, arm] = await Promise.all([
     db.rpc('get_athlete_context_envelope',{p_user:uid}),
     db.from('subscriptions').select('status,subscribed_modules').eq('user_id',uid).maybeSingle(),
     db.from('athlete_plan_snapshots').select('payload,updated_at').eq('user_id',uid).eq('sport',sport).eq('plan_date',date).maybeSingle(),
@@ -38,6 +40,7 @@ export async function composeSportDay(db: any, input: {
     db.from('athlete_plan_adjustments').select('*').eq('user_id',uid).or(`plan_date.eq.${date},scope.eq.always`).order('created_at',{ascending:false}).limit(1000),
     db.rpc('active_principle_picks'),
     db.from('athlete_side_preferences').select('*').eq('user_id',uid).maybeSingle(),
+    db.from('arm_ledger_entries').select('entry_date,source,throw_type,count,status').eq('user_id',uid).gte('entry_date',isoShift(date,-730)).lte('entry_date',date).limit(5000),
   ]);
   for(const r of [env,sub,snapshot,side])if(r.error)throw r.error;
   if(!env.data)throw new Error('Dated athlete context unavailable');
@@ -58,7 +61,8 @@ export async function composeSportDay(db: any, input: {
   const entry=(value:unknown,source:string)=>({value,source,owner:'canonical',confidence:'derived',missing:value==null,last_updated:null});
   envelope.equipment_effective=entry(input.equipment,'dated equipment resolver');
   envelope.injury_history=entry([envelope.injury_history?.value,...input.injuries].filter(Boolean),'canonical active injury/context');
-  const extra=['date_of_birth','readiness'].map(key=>({key,label:key,domain:'identity',value:key==='readiness'?input.readiness:input.birthday,source:key==='readiness'?'canonical rolling/check-in readiness':'profiles.date_of_birth',confidence:'high',missing:(key==='readiness'?input.readiness:input.birthday)==null,lastUpdated:null,lineage:{owner:'canonical',source:key,rawConfidence:'derived'}}));
+  const age=ageFromDob(input.birthday,date);
+  const extra=['date_of_birth','readiness','age_years'].map(key=>({key,label:key,domain:'identity',value:key==='readiness'?input.readiness:key==='age_years'?age:input.birthday,source:key==='readiness'?'canonical rolling/check-in readiness':'profiles.date_of_birth',confidence:'high',missing:(key==='readiness'?input.readiness:key==='age_years'?age:input.birthday)==null,lastUpdated:null,lineage:{owner:'canonical',source:key,rawConfidence:'derived'}}));
   const context=contextFromEnvelope(envelope,extra);
   const modules=sub.data?.status==='active'?(sub.data.subscribed_modules??[]):[];
   const access=priorityAccess(modules,sport);
@@ -78,10 +82,10 @@ export async function composeSportDay(db: any, input: {
   setOwnerPlanDrills(circulation.rows);
   setWarmupStageOverrides(input.warmupStages);
   const evidence=projectBuntingEvidence(sessionRows,abRows,pitchRows.filter((p:any)=>p.perspective==='hitter'&&['bunt_foul','bunt_in_play'].includes(p.result)),complete(tasks),sport);
-  const age=ageFromDob(input.birthday,date);
   const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
+    alwaysMissingGear:input.alwaysMissingGear??[],armHistory:{rows:complete(arm,5000)},
     bunting:access.hasHitting?{evidence,catalog:complete(bunts),age,userId:uid,phase:input.phase}:undefined});
-  const plan=finalizeDatedPlan(raw,{sport,now:day,cnsHigh:input.cns>=7,adjustments:adjRows,clips:clipRows,games:gp,principles:complete(principles),rankedFaults:accessiblePlanFaults(faults.rankedFaults,modules,sport,{clips:clipRows,now:day.getTime()}),signalScopes:faults.signalScopes,recurringIssues:accessibleRecurringIssues(issues,modules,sport),ownedEquipment:new Set(input.equipment),catalog:mergeCatalog(ELITE_DRILL_CATALOG,circulation.rows),circulation:{servedToUser:circulation.served,usage:circulation.usage}});
+  const plan=finalizeDatedPlan(raw,{sport,now:day,cnsHigh:input.cns>=7,adjustments:adjRows,clips:clipRows,games:gp,principles:complete(principles),rankedFaults:accessiblePlanFaults(faults.rankedFaults,modules,sport,{clips:clipRows,now:day.getTime()}),signalScopes:faults.signalScopes,recurringIssues:accessibleRecurringIssues(issues,modules,sport),ownedEquipment:new Set(planningGear(input.equipment,input.alwaysMissingGear??[])),catalog:mergeCatalog(ELITE_DRILL_CATALOG,circulation.rows),circulation:{servedToUser:circulation.served,usage:circulation.usage}});
   if(plan.sanity?.ok===false&&!input.rest)throw new Error('Sport day failed structural validation');
   return {payload:{composition_version:'sport_physical_v1',sport,plan_date:date,engine_version:ENGINE_CONTRACT.version,seasonPhase:plan.seasonPhase,physicalPhase:input.phase,restDay:input.rest,weeklyRoadmap:plan.weeklyRoadmap,weeklyTemplate:plan.weeklyTemplate,microcycle:plan.microcycle,roadmap:plan.roadmap,blocks:plan.blocks},expectedSnapshot:snapshot.data?.updated_at??null,engine:ENGINE_CONTRACT.version};
 }

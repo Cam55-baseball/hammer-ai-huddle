@@ -72,6 +72,7 @@ function withCleanClipNote(block: PrescribedBlock, discipline: Discipline, ranke
 /** Exact category only: an overhand throwing card is not a pitching prescription. */
 function disciplinesForBlock(block: PrescribedBlock): Discipline[] {
   if (block.modality === "hitting") return ["hitting"];
+  if (block.modality === "pitching") return ["pitching"];
   if (block.modality === "throwing") {
     const module = new URL(block.route, 'https://local.invalid').searchParams.get('module');
     return module === 'pitching' ? ['pitching'] : ['throwing'];

@@ -1225,7 +1225,7 @@ const handler = async (req: Request): Promise<Response> => {
       };
       return [...rows].sort((a, b) => rank(a) - rank(b));
     };
-    const libBase0 = equipmentUnknown ? gearFreeFirst(catalog ?? []) : (catalog ?? []);
+    const libBase0 = catalog ?? [];
     // Simple Swap "always missing" memory: drop movements needing gear the
     // player said is always missing, even when no same-family fallback exists.
     // Existing legal selection/fallback rules still decide the work and dose.
@@ -2246,10 +2246,8 @@ const handler = async (req: Request): Promise<Response> => {
       // Prescribe best first with the player's own saved gear: when any legal
       // candidate needs only gear they said they have, pick among those. If none
       // does, the earlier choice stands unchanged (never an empty role).
-      if (!equipmentUnknown) {
-        const owned = cands.filter((c) => ownsAllGear(c.item as any, declaredEquipment, UNIVERSAL_GEAR));
-        if (owned.length) cands = owned;
-      }
+      // Unknown ownership does not lower the best legal selection. Only the
+      // explicit Always missing filter above constrains generated equipment.
       // Non-lift slots keep strict rank-1 behaviour — this pass changes lifts only.
       if (!rotateKey) {
         return cands.reduce((a, b) => (b.score > a.score ? b : a), cands[0]).item;
@@ -5286,7 +5284,7 @@ const handler = async (req: Request): Promise<Response> => {
     if(composeRequested){
       const posture=isTravelDay?'travel':isGameDay?'game':isHeavyPracticeDay?'team_practice':gameProximity.hoursToNearestGame!=null&&gameProximity.hoursToNearestGame>0&&gameProximity.hoursToNearestGame<=24?'taper':'normal';
       const phaseStart=phaseRes.phase.startsWith('os_')?seasonSettings.post_season_end_date:phaseRes.phase==='in_season'?seasonSettings.in_season_start_date:phaseRes.phase==='preseason'?seasonSettings.preseason_start_date:seasonSettings.post_season_start_date;
-      composed=await composeSportDay(userClient,{userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null});
+      composed=await composeSportDay(userClient,{userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,alwaysMissingGear:[...alwaysMissing],injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null});
     }
 
     // -------- Stated change to a day already built: adjust unmarked cards only --------

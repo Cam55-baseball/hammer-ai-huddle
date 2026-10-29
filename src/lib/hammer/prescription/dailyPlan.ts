@@ -344,7 +344,7 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, armHistory, planDate, armRole, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
   const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
@@ -1008,16 +1008,24 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         trainingAgeYears: liftingAge ?? null,
         injuryRegions: [...injuryRegions],
         armSore,
-        isGameDay: !!sched.isGameDay || !!pitcherOutings?.startsToday,
+        isGameDay: !!sched.isGameDay || !!pitcherOutings?.startsToday || pitchingType === 'available',
         // If schedule doesn't declare throwing day explicitly, treat non-game days as throwing days
         // when the athlete's development priorities include throwing/velocity, otherwise alternate.
         isThrowingDay: pitcherOutings?.startsTomorrow || pitcherOutings?.relieverAvailableSoon
-          ? false : sched.isThrowingDay ?? !sched.isGameDay,
-        isRecoveryDay: !!sched.isRecoveryDay || recoverDay || !!pitcherOutings?.pitchedYesterday,
+          ? false : pitchingType ? ['bullpen','side','long_toss'].includes(pitchingType) : sched.isThrowingDay ?? !sched.isGameDay,
+        isRecoveryDay: !!sched.isRecoveryDay || recoverDay || !!pitcherOutings?.pitchedYesterday || pitchingType === 'flush' || pitchingType === 'rest',
         readinessScore,
       };
 
       const eass = buildEassPrescription(eassCtx);
+      if (pitchingType) {
+        // The existing full-go pitch budget rotates between bullpen/design and
+        // live counts; never create a second pitch dose for a presentation stage.
+        eass.drills = eass.drills.map(d => d.stage === 'full_go' && pitchingType === 'bullpen'
+          ? { ...d, name: planDate && new Date(`${planDate}T12:00:00Z`).getUTCDay() === 6 ? 'Live at-bats — existing pitch budget' : d.name,
+            cue: `${d.cue} Pitch design: use your saved pitch types, change the target and count strikes. Live at-bats use this same pitch count, never an added round.` } : d);
+      }
+      if (planDate && armRole) eass.drills = guardArmDrills(eass.drills, {date:planDate,sport:normalizeSport(sportRaw),role:armRole,age:ageYears,level:ctx.get<string>('competition_level')?.value??null,history:armHistory});
       const outingReason = pitcherOutings?.pitchedYesterday
         ? "You pitched yesterday. Today's arm care is easy recovery work."
         : pitcherOutings?.startsToday ? "You start today. Save your throwing work for the outing."
@@ -1048,7 +1056,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         supplemental: [] as ReturnType<typeof selectThrowingAdaptations>["supplemental"],
         rationale: null,
       };
-      for (const s of thrOut.supplemental) {
+      for (const s of armRole ? [] : thrOut.supplemental) {
         drills.push({
           name: s.name,
           dosage: s.dosage,
@@ -2129,6 +2137,7 @@ function labelForModality(m: ModalityKey): string {
     case "strength": return "Strength";
     case "hitting": return "Hitting";
     case "throwing": return "Throwing";
+    case "pitching": return "Pitching";
     case "defense": return "Defense";
     case "baserunning": return "Baserunning";
     case "game_iq": return "Game IQ";
@@ -2340,7 +2349,10 @@ export function buildHammerDailyPlan(
   const positionOverrideArg = roadmapInputs.positionOverride ?? null;
   const allowed = (m: ModalityKey) => !access || (m === 'hitting' ? access.hasHitting : m === 'baserunning' ? access.hasBaserunning : m === 'defense' ? access.hasDefense : m === 'throwing' ? access.hasThrowing || access.hasPitching : true);
   const firstPass = ALL_MODALITIES.filter(allowed).map((m) =>
-    builder({ modality: m, ctx, proj, speed, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings, skillExecutionAllowed: scheduleSignal.postureToday === 'normal' }),
+    builder({ modality: m, ctx, proj, speed, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
+      pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings) : undefined,
+      armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,armHistory:roadmapInputs.armHistory,
+      planDate:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,skillExecutionAllowed: scheduleSignal.postureToday === 'normal' }),
   );
   const goalAccess = roadmapInputs.subscriptionModules === undefined ? null
     : priorityAccess(roadmapInputs.subscriptionModules, normalizeSport(sportRaw) === 'softball' ? 'softball' : 'baseball');
