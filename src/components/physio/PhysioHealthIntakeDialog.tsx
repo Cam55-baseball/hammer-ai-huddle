@@ -229,7 +229,9 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
         const entry={region:injuryArea,recovery_status:injuryStatus,note:`Player reported ${injuryStatus} ${injuryArea} history`,reported_at:new Date().toISOString()};
         const history=[...previous,entry];
         const result=await supabase.from('athlete_context').upsert({user_id:user.id,injury_history:history},{onConflict:'user_id'}).select('injury_history').single();
-        if(result.error||JSON.stringify(result.data?.injury_history)!==JSON.stringify(history))throw new Error('Could not confirm injury status.');
+        // The database stores JSON with its own key order, so compare values, not raw text.
+        const stable=(v:unknown):string=>Array.isArray(v)?`[${v.map(stable).join(',')}]`:v&&typeof v==='object'?`{${Object.keys(v as Record<string,unknown>).sort().map(k=>`${JSON.stringify(k)}:${stable((v as Record<string,unknown>)[k])}`).join(',')}}`:JSON.stringify(v);
+        if(result.error||stable(result.data?.injury_history)!==stable(history))throw new Error('Could not confirm injury status.');
         setInjuryArea('');
       }
       if (enableAdult && isAdultEligible) {
