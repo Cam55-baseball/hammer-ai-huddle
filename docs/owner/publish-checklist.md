@@ -49,12 +49,10 @@ Exact remaining work:
 
 ### Live and preview verification — this run
 
-- Signed in as the owner on **hammersmodality.org**. Owner overview, General and Players Club settled with real account data, no captured page exceptions or failed backend requests, and no horizontal overflow. A real saved report was opened; no new clip or work was written.
-- Published phone General: Performance opened at 390×844, no page exceptions/overflow. Direct authenticated read-only phase-state, saved prescriptions and initial missing-input judge each returned **200**; seven prescriptions read, nine missing-input labels returned. This proves read contracts, NOT a full first week or rebuilt week.
-- Preview owner/Training Intelligence/General checked at 1280×1800; initial owner loading capture discarded in favor of settled recapture. Published frontend is older than preview; successful reads do not establish that every new preview feature is already published.
-- Live function telemetry confirms phase-state responds successfully; wk-generate-daily remains deployed with 200/409 outcomes. Retained rollout records cover plan-swap, create-test-athlete and migrations 0154/0155/0156. Exact all-source deployment parity is **not certified**; staged changes were not redeployed.
-- **Full suite:** 23 bounded batches, 673 unique files; final consolidated result **5,373 passed, 0 failed, 2 skipped**, no omissions/extras/duplicates. Initial 44 failures were obsolete subscription/unknown-equipment/empty-reason test expectations in five files; corrected fixtures and reruns passed. No production safety rule was changed. Write-dependent live test branches without credentials are not end-to-end passes.
-- Automatic preview build succeeded at **16:24:00 UTC**, in sync with project tip; compiler diagnostics and failed targets empty. No manual build/typecheck.
+- Published hammersmodality.org signed in as the owner at 390×844: dashboard settled with real account data, no page exceptions.
+- Full suite: 676 unique files, all passed (12 bounded batches; timed-out batches split and the two slowest files run alone with 25 and 7 tests passing).
+- Preview: no build errors recorded; no code changed this run.
+- No publish, migration, redeploy, cron, iOS or destructive change. One TEST-only helper call reseeded the HS shortstop persona idempotently (no deletes).
 
 ## Part B — owner's human checks (nonblocking only)
 
@@ -73,7 +71,7 @@ Use consenting, entitled accounts and genuine records. Never bypass age, health,
 
 ### Review the sample weeks by program and sport
 
-Open **docs/owner/scheduling-certification.md**. Review all **12 tables**: baseball and softball × Complete Pitcher, 5Tool, Golden 2Way × off-season and in-season with games.
+Open **docs/owner/scheduling-certification.md**. Saved server sample weeks do not exist yet (0/224). Until then, review all **12 local tables**: baseball and softball × Complete Pitcher, 5Tool, Golden 2Way × off-season and in-season with games.
 
 1. Read each Monday–Sunday date/card row; compare the two phases. These are **local shared-builder samples**, not completed server certification; all unverified columns stay unverified.
 2. Complete Pitcher: pitching owns its card; baseball throwing and softball windmill remain separate. No hitting, baserunning or bunting; retain safe PFP/defense, pitcher conditioning, lifting and Mind.
