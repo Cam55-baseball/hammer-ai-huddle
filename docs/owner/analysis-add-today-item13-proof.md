@@ -44,3 +44,8 @@
 5. Full safety certification/freshness across catalog and all legal/load facts needs further audit before declaring every drill covered.
 
 Evidence under /tmp/browser/item13: heart_saved.png, add_result.png, saved_proof.log. TEST clips (including failed/temporary attempts) retained; no destructive cleanup authorized or performed. No publish, cron or iOS changes. Other items untouched.
+## Oct 29 14:20 — positive next-day proof (plan-swap + 0154 live)
+- Binding certification test added (`analysisDrillBinding.test.ts`): every fault-prescribable hitting/pitching/throwing drill binds each declared issue in every sport it serves; 11 drills with no declared issue can bind only to a saved goal, never an invented issue. 4/4 pass; prescription folder 271/271.
+- TEST player a283a732…: Oct 30 rotation (same call the Today notice makes) returned 3 fresh warnings (no check-in yet, unrecorded intensity, unrecorded age level) → player's Okay (`analysis_rotation_ack`) → saved. Oct 30 hitting card holds "Closed-Shoulder Tee (Glove-Side Hold)" as fix_it with Because: "Because you chose … to work on front shoulder opens early, it stays in your fix-it slot while we check your progress."
+- 390×844 with the device clock at Oct 30: card shows the drill (3×30 swings) and the fix-it Because, also after reload (`/tmp/browser/item13/oct30-2.png`). The warning/Okay step was sent through the app's own request, not tapped on screen.
+- Known limit: a day saved by the seven-day rebuild gets its fix-it drill when the player opens that day (notice → Okay), by design — yesterday's Okay never certifies tomorrow.
