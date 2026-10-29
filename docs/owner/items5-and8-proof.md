@@ -17,7 +17,7 @@
 - **Not a full populated testing/sponsorship proof:** testing roster excludes system accounts by the existing canonical TEST filter, deliberately unchanged. Sponsor choices did not populate for this TEST member even after waiting; accepted membership was confirmed, but no sponsorship or testing result was fabricated. Scheduling/results/payment end-to-end remain unverified, not claimed complete.
 
 ## Checks and boundaries
-- 11 legal/signup/org test files, 78 tests passed; authenticated live organization activation/edit/ownership regression also passed. Final expanded affected suite recorded in run output.
+- Final affected suite: 15 files / 96 tests passed, including authenticated live organization activation/edit/ownership regression. `/tmp/items58-complete-tests.log`.
 - Preview automatic build clean at 02:45:54 UTC (latest checked before final close).
 - Only items 5 and 8 changed. No publish, cron or iOS changes. Migrations are live; frontend remains preview-only. Existing consent, assignment, subscription, scout approval and TEST exclusion rules retained.
 - TEST org/admin retained marked TEST/system for reproducible proof; no unscoped cleanup or destructive changes.
