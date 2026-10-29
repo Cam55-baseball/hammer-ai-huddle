@@ -1,5 +1,11 @@
 # Consolidated publish checklist
 
+## Oct29 current run — items12/13/18: NOT CLOSED
+- 12: actual owner all-positive clip390×844 now shows exact-tagged goal videos; informational goal/growth support built. Active owner drill attachments/info rows absent; combined and affected-player proof open.
+- 13: catalog-drill hearts + existing Saved drills shelf built/tested; old false local completion removed. Actual heart save/reload unproven; Add to Today/fix-it not implemented (new protected server save requires named authorization).
+- 18: assessment canonical planning/nutrition/health review built; adult TEST phone review/health opening proven. Missing-input client list extended, canonical fuel draft-only bug fixed. Initial full save/readback, remaining audited inputs and server gate extension still open.
+- Exact audit/evidence: `docs/owner/items12-13-18-proof.md`. No publish/migration/deployment/cron/iOS changes; earlier YES below is historical, not the current verdict.
+
 **Batch closeout · October 28, 2026 · after the owner's "both, combined" answer**
 
 **Ready to publish: YES.** (Oct 28 18:50 UTC: full suite 635 files / 5,113 tests PASS in three bounded batches; preview build OK.) Owner chose "Add fields": conditioning-tagged owner drills now carry rounds, work time, rest time and distance (or bases per rep + sport base distance), validated against the existing run-rest rules, and serve the 2-a-week running floor (readiness halves rounds, rest never shortened, never Sunday/game day/HOLD). `wk-generate-daily` redeployed under named authorization; migration 0146 applied. Human-only checks below remain the owner's and do not block.
