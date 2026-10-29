@@ -1287,9 +1287,16 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
                     defaultValue: 'Choose one clip of your {{module}} from your phone or camera roll. Hammer analyzes it frame by frame for mechanics feedback and drills.',
                   })}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {t('videoAnalysis.maxFileSize')}
-                </p>
+                <div className="w-full max-w-sm rounded-md border bg-muted/40 p-3 text-left" data-testid="upload-requirements">
+                  <p className="text-xs font-semibold">Before you upload, check that your clip has:</p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
+                    <li>{t('videoAnalysis.maxFileSize')}</li>
+                    <li>Just one rep — one swing, pitch or throw. A few seconds is plenty.</li>
+                    <li>Your whole body in the picture, head to feet, the whole time.</li>
+                    <li>A side view or a front view, with the phone held still.</li>
+                    <li>Good light, so you aren't a dark shadow.</li>
+                  </ul>
+                </div>
                 <label htmlFor="video-upload">
                   <Button asChild size="sm">
                     <span>
