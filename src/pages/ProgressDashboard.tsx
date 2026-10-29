@@ -50,6 +50,9 @@ import { WorkoutActuals } from '@/components/hammer/WorkoutActuals';
 import {MasteryIdentityPanel} from '@/components/intelligence/MasteryIdentityPanel';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { InformationalVideos } from '@/components/video-suggestions/InformationalVideos';
+import { MeaningSection } from '@/components/progress/SectionMeaning';
+import { PillarGoalTrends } from '@/components/progress/PillarGoalTrends';
+import { Button } from '@/components/ui/button';
 
 function PracticeIntelligenceCard() {
   const { data: mpi } = useMPIScores();
@@ -101,7 +104,7 @@ function ReadinessTodayCard() {
   const word = r.state === 'green' ? 'Good to go' : r.state === 'yellow' ? 'Take it a bit easier' : r.state === 'red' ? 'Low today' : '';
   return (
     <HammersCard
-      title="Ready today"
+      title="Ready Today"
       weSee={has ? `Readiness score: ${Math.round(r.score as number)} of 100 — ${word}` : 'Readiness score: Not enough data'}
       because={has ? `From ${r.sources.length} recent check-in source${r.sources.length === 1 ? '' : 's'}: ${r.sources.map((s) => s.name).join(', ')}.` : undefined}
       howSure={has ? howSureFor({ samples: r.sources.length, repeatsTogether: true }) : 'need_more_data'}
@@ -167,7 +170,6 @@ Confidence: ${snapshot.development_confidence}%
           <p className="text-muted-foreground">Where you are, what to do next, and how you'll know it worked.</p>
         </div>
         {header}
-        <MasteryIdentityPanel sport={selectedSport==='softball'?'softball':'baseball'} />
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as GeneralTab)} className="space-y-6">
           <TabsList className={`grid w-full ${gameIqOk ? "grid-cols-4" : "grid-cols-3"} h-auto`}>
@@ -178,14 +180,16 @@ Confidence: ${snapshot.development_confidence}%
           </TabsList>
 
           <TabsContent value="today" className="space-y-6">
+            <MeaningSection title="Today’s Overview" explanation="Your recent check-ins and saved work help explain today. Missing answers are not a good-readiness signal. Follow the existing plan; these summaries do not add work.">
             <LearningLoopList />
             <ReadinessTodayCard />
             {today}
+            </MeaningSection>
             <section id="body" className="scroll-mt-20">
               <Collapsible open={bodyOpen} onOpenChange={setBodyOpen}>
                 <Card className="border-primary/20">
                   <CollapsibleTrigger asChild>
-                    <button
+                    <Button variant="ghost"
                       type="button"
                       className="w-full flex items-center justify-between gap-3 px-4 sm:px-6 py-4 text-left hover:bg-muted/40 transition-colors rounded-t-lg"
                       aria-expanded={bodyOpen}
@@ -195,12 +199,12 @@ Confidence: ${snapshot.development_confidence}%
                           <HeartPulse className="h-5 w-5 text-primary" />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="font-bold text-base sm:text-lg">How your body is doing today</h3>
-                          <p className="text-xs text-muted-foreground">Readiness, workload and recovery.</p>
+                          <h3 className="font-bold text-base sm:text-lg">How Your Body Is Doing Today</h3>
+                          <p className="text-sm text-muted-foreground">Readiness, workload and recovery.</p>
                         </div>
                       </div>
                       <ChevronDown className={`h-5 w-5 text-muted-foreground shrink-0 transition-transform ${bodyOpen ? 'rotate-180' : ''}`} />
-                    </button>
+                    </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="px-2 sm:px-4 pb-4 pt-2 border-t border-border/40">
@@ -210,6 +214,7 @@ Confidence: ${snapshot.development_confidence}%
                 </Card>
               </Collapsible>
             </section>
+            <MeaningSection title="Weekly Guidance" explanation="These are the existing weekly picks and summaries. They keep their original evidence and access rules. They do not ask you to add extra training." collapsed>
             <NNSuggestionPanel />
             <WeeklyDigestPreview />
             <Advanced hasAdvancedAccess={hasAdvancedAccess}>
@@ -218,9 +223,15 @@ Confidence: ${snapshot.development_confidence}%
               <ReadinessBreakdownCard />
               <AskHammerPanel dashboardContext={dashboardContext} />
             </Advanced>
+            </MeaningSection>
           </TabsContent>
 
           <TabsContent value="performance" className="space-y-6">
+            <PillarGoalTrends sport={selectedSport} />
+            <MeaningSection title="Your Academy of Mastery" explanation="Each pillar is judged from its own evidence and the owner’s existing standards. Completed windows and source dates matter. Missing data is not a failing grade." collapsed>
+              <MasteryIdentityPanel sport={selectedSport} />
+            </MeaningSection>
+            <MeaningSection title="Recorded Performance" explanation="Your analyses, logged workout results and tests are different kinds of evidence. None of these summaries turns a written video observation into a measurement." collapsed>
             <PerformanceAreaRows />
             <WorkoutActuals />
             {performance}
@@ -249,9 +260,11 @@ Confidence: ${snapshot.development_confidence}%
               <PlayerSnapshotCard />
               <ProProbabilityCard />
             </Advanced>
+            </MeaningSection>
           </TabsContent>
 
           {gameIqOk && <TabsContent value="game-iq" className="space-y-6">
+            <MeaningSection title="Game Reports" explanation="Your saved game records remain separate from training results. Missing game details stay unknown; reports do not prove a training change caused a result.">
             {gameIqInternal && <InternalLabel />}
             {gameIq}
             <section id="game-iq" className="scroll-mt-20">
@@ -263,9 +276,11 @@ Confidence: ${snapshot.development_confidence}%
             <Advanced hasAdvancedAccess={hasAdvancedAccess} requireTrainingHistory={false}>
               <GameIqReports />
             </Advanced>
+            </MeaningSection>
           </TabsContent>}
 
           <TabsContent value="growth" className="space-y-6">
+            <MeaningSection title="Growth & Recovery" explanation="Look at changes across your own records rather than one good or bad day. Health flags are observations, not diagnoses. Forecasts keep their uncertainty and do not promise results.">
             <HealthFlagsCard />
             {growth}
             <section id="growth" className="scroll-mt-20 space-y-6">
@@ -276,11 +291,14 @@ Confidence: ${snapshot.development_confidence}%
               <ActivityAnalytics selectedSport={selectedSport} />
               <LoadDashboard />
             </section>
+            </MeaningSection>
+            <MeaningSection title="Supporting Insights" explanation="These deeper summaries use the existing access and training-history rules. A shared pattern is not proof of cause." collapsed>
             <Advanced hasAdvancedAccess={hasAdvancedAccess}>
               <WeaknessClusterCard />
               <ProofCard />
               <RiskAlertsCard />
             </Advanced>
+            </MeaningSection>
           </TabsContent>
         </Tabs>
       </div>

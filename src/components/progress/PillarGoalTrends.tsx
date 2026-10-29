@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useMasteryIdentity } from '@/hooks/useMasteryIdentity';
-import { useAthleteGoals } from '@/hooks/useAthleteGoals';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { categoryGoals } from '@/lib/prescription/analysisGoals';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MeaningTitle } from './SectionMeaning';
 import { EvidenceTrendChart } from './EvidenceTrendChart';
@@ -23,10 +26,20 @@ export function PillarGoalTrends({ sport }: { sport: 'baseball' | 'softball' }) 
 }
 
 function SavedGoalTrends({sport,series,visible}:{sport:'baseball'|'softball';series:ReturnType<typeof pillarTrends>;visible:(points:ReturnType<typeof pillarTrends>[number]['points'])=>ReturnType<typeof pillarTrends>[number]['points']}) {
-  const goals = useAthleteGoals();
-  return <section className="space-y-4"><h3><MeaningTitle title="Your Goals">Each saved goal is linked to its existing pillar evidence when there is a direct match. A skill-specific goal without a comparable recorded measure stays unscored.</MeaningTitle></h3><GoalRows goals={goals} sport={sport} series={series} visible={visible}/></section>;
-}
-
-function GoalRows({goals,sport,series,visible}: {goals:ReturnType<typeof useAthleteGoals>;sport:string;series:ReturnType<typeof pillarTrends>;visible:(points:ReturnType<typeof pillarTrends>[number]['points'])=>ReturnType<typeof pillarTrends>[number]['points']}) {
-  return <p className="text-base text-muted-foreground">Your top saved goal: {series.find(s=>s.id===goals.goals?.[0]?.category)?.title ?? 'See your ranked goals'} · {sport}.</p>;
+  const { user } = useAuth();
+  const goals = useQuery({ queryKey: ['general-saved-goals',user?.id,sport], enabled: !!user, queryFn: async () => {
+    if (!user) return [];
+    const {data,error} = await supabase.from('athlete_context').select('category_goals,position_primary').eq('user_id',user.id).maybeSingle();
+    if (error) throw error;
+    return ['hitting','pitching','throwing'].flatMap(module => categoryGoals(data?.category_goals,module,sport,data?.position_primary).map(title => ({title,module})));
+  }});
+  return <section className="space-y-4"><h3><MeaningTitle title="Your Goals">Saved goals show supporting pillar results, not a made-up goal score. A batting average cannot prove barrel control, and an arm grade cannot prove footwork. Keep these limits in mind.</MeaningTitle></h3>
+    {goals.isError && <p role="alert" className="text-destructive">Could not load saved goals.</p>}
+    {goals.data?.length === 0 && <p className="text-muted-foreground">No saved goals for this sport yet.</p>}
+    <div className="grid min-w-0 gap-6 lg:grid-cols-2">{goals.data?.map(g => {
+      const pillar = g.module === 'pitching' ? 'pitching' : g.module === 'throwing' ? 'arm' : /power/i.test(g.title) ? 'power' : 'contact';
+      const s = series.find(row=>row.id===pillar);
+      return <section className="min-w-0 border-b border-border pb-4" key={`${g.module}:${g.title}`}><h4><MeaningTitle title={g.title}>This is your saved {g.module} goal. The graph shows supporting {s?.title.toLowerCase()} evidence only. It does not directly measure this skill or claim the goal is reached.</MeaningTitle></h4>{s && <EvidenceTrendChart label={`${g.title} · Supporting ${s.title}`} unit={s.unit} points={visible(s.points)}/>}</section>;
+    })}</div>
+  </section>;
 }
