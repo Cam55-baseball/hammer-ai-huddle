@@ -104,6 +104,7 @@ export function useHammerAthleteContext(): HammerAthleteContext {
       // Spine variables (envelope) — shared with contextFromEnvelope() so tests
       // exercise the same derivation the app uses.
       ...spineVariables(env),
+      mkLive('age_years','Age','identity',(()=>{const dob=env?.date_of_birth?.value;if(typeof dob!=='string')return null;const birth=new Date(dob);const now=new Date();if(!Number.isFinite(birth.getTime())||birth>now)return null;return now.getFullYear()-birth.getFullYear()-(now.getMonth()<birth.getMonth()||now.getMonth()===birth.getMonth()&&now.getDate()<birth.getDate()?1:0);})(),'profiles.date_of_birth'),
 
       // Live signals (existing)
 

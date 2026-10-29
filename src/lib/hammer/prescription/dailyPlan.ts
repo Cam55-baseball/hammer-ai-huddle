@@ -10,7 +10,7 @@ import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
 import { priorityAccess } from '../priorityAccess';
 import { subscriptionSchedule } from './subscriptionSchedule';
 import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
-import { pitchingDay, guardArmDrills, type PlanningArmHistory } from './pitchingDay';
+import { pitchingDay, guardArmDrills, eassArmEvent, type PlanningArmHistory } from './pitchingDay';
 import { structureSkillSession } from './skillSessionStructure';
 import { applyPracticePlanContext } from './practicePlanContext';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
@@ -128,6 +128,7 @@ export interface DrillStep {
   readonly libraryVideoId?: string | null;
   readonly bunt?: {side:'R'|'L';type:import('../../../../supabase/functions/_shared/wic/buntingProgram').BuntType;attempts:number;sourceAttempts:number;sourceSuccesses:number};
   readonly name: string;
+  readonly armEvent?: import('../../../../supabase/functions/_shared/wic/phases/armLedger').ThrowEvent;
   readonly slug?: string;
   readonly setup?: string;
   readonly dosage: string;
@@ -453,6 +454,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         dosage: d.dosage,
         cue: d.cue,
         stopIf: d.stopIf,
+        ...(armRole && eassArmEvent(d) ? {armEvent:eassArmEvent(d)??undefined} : {}),
         equipmentNote: d.equipmentNote,
         guide: d.guide,
       })), ["hammers_today:warmup"], { sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []) });

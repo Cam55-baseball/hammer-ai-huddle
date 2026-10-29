@@ -1,5 +1,7 @@
 import { MindItemCard } from "./MindItemCard";
 import { RunningReadinessLine } from "./RunningReadinessLine";
+import { usePlanningArmHistory } from '@/hooks/usePlanningArmHistory';
+import { rememberedMissingGear } from '../../../supabase/functions/_shared/planSwap/simpleSwap';
 import { InformationalVideos } from '@/components/video-suggestions/InformationalVideos';
 import { stillRecurring } from '@/lib/wic/faultLedger/recurringIssues';
 /**
@@ -750,6 +752,13 @@ function HammerDailyPlanBody({
   const hasG2W = modules.includes(`${sportKey}_golden2way`);
 
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
+  const armHistory=usePlanningArmHistory(bodyUser?.id,bodyPlanDate,sportKey,modules.includes(`${sportKey}_pitcher`)||hasG2W);
+  const gearMemory=useQuery({queryKey:['planning-gear-memory',bodyUser?.id],enabled:!!bodyUser,queryFn:async()=>{
+    if(!bodyUser)throw new Error('Sign in to check saved equipment');
+    const {data,error}=await supabase.from('athlete_equipment_memory').select('confirmed_have,confirmed_lacks,created_at').eq('user_id',bodyUser.id).eq('scope','always').order('created_at',{ascending:true}).limit(200);
+    if(error)throw error;if(!data||data.length>=200)throw new Error('Complete equipment answers unavailable');
+    return [...rememberedMissingGear(data)];
+  }});
   const savedDay = useQuery({ queryKey: ["saved-block-day", bodyUser?.id, bodyPlanDate], enabled: !!bodyUser,
     queryFn: async () => {
       const { data, error } = await supabase.from("athlete_plan_snapshots").select("id,payload,sport").eq("user_id", bodyUser?.id ?? "").eq("plan_date", bodyPlanDate);
@@ -820,12 +829,14 @@ function HammerDailyPlanBody({
           pitcherOutings: pitcherSchedule.facts,
           practiceRecords: practiceLoadHistory.data,
           subscriptionModules: modules,
+          alwaysMissingGear:gearMemory.data??[],
+          armHistory:armHistory.data??{rows:[],unavailable:true},
           masteryFocus:masteryReady?masteryFocus:undefined,
           bunting: !hasSavedSportDay && buntHistory.data && !buntHistory.isError ? { ...buntHistory.data, age:buntAge, phase:resolvedPhase ?? '',userId:bodyUser?.id,traits:{...buntHistory.data.traits,powerGoal:hittingPowerGoal} } : undefined,
           fullRestDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []),
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady,armHistory.data,gearMemory.data],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a

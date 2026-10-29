@@ -7,6 +7,7 @@ import {
 import { isoShift } from './wic/schedule/timeline.ts';
 import { ageFromDob } from './age/ageFromDob.ts';
 import { planningGear } from './planSwap/planningGear.ts';
+import { readPlanningArmHistory } from './wic/pitching/readPlanningArmHistory.ts';
 
 /** Self JWT reads only; service jobs do not acquire an athlete's identity/health authority. */
 export async function composeSportDay(db: any, input: {
@@ -40,7 +41,7 @@ export async function composeSportDay(db: any, input: {
     db.from('athlete_plan_adjustments').select('*').eq('user_id',uid).or(`plan_date.eq.${date},scope.eq.always`).order('created_at',{ascending:false}).limit(1000),
     db.rpc('active_principle_picks'),
     db.from('athlete_side_preferences').select('*').eq('user_id',uid).maybeSingle(),
-    db.from('arm_ledger_entries').select('entry_date,source,throw_type,count,status').eq('user_id',uid).gte('entry_date',isoShift(date,-730)).lte('entry_date',date).limit(5000),
+    readPlanningArmHistory(db,uid,date,sport),
   ]);
   for(const r of [env,sub,snapshot,side])if(r.error)throw r.error;
   if(!env.data)throw new Error('Dated athlete context unavailable');
@@ -83,7 +84,7 @@ export async function composeSportDay(db: any, input: {
   setWarmupStageOverrides(input.warmupStages);
   const evidence=projectBuntingEvidence(sessionRows,abRows,pitchRows.filter((p:any)=>p.perspective==='hitter'&&['bunt_foul','bunt_in_play'].includes(p.result)),complete(tasks),sport);
   const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
-    alwaysMissingGear:input.alwaysMissingGear??[],armHistory:{rows:complete(arm,5000)},
+    alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,
     bunting:access.hasHitting?{evidence,catalog:complete(bunts),age,userId:uid,phase:input.phase}:undefined});
   const plan=finalizeDatedPlan(raw,{sport,now:day,cnsHigh:input.cns>=7,adjustments:adjRows,clips:clipRows,games:gp,principles:complete(principles),rankedFaults:accessiblePlanFaults(faults.rankedFaults,modules,sport,{clips:clipRows,now:day.getTime()}),signalScopes:faults.signalScopes,recurringIssues:accessibleRecurringIssues(issues,modules,sport),ownedEquipment:new Set(planningGear(input.equipment,input.alwaysMissingGear??[])),catalog:mergeCatalog(ELITE_DRILL_CATALOG,circulation.rows),circulation:{servedToUser:circulation.served,usage:circulation.usage}});
   if(plan.sanity?.ok===false&&!input.rest)throw new Error('Sport day failed structural validation');
