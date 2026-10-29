@@ -8466,9 +8466,23 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       durationMin: drills.length ? b.durationMin : null
     };
   }) : bunted;
-  const prehabbed = restFiltered.map((b) => {
+  const illnessFiltered = physio.illnessActive ? restFiltered.map((b) => {
+    if (["fueling", "game_iq"].includes(b.modality)) return b;
+    const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter((d3) => isSoftRecovery(d3.slug)) : [];
+    return {
+      ...b,
+      drills,
+      steps: drills.length ? drillsToSteps(drills) : ["Illness is still active. Recovery only until you mark yourself better."],
+      status: drills.length ? "ready" : "off-day",
+      offDayOverridable: false,
+      gamePlanTemplate: null,
+      durationMin: drills.length ? b.durationMin : null,
+      why: "Illness is still active. Recovery only until you mark yourself better."
+    };
+  }) : restFiltered;
+  const prehabbed = illnessFiltered.map((b) => {
     const notices = [...physio.cautions, ...physio.professionalWarning ? [physio.professionalWarning] : [], ...physio.illnessActive ? ["Illness is still active. Keep work light until you mark yourself better."] : []];
-    const available = b.modality === "warmup" && b.status === "ready" && !fullRestDay ? [...new Set(physio.healedAreas.filter((a) => !physio.activeAreas.includes(a)).map((a) => PREHAB_SLUGS[a]))].flatMap((slug) => {
+    const available = b.modality === "warmup" && b.status === "ready" && !fullRestDay && !physio.illnessActive ? [...new Set(physio.healedAreas.filter((a) => !physio.activeAreas.includes(a)).map((a) => PREHAB_SLUGS[a]))].flatMap((slug) => {
       if (b.drills.some((d3) => d3.slug === slug)) return [];
       const drill = WARMUP_LIBRARY.find((d3) => d3.slug === slug);
       return drill ? [{ slug: drill.slug, name: drill.name, dosage: drill.baseDose, setup: drill.setup, cue: drill.cue, stopIf: drill.stopIf ?? "Stop if this hurts.", stage: "prep" }] : [];
