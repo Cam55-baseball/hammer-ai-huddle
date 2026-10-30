@@ -53,7 +53,7 @@ export function rowKinds(r: FinalCheckRow, f: CatalogFacts | undefined): DayKind
   const out: DayKind[] = [];
   const slot = r.slot ?? r.sequence_role ?? "";
   const slug = r.movement_slug ?? "";
-  if (slot === "conditioning" && f?.conditioning_category !== "recovery_flush" && !slug.startsWith("rc_")) out.push("hard_run");
+  if (slot === "conditioning" && f?.conditioning_category !== "recovery_flush" && !slug.startsWith("rc_") && !(f?.movement_velocity === 'submax' && ['easy_base_jog_bb','easy_base_jog_sb'].includes(slug))) out.push("hard_run");
   if (slot === "speed" && f && f.exposure_channel === "sprint" && f.movement_velocity !== "submax"
     && HARD_SPEED.has(String(f.speed_category ?? ""))) out.push("hard_run");
   if (f && LOWER_JUMP_CHANNELS.has(String(f.exposure_channel ?? ""))

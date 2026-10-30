@@ -17,9 +17,13 @@ describe("bunting weekdays", () => {
     const p=buntingProgram({sport:'baseball',modules:['baseball_5tool'],bats:'R',legalWeekdays:legal,weeklyMinimum:3,restDay:false,gameDay:false});
     expect(p.scheduled).toEqual([2,3,4]);expect(p.dose('R','squeeze').reps).toBe(5);
   });
-  it('a minimum cannot exceed the available non-game slots or grant an unbought skill',()=>{
+  it('game stations fill the minimum without granting an unbought skill or Sunday',()=>{
     const facts={sport:'baseball' as const,modules:['baseball_5tool'],bats:'R' as const,legalWeekdays:buntingWeekdays(inSeason,[1,2,3,4,5],6),weeklyMinimum:6,restDay:false,gameDay:false};
-    expect(buntingProgram(facts).scheduled).toEqual([6]);expect(buntingProgram(facts).constrained).toBe(true);
+    expect(buntingProgram(facts).scheduled).toEqual([1,2,3,4,5,6]);expect(buntingProgram(facts).constrained).toBe(false);
     expect(buntingProgram({...facts,modules:['baseball_completepitcher']}).scheduled).toEqual([]);
+  });
+  it('six-game weeks retain two bunting stations, each exactly five attempts',()=>{
+    const p=buntingProgram({sport:'baseball',modules:['baseball_5tool'],bats:'R',legalWeekdays:buntingWeekdays(inSeason,[1,2,3,4,5,6],2),restDay:false,gameDay:true,pregameStation:true});
+    expect(p.scheduled).toEqual([1,2]);expect(p.canTrainToday).toBe(true);expect(p.dose('R','squeeze').reps).toBe(5);
   });
 });

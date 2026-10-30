@@ -1753,7 +1753,24 @@ export function buntingWeekdays(roadmap: ReadonlyArray<{dow:number;restDay:boole
   const full = open.filter(d => d.modalities.some(m => m.key === 'hitting' && m.intensity !== 'activation')).map(d => d.dow);
   if (full.length >= wanted) return full;
   const light = open.filter(d => !full.includes(d.dow) && d.modalities.some(m => m.key === 'hitting')).map(d => d.dow);
-  return [...full, ...light.slice(0, wanted - full.length)];
+  const chosen = [...full, ...light.slice(0, wanted - full.length)];
+  const pregame = roadmap.filter(d => !d.restDay && gameDows.includes(d.dow) && d.modalities.some(m => m.key === 'hitting')).map(d => d.dow);
+  return [...chosen, ...pregame.slice(0, Math.max(0, wanted - chosen.length))];
+}
+
+/** Game stations reduce existing safe work; they never restore injury/recovery-suppressed work. */
+function gameSkillStation(b: PrescribedBlock, original: PrescribedBlock | undefined): PrescribedBlock {
+  const source = b.status === 'ready' ? b : undefined;
+  if (!source?.drills.length) return b;
+  const skill = source.drills.find(d => d.stage === 'drills' && /^\d+ swings/.test(d.dosage));
+  if (b.modality === 'hitting' && !skill) return b;
+  const drills = b.modality === 'hitting' && skill
+    ? [{...skill, dosage: `${Math.min(15, Number(/^(\d+)/.exec(skill.dosage)?.[1] ?? 0))} swings`, cue: `${skill.cue} Game-speed decisions, low volume; stop before fatigue.`}]
+    : source.drills.slice(0, 1).map(d => ({...d, dosage: d.dosage.replace(/^\d+/, '1'), cue:`${d.cue} Easy pre-game rehearsal; stop before fatigue.`}));
+  return {...source, drills, steps: drillsToSteps(drills), status:'ready', durationMin:3, phase:'maintain', gamePlanTemplate:null,
+    title:`${b.modality === 'hitting' ? 'Hitting' : 'Baserunning'} — short pre-game station`,
+    why:'A short station keeps your skill work in a busy game week. Save your energy for the game.',
+    roadmapReason:'Game week — short, low-volume skill station; existing safety stops still apply.'};
 }
 
 /** The game itself as a card the player logs after playing. Light pre-game work and
@@ -1792,11 +1809,12 @@ function applyScheduleModulation(
           case "recovery":
             return annotate(b, rationale);
           case "throwing":
-          case "hitting":
             // Allow a brief activation set on game day; full tournament-day suppression.
             return signal.postureToday === "tournament"
               ? suppressBlock(b, rationale)
               : suppressBlock(b, rationale, { keepActivation: true });
+          case "hitting":
+            return gameSkillStation(b, originals?.get(blockKey(b)));
           case "defense": {
             if (b.status === 'awaiting-input') return b;
             const original = originals?.get(blockKey(b));
@@ -1810,8 +1828,9 @@ function applyScheduleModulation(
           }
           case "speed":
           case "strength":
-          case "baserunning":
             return suppressBlock(b, rationale);
+          case "baserunning":
+            return gameSkillStation(b, originals?.get(blockKey(b)));
           default:
             return b;
         }
@@ -2556,7 +2575,7 @@ export function buildHammerDailyPlan(
     bats:identityOverride?.isSwitchHitter?'S':(['R','L','S'].includes(String(ctx.get('bats_hand')?.value))?ctx.get('bats_hand')?.value as 'R'|'L'|'S':null),
     ...bunting.traits,battingGames:bunting.evidence.battingGames,battingWindow:bunting.evidence.battingWindow,outcomes:bunting.evidence.outcomes,
     legalWeekdays:buntingWeekdays(weeklyRoadmap,bunting.gameWeekdays??[],buntingMinimum),weeklyMinimum:buntingMinimum,
-    restDay:fullRestDay,gameDay:scheduleSignal.postureToday!=='normal',
+    restDay:fullRestDay,gameDay:scheduleSignal.postureToday!=='normal',pregameStation:scheduleSignal.postureToday==='game'||scheduleSignal.postureToday==='tournament',
   },{weekday:today.getDay(),weekIndex:Math.floor(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()-((today.getDay()+6)%7))/604800000),
     owned:proj.equipmentList,age:bunting.age,phase:bunting.phase,catalog:bunting.catalog,userId:bunting.userId}) : masteryOrdered;
   const restFiltered = fullRestDay ? bunted.map(b => {

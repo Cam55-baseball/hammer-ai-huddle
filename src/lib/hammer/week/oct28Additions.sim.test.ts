@@ -88,8 +88,9 @@ describe("conditioning floor — 8 weeks, every player type, both sports", () =>
                 const slugs = floorConditioningSlugs({ sport, isPitcher, lowReadiness: low });
                 floorOpportunities++;
                 if (low) {
-                  expect(slugs).toEqual(["rc_easy_flush"]);
-                  expect(isRunningConditioning(slugs)).toBe(false);
+                  expect(slugs).toEqual([sport==='baseball'?'easy_base_jog_bb':'easy_base_jog_sb']);
+                  expect(isRunningConditioning(slugs)).toBe(true);
+                  ran.push(date); weekCount++;
                 } else {
                   expect(isRunningConditioning(slugs)).toBe(true);
                   if (!isPitcher) expect(slugs[0]).toBe(sport === "baseball" ? "bases_home_2nd" : "bases_double_sb");
@@ -98,7 +99,7 @@ describe("conditioning floor — 8 weeks, every player type, both sports", () =>
               }
             }
             expect(floorOpportunities).toBe(CONDITIONING_WEEKLY_MINIMUM);
-            expect(weekCount).toBe(lowEveryOtherDay ? 1 : CONDITIONING_WEEKLY_MINIMUM);
+            expect(weekCount).toBe(CONDITIONING_WEEKLY_MINIMUM);
           }
         });
       }

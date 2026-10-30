@@ -104,6 +104,9 @@ export function selectConditioning(input: ConditioningSelectionInput): Condition
   const pos = aerobicPositionDrill(positionDrillSlug(input.position));
   const sportPosition = input.sport === "softball" && pos === "bases_1st_3rd" ? "bases_double_sb" : pos;
   const base = (path: ConditioningPath, templateId: ConditioningTemplateId, slugs: string[], why: string, fallback = false): ConditioningSelection => {
+    if (input.dialDownReasons.length > 0 || path === 'pitcher_after_start' || path === 'game_within_48h' || path === 'tournament') {
+      return {path,templateId:'cond.off_day',slugs:[input.sport === 'softball' ? 'easy_base_jog_sb' : 'easy_base_jog_bb'],why:`${why} ${input.dialDownReasons.length ? dialLine(input.dialDownReasons) : ''} Easy base-route jogging at a talking pace; no sprints. Stop with pain, dizziness or fatigue.`,fallback,dialedDown:true};
+    }
     const dial = input.dialDownReasons.length > 0 && slugs.some((x) => ALACTIC.has(x));
     return {
       path, templateId,
