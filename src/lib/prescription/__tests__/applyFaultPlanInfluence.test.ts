@@ -3,6 +3,8 @@ import type { EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import type { PrescribedBlock } from "@/lib/hammer/prescription/dailyPlan";
 import type { RankedFault } from "@/lib/wic/faultLedger/ranking";
 import { applyFaultPlanInfluence } from "../applyFaultPlanInfluence";
+import { mergeCatalog, type OwnerDrillRow } from '../ownerDrills';
+import { PHILOSOPHY_TEST_USERS, testSettingsFor } from '@/lib/intelligence/testSettings';
 
 const drill: EliteDrill = {
   id: "test.hit.analysis", name: "Analysis Match", category: "hitting", sports: ["baseball"],
@@ -34,6 +36,18 @@ const ranked: RankedFault[] = [{
 const apply = (blocks: PrescribedBlock[]) => applyFaultPlanInfluence({
   blocks, rankedFaults: ranked, sport: "baseball", ownedEquipment: new Set(), catalog: [drill],
   circulation: { servedToUser: {}, usage: {} }, now: new Date("2026-10-03T00:00:00.000Z"),
+});
+
+it('TEST Confirm fault tags reach the final fix-it slot, Undo and real players retain the original plan',()=>{
+ const owner:OwnerDrillRow={id:'scoped',overrides_drill_id:null,placements:['analysis:baseball:hitting','hammers_today:skill'],sports:['baseball'],name:'Scoped fix-it',fault_keys:['unrelated'],phase:null,level:'feel',dosage:'3 x 6',setup:'Open space',steps:['Hold'],cue:'Hold front side',feel:null,feel_wrong:null,common_mistake:null,equipment:[],video_url:null,active:true,pinned:false,created_at:'2026-10-01',routine_role:'fix_it'};
+ const changed={...owner,test_overrides:{[PHILOSOPHY_TEST_USERS[0]]:{fault_keys:['front_shoulder_opens_early']}}};
+ const build=(row:OwnerDrillRow,userId:string)=>applyFaultPlanInfluence({blocks:[block()],rankedFaults:ranked,sport:'baseball',ownedEquipment:new Set(),catalog:mergeCatalog([],[row]),ownerRows:[row],userId,circulation:{servedToUser:{},usage:{}},now:new Date('2026-10-03')});
+ const confirmed=testSettingsFor(changed,PHILOSOPHY_TEST_USERS[0]);
+ expect(build(confirmed,PHILOSOPHY_TEST_USERS[0])[0].drills[0].name).toBe('Scoped fix-it');
+ expect(build(confirmed,PHILOSOPHY_TEST_USERS[0])[0].drills[0].dosage).toBe('1');
+ expect(build(owner,PHILOSOPHY_TEST_USERS[0])[0].drills[0].name).toBe('A');
+ expect(build(testSettingsFor(changed,'real-player'),'real-player')[0].drills[0].name).toBe('A');
+ expect(owner.fault_keys).toEqual(['unrelated']);
 });
 
 describe("analysis influence on Hammers Today", () => {
