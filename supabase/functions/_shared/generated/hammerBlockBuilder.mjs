@@ -953,7 +953,6 @@ function equipmentNoteFor(drill) {
 }
 var TEMPLATES = {
   game_day: [
-    "breathwork",
     "tissue_prep",
     "cars",
     "fascial_rotation",
@@ -978,7 +977,6 @@ var TEMPLATES = {
     "arm_care"
   ],
   in_season_default: [
-    "breathwork",
     "cars",
     "fascial_rotation",
     "activation",
@@ -1003,7 +1001,6 @@ var TEMPLATES = {
     "movement_bridge"
   ],
   lift_day: [
-    "breathwork",
     "tissue_prep",
     "cars",
     "mobility_joint",
@@ -1042,7 +1039,6 @@ var TEMPLATES = {
     "movement_bridge"
   ],
   offseason_extended: [
-    "breathwork",
     "tissue_prep",
     "tissue_prep",
     "cars",
@@ -1065,14 +1061,12 @@ var TEMPLATES = {
     "arm_care"
   ],
   recovery_day: [
-    "breathwork",
     "tissue_prep",
     "cars",
     "mobility_joint",
     "activation"
   ],
   travel_day: [
-    "breathwork",
     "cars",
     "mobility_joint",
     "activation",
@@ -1098,8 +1092,24 @@ var TWITCH_ROLES = [
   "fast_twitch"
 ];
 var SINGLE_LEG_MIN_SHARE = 0.6;
+function fullBodyTemplate(context) {
+  const base2 = [...TEMPLATES[context] ?? TEMPLATES.default];
+  if (context === "recovery_day") return base2;
+  const ORDER2 = ["tissue_prep", "cars", "fascial_rotation", "mobility_joint", "activation"];
+  for (let i = ORDER2.length - 1; i >= 0; i--) {
+    const role = ORDER2[i];
+    if (base2.includes(role)) continue;
+    const before = ORDER2.slice(0, i).map((r) => base2.lastIndexOf(r)).filter((n) => n >= 0);
+    base2.splice(before.length ? Math.max(...before) + 1 : 0, 0, role);
+  }
+  if (!base2.includes("movement_bridge")) {
+    const armIdx = base2.indexOf("arm_care");
+    base2.splice(armIdx >= 0 ? armIdx : base2.length, 0, "movement_bridge");
+  }
+  return base2;
+}
 function templateFor(context, lifecycle) {
-  const base2 = TEMPLATES[context] ?? TEMPLATES.default;
+  const base2 = fullBodyTemplate(context);
   const rank = { youth: 0, beginner: 1, intermediate: 2, advanced: 3, elite: 4 };
   if (rank[lifecycle] > 1) return base2;
   const out = [...base2];
