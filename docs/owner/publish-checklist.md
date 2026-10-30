@@ -1,89 +1,81 @@
-# Final publish checklist — October 29, 2026 · close-out (6)
+# Final publish checklist — October 30, 2026 · close-out (8)
 
-**Ready to publish: NO.** Functional gaps remain in **2, 3, 13, 18, 20 and scheduling D/E/H (0 of 224 saved server dates certified)**. Named populated/entitled owner checks below are nonblocking; unfinished implementation or required functional proof is not a human check.
+**Ready to publish: NO.** Items **3 and 18** retain required functional acceptance; scheduling has **224/224 saved dates**, but unmet floors and missing off-season samples prevent complete D/E/H acceptance. Item 20's demonstrated weights/standard/tag path passes; safety-maximum minimums correctly add no days, while unproved minimum/tag/fix-it consumers are explicitly bounded below.
 
-**Close-out (6), 20:30 UTC:** backend healthy (memory 54%, connections 23/60; last disk-IO alert 17:15 UTC). Scheduling certification could not continue: only 3 of the 8 required personas exist in the live TEST helper, and the first build (HS shortstop) was correctly refused for unfinished starting details. Live app signed in as the owner on hammersmodality.org at 390×844: dashboard loaded with real data, zero page errors. Full suite: all 676 files passed in bounded batches (slow files run alone). No code changes this run.
+## Part A — proven results, not a fresh replay of all 24 journeys
 
-## Part A — built and proven; unfinished work clearly separated
+PASS = retained affected-role UI proof plus current regression coverage. HUMAN = built, only owner-authorized populated/entitled checks remain (nonblocking). OPEN = implementation, rollout or required functional proof remains; never hidden in Part B.
 
-**PASS:** retained functional proof plus current regression coverage, not a fresh replay of every journey. **HUMAN:** built, only the named owner acceptance remains. **OPEN:** unfinished behavior, rollout or functional acceptance.
-
-| # | Item | Status | Evidence / exact remaining boundary |
+| # | Item | Status | Evidence / remaining boundary |
 |---|---|---|---|
-| 1 | Goal picker | PASS | Two goals, ranking, save/reload, Start and goal-weighted plan retained. |
-| 2 | Full Today matching block and season | OPEN | Combined save and seven-date proof retained; latest owner week still has zero ready defense days with shoulder/ankle restrictions and lacks positive running-conditioning certification. Unknown gear is assumed available: confirming gear is optional, NOT a cure or a floor gate. |
-| 3 | Update Hammer everywhere | OPEN | Season writer/resolvers and seven-day rebuild deployed; four requested changes plus alternate forms, card/General and connected democoach before/after at 390×844 remain unproved in the latest run. |
-| 4 | Organization sport Both | HUMAN | Built; saved Both and edits need populated owner acceptance. |
-| 5 | Sign-up terms overlay / Back | PASS | Retained nested Close/Back proof preserves entered fields and sign-up step. |
-| 6 | Coach send / player response | PASS | Retained coach→player→coach search/send, notification, Today choices, Coach workouts, logging and reply proof. |
-| 7 | Owner/admin library and builders | PASS | Retained owner desktop/phone create/save/reload; admin bypass covered by tests. |
-| 8 | Organization automatic activation | HUMAN | Live automatic activation; retained 7/7 existing and new TEST 8/8. Populated testing/sponsorship remain owner checks. |
-| 9 | Sport-switch pop-up removed | PASS | Active analysis presentation and regression coverage retained. |
-| 10 | Plain upload requirements | PASS | Supported clips and plain recording guidance retained. |
-| 11 | Ordered, merged report advice | PASS | Prior duplicate correction and regression coverage; real published saved report opened in this run. No new analysis/upload claimed. |
-| 12 | Videos for positive clips / growth | HUMAN | Positive goal-video proof retained; combined genuine attached growth-content acceptance remains owner-only. |
-| 13 | Heart / Saved drills / Add to Today | OPEN | 0154 and plan-swap are live. Heart/reload, Today and next-date fix-it/Because/reload proved; next-date Okay used the app request, not a tap. Protected owner-drill routes, remaining unmapped practice-check identities and complete future-date safety/UI acceptance remain unclosed. |
-| 14 | General trends / dated arm history | HUMAN | Independent dated compatible arm series and explicit local TEST renders proved; genuine populated history comparison remains owner-only. |
-| 15 | Develop This Week | PASS | Retained affected-player General drawer proof. |
-| 16 | Embedded Body Load | HUMAN | Built; genuine populated saved-load comparison remains owner-only. |
-| 17 | Defensive plays history | PASS | Retained drawer and populated history proof. |
-| 18 | Complete onboarding / Start | OPEN | Named create-test-athlete rollout live; fresh unstarted TEST reached assessment. Full assessment, Start, validated first seven dates/reload, explicit better action and exact healed-area prehab/health readback remain unfinished; health generator changes are not deployed. Owner health decisions already supplied. |
-| 19 | Owner health / attention / actions | PASS | Retained two-size interactions; fresh owner and Training Intelligence reads. Health color is not publish readiness. |
-| 20 | Philosophy Confirm / receipt / Undo | OPEN | Standard/tag Confirm/Undo proved; TEST weight 1→2 reached saved Nov 2–3 plans and Undo restored them (wk-generate-daily deployed); thread restores on reload. Remaining: Confirm/Undo pressed on screen, and weekly minimum overrides have no effect because days already sit at the safety maximum. |
-| 21 | Informational Video Manager | HUMAN | Manager and Before you start placement built/proved; genuine matching-analysis playback is owner-only. |
-| 22 | My Players photos / readable names | HUMAN | Retained readable coach rows at both sizes; genuine authorized photo acceptance remains owner-only. |
-| 23 | Guest analysis access | PASS | Retained coach button→guest route proof; no fresh guest upload claimed. |
-| 24 | Organization hierarchy / trends | HUMAN | Six groups/explanations built; labeled local chart fixtures are not populated hosted proof. |
+| 1 | Goal picker | PASS | Ranked goals → save/reload → Start → goal-weighted plan; retained Item1 proof. |
+| 2 | Owner's full saved week | PASS | Fresh readback: Oct30–Nov5, seven combined days, four ready seated-defense days and six restriction-modified conditioning days. Zero running; cycling only if pain-free/professionally allowed. Restrictions unchanged. Item2 owner-week proof. |
+| 3 | Update Hammer everywhere | OPEN | Latest phone run proves offseason and Tell Hammers season changes with General/coach refresh. Game/schedule and days-available before/after, plus revised seven-changeable-date confirmation still need the requested on-screen proof. No fresh TEST schedule writes in this audit. |
+| 4 | Organization Both sport | HUMAN | Saved Both/edit/reload acceptance on a populated organization. |
+| 5 | Terms overlays / Back | PASS | Nested Back/Close keeps entered sign-up fields and step. |
+| 6 | Coach send / player response | PASS | Coach→player→coach search/send, notifications, Today choices, Coach workouts, logging and response retained. |
+| 7 | Owner/admin builders | PASS | Owner phone/desktop create/save/list/reload; admin access covered by tests. |
+| 8 | Organization auto-activation | HUMAN | Live automatic activation; retained existing7/7 and newTEST8/8. Genuine testing/sponsorship acceptance only. |
+| 9 | Sport-switch pop-up removed | PASS | Presentation regression coverage retained. |
+| 10 | Plain upload requirements | PASS | Supported clips / recording guidance retained; no fresh upload claimed. |
+| 11 | Ordered merged report advice | PASS | Duplicate/order fixes covered; no fresh inference claimed. |
+| 12 | Positive/growth videos | HUMAN | Retained positive goal-video proof; genuine combined growth-media acceptance remains owner-only. |
+| 13 | Saved drills / Add to Today / fix-it | PASS | Oct30 actual owner-drill heart/shelf/reload; eligible TEST saved report Today/reload and Oct31/Nov3 warning→Okay taps→fix-it/Because/reload. Authorized rollout retained. |
+| 14 | General / dated arm trends | HUMAN | Separate dated sport/position/unit/source series and local TEST rendering; genuine populated comparison only. |
+| 15 | Develop This Week | PASS | Retained affected-player General drawer. |
+| 16 | Embedded Body Load | HUMAN | Genuine saved-load comparison only. |
+| 17 | Defensive history | PASS | Populated canonical history/drawer proof retained. |
+| 18 | Fresh onboarding / first Start week | OPEN | Fresh TEST sign-up/full nutrition/health/Start/reload retained, but day1 was manually re-saved through Update Hammer to obtain seven combined dates. This run corrected lazy generation to request the existing combined server save; 1 regression +9 rebuild tests pass. No brand-new first-Start UI/readback replay after correction; frontend unpublished. |
+| 19 | Owner health / actions | PASS | Retained two-size health/actions/Details; fresh preview read. Health reports warnings honestly, not publish readiness. |
+| 20 | Philosophy adapters | OPEN (bounded proof passes) | Oct30 on-screen TEST weight1→2 Confirm changes saved goal priority; Undo restores1. Prior standard65→70/tag Confirm/Undo and atomic receipts retained; globals unchanged. Safety-maximum floors correctly add no days. Full minimum/bunting/conditioning and drill/fix-it consumer coverage beyond these proofs remains uncertified, not assumed complete. |
+| 21 | Video Manager | HUMAN | Before-you-start placement retained; genuine matching-analysis playback after attachment only. |
+| 22 | My Players photos/names | HUMAN | Readable rows retained; genuine authorized photo only. |
+| 23 | Guest analysis | PASS | Retained coach-button→guest-route proof; no fresh upload. |
+| 24 | Organization hierarchy/trends | HUMAN | Six groups/explanations and labeled local fixture rendering; entitled populated records only. |
 
-### Scheduling certification: OPEN — 0 of 224 saved server days
+### Saved scheduling certification — 224 / 224 dates, not all requirements passed
 
-Blockers: (1) live TEST helper allowlist has only HS 5Tool baseball, HS Golden 2Way baseball and pro 5Tool baseball; HS Complete Pitcher baseball, HS 5Tool / Complete Pitcher / Golden 2Way softball and college Golden 2Way softball need adding plus a **named create-test-athlete redeploy**; (2) every persona must finish the starting assessment in the app before the server builds (correctly enforced). Then 7-date units with a load check between, at most 8 units/hour (≥4 hours total). The twelve local sample weeks are not server certification.
+Fresh read-only count: eight exact TEST personas ×28 distinct dates, Oct30–Nov26; all snapshots carry sport_physical_v1. Physical readback:1,576 rows on217 dates; seven game dates legitimately have no physical work. Existing saved reports have warnings; no fatal issue seen in the returned reports. This does not prove completed work, all weekly floors, or arm-ledger logging.
 
-Exact remaining work:
-- **2:** retain compatible safe defense without erasing injuries and certify every purchased weekly floor, including running conditioning, on saved combined dates.
-- **3:** prove Offseason, game/schedule, days-available and Tell Hammers immediate rebuild/confirmation; compare card, General and connected democoach before/after on phone.
-- **13:** close owner-drill/action coverage and unmapped practice checks; prove fresh dated warning taps and full generator/safety acceptance without inheriting yesterday's Okay.
-- **18:** complete conservative health mapping and better action/prehab, obtain named generator rollout, then fresh assessment→Start→seven valid saved dates→reload.
-- **20:** wire effective canonical weights/minimums and thread restoration; obtain named server rollout; prove fresh TEST next-plan/analysis Confirm effect and Undo with global values untouched.
-- **Scheduling D/E/H:** prepare the exact eight TEST personas, enter requested games through the app, certify all 224 saved dates and loggable games, starter/reliever recovery, Option B lift dose, numeric Primer, sport routes/pitcher conditioning, readiness, arm limits and Sunday recovery; compare off/in-season inside saved cards.
+**Open scheduling requirements:** zero conditioning in three retained heavy-game sample weeks; pro5Tool sample has one bunting day; three baseball demo personas have no saved off-season week; requested cohort game densities/app-entered schedules and starter/reliever live outing/recovery execution remain incomplete. New pitchers mostly receive easy flush because history is absent. Never manufacture history, count games as running, or override safety to obtain a count.
 
-### Live and preview verification — this run
+The sample guide is corrected from fresh snapshots **and physical rows**. Off/suppressed cards are labeled; Primer appears only on actual saved lift rows. Prior stale Primer metadata printed on Sunday and “strength” titles on game days were not proof of performed physical work. Sunday saved physical rows are breathing resets only. See **docs/owner/scheduling-certification.md** for all16 saved sample tables, with missing off-season honestly labeled instead of invented.
 
-- Published hammersmodality.org signed in as the owner at 390×844: dashboard settled with real account data, no page exceptions.
-- Full suite: 676 unique files, all passed (12 bounded batches; timed-out batches split and the two slowest files run alone with 25 and 7 tests passing).
-- Preview: no build errors recorded; no code changed this run.
-- No publish, migration, redeploy, cron, iOS or destructive change. One TEST-only helper call reseeded the HS shortstop persona idempotently (no deletes).
+### Live / preview / scope
 
-## Part B — owner's human checks (nonblocking only)
+Owner session minted with --self and restored only on each app origin. Published owner dashboard, General, Players Club and Coaching Console opened at390×844; desktop dashboard checked. Published frontend remains older than preview. /owner/training-intelligence was a mistaken address (404); the configured address is /admin/training-intelligence. The live tools page remained Loading in the targeted capture; preview showed health/actions/Details. That live page is not counted as successful acceptance. Empty owner Players Club had no report to open; no new analysis was fabricated.
 
-Use consenting, entitled accounts and genuine records. Never bypass age, health, consent, subscriptions, equipment stops or legal versions.
+Authenticated phase-state and owner saved-week reads succeeded. Initial diagnostic used the wrong RPC argument; corrected self-only initial_plan_missing read is checked in the final evidence. Latest function activity for phase-state/wk-generate-daily retrieved; prior named deployment proofs retained. No claim of byte-for-byte deployed-source parity for every function. No backend redeploy/migration or publishing in this run.
+
+TEST_SUMMARY_PENDING
+
+## Part B — owner human checks (nonblocking only)
+
+Use real consenting, entitled accounts; never bypass legal, age, health, subscriptions, organization access or TEST exclusions.
 
 | Item | Exact owner steps |
 |---|---|
-| 4 | Save an organization with Both; reload. Reopen each offered sport-edit screen, save Both, reload and verify both sports and the saved choice. |
-| 8 | Open a legitimately active organization; verify no approval wait. Invite eligible athletes/coaches and accept normally. Schedule testing, enter genuine results and reload. Complete a legitimate sponsorship/payment journey with an eligible athlete, without removing TEST exclusions. |
-| 12 | Attach genuine drill media and eligible informational/growth videos with exact sport/goals/tags. As a subscribed developed player, analyze a genuinely clean clip. Verify and play goal-matched positive/growth selections, save and reopen without inventing faults. |
-| 14 | With real selected-sport history and goals, open General→Performance. Compare pillar/goal graph dates, units and values with records; switch Windows/Weeks and 4/8/12, open explanations, reload on phone/desktop. Check velocity by recorded position separately from pop-time seconds and coach/scout grades; never combine undated/unrelated records. |
-| 16 | With actual saved weekly load, open Your training block & season. Compare Body Load dates/values to saved work, reload and confirm readable text without a detached duplicate card. |
-| 21 | In Video Manager save/activate genuine matching media for Before you start and after analysis. As an eligible player, play it before training and after a real matching analysis; save/reopen. Check recurring/growth only when genuinely eligible. |
-| 22 | Save an authorized real athlete photo through Profile. As the connected coach inspect My Players on phone/desktop, reload, check photo/name/actions; verify missing photos still use the fallback. |
-| 24 | With active organization access and actual athletes/results, visit Roster, Teams, Testing, Workouts, Results & Trends, Billing. Open each explanation; compare progress/test/growth vs game graphs to records and reload on phone/desktop. |
+| 4 | Save Both on an organization; reload; reopen each offered sport editor, save Both, reload and compare both sports. |
+| 8 | Open an active organization without approval wait; invite eligible player/coach, accept normally; schedule testing and enter genuine results; reload; complete an eligible real sponsorship/payment journey. |
+| 12 | Attach genuine drill and eligible informational growth media with exact sport/goals/tags; as an entitled developed player analyze a genuinely clean clip; play matching positive/growth suggestions; save/reopen. |
+| 14 | General→Performance: compare dates/units/values to actual source records; Windows/Weeks,4/8/12, explanations, reload phone/desktop. Keep velocity by recorded position separate from catcher seconds and staff grades. |
+| 16 | Open training block/season with genuine saved load; compare Body Load dates and values to saved work; reload, ensure readable and not duplicated. |
+| 21 | Video Manager: activate genuine Before-you-start/after-analysis media; eligible player plays before training and after a real matching analysis; save/reopen; recurring/growth only when actually eligible. |
+| 22 | Player saves an authorized photo in Profile; connected coach opens My Players phone/desktop, reloads and checks photo/name/actions; fallback remains for no photo. |
+| 24 | Active populated organization: open Roster,Teams,Testing,Workouts,Results & Trends,Billing; every explanation; compare genuine roster/test/growth-vs-game values; reload phone/desktop. |
 
-### Review the sample weeks by program and sport
+### Review the saved sample weeks
 
-Open **docs/owner/scheduling-certification.md**. Saved server sample weeks do not exist yet (0/224). Until then, review all **12 local tables**: baseball and softball × Complete Pitcher, 5Tool, Golden 2Way × off-season and in-season with games.
+1. Open **docs/owner/scheduling-certification.md**, then each persona's two dated tables. There are16 saved samples; five have an off/in-season pair, three explicitly lack an off-season sample. This lack remains functional certification work, not an owner sign-off shortcut.
+2. Read card **status** and actual Conditioning/Lift/Primer rows, not title alone. Inspect Sundays: breathing recovery only; a scheduled Sunday game is logged as a game, never manufactured conditioning.
+3. Complete Pitcher: no hitting/baserunning/bunting; separate baseball pitching vs softball windmill, safe PFP, recovery. 5Tool:no pitching. Golden2Way:shared pitching/position arm budget. Check pitcher outing and next-day protocol with genuine logs, not the word “bullpen” alone.
+4. Compare phases and actual doses: sets/reps/load/rest, conditioning routes, Primer action numbers. Check six-day pattern and purchased floors: hitting3,defense4,baserunning1,bunting2 where purchased,conditioning2+. **Flag the already-listed shortfall weeks; do not treat saved224 as floor certification.**
+5. Give coaching feedback without changing injury clearance or claiming unperformed work. Unknown gear is available by assumption; explicitly missing gear goes through existing Swap memory, never a floor-erasing prompt.
 
-1. Read each Monday–Sunday date/card row; compare the two phases. These are **local shared-builder samples**, not completed server certification; all unverified columns stay unverified.
-2. Complete Pitcher: pitching owns its card; baseball throwing and softball windmill remain separate. No hitting, baserunning or bunting; retain safe PFP/defense, pitcher conditioning, lifting and Mind.
-3. 5Tool: no pitching; inspect purchased hitting, defense, baserunning and side-specific bunting. Golden 2Way: all purchased skills with one shared arm budget.
-4. Check games, light pregame and postgame recovery, pitcher outings/next-day recovery; compare actual within-card lifting/conditioning/skill dose when saved server examples become available.
-5. Check six training days/Sunday soft recovery, purchased floors (hitting 3, defense 4, baserunning 1, bunting 2 where purchased; running conditioning 2+), readiness modulation and unchanged safety. Do not count unknown gear as missing or convert a game into performed training.
-6. Give coaching feedback; **owner review cannot replace the still-open 224-date/server certification**. Complete Pitcher's no-hitting rule is already decided, not an unanswered question.
+**Minimums guide:** a minimum already at its safety ceiling correctly does nothing. TEST weights reorder existing goal slots, not dose; Confirm/Undo must not affect real players. This accepted behavior is not a promise that unproved consumers are wired.
 
-**Optional gear review:** confirm only what is explicitly unavailable through the existing equipment/Swap answers. Unknown ownership is assumed available and the prompt is nonblocking; this does not remove injury restrictions or certify missing defense days.
+**Physical iPhone (nonblocking):** normal Safari sign-in; original supported hitting/pitching/throwing clips, includingHEVC/MOV; report→optional save→reopen/play/reload; log genuine Today work; explicit Sign out/in. Emulator evidence is not physical-device evidence.
 
-**Real iPhone:** sign in normally on Safari; upload original supported hitting/pitching/throwing clips, including HEVC/MOV; read report, optionally save, reopen/play/reload, then Today→log a real item→sign out/in. Emulator proof is not actual-device proof.
+**Visual check (nonblocking):** Today,General,reports,Saved drills,builders/console and entitled organization; open explanations/drawers, check text/photos/video framing. Approved legal versions stay immutable.
 
-**Visual review:** inspect Today, General, saved reports, Saved drills, owner builders/console and entitled organization on phone/desktop. Open drawers/explanations and check text, buttons, photos, video framing and final copy. Approved legal versions remain immutable.
-
-**Evidence:** current item-specific docs, docs/owner/scheduling-certification.md, docs/owner/final-closeout4-oct29-proof.md; bounded manifest/results /tmp/closeout4/ and browser evidence /tmp/browser/closeout4/. No publish, migration, redeployment, cron, iOS or destructive cleanup performed in this run.
+Evidence: item-specific proof docs; saved scheduling guide; docs/owner/final-closeout8-oct30-proof.md. No publish, backend deployment, migration, cron, iOS or destructive cleanup. No real-player settings, injury clearance or performed-work writes.
