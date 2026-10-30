@@ -6957,7 +6957,7 @@ function drillsToSteps(drills) {
 function drillsToChecklist(drills) {
   return drills.map((d3) => `${d3.name} \u2014 ${d3.dosage}`);
 }
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, planDate, armRole, positionThrowing, skillExecutionAllowed = true }) {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, planDate, armRole, positionThrowing, gameTomorrow, skillExecutionAllowed = true }) {
   const declaredPos = firstPositionToken(ctx.get("position_primary")?.value) ?? firstPositionToken(ctx.get("position")?.value) ?? null;
   const pos = firstPositionToken(positionOverride) ?? declaredPos;
   const liftingAge = proj.liftingAgeYears;
@@ -7491,7 +7491,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         eass.drills = eass.drills.filter((d3) => d3.category !== "intent" && d3.category !== "overload").map((d3) => d3.stage === "full_go" ? { ...d3, name: "Flat-ground command \u2014 existing pitch budget", stage: "drills", cue: `${d3.cue} Flat ground only, easy feel; use the same listed count.` } : d3);
       }
       if (armRole && ["shoulder", "elbow", "ucl", "forearm"].some((r) => injuryRegions.includes(r))) eass.drills = eass.drills.filter((d3) => ["band_prep", "cooldown", "recovery"].includes(d3.category));
-      if (armRole && sched.isGameTomorrow) eass.drills = eass.drills.filter((d3) => ["band_prep", "cooldown", "recovery"].includes(d3.category));
+      if (armRole && gameTomorrow) eass.drills = eass.drills.filter((d3) => ["band_prep", "cooldown", "recovery"].includes(d3.category));
       if (planDate && armRole) eass.drills = guardArmDrills(eass.drills, { date: planDate, sport: normalizeSport(sportRaw), role: armRole, age: ageYears, level: ctx.get("competition_level")?.value ?? null, history: armHistory });
       const outingReason = pitcherOutings?.pitchedYesterday ? "You pitched yesterday. Today's arm care is easy recovery work." : pitcherOutings?.startsToday ? "You start today. Save your throwing work for the outing." : pitcherOutings?.startsTomorrow ? "You start tomorrow. Today's throwing keeps you ready." : pitcherOutings?.relieverAvailableSoon ? "You're available to pitch. Keep your arm ready without a separate hard session." : "";
       const mappedDrills = eass.drills.map((d3) => ({
@@ -8471,6 +8471,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       ctx,
       proj,
       speed,
+      gameTomorrow: scheduleSignal.isGameTomorrow,
       positionOverride: m === "throwing" && access?.hasPitching || m === "defense" && access?.pitcherOnly ? "P" : positionOverrideArg,
       pitcherOutings: roadmapInputs.pitcherOutings,
       pitchingType: access?.hasPitching ? pitchingDay(today, sport, quarter, roadmapInputs.pitcherOutings) : void 0,
