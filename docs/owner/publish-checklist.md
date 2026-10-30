@@ -43,11 +43,11 @@ The sample guide is corrected from fresh snapshots **and physical rows**. Off/su
 
 ### Live / preview / scope
 
-Owner session minted with --self and restored only on each app origin. Published owner dashboard, General, Players Club, Training Intelligence and Coaching Console settled at390×844; desktop dashboard checked. Published frontend remains older than preview. /owner/training-intelligence was a mistaken address (404); the configured /admin/training-intelligence loaded in the final capture. Its recorded concerns are not a green readiness signal. Preview showed health/actions/Details; one preview dashboard capture was blank during loading and is not counted (earlier settled desktop capture retained). Empty owner Players Club had no report to open; no new analysis was fabricated.
+Owner session minted with --self and restored only on each app origin. Published owner dashboard, General, Players Club, Training Intelligence and Coaching Console settled at390×844; desktop dashboard checked. Published frontend remains older than preview. /owner/training-intelligence was a mistaken address (404); the configured /admin/training-intelligence loaded in the final capture. Its recorded concerns are not a green readiness signal. Preview showed health/actions/Details; one preview dashboard capture was blank during loading and is not counted (fresh settled desktop capture verified). Empty owner Players Club had no report to open; no new analysis was fabricated.
 
 Authenticated phase-state and owner saved-week reads succeeded. Initial diagnostic used the wrong RPC argument; corrected self-only initial_plan_missing returned nine starting-detail omissions without an error (existing owner privilege is not fresh-player Start proof). Latest function activity for phase-state/wk-generate-daily retrieved; prior named deployment proofs retained. No claim of byte-for-byte deployed-source parity for every function. No backend redeploy/migration or publishing in this run.
 
-TEST_SUMMARY_PENDING
+**Full suite:** 29 bounded batches, 683 unique configured files, 5,405 tests passed, zero failures, two skipped live tests. No omissions/extras/duplicates. One batch initially failed four obsolete easy-flush-as-running assertions; corrected the test to keep ambiguous bike/walk flushes out of the running count (no safety or production conditioning change), then reran its full24-file batch successfully. New first-Start composition regression included. Latest automatic preview build OK at03:01:12UTC; settled authenticated desktop preview screenshot: no exceptions or overflow.
 
 ## Part B — owner human checks (nonblocking only)
 

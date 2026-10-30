@@ -1,0 +1,19 @@
+# Final close-out (8) — October 30, 2026
+
+## Verdict
+Ready to publish: NO — Item3 required four-change/connected-coach proof, Item18 fresh first-Start combined-save acceptance, Item20 complete minimum/drill/fix-it consumer certification, and scheduling semantic shortfalls remain. Owner human checks in checklist PartB remain nonblocking.
+
+## Full suite / preview
+29 bounded batches, two concurrent one-worker runners, 24files per batch maximum. Final683unique files,5405passed,0failed,2skipped; zero omissions/extras/duplicates. Batch14 initially failed4 obsolete assertions that ambiguous Easy Flush (Bike or Walk) counts as running. Updated tests require two floor opportunities but only explicit running identities count; the reproduced shortfall stays visible rather than weakening production safety. Full24-file batch14 rerun passed206tests. First-Start regression included. Manifest/reports/final-summary: /tmp/closeout8/. Latest automatic local preview buildOK03:01:12UTC; hosted build status previously succeeded/in sync. No manual build/typecheck.
+
+## Narrow correction
+useWkDailyPrescriptions now requests compose_sport_day:true via composedDayRequest for initial lazy generation, matching the existing live atomic server path used by Update Hammer. Session guard added before invocation. Regression test confirms exact plan date and compose flag. No backend change/deployment. This is preview-only until publish; no fresh unstarted TEST Start flow after correction, so Item18 remains open.
+
+## Live owner and saved readback
+Minted --self owner session, scoped restore independently to hammersmodality.org and localhost. Published dashboard,General,PlayersClub,TrainingIntelligence,CoachingConsole settled390x844; desktop dashboard inspected. No captured page exceptions or failed backend reads in final browser summaries. Wrong /owner/training-intelligence diagnostic was404; actual /admin/training-intelligence settled and showed honest recorded concerns. Published frontend is older, not silently upgraded. Owner Club empty, so no fresh saved-report/upload proof claimed. Initial diagnostic RPC used wrong argument; corrected initial_plan_missing(p_user) succeeded with9omissions. Authenticated phase-state returnedoffseason;7saved owner snapshots retain4ready defense dates; physical rows show6conditioning dates,540seconds each, seated-bike/pain/professional-stop reasons. No medical clearance or running claimed. Latest phase/generator activity read; retained authorized rollout evidence, not full deployed-source hash parity.
+
+## Saved scheduling
+Fresh exact8identity count:28distinct saved dates each=224/224,all sport_physical_v1. Read1576physical rows on217dates;7game dates have no physical work. Reports containwarnings,no fatal severity returned. Re-rendered16sample weeks from snapshot statuses and dated physical rows. Three demo personas lack off-season weeks; no invented phase/date. Existing sample zero-conditioning weeks remain; HS/pro5Tool game weeks have2/1ready hitting days,pro1buntingday. Older title-only six-day counts and Sunday Primer metadata were not executable prescription evidence. Sunday physical rows arebreathing only; Primer metadata now explicitly labeled execution-uncertified and omitted onrestdays. Missing game-density/form/outing-log/readiness/arm-ledger acceptance not inferred from224saves.
+
+## Scope and artifacts
+No publish, backend deployment, migration, cron, iOS, destructive cleanup, injury-clearance or real-player-settings change. Existing app page reads may perform their existing timezone/cache/saved-plan verification effects; no manual plan rebuild or performed-work write made. Browser screenshots/logs/readbacks:/tmp/browser/closeout8/. Raw certification/read-only queries/results:/tmp/closeout8/. Checklist PartA/PartB and saved scheduling guide updated; prior affected-role proofs retained, not all freshly replayed.
