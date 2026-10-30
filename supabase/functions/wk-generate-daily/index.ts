@@ -18,7 +18,7 @@ import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
 import { masteryContext } from "../_shared/masteryContext.ts";
 import { composeSportDay } from '../_shared/composeSportDay.ts';
 import { gamePitchLoads } from '../_shared/wic/pitching/gamePitchLoad.ts';
-import { optionalCompoundAvailable } from '../_shared/wic/lift/optionalSlot.ts';
+import { optionalCompoundAvailable, removeDuplicateCompounds } from '../_shared/wic/lift/optionalSlot.ts';
 import { planningGear } from '../_shared/planSwap/planningGear.ts';
 import { masteryPlanGuidance, masterySavedGuidance } from "../_shared/wic/masteryPlanContext.ts";
 import { checkInReductions, latestCheckInValues } from "../_shared/wic/checkInReductions.ts";
@@ -3856,6 +3856,13 @@ const handler = async (req: Request): Promise<Response> => {
     if (wholePlanRest(planDate, timelineToday.hold) || availabilityRest) {
       const gentle = restSafeFallback(finalRxs as any[], true);
       if (gentle.length) finalRxs = assignSequenceOrder(gentle as any) as typeof finalRxs;
+    }
+    // Governor step-downs may converge distinct selections into one compound
+    // category. Remove the later duplicate; never change the certifier or dose.
+    const compoundDedup=removeDuplicateCompounds(finalRxs,r=>coerceCanonicalCategory(lib.find(m=>m.slug===r.movement_slug) as any));
+    if(compoundDedup.removed.length){
+      finalRxs=assignSequenceOrder(compoundDedup.rows);
+      reductions.push({reason:'duplicate_compound_removed',detail:'A later lift duplicated an already selected compound category after the safety step-down, so it was left out.'});
     }
     // -------- WIC Validation Engine — no publication without a passing report --------
     const validatorReport = wicValidate({
