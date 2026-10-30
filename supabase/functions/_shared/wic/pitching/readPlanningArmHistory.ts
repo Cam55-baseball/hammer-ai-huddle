@@ -5,14 +5,14 @@ import { gamePitchLoads } from './gamePitchLoad.ts';
 export async function readPlanningArmHistory(db:any,userId:string,date:string,sport:string) {
   const complete=(r:any,limit:number)=>{if(r.error)throw r.error;if(!Array.isArray(r.data)||r.data.length>=limit)throw new Error('Complete arm history unavailable');return r.data;};
   const [arm,logs,games,saved]=await Promise.all([
-    db.from('arm_ledger_entries').select('entry_date,source,throw_type,count,status,game_id,game_sport').eq('user_id',userId).gte('entry_date',isoShift(date,-730)).lte('entry_date',date).limit(5000),
+    db.from('arm_ledger_entries').select('entry_date,source,throw_type,count,status,game_sources,game_sport').eq('user_id',userId).gte('entry_date',isoShift(date,-730)).lte('entry_date',date).limit(5000),
     db.from('wk_session_logs').select('plan_date,movement_slug,metrics').eq('user_id',userId).gte('plan_date',isoShift(date,-365)).lte('plan_date',date).in('movement_slug',['bullpen_pitching','pitching_outing']).limit(1000),
     db.from('gp_games').select('id,user_id,game_date,sport,pitch_count,status,deleted_at,ignored_for_training,is_starting_pitcher').eq('user_id',userId).eq('sport',sport).is('deleted_at',null).or('ignored_for_training.is.null,ignored_for_training.eq.false').gte('game_date',isoShift(date,-365)).lte('game_date',date).in('status',['completed','final']).limit(1000),
     db.from('athlete_plan_snapshots').select('plan_date,payload').eq('user_id',userId).eq('sport',sport).gte('plan_date',isoShift(date,-6)).lt('plan_date',date).limit(20),
   ]);
   const rows=complete(arm,5000);const gameRows=complete(games,1000);
   // Reconcile exact game identities below, never add their projection twice.
-  const result=rows.filter((r:any)=>!r.game_id && r.throw_type !== 'game_pitches_self');
+  const result=rows.filter((r:any)=>r.throw_type !== 'game_pitches_self');
   for(const log of complete(logs,1000)) {
     const rounds=log.metrics?.rounds;
     if(!Array.isArray(rounds))continue;

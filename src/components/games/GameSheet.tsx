@@ -101,6 +101,7 @@ export function GameSheet({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["gp-game", gameId] });
       qc.invalidateQueries({ queryKey: ["gp-games-list"] });
+      for (const key of ['game-pitch-load','planning-arm-history','arm-ledger','pitcher-schedule']) qc.invalidateQueries({queryKey:[key]});
     },
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
   });

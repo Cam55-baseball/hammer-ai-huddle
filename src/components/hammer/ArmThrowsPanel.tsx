@@ -50,7 +50,7 @@ export function ArmThrowsPanel({ source, planDate, fixture }: { source: EntrySou
   const role = throwRoleFrom(primary, secondary);
 
   const pitchLoad = useRecentPitchingLoad(7);
-  const gamePitchLoad = useGamePitchLoad(7);
+  const gamePitchLoad = useGamePitchLoad(7,date);
   const from = new Date(Date.parse(date + "T00:00:00Z") - 6 * 86400000).toISOString().slice(0, 10);
   const key = ["arm-ledger", user?.id, date];
   const entriesQ = useQuery({
