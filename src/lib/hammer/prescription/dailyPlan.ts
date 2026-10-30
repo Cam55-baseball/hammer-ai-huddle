@@ -14,6 +14,7 @@ import { priorityAccess } from '../priorityAccess';
 import { subscriptionSchedule } from './subscriptionSchedule';
 import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
 import { pitchingDay, guardArmDrills, eassArmEvent, windmillPlanningDrills, type PlanningArmHistory } from './pitchingDay';
+import {finalArmGuard} from './finalArmGuard';
 import { structureSkillSession } from './skillSessionStructure';
 import { restrictedFielding } from './restrictedFielding';
 import { applyPracticePlanContext } from './practicePlanContext';
@@ -249,6 +250,7 @@ const ALL_MODALITIES: ModalityKey[] = [
 ];
 
 interface BuilderArgs {
+  readonly gameTomorrow?: boolean;
   readonly pitchingType?: ReturnType<typeof pitchingDay>;
   readonly armHistory?: PlanningArmHistory;
   readonly planDate?: string;
@@ -354,7 +356,7 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, planDate, armRole, positionThrowing, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, planDate, armRole, positionThrowing, gameTomorrow, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
   const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
@@ -1031,7 +1033,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       if(armRole && normalizeSport(sportRaw)==='softball'){
         const care=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
         const phase=pitchingPhase??(seasonPhase==='off'?'os_q1':seasonPhase==='pre'?'preseason':seasonPhase==='in'?'in_season':'post_season');
-        eass.drills=[...care,...(planDate?windmillPlanningDrills({date:planDate,phase,age:ageYears,readiness:readinessScore,armPain:armSore||injuryRegions.some(r=>['shoulder','elbow','ucl','forearm'].includes(r)),equipment:[...proj.equipmentList],history:armHistory,outings:pitcherOutings}):[])];
+        eass.drills=[...care,...(planDate&&!eassCtx.isRecoveryDay?windmillPlanningDrills({date:planDate,phase,age:ageYears,readiness:readinessScore,armPain:armSore||injuryRegions.some(r=>['shoulder','elbow','ucl','forearm'].includes(r)),equipment:[...proj.equipmentList],history:armHistory,outings:pitcherOutings}):[])];
       }
       if(armRole==='two_way') {
         const position=normalizePosition(declaredPos)==='pitcher'?normalizePosition(ctx.get('position_secondary')?.value):normalizePosition(declaredPos);
@@ -1049,6 +1051,9 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         eass.drills=eass.drills.filter(d=>d.category!=='intent'&&d.category!=='overload').map(d=>d.stage==='full_go'?{...d,name:'Flat-ground command — existing pitch budget',stage:'drills' as const,cue:`${d.cue} Flat ground only, easy feel; use the same listed count.`}:d);
       }
       if(armRole && ['shoulder','elbow','ucl','forearm'].some(r=>injuryRegions.includes(r)))eass.drills=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
+      // A scheduled game tomorrow cannot coexist with a new pitcher arm dose
+      // that would impose rest on that game. Missing starter status is not clearance.
+      if(armRole && gameTomorrow)eass.drills=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
       if (planDate && armRole) eass.drills = guardArmDrills(eass.drills, {date:planDate,sport:normalizeSport(sportRaw),role:armRole,age:ageYears,level:ctx.get<string>('competition_level')?.value??null,history:armHistory});
       const outingReason = pitcherOutings?.pitchedYesterday
         ? "You pitched yesterday. Today's arm care is easy recovery work."
@@ -2460,7 +2465,7 @@ export function buildHammerDailyPlan(
   // Game IQ is unreleased: it is never saved into a player's plan until the release switch opens.
   const allowed = (m: ModalityKey) => (m !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES) && (!access || (m === 'hitting' ? access.hasHitting : m === 'baserunning' ? access.hasBaserunning : m === 'defense' ? access.hasDefense : m === 'throwing' ? access.hasThrowing || access.hasPitching : true));
   const firstPass = ALL_MODALITIES.filter(allowed).map((m) =>
-    builder({ modality: m, ctx, proj, speed, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
+    builder({ modality: m, ctx, proj, speed, gameTomorrow:scheduleSignal.isGameTomorrow, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
       pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings) : undefined,
       pitchingPhase:quarter.phase==='off'?`os_q${quarter.quarter}`:quarter.phase==='pre'?'preseason':quarter.phase==='in'?'in_season':'post_season',
       armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,positionThrowing:!!access&&!access.hasPitching,armHistory:roadmapInputs.armHistory,
@@ -2607,7 +2612,7 @@ export function buildHammerDailyPlan(
     const drills=available.length?sortByWarmupStage([...b.drills,...available],d=>d.slug??''):b.drills;
     return {...b,drills,steps:available.length?drillsToSteps(drills):b.steps,because:[...(b.because??[]),...notices]};
   });
-  const blocks = prehabbed.flatMap(b => {
+  const unguardedBlocks = prehabbed.flatMap(b => {
     if(!access?.hasPitching || b.modality!=='throwing')return [b];
     const type=pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings);
     const pitchingDrills=b.drills.filter(d=>d.armCard!=='throwing');
@@ -2615,6 +2620,7 @@ export function buildHammerDailyPlan(
     const pitching={...b,drills:pitchingDrills,steps:drillsToSteps(pitchingDrills),modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
     return [pitching,...(throwingDrills.length?[{...b,drills:throwingDrills,steps:drillsToSteps(throwingDrills),title:'Throwing — position work within your shared arm budget',gamePlanTemplate:null}]:[])];
   });
+  const blocks=access?.hasPitching?finalArmGuard(unguardedBlocks,{sport,role:access.pitcherOnly?'pitcher':'two_way',age:ctx.get<number>('age_years')?.value??null,date:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,history:roadmapInputs.armHistory}).map(b=>({...b,steps:drillsToSteps(b.drills)})):unguardedBlocks;
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {

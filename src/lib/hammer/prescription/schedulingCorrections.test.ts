@@ -74,4 +74,15 @@ describe('owner scheduling corrections A B C F G',()=>{
  expect(defense?.drills.some(d=>d.stage==='full_go')).toBe(false);
  });
  it('declared quantities count pitches separately from warm-up throws',()=>{expect(eassArmEvent(pitch)?.count).toBe(30);expect(eassArmEvent(pitch)?.kind).toBe('pitch');});
+ it('a scheduled game tomorrow prevents a bullpen creating rest debt on game day',()=>{
+ const plan=buildHammerDailyPlan(ctx('baseball',{position_primary:'P',age_years:17,season_phase:'in'}),{...NORMAL_SIGNAL,isGameTomorrow:true},null,null,undefined,new Date(2026,10,16),{subscriptionModules:['baseball_pitcher'],armHistory:{rows:[]}});
+ expect(plan.blocks.filter(b=>b.status==='ready').flatMap(b=>b.drills).some(d=>(d.armEvent?.count??0)>0)).toBe(false);
+ });
+ it('40-pitch softball game yesterday leaves next-day recovery without windmill pitches',()=>{
+ const outings={hasSchedule:true,plannedStartDates:[],thrownDates:['2026-06-02'],startsToday:false,startsTomorrow:false,pitchedYesterday:true,relieverAvailableSoon:false,relieverUnavailableToday:false,unconfirmed:[]};
+ expect(windmillPlanningDrills({date:'2026-06-03',phase:'in_season',age:17,readiness:80,armPain:false,equipment:['softball','bands'],history:{rows:[{entry_date:'2026-06-02',source:'pitching',throw_type:'game_pitches_self',count:40,status:'done'}]},outings})).toEqual([]);
+ const plan=buildHammerDailyPlan(ctx('softball',{position_primary:'P',age_years:17,season_phase:'in'}),undefined,null,null,undefined,new Date(2026,5,3),{subscriptionModules:['softball_pitcher'],resolvedSeasonPhase:'in',pitcherOutings:outings,armHistory:{rows:[{entry_date:'2026-06-02',source:'pitching',throw_type:'game_pitches_self',count:40,status:'done'}]}});
+ const card=plan.blocks.find(b=>b.modality==='pitching');
+ expect(card?.drills.length).toBeGreaterThan(0);expect(card?.drills.some(d=>(d.armEvent?.count??0)>0)).toBe(false);expect(card?.title).toContain('flush');
+ });
 });

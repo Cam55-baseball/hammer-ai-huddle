@@ -61,11 +61,13 @@ export function resolveOutingFacts(input: {
   settings: PitcherSettingsRow | null;
   outings: PitcherOutingRow[];
   availability: PitcherAvailabilityRow[];
+  /** Exact eligible finalized games, counted by gamePitchLoads. No inferred role. */
+  games?: readonly { game_id:string; date:string; count:number; isStart:boolean }[];
 }): OutingFacts {
   const { planDate, settings, outings, availability } = input;
   const yesterday = shift(planDate, -1);
   const tomorrow = shift(planDate, 1);
-  const thrown = outings.filter((o) => o.status === "thrown" && o.actual_date);
+  const thrown = [...outings.filter((o) => o.status === "thrown" && o.actual_date), ...(input.games ?? []).filter(g=>g.count>0 && g.date<=planDate).map(g=>({id:g.game_id,outing_type:g.isStart?'start' as const:'relief' as const,planned_date:null,actual_date:g.date,status:'thrown' as const}))];
   const thrownDates = [...new Set(thrown.map((o) => o.actual_date as string))].sort().reverse();
   const latestStart = thrown.filter((o) => o.outing_type === "start").map((o) => o.actual_date as string).sort().pop() ?? null;
 
@@ -84,7 +86,7 @@ export function resolveOutingFacts(input: {
   const isReliever = settings?.role === "reliever" || settings?.role === "both";
 
   return {
-    hasSchedule: !!settings || outings.length > 0 || availability.length > 0,
+    hasSchedule: !!settings || outings.length > 0 || availability.length > 0 || (input.games?.length ?? 0)>0,
     plannedStartDates,
     thrownDates,
     startsToday: plannedStartDates.includes(planDate),

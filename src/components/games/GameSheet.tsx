@@ -101,6 +101,7 @@ export function GameSheet({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["gp-game", gameId] });
       qc.invalidateQueries({ queryKey: ["gp-games-list"] });
+      for (const key of ['game-pitch-load','planning-arm-history','arm-ledger','pitcher-schedule']) qc.invalidateQueries({queryKey:[key]});
     },
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
   });
@@ -585,7 +586,7 @@ function OverviewPanel({
         </div>
       </div>
 
-      {oneTapLogging && (
+      {(oneTapLogging || positions.includes('P')) && (
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1.5">
             <Label htmlFor="innings-played">Innings played (optional)</Label>

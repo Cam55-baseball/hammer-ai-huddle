@@ -17,6 +17,8 @@ import { isPlanGameDay } from "../_shared/schedule/isGameDay.ts";
 import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
 import { masteryContext } from "../_shared/masteryContext.ts";
 import { composeSportDay } from '../_shared/composeSportDay.ts';
+import { gamePitchLoads } from '../_shared/wic/pitching/gamePitchLoad.ts';
+import { optionalCompoundAvailable, removeDuplicateCompounds } from '../_shared/wic/lift/optionalSlot.ts';
 import { planningGear } from '../_shared/planSwap/planningGear.ts';
 import { masteryPlanGuidance, masterySavedGuidance } from "../_shared/wic/masteryPlanContext.ts";
 import { checkInReductions, latestCheckInValues } from "../_shared/wic/checkInReductions.ts";
@@ -972,24 +974,33 @@ const handler = async (req: Request): Promise<Response> => {
     let actualStartDates: string[] = [];
     let pitcherScheduleReadFailed = false;
     try {
-      const [pss, pout, pav] = await Promise.all([
+      const [pss, pout, pav, armGames] = await Promise.all([
         admin.from("pitcher_schedule_settings").select("role, rotation_anchor_date, rotation_every_days, rotation_active").eq("user_id", user.id).maybeSingle(),
         admin.from("pitcher_outings").select("id, outing_type, planned_date, actual_date, status").eq("user_id", user.id)
           .or(`planned_date.gte.${isoShift(planDate, -21)},actual_date.gte.${isoShift(planDate, -21)}`).limit(200),
         admin.from("pitcher_availability").select("date, available").eq("user_id", user.id)
           .gte("date", isoShift(planDate, -1)).lte("date", isoShift(planDate, 2)),
+        admin.from('gp_games').select('id,user_id,game_date,sport,pitch_count,status,deleted_at,ignored_for_training,is_starting_pitcher').eq('user_id',user.id).eq('sport',sport).gte('game_date',isoShift(planDate,-21)).lte('game_date',planDate).in('status',['final','completed']).is('deleted_at',null).limit(200),
       ]);
-      for (const result of [pss, pout, pav]) if (result.error) throw result.error;
+      for (const result of [pss, pout, pav, armGames]) if (result.error) throw result.error;
+      if ((armGames.data??[]).length>=200) throw new Error('Complete game arm history unavailable');
+      const armGameIds=(armGames.data??[]).map((g:any)=>g.id);
+      const details=armGameIds.length ? await admin.from('gp_pitches').select('game_id').eq('user_id',user.id).eq('perspective','pitcher').in('game_id',armGameIds).limit(5000) : {data:[],error:null};
+      if(details.error || (details.data??[]).length>=5000) throw details.error ?? new Error('Complete game pitch history unavailable');
+      const actualGames=gamePitchLoads(armGames.data??[],details.data??[],user.id,sport);
       actualStartDates = ((pout.data ?? []) as any[]).filter((o) => o.status === "thrown" && o.outing_type === "start" && o.actual_date).map((o) => String(o.actual_date));
       outingFacts = resolveOutingFacts({
         planDate,
         settings: (pss as any)?.data ?? null,
         outings: ((pout as any)?.data ?? []) as any[],
         availability: ((pav as any)?.data ?? []) as any[],
+        games: actualGames,
       });
+      actualStartDates.push(...actualGames.filter(g=>g.isStart).map(g=>g.date));
       outingLoadDates = (((pout as any)?.data ?? []) as any[])
         .filter((o) => o.status === "thrown" && o.actual_date && o.outing_type !== "bullpen")
         .map((o) => String(o.actual_date));
+      outingLoadDates = [...new Set([...outingLoadDates,...actualGames.map(g=>g.date)])];
       if (!outingFacts.hasSchedule) outingFacts = null;
     } catch (_e) {
       pitcherScheduleReadFailed = true;
@@ -2950,6 +2961,11 @@ const handler = async (req: Request): Promise<Response> => {
           const pool = robustnessPool(area, robustCtx);
           const pick = pickBestLift(pool, `robustness_${area}`) ?? pickFirstLift(pool);
           if (!pick) continue;
+          const usedCategories=rxs.filter(r=>r.slot==='lift').map(r=>coerceCanonicalCategory(lib.find(m=>m.slug===r.movement_slug) as any));
+          if(!optionalCompoundAvailable(coerceCanonicalCategory(pick as any),usedCategories)) {
+            selectionSkips.record({domain:'lift',requirement:'robustness',reason:'Optional robustness was left out because its compound category is already trained today.'});
+            continue;
+          }
           if (isInSeason) {
             const liftSets = rxs.filter((r: any) => r.slot === "lift").reduce((a: number, r: any) => a + (Number(r.sets) || 0), 0);
             if (liftSets + ROBUSTNESS_IN_SEASON_SETS > IN_SEASON_SESSION_SET_CAP) {
@@ -3840,6 +3856,13 @@ const handler = async (req: Request): Promise<Response> => {
     if (wholePlanRest(planDate, timelineToday.hold) || availabilityRest) {
       const gentle = restSafeFallback(finalRxs as any[], true);
       if (gentle.length) finalRxs = assignSequenceOrder(gentle as any) as typeof finalRxs;
+    }
+    // Governor step-downs may converge distinct selections into one compound
+    // category. Remove the later duplicate; never change the certifier or dose.
+    const compoundDedup=removeDuplicateCompounds(finalRxs,r=>coerceCanonicalCategory(lib.find(m=>m.slug===r.movement_slug) as any));
+    if(compoundDedup.removed.length){
+      finalRxs=assignSequenceOrder(compoundDedup.rows);
+      reductions.push({reason:'duplicate_compound_removed',detail:'A later lift duplicated an already selected compound category after the safety step-down, so it was left out.'});
     }
     // -------- WIC Validation Engine — no publication without a passing report --------
     const validatorReport = wicValidate({
