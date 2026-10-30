@@ -1,4 +1,6 @@
 import { capAnalysisVideos } from '@/lib/prescription/analysisVideoCap';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 /**
  * Library videos matched to what THIS analysis actually found.
  *
