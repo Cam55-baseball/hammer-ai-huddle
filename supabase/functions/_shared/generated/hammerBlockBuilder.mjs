@@ -7975,11 +7975,11 @@ function buntingWeekdays(roadmap, gameDows, wanted) {
   return [...chosen, ...pregame.slice(0, Math.max(0, wanted - chosen.length))];
 }
 function gameSkillStation(b, original) {
-  const source = b.status === "ready" ? b : b.status === "off-day" && original?.status === "ready" ? original : void 0;
+  const source = b.status === "ready" ? b : void 0;
   if (!source?.drills.length) return b;
   const skill = source.drills.find((d3) => d3.stage === "drills" && /^\d+ swings/.test(d3.dosage));
   if (b.modality === "hitting" && !skill) return b;
-  const drills = b.modality === "hitting" && skill ? [{ ...skill, dosage: `${Math.min(15, Number(/^(\d+)/.exec(skill.dosage)?.[1] ?? 0))} swings`, cue: `${skill.cue} Game-speed decisions, low volume; stop before fatigue.` }] : source.drills.slice(0, 1).map((d3) => ({ ...d3, dosage: "1 rep \u2014 easy pre-game rehearsal; no extra throws" }));
+  const drills = b.modality === "hitting" && skill ? [{ ...skill, dosage: `${Math.min(15, Number(/^(\d+)/.exec(skill.dosage)?.[1] ?? 0))} swings`, cue: `${skill.cue} Game-speed decisions, low volume; stop before fatigue.` }] : source.drills.slice(0, 1).map((d3) => ({ ...d3, dosage: d3.dosage.replace(/^\d+/, "1"), cue: `${d3.cue} Easy pre-game rehearsal; stop before fatigue.` }));
   return {
     ...source,
     drills,
