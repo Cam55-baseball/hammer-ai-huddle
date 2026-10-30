@@ -164,6 +164,7 @@ import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 
 import { PlanStreakStrip } from "@/components/hammer/cards/PlanStreakStrip";
 import { runningCardTitle } from "@/lib/hammer/week/weeklyVolume";
+import { isCombinedBaseConditioningProgram } from "../../../supabase/functions/_shared/wic/conditioning/combinedBaseRunning";
 import { prescribedToday, visiblePlanCard, splitBaserunning, groupPhysicalBaserunning, splitBunting } from "@/components/hammer/cards/todayPresentation";
 import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure";
 import { ExerciseInstructions } from "@/components/hammer/cards/ExerciseInstructions";
@@ -752,6 +753,8 @@ function HammerDailyPlanBody({
   // Base Stealer: 5Tool and Golden 2Way only (owner rule) — never Complete Pitcher.
   const has5Tool = modules.includes(`${sportKey}_5tool`);
   const hasG2W = modules.includes(`${sportKey}_golden2way`);
+  // Owner Oct 30: same rule as the server builder (bundles or legacy hitting module).
+  const combinedBaseRunning = isCombinedBaseConditioningProgram(modules, sportKey);
 
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const physioMapping=useQuery({queryKey:['physio-plan-mapping',bodyUser?.id,bodyPlanDate],enabled:!!bodyUser,queryFn:async()=>{
@@ -1073,7 +1076,7 @@ function HammerDailyPlanBody({
             ...plan.blocks.filter(block => block.status === "ready" && block.drills.length > 0 && !["warmup", "fueling", "game_iq", "strength", "speed"].includes(block.modality)).map(block => block.modality === "defense" ? "Defense" : block.modality === "hitting" ? "Hitting" : block.modality === "baserunning" ? "Baserunning" : block.modality === "throwing" ? "Throwing" : "Recovery"),
             ...wkRx.grouped.speedCard.length ? ["Speed"] : [],
             ...wkRx.grouped.batSpeedCard.length ? ["Bat speed"] : [],
-            ...wkRx.grouped.conditioningCard.length ? ["Conditioning"] : [],
+            ...wkRx.grouped.conditioningCard.length ? [combinedBaseRunning ? "Base running & conditioning" : "Conditioning"] : [],
             ...wkRx.grouped.lifts.length ? ["Lift / tissue care"] : [],
           ])]} />
       </BeforeYouStartSection>
@@ -1361,7 +1364,7 @@ function HammerDailyPlanBody({
               })}
               {coachCards(["hitting", "pitching", "throwing", "fielding", "baserunning", "vision"])}
               <ErrorBoundary label="wk-conditioning">
-                <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} category={runningCardTitle({ has5Tool, hasG2W })} focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.conditioningCard.length > 0 || baseConditioning.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
+                <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} category={runningCardTitle({ has5Tool: combinedBaseRunning, hasG2W: false })} focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.conditioningCard.length > 0 || baseConditioning.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
                   {() => <>{wkRx.grouped.conditioningCard.length > 0 && <WkConditioningCard pocket />}{baseConditioning.map(b => <div key={`physical-${b.side ?? "x"}`}><BlockCard block={{...b, title: "Base-route running"}} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
                 </PocketCard>
               </ErrorBoundary>
