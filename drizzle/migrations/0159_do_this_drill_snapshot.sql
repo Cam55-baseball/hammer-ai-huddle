@@ -1,0 +1,2 @@
+ALTER TABLE public.intelligence_recommendations ADD COLUMN IF NOT EXISTS drill jsonb, ADD COLUMN IF NOT EXISTS source_video_id uuid;
+COMMENT ON COLUMN public.intelligence_recommendations.drill IS 'Owner Oct30: player-safe snapshot of the report-card drill (title, reps_sets, purpose, steps) for the General Do-this drop-down; no scores.';

@@ -10512,12 +10512,14 @@ export type Database = {
           checked_at: string | null
           created_at: string
           do_this: string
+          drill: Json | null
           followed: boolean | null
           followed_at: string | null
           id: string
           outcome: string | null
           principle_version_id: string | null
           recheck_value: number | null
+          source_video_id: string | null
           user_id: string
         }
         Insert: {
@@ -10526,12 +10528,14 @@ export type Database = {
           checked_at?: string | null
           created_at?: string
           do_this: string
+          drill?: Json | null
           followed?: boolean | null
           followed_at?: string | null
           id?: string
           outcome?: string | null
           principle_version_id?: string | null
           recheck_value?: number | null
+          source_video_id?: string | null
           user_id: string
         }
         Update: {
@@ -10540,12 +10544,14 @@ export type Database = {
           checked_at?: string | null
           created_at?: string
           do_this?: string
+          drill?: Json | null
           followed?: boolean | null
           followed_at?: string | null
           id?: string
           outcome?: string | null
           principle_version_id?: string | null
           recheck_value?: number | null
+          source_video_id?: string | null
           user_id?: string
         }
         Relationships: [
