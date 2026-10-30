@@ -7,9 +7,22 @@ import { guardArmDrills, eassArmEvent, windmillPlanningDrills } from './pitching
 import { subscriptionSchedule } from './subscriptionSchedule';
 import type { BuntCatalogItem } from './buntingPlan';
 import type { EassDrill } from './eassLibrary';
+import {NORMAL_SIGNAL} from './scheduleContext';
 const catalog:BuntCatalogItem[]=(['R','L'] as const).flatMap(side=>BUNT_TYPES.map(type=>({slug:`bunt_${side.toLowerCase()}_${type}`,name:BUNT_WORDING[side][type],cue:BUNT_WORDING[side][type],is_active:true,dosage_unit:'attempts',equipment_requirements:['bat','ball','field'],equipment:[],equipment_alternatives:[],sport_scope:'both',min_age_years:0,season_eligibility:['os_q1','os_q2','os_q3','os_q4','in_season'],visible_to:null})));
 const ctx=(sport:string,extra:Record<string,unknown>={})=>contextFromEnvelope(Object.fromEntries(Object.entries({sport_primary:sport,position_primary:'SS',bats_hand:'R',age_years:20,lifecycle_band:'adult',lifting_age_years:4,weekly_availability_days:6,season_phase:'off',injury_history:[],equipment_effective:null,...extra}).map(([key,value])=>[key,{value,source:'test',owner:'athlete',confidence:'high',missing:false,last_updated:null}])));
 describe('owner scheduling corrections A B C F G',()=>{
+ for(const sport of ['baseball','softball'] as const)it(`${sport} six-game week meets purchased ready skill floors`,()=>{
+  const counts:Record<string,number>={};
+  for(let n=0;n<7;n++){
+   const date=new Date(2026,10,16+n);
+   const plan=buildHammerDailyPlan(ctx(sport,{season_phase:'in'}),{...NORMAL_SIGNAL,postureToday:'game',rationale:'TEST six-game week'},null,null,undefined,date,{subscriptionModules:[`${sport}_5tool`],armHistory:{rows:[]},bunting:{gameWeekdays:[1,2,3,4,5,6],evidence:{battingGames:[],outcomes:[],sourceIds:[]},catalog,age:20,phase:'in_season'}});
+   const ready=plan.blocks.filter(b=>b.status==='ready'&&b.drills.length);
+   if(date.getDay()===0){expect(ready.some(b=>['hitting','defense','baserunning','throwing'].includes(b.modality))).toBe(false);continue;}
+   for(const category of ['hitting','defense','baserunning'])if(ready.some(b=>b.modality===category))counts[category]=(counts[category]??0)+1;
+   if(ready.some(b=>b.drills.some(d=>d.bunt))){counts.bunting=(counts.bunting??0)+1;expect(ready.flatMap(b=>b.drills).filter(d=>d.bunt).every(d=>d.bunt?.attempts===5)).toBe(true);}
+  }
+  expect(counts.hitting).toBeGreaterThanOrEqual(3);expect(counts.defense).toBeGreaterThanOrEqual(4);expect(counts.baserunning).toBeGreaterThanOrEqual(1);expect(counts.bunting).toBeGreaterThanOrEqual(2);
+ });
  it('legacy active all-skill subscription retains defense, bunting and pitching',()=>{expect(subscriptionSchedule(['hitting','pitching','throwing'],'baseball')).toMatchObject({hasPitching:true,hasHitting:true,hasDefense:true,hasBaserunning:true,hasBunting:true,pitcherOnly:false});});
  for(const sport of ['baseball','softball'] as const)for(const tier of ['pitcher','5tool','golden2way'] as const)it(`${sport}/${tier}: purchased floors with unknown gear across eight weeks`,()=>{
   for(let week=0;week<8;week++){
