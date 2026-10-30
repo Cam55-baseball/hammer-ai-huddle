@@ -12713,7 +12713,7 @@ function eligibleCatalog(catalog, ownedEquipment, input) {
     if (isOwnerDrill(drill)) {
       if (!PHILOSOPHY_TEST_USERS.some((id) => id === input.userId)) return false;
       const row = input.ownerRows?.find((r) => r.id === drill.ownerRowId);
-      if (!row || row.routine_role !== "fix_it") return false;
+      if (!row || row.routine_role !== "fix_it" || row.phase || row.level === "iso" || !["hitting", "fielding", "baserunning"].includes(drill.category)) return false;
       const slot = drill.category === "fielding" ? "hammers_today:defense" : drill.category === "baserunning" ? "hammers_today:baserunning" : "hammers_today:skill";
       if (!eligibleFor(row, [slot], { sport: input.sport, owned, day: input.now, skill: drill.category === "hitting" ? "hitting" : "throwing" })) return false;
     }
