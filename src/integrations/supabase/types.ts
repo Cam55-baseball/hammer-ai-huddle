@@ -2364,6 +2364,8 @@ export type Database = {
           count: number
           created_at: string
           entry_date: string
+          game_sources: Json | null
+          game_sport: string | null
           id: string
           prescribed: number | null
           source: string
@@ -2376,6 +2378,8 @@ export type Database = {
           count?: number
           created_at?: string
           entry_date: string
+          game_sources?: Json | null
+          game_sport?: string | null
           id?: string
           prescribed?: number | null
           source: string
@@ -2388,6 +2392,8 @@ export type Database = {
           count?: number
           created_at?: string
           entry_date?: string
+          game_sources?: Json | null
+          game_sport?: string | null
           id?: string
           prescribed?: number | null
           source?: string
@@ -24752,6 +24758,10 @@ export type Database = {
         Returns: undefined
       }
       swap_v2_enabled: { Args: never; Returns: boolean }
+      sync_game_arm_day: {
+        Args: { p_date: string; p_user: string }
+        Returns: undefined
+      }
       tag_at_bat_video: {
         Args: { _ab: string; _seconds: number; _video: string }
         Returns: undefined
