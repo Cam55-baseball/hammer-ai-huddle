@@ -53,7 +53,7 @@ export function sessionVersion(r: Readiness): { version: SessionVersion; volume:
 }
 
 export type MindKind = "situations" | "film_study" | "tex_vision" | "breathing" | "focus_routine" | "journaling";
-const MIND_ROTATION: MindKind[] = ["situations", "breathing", "film_study", "focus_routine", "journaling", "situations", "breathing"];
+const MIND_ROTATION: MindKind[] = ["situations", "journaling", "film_study", "focus_routine", "journaling", "situations", "focus_routine"]; // Owner Oct30: breathing is only the recovery card's last task, never a Mind duplicate.
 
 /** One non-physical item every day (rest days included). Tex Vision only when prescribed. */
 export function dailyMindItem(dayIndex: number, texVisionPrescribed: boolean): { kind: MindKind; physical: false; countsIn: "discipline" } {
