@@ -36,8 +36,9 @@ export function AddAnalysisDrill({ drill, videoId, sport,planDate,rotation=false
   return <>
     <Button variant="outline" size="sm" disabled={!videoId || busy} onClick={()=>{setOpen(true);setDone(false);setWarnings([]);setKeys([]);void add();}}><Plus className="h-4 w-4 mr-1"/>{rotation?'Review fix-it choice':'Add to Today'}</Button>
     <Sheet open={open} onOpenChange={value=>{if(!busy)setOpen(value);}}><SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
-      <SheetHeader><SheetTitle>{drill.name}</SheetTitle></SheetHeader>
+      <SheetHeader><SheetTitle className="pr-10 break-words">{drill.name}</SheetTitle></SheetHeader>
       <div className="space-y-4 py-4">
+        <p className="text-sm text-muted-foreground">Plan date: {planDate ?? new Date().toISOString().slice(0,10)}</p>
         {busy && <p role="status" className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin"/>Checking today’s work…</p>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         {done && <p role="status">Added to Today and your fix-it rotation. Your planned amount stays the same.</p>}
