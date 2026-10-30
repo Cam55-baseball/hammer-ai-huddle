@@ -32,6 +32,7 @@ export type MinimumContextKey = (typeof MINIMUM_CONTEXT_SET)[number];
 // Map a spine key to an `athlete_context` column.
 const COLUMN_BY_KEY: Record<string, string> = {
   sport_primary: "sport_primary",
+  sport_secondary: "sport_secondary",
   goal_summary: "goal_summary",
   goal_horizon: "goal_horizon",
   weekly_availability_days: "weekly_availability_days",
