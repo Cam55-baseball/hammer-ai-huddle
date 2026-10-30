@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { combinedRunningRowsToDrop, isCombinedBaseConditioningProgram, baseDistanceFeet } from "./combinedBaseRunning";
+import { combinedRunningRowsToDrop, isCombinedBaseConditioningProgram, baseDistanceFeet } from "../../../../supabase/functions/_shared/wic/conditioning/combinedBaseRunning";
 
 const rows = [
   { slot: "conditioning", movement_slug: "bases_home_2nd" },
