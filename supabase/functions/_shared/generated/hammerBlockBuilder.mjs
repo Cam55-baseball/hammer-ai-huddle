@@ -2355,7 +2355,7 @@ var OFF_SEASON_5D = {
     // Fri: accel base, not max-vel again
   },
   dayLabels: {
-    strength: { 1: "Heavy lower", 2: "Upper push", 4: "Heavy upper", 5: "Lower dynamic" },
+    strength: { 1: "Full-body heavy", 2: "Full-body strength", 4: "Full-body heavy", 5: "Full-body dynamic" },
     speed: { 2: "Max velocity", 5: "Acceleration base" }
   },
   priorityDayOrder: {
@@ -2381,7 +2381,7 @@ var OFF_SEASON_4D = {
     baserunning: [5]
   },
   dayLabels: {
-    strength: { 1: "Heavy lower", 2: "Upper", 4: "Heavy upper", 5: "Lower dynamic" },
+    strength: { 1: "Full-body heavy", 2: "Full-body strength", 4: "Full-body heavy", 5: "Full-body dynamic" },
     speed: { 2: "Max velocity", 5: "Acceleration" }
   },
   priorityDayOrder: {
@@ -2411,7 +2411,7 @@ var PRE_SEASON_5D = {
     speed: { 5: "secondary" }
   },
   dayLabels: {
-    strength: { 1: "Heavy full-body", 3: "Dynamic effort", 5: "Repetition effort" },
+    strength: { 1: "Full-body heavy", 3: "Dynamic effort", 5: "Repetition effort" },
     speed: { 1: "Acceleration", 3: "Max velocity", 5: "Tempo / freshness" }
   },
   priorityDayOrder: {
@@ -4140,6 +4140,26 @@ function seasonPhaseFromShort(code) {
 function getSeasonHPI(phaseOrShort) {
   const phase = phaseOrShort && VALID.includes(phaseOrShort) ? phaseOrShort : seasonPhaseFromShort(phaseOrShort);
   return SEASON_PROFILES[phase].hpi;
+}
+
+// src/lib/hammer/prescription/breathingPlacement.ts
+function isBreathingDrill(d3) {
+  return /breath/i.test(`${d3.slug ?? ""} ${d3.name ?? ""}`);
+}
+function placeBreathing(blocks, toSteps) {
+  let kept = false;
+  return blocks.map((b) => {
+    const breathing = b.drills.filter(isBreathingDrill);
+    if (!breathing.length) return b;
+    const rest = b.drills.filter((d3) => !isBreathingDrill(d3));
+    let drills = rest;
+    if (b.modality === "recovery" && !kept) {
+      kept = true;
+      drills = [...rest, breathing[0]];
+    }
+    const next = { ...b, drills };
+    return toSteps ? { ...next, steps: toSteps(drills) } : next;
+  });
 }
 
 // src/lib/hammer/prescription/eassLibrary.ts
@@ -6352,7 +6372,7 @@ var DESCRIPTORS = {
     index: 3,
     label: "Bridge",
     headline: "Bridge to elite \u2014 full off-season program.",
-    description: "Matches the elite 5-day off-season template. Heavy lower / upper split, max-velocity sprints, structured throwing ladder, side-independent bat-speed density.",
+    description: "Matches the elite 5-day off-season template. Full-body lifts, max-velocity sprints, structured throwing ladder, side-independent bat-speed density.",
     volumeCeilings: {
       liftSessionsPerWeek: 4,
       speedSessionsPerWeek: 2,
@@ -7036,27 +7056,6 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         equipmentNote: d3.equipmentNote,
         guide: d3.guide
       })), ["hammers_today:warmup"], { sport: normalizeSport(ctx.get("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set(proj.equipmentList ?? []) });
-      if (isRecoveryDay || recoverDay) {
-        const primer = getSeasonHPI(seasonPhase);
-        drills.splice(1, 0, {
-          name: "Breath primer (60 sec)",
-          slug: "hpi-breath-primer",
-          setup: "Seated or standing tall, shoulders soft, tongue on the roof of the mouth.",
-          dosage: primer.breathPrimer,
-          cue: `${primer.element} phase \u2014 ${primer.qiDirective}`,
-          stopIf: "Lightheaded \u2014 stop, breathe normally, then continue.",
-          guide: {
-            what: "A short breath-first primer that regulates the autonomic system before movement.",
-            setup: "Seated or standing tall, shoulders soft, tongue on the roof of the mouth.",
-            goodRep: ["Slow, quiet nasal breathing.", "Ribs expand 360\xB0, not just the chest.", "Exhale is longer than the inhale."],
-            badRep: ["Mouth breathing.", "Shoulders shrugging up on the inhale.", "Rushing the tempo."],
-            feel: "Calm, warm, slightly heavier \u2014 sympathetic tone dropping.",
-            whyToday: "Long exhales bias parasympathetic recovery; box breathing steadies focus before performance.",
-            nextLink: "hammer:open-hpi",
-            stopIf: "Lightheaded \u2014 stop, breathe normally, then continue."
-          }
-        });
-      }
       {
         const roleBySlug = new Map(built.drills.map((d3) => [d3.slug, d3.role]));
         const sorted = sortByWarmupStage(drills, (d3) => d3.slug ?? "", (d3) => roleBySlug.get(d3.slug ?? "") ?? null);
@@ -8645,7 +8644,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     console.debug("[dailyPlan] gp-signal bias \u2192", gpBiasTags);
   }
   return {
-    blocks: enforceSkillStageOrder(blocks),
+    blocks: enforceSkillStageOrder(placeBreathing(blocks, (d3) => drillsToSteps(d3))),
     sanity: validatePlanSanity({ restDay: fullRestDay, work: blocks.filter((b) => b.status === "ready").flatMap((b) => b.drills.map((d3) => ({ category: b.modality, slug: d3.slug }))) }),
     practiceLoad,
     seasonPhase: proj.seasonPhase,
