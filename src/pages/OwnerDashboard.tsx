@@ -50,7 +50,7 @@ import { OwnerSidebar, type OwnerSection } from "@/components/owner/OwnerSidebar
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TEST_ADMIN_PROOF_ID } from "@/lib/testAdminExclusion";
-import { accountStatus } from '@/lib/owner/accountStatus';
+import { accountStatus, unifiedSetupComplete } from '@/lib/owner/accountStatus';
 
 interface UserProfile {
   id: string;
@@ -249,7 +249,7 @@ const OwnerDashboard = () => {
     try {
       setStatusLoadFailed(false);
       const [usersResponse, rolesResponse, videosResponse, subsResponse, adminReqResponse, scoutAppResponse] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, created_at, hammers_today_started_at").neq("id", TEST_ADMIN_PROOF_ID).order("created_at", { ascending: false }),
+        supabase.from("profiles").select("id, full_name, created_at, hammers_today_started_at, position, height, throwing_hand, graduation_year").neq("id", TEST_ADMIN_PROOF_ID).order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id, role, status").neq("user_id", TEST_ADMIN_PROOF_ID),
         supabase.from("videos").select(VIDEO_PUBLIC_COLUMNS).neq("user_id", TEST_ADMIN_PROOF_ID).order("created_at", { ascending: false }).limit(10).then(async (r) => ({ ...r, data: r.data ? await withStaffScores(r.data as any) : r.data })),
         supabase.from("subscriptions").select("*").neq("user_id", TEST_ADMIN_PROOF_ID),
@@ -280,7 +280,7 @@ const OwnerDashboard = () => {
       if ([usersResponse,subsResponse,staff,assessments,coaches,scouts].some(r=>r.error)) setStatusLoadFailed(true);
       else {
         setAccountPlans([...(subsResponse.data??[]),...(staff.data??[])]);
-        setCompletedSetup(new Set([...(assessments.data??[]),...(coaches.data??[]),...(scouts.data??[])].filter(r=>!!r.completed_at).map(r=>r.user_id)));
+        setCompletedSetup(new Set([...(usersResponse.data??[]).filter(unifiedSetupComplete).map(r=>r.id),...[...(assessments.data??[]),...(coaches.data??[]),...(scouts.data??[])].filter(r=>!!r.completed_at).map(r=>r.user_id)]));
       }
       if (scoutAppResponse.data) setScoutApplications(scoutAppResponse.data);
       

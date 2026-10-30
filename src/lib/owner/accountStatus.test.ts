@@ -1,5 +1,9 @@
 import { expect,it } from 'vitest';
-import { accountStatus } from './accountStatus';
+import { accountStatus, unifiedSetupComplete } from './accountStatus';
+it('unified player setup needs all saved identifying answers',()=>{
+  expect(unifiedSetupComplete({position:'SS',height:'5 ft 8',throwing_hand:'R',graduation_year:2027})).toBe(true);
+  expect(unifiedSetupComplete({position:'SS',height:'5 ft 8',throwing_hand:'R'})).toBe(false);
+});
 it('active player or staff payment is independent of training start',()=>{
   expect(accountStatus({id:'paid'},[{user_id:'paid',status:'active'}],new Set())).toEqual({paid:true,started:false,onboarded:false});
   expect(accountStatus({id:'paid'},[{user_id:'paid',status:'canceled'}],new Set())).toEqual({paid:false,started:false,onboarded:false});
