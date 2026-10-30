@@ -9,13 +9,16 @@ import { PITCH_SMART_BANDS, bandIndex, restDaysFor, pitchSmartApplies, thirdCons
 import { u13ThrowBlockFrom } from '../../../../supabase/functions/_shared/wic/phases/u13ThrowGate';
 import { planWindmillSession } from '../../../../supabase/functions/_shared/wic/pitching/windmillProgram';
 
+/** Entered innings never lower the pitch-count estimate the windmill rules use. */
+const dayInnings=(rows:readonly ArmRow[],date:string,pitches:number)=>Math.max(Math.ceil(pitches/15),rows.filter(r=>r.entry_date===date).reduce((n,r)=>n+(Number(r.innings)>0?Number(r.innings):0),0));
+
 export interface PlanningArmHistory { rows: readonly ArmRow[]; unavailable?: boolean }
 
 /** Adapt only the canonical windmill program, never baseball weighted-ball work. */
 export function windmillPlanningDrills(input:{date:string;phase:string;age:number|null;readiness:number|null;armPain:boolean;equipment:string[];history?:PlanningArmHistory;outings?:OutingFacts|null}):EassDrill[]{
  if(!input.history||input.history.unavailable||input.age==null||input.armPain||input.outings?.pitchedYesterday)return [];
  const pitchRows=input.history.rows.filter(r=>r.source==='pitching'&&!/warm|catch|off_mound|flat/i.test(r.throw_type??'')&&!/skip|cancel|miss/i.test(r.status??''));
- const days=[...new Set(pitchRows.map(r=>r.entry_date))].map(date=>({date,pitches:pitchRows.filter(r=>r.entry_date===date).reduce((n,r)=>n+(r.count??0),0),innings:0}));
+ const days=[...new Set(pitchRows.map(r=>r.entry_date))].map(date=>({date,pitches:pitchRows.filter(r=>r.entry_date===date).reduce((n,r)=>n+(r.count??0),0),innings:0})).map(d=>({...d,innings:dayInnings(pitchRows,d.date,d.pitches)}));
  const session=planWindmillSession({planDate:input.date,phase:input.phase,age:input.age,readiness:input.readiness,armPain:input.armPain,growthMode:false,history:days,todayPitchesSoFar:days.find(d=>d.date===input.date)?.pitches??0,gameToday:!!input.outings?.startsToday,gameTomorrow:!!input.outings?.startsTomorrow,priorFullSessionsThisWeek:days.filter(d=>d.date>=new Date(Date.parse(input.date)-6*86400000).toISOString().slice(0,10)&&d.pitches>0).length,fullSessionYesterday:days.some(d=>d.date===new Date(Date.parse(input.date)-86400000).toISOString().slice(0,10)&&d.pitches>0),equipment:input.equipment});
  return session.rows.map(r=>({slug:r.slug,name:r.name,category:r.kind==='pitch'?'position_skill' as const:r.countWeight>0?'regulation' as const:'band_prep' as const,overloadClass:r.countWeight>0?'regulation' as const:undefined,intensity:r.kind==='pitch'?'moderate' as const:'prep' as const,stage:r.kind==='pitch'?'full_go' as const:'prep' as const,dosage:r.kind==='pitch'?`${r.sets*r.reps} pitches`:`${r.sets}x${r.reps} reps`,cue:r.cue,stopIf:'Shoulder or elbow pain, fatigue or unsafe space — stop.'}));
 }
@@ -51,7 +54,7 @@ export function guardArmDrills(drills: readonly EassDrill[], input:{date:string;
       if(thirdConsecutiveGameDay(dates,input.date))return care;
       if([...by].some(([date,n])=>date<input.date && Math.round((Date.parse(input.date)-Date.parse(date))/86400000)-1<restDaysFor(band,Math.ceil(n))))return care;
     }
-  } else if(windmillCheck(input.age,priorDays.map(d=>({date:d.date,pitches:d.pitches,innings:0})),input.date,{pitches:pitchRows.filter(r=>r.entry_date===input.date).reduce((n,r)=>n+(r.count??0),0)+1,innings:0}).length)return care;
+  } else if(windmillCheck(input.age,priorDays.map(d=>({date:d.date,pitches:d.pitches,innings:dayInnings(pitchRows,d.date,d.pitches)})),input.date,{pitches:pitchRows.filter(r=>r.entry_date===input.date).reduce((n,r)=>n+(r.count??0),0)+1,innings:0}).length)return care;
   const budget=armBudget({sport:input.sport,role:input.role,age:input.age});
   let room=Math.max(0,Math.min(budget.daily-(by.get(input.date)??0),budget.weekly-[...by].filter(([date])=>date>=new Date(Date.parse(input.date)-6*86400000).toISOString().slice(0,10)).reduce((n,[,v])=>n+v,0)));
   let pitchRoom=Math.max(0,(input.sport==='baseball'&&pitchSmartApplies(input.age,input.level)?PITCH_SMART_BANDS[bandIndex(input.age)].dailyMax:budget.daily)-pitchRows.filter(r=>r.entry_date===input.date).reduce((n,r)=>n+(r.count??0),0));

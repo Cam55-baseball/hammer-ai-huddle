@@ -6,7 +6,7 @@
 import { PITCH_SMART_BANDS, bandIndex, restDaysFor, pitchSmartApplies } from "./youthThrowing.ts";
 import { THROW_WEIGHTS, type ThrowKind } from "./throwCount.ts";
 
-export interface ArmRow { entry_date: string; source?: string | null; throw_type?: string | null; count?: number | null; status?: string | null }
+export interface ArmRow { entry_date: string; source?: string | null; throw_type?: string | null; count?: number | null; status?: string | null; innings?: number | null }
 
 const dayMs = 86_400_000;
 const ms = (d: string) => Date.parse(`${d}T00:00:00Z`);
