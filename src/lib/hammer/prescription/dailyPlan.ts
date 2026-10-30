@@ -15,6 +15,7 @@ import { subscriptionSchedule } from './subscriptionSchedule';
 import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
 import { pitchingDay, guardArmDrills, eassArmEvent, windmillPlanningDrills, type PlanningArmHistory } from './pitchingDay';
 import { structureSkillSession } from './skillSessionStructure';
+import { restrictedFielding } from './restrictedFielding';
 import { applyPracticePlanContext } from './practicePlanContext';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
 import type { OutingFacts } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
@@ -1204,6 +1205,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // just keep the modality visible with a "come back tomorrow" note.
       // Owner-approved narrow addition: swap one slot for a switched-on owner drill.
       const fieldingSource = prescription?.drills ? [...prescription.drills] : null;
+      const restricted = fieldingSource ? restrictedFielding(fieldingSource, injuryRegions) : null;
       const pitcherFielding = normalizePosition(pos)==='pitcher';
       const lowTaxingFielding = pitcherFielding ? fieldingSource?.filter(d=>d.executionKind==='fielding_reads').map(d=>({...d,setup:[d.setup,'Low-taxing pitcher fielding: walk through the read, field and set your feet. No release or extra throw; all throwing belongs to the arm plan.'].filter(Boolean).join(' '),cue:'Read, field and set your feet at easy pace. Do not throw.'})) : fieldingSource;
       const drills: DrillStep[] = structureSkillSession(mergeOwnerSlotDrills(lowTaxingFielding
@@ -1213,25 +1215,25 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
             { name: "Glove work — 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" },
           ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: ownedDefense }), { skill: 'defense', sport: defenseSport, owned: ownedDefense, injuryRegions, recoveryDay: recoverDay || tournamentToday || !skillExecutionAllowed || pitcherFielding });
       const armProtected=injuryRegions.some(r=>['shoulder','elbow','ucl','forearm'].includes(r));
-      const safeDrills = missingGear.length || armProtected ? drills.filter(d=>d.executionKind==='fielding_reads').map(d=>({...d,name:`${d.name} — dry footwork`,executionKind:undefined,stage:'drills' as const,setup:'Walk through the existing footwork without a ball or throw. Stay within your safe space; no diving, sprinting or catching.',cue:'Read an imaginary ball, set your feet, then reset. No throws.',stopIf:'Pain or unsafe space — stop.'})) : drills;
+      const safeDrills = restricted ? structureSkillSession(restricted.drills,{skill:'defense',sport:defenseSport,owned:ownedDefense,injuryRegions,recoveryDay:true}) : missingGear.length || armProtected ? drills.filter(d=>d.executionKind==='fielding_reads').map(d=>({...d,name:`${d.name} — dry footwork`,executionKind:undefined,stage:'drills' as const,setup:'Walk through the existing footwork without a ball or throw. Stay within your safe space; no diving, sprinting or catching.',cue:'Read an imaginary ball, set your feet, then reset. No throws.',stopIf:'Pain or unsafe space — stop.'})) : drills;
       const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
       const stopRules = [...(prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and update Hammer."]), "Use a glove, the correct ball and safe space. If something is missing, use Swap before starting; do not perform an unsafe rep."];
       const durationMin = prescription?.durationMin ?? (inSeason ? 15 : offSeason ? 35 : 25);
       const title = prescription?.title ?? `Defense — ${pos}`;
-      const why = prescription?.why
+      const why = restricted?.reason ?? prescription?.why
         ?? ((inSeason ? "Game-rep quality over volume." : offSeason ? "Footwork and range building." : "Position-specific reads, footwork, and finishes.") + (goal ? ` ${goal}` : ""));
 
       return {
         modality,
         title,
         why,
-        roadmapReason: tournamentToday
+        roadmapReason: restricted?.reason ?? (tournamentToday
           ? "Tournament day — primer only, save the legs."
           : inSeason
             ? "In-season — game-rep quality."
             : offSeason
               ? "Off-season — load volume + range."
-              : "Pre-season — sharpen reads and finishes.",
+              : "Pre-season — sharpen reads and finishes."),
         phase: inSeason ? "sharpen" : tournamentToday ? "maintain" : "build",
         steps: drillsToSteps(safeDrills),
         drills: safeDrills,
@@ -1265,7 +1267,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       if (legBlocked) {
         const drills: DrillStep[] = [
           { name: "Pickoff read film", dosage: "10 min", cue: "watch the pitcher's first move" },
-          { name: "Lead/secondary footwork (walk pace)", dosage: "10 reps", cue: "feet only, no max-effort sprint", stopIf: "any leg pain" },
+          { name: "Lead/secondary position reads — seated", dosage: "10 reps", cue: "Stay seated. Picture the lead and say when you would return to the base. No steps, pivots or running.", stopIf: "any pain or discomfort" },
         ];
         return {
           modality,
@@ -2406,6 +2408,12 @@ export function buildHammerDailyPlan(
     acc[m] = resolveSkillDaysTarget(
       "sustain", m, positionRaw, proj.injuryRegions, proj.lifecycleBand, proj.liftingAgeYears,
     );
+    // Normal fielding keeps its injury ceiling. Only the explicitly seated/dry
+    // canonical sibling can sustain the purchased defense floor without loading that injury.
+    if(m==='defense' && firstPositionToken(positionRaw)) {
+      const candidate=selectDefenseDrills({position:positionRaw,sport:sport==='softball'?'softball':'baseball',seasonPhase:proj.seasonPhase,injuryRegions:proj.injuryRegions});
+      if(candidate && restrictedFielding(candidate.drills,proj.injuryRegions))acc[m]=Math.max(acc[m]??0,4);
+    }
     const requested = roadmapInputs.testPreferences?.weekly_minimums?.[m];
     // Sustain already is the legal ceiling; scoped floors never reopen a
     // youth/injury-clamped day or reduce the canonical baseline.

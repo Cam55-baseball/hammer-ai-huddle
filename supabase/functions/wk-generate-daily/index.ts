@@ -393,6 +393,7 @@ import { oppositeLowerPool } from "../_shared/wic/lift/areaMap.ts";
 import { runningReadiness, type ReadinessCheckin, type RunningReadiness } from "../_shared/readiness/runningReadiness.ts";
 import { readPhysioMapping } from '../_shared/health/readPhysioMapping.ts';
 import { conditioningFloorDue, isRunningConditioning, floorConditioningSlugs } from "../_shared/wic/conditioning/weeklyFloor.ts";
+import { activeRestrictedAreas, restrictedConditioningReason } from '../_shared/wic/conditioning/restrictedConditioning.ts';
 
 // Step 20 C3 — the first request an isolate serves pays for loading the code.
 // That build is not comparable with a warm one, so the watchdog logs it for
@@ -911,6 +912,8 @@ const handler = async (req: Request): Promise<Response> => {
     const trainingAgeYears = Number((ctx as any)?.lifting_age_years ?? p.years_lifting ?? p.training_age_years ?? 0);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
+    for (const region of activeRestrictedAreas(ctx?.injury_history)) injurySlugs.add(region);
+    const restrictedConditioningWhy = restrictedConditioningReason([...injurySlugs]);
     for (const region of physio.activeAreas) injurySlugs.add(region);
     // -------- Tell Hammers timeline (spec adaptive-phases-and-schedule-v1 §2) --------
     // Read only when the athlete's switch is on. Off → empty list → every line
@@ -3284,7 +3287,11 @@ const handler = async (req: Request): Promise<Response> => {
       let conditioning: MovementRow[] = conditioningSelection.slugs
         .map((slug) => lib.find((m) => m.slug === slug))
         .filter((m): m is MovementRow => eligible(m));
-      if (conditioning.length === 0) {
+      if (restrictedConditioningWhy) {
+        conditioning = [lib.find(m=>m.slug==='rc_easy_flush')].filter((m):m is MovementRow=>eligible(m));
+        conditioningSelection = {...conditioningSelection,slugs:conditioning.map(m=>m.slug),why:restrictedConditioningWhy,templateId:'cond.recovery_flush',dialedDown:true,fallback:true};
+      }
+      if (conditioning.length === 0 && !restrictedConditioningWhy) {
         // Chosen work not available to this athlete — pre-Stage-1 pair, said honestly.
         conditioning = [
           lib.find((m) => m.slug === (sport === "baseball" ? "inning_restart_sim_bb" : "inning_restart_sim_sb") && eligible(m)),
@@ -3298,12 +3305,14 @@ const handler = async (req: Request): Promise<Response> => {
       }
       conditioningEmptyPool = conditioning.length === 0;
       for (const m of conditioning) {
-        push("conditioning", "conditioning", m, {}, conditioningSelection.why, {
+        push("conditioning", "conditioning", restrictedConditioningWhy ? {...m,why_prescribed:restrictedConditioningWhy,cue:'Seated stationary bike, comfortable pace, arms relaxed. Pain or a professional restriction — stop.'} : m, {}, conditioningSelection.why, {
           conditioning_why: conditioningSelection.why,
           conditioning_path: conditioningSelection.path,
           conditioning_template_id: conditioningSelection.templateId,
           conditioning_fallback: conditioningSelection.fallback,
           conditioning_dialed_down: conditioningSelection.dialedDown,
+          conditioning_restriction_reason: restrictedConditioningWhy,
+          conditioning_counts_as_running: !restrictedConditioningWhy && isRunningConditioning([m.slug]),
         });
       }
     }
@@ -3317,7 +3326,7 @@ const handler = async (req: Request): Promise<Response> => {
     try {
       const builtToday = conditioningSelection?.slugs ?? [];
       const ranToday = !conditioningEmptyPool && builtToday.length > 0 && isRunningConditioning(builtToday);
-      if (!ranToday && !isGameDay && !timelineToday.hold) {
+      if (!ranToday && !isGameDay && !timelineToday.hold && !restrictedConditioningWhy) {
         const { data: priorRows, error: priorErr } = await admin.from("wk_prescriptions")
           .select("plan_date, movement_slug").eq("user_id", user.id).eq("slot", "conditioning")
           .gte("plan_date", isoShift(planDate, -6)).lt("plan_date", planDate).limit(200);

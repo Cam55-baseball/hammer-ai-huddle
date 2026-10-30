@@ -3434,6 +3434,30 @@ function structureSkillSession(steps, options) {
   return sort(structured);
 }
 
+// src/lib/hammer/prescription/restrictedFielding.ts
+var DRY_READS = /* @__PURE__ */ new Set(["DP pivot at 2B \u2014 replace foot + throw", "DP pivot at 2B \u2014 quick feed & throw", "DP pivot", "DP pivot primer", "Backhand & throw across body", "Backhand range", "Backhand primer", "Pop-up communication with 2B/OF", "Pop-up communication \u2014 infield fly rule reps"]);
+var LEG = /* @__PURE__ */ new Set(["ankle", "knee", "hip", "hamstring", "groin", "quad", "calf", "foot"]);
+var ARM = /* @__PURE__ */ new Set(["shoulder", "elbow", "ucl", "forearm", "labrum", "rotator_cuff", "biceps"]);
+function restrictedFielding(drills, regions) {
+  const leg = regions.some((r) => LEG.has(r));
+  const arm = regions.some((r) => ARM.has(r));
+  if (!leg && !arm) return null;
+  const reason = `Because your ${regions.filter((r) => LEG.has(r) || ARM.has(r)).join(" and ")} restrictions limit normal fielding, keep these existing reads easy: ${leg ? "stay seated, with no steps or pivots" : "walk through only"}. No ball, catches or throws. Stop if it hurts.`;
+  const safe = drills.filter((d3) => DRY_READS.has(d3.name)).map((d3) => ({
+    ...d3,
+    name: `${d3.name.startsWith("DP pivot") ? "Double-play decision" : d3.name.startsWith("Backhand") ? "Backhand decision" : "Pop-up communication"} \u2014 ${leg ? "seated read" : "dry read"}`,
+    setup: reason,
+    cue: leg ? "Stay seated. Picture the ball and say where you would field it and set your feet. Keep your arms relaxed." : "Read an imaginary ball and set your feet slowly; do not throw.",
+    stopIf: "Pain, dizziness or discomfort \u2014 stop and update Hammers.",
+    guide: void 0,
+    executionKind: void 0,
+    armEvent: void 0,
+    stage: "drills",
+    equipmentNote: "No ball or glove needed for these dry reads."
+  }));
+  return safe.length ? { drills: safe, reason } : null;
+}
+
 // src/lib/hammer/prescription/practiceDoseAdjustment.ts
 function reducedSetsWithinFloor(sets, minimumSets) {
   const floor = minimumSets !== null && Number.isInteger(minimumSets) && minimumSets >= 1 ? minimumSets : 0;
@@ -7570,6 +7594,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         tier: defenseTier
       });
       const fieldingSource = prescription?.drills ? [...prescription.drills] : null;
+      const restricted = fieldingSource ? restrictedFielding(fieldingSource, injuryRegions) : null;
       const pitcherFielding = normalizePosition(pos) === "pitcher";
       const lowTaxingFielding = pitcherFielding ? fieldingSource?.filter((d3) => d3.executionKind === "fielding_reads").map((d3) => ({ ...d3, setup: [d3.setup, "Low-taxing pitcher fielding: walk through the read, field and set your feet. No release or extra throw; all throwing belongs to the arm plan."].filter(Boolean).join(" "), cue: "Read, field and set your feet at easy pace. Do not throw." })) : fieldingSource;
       const drills = structureSkillSession(mergeOwnerSlotDrills(lowTaxingFielding ? lowTaxingFielding : [
@@ -7577,17 +7602,17 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         { name: "Glove work \u2014 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" }
       ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: ownedDefense }), { skill: "defense", sport: defenseSport, owned: ownedDefense, injuryRegions, recoveryDay: recoverDay || tournamentToday || !skillExecutionAllowed || pitcherFielding });
       const armProtected = injuryRegions.some((r) => ["shoulder", "elbow", "ucl", "forearm"].includes(r));
-      const safeDrills = missingGear.length || armProtected ? drills.filter((d3) => d3.executionKind === "fielding_reads").map((d3) => ({ ...d3, name: `${d3.name} \u2014 dry footwork`, executionKind: void 0, stage: "drills", setup: "Walk through the existing footwork without a ball or throw. Stay within your safe space; no diving, sprinting or catching.", cue: "Read an imaginary ball, set your feet, then reset. No throws.", stopIf: "Pain or unsafe space \u2014 stop." })) : drills;
+      const safeDrills = restricted ? structureSkillSession(restricted.drills, { skill: "defense", sport: defenseSport, owned: ownedDefense, injuryRegions, recoveryDay: true }) : missingGear.length || armProtected ? drills.filter((d3) => d3.executionKind === "fielding_reads").map((d3) => ({ ...d3, name: `${d3.name} \u2014 dry footwork`, executionKind: void 0, stage: "drills", setup: "Walk through the existing footwork without a ball or throw. Stay within your safe space; no diving, sprinting or catching.", cue: "Read an imaginary ball, set your feet, then reset. No throws.", stopIf: "Pain or unsafe space \u2014 stop." })) : drills;
       const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
       const stopRules = [...prescription?.stopRules ?? ["Knee, ankle, or hip pain \u2014 stop and update Hammer."], "Use a glove, the correct ball and safe space. If something is missing, use Swap before starting; do not perform an unsafe rep."];
       const durationMin = prescription?.durationMin ?? (inSeason ? 15 : offSeason ? 35 : 25);
       const title = prescription?.title ?? `Defense \u2014 ${pos}`;
-      const why = prescription?.why ?? (inSeason ? "Game-rep quality over volume." : offSeason ? "Footwork and range building." : "Position-specific reads, footwork, and finishes.") + (goal ? ` ${goal}` : "");
+      const why = restricted?.reason ?? prescription?.why ?? (inSeason ? "Game-rep quality over volume." : offSeason ? "Footwork and range building." : "Position-specific reads, footwork, and finishes.") + (goal ? ` ${goal}` : "");
       return {
         modality,
         title,
         why,
-        roadmapReason: tournamentToday ? "Tournament day \u2014 primer only, save the legs." : inSeason ? "In-season \u2014 game-rep quality." : offSeason ? "Off-season \u2014 load volume + range." : "Pre-season \u2014 sharpen reads and finishes.",
+        roadmapReason: restricted?.reason ?? (tournamentToday ? "Tournament day \u2014 primer only, save the legs." : inSeason ? "In-season \u2014 game-rep quality." : offSeason ? "Off-season \u2014 load volume + range." : "Pre-season \u2014 sharpen reads and finishes."),
         phase: inSeason ? "sharpen" : tournamentToday ? "maintain" : "build",
         steps: drillsToSteps(safeDrills),
         drills: safeDrills,
@@ -7616,7 +7641,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       if (legBlocked) {
         const drills2 = [
           { name: "Pickoff read film", dosage: "10 min", cue: "watch the pitcher's first move" },
-          { name: "Lead/secondary footwork (walk pace)", dosage: "10 reps", cue: "feet only, no max-effort sprint", stopIf: "any leg pain" }
+          { name: "Lead/secondary position reads \u2014 seated", dosage: "10 reps", cue: "Stay seated. Picture the lead and say when you would return to the base. No steps, pivots or running.", stopIf: "any pain or discomfort" }
         ];
         return {
           modality,
@@ -8366,6 +8391,10 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       proj.lifecycleBand,
       proj.liftingAgeYears
     );
+    if (m === "defense" && firstPositionToken(positionRaw)) {
+      const candidate = selectDefenseDrills({ position: positionRaw, sport: sport === "softball" ? "softball" : "baseball", seasonPhase: proj.seasonPhase, injuryRegions: proj.injuryRegions });
+      if (candidate && restrictedFielding(candidate.drills, proj.injuryRegions)) acc[m] = Math.max(acc[m] ?? 0, 4);
+    }
     const requested = roadmapInputs.testPreferences?.weekly_minimums?.[m];
     if (typeof requested === "number" && Number.isInteger(requested) && requested >= 0 && requested <= 6) acc[m] = Math.min(acc[m] ?? 0, Math.max(acc[m] ?? 0, requested));
     return acc;

@@ -11,7 +11,7 @@ export const REST_DOW = 0; // Sunday
 export const NON_RUNNING = new Set(["rc_breathing_reset", "rc_travel_reset", "rc_long_reach_walk"]);
 
 export function isRunningConditioning(slugs: readonly string[]): boolean {
-  return slugs.some((s) => !NON_RUNNING.has(s));
+  return slugs.some((s) => ['bases_home_2nd','bases_1st_3rd','bases_double_sb','bases_triple_sb','repeat_90ft_bb','repeat_43ft_sb','inning_restart_sim_bb','inning_restart_sim_sb','pc_ankle_pogos_bb','pc_buildup_strides_bb','sp_drive_bounds_sb','sp_stride_stick_sb'].includes(s) || s.startsWith('owner_cond_'));
 }
 
 const dow = (iso: string) => new Date(`${iso}T12:00:00Z`).getUTCDay();

@@ -9,3 +9,7 @@ it('identical prescribed rows do not become new work just from order', () => {
   const b = { movement_slug: 'b', phase: 'in_season', sets: 2, reps: 6 };
   expect(planChangeSignature([a,b])).toBe(planChangeSignature([b,a]));
 });
+it('a new conditioning restriction updates an unchanged dose and its saved safety instructions',()=>{
+ const row={movement_slug:'rc_easy_flush',phase:'os_q1',duration_seconds:540,why_payload:{}};
+ expect(planChangeSignature([row])).not.toBe(planChangeSignature([{...row,why_payload:{conditioning_restriction_reason:'No running; seated bike only'}}]));
+});
