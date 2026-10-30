@@ -9,7 +9,7 @@ describe('restricted owner fielding floor',()=>{
   let count=0;for(let i=0;i<7;i++){
    const p=buildHammerDailyPlan(ctx,undefined,null,null,undefined,new Date(2026,10,2+i),{subscriptionModules:['hitting','pitching','throwing']});
    const b=p.blocks.find(b=>b.modality==='defense');
-   if(b?.status==='ready'&&b.drills.length){count++;expect(b.drills.every(d=>!d.armEvent&&d.stage!=='full_go'&&d.setup?.includes('stay seated'))).toBe(true);}
+   if(b?.status==='ready'&&b.drills.length){count++;expect(b.drills.every(d=>!d.armEvent&&d.stage!=='full_go'&&d.setup?.includes('stay seated')&&!/throw|pivot/.test(d.name))).toBe(true);}
   }expect(count).toBeGreaterThanOrEqual(4);
  });
  it('never promotes unknown catalog drills or unaffected athletes',()=>{

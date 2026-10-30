@@ -10,7 +10,7 @@ export function restrictedFielding(drills: readonly DrillStep[], regions: readon
   if (!leg && !arm) return null;
   const reason = `Because your ${regions.filter(r=>LEG.has(r)||ARM.has(r)).join(' and ')} restrictions limit normal fielding, keep these existing reads easy: ${leg ? 'stay seated, with no steps or pivots' : 'walk through only'}. No ball, catches or throws. Stop if it hurts.`;
   const safe = drills.filter(d=>DRY_READS.has(d.name)).map(d=>({...d,
-    name:`${d.name} — ${leg ? 'seated read' : 'dry read'}`,
+    name:`${d.name.startsWith('DP pivot') ? 'Double-play decision' : d.name.startsWith('Backhand') ? 'Backhand decision' : 'Pop-up communication'} — ${leg ? 'seated read' : 'dry read'}`,
     setup:reason,
     cue:leg?'Stay seated. Picture the ball and say where you would field it and set your feet. Keep your arms relaxed.':'Read an imaginary ball and set your feet slowly; do not throw.',
     stopIf:'Pain, dizziness or discomfort — stop and update Hammers.',
