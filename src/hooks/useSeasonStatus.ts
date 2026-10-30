@@ -86,7 +86,7 @@ export function useSeasonStatus() {
       const payload =
         rest.season_status !== undefined && rest.season_status_manual === undefined && !__silent
           ? { ...rest, season_status_manual: true, season_status_manual_at: new Date().toISOString() }
-          : rest;
+          : { ...rest, ...(!__silent ? { season_status_manual_at: new Date().toISOString() } : {}) };
       const { data: athlete, error: athleteError } = await supabase.from('athlete_context').select('sport_primary').eq('user_id', user.id).maybeSingle();
       if (athleteError) throw athleteError;
       if (!athlete?.sport_primary) throw new Error('Choose your sport before changing your season');

@@ -118,14 +118,17 @@ export function parseScheduleRequest(text: string, today: string): ParseResult {
   const phaseWord = t.match(/\b(off[ -]?season|pre[ -]?season|in[ -]?season|post[ -]?season)\b/);
   if (phaseWord) {
     const phase = phaseWord[1].replace(/[ -]/g, '').replace('offseason', 'off_season').replace('inseason', 'in_season').replace('postseason', 'post_season');
-    return { ok: true, draft: { tag: 'SEASON', ...range(first ?? today), dates: null, payload: { phase, which: phase === 'off_season' ? 'ends' : 'starts' } } };
+    return { ok: true, draft: { tag: 'SEASON', ...range(first ?? today, dates[1]), dates: null, payload: { phase, which: phase === 'off_season' ? 'ends' : 'starts', ...(dates[1] ? { window_end: dates[1] } : {}) } } };
   }
   const available = t.match(/\b(?:available|availability|can train|train)\s*(?:for|on)?\s*([1-7])\s*days?\s*(?:a|per|each)?\s*week\b/);
   if (available) return { ok: true, draft: { tag: 'NOTE', ...range(today), dates: null, payload: { kind: 'availability', days: Number(available[1]), text: text.trim() } } };
   if (/season (start|begin|end|finish|over)/.test(t)) {
     if (!first) return { ok: false, reason: "What date?" };
     const which = /end|finish|over/.test(t) ? "ends" : "starts";
-    return { ok: true, draft: { tag: "SEASON", ...range(first), dates: null, payload: { which } } };
+    // A season's final day is inclusive; offseason begins the following day.
+    const finalDay = which === 'ends' && !/offseason|off season/.test(t);
+    const effective = finalDay ? isoShift(first, 1) : first;
+    return { ok: true, draft: { tag: "SEASON", ...range(effective, finalDay ? null : dates[1]), dates: null, payload: { which, ...(finalDay ? { season_end: first } : dates[1] ? { phase: 'in_season', window_end: dates[1] } : {}) } } };
   }
   if (/travel|trip|away|vacation|break|rest|time off|off for/.test(t)) {
     const reason = /travel|trip|away|vacation/.test(t) ? "travel" : "break";

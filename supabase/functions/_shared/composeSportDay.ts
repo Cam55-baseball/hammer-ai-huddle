@@ -19,6 +19,7 @@ export async function composeSportDay(db: any, input: {
   readiness: unknown; phaseStartedAt: string|null;
   alwaysMissingGear?: string[];
   physio?: PhysioMapping;
+  availabilityDays?: number | null;
 }) {
   const { userId: uid, date, sport } = input;
   const day = new Date(`${date}T12:00:00Z`);
@@ -70,6 +71,7 @@ export async function composeSportDay(db: any, input: {
   const envelope={...env.data};
   const entry=(value:unknown,source:string)=>({value,source,owner:'canonical',confidence:'derived',missing:value==null,last_updated:null});
   envelope.equipment_effective=entry(input.equipment,'dated equipment resolver');
+  if (input.availabilityDays != null) envelope.weekly_availability_days=entry(input.availabilityDays,'athlete_context.weekly_availability_days');
   const existingInjuries=envelope.injury_history?.value;
   envelope.injury_history=entry([...(Array.isArray(existingInjuries)?existingInjuries:existingInjuries?[existingInjuries]:[]),...input.injuries].filter(Boolean),'canonical active injury/context');
   const age=ageFromDob(input.birthday,date);
@@ -108,6 +110,6 @@ export async function composeSportDay(db: any, input: {
     alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,physio:input.physio,testPreferences,
     bunting:access.hasHitting?{gameWeekdays,evidence,catalog:complete(bunts),age,userId:uid,phase:input.phase}:undefined});
   const plan=finalizeDatedPlan(raw,{sport,userId:uid,ownerRows:circulation.rows,now:day,cnsHigh:input.cns>=7,adjustments:adjRows,clips:clipRows,games:gp,principles:complete(principles),rankedFaults:accessiblePlanFaults(faults.rankedFaults,modules,sport,{clips:clipRows,now:day.getTime()}),signalScopes:faults.signalScopes,recurringIssues:accessibleRecurringIssues(issues,modules,sport),ownedEquipment:new Set(planningGear(input.equipment,input.alwaysMissingGear??[])),catalog:mergeCatalog(ELITE_DRILL_CATALOG,circulation.rows),circulation:{servedToUser:circulation.served,usage:circulation.usage}});
-  if(plan.sanity?.ok===false&&!input.rest)throw new Error('Sport day failed structural validation');
+  if(plan.sanity?.ok===false&&!input.rest)throw new Error(`Sport day failed structural validation: ${(plan.sanity.issues ?? []).join(',')}`);
   return {payload:{composition_version:'sport_physical_v1',sport,plan_date:date,engine_version:ENGINE_CONTRACT.version,seasonPhase:plan.seasonPhase,physicalPhase:input.phase,restDay:input.rest,weeklyRoadmap:plan.weeklyRoadmap,weeklyTemplate:plan.weeklyTemplate,microcycle:plan.microcycle,roadmap:plan.roadmap,blocks:plan.blocks},expectedSnapshot:snapshot.data?.updated_at??null,engine:ENGINE_CONTRACT.version};
 }
