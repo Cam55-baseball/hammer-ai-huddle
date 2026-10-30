@@ -1050,6 +1050,9 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         eass.drills=eass.drills.filter(d=>d.category!=='intent'&&d.category!=='overload').map(d=>d.stage==='full_go'?{...d,name:'Flat-ground command — existing pitch budget',stage:'drills' as const,cue:`${d.cue} Flat ground only, easy feel; use the same listed count.`}:d);
       }
       if(armRole && ['shoulder','elbow','ucl','forearm'].some(r=>injuryRegions.includes(r)))eass.drills=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
+      // A scheduled game tomorrow cannot coexist with a new pitcher arm dose
+      // that would impose rest on that game. Missing starter status is not clearance.
+      if(armRole && sched.isGameTomorrow)eass.drills=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
       if (planDate && armRole) eass.drills = guardArmDrills(eass.drills, {date:planDate,sport:normalizeSport(sportRaw),role:armRole,age:ageYears,level:ctx.get<string>('competition_level')?.value??null,history:armHistory});
       const outingReason = pitcherOutings?.pitchedYesterday
         ? "You pitched yesterday. Today's arm care is easy recovery work."
