@@ -39,7 +39,7 @@ describe("8-week simulation, every program, both sports", () => {
 
 describe("rules", () => {
   it("minimums", () => {
-    expect(weeklyMinimums(["hitting", "defense", "baserunning", "bunting"], "5tool")).toEqual({ hitting: 3, defense: 4, baserunning: 1, bunting: 2 });
+    expect(weeklyMinimums(["hitting", "defense", "baserunning", "bunting"], "5tool")).toEqual({ hitting: 3, defense: 4, baserunning: 2, bunting: 2 });
     expect(weeklyMinimums(["bunting"], "hitting_only")).toEqual({});
   });
   it("low readiness keeps the session as low-taxing", () => {
