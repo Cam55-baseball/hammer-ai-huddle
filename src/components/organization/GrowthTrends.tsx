@@ -68,7 +68,7 @@ export function GrowthTrends({ orgId }: { orgId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle><MeaningTitle organization title="Growth vs. Game Trends">Training completion is recorded cards done out of planned cards. Game outcomes use recorded scores: win 1, tie 0.5, loss 0. These measures are separate, and moving together is not proof of cause. Written video reports are not measurements.</MeaningTitle></CardTitle>
+        <CardTitle><MeaningTitle organization title="Growth vs. Game Trends" use="Look for stretches where training completion fell and game results dropped too. Use that to start a talk with the team.">Training completion is recorded cards done out of planned cards. Game outcomes use recorded scores: win 1, tie 0.5, loss 0. These measures are separate, and moving together is not proof of cause. Written video reports are not measurements.</MeaningTitle></CardTitle>
         <p className="text-sm text-muted-foreground">
           Compare a player's recorded training completion and game results. Shared movement does not prove cause.
         </p>
