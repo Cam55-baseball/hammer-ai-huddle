@@ -52,7 +52,7 @@ export default function StaffSignup() {
     if (!f.terms) return setErr("Agree to the Terms and Privacy Policy to continue.");
     setBusy(true);
     try {
-      const { data, error } = await signUp(em.data, f.password, `${f.first.trim()} ${f.last.trim()}`, { date_of_birth: f.dob, age_band: "adult" });
+      const { data, error } = await signUp(em.data, f.password, `${f.first.trim()} ${f.last.trim()}`, { date_of_birth: f.dob, age_band: "adult", sport: f.sport });
       if (error) return setErr(error.message);
       if (!data?.session) {
         const s = await supabase.auth.signInWithPassword({ email: em.data, password: f.password });

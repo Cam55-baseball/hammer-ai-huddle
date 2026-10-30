@@ -28,6 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSeasonStatus, type SeasonStatus } from "@/hooks/useSeasonStatus";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
+import { ActiveSportSwitch } from "@/components/hammer/ActiveSportSwitch";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 import { CompetitionLevelPicker } from "@/components/shared/CompetitionLevelPicker";
 import { detectInjuryPhrasing, type ReportInjuryRegionKey } from "@/lib/hammer/injury/reportInjury";
@@ -126,6 +127,7 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
         </DialogHeader>
 
         <div className="space-y-3">
+          {user && <ActiveSportSwitch userId={user.id} />}
           <div>
             <Label className="text-xs">Quick: season phase</Label>
             <div className="flex flex-wrap gap-1.5 mt-1">
