@@ -130,10 +130,10 @@ function AddDoThisButton({ drill, text, area, videoId }: { drill: any; text: str
     try {
       const { date, result } = await addToNextAppropriateSession(candidatePlanDates(new Date()), async (planDate) => {
         const { data, error } = await supabase.functions.invoke("plan-swap", { body: { action: "analysis_drill", videoId, drillId, sport, planDate } });
-        if (error || data?.error) return { error: data?.error ?? "Not added." };
+        if (error || data?.error) { const body = await (error as any)?.context?.clone?.().json?.().catch(() => null); return { error: data?.error ?? body?.error ?? "this drill could not be added." }; }
         return data;
       });
-      if (!date) setMsg(result.error ? `${result.error} Nothing was saved.`.replace(". Nothing was saved. Nothing was saved.", ". Nothing was saved.") : "No upcoming session of this kind yet. Nothing was saved.");
+      if (!date) setMsg(`Not added: ${result.error ?? "no upcoming session of this kind yet."} Nothing was saved.`);
       else if (result.saved) { setMsg(`Added ${match.name} to your ${date === candidatePlanDates(new Date())[0] ? "work today" : `session on ${date}`}.`); await qc.invalidateQueries({ predicate: (q) => /^(saved-block-day|wk-rx)/.test(String(q.queryKey[0])) }); }
       else setMsg(`Your session on ${date} needs a safety check first. Open it from the analysis report.`);
     } finally { setBusy(false); }
