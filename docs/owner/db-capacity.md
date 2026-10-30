@@ -3,6 +3,8 @@
 ## Recovery and evidence
 
 - Owner authorized restarting the shared Live Lovable Cloud backend. Restart tool accepted the request around **22:00 UTC**. Acceptance is not confirmation of completion.
+- Database start time read back as **22:05:43.390199 UTC**. By 22:06 UTC health and all three reachability probes recovered; `SELECT now()` answered at **22:06:19 UTC**.
+- Recovery load check: memory56%, disk45%, connections11/60, database3.20GB, transaction journal128MB. After the single successful published proof: memory50%, disk45%, connections23/60. Neither snapshot proves sustained capacity headroom.
 - At 22:00:18 UTC the auth-to-database probe timed out. Current health metrics were unavailable.
 - The only returned IO exhaustion alert was **04:01:53 UTC**, value **46**, described as “IO budget is less than 50%.” This is a historical alert, not a reading from the 21:58 outage. No recovery events are supplied.
 - Bounded database/auth log searches for 21:15–22:03 returned no records. Missing logs do not prove an absence of failure or load.
@@ -29,6 +31,8 @@ Inspected background candidates:
 
 Actual background executions, database read/write rates, steady IO budget consumption and peak overlap remain unavailable until health and bounded execution diagnostics answer. Source identifies candidates, not deployed frequency. Required next measurement: representative quiet and peak windows of CPU, memory, connections, read/write throughput and IO budget, alongside safe schedule metadata and query statistics.
 
+At 22:07 the statistics snapshot returned3,195 disk blocks read,660,598 cache hits and5,455,872 temporary bytes, with no statistics-reset timestamp. These cumulative quantities cannot supply a steady IO rate or attribute workload to background jobs; no before/after rate is claimed.
+
 ## Upgrade recommendation and cost
 
 **Conditional candidate: Medium database instance**, via **More → Database → Manage → Settings → Manage instance** (also exposed under Backend advanced instance settings). Current quote is **0.330368 requested credits/hour**, **7.928832/day**, or **237.86496 per 30 days at 720 active hours**. Relative to the recorded Pico quote, the same 720 hours would add **182.123136 requested credits**. These are instance-only quotes before coverage, not dollars paid, not a whole-app bill and not a guarantee against recurrence.
@@ -43,7 +47,9 @@ Small is quoted at 120.744 credits/720 hours; Large at 445.9104. Medium is a cap
 
 ## Published sign-in
 
-Pending successful restart and load check. A published login page loading is not successful sign-in; session restoration is not password sign-in. Recovery must be verified against the published origin with an actual token/password exchange and authenticated UI readback, without starting plans or changing athlete data.
+After a load check, one authorized TEST browser at a time opened **https://hammersmodality.org/auth**. A real refresh-token exchange from that published origin returned **200**, followed by authenticated redirect to **/dashboard** and successful database responses. Screenshot: `/tmp/browser/db-recovery/published-signed-in.png`; login screen: `/tmp/browser/db-recovery/published-login.png`. The first exchange lacked the public API key and returned401; the corrected exchange succeeded. This confirms published session renewal and authenticated access, **not fresh password-entry sign-in** (no approved password was available). Do not label the latter verified.
+
+The dashboard naturally issued many reads and some201/204 writes; no manual plan generation, workout entry or settings change was requested. The proof ended and no browser/test runner remained at22:07. Published initialization traffic is itself a future performance candidate, not a proven cause of this outage.
 
 No publish, deployment, migration, cron changes, iOS changes, retention change or compute upgrade was performed.
 
