@@ -174,6 +174,7 @@ export default function Subscribers() {
         <div>
           <h1 className="text-3xl font-bold">Subscriber Analytics</h1>
           <p className="text-muted-foreground">Active subscribers and module breakdown</p>
+          <AllAccountsLine />
         </div>
 
         <div className="grid gap-4 md:grid-cols-1">
@@ -288,4 +289,20 @@ export default function Subscribers() {
       </div>
     </DashboardLayout>
   );
+}
+
+/** Owner Oct30: unpaid and not-yet-onboarded accounts must be visible too. */
+function AllAccountsLine() {
+  const [counts, setCounts] = useState<{ total: number; paid: number } | null>(null);
+  useEffect(() => {
+    void (async () => {
+      const [{ count: total }, { data: subs }] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        supabase.from("subscriptions").select("user_id").eq("status", "active"),
+      ]);
+      setCounts({ total: total ?? 0, paid: new Set((subs ?? []).map((r: any) => r.user_id)).size });
+    })();
+  }, []);
+  if (!counts) return null;
+  return <p className="mt-1 text-sm">All accounts: {counts.total} · Not paid yet: {Math.max(0, counts.total - counts.paid)} · <a className="text-primary underline" href="/owner?section=users">See every account and its status</a></p>;
 }

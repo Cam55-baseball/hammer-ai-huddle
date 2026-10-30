@@ -57,6 +57,7 @@ import {
 import { buildWarmup, resolveWarmupContext, lifecycleFor } from "./warmupLibrary";
 import { guideFor as _guideForMovement } from "./movementGuide";
 import { getSeasonHPI } from "@/lib/seasonPhase";
+import { placeBreathing } from "./breathingPlacement";
 import {
   buildEassPrescription,
   normalizePosition,
@@ -473,27 +474,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // warm-up with a 60-second season-aware breath primer so we downshift
       // sympathetic tone before any movement load. Additive only — never
       // replaces a drill, only prepends a primer step.
-      if (isRecoveryDay || recoverDay) {
-        const primer = getSeasonHPI(seasonPhase);
-        drills.splice(1, 0, {
-          name: "Breath primer (60 sec)",
-          slug: "hpi-breath-primer",
-          setup: "Seated or standing tall, shoulders soft, tongue on the roof of the mouth.",
-          dosage: primer.breathPrimer,
-          cue: `${primer.element} phase — ${primer.qiDirective}`,
-          stopIf: "Lightheaded — stop, breathe normally, then continue.",
-          guide: {
-            what: "A short breath-first primer that regulates the autonomic system before movement.",
-            setup: "Seated or standing tall, shoulders soft, tongue on the roof of the mouth.",
-            goodRep: ["Slow, quiet nasal breathing.", "Ribs expand 360°, not just the chest.", "Exhale is longer than the inhale."],
-            badRep: ["Mouth breathing.", "Shoulders shrugging up on the inhale.", "Rushing the tempo."],
-            feel: "Calm, warm, slightly heavier — sympathetic tone dropping.",
-            whyToday: "Long exhales bias parasympathetic recovery; box breathing steadies focus before performance.",
-            nextLink: "hammer:open-hpi",
-            stopIf: "Lightheaded — stop, breathe normally, then continue.",
-          },
-        });
-      }
+      // Owner Oct30: breathing lives only as the last recovery task; never in warm-ups.
       // Order only (owner 2026-10-11): sort by warm-up stage; nothing added or removed.
       {
         const roleBySlug = new Map(built.drills.map((d) => [d.slug, d.role as string]));
@@ -2644,7 +2625,7 @@ export function buildHammerDailyPlan(
     console.debug("[dailyPlan] gp-signal bias →", gpBiasTags);
   }
   return {
-    blocks: enforceSkillStageOrder(blocks),
+    blocks: enforceSkillStageOrder(placeBreathing(blocks, (d) => drillsToSteps(d))),
     sanity: validatePlanSanity({ restDay: fullRestDay, work: blocks.filter(b => b.status === 'ready').flatMap(b => b.drills.map(d => ({ category: b.modality, slug: d.slug }))) }),
     practiceLoad,
     seasonPhase: proj.seasonPhase,

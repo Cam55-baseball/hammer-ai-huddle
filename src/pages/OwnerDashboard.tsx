@@ -108,7 +108,7 @@ const OwnerDashboard = () => {
   const [playerSearch, setPlayerSearch] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [rankingsVisible, setRankingsVisible] = useState(true);
-  const [activeSection, setActiveSection] = useState<OwnerSection>('overview');
+  const [activeSection, setActiveSection] = useState<OwnerSection>(() => (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('section') === 'users' ? 'users' : 'overview'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [builds, setBuilds] = useState<BuildItem[]>([]);
   const [pendingBuildId, setPendingBuildId] = useState<string | null>(null);
@@ -243,7 +243,7 @@ const OwnerDashboard = () => {
   const loadDashboardData = async () => {
     try {
       const [usersResponse, rolesResponse, videosResponse, subsResponse, adminReqResponse, scoutAppResponse] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, created_at").neq("id", TEST_ADMIN_PROOF_ID).order("created_at", { ascending: false }),
+        supabase.from("profiles").select("id, full_name, created_at, hammers_today_started_at").neq("id", TEST_ADMIN_PROOF_ID).order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id, role, status").neq("user_id", TEST_ADMIN_PROOF_ID),
         supabase.from("videos").select(VIDEO_PUBLIC_COLUMNS).neq("user_id", TEST_ADMIN_PROOF_ID).order("created_at", { ascending: false }).limit(10).then(async (r) => ({ ...r, data: r.data ? await withStaffScores(r.data as any) : r.data })),
         supabase.from("subscriptions").select("*").neq("user_id", TEST_ADMIN_PROOF_ID),
@@ -945,6 +945,15 @@ const OwnerDashboard = () => {
                                 Active
                               </Badge>
                             )}
+                            {(() => {
+                              // Owner Oct30: every account shows, with its status.
+                              const paid = subscriptions.some((s: any) => s.user_id === user.id && s.status === 'active');
+                              const started = !!(user as any).hammers_today_started_at;
+                              return <>
+                                <Badge variant="outline" className="text-xs">{paid ? 'Paid' : 'Not paid yet'}</Badge>
+                                <Badge variant="outline" className="text-xs">{started ? 'Started training' : 'Not onboarded yet'}</Badge>
+                              </>;
+                            })()}
                             <span className="text-xs text-muted-foreground">
                               · Joined {new Date(user.created_at).toLocaleDateString()}
                             </span>

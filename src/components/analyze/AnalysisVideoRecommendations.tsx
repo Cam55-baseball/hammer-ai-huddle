@@ -1,3 +1,6 @@
+import { capAnalysisVideos } from '@/lib/prescription/analysisVideoCap';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 /**
  * Library videos matched to what THIS analysis actually found.
  *
@@ -97,10 +100,25 @@ export function AnalysisVideoRecommendations({ analysis, module, sport, persiste
     enabled: Boolean(signals),
   });
 
-  const suggestions = useMemo(() => allSuggestions.filter((s) => s.relevance !== 'general'), [allSuggestions]);
+  const rawSuggestions = useMemo(() => allSuggestions.filter((s) => s.relevance !== 'general'), [allSuggestions]);
   const goalVideos = useAnalysisGoalVideos(module, sport);
-  const goalPicks = goalVideos.suggestions.filter(pick => !suggestions.some(s => s.video.id === pick.video.id));
-  const feedback = useVideoFaultFeedback([...suggestions, ...goalPicks].map(s => s.video.id));
+  const rawGoalPicks = goalVideos.suggestions.filter(pick => !rawSuggestions.some(s => s.video.id === pick.video.id));
+  const feedback = useVideoFaultFeedback([...rawSuggestions, ...rawGoalPicks].map(s => s.video.id));
+  const { data: watchedIds } = useQuery({
+    queryKey: ['analysis-watched-videos', user?.id], enabled: !!user,
+    queryFn: async () => {
+      const { data } = await (supabase as any).from('video_user_outcomes').select('video_id').eq('user_id', user!.id).not('watched_at', 'is', null).limit(1000);
+      return new Set<string>(((data ?? []) as Array<{ video_id: string }>).map(r => r.video_id));
+    },
+  });
+  // Owner Oct30: max 3 per analysis, unwatched first, at most one saved video.
+  const capped = useMemo(() => {
+    const all = [...rawSuggestions.map(s => ({ kind: 'fault' as const, s })), ...rawGoalPicks.map(s => ({ kind: 'goal' as const, s }))];
+    const saved = new Set(all.map(x => x.s.video.id).filter(v => feedback.isSaved(v)));
+    return capAnalysisVideos(all, x => x.s.video.id, watchedIds ?? new Set(), saved);
+  }, [rawSuggestions, rawGoalPicks, watchedIds, feedback]);
+  const suggestions = capped.filter(x => x.kind === 'fault').map(x => x.s as (typeof rawSuggestions)[number]);
+  const goalPicks = capped.filter(x => x.kind === 'goal').map(x => x.s as (typeof rawGoalPicks)[number]);
   // Never a blank shelf: if nothing matches the fault, offer the closest
   // foundational video for this part of the game, labelled as exactly that.
   const { results: foundationPicks } = useFoundationVideos({

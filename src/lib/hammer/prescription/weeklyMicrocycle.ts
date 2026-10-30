@@ -126,7 +126,7 @@ const OFF_SEASON_5D: WeeklyTemplate = {
     speed:    { 5: "secondary" },            // Fri: accel base, not max-vel again
   },
   dayLabels: {
-    strength: { 1: "Heavy lower", 2: "Upper push", 4: "Heavy upper", 5: "Lower dynamic" },
+    strength: { 1: "Full-body heavy", 2: "Full-body strength", 4: "Full-body heavy", 5: "Full-body dynamic" },
     speed:    { 2: "Max velocity", 5: "Acceleration base" },
   },
   priorityDayOrder: {
@@ -154,7 +154,7 @@ const OFF_SEASON_4D: WeeklyTemplate = {
     baserunning: [5],
   },
   dayLabels: {
-    strength: { 1: "Heavy lower", 2: "Upper", 4: "Heavy upper", 5: "Lower dynamic" },
+    strength: { 1: "Full-body heavy", 2: "Full-body strength", 4: "Full-body heavy", 5: "Full-body dynamic" },
     speed:    { 2: "Max velocity", 5: "Acceleration" },
   },
   priorityDayOrder: {
@@ -186,7 +186,7 @@ const PRE_SEASON_5D: WeeklyTemplate = {
     speed:    { 5: "secondary" },
   },
   dayLabels: {
-    strength: { 1: "Heavy full-body", 3: "Dynamic effort", 5: "Repetition effort" },
+    strength: { 1: "Full-body heavy", 3: "Dynamic effort", 5: "Repetition effort" },
     speed:    { 1: "Acceleration", 3: "Max velocity", 5: "Tempo / freshness" },
   },
   priorityDayOrder: {
