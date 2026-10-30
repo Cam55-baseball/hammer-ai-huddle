@@ -16,7 +16,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAuthStable: boolean;
-  signUp: (email: string, password: string, fullName: string, ageMeta?: { date_of_birth: string; age_band: string; guardian_email?: string }) => Promise<any>;
+  signUp: (email: string, password: string, fullName: string, ageMeta?: { date_of_birth: string; age_band: string; guardian_email?: string; sport?: string }) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<any>;
   resetPassword: (email: string) => Promise<any>;
