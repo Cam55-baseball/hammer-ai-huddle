@@ -6,7 +6,7 @@ The readback also returned 1,576 physical prescription rows on 217 dates; seven 
 
 ## Certification remains OPEN
 
-- Retained sample weeks show zero conditioning in the college softball Two-Way November 16–22 week and the HS/pro baseball 5Tool November 2–8 weeks. Do not count games or a bike/walk choice as confirmed running. The pro sample has only one bunting day. These are functional scheduling gaps, not owner visual checks.
+- Retained sample weeks show zero conditioning in the college softball Two-Way November 16–22 week and the HS/pro baseball 5Tool November 2–8 weeks. Do not count games or a bike/walk choice as confirmed running. The pro sample has only one bunting day; the HS/pro baseball 5Tool weeks have two/one ready hitting days, below the three-day floor (suppressed titles do not count). These are functional scheduling gaps, not owner visual checks.
 - Three baseball demo personas have no saved off-season week within this window. Their second sample below is honestly labeled in-season without games. No new dates or phases were invented.
 - Busy game densities were seeded through the TEST helper in the last batch. This is not a fresh proof of all required app-entered cohort schedules or starter/reliever outing logging and arm-ledger execution.
 - New pitcher sessions mostly use the existing easy flush; missing workload history does not prove mature pitcher-specific conditioning.
