@@ -24,6 +24,14 @@ export const WEEKLY_MINIMUMS: Record<SkillCategory, number> = {
   bunting: 2,
 };
 
+/** Programs whose base running and conditioning are one combined session (owner Oct 30). */
+export const COMBINED_BASE_CONDITIONING = new Set(["5tool", "golden_2way"]);
+export const COMBINED_BASE_CONDITIONING_MIN = 2;
+/** Card title for the day's running work: combined for 5Tool/G2W, pitcher conditioning otherwise. */
+export function runningCardTitle(program: { has5Tool: boolean; hasG2W: boolean }): string {
+  return program.has5Tool || program.hasG2W ? "Base running & conditioning" : "Conditioning";
+}
+
 /** Bunting minimum applies only to these programs. */
 export const BUNTING_PROGRAMS = new Set(["5tool", "golden_2way"]);
 
@@ -32,6 +40,9 @@ export function weeklyMinimums(owned: SkillCategory[], program: string): Partial
   for (const c of owned) {
     if (c === "bunting" && !BUNTING_PROGRAMS.has(program)) continue;
     out[c] = WEEKLY_MINIMUMS[c];
+    // Owner Oct 30: for 5Tool/Golden 2Way base-route conditioning IS the
+    // base-running session, so the combined session meets the higher floor (2).
+    if (c === "baserunning" && COMBINED_BASE_CONDITIONING.has(program)) out[c] = Math.max(WEEKLY_MINIMUMS.baserunning, COMBINED_BASE_CONDITIONING_MIN);
   }
   return out;
 }

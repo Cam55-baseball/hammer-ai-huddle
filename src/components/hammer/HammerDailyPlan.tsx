@@ -163,6 +163,7 @@ import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitchin
 import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 
 import { PlanStreakStrip } from "@/components/hammer/cards/PlanStreakStrip";
+import { runningCardTitle } from "@/lib/hammer/week/weeklyVolume";
 import { prescribedToday, visiblePlanCard, splitBaserunning, groupPhysicalBaserunning, splitBunting } from "@/components/hammer/cards/todayPresentation";
 import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure";
 import { ExerciseInstructions } from "@/components/hammer/cards/ExerciseInstructions";
@@ -1260,6 +1261,7 @@ function HammerDailyPlanBody({
                   </PocketCard>
                 );
               })}
+              <UpperBodyPrimerCard />
               <WarmupCrossoverAddons />
               {coachCards(["warmup"])}
               <HammerCheckInCard
@@ -1359,8 +1361,8 @@ function HammerDailyPlanBody({
               })}
               {coachCards(["hitting", "pitching", "throwing", "fielding", "baserunning", "vision"])}
               <ErrorBoundary label="wk-conditioning">
-                <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} category="Conditioning" focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.conditioningCard.length > 0 || baseConditioning.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
-                  {() => <>{wkRx.grouped.conditioningCard.length > 0 && <WkConditioningCard pocket />}{baseConditioning.map(b => <div key={`physical-${b.side ?? "x"}`}><Badge variant="secondary">Conditioning</Badge><BlockCard block={{...b, title: "Conditioning — base-running work"}} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
+                <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} category={runningCardTitle({ has5Tool, hasG2W })} focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.conditioningCard.length > 0 || baseConditioning.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
+                  {() => <>{wkRx.grouped.conditioningCard.length > 0 && <WkConditioningCard pocket />}{baseConditioning.map(b => <div key={`physical-${b.side ?? "x"}`}><BlockCard block={{...b, title: "Base-route running"}} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
                 </PocketCard>
               </ErrorBoundary>
               {coachCards(["conditioning"])}
@@ -1482,6 +1484,15 @@ const POCKET_INTROS: Record<string, string> = {
 };
 function countLabel(items: ReadonlyArray<unknown>): string | null {
   return items.length ? `${items.length} exercise${items.length === 1 ? "" : "s"}` : null;
+}
+
+function UpperBodyPrimerCard() {
+  const { grouped } = useHammersToday();
+  const rows = (grouped as { ubPrimerCard?: typeof grouped.warmupAddons }).ubPrimerCard ?? [];
+  if (!rows.length) return null;
+  return <PocketCard id="ub_primer" category="Upper-body primer" tone="" planDate={rows[0].plan_date} prescribed countLabel={countLabel(rows)} progress={progressOf(rows)}>
+    {() => <div className="space-y-2">{rows.map(rx => <WkPrescriptionCard key={rx.id} rx={rx} />)}</div>}
+  </PocketCard>;
 }
 
 function WarmupCrossoverAddons() {

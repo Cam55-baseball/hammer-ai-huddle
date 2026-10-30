@@ -37,8 +37,8 @@ export function LearningLoopList() {
       if (!user) return [];
       // Owner/admin also see which principle produced the advice.
       const cols = staff
-        ? "id, area, do_this, followed, outcome, created_at, followed_at, checked_at, principle_version_id, coaching_principle_versions(principle_id, version)"
-        : "id, area, do_this, followed, outcome, created_at, followed_at, checked_at";
+        ? "id, area, do_this, drill, followed, outcome, created_at, followed_at, checked_at, principle_version_id, coaching_principle_versions(principle_id, version)"
+        : "id, area, do_this, drill, followed, outcome, created_at, followed_at, checked_at";
       const { data, error } = await (supabase as any).from("intelligence_recommendations")
         .select(cols)
         .eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
@@ -69,7 +69,7 @@ export function LearningLoopList() {
       {data.map((r) => (
         <Card key={r.id} className="space-y-2 p-3">
           <p className="text-xs text-muted-foreground">Area: {r.area}</p>
-          <p className="font-medium">Do this: {r.do_this}</p>
+          <DoThisDrill text={r.do_this} drill={r.drill} />
           {staff && (r.coaching_principle_versions ? (
             <Link className="text-xs text-primary underline" to={`/owner/coaching-console?principle=${r.coaching_principle_versions.principle_id}`}>
               Which principle produced this advice (version {r.coaching_principle_versions.version})
@@ -94,5 +94,21 @@ export function LearningLoopList() {
         </Card>
       ))}
     </section>
+  );
+}
+
+/** Drill instructions in a drop-down, same as drills elsewhere. */
+function DoThisDrill({ text, drill }: { text: string; drill?: { title?: string | null; reps_sets?: string | null; purpose?: string | null; steps?: string[]; cue?: string | null } | null }) {
+  const hasHow = !!(drill && (drill.purpose || drill.steps?.length || drill.cue));
+  return (
+    <details className="rounded-md border border-border p-2" data-do-this-drill>
+      <summary className="cursor-pointer font-medium">Do this: {drill?.title ?? text}{drill?.reps_sets ? ` · ${drill.reps_sets}` : ""}</summary>
+      <div className="mt-2 space-y-1 text-sm">
+        {drill?.purpose && <p><span className="font-medium">Why: </span>{drill.purpose}</p>}
+        {!!drill?.steps?.length && <ol className="list-decimal space-y-0.5 pl-5">{drill.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>}
+        {drill?.cue && <p><span className="font-medium">Cue: </span>{drill.cue}</p>}
+        {!hasHow && <p className="text-muted-foreground">How-to steps show here for advice from your next analysis.</p>}
+      </div>
+    </details>
   );
 }
