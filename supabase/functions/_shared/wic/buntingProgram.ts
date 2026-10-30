@@ -24,6 +24,8 @@ export interface BuntingFacts {
   /** Scoped minimum only; existing legal days and unchanged attempt budgets remain the ceiling. */
   weeklyMinimum?: number;
   restDay: boolean; gameDay: boolean;
+  /** Owner-approved short station inside the existing hitting swing budget. */
+  pregameStation?: boolean;
   opponentThrows?: "L" | "R" | null;
 }
 export function buntingProgram(facts: BuntingFacts) {
@@ -44,6 +46,7 @@ export function buntingProgram(facts: BuntingFacts) {
   const weekdays = [...new Set(facts.legalWeekdays)].filter(day => Number.isInteger(day) && day >= 0 && day <= 6).sort((a,b) => a-b).slice(0, 6);
   const scheduled = included && sides.length ? weekdays.slice(0, wantedSessions) : [];
   const dose = (side: BuntSide, type: BuntType) => {
+    if (facts.gameDay && facts.pregameStation) return {reps:5,floor:5,attempts:0,successes:0,successRate:null};
     const floor = under300 || side === "L" && (facts.leftPower === true || facts.powerGoal === true) ? 7 : 5;
     const logs = (facts.outcomes ?? []).filter(outcome => outcome.side === side && outcome.type === type && validBuntOutcome(outcome));
     const attempts = logs.reduce((sum, log) => sum + log.attempts, 0);
@@ -53,6 +56,6 @@ export function buntingProgram(facts: BuntingFacts) {
   };
   const typesFor = (side: BuntSide) => BUNT_TYPES.filter(type => type !== "push" || facts.opponentThrows === "L" && !(side === "L" && facts.bats === "S"));
   return { included, sides, scheduled, wantedSessions, constrained: scheduled.length < wantedSessions,
-    canTrainToday: included && sides.length > 0 && !facts.restDay && !facts.gameDay,
+    canTrainToday: included && sides.length > 0 && !facts.restDay && (!facts.gameDay || facts.pregameStation === true),
     battingSample: { games: games.length, atBats:validWindow?window.atBats:atBats, hits:validWindow?window.hits:hits, average:validWindow?window.hits/window.atBats:atBats?hits/atBats:null, under300, window:validWindow?window:null }, dose, typesFor };
 }
