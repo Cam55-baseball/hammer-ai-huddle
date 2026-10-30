@@ -158,7 +158,7 @@ const CATEGORY_ABBR: Record<string, string> = {
 };
 const CATEGORY_LABEL: Record<string, string> = { Lifts: "Full-body lift", "Lift / tissue care": "Full-body lift" };
 const categoryLabel = (c: string) => CATEGORY_LABEL[c] ?? c;
-const CHIP = "rounded border px-1 py-[1px] text-[9px] leading-none";
+const CHIP = "rounded border font-normal px-1 py-[1px] text-[9px] leading-none";
 
 function DayCell({
   day,
