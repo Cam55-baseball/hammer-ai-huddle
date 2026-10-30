@@ -394,6 +394,7 @@ import { runningReadiness, type ReadinessCheckin, type RunningReadiness } from "
 import { readPhysioMapping } from '../_shared/health/readPhysioMapping.ts';
 import { conditioningFloorDue, isRunningConditioning, floorConditioningSlugs } from "../_shared/wic/conditioning/weeklyFloor.ts";
 import { activeRestrictedAreas, restrictedConditioningReason } from '../_shared/wic/conditioning/restrictedConditioning.ts';
+import { PHILOSOPHY_TEST_USERS, testSettingsFor, boundedSkillFloor } from '../_shared/generated/hammerBlockBuilder.mjs';
 
 // Step 20 C3 — the first request an isolate serves pays for loading the code.
 // That build is not comparable with a warm one, so the watchdog logs it for
@@ -3338,7 +3339,14 @@ const handler = async (req: Request): Promise<Response> => {
           const blockedDates = Array.from({length:7},(_,n)=>isoShift(planDate,n)).filter(date =>
             unavailableTrainingDate(date,(ctx as any)?.weekly_availability_days) || dayEffect(timelineEntries,date).hold ||
             dayEffect(timelineEntries,date).games.length > 0 || scheduledGames.some(g=>g.date===date&&!g.ignored&&!['canceled','cancelled','rescheduled'].includes(String(g.status))));
-          const floor = conditioningFloorDue({ planDate, priorRunningDates, blockedDates });
+          let minimum = 2;
+          if(PHILOSOPHY_TEST_USERS.includes(user.id)) {
+            const settings=await userClient.from('mastery_identity_settings').select('test_overrides').eq('sport',sport).maybeSingle();
+            if(settings.error)throw settings.error;
+            const scoped=settings.data?testSettingsFor(settings.data,user.id):null;
+            minimum=boundedSkillFloor(2,scoped?.weekly_minimums?.conditioning,6);
+          }
+          const floor = conditioningFloorDue({ planDate, priorRunningDates, blockedDates, minimum });
           conditioningFloor = { due: floor.due, needed: floor.needed, added: [] };
           if (floor.due) {
             const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");

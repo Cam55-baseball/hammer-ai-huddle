@@ -2562,7 +2562,7 @@ export function buildHammerDailyPlan(
   const restFiltered = fullRestDay ? bunted.map(b => {
     if (["fueling", "game_iq"].includes(b.modality)) return b;
     const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter(d => isSoftRecovery(d.slug)) : [];
-    return { ...b, drills, steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
+    return { ...b, ...(b.modality==='warmup'?{title:'Gentle recovery preparation'}:{}), drills, steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
       status: b.status === "awaiting-input" ? "awaiting-input" as const : drills.length ? "ready" as const : "off-day" as const,
       offDayOverridable: false, gamePlanTemplate: null,
       why: "Rest today — gentle recovery only. Save real training for your next training day.",
