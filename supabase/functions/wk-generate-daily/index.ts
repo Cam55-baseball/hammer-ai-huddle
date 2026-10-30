@@ -3324,7 +3324,7 @@ const handler = async (req: Request): Promise<Response> => {
     // low running/check-in readiness uses the easy-flush run (still counts).
     let conditioningFloor: { due: boolean; needed: number; added: string[]; readFailed?: boolean } | null = null;
     try {
-      const builtToday = conditioningSelection?.slugs ?? [];
+      const builtToday = rxs.filter(r => r.slot === 'conditioning').map(r => r.movement_slug);
       const ranToday = !conditioningEmptyPool && builtToday.length > 0 && isRunningConditioning(builtToday);
       if (!ranToday && !isGameDay && !timelineToday.hold && !restrictedConditioningWhy) {
         const { data: priorRows, error: priorErr } = await admin.from("wk_prescriptions")
@@ -3335,7 +3335,10 @@ const handler = async (req: Request): Promise<Response> => {
           const byDate = new Map<string, string[]>();
           for (const r of (priorRows ?? []) as any[]) byDate.set(r.plan_date, [...(byDate.get(r.plan_date) ?? []), r.movement_slug]);
           const priorRunningDates = [...byDate].filter(([, slugs]) => isRunningConditioning(slugs)).map(([d]) => d);
-          const floor = conditioningFloorDue({ planDate, priorRunningDates });
+          const blockedDates = Array.from({length:7},(_,n)=>isoShift(planDate,n)).filter(date =>
+            unavailableTrainingDate(date,(ctx as any)?.weekly_availability_days) || dayEffect(timelineEntries,date).hold ||
+            dayEffect(timelineEntries,date).games.length > 0 || scheduledGames.some(g=>g.date===date&&!g.ignored&&!['canceled','cancelled','rescheduled'].includes(String(g.status))));
+          const floor = conditioningFloorDue({ planDate, priorRunningDates, blockedDates });
           conditioningFloor = { due: floor.due, needed: floor.needed, added: [] };
           if (floor.due) {
             const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");
