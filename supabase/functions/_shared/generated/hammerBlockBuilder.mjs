@@ -12687,15 +12687,36 @@ function recurringBecause(issue, drillName) {
   return `Because "${prettyFinding(issue.fault_key)}" keeps showing up (${where}), "${drillName}" works on it today.`;
 }
 
+// src/lib/intelligence/testSettings.ts
+var PHILOSOPHY_TEST_USERS = ["a283a732-dfca-4160-9c9b-55305e092572", "bb839f7d-6a03-460e-8b64-444f220b53da"];
+function testSettingsFor(row, userId) {
+  if (!userId || !PHILOSOPHY_TEST_USERS.some((id) => id === userId)) return row;
+  const raw = row.test_overrides;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return row;
+  const scoped = raw[userId];
+  if (!scoped || typeof scoped !== "object" || Array.isArray(scoped)) return row;
+  const allowed = /* @__PURE__ */ new Set(["elite_grade", "pitching_standards", "prescription_weights", "weekly_minimums", "tags", "fault_keys", "placements", "routine_role", "weight"]);
+  return { ...row, ...Object.fromEntries(Object.entries(scoped).filter(([key2]) => allowed.has(key2))) };
+}
+function boundedSkillFloor(base2, minimum, safetyCeiling) {
+  return Number.isInteger(minimum) && typeof minimum === "number" && minimum >= 0 && minimum <= 6 ? Math.min(safetyCeiling, Math.max(base2, minimum)) : base2;
+}
+
 // src/lib/prescription/applyFaultPlanInfluence.ts
 var PLAN_SIGNAL_SOURCES = /* @__PURE__ */ new Set(["video_analysis", "report_card"]);
 function isOwnerDrill(drill) {
   return "ownerRowId" in drill;
 }
-function eligibleCatalog(catalog, ownedEquipment) {
+function eligibleCatalog(catalog, ownedEquipment, input) {
   const owned = new Set([...ownedEquipment].map((item) => item.trim().toLowerCase()));
   return catalog.filter((drill) => {
-    if (isOwnerDrill(drill)) return false;
+    if (isOwnerDrill(drill)) {
+      if (!PHILOSOPHY_TEST_USERS.some((id) => id === input.userId)) return false;
+      const row = input.ownerRows?.find((r) => r.id === drill.ownerRowId);
+      if (!row || row.routine_role !== "fix_it") return false;
+      const slot = drill.category === "fielding" ? "hammers_today:defense" : drill.category === "baserunning" ? "hammers_today:baserunning" : "hammers_today:skill";
+      if (!eligibleFor(row, [slot], { sport: input.sport, owned, day: input.now, skill: drill.category === "hitting" ? "hitting" : "throwing" })) return false;
+    }
     return drill.equipment.every((item) => owned.has(item.trim().toLowerCase()));
   });
 }
@@ -12721,7 +12742,7 @@ var MODULE_FOR = { hitting: "hitting", throwing: "throwing", pitching: "pitching
 function applyFaultPlanInfluence(input) {
   const now = input.now ?? /* @__PURE__ */ new Date();
   const priorities = input.rankedFaults.filter((r) => !r.clearedByCleanClips).slice(0, 3);
-  const catalog = eligibleCatalog(input.catalog, input.ownedEquipment);
+  const catalog = eligibleCatalog(input.catalog, input.ownedEquipment, input);
   return input.blocks.map((original) => {
     const disciplines = disciplinesForBlock(original);
     if (disciplines.length === 0 || original.status !== "ready" || original.drills.length === 0) return original;
@@ -13250,21 +13271,6 @@ var ENGINE_CONTRACT = {
     receiving_quality: { poor: -3, average: 0, elite: 5 }
   }
 };
-
-// src/lib/intelligence/testSettings.ts
-var PHILOSOPHY_TEST_USERS = ["a283a732-dfca-4160-9c9b-55305e092572", "bb839f7d-6a03-460e-8b64-444f220b53da"];
-function testSettingsFor(row, userId) {
-  if (!userId || !PHILOSOPHY_TEST_USERS.some((id) => id === userId)) return row;
-  const raw = row.test_overrides;
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return row;
-  const scoped = raw[userId];
-  if (!scoped || typeof scoped !== "object" || Array.isArray(scoped)) return row;
-  const allowed = /* @__PURE__ */ new Set(["elite_grade", "pitching_standards", "prescription_weights", "weekly_minimums", "tags", "fault_keys", "placements", "routine_role", "weight"]);
-  return { ...row, ...Object.fromEntries(Object.entries(scoped).filter(([key2]) => allowed.has(key2))) };
-}
-function boundedSkillFloor(base2, minimum, safetyCeiling) {
-  return Number.isInteger(minimum) && typeof minimum === "number" && minimum >= 0 && minimum <= 6 ? Math.min(safetyCeiling, Math.max(base2, minimum)) : base2;
-}
 export {
   ELITE_DRILL_CATALOG,
   ENGINE_CONTRACT,
