@@ -8,7 +8,7 @@ interface Props { rows: AsbEventRow[] | undefined; loading?: boolean }
 const DAY_TYPE_LABELS: Record<string, string> = {
   practice: "Practice",
   game: "Game",
-  lift: "Lift",
+  lift: "Full-body lift",
   rest: "Rest",
   travel: "Travel",
   off: "Off day",

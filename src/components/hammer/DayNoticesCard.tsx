@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const SURFACE_LABEL: Record<string, string> = {
-  lift: "Lift",
+  lift: "Full-body lift",
   swing: "Hitting",
   throw: "Throwing",
   speed: "Speed",
