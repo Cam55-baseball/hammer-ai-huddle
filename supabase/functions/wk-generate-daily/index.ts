@@ -3372,7 +3372,7 @@ const handler = async (req: Request): Promise<Response> => {
           conditioningFloor = { due: floor.due, needed: floor.needed, added: [] };
           if (floor.due) {
             const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");
-            const slugs = floorConditioningSlugs({ sport, isPitcher: isPitcherAthlete, lowReadiness: low });
+            const slugs = floorConditioningSlugs({ sport, isPitcher: isPitcherAthlete && !isCombinedBaseConditioningProgram(schedulingModules, sport), lowReadiness: low });
             const why = low
               ? "Weekly running minimum: an easy run today because your readiness is lower. It still counts as one of your 2 this week."
               : isPitcherAthlete
