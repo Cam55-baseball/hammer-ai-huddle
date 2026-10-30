@@ -57,5 +57,5 @@ Deno.serve(async (req) => {
 function drillSnapshot(d: any) {
   const text = (v: unknown, n = 400) => (typeof v === "string" && v.trim() ? v.trim().slice(0, n) : null);
   const list = (v: unknown) => Array.isArray(v) ? v.map((x) => text(x, 240)).filter(Boolean).slice(0, 10) : [];
-  return { title: text(d?.title, 150), reps_sets: text(d?.reps_sets, 80), purpose: text(d?.purpose ?? d?.why ?? d?.description), steps: list(d?.steps ?? d?.instructions), cue: text(d?.cue, 200) };
+  return { id: text(d?.id ?? d?.drill_id, 150), title: text(d?.title, 150), reps_sets: text(d?.reps_sets, 80), purpose: text(d?.purpose ?? d?.why ?? d?.description), steps: list(d?.steps ?? d?.instructions), cue: text(d?.cue, 200) };
 }
