@@ -49,7 +49,7 @@ export function ArmThrowsPanel({ source, planDate, fixture }: { source: EntrySou
   const age = fixture ? fixture.age : ageFrom(ctx.get<string>("date_of_birth")?.value as string | null);
   const role = throwRoleFrom(primary, secondary);
 
-  const pitchLoad = useRecentPitchingLoad(7);
+  const pitchLoad = useRecentPitchingLoad(7,date);
   const gamePitchLoad = useGamePitchLoad(7,date);
   const from = new Date(Date.parse(date + "T00:00:00Z") - 6 * 86400000).toISOString().slice(0, 10);
   const key = ["arm-ledger", user?.id, date];

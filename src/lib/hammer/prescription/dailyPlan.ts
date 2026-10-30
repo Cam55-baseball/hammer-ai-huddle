@@ -1031,7 +1031,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       if(armRole && normalizeSport(sportRaw)==='softball'){
         const care=eass.drills.filter(d=>['band_prep','cooldown','recovery'].includes(d.category));
         const phase=pitchingPhase??(seasonPhase==='off'?'os_q1':seasonPhase==='pre'?'preseason':seasonPhase==='in'?'in_season':'post_season');
-        eass.drills=[...care,...(planDate?windmillPlanningDrills({date:planDate,phase,age:ageYears,readiness:readinessScore,armPain:armSore||injuryRegions.some(r=>['shoulder','elbow','ucl','forearm'].includes(r)),equipment:[...proj.equipmentList],history:armHistory,outings:pitcherOutings}):[])];
+        eass.drills=[...care,...(planDate&&!eassCtx.isRecoveryDay?windmillPlanningDrills({date:planDate,phase,age:ageYears,readiness:readinessScore,armPain:armSore||injuryRegions.some(r=>['shoulder','elbow','ucl','forearm'].includes(r)),equipment:[...proj.equipmentList],history:armHistory,outings:pitcherOutings}):[])];
       }
       if(armRole==='two_way') {
         const position=normalizePosition(declaredPos)==='pitcher'?normalizePosition(ctx.get('position_secondary')?.value):normalizePosition(declaredPos);

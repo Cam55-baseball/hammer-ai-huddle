@@ -7,20 +7,22 @@ import { aggregateRecentPitchingLoad, type RecentPitchingLoad } from "@/lib/hamm
  * Fetches the last `days` of pitching logs and aggregates into a
  * per-day pitch total + last-outing summary.
  */
-export function useRecentPitchingLoad(days = 7): { data: RecentPitchingLoad | null; loading: boolean; isError: boolean } {
+export function useRecentPitchingLoad(days = 7, planDate?:string): { data: RecentPitchingLoad | null; loading: boolean; isError: boolean } {
   const { user } = useAuth();
   const q = useQuery({
-    queryKey: ["recent-pitching-load", user?.id, days],
+    queryKey: ["recent-pitching-load", user?.id, days, planDate],
     queryFn: async (): Promise<RecentPitchingLoad> => {
       if (!user) return { byDate: {}, weeklyTotal: 0, lastOuting: null };
-      const from = new Date();
-      from.setDate(from.getDate() - days);
+      const until=planDate??new Date().toISOString().slice(0,10);
+      const from = new Date(`${until}T12:00:00Z`);
+      from.setDate(from.getDate() - days + 1);
       const fromIso = from.toISOString().slice(0, 10);
       const { data, error } = await (supabase as any)
         .from("wk_session_logs")
         .select("plan_date, movement_slug, metrics")
         .eq("user_id", user.id)
         .gte("plan_date", fromIso)
+        .lte('plan_date',until)
         .in("movement_slug", ["bullpen_pitching", "pitching_outing"])
         .order("plan_date", { ascending: false });
       if (error) throw error;

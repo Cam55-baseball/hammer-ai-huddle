@@ -586,7 +586,7 @@ function OverviewPanel({
         </div>
       </div>
 
-      {oneTapLogging && (
+      {(oneTapLogging || positions.includes('P')) && (
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1.5">
             <Label htmlFor="innings-played">Innings played (optional)</Label>
