@@ -1367,7 +1367,7 @@ function HammerDailyPlanBody({
               </ErrorBoundary>
               {coachCards(["conditioning"])}
               <ErrorBoundary label="wk-lifts">
-                <PocketCard id="lift" progress={progressOf(wkRx.grouped.lifts)} intro={POCKET_INTROS.lift} category="Lift" focus={pocketFocus(wkRx.grouped.lifts)} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
+                <PocketCard id="lift" progress={progressOf(wkRx.grouped.lifts)} intro={POCKET_INTROS.lift} category="Full-body lift" focus={null} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
                   {() => <WkLiftsCard pocket />}
                 </PocketCard>
               </ErrorBoundary>

@@ -66,7 +66,7 @@ const SLOT_TONE: Record<WkRx["slot"], string> = {
 };
 
 const SLOT_LABEL: Record<WkRx["slot"], string> = {
-  lift: "Lift",
+  lift: "Full-body lift",
   supplemental: "Supplemental",
   speed: "Speed",
   bat_speed: "Bat-Speed",

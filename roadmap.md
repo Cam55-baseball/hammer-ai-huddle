@@ -4553,3 +4553,8 @@ Deploys/additive migrations needed for 2, 3, 13, 18, 20 and server scheduling ce
 - [ ] Item 13: heart an owner drill; future-date Add to Today proof
 - [ ] Item 18: fresh TEST player sign-up -> Start -> 7 saved days -> reload
 - [ ] Item 20: on-screen Confirm/Undo, TEST weights reaching the plan; guide note: minimum at safety maximum is correct
+
+## Owner addendum (Oct 30)
+- [x] A. Full-body lift titles on Today card/notices/week/load cards; slot names removed from lift card subtitle. Focus mode + coach view not yet screenshot.
+- [ ] B. Restore Hammers Today card to Oct 23 state except approved additions; hitter + pitcher before/after screenshots.
+- [ ] C. The General / coach / org: keep only sound correlations ("Need more data"), Hammers Card format, what-it-means on every section; screenshot Today/Performance/Growth.
