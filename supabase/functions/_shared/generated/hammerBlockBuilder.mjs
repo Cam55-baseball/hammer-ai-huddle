@@ -13197,9 +13197,22 @@ var ENGINE_CONTRACT = {
     receiving_quality: { poor: -3, average: 0, elite: 5 }
   }
 };
+
+// src/lib/intelligence/testSettings.ts
+var PHILOSOPHY_TEST_USERS = ["a283a732-dfca-4160-9c9b-55305e092572", "bb839f7d-6a03-460e-8b64-444f220b53da"];
+function testSettingsFor(row, userId) {
+  if (!userId || !PHILOSOPHY_TEST_USERS.some((id) => id === userId)) return row;
+  const raw = row.test_overrides;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return row;
+  const scoped = raw[userId];
+  if (!scoped || typeof scoped !== "object" || Array.isArray(scoped)) return row;
+  const allowed = /* @__PURE__ */ new Set(["elite_grade", "pitching_standards", "prescription_weights", "weekly_minimums", "tags", "fault_keys", "placements", "routine_role", "weight"]);
+  return { ...row, ...Object.fromEntries(Object.entries(scoped).filter(([key2]) => allowed.has(key2))) };
+}
 export {
   ELITE_DRILL_CATALOG,
   ENGINE_CONTRACT,
+  PHILOSOPHY_TEST_USERS,
   accessiblePlanFaults,
   accessibleRecurringIssues,
   buildHammerDailyPlan,
@@ -13212,5 +13225,6 @@ export {
   projectMasterySources,
   readDrillCirculation,
   setOwnerPlanDrills,
-  setWarmupStageOverrides
+  setWarmupStageOverrides,
+  testSettingsFor
 };
