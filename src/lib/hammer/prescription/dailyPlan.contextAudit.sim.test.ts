@@ -287,6 +287,15 @@ describe("execution: hitting session structure", () => {
 
 // ── AO5: real goal ranking (category_goals) → card order ──
 describe("audit: ranked category goals → day order", () => {
+  it('TEST weight defense 1→2 changes the existing goal rank and Undo restores it, with identical doses',()=>{
+    const context=ctx({...BASE,category_goals:{version:2,categoryOrder:['hitting','fielding','throwing','speed','power'],updatedAt:'2026-06-01T00:00:00Z'},equipment_effective:['field','glove','ball','tee','gamer_bat','net']});
+    const build=(defense:number)=>buildHammerDailyPlan(context,NORMAL_SIGNAL,null,null,undefined,DAY,{testPreferences:{prescription_weights:{hitting:1,defense,baserunning:1,pitching:1}}});
+    const original=build(1),confirmed=build(2),undone=build(1);
+    expect(original.blocks.find(b=>b.modality==='defense')?.why).toContain('Goal #2');
+    expect(confirmed.blocks.find(b=>b.modality==='defense')?.why).toContain('Goal #1');
+    expect(undone.blocks.find(b=>b.modality==='defense')?.why).toContain('Goal #2');
+    for(const b of original.blocks)expect(confirmed.blocks.find(after=>after.modality===b.modality)?.drills).toEqual(b.drills);
+  });
   it('the actual plan honors a saved V2 category order with no sub-goals yet', () => {
     const p = buildHammerDailyPlan(ctx({ ...BASE,
       category_goals: { version: 2, categoryOrder: ['fielding', 'hitting', 'throwing', 'speed', 'power'], updatedAt: '2026-06-01T00:00:00Z' },

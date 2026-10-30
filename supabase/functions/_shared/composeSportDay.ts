@@ -3,6 +3,7 @@ import {
   finalizeDatedPlan, projectBuntingEvidence, planFaultContext, accessiblePlanFaults,
   accessibleRecurringIssues, mergeCatalog, ELITE_DRILL_CATALOG, readDrillCirculation,
   priorityAccess, ENGINE_CONTRACT,
+  PHILOSOPHY_TEST_USERS, testSettingsFor,
 } from './generated/hammerBlockBuilder.mjs';
 import { isoShift } from './wic/schedule/timeline.ts';
 import { ageFromDob } from './age/ageFromDob.ts';
@@ -59,12 +60,11 @@ export async function composeSportDay(db: any, input: {
   ]):[{data:[],error:null},{data:[],error:null},{data:[],error:null}];
   const abRows=complete(abs), pitchRows=complete(pitches), defenseRows=complete(defense);
   const circulation=await readDrillCirculation({owner:db.from('owner_drills').select('*').limit(1000),usage:db.rpc('drill_usage_totals'),events:db.from('drill_engagement').select('drill_id,event,created_at').eq('user_id',uid).lt('created_at',`${date}T00:00:00Z`).in('event',['served','completed']).limit(1000)});
-  const testIds=['a283a732-dfca-4160-9c9b-55305e092572','bb839f7d-6a03-460e-8b64-444f220b53da'];
   let testPreferences:unknown;
-  if(testIds.includes(uid)){
+  if(PHILOSOPHY_TEST_USERS.includes(uid)){
     const s=await db.from('mastery_identity_settings').select('test_overrides').eq('sport',sport).maybeSingle();if(s.error)throw s.error;
-    testPreferences=s.data?.test_overrides?.[uid];
-    circulation.rows=circulation.rows.map((r:any)=>({...r,...Object.fromEntries(Object.entries(r.test_overrides?.[uid]??{}).filter(([k])=>['fault_keys','placements','routine_role'].includes(k)))}));
+    testPreferences=s.data?testSettingsFor(s.data,uid):undefined;
+    circulation.rows=circulation.rows.map((r:any)=>testSettingsFor(r,uid));
   }
   // Per-request setters are synchronous immediately before the pure builder; no await can mix accounts.
   const envelope={...env.data};

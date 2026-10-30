@@ -1,5 +1,15 @@
 # Item 13 only — October 29, 2026
 
+## October 30 02:31 — requested owner-heart and dated UI proofs
+
+- At 390×844 the owner hearted the existing owner-created **TEST Item7 Skill proof2 phone** (still switched off, not activated for real athletes). Its heart read true after reload, and the exact name appeared in the owner's personal Saved drills shelf. Added the builder's favorite button using the same self-owned shelf, not a new storage or prescription path.
+- Eligible TEST `a283a732-dfca-4160-9c9b-55305e092572` opened the genuine saved report **TEST Item13 positive real swing**, then tapped Add to Today. October 30's hitting card retained **Closed-Shoulder Tee (Glove-Side Hold)** with issue `front_shoulder_opens_early`, `routineRole: fix_it`, enrollment provenance and issue-named Because after reload. The date already had prior acknowledgement; no claim that its repeated Add produced a new warning.
+- Fresh October 31 and November 3 reviews were tapped on screen: **Review fix-it choice → warnings → Okay → saved**, followed by the real saved day's hitting card and reload. November 3 screenshots show all three missing-fact warnings and the actual Okay button. Client calendar was advanced for display only (session expiry clock stayed real); no dated records, restrictions or findings were invented. November 3 preserved its legal 25-swing slot; October 30 preserved 30 swings.
+- Exact saved readbacks include the source report ID and issue in `analysisEnrollment`; the slot remains `fix_it`, and prep/full-go/log work remains. No yesterday-to-tomorrow acknowledgement was inherited. Existing tests retain injury/rest refusal and safety-freshness coverage; no safety rule changed.
+- Evidence: `/tmp/browser/items13-20/` owner-heart/shelf screenshots, add/next2/nov3 logs, inspected warning screenshots and `added-saved-days.json`. Zero page errors on successful TEST runs. Together with Item20: 48 focused tests passed; six server-bundle parity cases passed. Only named `wk-generate-daily` redeployed; no publish/migration/cron/iOS.
+
+**This run's requested proof passes.** Older broad coverage gaps below are historical and are not claims that every owner-drill prescription variant was exercised here.
+
 ## Current verdict: OPEN, not publish-ready
 
 ## Positive proof — eligible TEST, October 29, 12:28 UTC
