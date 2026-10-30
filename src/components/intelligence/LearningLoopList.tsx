@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
-import { Card } from "@/components/ui/card";
+import { HammersCard } from "@/components/intelligence/HammersCard";
 import { Button } from "@/components/ui/button";
 import { COMPARABLE_OUTCOME_LABEL } from "@/lib/intelligence/comparableOutcome";
 import { addToNextAppropriateSession, candidatePlanDates, matchCatalogDrill } from "@/lib/intelligence/addDoThisToPlan";
@@ -67,34 +67,34 @@ export function LearningLoopList() {
     <section className="space-y-2" aria-label="Your Do-this list">
       <h3 className="text-sm font-semibold">Your "Do this" list</h3>
       {recheckFailed && <p role="status" className="text-sm text-muted-foreground">We couldn't re-check your advice. Your saved results are unchanged. Please try again later.</p>}
-      {data.map((r) => (
-        <Card key={r.id} className="space-y-2 p-3">
-          <p className="text-xs text-muted-foreground">Area: {r.area}</p>
+      {data.map((r) => {
+        const when = String(r.created_at ?? "").slice(0, 10);
+        const result = r.outcome ? COMPARABLE_OUTCOME_LABEL[r.outcome as keyof typeof COMPARABLE_OUTCOME_LABEL] ?? COMPARABLE_OUTCOME_LABEL.need_more_data : null;
+        return (
+        <HammersCard key={r.id} title={r.area}
+          weSee={result ? `You did the drill. Your next ${String(r.area).toLowerCase()} check: ${result}.` : `Your ${String(r.area).toLowerCase()} video showed something to clean up.`}
+          because={`From your ${String(r.area).toLowerCase()} video analysis${when ? ` on ${when}` : ""}. One clip is an early read, not a final answer.`}
+          howSure="hunch" samples={1}
+          doThis={`${r.drill?.title ?? r.do_this}${r.drill?.reps_sets ? ` · ${r.drill.reps_sets}` : ""}`}
+          checkBack={`After your next ${String(r.area).toLowerCase()} clip.`}>
           <DoThisDrill text={r.do_this} drill={r.drill} />
           <AddDoThisButton drill={r.drill} text={r.do_this} area={r.area} videoId={r.source_video_id ?? null} />
-          {staff && (r.coaching_principle_versions ? (
+          {staff && r.coaching_principle_versions && (
             <Link className="text-xs text-primary underline" to={`/owner/coaching-console?principle=${r.coaching_principle_versions.principle_id}`}>
               Which principle produced this advice (version {r.coaching_principle_versions.version})
             </Link>
-          ) : (
-            <p className="text-xs text-muted-foreground">Principle: Not linked</p>
-          ))}
+          )}
           {r.followed == null ? (
             <div className="flex gap-2">
-              <span className="self-center text-xs">Did you do it?</span>
+              <span className="self-center text-sm">Did you do it?</span>
               <Button size="sm" onClick={() => mark(r.id, true)}>Yes</Button>
               <Button size="sm" variant="outline" onClick={() => mark(r.id, false)}>Not yet</Button>
             </div>
           ) : (
-            <p className="text-xs">
-              Did it: {r.followed ? "Yes" : "Not yet"} · Result:{" "}
-              {r.outcome
-                ? COMPARABLE_OUTCOME_LABEL[r.outcome as keyof typeof COMPARABLE_OUTCOME_LABEL] ?? COMPARABLE_OUTCOME_LABEL.need_more_data
-                : "Waiting for your next re-test"}
-            </p>
+            <p className="text-sm">Did it: {r.followed ? "Yes" : "Not yet"} · Result: {result ?? "Waiting for your next clip"}</p>
           )}
-        </Card>
-      ))}
+        </HammersCard>
+      );})}
     </section>
   );
 }
@@ -104,7 +104,7 @@ function DoThisDrill({ text, drill }: { text: string; drill?: { title?: string |
   const hasHow = !!(drill && (drill.purpose || drill.steps?.length || drill.cue));
   return (
     <details className="rounded-md border border-border p-2" data-do-this-drill>
-      <summary className="cursor-pointer font-medium">Do this: {drill?.title ?? text}{drill?.reps_sets ? ` · ${drill.reps_sets}` : ""}</summary>
+      <summary className="cursor-pointer font-medium">How to do it</summary>
       <div className="mt-2 space-y-1 text-sm">
         {drill?.purpose && <p><span className="font-medium">Why: </span>{drill.purpose}</p>}
         {!!drill?.steps?.length && <ol className="list-decimal space-y-0.5 pl-5">{drill.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>}
