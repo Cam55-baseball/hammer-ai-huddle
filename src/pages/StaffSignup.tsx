@@ -85,8 +85,8 @@ export default function StaffSignup() {
         <div><Label htmlFor="ss-dob">Date of birth</Label><Input id="ss-dob" type="date" className="h-11" value={f.dob} onChange={set("dob")} max={new Date().toISOString().slice(0, 10)} /></div>
         <div>
           <Label>Sport</Label>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {["baseball", "softball"].map((s) => (
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {["baseball", "softball", "both"].map((s) => (
               <Button key={s} type="button" variant={f.sport === s ? "default" : "outline"} onClick={() => setF({ ...f, sport: s })} className="h-11 capitalize">{s}</Button>
             ))}
           </div>

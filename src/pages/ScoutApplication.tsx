@@ -152,8 +152,8 @@ export default function ScoutApplication() {
 
             <div className="space-y-2">
               <Label htmlFor="sport">{t('scoutApplicationPage.sport')}</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {["baseball", "softball"].map((sp) => (
+              <div className="grid grid-cols-3 gap-2">
+                {["baseball", "softball", "both"].map((sp) => (
                   <Button key={sp} type="button" className="h-11 capitalize" variant={formData.sport === sp ? "default" : "outline"}
                     onClick={() => { localStorage.setItem("scoutSport", sp); setFormData({ ...formData, sport: sp }); }}>{sp}</Button>
                 ))}

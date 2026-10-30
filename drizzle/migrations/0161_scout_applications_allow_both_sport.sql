@@ -1,0 +1,2 @@
+ALTER TABLE public.scout_applications DROP CONSTRAINT scout_applications_sport_check;
+ALTER TABLE public.scout_applications ADD CONSTRAINT scout_applications_sport_check CHECK (sport = ANY (ARRAY['baseball'::text, 'softball'::text, 'both'::text]));
