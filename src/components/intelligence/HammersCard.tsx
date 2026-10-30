@@ -26,10 +26,12 @@ export interface HammersCardProps {
   samples?: number;
   doThis?: string;
   checkBack?: string;
+  /** Actions (buttons, drill steps) shown under the five lines. */
+  children?: React.ReactNode;
 }
 
 /** The one card every Hammers insight uses: We see / Because / How sure / Do this / Check back. */
-export function HammersCard({ title, weSee, because, howSure, samples, doThis, checkBack }: HammersCardProps) {
+export function HammersCard({ title, weSee, because, howSure, samples, doThis, checkBack, children }: HammersCardProps) {
   const thin = howSure === "need_more_data";
   const early = !thin && samples !== undefined && isEarlyRead(samples);
   const rows: [string, React.ReactNode][] = [
@@ -56,6 +58,7 @@ export function HammersCard({ title, weSee, because, howSure, samples, doThis, c
           </div>
         ))}
       </dl>
+      {children}
     </Card>
   );
 }
