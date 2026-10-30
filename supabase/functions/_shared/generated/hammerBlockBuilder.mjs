@@ -2817,7 +2817,7 @@ function resolveOutingFacts(input) {
   const { planDate, settings, outings, availability } = input;
   const yesterday = shift(planDate, -1);
   const tomorrow = shift(planDate, 1);
-  const thrown = outings.filter((o) => o.status === "thrown" && o.actual_date);
+  const thrown = [...outings.filter((o) => o.status === "thrown" && o.actual_date), ...(input.games ?? []).filter((g) => g.count > 0 && g.date <= planDate).map((g) => ({ id: g.game_id, outing_type: g.isStart ? "start" : "relief", planned_date: null, actual_date: g.date, status: "thrown" }))];
   const thrownDates = [...new Set(thrown.map((o) => o.actual_date))].sort().reverse();
   const latestStart = thrown.filter((o) => o.outing_type === "start").map((o) => o.actual_date).sort().pop() ?? null;
   const resolvedPlanned = new Set(outings.filter((o) => o.status !== "planned").map((o) => o.planned_date).filter(Boolean));
@@ -2828,7 +2828,7 @@ function resolveOutingFacts(input) {
   const avail = new Map(availability.map((a) => [a.date, a.available]));
   const isReliever = settings?.role === "reliever" || settings?.role === "both";
   return {
-    hasSchedule: !!settings || outings.length > 0 || availability.length > 0,
+    hasSchedule: !!settings || outings.length > 0 || availability.length > 0 || (input.games?.length ?? 0) > 0,
     plannedStartDates,
     thrownDates,
     startsToday: plannedStartDates.includes(planDate),
@@ -3337,8 +3337,8 @@ function planWindmillSession(i) {
 
 // src/lib/hammer/prescription/pitchingDay.ts
 function windmillPlanningDrills(input) {
-  if (!input.history || input.history.unavailable || input.age == null || input.armPain) return [];
-  const pitchRows = input.history.rows.filter((r) => r.source === "pitching" && !/skip|cancel|miss/i.test(r.status ?? ""));
+  if (!input.history || input.history.unavailable || input.age == null || input.armPain || input.outings?.pitchedYesterday) return [];
+  const pitchRows = input.history.rows.filter((r) => r.source === "pitching" && !/warm|catch|off_mound|flat/i.test(r.throw_type ?? "") && !/skip|cancel|miss/i.test(r.status ?? ""));
   const days = [...new Set(pitchRows.map((r) => r.entry_date))].map((date) => ({ date, pitches: pitchRows.filter((r) => r.entry_date === date).reduce((n, r) => n + (r.count ?? 0), 0), innings: 0 }));
   const session = planWindmillSession({ planDate: input.date, phase: input.phase, age: input.age, readiness: input.readiness, armPain: input.armPain, growthMode: false, history: days, todayPitchesSoFar: days.find((d3) => d3.date === input.date)?.pitches ?? 0, gameToday: !!input.outings?.startsToday, gameTomorrow: !!input.outings?.startsTomorrow, priorFullSessionsThisWeek: days.filter((d3) => d3.date >= new Date(Date.parse(input.date) - 6 * 864e5).toISOString().slice(0, 10) && d3.pitches > 0).length, fullSessionYesterday: days.some((d3) => d3.date === new Date(Date.parse(input.date) - 864e5).toISOString().slice(0, 10) && d3.pitches > 0), equipment: input.equipment });
   return session.rows.map((r) => ({ slug: r.slug, name: r.name, category: r.kind === "pitch" ? "position_skill" : r.countWeight > 0 ? "regulation" : "band_prep", overloadClass: r.countWeight > 0 ? "regulation" : void 0, intensity: r.kind === "pitch" ? "moderate" : "prep", stage: r.kind === "pitch" ? "full_go" : "prep", dosage: r.kind === "pitch" ? `${r.sets * r.reps} pitches` : `${r.sets}x${r.reps} reps`, cue: r.cue, stopIf: "Shoulder or elbow pain, fatigue or unsafe space \u2014 stop." }));
@@ -7454,7 +7454,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       if (armRole && normalizeSport(sportRaw) === "softball") {
         const care = eass.drills.filter((d3) => ["band_prep", "cooldown", "recovery"].includes(d3.category));
         const phase = pitchingPhase ?? (seasonPhase === "off" ? "os_q1" : seasonPhase === "pre" ? "preseason" : seasonPhase === "in" ? "in_season" : "post_season");
-        eass.drills = [...care, ...planDate ? windmillPlanningDrills({ date: planDate, phase, age: ageYears, readiness: readinessScore2, armPain: armSore || injuryRegions.some((r) => ["shoulder", "elbow", "ucl", "forearm"].includes(r)), equipment: [...proj.equipmentList], history: armHistory, outings: pitcherOutings }) : []];
+        eass.drills = [...care, ...planDate && !eassCtx.isRecoveryDay ? windmillPlanningDrills({ date: planDate, phase, age: ageYears, readiness: readinessScore2, armPain: armSore || injuryRegions.some((r) => ["shoulder", "elbow", "ucl", "forearm"].includes(r)), equipment: [...proj.equipmentList], history: armHistory, outings: pitcherOutings }) : []];
       }
       if (armRole === "two_way") {
         const position = normalizePosition(declaredPos) === "pitcher" ? normalizePosition(ctx.get("position_secondary")?.value) : normalizePosition(declaredPos);
