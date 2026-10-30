@@ -73,7 +73,7 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
   const [expanded, setExpanded] = useState<number | null>(null);
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
-  const { weeklyRoadmap, microcycle, roadmap } = plan;
+  const { weeklyRoadmap, roadmap } = plan;
   const season = useSeasonStatus();
   const {user}=useAuth();const {modules}=useSubscription();
   const today=localIso();
@@ -242,23 +242,4 @@ function DayDetail({ day, todayCategories }: { day: RoadmapDay; todayCategories?
       </ul>
     </div>
   );
-}
-
-function SCHEDULED_TODAY_LINE(
-  perModality: HammerDailyPlanResult["microcycle"]["perModality"],
-): string {
-  const on: string[] = [];
-  const off: string[] = [];
-  (Object.keys(perModality) as ModalityKey[]).forEach((k) => {
-    if (["warmup", "fueling", "recovery", "game_iq"].includes(k)) return;
-    const d = perModality[k];
-    if (d.scheduled) {
-      on.push(MODALITY_LABEL[k] + (d.intensity !== "primary" ? ` (${d.intensity})` : ""));
-    } else if (d.nextScheduledLabel) {
-      off.push(`${MODALITY_LABEL[k]} → ${d.nextScheduledLabel}`);
-    }
-  });
-  const onLine = on.length ? `On: ${on.join(", ")}.` : "";
-  const offLine = off.length ? ` Off: ${off.slice(0, 4).join(" · ")}.` : "";
-  return `${onLine}${offLine}`.trim();
 }
