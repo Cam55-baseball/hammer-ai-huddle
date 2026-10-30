@@ -759,4 +759,4 @@ Saved physical work: Slow Breathing Reset (1 sets, 120 seconds).
 
 Read queries: exact eight TEST profile IDs, two Mon–Sun windows, athlete_plan_snapshots blocks and corresponding wk_prescriptions; raw captured output `/tmp/tool-results/supabase--read_query/20261030-104334-190082`, parsed112days `/tmp/final-writeup/saved-days.json`. Floor aggregation separately read this run; no generator, simulated filler or manual plan writes used to author this guide.
 
-Latest authorized builder rollout: wk-generate-daily source hash d8452c80fde7a40ffa290fb7c39f02183df1fc1491064ea8439d199e4775d13f. No publishing, cron or iOS changes.
+Latest authorized builder rollout: wk-generate-daily source hash 640d16c835018d8f08154cd534d2124a415e71fa3093b674c581a4b9f958c2e1. No publishing, cron or iOS changes.

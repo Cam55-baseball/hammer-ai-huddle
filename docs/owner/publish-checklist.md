@@ -1,6 +1,6 @@
 # Final publish checklist — October 30, 2026
 
-**Verdict pending full-suite completion below.** Owner decision: Items3,18,20 and imperfect baseball off-season sample pairing are owner checks/review only after implementation and backend rollout; they are no longer presented as absent functionality. PASS retains affected-role proof; OWNER CHECK means implemented with named owner acceptance remaining. No new journey is claimed from old evidence.
+**Ready to publish: NO — only the retained pitcher safety acceptance remains outside the owner-authorized human-check list: next distinct softball bullpen and innings-dependent verification.** Owner decision: Items3,18,20 and imperfect baseball off-season sample pairing are owner checks/review only after implementation and backend rollout; they are no longer presented as absent functionality. PASS retains affected-role proof; OWNER CHECK means implemented with named owner acceptance remaining. No new journey is claimed from old evidence.
 
 ## Part A — implemented and proven evidence
 
@@ -43,7 +43,7 @@ Three TEST app outings saved40pitches/10batters and fresh canonical arm-ledger r
 - `wk-generate-daily` authorized rollout this run: source640d16c835018d8f08154cd534d2124a415e71fa3093b674c581a4b9f958c2e1; pure builder regenerated110sources. Includes minimum and safe TEST fix-it consumer. Existing atomic settings RPCs confirmed in live schema. Prior phase-state/plan-swap rollouts retained; no unrelated redeploy.
 - Item3 paths already implemented; Item18 required first-week orchestration, added/tested this run; Item20 required scoped fault-tag selector wiring and cap note, added/tested this run. Browser-source changes are in preview/publish candidate, **not on the published website until publishing**. Backend is live. No claim that unchanged published frontend has today's new Start flow.
 - Owner authenticated preview and published dashboard at390×844: settled, no document overflow or page exceptions; screenshots `/tmp/browser/final-writeup/owner-preview.png`, `owner-live.png`. This is not affected-player acceptance of3/18/20.
-- Full bounded suite/automatic preview results: see final-writeup-oct30-proof.md (updated after completion); no manual build/typecheck.
+- Full bounded suite: 29 sequential batches, 688/688 unique files, 5,438 tests passed, zero failures, two explicitly skipped live tests; no omissions/duplicates. Final changed tests rerun passed. Automatic preview build OK10:49:37UTC; no manual build/typecheck. See final-writeup-oct30-proof.md.
 
 ## Part B — exact owner human checks
 
