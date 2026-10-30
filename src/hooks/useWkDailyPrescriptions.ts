@@ -29,6 +29,7 @@ import { WIC_VERSION } from "../../supabase/functions/_shared/wic/constitution";
 import { usePhaseState } from "@/hooks/usePhaseState";
 import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
 import { partitionCoachRows } from "@/lib/coachRx/planRows";
+import { composedDayRequest } from "@/lib/hammer/composedDayRequest";
 
 // Must equal the version the generator stamps on every row. A mismatch made
 // every visit look "stale" and rebuild today's plan, wiping check-offs.
@@ -360,6 +361,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
 
   type ChangeReq = { reason: "player_request" | "tracked_activity"; text: string; key: string };
   const invokeOnce = useCallback(async (change?: ChangeReq) => {
+    if (!user?.id) throw new Error("Sign in before building your plan.");
     // Pull the most recent *live* recovery ack so the edge function can bias the
     // next plan (real learning loop instead of one-way personalization).
     // Superseded acks are spent — their cause has cleared, or they were written
@@ -368,7 +370,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     const { data: lastAck } = await supabase
       .from("wk_recovery_acks" as any)
       .select("reduction_reason, reduction_payload, acknowledged_at")
-      .eq("user_id", user!.id)
+      .eq("user_id", user.id)
       .is("superseded_at", null)
       .order("acknowledged_at", { ascending: false })
       .limit(1)
@@ -377,7 +379,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     return withTimeout(
       supabase.functions.invoke("wk-generate-daily", {
         body: {
-          plan_date: planDate,
+          ...composedDayRequest(planDate),
           side_hit: sideHit,
           side_throw: sideThrow,
           recent_ack: lastAck ?? null,
