@@ -8536,6 +8536,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter((d3) => isSoftRecovery(d3.slug)) : [];
     return {
       ...b,
+      ...b.modality === "warmup" ? { title: "Gentle recovery preparation" } : {},
       drills,
       steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
       status: b.status === "awaiting-input" ? "awaiting-input" : drills.length ? "ready" : "off-day",
