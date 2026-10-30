@@ -118,7 +118,12 @@ export function validate(input: ValidatorInput): ValidatorReport {
 
 
     // Game-day suppression enforcement.
-    if (input.isGameDay && !GAME_DAY_ALLOWED_SLOTS.has(rx.slot)) {
+    // Only the two canonical easy-jog identities may use conditioning on a
+    // game day. Catalog velocity, sport, restrictions and rest still pass the
+    // existing selector and final check; this is not a whole-slot exemption.
+    const easyGameJog = rx.slot === "conditioning" &&
+      (rx.movement_slug === "easy_base_jog_bb" || rx.movement_slug === "easy_base_jog_sb");
+    if (input.isGameDay && !GAME_DAY_ALLOWED_SLOTS.has(rx.slot) && !easyGameJog) {
       issues.push({
         code: "game_day_forbidden_slot",
         severity: "fatal",
