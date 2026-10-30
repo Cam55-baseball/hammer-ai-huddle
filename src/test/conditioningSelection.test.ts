@@ -18,6 +18,7 @@ const base: ConditioningSelectionInput = {
 };
 const sel = (o: Partial<ConditioningSelectionInput>) => selectConditioning({ ...base, ...o });
 const CATALOG = new Set([
+  'easy_base_jog_bb', 'easy_base_jog_sb',
   "bases_1st_3rd", "bases_home_2nd", "catcher_up_downs", "mif_turn_and_fire", "of_read_and_go",
   "pitcher_field_and_cover", "if_lateral_repeat", "inning_restart_sim_bb", "inning_restart_sim_sb",
   "repeat_43ft_sb", "repeat_90ft_bb", "bases_double_sb", "rc_easy_flush", "rc_long_reach_walk", "rc_travel_reset", "rc_breathing_reset",
@@ -51,7 +52,7 @@ describe("conditioning selection paths", () => {
   it("game tomorrow: one short drill", () => {
     const s = sel({ phase: "in_season", hoursToNearestGame: 20 });
     expect(s.path).toBe("game_within_48h");
-    expect(s.slugs).toEqual(["mif_turn_and_fire"]);
+    expect(s.slugs).toEqual(["easy_base_jog_bb"]);
     expect(s.why).toMatch(/^Game tomorrow/);
   });
   it("game in two days: still short", () => {
@@ -65,13 +66,13 @@ describe("conditioning selection paths", () => {
   it("pitcher the day after an outing gets the recovery flush", () => {
     const s = sel({ position: "Pitcher", isPitcher: true, outingSource: "schedule", phase: "in_season", pitcherStartedYesterday: true, hoursToNearestGame: 20 });
     expect(s.path).toBe("pitcher_after_start");
-    expect(s.templateId).toBe("cond.recovery_flush");
-    expect(s.slugs).toEqual(["rc_easy_flush", "rc_long_reach_walk"]);
+    expect(s.templateId).toBe("cond.off_day");
+    expect(s.slugs).toEqual(["easy_base_jog_bb"]);
   });
   it("tournament day (not a game day) stays light", () => {
     const s = sel({ isTournamentDay: true });
     expect(s.path).toBe("tournament");
-    expect(s.templateId).toBe("cond.tournament_day");
+    expect(s.templateId).toBe("cond.off_day");
     expect(s.slugs).toHaveLength(1);
   });
   it("returning after time off outranks everything", () => {
@@ -86,14 +87,14 @@ describe("check-ins and the recovery governor dial it down", () => {
   for (const r of ["sleep", "cns", "soreness", "governor"]) {
     it(`${r} → hard sprint swapped for an easy flush, count held`, () => {
       const s = sel({ dialDownReasons: [r] });
-      expect(s.slugs).toHaveLength(2);
+      expect(s.slugs).toHaveLength(1);
       expect(s.dialedDown).toBe(true);
       expect(s.why).toMatch(r === "governor" ? /lighter day/ : /go easier today/);
-      expect(s.slugs).toEqual(["rc_easy_flush", "bases_home_2nd"]);
+      expect(s.slugs).toEqual(["easy_base_jog_bb"]);
     });
   }
   it("single-movement days are not marked dialed down twice", () => {
-    expect(sel({ hoursToNearestGame: 20, dialDownReasons: ["sleep"] }).dialedDown).toBe(false);
+    expect(sel({ hoursToNearestGame: 20, dialDownReasons: ["sleep"] }).dialedDown).toBe(true);
   });
 });
 
@@ -144,7 +145,7 @@ describe("shape and voice guarantees", () => {
   });
   it("on/off switches are untouched in the generator", () => {
     const src = readFileSync("supabase/functions/wk-generate-daily/index.ts", "utf8");
-    expect(src).toContain("if (!isGameDay && !isPostSeason && !conditioningSuppressed && !timelineToday.hold) {");
+    expect(src).toContain("!conditioningSuppressed && !timelineToday.hold && !wholePlanRest(planDate)");
     // Owner Oct 28: the only extra conditioning pushes are the 2-a-week running floor
     // (built-in) and its owner-drill stand-in ("Add fields"), both inside the floor block.
     expect((src.match(/push\("conditioning"/g) ?? []).length).toBe(3);

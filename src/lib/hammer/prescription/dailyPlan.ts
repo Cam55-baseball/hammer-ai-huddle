@@ -1760,13 +1760,13 @@ export function buntingWeekdays(roadmap: ReadonlyArray<{dow:number;restDay:boole
 
 /** Game stations reduce existing safe work; they never restore injury/recovery-suppressed work. */
 function gameSkillStation(b: PrescribedBlock, original: PrescribedBlock | undefined): PrescribedBlock {
-  const source = b.status === 'ready' ? b : b.status === 'off-day' && original?.status === 'ready' ? original : undefined;
+  const source = b.status === 'ready' ? b : undefined;
   if (!source?.drills.length) return b;
   const skill = source.drills.find(d => d.stage === 'drills' && /^\d+ swings/.test(d.dosage));
   if (b.modality === 'hitting' && !skill) return b;
   const drills = b.modality === 'hitting' && skill
     ? [{...skill, dosage: `${Math.min(15, Number(/^(\d+)/.exec(skill.dosage)?.[1] ?? 0))} swings`, cue: `${skill.cue} Game-speed decisions, low volume; stop before fatigue.`}]
-    : source.drills.slice(0, 1).map(d => ({...d, dosage: '1 rep — easy pre-game rehearsal; no extra throws'}));
+    : source.drills.slice(0, 1).map(d => ({...d, dosage: d.dosage.replace(/^\d+/, '1'), cue:`${d.cue} Easy pre-game rehearsal; stop before fatigue.`}));
   return {...source, drills, steps: drillsToSteps(drills), status:'ready', durationMin:3, phase:'maintain', gamePlanTemplate:null,
     title:`${b.modality === 'hitting' ? 'Hitting' : 'Baserunning'} — short pre-game station`,
     why:'A short station keeps your skill work in a busy game week. Save your energy for the game.',
