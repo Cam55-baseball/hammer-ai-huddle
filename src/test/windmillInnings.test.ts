@@ -22,3 +22,11 @@ describe("windmill entered innings", () => {
     expect(enteredInningsByDate([{ game_date: "2026-11-16", pitcher_innings: 5, status: "draft" }, { game_date: "2026-11-16", pitcher_innings: 5, status: "final", deleted_at: "x" }]).size).toBe(0);
   });
 });
+
+import { windmillPlanningDrills } from "../lib/hammer/prescription/pitchingDay";
+describe("combined-day windmill uses entered innings", () => {
+  const row = (innings: number) => ({ entry_date: "2026-11-16", source: "pitching", throw_type: "game_pitches_self", count: 40, status: "done", innings });
+  it("4 entered innings over 40 pitches -> no pitching next day", () => {
+    expect(windmillPlanningDrills({ date: "2026-11-17", phase: "in_season", age: 16, readiness: 80, armPain: false, equipment: ["softball", "bands"], history: { rows: [row(4)] } })).toEqual([]);
+  });
+});
