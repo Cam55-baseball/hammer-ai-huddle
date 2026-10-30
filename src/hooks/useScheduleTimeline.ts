@@ -21,6 +21,7 @@ import { recordPain } from "@/lib/hammer/injury/recordPain";
 import { FACE_SEVERITY } from "@/lib/hammer/tellHammers/parse";
 import { rebuildAfterChange } from '@/lib/hammer/rebuildAfterChange';
 import { persistContextAnswer } from '@/lib/hammer/context/acquisition';
+import { rememberChangeConfirmation } from '@/lib/hammer/changeConfirmation';
 
 export const TIMELINE_QUERY_KEY = "schedule-timeline";
 export const SCHEDULE_CHANGED_EVENT = "hammer:schedule-changed";
@@ -176,6 +177,8 @@ function describeChange(draft: EntryDraft) {
 
 export async function announceChange(qc: ReturnType<typeof useQueryClient>, userId: string, reason: string | null, effectiveDate?: string) {
   const result = reason === null ? null : await rebuildAfterChange(reason, getTodayDate(), effectiveDate);
+  // Cache the actual server result before invalidation can remount the entry surface.
+  if (result) rememberChangeConfirmation(userId, getTodayDate(), result.message);
   qc.invalidateQueries({ queryKey: [TIMELINE_QUERY_KEY, userId] });
   for (const k of [
     "schedule-window-games",
