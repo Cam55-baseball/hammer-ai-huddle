@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
+import { HammersCard } from "@/components/intelligence/HammersCard";
 
-const NM = "Not yet measured";
 const d = (x?: string | null) => (x ? String(x).slice(0, 10) : "date not recorded");
 
 /** The General — player layer: the player's own latest six-week recap. */
@@ -23,17 +22,18 @@ export function MySixWeekRecapCard() {
     },
   });
 
+  if (isLoading) return null;
+  const lifted = data?.total_weight_lifted ? Number(data.total_weight_lifted) : 0;
+  const measured = !!data && lifted > 0 && data.strength_change_percent != null;
+  const change = Number(data?.strength_change_percent ?? 0);
   return (
-    <Card className="border-primary/20 p-4 space-y-1" data-testid="my-six-week-recap">
-      <p className="font-semibold">Your six-week recap</p>
-      {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p>
-        : !data ? <p className="text-sm text-muted-foreground">No six-week recap yet. Your first one arrives after six weeks of training.</p>
-        : <>
-            <p className="text-sm">Period: {d(data.recap_period_start)} to {d(data.recap_period_end)}</p>
-            <p className="text-sm">Strength change: {data.strength_change_percent != null ? `${data.strength_change_percent}%` : NM}</p>
-            <p className="text-sm">Total weight lifted: {data.total_weight_lifted ? `${data.total_weight_lifted} lb` : NM}</p>
-            <p className="text-xs text-muted-foreground">Source: your logged workouts</p>
-          </>}
-    </Card>
+    <div data-testid="my-six-week-recap">
+      <HammersCard title="Your six-week strength recap"
+        weSee={measured ? `Strength ${change > 0 ? "up" : change < 0 ? "down" : "about the same"} ${Math.abs(change)}% (${d(data!.recap_period_start)} to ${d(data!.recap_period_end)}), ${lifted} lb lifted.` : "Not enough logged lifting to show a strength change yet."}
+        because={measured ? "From the weights you logged in your lifts." : undefined}
+        howSure={measured ? "measured" : "need_more_data"}
+        doThis={measured ? (change < 0 ? "Check your sleep and soreness, and log every lift set with its weight." : "Keep logging every lift set with its weight.") : "Log the weight on every lift set."}
+        checkBack="At your next six-week recap." />
+    </div>
   );
 }

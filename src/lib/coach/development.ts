@@ -32,12 +32,8 @@ export interface Issue {
   evidence: string | null;
 }
 
-export type ConnectionLabel =
-  | "Observed fact"
-  | "Measured change"
-  | "Supported pattern"
-  | "Hypothesis to check"
-  | "Not enough data";
+/** Same how-sure words as every Hammers Card. */
+export type ConnectionLabel = "Pattern" | "Hunch" | "Need more data";
 
 export interface Connection {
   label: ConnectionLabel;
@@ -204,13 +200,14 @@ export function buildConnections(reports: DevReport[], findings: DevFinding[]): 
   const cards = buildCategoryCards(reports, findings);
   const issues = classifyIssues(reports, findings);
   if (reports.length < 2) {
-    out.push({ label: "Not enough data", text: "Fewer than 2 analysis reports — connections need more reports." });
+    out.push({ label: "Need more data", text: "Fewer than 2 analysis reports — connections need more reports." });
     return out;
   }
   for (const c of cards) {
-    if (c.trend === "up" || c.trend === "down") {
+    // A direction needs at least three reports; written reports are not measurements.
+    if ((c.trend === "up" || c.trend === "down") && c.reports.length >= 3) {
       out.push({
-        label: "Measured change",
+        label: "Pattern",
         text: `${pretty(c.category)} scores went ${c.trend} across the last ${c.reports.length} reports (${dateOnly(c.reports[c.reports.length - 1].date)} → ${dateOnly(c.reports[0].date)}).`,
       });
     }
@@ -218,25 +215,20 @@ export function buildConnections(reports: DevReport[], findings: DevFinding[]): 
   for (const i of issues) {
     if (i.status === "Recurring" && i.times_seen >= 3) {
       out.push({
-        label: "Supported pattern",
+        label: "Pattern",
         text: `${pretty(i.fault_key)} has shown up in ${i.times_seen} of the last ${i.reports_checked} ${pretty(i.category).toLowerCase()} reports.`,
-      });
-    } else if (i.status === "New") {
-      out.push({
-        label: "Hypothesis to check",
-        text: `${pretty(i.fault_key)} appeared for the first time in the latest ${pretty(i.category).toLowerCase()} report — watch the next video to see if it repeats.`,
       });
     }
   }
   const cleaning = issues.filter((i) => i.status === "Cleaning up");
   for (const i of cleaning) {
     out.push({
-      label: "Observed fact",
+      label: "Hunch",
       text: `${pretty(i.fault_key)} was not seen in the latest ${pretty(i.category).toLowerCase()} report (${i.last_seen} was the last time it appeared).`,
     });
   }
   if (out.length === 0) {
-    out.push({ label: "Not enough data", text: "No clear connections yet — keep collecting reports." });
+    out.push({ label: "Need more data", text: "No clear connections yet — keep collecting reports." });
   }
   return out;
 }

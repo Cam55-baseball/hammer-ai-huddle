@@ -47,7 +47,7 @@ export function FacilityBoard({ orgId }: { orgId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle><MeaningTitle organization title="Players at a Glance">Each player keeps their existing recorded plan completion, test dates and activity status. Check-in attendance is visible here, but health answers require the player's health-sharing permission.</MeaningTitle></CardTitle>
+        <CardTitle><MeaningTitle organization title="Players at a Glance" use="Scan for low completion or old test dates. Reach out to those players first.">Each player keeps their existing recorded plan completion, test dates and activity status. Check-in attendance is visible here, but health answers require the player's health-sharing permission.</MeaningTitle></CardTitle>
         <p className="text-sm text-muted-foreground">
           One short line per player. Tap a name for details.
         </p>

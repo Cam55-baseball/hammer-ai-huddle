@@ -54,41 +54,6 @@ import { MeaningSection } from '@/components/progress/SectionMeaning';
 import { PillarGoalTrends } from '@/components/progress/PillarGoalTrends';
 import { Button } from '@/components/ui/button';
 
-function PracticeIntelligenceCard() {
-  const { data: mpi } = useMPIScores();
-  const { prompts, hasPrompts } = useAIPrompts();
-
-  const gradeLabel = mpi?.adjusted_global_score
-    ? getGradeLabel(mpi.adjusted_global_score)
-    : null;
-
-  return (
-    <Card className="p-4 sm:p-6 border-primary/20">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-full bg-primary/10">
-            <Activity className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-bold text-lg">Practice Intelligence</h3>
-            {mpi ? (
-              <p className="text-sm text-muted-foreground mt-1">Practice intelligence based on logged sessions and self-reports.</p>
-            ) : (
-              <p className="text-sm text-muted-foreground mt-1">Start logging sessions to build your practice history.</p>
-            )}
-          </div>
-        </div>
-      </div>
-      {hasPrompts && prompts[0] && (
-        <div className="mt-3 flex items-start gap-2 rounded-lg bg-muted/30 p-2">
-          <Lightbulb className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground">{prompts[0]}</p>
-        </div>
-      )}
-    </Card>
-  );
-}
-
 const HASH_TAB: Record<string, GeneralTab> = {
   '#body': 'today',
   '#performance-context': 'performance',
@@ -180,7 +145,7 @@ Confidence: ${snapshot.development_confidence}%
           </TabsList>
 
           <TabsContent value="today" className="space-y-6">
-            <MeaningSection title="Today’s Overview" explanation="Your recent check-ins and saved work help explain today. Missing answers are not a good-readiness signal. Follow the existing plan; these summaries do not add work.">
+            <MeaningSection title="Today’s Overview" use="Start with your Do-this list, then check how ready you are. Do your morning check-in so this stays accurate." explanation="Your recent check-ins and saved work help explain today. Missing answers are not a good-readiness signal. Follow the existing plan; these summaries do not add work.">
             <LearningLoopList />
             <ReadinessTodayCard />
             {today}
@@ -214,7 +179,7 @@ Confidence: ${snapshot.development_confidence}%
                 </Card>
               </Collapsible>
             </section>
-            <MeaningSection title="Weekly Guidance" explanation="These are the existing weekly picks and summaries. They keep their original evidence and access rules. They do not ask you to add extra training." collapsed>
+            <MeaningSection title="Weekly Guidance" use="Read it once at the start of the week so you know what's coming. Nothing here adds extra work." explanation="These are the existing weekly picks and summaries. They keep their original evidence and access rules. They do not ask you to add extra training." collapsed>
             <NNSuggestionPanel />
             <WeeklyDigestPreview />
             <Advanced hasAdvancedAccess={hasAdvancedAccess}>
@@ -228,10 +193,10 @@ Confidence: ${snapshot.development_confidence}%
 
           <TabsContent value="performance" className="space-y-6">
             <PillarGoalTrends sport={selectedSport} />
-            <MeaningSection title="Your Academy of Mastery" explanation="Each pillar is judged from its own evidence and the owner’s existing standards. Completed windows and source dates matter. Missing data is not a failing grade." collapsed>
+            <MeaningSection title="Your Academy of Mastery" use="Find your weakest pillar and focus there this week. Your plan already puts work there." explanation="Each pillar is judged from its own evidence and the owner’s existing standards. Completed windows and source dates matter. Missing data is not a failing grade." collapsed>
               <MasteryIdentityPanel sport={selectedSport} />
             </MeaningSection>
-            <MeaningSection title="Recorded Performance" explanation="Your analyses, logged workout results and tests are different kinds of evidence. None of these summaries turns a written video observation into a measurement." collapsed>
+            <MeaningSection title="Recorded Performance" use="Look at the newest analysis or test first. If something dropped, rewatch your clip and do its drill." explanation="Your analyses, logged workout results and tests are different kinds of evidence. None of these summaries turns a written video observation into a measurement." collapsed>
             <PerformanceAreaRows />
             <WorkoutActuals />
             {performance}
@@ -240,22 +205,15 @@ Confidence: ${snapshot.development_confidence}%
               <p className="text-base text-foreground">Your test results live in the Vault.</p>
               <Link to="/vault" className="font-semibold text-primary underline-offset-4 hover:underline">See tests</Link>
             </Card>
-            <Collapsible>
-              <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-4 text-left font-semibold">Standards Board<ChevronDown className="h-4 w-4" /></CollapsibleTrigger>
-              <CollapsibleContent className="pt-3"><StandardsBoard /></CollapsibleContent>
-            </Collapsible>
-            <Collapsible>
-              <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-4 text-left font-semibold">Develop This Week<ChevronDown className="h-4 w-4" /></CollapsibleTrigger>
-              <CollapsibleContent className="pt-3"><DevelopThisWeek /></CollapsibleContent>
-            </Collapsible>
-            <Collapsible>
-              <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-4 text-left font-semibold">Recent Development Picks<ChevronDown className="h-4 w-4" /></CollapsibleTrigger>
-              <CollapsibleContent className="pt-3"><LongTermVideoSuggestions /></CollapsibleContent>
-            </Collapsible>
+            </MeaningSection>
+            <MeaningSection title="Standards Board" use="Pick the next mark you're close to and aim for it in your next lifts." explanation="Weight-room marks you've hit, from your own logged lifts." collapsed><StandardsBoard /></MeaningSection>
+            <MeaningSection title="Develop This Week" use="Do one pick each training day, inside your normal plan." explanation="This week's development picks, from your saved work." collapsed><DevelopThisWeek /></MeaningSection>
+            <MeaningSection title="Recent Development Picks" use="Watch one before practice and try its cue in your first round." explanation="Videos picked for you from your recent analyses and goals." collapsed><LongTermVideoSuggestions /></MeaningSection>
             <ReportCardAccessGate>
               <InternalLabel />
               <UhrcAthleteSection />
             </ReportCardAccessGate>
+            <MeaningSection title="Big Picture" use="Use it to see where you stand overall, then go back to your weakest pillar above." explanation="A long-range summary built from all your saved work. It is an estimate, not a promise." collapsed>
             <Advanced hasAdvancedAccess={hasAdvancedAccess}>
               <PlayerSnapshotCard />
               <ProProbabilityCard />
@@ -264,7 +222,7 @@ Confidence: ${snapshot.development_confidence}%
           </TabsContent>
 
           {gameIqOk && <TabsContent value="game-iq" className="space-y-6">
-            <MeaningSection title="Game Reports" explanation="Your saved game records remain separate from training results. Missing game details stay unknown; reports do not prove a training change caused a result.">
+            <MeaningSection title="Game Reports" use="After a game, open the report and pick one thing to work on in practice." explanation="Your saved game records remain separate from training results. Missing game details stay unknown; reports do not prove a training change caused a result.">
             {gameIqInternal && <InternalLabel />}
             {gameIq}
             <section id="game-iq" className="scroll-mt-20">
@@ -280,19 +238,20 @@ Confidence: ${snapshot.development_confidence}%
           </TabsContent>}
 
           <TabsContent value="growth" className="space-y-6">
-            <MeaningSection title="Growth & Recovery" explanation="Look at changes across your own records rather than one good or bad day. Health flags are observations, not diagnoses. Forecasts keep their uncertainty and do not promise results.">
+            <MeaningSection title="Growth & Recovery" use="If a health flag shows up, tell your coach or parent and take it easier. Use the videos to keep learning." explanation="Look at changes across your own records rather than one good or bad day. Health flags are observations, not diagnoses. Forecasts keep their uncertainty and do not promise results.">
             <HealthFlagsCard />
             {growth}
             <section id="growth" className="scroll-mt-20 space-y-6">
               <InformationalVideos placement="growth" sport={selectedSport} developed={developed} />
               <ForecastPreview />
-              <PracticeIntelligenceCard />
+            </section>
+            </MeaningSection>
+            <MeaningSection title="Your Training Logs" use="Check that your week has no big gaps. If you skipped days, make the next ones count instead of doubling up." explanation="Your streak, completed activities, running and training exposure. These are counts of what you logged — not a body measurement or a grade." collapsed>
               <DualStreakDisplay />
               <ActivityAnalytics selectedSport={selectedSport} />
               <LoadDashboard />
-            </section>
             </MeaningSection>
-            <MeaningSection title="Supporting Insights" explanation="These deeper summaries use the existing access and training-history rules. A shared pattern is not proof of cause." collapsed>
+            <MeaningSection title="Supporting Insights" use="Use these only after the cards above. If something keeps showing up, ask your coach about it." explanation="These deeper summaries use the existing access and training-history rules. A shared pattern is not proof of cause." collapsed>
             <Advanced hasAdvancedAccess={hasAdvancedAccess}>
               <WeaknessClusterCard />
               <ProofCard />

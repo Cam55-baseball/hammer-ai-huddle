@@ -32,7 +32,7 @@ export function CompareByTest({ orgId }: { orgId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle><MeaningTitle organization title="Rank by Test">Each player contributes their latest recorded result for the selected test. Results keep their date and verification source. Choose whether higher or lower is better; mixed ages and positions need care.</MeaningTitle></CardTitle>
+        <CardTitle><MeaningTitle organization title="Rank by Test" use="Pick a test, set whether higher or lower is better, then find who is behind and give them work on that skill.">Each player contributes their latest recorded result for the selected test. Results keep their date and verification source. Choose whether higher or lower is better; mixed ages and positions need care.</MeaningTitle></CardTitle>
         <p className="text-sm text-muted-foreground">Each player's most recent result for the test you pick.</p>
       </CardHeader>
       <CardContent className="space-y-3">
