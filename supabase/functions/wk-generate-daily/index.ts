@@ -3257,7 +3257,7 @@ const handler = async (req: Request): Promise<Response> => {
     let conditioningEmptyPool = false;
     let conditioningSelection: ConditioningSelection | null = null;
     // Tell Hammers HOLD is a recovery day: no conditioning is built.
-    const easyConditioningOnly = isGameDay || (conditioningSuppressed && injurySlugs.size === 0 && !tcsAdjust?.recoveryOnly);
+    const easyConditioningOnly = (isGameDay && adaptationDecision.primary === 'game_readiness') || (conditioningSuppressed && injurySlugs.size === 0 && !tcsAdjust?.recoveryOnly);
     const conditioningSafetyStop = conditioningSuppressed && !easyConditioningOnly;
     if (!isPostSeason && !conditioningSafetyStop && !timelineToday.hold && !wholePlanRest(planDate)) {
       // Stage 1 (owner-authorised 2026-10-05): the session type chooses the
