@@ -3,11 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { User, UserCog, ArrowLeft, Building2 } from "lucide-react";
+import { User, Users, UserCog, ArrowLeft, Building2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 /**
- * The original first sign-up question (Player / Scout-Coach), plus Organization.
+ * First sign-up question: Player / Coach / Scout / Organization (owner Oct30).
  * Brand-new visitors (signed out) pick here first; the choice decides the rest of sign-up.
  */
 const SelectUserRole = () => {
@@ -15,20 +15,23 @@ const SelectUserRole = () => {
   const { t } = useTranslation();
   const { user, loading, signOut } = useAuth();
 
-  const handleRoleSelect = (role: 'player' | 'scout' | 'organization') => {
+  const handleRoleSelect = (role: 'player' | 'coach' | 'scout' | 'organization') => {
     // Display preference only — real staff/org powers come from the approval queue or verification.
     localStorage.setItem('userRole', role);
 
     if (!user) {
       // New visitor: each choice leads to its own sign-up path.
       if (role === 'organization') navigate('/signup/organization');
-      else if (role === 'scout') navigate('/signup/scout'); // scout application asks scout or coach
+      else if (role === 'coach') navigate('/signup/coach'); // coaches start right away, no approval
+      else if (role === 'scout') navigate('/signup/scout'); // scout application → owner approval
       else navigate('/signup'); // player onboarding (under 13 → parent path)
       return;
     }
 
     if (role === 'organization') {
       navigate('/organization/setup');
+    } else if (role === 'coach') {
+      navigate('/signup/coach');
     } else if (role === 'scout') {
       // Scouts go to sport selection for application
       navigate('/select-sport-scout');
@@ -89,6 +92,26 @@ const SelectUserRole = () => {
 
           <Card 
             className="p-8 cursor-pointer hover:border-primary transition-all hover:shadow-lg"
+            onClick={() => handleRoleSelect('coach')}
+          >
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 rounded-full bg-primary/10">
+                  <Users className="h-12 w-12 text-primary" />
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Coach</h2>
+              <p className="text-muted-foreground mb-6">
+                Coach your players and send them work. Start right away.
+              </p>
+              <Button size="lg" className="w-full">
+                I'm a Coach
+              </Button>
+            </div>
+          </Card>
+
+          <Card 
+            className="p-8 cursor-pointer hover:border-primary transition-all hover:shadow-lg"
             onClick={() => handleRoleSelect('scout')}
           >
             <div className="text-center">
@@ -97,12 +120,12 @@ const SelectUserRole = () => {
                   <UserCog className="h-12 w-12 text-primary" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold mb-2">Scout/Coach</h2>
+              <h2 className="text-2xl font-bold mb-2">Scout</h2>
               <p className="text-muted-foreground mb-6">
-                Find and evaluate talented players
+                Find and evaluate players. Scouts apply and are approved first.
               </p>
               <Button size="lg" className="w-full">
-                I'm a Scout/Coach
+                I'm a Scout
               </Button>
             </div>
           </Card>
