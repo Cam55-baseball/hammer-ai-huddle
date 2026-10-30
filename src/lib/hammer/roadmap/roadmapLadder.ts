@@ -79,7 +79,7 @@ const DESCRIPTORS: Record<RoadmapRung, RoadmapRungDescriptor> = {
     label: "Bridge",
     headline: "Bridge to elite — full off-season program.",
     description:
-      "Matches the elite 5-day off-season template. Heavy lower / upper split, max-velocity sprints, structured throwing ladder, side-independent bat-speed density.",
+      "Matches the elite 5-day off-season template. Full-body lifts, max-velocity sprints, structured throwing ladder, side-independent bat-speed density.",
     volumeCeilings: {
       liftSessionsPerWeek: 4, speedSessionsPerWeek: 2,
       batSpeedSessionsPerWeek: 4, throwsPerWeekCeiling: 190,
