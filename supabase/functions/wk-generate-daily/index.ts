@@ -3257,7 +3257,9 @@ const handler = async (req: Request): Promise<Response> => {
     let conditioningEmptyPool = false;
     let conditioningSelection: ConditioningSelection | null = null;
     // Tell Hammers HOLD is a recovery day: no conditioning is built.
-    if (!isPostSeason && !conditioningSuppressed && !timelineToday.hold && !wholePlanRest(planDate)) {
+    const easyConditioningOnly = isGameDay || (conditioningSuppressed && injurySlugs.size === 0 && !tcsAdjust?.recoveryOnly);
+    const conditioningSafetyStop = conditioningSuppressed && !easyConditioningOnly;
+    if (!isPostSeason && !conditioningSafetyStop && !timelineToday.hold && !wholePlanRest(planDate)) {
       // Stage 1 (owner-authorised 2026-10-05): the session type chooses the
       // work from recorded facts. Same card, never more than two movements.
       const dialDownReasons = [
@@ -3285,7 +3287,7 @@ const handler = async (req: Request): Promise<Response> => {
         returningAfterGap: isReturningAfterGap(((historyLogRows ?? []) as any[]).map((r: any) => String(r.plan_date)), planDate),
         dialDownReasons,
       });
-      if (isGameDay) conditioningSelection = {...conditioningSelection,slugs:[sport==='softball'?'easy_base_jog_sb':'easy_base_jog_bb'],templateId:'cond.off_day',dialedDown:true,why:'Game day: two easy base-route jogs at a talking pace, with a walk back and full rest. Stop before fatigue; save energy for the game.'};
+      if (easyConditioningOnly) conditioningSelection = {...conditioningSelection,slugs:[sport==='softball'?'easy_base_jog_sb':'easy_base_jog_bb'],templateId:'cond.off_day',dialedDown:true,why:isGameDay?'Game day: two easy base-route jogs at a talking pace, with a walk back and full rest. Stop before fatigue; save energy for the game.':'Lower readiness: easy base-route jogging at a talking pace. No sprints; stop for pain, dizziness or fatigue.'};
       let conditioning: MovementRow[] = conditioningSelection.slugs
         .map((slug) => lib.find((m) => m.slug === slug))
         .filter((m): m is MovementRow => eligible(m));
