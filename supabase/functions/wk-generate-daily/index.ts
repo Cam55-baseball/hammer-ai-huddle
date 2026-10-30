@@ -253,6 +253,7 @@ import { limbGuidance, attachLimbHints } from "../_shared/wic/limb/limbGuidance.
 import { planPowerPrimer, liftPatternOf, painAreasFromInjuries, type PapRole, type PapPitchBudget } from "../_shared/wic/pap/powerPrimer.ts";
 import { PITCH_SMART_BANDS, bandIndex, restDaysFor, checkCaps, pitchSmartApplies } from "../_shared/wic/phases/youthThrowing.ts";
 import { planWindmillSession, WINDMILL_PROGRAM_VERSION } from "../_shared/wic/pitching/windmillProgram.ts";
+import { enteredInningsByDate, windmillHistory } from "../_shared/wic/pitching/windmillInnings.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
 
@@ -5098,11 +5099,13 @@ const handler = async (req: Request): Promise<Response> => {
     // the windmill arm rules; the final check below still runs on every row.
     try {
       if (!composeRequested && features.windmill_program === true && sport === "softball" && isPitcherAthlete) {
-        const [{ data: wmLedger }, { data: wmPrior }] = await Promise.all([
+        const [{ data: wmLedger }, { data: wmPrior }, { data: wmGames }] = await Promise.all([
           admin.from("arm_ledger_entries").select("entry_date, source, throw_type, count, status")
             .eq("user_id", user.id).gte("entry_date", isoShift(planDate, -14)).lte("entry_date", planDate).limit(2000),
           admin.from("wk_prescriptions").select("plan_date, wm:why_payload->windmill")
             .eq("user_id", user.id).eq("slot", "windmill").gte("plan_date", isoShift(planDate, -6)).lt("plan_date", planDate).limit(200),
+          admin.from("gp_games").select("game_date, pitcher_innings, status, deleted_at, ignored_for_training")
+            .eq("user_id", user.id).eq("sport", "softball").gte("game_date", isoShift(planDate, -14)).lt("game_date", planDate).limit(200),
         ]);
         const byDay = new Map<string, number>();
         for (const e of (wmLedger ?? []) as any[]) {
@@ -5110,7 +5113,7 @@ const handler = async (req: Request): Promise<Response> => {
           if (String(e.source) !== "pitching" || /warm/i.test(String(e.throw_type ?? ""))) continue;
           byDay.set(String(e.entry_date), (byDay.get(String(e.entry_date)) ?? 0) + Number(e.count ?? 0));
         }
-        const history = [...byDay.entries()].filter(([d]) => d < planDate).map(([date, pitches]) => ({ date, pitches, innings: Math.ceil(pitches / 15) }));
+        const history = windmillHistory(byDay, enteredInningsByDate((wmGames ?? []) as any[]), planDate);
         const fullDays = new Set(((wmPrior ?? []) as any[]).filter((r) => Number(r.wm?.full_pitches ?? 0) >= 20 && r.wm?.type !== "sharpen").map((r) => String(r.plan_date)));
         const mondayOffset = (new Date(`${planDate}T00:00:00Z`).getUTCDay() + 6) % 7;
         const weekStart = isoShift(planDate, -mondayOffset);
