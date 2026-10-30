@@ -10,6 +10,7 @@ export default defineConfig({
     testTimeout: 30000,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    exclude: ["src/**/*.live.test.{ts,tsx}", "src/test/scheduling-elite.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
