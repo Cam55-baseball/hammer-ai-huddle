@@ -191,7 +191,6 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
       <p className="flex items-center gap-1 text-xs text-muted-foreground"><Lock className="h-3 w-3" /> All-out throws unlock after your throwing warm-up (in the drop-down below). Your lift sets go ahead now.</p>
     ) : <ol className="space-y-1">{rows}</ol>}
     {stopReason && !locked && <p data-pap-stopped className="text-xs font-medium">{stopReason}</p>}
-    {pp.action.real_throw && <p data-primer-arm className="text-[11px] text-muted-foreground">Arm count: {st.realThrows} real throws = {st.armUnits} arm units (each counts 1.5).</p>}
     {savedRounds.error && <p role="alert" className="text-xs text-destructive">Couldn't load your saved primer rounds. Your lift stays available.</p>}
     {saveFailed && <p role="alert" className="text-xs text-destructive">Couldn't save your rating. Rate this set again to retry.</p>}
     {saveFailed && <div className="flex flex-wrap gap-1">{QUALITY.map(q => <Button key={q.value} size="sm" variant="outline" onClick={() => rate(focus.active ? focus.row : Math.max(0, ratedCount - 1), q.value)}>{q.value}/5 {q.label}</Button>)}</div>}
