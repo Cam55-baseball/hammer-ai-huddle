@@ -49,6 +49,7 @@ import { ScheduleAdjustmentNotice } from "@/components/hammer/ScheduleAdjustment
 import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
 import { isDayStatementNotAReduction } from "@/components/hammer/WkPrescriptionCard";
 import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
+import { isPapStrengthRow } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
 
 export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
   const { user } = useAuth();
