@@ -6,6 +6,9 @@ import { matchPrescriptionDrills } from "@/lib/prescription/matchDrills";
 import { recencyWeight, type Discipline, type RankedFault } from "@/lib/wic/faultLedger/ranking";
 import { fadeMessage } from "@/lib/wic/faultLedger/cleanClipFade";
 import { recurringBecause, stillRecurring, type RecurringIssue } from "@/lib/wic/faultLedger/recurringIssues";
+import { PHILOSOPHY_TEST_USERS } from '@/lib/intelligence/testSettings';
+import { eligibleFor } from './ownerPlanDrills';
+import type { OwnerDrillRow } from './ownerDrills';
 
 const PLAN_SIGNAL_SOURCES = new Set(["video_analysis", "report_card"]);
 
@@ -28,6 +31,8 @@ export interface InfluencedDrillStep extends DrillStep {
 }
 
 export interface FaultPlanInfluenceInput {
+  readonly userId?: string;
+  readonly ownerRows?: readonly OwnerDrillRow[];
   readonly blocks: ReadonlyArray<PrescribedBlock>;
   readonly rankedFaults: ReadonlyArray<RankedFault>;
   readonly sport: "baseball" | "softball";
@@ -45,12 +50,18 @@ function isOwnerDrill(drill: EliteDrill): drill is OwnerDrill {
   return "ownerRowId" in drill;
 }
 
-function eligibleCatalog(catalog: ReadonlyArray<EliteDrill>, ownedEquipment: ReadonlySet<string>): EliteDrill[] {
+function eligibleCatalog(catalog: ReadonlyArray<EliteDrill>, ownedEquipment: ReadonlySet<string>, input: FaultPlanInfluenceInput): EliteDrill[] {
   const owned = new Set([...ownedEquipment].map((item) => item.trim().toLowerCase()));
   return catalog.filter((drill) => {
     // Owner-created and owner-overridden drills keep their sole route through
     // ownerPlanDrills, where every owner placement condition remains enforced.
-    if (isOwnerDrill(drill)) return false;
+    if (isOwnerDrill(drill)) {
+      if (!PHILOSOPHY_TEST_USERS.some(id=>id===input.userId)) return false;
+      const row=input.ownerRows?.find(r=>r.id===drill.ownerRowId);
+      if(!row || row.routine_role!=='fix_it')return false;
+      const slot=drill.category==='fielding'?'hammers_today:defense':drill.category==='baserunning'?'hammers_today:baserunning':'hammers_today:skill';
+      if(!eligibleFor(row,[slot],{sport:input.sport,owned,day:input.now,skill:drill.category==='hitting'?'hitting':'throwing'}))return false;
+    }
     return drill.equipment.every((item) => owned.has(item.trim().toLowerCase()));
   });
 }
@@ -87,7 +98,7 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
   const now = input.now ?? new Date();
   // A fault cleared by clean clips gives up its priority slot (Stage 2).
   const priorities = input.rankedFaults.filter((r) => !r.clearedByCleanClips).slice(0, 3);
-  const catalog = eligibleCatalog(input.catalog, input.ownedEquipment);
+  const catalog = eligibleCatalog(input.catalog, input.ownedEquipment, input);
 
   return input.blocks.map((original) => {
     const disciplines = disciplinesForBlock(original);
