@@ -421,7 +421,7 @@ export function equipmentNoteFor(drill: WarmupDrill): string | undefined {
 // single-leg share of the twitch layer is enforced at build time.
 const TEMPLATES: Record<WarmupContext, WarmupRole[]> = {
   game_day: [
-    "breathwork", "tissue_prep", "cars", "fascial_rotation",
+    "tissue_prep", "cars", "fascial_rotation",
     "activation", "weightless_coordination", "ladder_quickness", "neural_priming", "arm_care", "movement_bridge",
   ],
   in_season_practice: [
@@ -430,7 +430,7 @@ const TEMPLATES: Record<WarmupContext, WarmupRole[]> = {
     "single_leg_twitch", "movement_bridge", "arm_care",
   ],
   in_season_default: [
-    "breathwork", "cars", "fascial_rotation", "activation",
+    "cars", "fascial_rotation", "activation",
     "weightless_coordination", "ladder_quickness", "neural_priming", "single_leg_twitch", "arm_care",
   ],
   speed_day: [
@@ -439,7 +439,7 @@ const TEMPLATES: Record<WarmupContext, WarmupRole[]> = {
     "single_leg_twitch", "single_leg_twitch", "ground_force", "fast_twitch", "movement_bridge",
   ],
   lift_day: [
-    "breathwork", "tissue_prep", "cars", "mobility_joint",
+    "tissue_prep", "cars", "mobility_joint",
     "activation", "weightless_coordination", "stability", "neural_priming",
     "ladder_quickness", "single_leg_twitch", "fast_twitch",
   ],
@@ -457,17 +457,17 @@ const TEMPLATES: Record<WarmupContext, WarmupRole[]> = {
     "single_leg_twitch", "fast_twitch", "movement_bridge",
   ],
   offseason_extended: [
-    "breathwork", "tissue_prep", "tissue_prep", "cars", "cars",
+    "tissue_prep", "tissue_prep", "cars", "cars",
     "fascial_rotation", "mobility_joint", "mobility_joint", "activation", "stability",
     "weightless_coordination", "weightless_coordination", "neural_priming",
     "ladder_quickness", "ladder_quickness", "single_leg_twitch", "single_leg_twitch",
     "ground_force", "fast_twitch", "movement_bridge", "arm_care",
   ],
   recovery_day: [
-    "breathwork", "tissue_prep", "cars", "mobility_joint", "activation",
+    "tissue_prep", "cars", "mobility_joint", "activation",
   ],
   travel_day: [
-    "breathwork", "cars", "mobility_joint", "activation",
+    "cars", "mobility_joint", "activation",
     "weightless_coordination",
   ],
   default: [
@@ -494,8 +494,31 @@ export const SINGLE_LEG_MIN_SHARE = 0.6;
  * to maximize hand-eye / rhythm development before strength training age.
  * Elite gets only the single canonical slot so fast-twitch windows stay clean.
  */
+/**
+ * Owner Oct 30: every training-day warm-up is FULL BODY — tissue prep →
+ * mobility → activation → movement prep → the day's specific prep. Missing
+ * full-body stages are added; nothing is removed. Recovery day keeps its flow.
+ */
+export const FULL_BODY_CORE: ReadonlyArray<WarmupRole> = ["tissue_prep", "cars", "fascial_rotation", "mobility_joint", "activation", "movement_bridge"];
+export function fullBodyTemplate(context: WarmupContext): WarmupRole[] {
+  const base = [...(TEMPLATES[context] ?? TEMPLATES.default)];
+  if (context === "recovery_day") return base;
+  const ORDER: WarmupRole[] = ["tissue_prep", "cars", "fascial_rotation", "mobility_joint", "activation"];
+  for (let i = ORDER.length - 1; i >= 0; i--) {
+    const role = ORDER[i];
+    if (base.includes(role)) continue;
+    const before = ORDER.slice(0, i).map((r) => base.lastIndexOf(r)).filter((n) => n >= 0);
+    base.splice(before.length ? Math.max(...before) + 1 : 0, 0, role);
+  }
+  if (!base.includes("movement_bridge")) {
+    const armIdx = base.indexOf("arm_care");
+    base.splice(armIdx >= 0 ? armIdx : base.length, 0, "movement_bridge");
+  }
+  return base;
+}
+
 function templateFor(context: WarmupContext, lifecycle: LifecycleClass): WarmupRole[] {
-  const base = TEMPLATES[context] ?? TEMPLATES.default;
+  const base = fullBodyTemplate(context);
   const rank: Record<LifecycleClass, number> = { youth: 0, beginner: 1, intermediate: 2, advanced: 3, elite: 4 };
   if (rank[lifecycle] > 1) return base;
   const out = [...base];
