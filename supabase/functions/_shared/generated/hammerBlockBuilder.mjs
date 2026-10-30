@@ -3407,6 +3407,25 @@ function pitchingDay(date, sport, quarter, facts) {
   return type === "start" || type === "game" || type === "available" ? "bullpen" : type;
 }
 
+// src/lib/hammer/prescription/finalArmGuard.ts
+function finalArmGuard(blocks, input) {
+  const budget = armBudget(input);
+  const by = equivalentsByDay((input.history?.rows ?? []).filter((r) => r.entry_date <= input.date));
+  const since = new Date(Date.parse(input.date) - 6 * 864e5).toISOString().slice(0, 10);
+  let room = input.history && !input.history.unavailable && input.age !== null ? Math.max(0, Math.min(budget.daily - (by.get(input.date) ?? 0), budget.weekly - [...by].filter(([d3]) => d3 >= since).reduce((n, [, v]) => n + v, 0))) : 0;
+  return blocks.map((block) => {
+    if (block.status !== "ready") return block;
+    const drills = block.drills.filter((d3) => {
+      if (!d3.armEvent) return true;
+      const cost = throwUnits([d3.armEvent]);
+      if (cost > room) return false;
+      room -= cost;
+      return true;
+    });
+    return drills.length === block.drills.length ? block : { ...block, drills, because: [...block.because ?? [], "Pitching and position throws use one arm budget. Extra throwing was left out to keep you within it."] };
+  });
+}
+
 // src/lib/hammer/prescription/skillSessionStructure.ts
 function structureSkillSession(steps, options) {
   if (!steps.length) return [];
@@ -8596,7 +8615,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const drills = available.length ? sortByWarmupStage([...b.drills, ...available], (d3) => d3.slug ?? "") : b.drills;
     return { ...b, drills, steps: available.length ? drillsToSteps(drills) : b.steps, because: [...b.because ?? [], ...notices] };
   });
-  const blocks = prehabbed.flatMap((b) => {
+  const unguardedBlocks = prehabbed.flatMap((b) => {
     if (!access?.hasPitching || b.modality !== "throwing") return [b];
     const type = pitchingDay(today, sport, quarter, roadmapInputs.pitcherOutings);
     const pitchingDrills = b.drills.filter((d3) => d3.armCard !== "throwing");
@@ -8604,6 +8623,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const pitching = { ...b, drills: pitchingDrills, steps: drillsToSteps(pitchingDrills), modality: "pitching", title: `Pitching \u2014 ${sport === "softball" ? "windmill" : "baseball"} \xB7 ${type.replace(/_/g, " ")}`, route: "/practice?module=pitching", ctaLabel: "Open pitching", gamePlanTemplate: null, because: [...b.because ?? [], "Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."] };
     return [pitching, ...throwingDrills.length ? [{ ...b, drills: throwingDrills, steps: drillsToSteps(throwingDrills), title: "Throwing \u2014 position work within your shared arm budget", gamePlanTemplate: null }] : []];
   });
+  const blocks = access?.hasPitching ? finalArmGuard(unguardedBlocks, { sport, role: access.pitcherOnly ? "pitcher" : "two_way", age: ctx.get("age_years")?.value ?? null, date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`, history: roadmapInputs.armHistory }).map((b) => ({ ...b, steps: drillsToSteps(b.drills) })) : unguardedBlocks;
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));
