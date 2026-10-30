@@ -108,7 +108,7 @@ const OwnerDashboard = () => {
   const [playerSearch, setPlayerSearch] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [rankingsVisible, setRankingsVisible] = useState(true);
-  const [activeSection, setActiveSection] = useState<OwnerSection>('overview');
+  const [activeSection, setActiveSection] = useState<OwnerSection>(() => (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('section') === 'users' ? 'users' : 'overview'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [builds, setBuilds] = useState<BuildItem[]>([]);
   const [pendingBuildId, setPendingBuildId] = useState<string | null>(null);
