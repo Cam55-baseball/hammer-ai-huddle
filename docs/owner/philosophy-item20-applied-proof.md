@@ -1,5 +1,13 @@
 # Item 20 — applied philosophy, October 29
 
+## October 30, 02:31 run — TEST weights, on-screen Confirm and Undo
+
+- Named `wk-generate-daily` deployment completed; the server now imports the same exact TEST identity list and setting projection as the client from the shared pure builder package (109 sources; six parity cases passed).
+- At 390×844 the owner read the stored weights, entered defense **1 → 2** with hitting/baserunning/pitching unchanged at 1, reviewed the philosophy with Hammers, and tapped **Confirm settings**. The receipt showed version 2. The TEST player's real server build saved November 2 with Fielding **Goal #1**, Hitting **Goal #2**.
+- The owner tapped **Undo settings** on screen (version 3); rebuilding that same TEST date restored Fielding **Goal #2**, Hitting **Goal #1**. Canonical global values were never written by either RPC; TEST overrides were restored. Evidence `/tmp/browser/items13-20/weights.log`, exact saved payloads, review and receipt screenshots.
+- **Guide note:** a weekly minimum already at the safety maximum correctly has no further effect. Minimums cannot add days above youth/injury/availability/phase limits, reduce the canonical floor, or override dose/rest rules. Selection weights change the existing goal priority, not training amounts.
+- Focused tests: 45 passed across three files, including concrete 1→2→1 shared-builder ranking and unchanged drill doses. No publish, migration, cron or iOS changes.
+
 ## October 29, 16:05 run — isolated standard/tag Confirm and Undo
 
 - Authorized additive migration `0156_philosophy_test_settings_isolation.sql` applied live. Existing standards, owner drill metadata/fix-it fields, library tags and engine weights now have per-athlete `test_overrides`. RPCs permit only the two exact marked TEST identities, reject stale/duplicate changes, and atomically append principle version, Vault audit and conversation receipt. Undo restores the previous overlay or removes the field when none existed. Global values are not overwritten; TEST principles remain excluded from global picks.

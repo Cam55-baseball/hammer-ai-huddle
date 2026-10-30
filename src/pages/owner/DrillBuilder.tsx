@@ -23,6 +23,7 @@ import { validateVideoFile } from "@/data/videoLimits";
 import { VideoPlayer } from "@/components/video-library/VideoPlayer";
 import { useVideoLibrary } from '@/hooks/useVideoLibrary';
 import { BuilderLibraryLink } from '@/components/owner/BuilderLibraryLink';
+import { OwnerDrillFavorite } from '@/components/owner/OwnerDrillFavorite';
 import { DrillCmsManager } from '@/components/owner/DrillCmsManager';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ownerConditioningProblems } from '../../../supabase/functions/_shared/wic/conditioning/ownerConditioning';
@@ -293,6 +294,7 @@ export default function DrillBuilder() {
                   <UsageLine id={`owner.${r.id}`} /> <Badge variant="outline">{readiness(r)}</Badge>
                 </div>
                 <div className="flex items-center gap-2">
+                  <OwnerDrillFavorite row={r} sport={g.id.split(':')[1]} category={g.id.split(':')[2]} />
                   <Switch checked={r.active} onCheckedChange={() => toggleActive(r)} aria-label="Drill on or off" />
                   <Button size="sm" variant="ghost" onClick={() => setPreview(r)} aria-label={`Preview ${r.name}`}><Eye className="h-4 w-4" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => setDraft({ ...r })} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
