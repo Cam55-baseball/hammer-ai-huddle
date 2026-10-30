@@ -7641,7 +7641,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       if (legBlocked) {
         const drills2 = [
           { name: "Pickoff read film", dosage: "10 min", cue: "watch the pitcher's first move" },
-          { name: "Lead/secondary footwork (walk pace)", dosage: "10 reps", cue: "feet only, no max-effort sprint", stopIf: "any leg pain" }
+          { name: "Lead/secondary position reads \u2014 seated", dosage: "10 reps", cue: "Stay seated. Picture the lead and say when you would return to the base. No steps, pivots or running.", stopIf: "any pain or discomfort" }
         ];
         return {
           modality,
