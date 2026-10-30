@@ -9,7 +9,7 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { COMPARABLE_OUTCOME_LABEL } from "@/lib/intelligence/comparableOutcome";
-import { addToNextAppropriateSession, candidatePlanDates } from "@/lib/intelligence/addDoThisToPlan";
+import { addToNextAppropriateSession, candidatePlanDates, matchCatalogDrill } from "@/lib/intelligence/addDoThisToPlan";
 
 /** "Your Do-this list": did you do it, and what happened when we re-checked. */
 export function LearningLoopList() {
@@ -71,7 +71,7 @@ export function LearningLoopList() {
         <Card key={r.id} className="space-y-2 p-3">
           <p className="text-xs text-muted-foreground">Area: {r.area}</p>
           <DoThisDrill text={r.do_this} drill={r.drill} />
-          <AddDoThisButton drillId={r.drill?.id ?? null} videoId={r.source_video_id ?? null} />
+          <AddDoThisButton drill={r.drill} text={r.do_this} area={r.area} videoId={r.source_video_id ?? null} />
           {staff && (r.coaching_principle_versions ? (
             <Link className="text-xs text-primary underline" to={`/owner/coaching-console?principle=${r.coaching_principle_versions.principle_id}`}>
               Which principle produced this advice (version {r.coaching_principle_versions.version})
@@ -116,12 +116,15 @@ function DoThisDrill({ text, drill }: { text: string; drill?: { title?: string |
 }
 
 /** Adds the drill to today, or the very next session of the same kind (server checks category and safety). */
-function AddDoThisButton({ drillId, videoId }: { drillId: string | null; videoId: string | null }) {
+function AddDoThisButton({ drill, text, area, videoId }: { drill: any; text: string; area: string; videoId: string | null }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  if (!drillId || !videoId) return <p className="text-xs text-muted-foreground">"Add to today's work" opens for advice from your next analysis.</p>;
   const sport = localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball";
+  const match = matchCatalogDrill(drill ?? { title: text }, area, sport);
+  // No clip to link or no catalog drill matched by tags: no button (never faked).
+  if (!videoId || !match) return null;
+  const drillId = match.id;
   const run = async () => {
     setBusy(true); setMsg(null);
     try {
@@ -130,8 +133,8 @@ function AddDoThisButton({ drillId, videoId }: { drillId: string | null; videoId
         if (error || data?.error) return { error: data?.error ?? "Not added." };
         return data;
       });
-      if (!date) setMsg("No upcoming session of this kind yet. Nothing was saved.");
-      else if (result.saved) { setMsg(`Added to your ${date === candidatePlanDates(new Date())[0] ? "work today" : `session on ${date}`}.`); await qc.invalidateQueries({ predicate: (q) => /^(saved-block-day|wk-rx)/.test(String(q.queryKey[0])) }); }
+      if (!date) setMsg(result.error ? `${result.error} Nothing was saved.`.replace(". Nothing was saved. Nothing was saved.", ". Nothing was saved.") : "No upcoming session of this kind yet. Nothing was saved.");
+      else if (result.saved) { setMsg(`Added ${match.name} to your ${date === candidatePlanDates(new Date())[0] ? "work today" : `session on ${date}`}.`); await qc.invalidateQueries({ predicate: (q) => /^(saved-block-day|wk-rx)/.test(String(q.queryKey[0])) }); }
       else setMsg(`Your session on ${date} needs a safety check first. Open it from the analysis report.`);
     } finally { setBusy(false); }
   };
