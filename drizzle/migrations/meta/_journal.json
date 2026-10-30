@@ -1121,6 +1121,13 @@
       "when": 1793377345428,
       "tag": "0159_do_this_drill_snapshot",
       "breakpoints": true
+    },
+    {
+      "idx": 160,
+      "version": "7",
+      "when": 1793377428238,
+      "tag": "0160_do_this_drill_select_grant",
+      "breakpoints": true
     }
   ]
 }
