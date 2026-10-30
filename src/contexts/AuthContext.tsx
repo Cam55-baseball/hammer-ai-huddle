@@ -187,7 +187,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     email: string,
     password: string,
     fullName: string,
-    ageMeta?: { date_of_birth: string; age_band: string; guardian_email?: string },
+    ageMeta?: { date_of_birth: string; age_band: string; guardian_email?: string; sport?: string },
   ) => {
     const redirectUrl = `${window.location.origin}/signup?confirmed=1`;
     const { data, error } = await supabase.auth.signUp({
@@ -201,6 +201,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             ? {
                 date_of_birth: ageMeta.date_of_birth,
                 age_band: ageMeta.age_band,
+                ...(ageMeta.sport ? { sport: ageMeta.sport } : {}),
                 // Placeholder flag — 13–17 handling awaits legal review.
                 // The guardian notification below does NOT resolve this flag.
                 age_handling_pending_legal_review:
