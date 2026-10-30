@@ -1253,18 +1253,18 @@ function HammerDailyPlanBody({
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
                     intro={POCKET_INTROS[b.modality] ?? null}
                   >
-                    {() => (
+                    {() => (<>
                       <BlockCard
                         block={b}
                         onNavigate={(r) => navigate(r)}
                         onEngagementChanged={bumpEngagement}
                         adaptiveNote={adj?.note}
                       />
-                    )}
+                      {b === warmupBlocks[0] && <UpperBodyPrimerExercises />}
+                    </>)}
                   </PocketCard>
                 );
               })}
-              <UpperBodyPrimerCard />
               <WarmupCrossoverAddons />
               {coachCards(["warmup"])}
               <HammerCheckInCard
@@ -1489,13 +1489,11 @@ function countLabel(items: ReadonlyArray<unknown>): string | null {
   return items.length ? `${items.length} exercise${items.length === 1 ? "" : "s"}` : null;
 }
 
-function UpperBodyPrimerCard() {
+function UpperBodyPrimerExercises() {
   const { grouped } = useHammersToday();
   const rows = (grouped as { ubPrimerCard?: typeof grouped.warmupAddons }).ubPrimerCard ?? [];
   if (!rows.length) return null;
-  return <PocketCard id="ub_primer" category="Upper-body primer" tone="" planDate={rows[0].plan_date} prescribed countLabel={countLabel(rows)} progress={progressOf(rows)}>
-    {() => <div className="space-y-2">{rows.map(rx => <WkPrescriptionCard key={rx.id} rx={rx} />)}</div>}
-  </PocketCard>;
+  return <div className="space-y-2">{rows.map(rx => <WkPrescriptionCard key={rx.id} rx={rx} />)}</div>;
 }
 
 function WarmupCrossoverAddons() {
