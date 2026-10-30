@@ -4,7 +4,7 @@ import {resolveOutingFacts} from '../../supabase/functions/_shared/wic/pitching/
 import {equivalentsByDay} from '../../supabase/functions/_shared/wic/phases/nextThrowDate';
 const g:ArmGame={id:'game',user_id:'test',sport:'baseball',game_date:'2026-11-17',status:'final',pitch_count:40};
 describe('saved outing arm lineage',()=>{
- it('40 entered pitches count once even with 10 detailed pitches and duplicate game rows',()=>expect(gamePitchLoads([g,g],Array.from({length:10},()=>({game_id:g.id})),'test','baseball')).toEqual([{game_id:'game',date:'2026-11-17',count:40,isStart:false}]));
+ it('40 entered pitches count once even with 10 detailed pitches and duplicate game rows',()=>expect(gamePitchLoads([g,g],Array.from({length:10},()=>({game_id:g.id})),'test','baseball')).toEqual([{game_id:'game',date:'2026-11-17',count:40,innings:0,isStart:false}]));
  it('more detailed throws cannot disappear under a smaller aggregate',()=>expect(gamePitchLoads([g],Array.from({length:41},()=>({game_id:g.id})),'test','baseball')[0]?.count).toBe(41));
  it('ignores foreign athlete, sport, deleted, ignored and unplayed games',()=>{
   const variants=[{...g,user_id:'other'},{...g,sport:'softball'},{...g,deleted_at:'2026-11-18'},{...g,ignored_for_training:true},{...g,status:'scheduled'}];
