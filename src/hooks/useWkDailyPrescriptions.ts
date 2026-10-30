@@ -670,15 +670,11 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       // available for the Speed card banner on game days; content itself is
       // owned by the cross_sport card. `warmup_integration` placement is
       // rendered inside the Warm-up card (in-season crossover primer).
-      warmupAddons: [
-        ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement === "warmup_integration"),
-        // Upper-body primer — own slot, right after the warm-up (owner decision 2026-09-25).
-        ...rxs.filter((r) => r.slot === "ub_primer"),
-      ],
-      speedCard: [
-        ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement === "early_activation"),
-        ...rxs.filter((r) => r.slot === "speed"),
-      ],
+      // Owner Oct 30: every cross-sport activity lives in its own Cross-sport
+      // card; non-sport items (upper-body primer) keep their own place.
+      warmupAddons: crossSportRows(rxs),
+      ubPrimerCard: rxs.filter((r) => r.slot === "ub_primer"),
+      speedCard: rxs.filter((r) => r.slot === "speed"),
       batSpeedCard: rxs.filter((r) => r.slot === "bat_speed"),
       // Softball windmill pitching program — its own card (owner approved 2026-10-07).
       windmillCard: rxs.filter((r) => r.slot === "windmill").sort(byRoleOrder),
@@ -688,17 +684,10 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       ],
       conditioningCard: [
         ...rxs.filter((r) => r.slot === "conditioning"),
-        ...rxs.filter(
-          (r) =>
-            r.slot === "cross_sport" &&
-            r.why_payload?.placement !== "early_activation" &&
-            r.why_payload?.placement !== "warmup_integration",
-        ),
       ],
       // Legacy alias kept for any lingering imports; will be removed after
       // callers are migrated. Prefer speedCard + batSpeedCard.
       speedBat: [
-        ...rxs.filter((r) => r.slot === "cross_sport" && r.why_payload?.placement === "early_activation"),
         ...rxs.filter((r) => r.slot === "bat_speed"),
         ...rxs.filter((r) => r.slot === "speed"),
       ],
@@ -858,4 +847,9 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     /** Round 8 — next allowed plan date per spaced card type, from the server's rule check. */
     nextEligible,
   };
+}
+
+/** Cross-sport card rows: only the cross_sport slot, every placement. */
+export function crossSportRows<T extends { slot: string }>(rxs: ReadonlyArray<T>): T[] {
+  return rxs.filter((r) => r.slot === "cross_sport");
 }
