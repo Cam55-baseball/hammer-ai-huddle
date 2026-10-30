@@ -114,27 +114,32 @@ describe("strengthsAndWeaknesses", () => {
 });
 
 describe("buildConnections", () => {
-  it("labels a 3+ times recurring fault as Supported pattern", () => {
+  it("labels a 3+ times recurring fault as a Pattern", () => {
     const conns = buildConnections(reports, [
       find("f1", "r5", "early_arm", "2026-10-10T00:00:00Z"),
       find("f2", "r4", "early_arm", "2026-10-03T00:00:00Z"),
       find("f3", "r3", "early_arm", "2026-09-26T00:00:00Z"),
     ]);
-    expect(conns.some((c) => c.label === "Supported pattern")).toBe(true);
+    expect(conns.some((c) => c.label === "Pattern")).toBe(true);
   });
-  it("labels a first-time fault as Hypothesis to check", () => {
+  it("never calls a single first-time fault a connection", () => {
     const conns = buildConnections(reports, [find("f1", "r5", "new_thing", "2026-10-10T00:00:00Z")]);
-    expect(conns.some((c) => c.label === "Hypothesis to check")).toBe(true);
+    expect(conns.some((c) => c.text.includes("New Thing") || c.text.toLowerCase().includes("new thing"))).toBe(false);
   });
-  it("labels a disappeared fault as Observed fact", () => {
+  it("labels a disappeared fault as a Hunch", () => {
     const conns = buildConnections(reports, [find("f1", "r1", "old_thing", "2026-09-12T00:00:00Z")]);
-    expect(conns.some((c) => c.label === "Observed fact")).toBe(true);
+    expect(conns.some((c) => c.label === "Hunch")).toBe(true);
   });
-  it("labels a score trend as Measured change", () => {
-    expect(buildConnections(reports, []).some((c) => c.label === "Measured change")).toBe(true);
+  it("calls a score direction over 3+ reports a Pattern, never a measurement", () => {
+    const conns = buildConnections(reports, []);
+    expect(conns.some((c) => c.label === "Pattern")).toBe(true);
+    expect(conns.some((c) => /measured/i.test(c.label))).toBe(false);
+  });
+  it("needs three reports before showing a score direction", () => {
+    expect(buildConnections(reports.slice(0, 2), []).every((c) => c.label === "Need more data")).toBe(true);
   });
   it("says Not enough data with fewer than 2 reports", () => {
-    expect(buildConnections([reports[0]], [])[0].label).toBe("Not enough data");
+    expect(buildConnections([reports[0]], [])[0].label).toBe("Need more data");
   });
 });
 
