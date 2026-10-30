@@ -61,5 +61,6 @@
 - Exact exercise measurement decisions are shared by the library, inline logger and log-sheet resolver; yard entry converts only at the display boundary, keeping canonical distance in feet. Why: ambiguous names must not diverge between logging paths or change existing distance readers.
 - Mastery: gated judges, weekly boost, JWT-only new days; saved sport, no backfill. Why: provenance.
 - Read nested AGENTS.md (hooks, owner, hammer). Why: scoped rules.
+- Primer rows stay inside Warm-up; Both switch uses the current inbox. Why: no separate work/save path.
 - Goal shelves resolve self-scoped readable IDs, never fault attribution. Goal editors save picks/order together with readback and shared pickRanking. Why: retain both goals and pass Start without inventing evidence.
 - Owner conditioning drills serve only the weekly running floor, validated by `_shared/wic/conditioning/ownerConditioning.ts` against `runRest.ts`. Why: owner numbers used as entered, no new limit or path.
