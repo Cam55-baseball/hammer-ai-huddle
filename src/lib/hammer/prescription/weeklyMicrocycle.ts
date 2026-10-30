@@ -186,7 +186,7 @@ const PRE_SEASON_5D: WeeklyTemplate = {
     speed:    { 5: "secondary" },
   },
   dayLabels: {
-    strength: { 1: "Full-body heavy", 3: "Dynamic effort", 5: "Repetition effort" },
+    strength: { 1: "Full-body heavy", 3: "Full-body dynamic", 5: "Full-body repetition" },
     speed:    { 1: "Acceleration", 3: "Max velocity", 5: "Tempo / freshness" },
   },
   priorityDayOrder: {
@@ -229,7 +229,7 @@ const IN_SEASON: WeeklyTemplate = {
     speed:    { 2: "activation" },
   },
   dayLabels: {
-    strength: { 1: "Maintenance", 4: "Maintenance" },
+    strength: { 1: "Full-body maintenance", 4: "Full-body maintenance" },
     speed:    { 2: "Freshness (short reps)" },
   },
   priorityDayOrder: {
@@ -263,7 +263,7 @@ const POST_SEASON: WeeklyTemplate = {
     throwing: { 3: "activation" },
   },
   dayLabels: {
-    strength: { 2: "Rebuild base", 5: "Rebuild base" },
+    strength: { 2: "Full-body rebuild", 5: "Full-body rebuild" },
   },
   priorityDayOrder: {
     hitting:     [2, 5, 3, 1, 4, 6, 0],
@@ -294,7 +294,7 @@ const YOUTH: WeeklyTemplate = {
     speed:    { 2: "activation", 4: "activation" },
   },
   dayLabels: {
-    strength: { 1: "Movement quality", 4: "Movement quality" },
+    strength: { 1: "Full-body movement quality", 4: "Full-body movement quality" },
     speed:    { 2: "Short ATP-CP", 4: "Short ATP-CP" },
   },
   priorityDayOrder: {
