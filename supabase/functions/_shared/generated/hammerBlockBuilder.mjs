@@ -1639,6 +1639,7 @@ function buntingProgram(facts) {
   const weekdays = [...new Set(facts.legalWeekdays)].filter((day2) => Number.isInteger(day2) && day2 >= 0 && day2 <= 6).sort((a, b) => a - b).slice(0, 6);
   const scheduled = included && sides.length ? weekdays.slice(0, wantedSessions) : [];
   const dose = (side, type) => {
+    if (facts.gameDay && facts.pregameStation) return { reps: 5, floor: 5, attempts: 0, successes: 0, successRate: null };
     const floor = under300 || side === "L" && (facts.leftPower === true || facts.powerGoal === true) ? 7 : 5;
     const logs = (facts.outcomes ?? []).filter((outcome) => outcome.side === side && outcome.type === type && validBuntOutcome(outcome));
     const attempts = logs.reduce((sum, log) => sum + log.attempts, 0);
@@ -1658,7 +1659,7 @@ function buntingProgram(facts) {
     scheduled,
     wantedSessions,
     constrained: scheduled.length < wantedSessions,
-    canTrainToday: included && sides.length > 0 && !facts.restDay && !facts.gameDay,
+    canTrainToday: included && sides.length > 0 && !facts.restDay && (!facts.gameDay || facts.pregameStation === true),
     battingSample: { games: games.length, atBats: validWindow ? window2.atBats : atBats, hits: validWindow ? window2.hits : hits, average: validWindow ? window2.hits / window2.atBats : atBats ? hits / atBats : null, under300, window: validWindow ? window2 : null },
     dose,
     typesFor
@@ -7969,7 +7970,28 @@ function buntingWeekdays(roadmap, gameDows, wanted) {
   const full = open.filter((d3) => d3.modalities.some((m) => m.key === "hitting" && m.intensity !== "activation")).map((d3) => d3.dow);
   if (full.length >= wanted) return full;
   const light = open.filter((d3) => !full.includes(d3.dow) && d3.modalities.some((m) => m.key === "hitting")).map((d3) => d3.dow);
-  return [...full, ...light.slice(0, wanted - full.length)];
+  const chosen = [...full, ...light.slice(0, wanted - full.length)];
+  const pregame = roadmap.filter((d3) => !d3.restDay && gameDows.includes(d3.dow) && d3.modalities.some((m) => m.key === "hitting")).map((d3) => d3.dow);
+  return [...chosen, ...pregame.slice(0, Math.max(0, wanted - chosen.length))];
+}
+function gameSkillStation(b, original) {
+  const source = b.status === "ready" ? b : b.status === "off-day" && original?.status === "ready" ? original : void 0;
+  if (!source?.drills.length) return b;
+  const skill = source.drills.find((d3) => d3.stage === "drills" && /^\d+ swings/.test(d3.dosage));
+  if (b.modality === "hitting" && !skill) return b;
+  const drills = b.modality === "hitting" && skill ? [{ ...skill, dosage: `${Math.min(15, Number(/^(\d+)/.exec(skill.dosage)?.[1] ?? 0))} swings`, cue: `${skill.cue} Game-speed decisions, low volume; stop before fatigue.` }] : source.drills.slice(0, 1).map((d3) => ({ ...d3, dosage: "1 rep \u2014 easy pre-game rehearsal; no extra throws" }));
+  return {
+    ...source,
+    drills,
+    steps: drillsToSteps(drills),
+    status: "ready",
+    durationMin: 3,
+    phase: "maintain",
+    gamePlanTemplate: null,
+    title: `${b.modality === "hitting" ? "Hitting" : "Baserunning"} \u2014 short pre-game station`,
+    why: "A short station keeps your skill work in a busy game week. Save your energy for the game.",
+    roadmapReason: "Game week \u2014 short, low-volume skill station; existing safety stops still apply."
+  };
 }
 function gameDayCard(tournament) {
   const title = tournament ? "Tournament \u2014 play your games" : "Game day \u2014 play and log your game";
@@ -8006,8 +8028,9 @@ function applyScheduleModulation(blocks, signal, originals, defenseFullOverride 
           case "recovery":
             return annotate(b, rationale);
           case "throwing":
-          case "hitting":
             return signal.postureToday === "tournament" ? suppressBlock(b, rationale) : suppressBlock(b, rationale, { keepActivation: true });
+          case "hitting":
+            return gameSkillStation(b, originals?.get(blockKey(b)));
           case "defense": {
             if (b.status === "awaiting-input") return b;
             const original = originals?.get(blockKey(b));
@@ -8021,8 +8044,9 @@ function applyScheduleModulation(blocks, signal, originals, defenseFullOverride 
           }
           case "speed":
           case "strength":
-          case "baserunning":
             return suppressBlock(b, rationale);
+          case "baserunning":
+            return gameSkillStation(b, originals?.get(blockKey(b)));
           default:
             return b;
         }
@@ -8521,7 +8545,8 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     legalWeekdays: buntingWeekdays(weeklyRoadmap, bunting.gameWeekdays ?? [], buntingMinimum),
     weeklyMinimum: buntingMinimum,
     restDay: fullRestDay,
-    gameDay: scheduleSignal.postureToday !== "normal"
+    gameDay: scheduleSignal.postureToday !== "normal",
+    pregameStation: scheduleSignal.postureToday === "game" || scheduleSignal.postureToday === "tournament"
   }, {
     weekday: today.getDay(),
     weekIndex: Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate() - (today.getDay() + 6) % 7) / 6048e5),
