@@ -11,7 +11,11 @@ describe("combined base running & conditioning", () => {
   it("5Tool and Golden 2Way are combined; Complete Pitcher is not", () => {
     expect(isCombinedBaseConditioningProgram(["baseball_5tool"], "baseball")).toBe(true);
     expect(isCombinedBaseConditioningProgram(["softball_golden2way"], "softball")).toBe(true);
+    expect(isCombinedBaseConditioningProgram(["baseball_hitting", "baseball_throwing"], "baseball")).toBe(true);
+    expect(isCombinedBaseConditioningProgram(["softball_hitting", "softball_pitching", "softball_throwing"], "softball")).toBe(true);
     expect(isCombinedBaseConditioningProgram(["baseball_pitcher"], "baseball")).toBe(false);
+    expect(isCombinedBaseConditioningProgram(["softball_pitching"], "softball")).toBe(false);
+    expect(isCombinedBaseConditioningProgram(["softball_hitting"], "baseball")).toBe(false);
   });
   it("drops running conditioning on a day without base running", () => {
     expect(combinedRunningRowsToDrop(rows, { combined: true, baserunningReady: false })).toEqual([0]);

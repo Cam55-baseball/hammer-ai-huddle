@@ -8,7 +8,9 @@
 import { isRunningConditioning } from "./weeklyFloor.ts";
 
 export function isCombinedBaseConditioningProgram(modules: readonly string[], sport: string): boolean {
-  return modules.includes(`${sport}_5tool`) || modules.includes(`${sport}_golden2way`);
+  // 5Tool / Golden 2Way bundles, or the legacy hitting module (5Tool = hitting+throwing,
+  // Golden 2Way = hitting+pitching+throwing). Complete Pitcher has no hitting.
+  return [`${sport}_5tool`, `${sport}_golden2way`, `${sport}_hitting`, "hitting"].some((m) => modules.includes(m));
 }
 
 export function combinedRunningRowsToDrop(
