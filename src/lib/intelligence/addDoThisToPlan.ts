@@ -20,12 +20,15 @@ export async function addToNextAppropriateSession(
   attempt: (date: string) => Promise<AddAttempt>,
 ): Promise<{ date: string | null; result: AddAttempt }> {
   let last: AddAttempt = { error: "No upcoming session of this kind. Nothing was saved." };
+  let firstRefusal: AddAttempt | undefined;
   for (const date of dates) {
     const r = await attempt(date);
     if (r.saved === true || (r.warnings && r.warnings.length)) return { date, result: r };
+    if (!firstRefusal && r.error) firstRefusal = r;
     last = r;
   }
-  return { date: null, result: last };
+  // Later date-gate errors must not conceal today's actual safety refusal.
+  return { date: null, result: firstRefusal ?? last };
 }
 
 import { ELITE_DRILL_CATALOG, type EliteDrill } from "@/data/drills/eliteDrillCatalog";
