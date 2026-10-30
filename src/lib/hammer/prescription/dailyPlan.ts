@@ -57,6 +57,7 @@ import {
 import { buildWarmup, resolveWarmupContext, lifecycleFor } from "./warmupLibrary";
 import { guideFor as _guideForMovement } from "./movementGuide";
 import { getSeasonHPI } from "@/lib/seasonPhase";
+import { placeBreathing } from "./breathingPlacement";
 import {
   buildEassPrescription,
   normalizePosition,
@@ -2624,7 +2625,7 @@ export function buildHammerDailyPlan(
     console.debug("[dailyPlan] gp-signal bias →", gpBiasTags);
   }
   return {
-    blocks: enforceSkillStageOrder(blocks),
+    blocks: enforceSkillStageOrder(placeBreathing(blocks, (d) => drillsToSteps(d))),
     sanity: validatePlanSanity({ restDay: fullRestDay, work: blocks.filter(b => b.status === 'ready').flatMap(b => b.drills.map(d => ({ category: b.modality, slug: d.slug }))) }),
     practiceLoad,
     seasonPhase: proj.seasonPhase,
