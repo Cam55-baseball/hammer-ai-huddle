@@ -1,3 +1,4 @@
+import { MeaningTitle } from "@/components/progress/SectionMeaning";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -60,7 +61,7 @@ export function CoachDisciplineTab({ athleteId }: { athleteId: string }) {
   return (
     <div className="space-y-3">
       <Card className="p-4 space-y-2">
-        <h3 className="font-semibold">Work done vs work set (days before today)</h3>
+        <h3 className="font-semibold"><MeaningTitle title="Work done vs work set (days before today)" use="Under 70% for 28 days? Ask what's getting in the way before adding more work.">How much of the planned work the player actually logged.</MeaningTitle></h3>
         <p className="text-sm">Last 7 days: {pct(7)}</p>
         <p className="text-sm">Last 28 days: {pct(28)}</p>
         <p className="text-sm">Last 90 days: {pct(90)}</p>
@@ -70,7 +71,7 @@ export function CoachDisciplineTab({ athleteId }: { athleteId: string }) {
         <p className="text-xs text-muted-foreground">Source: the player's plan and their saved workout logs.</p>
       </Card>
       <Card className="p-4 space-y-2">
-        <h3 className="font-semibold">Saved practice and games</h3>
+        <h3 className="font-semibold"><MeaningTitle title="Saved practice and games" use="No recent logs? Remind them to log, so the plan has real data.">How many practice and game logs the player saved.</MeaningTitle></h3>
         {practice.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : practice.error || practice.data === null ?
           <p role="alert" className="text-sm text-muted-foreground">Practice logs unavailable for this view.</p> : <>
             <p className="text-sm">Sessions logged: {projected.sessions} · {data.from} to {data.to}</p>
@@ -79,12 +80,12 @@ export function CoachDisciplineTab({ athleteId }: { athleteId: string }) {
           </>}
       </Card>
       <Card className="p-4 space-y-2">
-        <h3 className="font-semibold">Most skipped, by card type (last 90 days)</h3>
+        <h3 className="font-semibold"><MeaningTitle title="Most skipped, by card type (last 90 days)" use="Talk about the most-skipped one. It's often time, gear or not knowing how.">The kinds of work this player skips most.</MeaningTitle></h3>
         {data.skips.length === 0 ? <p className="text-sm text-muted-foreground">Not enough data</p> :
           data.skips.map((s) => <p key={s.slot} className="text-sm">Card type {s.slot}: skipped {s.skipped} of {s.prescribed}</p>)}
       </Card>
       <Card className="p-4 space-y-2">
-        <h3 className="font-semibold">Links between doing the work and results</h3>
+        <h3 className="font-semibold"><MeaningTitle title="Links between doing the work and results" use="If results rise with more work done, show the player. If there's no link, keep collecting.">Each result next to how much work was done in the 28 days before. Shown only with at least 8 results. Never proof of cause.</MeaningTitle></h3>
         <p className="text-xs text-muted-foreground">Each result is paired with how much work was done in the 28 days before it. A link never shows cause. At least 8 results are needed.</p>
         {(() => {
           const links = adherenceLinks(past, trends.data ?? []);

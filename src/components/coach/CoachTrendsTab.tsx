@@ -1,3 +1,4 @@
+import { MeaningTitle } from "@/components/progress/SectionMeaning";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,9 +35,7 @@ export function CoachTrendsTab({ athleteId }: { athleteId: string }) {
 
   return (
     <div className="space-y-3" data-testid="coach-trends">
-      <p className="text-xs text-muted-foreground">
-        Each metric is compared only with this player's own usual range — never with other players.
-      </p>
+      <h3><MeaningTitle title="Measured Trends" use="Look for a result outside the player's usual range. If it's lower, check sleep, soreness and workload before changing the plan.">Each measured result is compared only with this player's own usual range — never with other players.</MeaningTitle></h3>
       {data.map((r) => {
         const recent = (r.recent ?? []).slice(0, 5);
         const verdict = latestVsBaseline(r);

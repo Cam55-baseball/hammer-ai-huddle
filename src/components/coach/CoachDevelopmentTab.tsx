@@ -1,3 +1,4 @@
+import { MeaningTitle } from "@/components/progress/SectionMeaning";
 import { useMemo } from "react";
 import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { useQuery } from "@tanstack/react-query";
@@ -53,7 +54,7 @@ export function CoachDevelopmentTab({ athleteId }: { athleteId: string }) {
   if (!data || data.reports.length === 0) {
     return (
       <Card>
-        <CardHeader><CardTitle>Development</CardTitle></CardHeader>
+        <CardHeader><CardTitle><MeaningTitle title="Development" use="Read it before a session so you know what they're working on.">A summary of this player's saved video analyses, newest first.</MeaningTitle></CardTitle></CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">No analysis reports yet — this view fills in once the player has video analysis reports.</p>
         </CardContent>
@@ -65,7 +66,7 @@ export function CoachDevelopmentTab({ athleteId }: { athleteId: string }) {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Takeaways</CardTitle>
+          <CardTitle><MeaningTitle title="Takeaways" use="Pick one takeaway and build your next lesson around it.">The 1–3 most useful points from their recent reports, each with its proof.</MeaningTitle></CardTitle>
           <p className="text-sm text-muted-foreground">The 1–3 most useful things to know, each with its evidence.</p>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -82,7 +83,7 @@ export function CoachDevelopmentTab({ athleteId }: { athleteId: string }) {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Development report card</CardTitle></CardHeader>
+        <CardHeader><CardTitle><MeaningTitle title="Development report card" use="Look for areas with few reports and ask for a new clip there.">Each skill area from their written video reports. Written reports are not camera measurements.</MeaningTitle></CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {cards.map((c) => (
             <div key={c.category} className="rounded-md border p-3 space-y-2">
@@ -125,7 +126,7 @@ export function CoachDevelopmentTab({ athleteId }: { athleteId: string }) {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Strengths &amp; weaknesses</CardTitle></CardHeader>
+        <CardHeader><CardTitle><MeaningTitle title="Strengths & weaknesses" use="Keep the strength, and give one drill for the weakest area.">Areas that stand out compared with the player's own other areas, not other players.</MeaningTitle></CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {sw.strengths.length === 0 && sw.weaknesses.length === 0 && (
             <p className="text-sm text-muted-foreground">{sw.note}</p>
@@ -147,7 +148,7 @@ export function CoachDevelopmentTab({ athleteId }: { athleteId: string }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Connections</CardTitle>
+          <CardTitle><MeaningTitle title="Connections" use="Use a Pattern to plan drills. Treat a Hunch as something to watch on the next clip.">Links only show when the same thing showed up in at least 3 reports. A link never proves cause.</MeaningTitle></CardTitle>
           <p className="text-sm text-muted-foreground">
             Each connection is labeled by how strong the evidence is. A connection never means one thing caused another.
           </p>
