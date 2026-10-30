@@ -13,6 +13,7 @@ import { parseScheduleRequest, FACE_LABEL, extractDates, type EntryDraft } from 
 import { REPORT_INJURY_REGIONS } from "@/lib/hammer/injury/reportInjury";
 import { readChangeConfirmation } from '@/lib/hammer/changeConfirmation';
 import { ActiveSportSwitch } from './ActiveSportSwitch';
+import { SeasonDatesDialog } from './SeasonDatesDialog';
 
 type Flow = "games" | "season" | "cancelled" | "pain" | "break" | "event" | "travel" | "resume" | "ask";
 const BUTTONS = [
@@ -39,6 +40,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   const storageKey = `hammer:tell-open:${user?.id ?? "guest"}`;
   const [open, setOpen] = useState(checkIn);
   const [flow, setFlow] = useState<Flow | null>(null);
+  const [datesOpen, setDatesOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [picked, setPicked] = useState<Date[]>([]);
@@ -154,6 +156,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       </div>}
     {(open || checkIn) && <div className="space-y-3">
       {!checkIn && user && <ActiveSportSwitch userId={user.id} />}
+      {!checkIn && <Button variant="outline" className="w-full" onClick={() => setDatesOpen(true)}>Season dates</Button>}
       {!checkIn && flow && backBtn}
       {lastMessage && <div role="status" data-testid="tell-hammers-result" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm"><strong>Got it — Hammer has it</strong><p>{lastMessage}</p></div>}
       {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
@@ -164,7 +167,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
         <Button variant="outline" className="w-full" data-testid="tell-ask" onClick={() => enter("ask")}>Update Hammer in your words</Button>
       </>}
       {flow === "games" && <><p className="text-sm">Tap your game days, then send.</p>{pickCalendar(true)}{choiceBtn("games-send", "Send these days", () => sendDays("GAME", "games-send"), "h-12 w-full")}</>}
-      {flow === "season" && <>{!which ? <div className="grid grid-cols-2 gap-2"><Button variant="outline" className="h-auto min-h-11 whitespace-normal" onClick={() => setWhich("starts")}>Season starts</Button><Button variant="outline" className="h-auto min-h-11 whitespace-normal" onClick={() => setWhich("ends")}>Offseason is beginning</Button></div> : <><p className="text-sm">{which === "ends" ? "Tap the day your offseason begins." : "Tap the day your season starts."}</p>{pickCalendar(false)}{choiceBtn("season-send", "Send this day", () => { if (!picked[0]) return; tap(draft("SEASON", getLocalDateString(picked[0]), getLocalDateString(picked[0]), { which }), "season-send"); }, "h-12 w-full")}</>}</>}
+      {flow === "season" && <>{!which ? <div className="grid grid-cols-2 gap-2">{[{phase:'preseason',label:'Pre-season'},{phase:'in_season',label:'In-season'},{phase:'post_season',label:'Post-season'},{phase:'off_season',label:'Offseason is beginning'}].map(p => <Button key={p.phase} variant="outline" disabled={busy} className="h-auto min-h-11 whitespace-normal" onClick={() => tap(draft('SEASON',today,today,{phase:p.phase}),p.phase)}>{p.label}</Button>)}<Button variant="outline" onClick={() => setWhich("starts")}>Season starts on…</Button><Button variant="outline" onClick={() => setWhich("ends")}>Offseason begins on…</Button></div> : <><p className="text-sm">{which === "ends" ? "Tap the day your offseason begins." : "Tap the day your season starts."}</p>{pickCalendar(false)}{choiceBtn("season-send", "Send this day", () => { if (!picked[0]) return; tap(draft("SEASON", getLocalDateString(picked[0]), getLocalDateString(picked[0]), { which }), "season-send"); }, "h-12 w-full")}</>}</>}
       {flow === "cancelled" && <><div className="grid grid-cols-2 gap-2">{[1,7,14,28].map((n) => choiceBtn(`cancel-${n}`, n === 1 ? "Today" : n === 7 ? "This week" : n === 14 ? "Next 2 weeks" : "Next 4 weeks", () => tap(draft("CANCELLED", today, isoShift(today, n - 1)), `cancel-${n}`)))}</div><p className="text-sm">Or tap the days:</p>{pickCalendar(true)}{choiceBtn("cancel-send", "Send these days", () => sendDays("CANCELLED", "cancel-send"), "h-12 w-full")}</>}
       {flow === "pain" && <>{!region ? <><p className="text-sm">Where does it hurt?</p><div className="grid grid-cols-3 gap-2">{REPORT_INJURY_REGIONS.map(r => <Button key={r.key} variant="outline" className="h-12 text-xs" data-testid={`pain-${r.key}`} onClick={() => setRegion(r)}>{r.label}</Button>)}</div></> : <><p className="text-sm">How bad is your {region.label.toLowerCase()}?</p><div className="grid grid-cols-3 gap-2">{FACES.map(f => { const on = pending?.payload.face === f.key; return <Button key={f.key} variant={on ? "default" : "outline"} aria-pressed={on} className="h-20 flex-col" data-testid={`face-${f.key}`} onClick={() => setPending(draft("PAIN",today,today,{ region: region.key, regionLabel: region.label, face: f.key, faceLabel: FACE_LABEL[f.key] }))}><span className="text-2xl">{f.emoji}</span>{FACE_LABEL[f.key]}</Button>; })}</div></> }</>}
       {(flow === "break" || flow === "travel") && <><p className="text-sm">{flow === "travel" ? "How long are you away?" : "How long do you need?"}</p><div className="grid grid-cols-2 gap-2">{(flow === "break" ? [1,3,7] : [1,3,7,14]).map(n => choiceBtn(`hold-${n}`, n === 1 ? "Just today" : n === 7 ? "1 week" : `${n} days`, () => tap(draft("HOLD",today,isoShift(today,n-1),{reason: flow === "travel" ? "travel" : "break"}), `hold-${n}`)))}</div></>}
@@ -190,6 +193,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       </div>}
       {checkIn && <div className="grid grid-cols-2 gap-3 border-t border-border pt-3"><Button className="h-12" disabled={busy || !!flow} onClick={() => void confirmChanges(false)} data-testid="change-done">Done</Button><Button className="h-12 whitespace-normal" variant="outline" disabled={busy || !!flow} onClick={() => void confirmChanges(true)} data-testid="change-no-change">Nothing's changed</Button></div>}
     </div>}
+    {datesOpen && <SeasonDatesDialog open={datesOpen} onOpenChange={setDatesOpen} />}
   </section>;
 }
 export default TellHammersInbox;

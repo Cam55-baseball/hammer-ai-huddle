@@ -20,6 +20,17 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
         body: { plan_date: date, compose_sport_day: true, change_reason: 'player_request', change_text: reason, change_key: `${key}:${date}` },
       });
       if (error) {
+        const conflict = await (error as { context?: Response }).context?.clone?.().json?.().catch(() => null);
+        if (conflict?.error === 'adjust_failed' && conflict?.message === 'Day changed; rebuild from fresh saved work') {
+          // One fresh server reread under the same lock; never bypass a safety or protected-work refusal.
+          const retry = await supabase.functions.invoke('wk-generate-daily', {body:{plan_date:date,compose_sport_day:true,change_reason:'player_request',change_text:reason,change_key:`${key}:${date}:fresh`}});
+          if (!retry.error && retry.data?.ok===true && retry.data?.composed===true && retry.data?.degraded!==true) {
+            if(retry.data.sport==='baseball'||retry.data.sport==='softball'){sport=retry.data.sport;userId=typeof retry.data.user_id==='string'?retry.data.user_id:null;boughtBunting=retry.data.bunting_entitled===true;}
+            continue;
+          }
+        }
+      }
+      if (error) {
         const body = await (error as { context?: Response }).context?.clone?.().json?.().catch(() => null);
         // Server refused to replace work the player already chose or marked: kept by design, not a failure to retry.
         if (body?.error === 'adjust_failed' && /protected/i.test(String(body?.message ?? ''))) { kept.push(date); continue; }

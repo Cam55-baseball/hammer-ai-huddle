@@ -50,3 +50,9 @@ it('missing starting details stop the rebuild with a plain reason',async()=>{
   expect(r.ok).toBe(false);expect(r.missingInputs).toBe(true);expect(invoke).toHaveBeenCalledTimes(1);
   expect(r.message).toContain('finish your missing starting details');
 });
+it('one concurrent saved-day revision gets one fresh locked rebuild, not a safety bypass',async()=>{
+  invoke.mockResolvedValueOnce({data:null,error:httpError({error:'adjust_failed',message:'Day changed; rebuild from fresh saved work'})});
+  const r=await rebuildAfterChange('In-season dates changed','2026-10-30');
+  expect(r.ok).toBe(true);expect(invoke).toHaveBeenCalledTimes(8);
+  expect(invoke.mock.calls.map(c=>c[1].body.plan_date)).toEqual(['2026-10-30','2026-10-30','2026-10-31','2026-11-01','2026-11-02','2026-11-03','2026-11-04','2026-11-05']);
+});
