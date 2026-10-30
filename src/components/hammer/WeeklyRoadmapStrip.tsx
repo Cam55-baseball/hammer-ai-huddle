@@ -28,7 +28,7 @@ import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 const MODALITY_ABBR: Record<ModalityKey, string> = {
   warmup: "WU",
   speed: "SPD",
-  strength: "LFT",
+  strength: "LIFT",
   hitting: "HIT",
   throwing: "THR",
   pitching: "PIT",
@@ -43,7 +43,7 @@ const MODALITY_ABBR: Record<ModalityKey, string> = {
 const MODALITY_LABEL: Record<ModalityKey, string> = {
   warmup: "Warm-up",
   speed: "Speed",
-  strength: "Lifts",
+  strength: "Full-body lift",
   hitting: "Hitting",
   throwing: "Throwing",
   pitching: "Pitching",
@@ -73,7 +73,7 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
   const [expanded, setExpanded] = useState<number | null>(null);
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
-  const { weeklyRoadmap, microcycle, roadmap } = plan;
+  const { weeklyRoadmap, roadmap } = plan;
   const season = useSeasonStatus();
   const {user}=useAuth();const {modules}=useSubscription();
   const today=localIso();
@@ -146,26 +146,19 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
         <DayDetail day={weeklyRoadmap[expanded]} todayCategories={savedCategories(weeklyRoadmap[expanded])??(weeklyRoadmap[expanded].isToday ? todayCategories : undefined)} />
       )}
 
-      <div className="mt-2 flex items-start gap-2 rounded-md border border-muted/30 bg-muted/5 px-2 py-1.5 text-[11px] text-muted-foreground">
-        <span className="font-medium text-foreground">Today:</span>
-        <span>
-          {(todayCategories ? todayCategories.join(" · ") : SCHEDULED_TODAY_LINE(plan.microcycle.perModality)) ||
-            "Warm-up, fueling and recovery."}{" "}
-          <span className="text-muted-foreground/70">
-            Hammer spaces high-demand work and protects recovery.
-          </span>
-        </span>
-      </div>
-
-      {microcycle.template.id === "in_season" && (
-        <div className="mt-1 text-[10px] text-muted-foreground">
-          In-season: strength maintains your base; speed stays fresh and skill work stays measured.
-        </div>
-      )}
       <WeeklyBodyLoadBar embedded />
     </section>
   );
 }
+
+const CATEGORY_ABBR: Record<string, string> = {
+  Hitting: "HIT", Defense: "DEF", Baserunning: "BR", Throwing: "THR", Pitching: "PIT", Bunting: "BUNT",
+  Lifts: "LIFT", "Lift / tissue care": "LIFT", Speed: "SPD", "Bat speed": "BAT", Conditioning: "COND",
+  "Base running & conditioning": "COND", Recovery: "REC",
+};
+const CATEGORY_LABEL: Record<string, string> = { Lifts: "Full-body lift", "Lift / tissue care": "Full-body lift" };
+const categoryLabel = (c: string) => CATEGORY_LABEL[c] ?? c;
+const CHIP = "rounded border font-normal px-1 py-[1px] text-[9px] leading-none";
 
 function DayCell({
   day,
@@ -181,12 +174,16 @@ function DayCell({
   const primaryChips = day.modalities.filter(
     (m) => (m.key !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES) && (m.intensity === "primary" || m.intensity === "secondary"),
   );
+  const chips = todayCategories
+    ? [...new Map(todayCategories.map((c) => [CATEGORY_ABBR[c] ?? c.slice(0, 4).toUpperCase(), c])).entries()]
+        .map(([abbr, c]) => ({ key: abbr, abbr, tone: INTENSITY_TONE.primary, label: c }))
+    : primaryChips.map((m) => ({ key: m.key, abbr: MODALITY_ABBR[m.key], tone: INTENSITY_TONE[m.intensity], label: m.key }));
   return (
     <button
       type="button"
       onClick={onClick}
       className={[
-        "flex flex-col items-center rounded-md border px-1 py-1.5 text-[10px] transition-colors",
+        "flex min-h-[84px] min-w-0 flex-col items-center overflow-hidden rounded-md border px-0.5 py-1.5 text-[10px] transition-colors",
         day.isToday
           ? "border-primary bg-primary/10 font-semibold text-foreground"
           : "border-muted/40 bg-background text-muted-foreground hover:border-primary/40",
@@ -197,18 +194,11 @@ function DayCell({
       {day.restDay ? (
         <span className="mt-1 text-[9px] text-muted-foreground/70">Rest</span>
       ) : (
-        <div className="mt-1 flex flex-wrap justify-center gap-0.5">
-          {todayCategories ? todayCategories.slice(0, 3).map(category => <span key={category} className="text-[9px] leading-none text-foreground">{category === "Hitting" ? "HIT" : category === "Conditioning" ? "COND" : category === "Recovery" ? "REC" : category === "Lift / tissue care" ? "CARE" : category}</span>) : primaryChips.slice(0, 3).map((m) => (
-            <span
-              key={m.key}
-              className={`rounded px-1 py-[1px] text-[9px] leading-none border ${INTENSITY_TONE[m.intensity]}`}
-            >
-              {MODALITY_ABBR[m.key]}
-            </span>
+        <div className="mt-1 flex w-full flex-col items-center gap-0.5">
+          {chips.slice(0, 3).map((chip) => (
+            <span key={chip.key} className={`${CHIP} ${chip.tone}`}>{chip.abbr}</span>
           ))}
-          {(todayCategories?.length ?? primaryChips.length) > 3 && (
-            <span className="text-[9px] text-muted-foreground">+{(todayCategories?.length ?? primaryChips.length) - 3}</span>
-          )}
+          {chips.length > 3 && <span className="text-[9px] leading-none text-muted-foreground">+{chips.length - 3}</span>}
         </div>
       )}
     </button>
@@ -224,7 +214,14 @@ function DayDetail({ day, todayCategories }: { day: RoadmapDay; todayCategories?
       </div>
     );
   }
-  if (todayCategories) return <div className="mt-2 text-xs text-foreground">{day.short} — {todayCategories.join(" · ")}</div>;
+  if (todayCategories) return (
+    <div className="mt-2 space-y-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px]">
+      <div className="text-xs font-semibold text-foreground">{day.short} · {todayCategories.length} scheduled blocks</div>
+      <ul className="space-y-0.5">
+        {[...new Set(todayCategories.map(categoryLabel))].map((c) => <li key={c} className="break-words text-foreground">{c}</li>)}
+      </ul>
+    </div>
+  );
   return (
     <div className="mt-2 space-y-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px]">
       <div className="text-xs font-semibold text-foreground">
@@ -245,23 +242,4 @@ function DayDetail({ day, todayCategories }: { day: RoadmapDay; todayCategories?
       </ul>
     </div>
   );
-}
-
-function SCHEDULED_TODAY_LINE(
-  perModality: HammerDailyPlanResult["microcycle"]["perModality"],
-): string {
-  const on: string[] = [];
-  const off: string[] = [];
-  (Object.keys(perModality) as ModalityKey[]).forEach((k) => {
-    if (["warmup", "fueling", "recovery", "game_iq"].includes(k)) return;
-    const d = perModality[k];
-    if (d.scheduled) {
-      on.push(MODALITY_LABEL[k] + (d.intensity !== "primary" ? ` (${d.intensity})` : ""));
-    } else if (d.nextScheduledLabel) {
-      off.push(`${MODALITY_LABEL[k]} → ${d.nextScheduledLabel}`);
-    }
-  });
-  const onLine = on.length ? `On: ${on.join(", ")}.` : "";
-  const offLine = off.length ? ` Off: ${off.slice(0, 4).join(" · ")}.` : "";
-  return `${onLine}${offLine}`.trim();
 }
