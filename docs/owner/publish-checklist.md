@@ -1,6 +1,6 @@
 # Final publish checklist — October 30, 2026
 
-**Ready to publish: NO — only the retained pitcher safety acceptance remains outside the owner-authorized human-check list: next distinct softball bullpen and innings-dependent verification.** Owner decision: Items3,18,20 and imperfect baseball off-season sample pairing are owner checks/review only after implementation and backend rollout; they are no longer presented as absent functionality. PASS retains affected-role proof; OWNER CHECK means implemented with named owner acceptance remaining. No new journey is claimed from old evidence.
+**Ready to publish: NO — innings-dependent softball rules are now implemented and deployed (Oct 30 11:4x UTC), but the saved-day proof (innings entered on certsbp/certsb2 Nov 16 → rebuild through Nov 26 → next distinct bullpen) was not run: this environment refused a TEST-player sign-in without owner approval.** Owner decision: Items3,18,20 and imperfect baseball off-season sample pairing are owner checks/review only after implementation and backend rollout; they are no longer presented as absent functionality. PASS retains affected-role proof; OWNER CHECK means implemented with named owner acceptance remaining. No new journey is claimed from old evidence.
 
 ## Part A — implemented and proven evidence
 
@@ -36,7 +36,7 @@
 
 Fresh read-only112sampledates: **16/16 sample weeks pass purchased floor counts**, all16Sunday skill/running checks pass. Sunday physical rows are only3D belly breathing/slow breathing reset. All112days and every saved card/physical row are regenerated in `docs/owner/scheduling-certification.md`. Complete Pitcher unbought skills correctly0/0; all other floors hitting3/defense4/baserunning1/bunting2/running2. Suppressed cards never count. Demo phase-pair review stays explicit.
 
-Three TEST app outings saved40pitches/10batters and fresh canonical arm-ledger readback40once/game. Next-day zero throws confirmed; baseball next bullpenNov19/20pitches; softball next saved flat-groundNov18–19/35pitches; Golden shared69.9/70daily units. **Remaining safety acceptance limitation:** no distinct next softball bullpen in the checked dates, and innings-dependent checks cannot be positively certified from unentered innings. These have not been declared complete or silently waived. See `docs/owner/pitcher-outings-oct30-proof.md`.
+Three TEST app outings saved40pitches/10batters and fresh canonical arm-ledger readback40once/game. Next-day zero throws confirmed; baseball next bullpenNov19/20pitches; softball next saved flat-groundNov18–19/35pitches; Golden shared69.9/70daily units. **Remaining safety acceptance limitation:** no distinct next softball bullpen in the checked dates, and innings-dependent checks cannot be positively certified from unentered innings. **Oct 30 fix:** both softball builders previously estimated innings as pitches÷15 and ignored entered innings (combined-day path used 0). Entered game innings now feed the windmill rules, never lowering the estimate; unit tests prove 4 entered innings ⇒ next-day no pitching. Deployed `wk-generate-daily` source SHA `892a0bd0…af5af`. Saved-day proof still open. See `docs/owner/pitcher-outings-oct30-proof.md`.
 
 ### Deployment and automated checks
 

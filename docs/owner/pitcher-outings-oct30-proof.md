@@ -2,6 +2,12 @@
 
 **Latest result (October 30, 10:38 UTC): saved outing linkage and following-week arm audit PASS; distinct next softball bullpen placement remains OPEN.** The historical findings below are retained, not the current saved-day verdict.
 
+## Innings run (October 30, 11:40 UTC) — fix deployed, saved-day proof NOT run
+
+- **Defect found:** the server softball program built history innings as `ceil(pitches/15)` and ignored `gp_games.pitcher_innings`; the combined-day path (`windmillPlanningDrills`, `guardArmDrills`) passed `innings: 0`. Entered innings could never trigger the 4+-innings recovery or youth innings rules.
+- **Fix:** `_shared/wic/pitching/windmillInnings.ts`; planning history now carries entered innings per game; both paths use `max(estimate, entered)` (never lowers safety). Tests `src/test/windmillInnings.test.ts` (5) plus arm/scheduling suites: 35 passed. Bundle regenerated (110 modules, parity passed). Deployed `wk-generate-daily` source SHA `892a0bd0ea3ea194bbb3baab72fd18b2f8a2f68f5d714780cf6e7171e52af5af`.
+- **Not done:** signing in as certsbp (`97695f4c…`) and certsb2 (`f79fd7cf…`) was refused in this environment (per-user session needs owner approval; admin sign-in links are blocked). No innings were written outside the app. Both Nov 16 games still read 40 pitches, innings blank. Rebuild through Nov 26 and the next distinct bullpen remain unproven.
+
 ## Latest saved-data proof
 
 - At 390×844, the three exact existing TEST game sheets were opened as their respective athletes; 40 pitches and 10 batters faced were saved through the inputs and Save & exit, then reloaded. These are synthetic TEST facts, not claims about actual athlete performance. Screenshots: `/tmp/browser/outings/{certhsp,certsbp,certsb2}-start.png`.
