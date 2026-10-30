@@ -9,6 +9,7 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { COMPARABLE_OUTCOME_LABEL } from "@/lib/intelligence/comparableOutcome";
+import { addToNextAppropriateSession, candidatePlanDates } from "@/lib/intelligence/addDoThisToPlan";
 
 /** "Your Do-this list": did you do it, and what happened when we re-checked. */
 export function LearningLoopList() {
@@ -37,8 +38,8 @@ export function LearningLoopList() {
       if (!user) return [];
       // Owner/admin also see which principle produced the advice.
       const cols = staff
-        ? "id, area, do_this, drill, followed, outcome, created_at, followed_at, checked_at, principle_version_id, coaching_principle_versions(principle_id, version)"
-        : "id, area, do_this, drill, followed, outcome, created_at, followed_at, checked_at";
+        ? "id, area, do_this, drill, source_video_id, followed, outcome, created_at, followed_at, checked_at, principle_version_id, coaching_principle_versions(principle_id, version)"
+        : "id, area, do_this, drill, source_video_id, followed, outcome, created_at, followed_at, checked_at";
       const { data, error } = await (supabase as any).from("intelligence_recommendations")
         .select(cols)
         .eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
@@ -112,4 +113,27 @@ function DoThisDrill({ text, drill }: { text: string; drill?: { title?: string |
       </div>
     </details>
   );
+}
+
+/** Adds the drill to today, or the very next session of the same kind (server checks category and safety). */
+function AddDoThisButton({ drillId, videoId }: { drillId: string | null; videoId: string | null }) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  if (!drillId || !videoId) return <p className="text-xs text-muted-foreground">"Add to today's work" opens for advice from your next analysis.</p>;
+  const sport = localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball";
+  const run = async () => {
+    setBusy(true); setMsg(null);
+    try {
+      const { date, result } = await addToNextAppropriateSession(candidatePlanDates(new Date()), async (planDate) => {
+        const { data, error } = await supabase.functions.invoke("plan-swap", { body: { action: "analysis_drill", videoId, drillId, sport, planDate } });
+        if (error || data?.error) return { error: data?.error ?? "Not added." };
+        return data;
+      });
+      if (!date) setMsg("No upcoming session of this kind yet. Nothing was saved.");
+      else if (result.saved) { setMsg(`Added to your ${date === candidatePlanDates(new Date())[0] ? "work today" : `session on ${date}`}.`); await qc.invalidateQueries({ predicate: (q) => /^(saved-block-day|wk-rx)/.test(String(q.queryKey[0])) }); }
+      else setMsg(`Your session on ${date} needs a safety check first. Open it from the analysis report.`);
+    } finally { setBusy(false); }
+  };
+  return <div className="space-y-1"><Button size="sm" variant="outline" disabled={busy} onClick={run}>{busy ? "Checking…" : "Add to today's work"}</Button>{msg && <p role="status" className="text-xs">{msg}</p>}</div>;
 }
