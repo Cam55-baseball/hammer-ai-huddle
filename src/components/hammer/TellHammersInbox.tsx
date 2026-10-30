@@ -12,6 +12,7 @@ import { describeEntry, isoShift } from "../../../supabase/functions/_shared/wic
 import { parseScheduleRequest, FACE_LABEL, extractDates, type EntryDraft } from "@/lib/hammer/tellHammers/parse";
 import { REPORT_INJURY_REGIONS } from "@/lib/hammer/injury/reportInjury";
 import { readChangeConfirmation } from '@/lib/hammer/changeConfirmation';
+import { ActiveSportSwitch } from './ActiveSportSwitch';
 
 type Flow = "games" | "season" | "cancelled" | "pain" | "break" | "event" | "travel" | "resume" | "ask";
 const BUTTONS = [
@@ -152,6 +153,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
         {open && <Button size="icon" variant="ghost" aria-label="Close Update Hammer" onClick={() => toggle(false)}><X className="h-4 w-4" /></Button>}
       </div>}
     {(open || checkIn) && <div className="space-y-3">
+      {!checkIn && user && <ActiveSportSwitch userId={user.id} />}
       {!checkIn && flow && backBtn}
       {lastMessage && <div role="status" data-testid="tell-hammers-result" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm"><strong>Got it — Hammer has it</strong><p>{lastMessage}</p></div>}
       {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
