@@ -50,11 +50,13 @@ import { OwnerSidebar, type OwnerSection } from "@/components/owner/OwnerSidebar
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TEST_ADMIN_PROOF_ID } from "@/lib/testAdminExclusion";
+import { accountStatus } from '@/lib/owner/accountStatus';
 
 interface UserProfile {
   id: string;
   full_name: string | null;
   created_at: string;
+  hammers_today_started_at?: string | null;
 }
 
 interface UserRole {
@@ -97,6 +99,9 @@ const OwnerDashboard = () => {
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [videos, setVideos] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [accountPlans, setAccountPlans] = useState<any[]>([]);
+  const [completedSetup, setCompletedSetup] = useState<Set<string>>(new Set());
+  const [statusLoadFailed, setStatusLoadFailed] = useState(false);
   const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([]);
   const [scoutApplications, setScoutApplications] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -242,6 +247,7 @@ const OwnerDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
+      setStatusLoadFailed(false);
       const [usersResponse, rolesResponse, videosResponse, subsResponse, adminReqResponse, scoutAppResponse] = await Promise.all([
         supabase.from("profiles").select("id, full_name, created_at, hammers_today_started_at").neq("id", TEST_ADMIN_PROOF_ID).order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id, role, status").neq("user_id", TEST_ADMIN_PROOF_ID),
@@ -265,6 +271,17 @@ const OwnerDashboard = () => {
       if (rolesResponse.data) setUserRoles(rolesResponse.data);
       if (videosResponse.data) setVideos(videosResponse.data);
       if (subsResponse.data) setSubscriptions(subsResponse.data);
+      const [staff, assessments, coaches, scouts] = await Promise.all([
+        supabase.from('staff_plans').select('user_id,status'),
+        supabase.from('initial_assessments').select('user_id,completed_at'),
+        supabase.from('coach_context').select('user_id,completed_at'),
+        supabase.from('scout_context').select('user_id,completed_at'),
+      ]);
+      if ([usersResponse,subsResponse,staff,assessments,coaches,scouts].some(r=>r.error)) setStatusLoadFailed(true);
+      else {
+        setAccountPlans([...(subsResponse.data??[]),...(staff.data??[])]);
+        setCompletedSetup(new Set([...(assessments.data??[]),...(coaches.data??[]),...(scouts.data??[])].filter(r=>!!r.completed_at).map(r=>r.user_id)));
+      }
       if (scoutAppResponse.data) setScoutApplications(scoutAppResponse.data);
       
       if (adminReqResponse.data) {
@@ -921,6 +938,7 @@ const OwnerDashboard = () => {
                     return filtered.map((user) => (
                     <div
                       key={user.id}
+                      data-account-id={user.id}
                       className={cn(
                         "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 transition-colors",
                         isActiveAdmin(user.id) && "bg-success/5",
@@ -947,11 +965,12 @@ const OwnerDashboard = () => {
                             )}
                             {(() => {
                               // Owner Oct30: every account shows, with its status.
-                              const paid = subscriptions.some((s: any) => s.user_id === user.id && s.status === 'active');
-                              const started = !!(user as any).hammers_today_started_at;
+                              if (statusLoadFailed) return <Badge variant="outline">Status unavailable</Badge>;
+                              const {paid,started,onboarded}=accountStatus(user,accountPlans,completedSetup);
                               return <>
-                                <Badge variant="outline" className="text-xs">{paid ? 'Paid' : 'Not paid yet'}</Badge>
-                                <Badge variant="outline" className="text-xs">{started ? 'Started training' : 'Not onboarded yet'}</Badge>
+                                <Badge data-account-paid={paid} variant="outline" className="text-xs">{paid ? 'Paid' : 'Not paid yet'}</Badge>
+                                <Badge data-account-started={started} variant="outline" className="text-xs">{started ? 'Started training' : 'Not started training'}</Badge>
+                                <Badge data-account-onboarded={onboarded} variant="outline" className="text-xs">{onboarded ? 'Onboarded' : 'Not onboarded yet'}</Badge>
                               </>;
                             })()}
                             <span className="text-xs text-muted-foreground">
