@@ -18,6 +18,7 @@ import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
 import { masteryContext } from "../_shared/masteryContext.ts";
 import { composeSportDay } from '../_shared/composeSportDay.ts';
 import { gamePitchLoads } from '../_shared/wic/pitching/gamePitchLoad.ts';
+import { optionalCompoundAvailable } from '../_shared/wic/lift/optionalSlot.ts';
 import { planningGear } from '../_shared/planSwap/planningGear.ts';
 import { masteryPlanGuidance, masterySavedGuidance } from "../_shared/wic/masteryPlanContext.ts";
 import { checkInReductions, latestCheckInValues } from "../_shared/wic/checkInReductions.ts";
@@ -2960,6 +2961,11 @@ const handler = async (req: Request): Promise<Response> => {
           const pool = robustnessPool(area, robustCtx);
           const pick = pickBestLift(pool, `robustness_${area}`) ?? pickFirstLift(pool);
           if (!pick) continue;
+          const usedCategories=rxs.filter(r=>r.slot==='lift').map(r=>coerceCanonicalCategory(lib.find(m=>m.slug===r.movement_slug) as any));
+          if(!optionalCompoundAvailable(coerceCanonicalCategory(pick as any),usedCategories)) {
+            selectionSkips.record({domain:'lift',requirement:'robustness',reason:'Optional robustness was left out because its compound category is already trained today.'});
+            continue;
+          }
           if (isInSeason) {
             const liftSets = rxs.filter((r: any) => r.slot === "lift").reduce((a: number, r: any) => a + (Number(r.sets) || 0), 0);
             if (liftSets + ROBUSTNESS_IN_SEASON_SETS > IN_SEASON_SESSION_SET_CAP) {
