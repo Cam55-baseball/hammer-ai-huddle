@@ -3336,10 +3336,11 @@ function planWindmillSession(i) {
 }
 
 // src/lib/hammer/prescription/pitchingDay.ts
+var dayInnings = (rows3, date, pitches) => Math.max(Math.ceil(pitches / 15), rows3.filter((r) => r.entry_date === date).reduce((n, r) => n + (Number(r.innings) > 0 ? Number(r.innings) : 0), 0));
 function windmillPlanningDrills(input) {
   if (!input.history || input.history.unavailable || input.age == null || input.armPain || input.outings?.pitchedYesterday) return [];
   const pitchRows = input.history.rows.filter((r) => r.source === "pitching" && !/warm|catch|off_mound|flat/i.test(r.throw_type ?? "") && !/skip|cancel|miss/i.test(r.status ?? ""));
-  const days = [...new Set(pitchRows.map((r) => r.entry_date))].map((date) => ({ date, pitches: pitchRows.filter((r) => r.entry_date === date).reduce((n, r) => n + (r.count ?? 0), 0), innings: 0 }));
+  const days = [...new Set(pitchRows.map((r) => r.entry_date))].map((date) => ({ date, pitches: pitchRows.filter((r) => r.entry_date === date).reduce((n, r) => n + (r.count ?? 0), 0), innings: 0 })).map((d3) => ({ ...d3, innings: dayInnings(pitchRows, d3.date, d3.pitches) }));
   const session = planWindmillSession({ planDate: input.date, phase: input.phase, age: input.age, readiness: input.readiness, armPain: input.armPain, growthMode: false, history: days, todayPitchesSoFar: days.find((d3) => d3.date === input.date)?.pitches ?? 0, gameToday: !!input.outings?.startsToday, gameTomorrow: !!input.outings?.startsTomorrow, priorFullSessionsThisWeek: days.filter((d3) => d3.date >= new Date(Date.parse(input.date) - 6 * 864e5).toISOString().slice(0, 10) && d3.pitches > 0).length, fullSessionYesterday: days.some((d3) => d3.date === new Date(Date.parse(input.date) - 864e5).toISOString().slice(0, 10) && d3.pitches > 0), equipment: input.equipment });
   return session.rows.map((r) => ({ slug: r.slug, name: r.name, category: r.kind === "pitch" ? "position_skill" : r.countWeight > 0 ? "regulation" : "band_prep", overloadClass: r.countWeight > 0 ? "regulation" : void 0, intensity: r.kind === "pitch" ? "moderate" : "prep", stage: r.kind === "pitch" ? "full_go" : "prep", dosage: r.kind === "pitch" ? `${r.sets * r.reps} pitches` : `${r.sets}x${r.reps} reps`, cue: r.cue, stopIf: "Shoulder or elbow pain, fatigue or unsafe space \u2014 stop." }));
 }
@@ -3375,7 +3376,7 @@ function guardArmDrills(drills, input) {
       if (thirdConsecutiveGameDay(dates, input.date)) return care;
       if ([...by].some(([date, n]) => date < input.date && Math.round((Date.parse(input.date) - Date.parse(date)) / 864e5) - 1 < restDaysFor(band, Math.ceil(n)))) return care;
     }
-  } else if (windmillCheck(input.age, priorDays.map((d3) => ({ date: d3.date, pitches: d3.pitches, innings: 0 })), input.date, { pitches: pitchRows.filter((r) => r.entry_date === input.date).reduce((n, r) => n + (r.count ?? 0), 0) + 1, innings: 0 }).length) return care;
+  } else if (windmillCheck(input.age, priorDays.map((d3) => ({ date: d3.date, pitches: d3.pitches, innings: dayInnings(pitchRows, d3.date, d3.pitches) })), input.date, { pitches: pitchRows.filter((r) => r.entry_date === input.date).reduce((n, r) => n + (r.count ?? 0), 0) + 1, innings: 0 }).length) return care;
   const budget = armBudget({ sport: input.sport, role: input.role, age: input.age });
   let room = Math.max(0, Math.min(budget.daily - (by.get(input.date) ?? 0), budget.weekly - [...by].filter(([date]) => date >= new Date(Date.parse(input.date) - 6 * 864e5).toISOString().slice(0, 10)).reduce((n, [, v]) => n + v, 0)));
   let pitchRoom = Math.max(0, (input.sport === "baseball" && pitchSmartApplies(input.age, input.level) ? PITCH_SMART_BANDS[bandIndex(input.age)].dailyMax : budget.daily) - pitchRows.filter((r) => r.entry_date === input.date).reduce((n, r) => n + (r.count ?? 0), 0));
