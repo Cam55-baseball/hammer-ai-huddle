@@ -18,7 +18,7 @@ it('players read saved outcome labels without requesting stored analysis scores'
   ], error: null }) }) }) });
   render(<MemoryRouter><QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><LearningLoopList /></QueryClientProvider></MemoryRouter>);
   await screen.findByText(/Did it: Yes/);
-  expect(mocks.select).toHaveBeenCalledWith('id, area, do_this, followed, outcome, created_at, followed_at, checked_at');
+  expect(mocks.select).toHaveBeenCalledWith('id, area, do_this, drill, source_video_id, followed, outcome, created_at, followed_at, checked_at');
   expect(screen.getByText(/Did it: Yes/).textContent).not.toContain('Need more data');
   expect(await screen.findByRole('status')).toHaveTextContent("couldn't re-check");
 });
