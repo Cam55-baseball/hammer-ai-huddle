@@ -5,6 +5,8 @@ import { isSwitchOnFor } from "../../supabase/functions/_shared/wic/flags/featur
 import { useQuery } from "@tanstack/react-query";
 import { assessmentStartAllowed } from "@/lib/assessment/startGate";
 import { type StartMissingItem } from "../../supabase/functions/_shared/startReadiness";
+import { rebuildAfterChange } from "@/lib/hammer/rebuildAfterChange";
+import { getTodayDate } from "@/utils/dateUtils";
 
 /**
  * Once-per-account "Start Hammers Today Plan" state.
@@ -73,14 +75,23 @@ export function useHammersTodayStart() {
     setStarting(true);
     setError(null);
     const { data, error: rpcErr } = await (supabase as any).rpc("start_hammers_today");
-    setStarting(false);
     if (rpcErr) {
+      setStarting(false);
       const msg = String(rpcErr.message ?? "");
       setError(msg.startsWith("Missing:") ? `Still missing — ${msg.slice(8).trim()}` : "Couldn't start your plan. Check your connection and tap again.");
       return;
     }
     const at = String(data ?? new Date().toISOString());
+    // Start is durable before any provider call. Use the same seven-date,
+    // day-locked combined save/readback as an explicit week change.
+    try {
+      const week = await rebuildAfterChange("Your first week", getTodayDate());
+      if (!week.ok) setError(week.message);
+    } catch {
+      setError("You started, but your first week could not be saved. Try rebuilding again.");
+    }
     setStartedAt(at);
+    setStarting(false);
     try { if (user?.id) localStorage.setItem(`hm.htstart.${user.id}`, at); } catch { /* storage blocked */ }
   }, [starting, startedAt, user?.id, assessmentReady]);
 
