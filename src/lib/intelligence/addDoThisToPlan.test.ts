@@ -21,4 +21,11 @@ describe("Do this → Add to today's work", () => {
     const r = await addToNextAppropriateSession(["a"], async () => ({ error: "no session" }));
     expect(r.date).toBeNull();
   });
+  it("retains today's safety refusal rather than a later date-gate error", async () => {
+    const r = await addToNextAppropriateSession(["2026-10-30", "2026-10-31"], async date => ({
+      error: date === "2026-10-30" ? "There is no safe card for this category today. Keep it in Saved drills." : "Open today’s plan before adding this drill.",
+    }));
+    expect(r.date).toBeNull();
+    expect(r.result).toEqual({ error: "There is no safe card for this category today. Keep it in Saved drills." });
+  });
 });
