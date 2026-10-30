@@ -54,41 +54,6 @@ import { MeaningSection } from '@/components/progress/SectionMeaning';
 import { PillarGoalTrends } from '@/components/progress/PillarGoalTrends';
 import { Button } from '@/components/ui/button';
 
-function PracticeIntelligenceCard() {
-  const { data: mpi } = useMPIScores();
-  const { prompts, hasPrompts } = useAIPrompts();
-
-  const gradeLabel = mpi?.adjusted_global_score
-    ? getGradeLabel(mpi.adjusted_global_score)
-    : null;
-
-  return (
-    <Card className="p-4 sm:p-6 border-primary/20">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-full bg-primary/10">
-            <Activity className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-bold text-lg">Practice Intelligence</h3>
-            {mpi ? (
-              <p className="text-sm text-muted-foreground mt-1">Practice intelligence based on logged sessions and self-reports.</p>
-            ) : (
-              <p className="text-sm text-muted-foreground mt-1">Start logging sessions to build your practice history.</p>
-            )}
-          </div>
-        </div>
-      </div>
-      {hasPrompts && prompts[0] && (
-        <div className="mt-3 flex items-start gap-2 rounded-lg bg-muted/30 p-2">
-          <Lightbulb className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground">{prompts[0]}</p>
-        </div>
-      )}
-    </Card>
-  );
-}
-
 const HASH_TAB: Record<string, GeneralTab> = {
   '#body': 'today',
   '#performance-context': 'performance',
@@ -248,10 +213,12 @@ Confidence: ${snapshot.development_confidence}%
               <InternalLabel />
               <UhrcAthleteSection />
             </ReportCardAccessGate>
+            <MeaningSection title="Big Picture" use="Use it to see where you stand overall, then go back to your weakest pillar above." explanation="A long-range summary built from all your saved work. It is an estimate, not a promise." collapsed>
             <Advanced hasAdvancedAccess={hasAdvancedAccess}>
               <PlayerSnapshotCard />
               <ProProbabilityCard />
             </Advanced>
+            </MeaningSection>
           </TabsContent>
 
           {gameIqOk && <TabsContent value="game-iq" className="space-y-6">
