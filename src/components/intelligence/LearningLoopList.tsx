@@ -70,6 +70,7 @@ export function LearningLoopList() {
         <Card key={r.id} className="space-y-2 p-3">
           <p className="text-xs text-muted-foreground">Area: {r.area}</p>
           <DoThisDrill text={r.do_this} drill={r.drill} />
+          <AddDoThisButton drillId={r.drill?.id ?? null} videoId={r.source_video_id ?? null} />
           {staff && (r.coaching_principle_versions ? (
             <Link className="text-xs text-primary underline" to={`/owner/coaching-console?principle=${r.coaching_principle_versions.principle_id}`}>
               Which principle produced this advice (version {r.coaching_principle_versions.version})
