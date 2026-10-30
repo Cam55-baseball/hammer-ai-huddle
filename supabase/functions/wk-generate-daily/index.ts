@@ -396,6 +396,7 @@ import { oppositeLowerPool } from "../_shared/wic/lift/areaMap.ts";
 import { runningReadiness, type ReadinessCheckin, type RunningReadiness } from "../_shared/readiness/runningReadiness.ts";
 import { readPhysioMapping } from '../_shared/health/readPhysioMapping.ts';
 import { conditioningFloorDue, isRunningConditioning, floorConditioningSlugs } from "../_shared/wic/conditioning/weeklyFloor.ts";
+import { combinedRunningRowsToDrop, isCombinedBaseConditioningProgram } from "../_shared/wic/conditioning/combinedBaseRunning.ts";
 import { activeRestrictedAreas, restrictedConditioningReason } from '../_shared/wic/conditioning/restrictedConditioning.ts';
 import { PHILOSOPHY_TEST_USERS, testSettingsFor, boundedSkillFloor } from '../_shared/generated/hammerBlockBuilder.mjs';
 
@@ -3371,7 +3372,7 @@ const handler = async (req: Request): Promise<Response> => {
           conditioningFloor = { due: floor.due, needed: floor.needed, added: [] };
           if (floor.due) {
             const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");
-            const slugs = floorConditioningSlugs({ sport, isPitcher: isPitcherAthlete, lowReadiness: low });
+            const slugs = floorConditioningSlugs({ sport, isPitcher: isPitcherAthlete && !isCombinedBaseConditioningProgram(schedulingModules, sport), lowReadiness: low });
             const why = low
               ? "Weekly running minimum: an easy run today because your readiness is lower. It still counts as one of your 2 this week."
               : isPitcherAthlete
@@ -5397,6 +5398,10 @@ const handler = async (req: Request): Promise<Response> => {
       const posture=isTravelDay?'travel':isGameDay?'game':isHeavyPracticeDay?'team_practice':gameProximity.hoursToNearestGame!=null&&gameProximity.hoursToNearestGame>0&&gameProximity.hoursToNearestGame<=24?'taper':'normal';
       const phaseStart=phaseRes.phase.startsWith('os_')?seasonSettings.post_season_end_date:phaseRes.phase==='in_season'?seasonSettings.in_season_start_date:phaseRes.phase==='preseason'?seasonSettings.preseason_start_date:seasonSettings.post_season_start_date;
       composed=await composeSportDay(userClient,{userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,alwaysMissingGear:[...alwaysMissing],injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null,physio});
+      // Owner Oct 30: 5Tool/Golden 2Way base running + running conditioning are one same-day session.
+      const brReady=(composed.payload.blocks as any[]).some((b:any)=>b?.modality==='baserunning'&&b?.status==='ready');
+      const drop=combinedRunningRowsToDrop(rows as any[],{combined:isCombinedBaseConditioningProgram(schedulingModules,sport),baserunningReady:brReady});
+      for(const i of [...drop].reverse())(rows as any[]).splice(i,1);
     }
 
     // -------- Stated change to a day already built: adjust unmarked cards only --------
