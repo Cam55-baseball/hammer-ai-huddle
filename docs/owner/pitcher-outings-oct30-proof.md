@@ -1,6 +1,26 @@
 # Pitcher outings and arm ledger — October 30, 2026
 
-**Result: OPEN / not certified.** Real application writes on exact TEST accounts exposed missing aggregate game-pitch lineage. No safety rule, prescription code, migration or deployment changed in this run.
+**Latest result (October 30, 10:38 UTC): saved outing linkage and following-week arm audit PASS; distinct next softball bullpen placement remains OPEN.** The historical findings below are retained, not the current saved-day verdict.
+
+## Latest saved-data proof
+
+- At 390×844, the three exact existing TEST game sheets were opened as their respective athletes; 40 pitches and 10 batters faced were saved through the inputs and Save & exit, then reloaded. These are synthetic TEST facts, not claims about actual athlete performance. Screenshots: `/tmp/browser/outings/{certhsp,certsbp,certsb2}-start.png`.
+- Each game now has one `game_pitches_self` arm-ledger row, count 40, status done, matching sport/date and exact game ID in `game_sources`. Repeated UI saves retained 40, not 80. No pitch-by-pitch, innings or starter facts were invented.
+- Applied additive migration `0158_game_outing_arm_lineage`; deployed only `wk-generate-daily`, final submitted source hash `6b238321ea3349be84e00649f7f07188d8964ba47058b56ea5bcd876278cb362`.
+- Corrected missing aggregate/detail projection (greater count once per game), actual-outing recovery, windmill recovery reopening, shared final arm envelope and game-eve pitching. A refused softball rebuild also exposed duplicate compound pulls after safety step-down: later duplicates are removed before the unchanged certifier, without changing retained doses.
+- Sequential server saves/readbacks succeeded. Baseball November16–22; softball following dates November17–23 for both personas. Saved November16 softball outing days retained no ready arm work. Sunday November22 retained no pitching/position throws.
+
+| TEST persona | Outing | Next-day saved protocol | Next saved pitching | Saved week arm audit |
+|---|---|---|---|---|
+| certhsp — baseball Complete Pitcher | Nov17,40 pitches/10 batters | Nov18: cuff/scap activation, wrist/forearm mobility, sleeper/cross-body stretch; zero throws | Nov19:20-pitch command bullpen,55 total arm units with supplements; Nov16 game-eve has zero throws | No canonical rest/daily/weekly violation; peak55/105 daily,150/263 weekly across checked Nov16–23 |
+| certsbp — softball Complete Pitcher | Nov16,40 pitches/10 batters | Nov17: same easy recovery protocol; zero throws | Nov18 and19:35-pitch flat-ground command,43 arm units/day; Nov20 recovery; Nov21–23 no pitching | No windmill/daily/weekly violation; peak43/140 daily,126/420 weekly. No distinct next bullpen in checked saved dates |
+| certsb2 — softball Golden2Way | Nov16,40 pitches/10 batters | Nov17: easy recovery protocol; zero pitching or position throws | Nov18 and19:35 windmill pitches plus position work,69.9 combined arm units/day | One shared70/day,280/week envelope; checked peak179.8 weekly, zero canonical violations. No distinct next bullpen in checked saved dates |
+
+Audit uses actual game40 plus explicit armEvent metadata from READY saved drills, never suppressed titles or claimed performance. Innings remain unknown, so unentered innings-dependent rules are not positively certified. Evidence: `/tmp/browser/outings/*-saved.json`, `audit.json`, build receipts and UI screenshots. A clock-shifted Today-screen attempt expired the TEST session and reached sign-in; it is not counted as saved-card UI proof.
+
+Focused regressions:84 passed across7files. Latest automatic preview check: build OK10:34:00UTC. No publish, cron, iOS, account reset, manual prescription/arm-row writes or real-player test data changes.
+
+**Remaining acceptance:** distinct next softball bullpen dates beyond the checked flat-ground sessions, and innings-dependent safety with an actually entered innings value. These are not represented as completed.
 
 ## Inputs entered through the phone UI
 
