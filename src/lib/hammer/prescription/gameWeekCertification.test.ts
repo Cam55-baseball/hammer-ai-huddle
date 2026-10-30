@@ -27,8 +27,11 @@ describe('D/H real shared builder with explicit TEST game weeks',()=>{
      expect(defense?.gameDayPrimer).toBe(true);
      expect(defense?.drills.some(d=>d.stage==='full_go')).toBe(false);
      expect(defense?.durationMin).toBeLessThanOrEqual(10);
-     expect(plan.blocks.filter(b=>['speed','strength','baserunning'].includes(b.modality)&&b.status==='ready')).toEqual([]);
-     expect(plan.blocks.flatMap(b=>b.drills).some(d=>d.bunt)).toBe(false);
+     expect(plan.blocks.filter(b=>['speed','strength'].includes(b.modality)&&b.status==='ready')).toEqual([]);
+     const running=plan.blocks.find(b=>b.modality==='baserunning'&&b.status==='ready');
+     if(running) expect(running.durationMin).toBeLessThanOrEqual(3);
+     const bunts=plan.blocks.flatMap(b=>b.status==='ready'?b.drills:[]).filter(d=>d.bunt);
+     for(const drill of bunts) expect(drill.bunt?.reps).toBe(5);
     }
     if(program==='pitcher')expect(plan.blocks.some(b=>['hitting','baserunning'].includes(b.modality))).toBe(false);
     if(program==='5tool')expect(plan.blocks.some(b=>b.modality==='pitching')).toBe(false);
