@@ -31,7 +31,7 @@ describe('D/H real shared builder with explicit TEST game weeks',()=>{
      const running=plan.blocks.find(b=>b.modality==='baserunning'&&b.status==='ready');
      if(running) expect(running.durationMin).toBeLessThanOrEqual(3);
      const bunts=plan.blocks.flatMap(b=>b.status==='ready'?b.drills:[]).filter(d=>d.bunt);
-     for(const drill of bunts) expect(drill.bunt?.reps).toBe(5);
+     for(const drill of bunts) expect(drill.bunt?.attempts).toBe(5);
     }
     if(program==='pitcher')expect(plan.blocks.some(b=>['hitting','baserunning'].includes(b.modality))).toBe(false);
     if(program==='5tool')expect(plan.blocks.some(b=>b.modality==='pitching')).toBe(false);
