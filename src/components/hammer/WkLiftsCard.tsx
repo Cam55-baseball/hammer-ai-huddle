@@ -49,6 +49,7 @@ import { ScheduleAdjustmentNotice } from "@/components/hammer/ScheduleAdjustment
 import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
 import { isDayStatementNotAReduction } from "@/components/hammer/WkPrescriptionCard";
 import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
+import { isPapStrengthRow } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
 
 export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
   const { user } = useAuth();
@@ -193,7 +194,7 @@ export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
                 <div key={rx.id} className="space-y-1">
                   <WkPrescriptionCard rx={rx} phaseDisplay={phaseDisplay} phaseKey={phaseKey} allowSwap
                     extraLogging={rx.load_pct ? <TestedMaxLog movementSlug={rx.movement_slug} movementName={rx.movement_name} /> : null} />
-                  {(rx.why_payload as any)?.power_primer ? <PowerPrimerBlock prescriptionId={rx.id} pp={(rx.why_payload as any).power_primer} planDate={(rx as any).plan_date ?? null} liftName={rx.movement_name} liftSets={Number(rx.sets) || 0} /> : null}
+                  {(rx.why_payload as any)?.power_primer && isPapStrengthRow(rx as any) ? <PowerPrimerBlock prescriptionId={rx.id} pp={(rx.why_payload as any).power_primer} planDate={(rx as any).plan_date ?? null} liftName={rx.movement_name} liftSets={Number(rx.sets) || 0} /> : null}
                 </div>
               ))
             )}

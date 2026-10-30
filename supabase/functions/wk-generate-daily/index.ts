@@ -250,7 +250,7 @@ import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "
 import { goalDose, goalDoseKey, GOAL_DOSE_VERSION } from "../_shared/wic/goals/goalDose.ts";
 import { applyProgramContent, BATCH_KEYS } from "../_shared/wic/content/programContent.ts";
 import { limbGuidance, attachLimbHints } from "../_shared/wic/limb/limbGuidance.ts";
-import { planPowerPrimer, liftPatternOf, painAreasFromInjuries, type PapRole, type PapPitchBudget } from "../_shared/wic/pap/powerPrimer.ts";
+import { planPowerPrimer, isPapStrengthRow, liftPatternOf, painAreasFromInjuries, type PapRole, type PapPitchBudget } from "../_shared/wic/pap/powerPrimer.ts";
 import { PITCH_SMART_BANDS, bandIndex, restDaysFor, checkCaps, pitchSmartApplies } from "../_shared/wic/phases/youthThrowing.ts";
 import { planWindmillSession, WINDMILL_PROGRAM_VERSION } from "../_shared/wic/pitching/windmillProgram.ts";
 import { enteredInningsByDate, windmillHistory } from "../_shared/wic/pitching/windmillInnings.ts";
@@ -5293,7 +5293,7 @@ const handler = async (req: Request): Promise<Response> => {
     // only: no new card, no dose change, never a hard-running day.
     try {
       if (features.power_primer === true) {
-        const liftRows = (rows as any[]).filter((r) => r.slot === "lift" && r.sequence_role !== "arm_care" && r.sequence_role !== "warmup");
+        const liftRows = (rows as any[]).filter((r) => isPapStrengthRow(r));
         if (liftRows.length > 0) {
           const ppSlugs = Array.from(new Set((rows as any[]).map((r) => String(r.movement_slug ?? "")).filter(Boolean)));
           const [{ data: ppCat }, { data: ppPrior }] = await Promise.all([

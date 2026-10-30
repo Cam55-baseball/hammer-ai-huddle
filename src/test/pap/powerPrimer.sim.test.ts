@@ -229,3 +229,15 @@ describe("Power Primer — under-13 4 oz stress test", () => {
     expect(papThrowsAllowed(10, { pitchesToday: 17, restDay: false, capRemaining: null }, 5)).toBe(2); // 20 → 21 would add a rest day
   });
 });
+
+import { isPapStrengthRow } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
+describe("Item 4 — primer pairs only with a strength move", () => {
+  it("accepts the day's compound lift", () => {
+    expect(isPapStrengthRow({ slot: "lift", sequence_role: "compound_lower", movement_slug: "jump_shrug" })).toBe(true);
+  });
+  it("rejects breathing, mobility and trunk rows", () => {
+    expect(isPapStrengthRow({ slot: "lift", sequence_role: "mobility", movement_slug: "rc_breathing_reset" })).toBe(false);
+    expect(isPapStrengthRow({ slot: "lift", sequence_role: "trunk_primer", movement_slug: "paloff_press" })).toBe(false);
+    expect(isPapStrengthRow({ slot: "lift", sequence_role: "mobility", movement_slug: "ac_recovery_belly_breathing" })).toBe(false);
+  });
+});

@@ -321,6 +321,19 @@ export function shouldStop(block: Pick<PapBlock, "stop" | "max_sets" | "max_tota
   return false;
 }
 
+/**
+ * The primer pairs only with a real strength move (owner Item 4, Oct 30):
+ * never breathing, mobility, trunk, arm care, warm-up or recovery rows.
+ */
+export function isPapStrengthRow(r: { slot?: string | null; sequence_role?: string | null; movement_slug?: string | null }): boolean {
+  if (r.slot != null && r.slot !== "lift") return false;
+  const role = String(r.sequence_role ?? "").toLowerCase();
+  const slug = String(r.movement_slug ?? "").toLowerCase();
+  if (/mobility|trunk|arm_care|warmup|recovery|breath|cooldown|rotation/.test(role)) return false;
+  if (/^rc_|^ac_|breath|flush|stretch/.test(slug)) return false;
+  return /compound|unilateral|main|upper_push|upper_pull|power/.test(role);
+}
+
 /** Map catalog movement fields → lift pattern. */
 export function liftPatternOf(slug: string, pattern?: string | null, category?: string | null): LiftPattern {
   const s = `${slug} ${pattern ?? ""} ${category ?? ""}`.toLowerCase();
