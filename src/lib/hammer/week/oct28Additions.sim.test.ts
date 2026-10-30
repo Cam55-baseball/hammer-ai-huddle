@@ -72,11 +72,12 @@ describe("conditioning floor — 8 weeks, every player type, both sports", () =>
   for (const sport of ["baseball", "softball"] as const)
     for (const isPitcher of [false, true])
       for (const lowEveryOtherDay of [false, true]) {
-        it(`${sport} ${isPitcher ? "pitcher" : "position"}${lowEveryOtherDay ? " (low readiness days)" : ""}: ≥2 running sessions/week, never Sunday`, () => {
+        it(`${sport} ${isPitcher ? "pitcher" : "position"}${lowEveryOtherDay ? " (low readiness days)" : ""}: two floor opportunities without counting an ambiguous flush as running`, () => {
           const start = "2026-06-01"; // Monday
           const ran: string[] = [];
           for (let w = 0; w < 8; w++) {
             let weekCount = 0;
+            let floorOpportunities = 0;
             for (let d = 0; d < 7; d++) {
               const date = iso(start, w * 7 + d);
               const due = conditioningFloorDue({ planDate: date, priorRunningDates: ran });
@@ -85,13 +86,19 @@ describe("conditioning floor — 8 weeks, every player type, both sports", () =>
               if (due.due) {
                 const low = lowEveryOtherDay && d % 2 === 0;
                 const slugs = floorConditioningSlugs({ sport, isPitcher, lowReadiness: low });
-                expect(isRunningConditioning(slugs)).toBe(true);
-                if (low) expect(slugs).toEqual(["rc_easy_flush"]);
-                else if (!isPitcher) expect(slugs[0]).toBe(sport === "baseball" ? "bases_home_2nd" : "bases_double_sb");
-                ran.push(date); weekCount++;
+                floorOpportunities++;
+                if (low) {
+                  expect(slugs).toEqual(["rc_easy_flush"]);
+                  expect(isRunningConditioning(slugs)).toBe(false);
+                } else {
+                  expect(isRunningConditioning(slugs)).toBe(true);
+                  if (!isPitcher) expect(slugs[0]).toBe(sport === "baseball" ? "bases_home_2nd" : "bases_double_sb");
+                  ran.push(date); weekCount++;
+                }
               }
             }
-            expect(weekCount).toBe(CONDITIONING_WEEKLY_MINIMUM);
+            expect(floorOpportunities).toBe(CONDITIONING_WEEKLY_MINIMUM);
+            expect(weekCount).toBe(lowEveryOtherDay ? 1 : CONDITIONING_WEEKLY_MINIMUM);
           }
         });
       }
