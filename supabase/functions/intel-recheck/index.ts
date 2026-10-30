@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     let created = 0;
     for (const mod of ["hitting", "pitching", "throwing"]) {
       if (openAreas.has(mod)) continue;
-      const { data: last, error: clipError } = await sb.from("videos").select("efficiency_score, ai_analysis").eq("user_id", user.id).eq("module", mod)
+      const { data: last, error: clipError } = await sb.from("videos").select("id, efficiency_score, ai_analysis").eq("user_id", user.id).eq("module", mod)
         .not("efficiency_score", "is", null).order("created_at", { ascending: false }).limit(1);
       if (clipError) throw clipError;
       const source = last?.[0];
@@ -38,6 +38,8 @@ Deno.serve(async (req) => {
       const { error: ie } = await sb.from("intelligence_recommendations").insert({
         user_id: user.id, area: mod[0].toUpperCase() + mod.slice(1), do_this: doThis.slice(0, 200),
         baseline_value: source.efficiency_score,
+        source_video_id: (source as any).id ?? null,
+        drill: drillSnapshot(drill),
       });
       if (ie) throw ie;
       created++;
@@ -50,3 +52,10 @@ Deno.serve(async (req) => {
     return json({ error: "Re-check failed" }, 500);
   }
 });
+
+/** Player-safe drill snapshot: instructions only, never scores or findings. */
+function drillSnapshot(d: any) {
+  const text = (v: unknown, n = 400) => (typeof v === "string" && v.trim() ? v.trim().slice(0, n) : null);
+  const list = (v: unknown) => Array.isArray(v) ? v.map((x) => text(x, 240)).filter(Boolean).slice(0, 10) : [];
+  return { title: text(d?.title, 150), reps_sets: text(d?.reps_sets, 80), purpose: text(d?.purpose ?? d?.why ?? d?.description), steps: list(d?.steps ?? d?.instructions), cue: text(d?.cue, 200) };
+}
