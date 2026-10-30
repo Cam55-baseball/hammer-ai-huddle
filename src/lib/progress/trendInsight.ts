@@ -24,6 +24,9 @@ export function plainSeriesTitle(title: string): string {
   return parts.map(words).join(' · ');
 }
 
+/** "Entered performance test · throwing · ten_yard_dash" → "your Vault test: 10-yard dash". */
+export const plainSource = (src: string) => words(src.replace(/^Entered performance test · [^·]+ · /, 'your Vault test: '));
+
 const lowerIsBetter = (s: PillarSeries) => /pop time/i.test(s.title);
 const fmt = (v: number, unit: string) => unit === 'batting average' ? v.toFixed(3).replace(/^0/, '') : Math.abs(v) >= 10 ? v.toFixed(0) : v.toFixed(2).replace(/\.?0+$/, '');
 const day = (d: string) => (d.match(/\d{4}-\d{2}-\d{2}/g)?.pop() ?? d);
@@ -49,7 +52,7 @@ export function trendInsight(s: PillarSeries, title = plainSeriesTitle(s.title))
   const k = kind(s.id);
   const first = pts[0], last = pts[pts.length - 1];
   const unit = s.unit;
-  const because = `${pts.length} recorded result${pts.length === 1 ? '' : 's'} (${last.source}), ${day(first.date)}${pts.length > 1 ? ` to ${day(last.date)}` : ''}.`;
+  const because = `${pts.length} recorded result${pts.length === 1 ? '' : 's'} (${plainSource(last.source)}), ${day(first.date)}${pts.length > 1 ? ` to ${day(last.date)}` : ''}.`;
   if (pts.length === 1) {
     return { title, weSee: `${fmt(last.value, unit)} ${unit} on ${day(last.date)}. Only one record — no trend yet.`, because, howSure: 'need_more_data', samples: 1,
       doThis: DO[k] ?? 'Record this again so we can see a trend.', checkBack: BACK[k] ?? 'After your next record.', showChart: false, direction: null };

@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MeaningTitle } from './SectionMeaning';
 import { EvidenceTrendChart } from './EvidenceTrendChart';
 import { pillarTrends, weeklyPoints, type PillarSeries } from '@/lib/progress/pillarTrends';
-import { emptyPillars, plainSeriesTitle, trendInsight, type TrendInsight } from '@/lib/progress/trendInsight';
+import { emptyPillars, plainSeriesTitle, plainSource, trendInsight, type TrendInsight } from '@/lib/progress/trendInsight';
 import { HammersCard } from '@/components/intelligence/HammersCard';
 
 /** Plain titles; two series with the same name say which test day they came from. */
@@ -36,7 +36,7 @@ export function PillarGoalTrends({ sport }: { sport: 'baseball' | 'softball' }) 
     {query.isError && <p role="alert" className="text-destructive">Could not load your records. Try again.</p>}
     {query.isPending && <p className="text-muted-foreground">Loading your records…</p>}
     <div className="grid min-w-0 gap-4 lg:grid-cols-2">{cards.map(({ s, insight }) => <HammersCard key={s.id} title={insight.title} weSee={insight.weSee} because={insight.because} howSure={insight.howSure} samples={insight.samples} doThis={insight.doThis} checkBack={insight.checkBack}>
-      {insight.showChart && <EvidenceTrendChart label={insight.title} unit={s.unit} points={visible(s.points)} />}
+      {insight.showChart && <EvidenceTrendChart label={insight.title} unit={s.unit} points={visible(s.points).map(p => ({ ...p, source: plainSource(p.source) }))} />}
     </HammersCard>)}</div>
     {query.data && missing.length > 0 && <HammersCard title="Need more data" weSee={`No records yet for: ${missing.join(', ')}.`} howSure="need_more_data" doThis="Log your games (at-bats, chances, batters faced) and enter your arm and speed tests in the Vault." checkBack="After your next game or test." />}
     <SavedGoalTrends sport={sport} cards={cards} />

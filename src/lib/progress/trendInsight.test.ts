@@ -28,4 +28,8 @@ describe('General trend cards (Item C)', () => {
   it('turns raw test keys into plain words', () => {
     expect(plainSeriesTitle('Speed · Entered performance test · hitting · ten_yard_dash')).toBe('Speed · 10-yard dash');
   });
+  it('names the source in plain words', () => {
+    const r = trendInsight({ id: 'speed', title: 'Speed', unit: 'grade', points: [{ label: 'a', value: 40, date: '2026-01-01', source: 'Entered performance test · throwing · ten_yard_dash' }] })!;
+    expect(r.because).toContain('your Vault test: 10-yard dash');
+  });
 });
