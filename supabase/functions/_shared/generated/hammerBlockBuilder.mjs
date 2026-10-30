@@ -13215,12 +13215,16 @@ function testSettingsFor(row, userId) {
   const allowed = /* @__PURE__ */ new Set(["elite_grade", "pitching_standards", "prescription_weights", "weekly_minimums", "tags", "fault_keys", "placements", "routine_role", "weight"]);
   return { ...row, ...Object.fromEntries(Object.entries(scoped).filter(([key2]) => allowed.has(key2))) };
 }
+function boundedSkillFloor(base2, minimum, safetyCeiling) {
+  return Number.isInteger(minimum) && typeof minimum === "number" && minimum >= 0 && minimum <= 6 ? Math.min(safetyCeiling, Math.max(base2, minimum)) : base2;
+}
 export {
   ELITE_DRILL_CATALOG,
   ENGINE_CONTRACT,
   PHILOSOPHY_TEST_USERS,
   accessiblePlanFaults,
   accessibleRecurringIssues,
+  boundedSkillFloor,
   buildHammerDailyPlan,
   contextFromEnvelope,
   finalizeDatedPlan,
