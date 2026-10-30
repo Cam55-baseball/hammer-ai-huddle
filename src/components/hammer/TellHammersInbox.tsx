@@ -11,6 +11,7 @@ import { getTodayDate, getLocalDateString } from "@/utils/dateUtils";
 import { describeEntry, isoShift } from "../../../supabase/functions/_shared/wic/schedule/timeline";
 import { parseScheduleRequest, FACE_LABEL, extractDates, type EntryDraft } from "@/lib/hammer/tellHammers/parse";
 import { REPORT_INJURY_REGIONS } from "@/lib/hammer/injury/reportInjury";
+import { readChangeConfirmation } from '@/lib/hammer/changeConfirmation';
 
 type Flow = "games" | "season" | "cancelled" | "pain" | "break" | "event" | "travel" | "resume" | "ask";
 const BUTTONS = [
@@ -47,7 +48,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   const [pending, setPending] = useState<EntryDraft | null>(null);
   const [text, setText] = useState("");
   const [confirm, setConfirm] = useState<EntryDraft | null>(null);
-  const [lastMessage, setLastMessage] = useState<string | null>(null);
+  const [lastMessage, setLastMessage] = useState<string | null>(() => readChangeConfirmation(user?.id, today));
   const [sent, setSent] = useState<Array<{ id: string; label: string }>>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
   useEffect(() => {

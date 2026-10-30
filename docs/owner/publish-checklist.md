@@ -10,7 +10,7 @@ PASS = retained affected-role UI proof plus current regression coverage. HUMAN =
 |---|---|---|---|
 | 1 | Goal picker | PASS | Ranked goals → save/reload → Start → goal-weighted plan; retained Item1 proof. |
 | 2 | Owner's full saved week | PASS | Fresh readback: Oct30–Nov5, seven combined days, four ready seated-defense days and six restriction-modified conditioning days. Zero running; cycling only if pain-free/professionally allowed. Restrictions unchanged. Item2 owner-week proof. |
-| 3 | Update Hammer everywhere | OPEN | Latest phone run proves offseason and Tell Hammers season changes with General/coach refresh. Game/schedule and days-available before/after, plus revised seven-changeable-date confirmation still need the requested on-screen proof. No fresh TEST schedule writes in this audit. |
+| 3 | Update Hammer everywhere | OPEN (proof advanced) | Oct30 actual TEST phone game/schedule and available-days changes return server rebuild confirmations and dated readbacks; Tell Hammers in-season confirmation now survives refresh, General/season/connected coach update. Prior offseason transition retained. Fresh combined transition and coach saved-card consistency review remains; see completion-oct30-proof.md. |
 | 4 | Organization Both sport | HUMAN | Saved Both/edit/reload acceptance on a populated organization. |
 | 5 | Terms overlays / Back | PASS | Nested Back/Close keeps entered sign-up fields and step. |
 | 6 | Coach send / player response | PASS | Coach→player→coach search/send, notifications, Today choices, Coach workouts, logging and response retained. |
