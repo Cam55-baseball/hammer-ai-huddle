@@ -8,6 +8,7 @@ import { dispatchSportChange } from "@/contexts/SportThemeContext";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import { rebuildAfterChange } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
+import { priorityAccess } from '@/lib/hammer/priorityAccess';
 
 type Sport = "baseball" | "softball";
 const NAME: Record<Sport, string> = { baseball: "Baseball", softball: "Softball" };
@@ -33,6 +34,13 @@ export function ActiveSportSwitch({ userId }: { userId: string }) {
     if (busy || !primary || next === primary) return;
     setBusy(true); setResult(null);
     try {
+      const {data:subscription,error:accessError}=await supabase.from('subscriptions').select('status,subscribed_modules').eq('user_id',userId).maybeSingle();
+      if(accessError) throw accessError;
+      const access=priorityAccess(subscription?.status==='active'?subscription.subscribed_modules??[]:[],next);
+      if(!access.hasHitting&&!access.hasPitching&&!access.hasThrowing){
+        const message=`Your paid plan does not include ${NAME[next]} yet. Your current sport and saved work have not changed.`;
+        setResult(message);toast.error(message);return;
+      }
       await persistContextAnswer(userId, "sport_primary", next, "tell_hammer", "self_report");
       await persistContextAnswer(userId, "sport_secondary", [primary], "tell_hammer", "self_report");
       dispatchSportChange(next);
