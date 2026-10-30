@@ -131,7 +131,7 @@ const SelectUserRole = () => {
           </Card>
 
           <Card 
-            className="p-8 cursor-pointer hover:border-primary transition-all hover:shadow-lg md:col-span-2"
+            className="p-8 cursor-pointer hover:border-primary transition-all hover:shadow-lg"
             onClick={() => handleRoleSelect('organization')}
           >
             <div className="text-center">
