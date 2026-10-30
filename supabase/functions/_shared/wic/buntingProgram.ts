@@ -21,6 +21,8 @@ export interface BuntingFacts {
   outcomes?: readonly BuntOutcome[];
   /** Existing legal training weekdays only, 0=Sunday. Rest and game days excluded by caller. */
   legalWeekdays: readonly number[];
+  /** Scoped minimum only; existing legal days and unchanged attempt budgets remain the ceiling. */
+  weeklyMinimum?: number;
   restDay: boolean; gameDay: boolean;
   opponentThrows?: "L" | "R" | null;
 }
@@ -37,7 +39,8 @@ export function buntingProgram(facts: BuntingFacts) {
   const lowAverage=facts.lowAverage??.300;
   const under300 = facts.battingWindow !== undefined ? validWindow && window.hits / window.atBats < lowAverage : games.length >= 2 && games.every(game => game.hits / game.atBats < lowAverage);
   const sides: BuntSide[] = facts.bats === "S" ? ["R", "L"] : facts.bats ? [facts.bats] : [];
-  const wantedSessions = facts.speedy === true || facts.lacksPower === true ? 3 : 2;
+  const baseSessions = facts.speedy === true || facts.lacksPower === true ? 3 : 2;
+  const wantedSessions = typeof facts.weeklyMinimum === 'number' && Number.isInteger(facts.weeklyMinimum) && facts.weeklyMinimum >= 2 && facts.weeklyMinimum <= 6 ? Math.max(baseSessions,facts.weeklyMinimum) : baseSessions;
   const weekdays = [...new Set(facts.legalWeekdays)].filter(day => Number.isInteger(day) && day >= 0 && day <= 6).sort((a,b) => a-b).slice(0, 6);
   const scheduled = included && sides.length ? weekdays.slice(0, wantedSessions) : [];
   const dose = (side: BuntSide, type: BuntType) => {
