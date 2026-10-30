@@ -8,9 +8,16 @@
 - Focused regression suite: four files, 17 tests passed. Automatic preview build OK at03:27:30UTC. No full-suite rerun claimed; prior 683-file/5,405-test full pass retained.
 
 ## Remaining work
-- Item18: fresh unstarted full assessment→first Start→seven combined saved days→reload must be replayed after the preview-only compose request correction; no new identity created this run.
+- Item18: retained approved fresh TEST `onboarding18_oct29_1545` was confirmed unstarted. Actual 390×844 UI saved synthetic body measurements, equipment, two ranked goals, training inputs, nutrition (2600 calories/140g protein/320g carbs/85g fat/110oz water) and completed health setup. Optional unmeasured assessment steps were explicitly skipped, not fabricated. Canonical missing-input RPC returned []. Start produced a populated day and reload retained it with no Start button. However the saved snapshot has **no composition_version**: this is not the required seven-combined-date acceptance and no manual resave was used to conceal it. Preview compose request correction still needs named `wk-generate-daily` rollout authorization and a new unstarted proof identity; never reset this now-started player. Evidence: `/tmp/browser/completion-next/`, screenshots first-start/start-reload and canonical prestart/first-start JSON. First screenshot contains the automatic welcome tour, not a visible-card acceptance capture.
 - Item20: demonstrated standard/tag and weight Confirm/Undo retained. Audit confirms scoped readers exist, but complete minimum/bunting/conditioning/drill-fix-it consumer acceptance is still uncertified. A ceiling-limited minimum must never manufacture extra days.
 - Scheduling: retained224/224 dates are not complete acceptance. Heavy-game zero-running weeks, ready hitting/bunting shortfalls, missing off-season samples and requested game-density/outing/arm-logging proof remain. No safety relaxation or ambiguous flush-as-running count applied.
 - Item3: four change paths now have on-screen confirmations and saved-date readbacks; combined fresh transition acceptance and saved coach/card consistency should be reviewed before marking the entire item closed. Coach game snapshot retains a misleading warm-up title with a rest reason; this was observed, not fixed or passed as safe physical execution.
 
-No publish, deployment, migration, cron, iOS, destructive cleanup, real-player settings or performed-work writes. Only TEST schedule answers and their normal server rebuilds were changed. **Ready to publish: NO.**
+## Additional staged corrections and verification
+- Conditioning floor opportunities exclude game/hold/unavailable dates and inspect emitted rows rather than pre-trim selections. Shared TEST conditioning minimum projection is integrated without changing running identities or safety caps.
+- Bunting consumes bounded TEST minimums through both legal-weekday selection and its policy, replacing swings at unchanged dose. Composer includes canonical timeline game/cancellation evidence; no Sunday/game work reopened.
+- Retained recovery-only warmup blocks use the title Gentle recovery preparation, not a training label. This title correction has not been live coach-reproved.
+- Seven targeted files /140 tests passed; generated shared builder has109 sources and six parity cases passed. Automatic preview last observed build OK03:40:26UTC. No full-suite rerun claimed.
+- These server corrections are **staged, not live**; no new named redeploy authorization was assumed from Continue.
+
+No publish, deployment, migration, cron, iOS, destructive cleanup, real-player settings or performed-work writes. TEST profile/health/nutrition/assessment answers, Start and normal server saves were exercised. **Ready to publish: NO.**

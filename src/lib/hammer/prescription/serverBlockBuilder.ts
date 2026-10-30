@@ -13,4 +13,4 @@ export { ELITE_DRILL_CATALOG } from '@/data/drills/eliteDrillCatalog';
 export { readDrillCirculation } from '@/lib/prescription/drillCirculationRead';
 export { priorityAccess } from '../priorityAccess';
 export { ENGINE_CONTRACT } from '@/data/ENGINE_CONTRACT';
-export { PHILOSOPHY_TEST_USERS, testSettingsFor } from '@/lib/intelligence/testSettings';
+export { PHILOSOPHY_TEST_USERS, testSettingsFor, boundedSkillFloor } from '@/lib/intelligence/testSettings';

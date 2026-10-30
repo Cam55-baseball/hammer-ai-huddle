@@ -5,7 +5,7 @@ import {
   priorityAccess, ENGINE_CONTRACT,
   PHILOSOPHY_TEST_USERS, testSettingsFor,
 } from './generated/hammerBlockBuilder.mjs';
-import { isoShift } from './wic/schedule/timeline.ts';
+import { isoShift, dayEffect } from './wic/schedule/timeline.ts';
 import { ageFromDob } from './age/ageFromDob.ts';
 import { planningGear } from './planSwap/planningGear.ts';
 import { readPlanningArmHistory } from './wic/pitching/readPlanningArmHistory.ts';
@@ -90,12 +90,15 @@ export async function composeSportDay(db: any, input: {
   const posture=input.posture;
   // Game weekdays of this Mon–Sun week from the app's schedule: bunting moves to non-game days.
   const monday=isoShift(date,-((day.getUTCDay()+6)%7)),sunday=isoShift(monday,6);
-  const [calWeek,gpWeek]=await Promise.all([
+  const [calWeek,gpWeek,tlWeek]=await Promise.all([
     db.from('calendar_events').select('event_date,ignored_for_training').eq('user_id',uid).is('deleted_at',null).in('event_type',['game','tournament','scrimmage']).gte('event_date',monday).lte('event_date',sunday).limit(50),
     db.from('gp_games').select('game_date,ignored_for_training').eq('user_id',uid).is('deleted_at',null).gte('game_date',monday).lte('game_date',sunday).limit(50),
+    db.from('schedule_timeline_entries').select('*').eq('user_id',uid).gte('end_date',monday).lte('start_date',sunday).limit(200),
   ]);
+  for(const result of [calWeek,gpWeek,tlWeek])if(result.error)throw result.error;
   const gameWeekdays=[...(calWeek.data??[]).map((e:any)=>e.ignored_for_training===true?null:e.event_date),...(gpWeek.data??[]).map((g:any)=>g.ignored_for_training===true?null:g.game_date)]
-    .filter(Boolean).map((d:string)=>new Date(`${d}T12:00:00Z`).getUTCDay());
+    .filter(Boolean).filter((d:string)=>!dayEffect(tlWeek.data??[],d).cancelled).map((d:string)=>new Date(`${d}T12:00:00Z`).getUTCDay());
+  for(let n=0;n<7;n++){const date=isoShift(monday,n);if(dayEffect(tlWeek.data??[],date).games.length)gameWeekdays.push(new Date(`${date}T12:00:00Z`).getUTCDay());}
   const schedule={todayKinds:[],tomorrowKinds:[],isGameToday:posture==='game',isTournamentToday:posture==='tournament',isCampToday:false,isTravelToday:posture==='travel',hasTeamPracticeToday:posture==='team_practice',isGameTomorrow:input.gameTomorrow,isTournamentTomorrow:false,tournamentWindow:null,tournamentDayLabel:null,postureToday:posture,eventLabel:null,rationale:posture==='normal'?'':`Your saved schedule: ${posture.replace(/_/g,' ')}.`};
   const adjRows=complete(adjustments);
   setOwnerPlanDrills(circulation.rows);

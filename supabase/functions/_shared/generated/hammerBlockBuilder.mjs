@@ -1634,7 +1634,8 @@ function buntingProgram(facts) {
   const lowAverage = facts.lowAverage ?? 0.3;
   const under300 = facts.battingWindow !== void 0 ? validWindow && window2.hits / window2.atBats < lowAverage : games.length >= 2 && games.every((game) => game.hits / game.atBats < lowAverage);
   const sides = facts.bats === "S" ? ["R", "L"] : facts.bats ? [facts.bats] : [];
-  const wantedSessions = facts.speedy === true || facts.lacksPower === true ? 3 : 2;
+  const baseSessions = facts.speedy === true || facts.lacksPower === true ? 3 : 2;
+  const wantedSessions = typeof facts.weeklyMinimum === "number" && Number.isInteger(facts.weeklyMinimum) && facts.weeklyMinimum >= 2 && facts.weeklyMinimum <= 6 ? Math.max(baseSessions, facts.weeklyMinimum) : baseSessions;
   const weekdays = [...new Set(facts.legalWeekdays)].filter((day2) => Number.isInteger(day2) && day2 >= 0 && day2 <= 6).sort((a, b) => a - b).slice(0, 6);
   const scheduled = included && sides.length ? weekdays.slice(0, wantedSessions) : [];
   const dose = (side, type) => {
@@ -8505,6 +8506,9 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   }), focusProjection);
   const fullRestDay = roadmapInputs.fullRestDay === true || physio.recoveryOnly || today.getDay() === SIX_DAY_REST_DOW || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day2) => day2.isToday)?.restDay === true;
   const bunting = roadmapInputs.bunting;
+  const requestedBunting = roadmapInputs.testPreferences?.weekly_minimums?.bunting;
+  const baseBunting = bunting?.traits?.speedy === true || bunting?.traits?.lacksPower === true ? 3 : 2;
+  const buntingMinimum = typeof requestedBunting === "number" && Number.isInteger(requestedBunting) && requestedBunting >= 2 && requestedBunting <= 6 ? Math.max(baseBunting, requestedBunting) : baseBunting;
   const masteryOrdered = applyMasteryFocus(goalOrdered, roadmapInputs.masteryFocus);
   const bunted = bunting ? applyBuntingPlan(masteryOrdered, {
     sport: normalizeSport(sportRaw) === "softball" ? "softball" : "baseball",
@@ -8514,7 +8518,8 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     battingGames: bunting.evidence.battingGames,
     battingWindow: bunting.evidence.battingWindow,
     outcomes: bunting.evidence.outcomes,
-    legalWeekdays: buntingWeekdays(weeklyRoadmap, bunting.gameWeekdays ?? [], bunting.traits?.speedy === true || bunting.traits?.lacksPower === true ? 3 : 2),
+    legalWeekdays: buntingWeekdays(weeklyRoadmap, bunting.gameWeekdays ?? [], buntingMinimum),
+    weeklyMinimum: buntingMinimum,
     restDay: fullRestDay,
     gameDay: scheduleSignal.postureToday !== "normal"
   }, {
@@ -8531,6 +8536,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter((d3) => isSoftRecovery(d3.slug)) : [];
     return {
       ...b,
+      ...b.modality === "warmup" ? { title: "Gentle recovery preparation" } : {},
       drills,
       steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
       status: b.status === "awaiting-input" ? "awaiting-input" : drills.length ? "ready" : "off-day",
@@ -13209,12 +13215,16 @@ function testSettingsFor(row, userId) {
   const allowed = /* @__PURE__ */ new Set(["elite_grade", "pitching_standards", "prescription_weights", "weekly_minimums", "tags", "fault_keys", "placements", "routine_role", "weight"]);
   return { ...row, ...Object.fromEntries(Object.entries(scoped).filter(([key2]) => allowed.has(key2))) };
 }
+function boundedSkillFloor(base2, minimum, safetyCeiling) {
+  return Number.isInteger(minimum) && typeof minimum === "number" && minimum >= 0 && minimum <= 6 ? Math.min(safetyCeiling, Math.max(base2, minimum)) : base2;
+}
 export {
   ELITE_DRILL_CATALOG,
   ENGINE_CONTRACT,
   PHILOSOPHY_TEST_USERS,
   accessiblePlanFaults,
   accessibleRecurringIssues,
+  boundedSkillFloor,
   buildHammerDailyPlan,
   contextFromEnvelope,
   finalizeDatedPlan,

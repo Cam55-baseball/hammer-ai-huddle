@@ -27,14 +27,15 @@ export function weekStart(planDate: string): string {
  * Due when the training days left this week (today through Saturday) are no more
  * than the running sessions still needed. Never due on the rest day.
  */
-export function conditioningFloorDue(input: { planDate: string; priorRunningDates: readonly string[]; minimum?: number }) {
+export function conditioningFloorDue(input: { planDate: string; priorRunningDates: readonly string[]; minimum?: number; blockedDates?: readonly string[] }) {
   const min = input.minimum ?? CONDITIONING_WEEKLY_MINIMUM;
   const start = weekStart(input.planDate);
   const done = new Set(input.priorRunningDates.filter((d) => d >= start && d < input.planDate)).size;
   const needed = Math.max(0, min - done);
   const today = dow(input.planDate);
-  const remaining = today === REST_DOW ? 0 : 7 - today; // Mon=1 → 6 days left incl. today … Sat=6 → 1
-  return { due: today !== REST_DOW && needed > 0 && remaining <= needed, needed, remaining, done };
+  const blocked = new Set(input.blockedDates ?? []);
+  const remaining = today === REST_DOW ? 0 : Array.from({ length: 7 - today }, (_, n) => shift(input.planDate, n)).filter(date => !blocked.has(date)).length;
+  return { due: today !== REST_DOW && !blocked.has(input.planDate) && needed > 0 && remaining <= needed, needed, remaining, done };
 }
 
 /** The floor session's movements (existing library slugs only). */

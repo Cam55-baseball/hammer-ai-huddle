@@ -2547,19 +2547,22 @@ export function buildHammerDailyPlan(
     (scheduleSignal.postureToday === "normal" && weeklyRoadmap.find(day => day.isToday)?.restDay === true);
   // Last composition boundary: laterality, owner slots, overrides and warm-up anchors cannot reopen rest.
   const bunting = roadmapInputs.bunting;
+  const requestedBunting = roadmapInputs.testPreferences?.weekly_minimums?.bunting;
+  const baseBunting = bunting?.traits?.speedy===true||bunting?.traits?.lacksPower===true?3:2;
+  const buntingMinimum = typeof requestedBunting==='number'&&Number.isInteger(requestedBunting)&&requestedBunting>=2&&requestedBunting<=6?Math.max(baseBunting,requestedBunting):baseBunting;
   const masteryOrdered=applyMasteryFocus(goalOrdered,roadmapInputs.masteryFocus);
   const bunted = bunting ? applyBuntingPlan(masteryOrdered, {
     sport:normalizeSport(sportRaw)==='softball'?'softball':'baseball',modules:roadmapInputs.subscriptionModules??[],
     bats:identityOverride?.isSwitchHitter?'S':(['R','L','S'].includes(String(ctx.get('bats_hand')?.value))?ctx.get('bats_hand')?.value as 'R'|'L'|'S':null),
     ...bunting.traits,battingGames:bunting.evidence.battingGames,battingWindow:bunting.evidence.battingWindow,outcomes:bunting.evidence.outcomes,
-    legalWeekdays:buntingWeekdays(weeklyRoadmap,bunting.gameWeekdays??[],bunting.traits?.speedy===true||bunting.traits?.lacksPower===true?3:2),
+    legalWeekdays:buntingWeekdays(weeklyRoadmap,bunting.gameWeekdays??[],buntingMinimum),weeklyMinimum:buntingMinimum,
     restDay:fullRestDay,gameDay:scheduleSignal.postureToday!=='normal',
   },{weekday:today.getDay(),weekIndex:Math.floor(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()-((today.getDay()+6)%7))/604800000),
     owned:proj.equipmentList,age:bunting.age,phase:bunting.phase,catalog:bunting.catalog,userId:bunting.userId}) : masteryOrdered;
   const restFiltered = fullRestDay ? bunted.map(b => {
     if (["fueling", "game_iq"].includes(b.modality)) return b;
     const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter(d => isSoftRecovery(d.slug)) : [];
-    return { ...b, drills, steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
+    return { ...b, ...(b.modality==='warmup'?{title:'Gentle recovery preparation'}:{}), drills, steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
       status: b.status === "awaiting-input" ? "awaiting-input" as const : drills.length ? "ready" as const : "off-day" as const,
       offDayOverridable: false, gamePlanTemplate: null,
       why: "Rest today — gentle recovery only. Save real training for your next training day.",
