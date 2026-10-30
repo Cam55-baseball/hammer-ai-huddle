@@ -1,0 +1,1 @@
+- Owner account badges derive independent payment, training-start and onboarding facts from canonical account records and fail visibly when any required read fails. Why: paid staff must not look unpaid, and starting training must not falsely claim onboarding completion.

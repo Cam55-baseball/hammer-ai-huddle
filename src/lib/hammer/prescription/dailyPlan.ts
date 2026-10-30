@@ -9,6 +9,7 @@ import { applyBuntingPlan, type BuntCatalogItem } from './buntingPlan';
 import type { BuntingEvidence } from './buntingEvidence';
 import type { BuntingFacts } from '../../../../supabase/functions/_shared/wic/buntingProgram';
 import { isSoftRecovery } from "../../../../supabase/functions/_shared/wic/schedule/softRecovery";
+import { unavailableTrainingDate } from '../../../../supabase/functions/_shared/wic/schedule/availability';
 import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
 import { priorityAccess } from '../priorityAccess';
 import { subscriptionSchedule } from './subscriptionSchedule';
@@ -2548,6 +2549,7 @@ export function buildHammerDailyPlan(
   }), focusProjection);
   const fullRestDay = roadmapInputs.fullRestDay === true ||
     physio.recoveryOnly ||
+    unavailableTrainingDate(`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`, proj.weeklyAvailabilityDays) ||
     today.getDay() === SIX_DAY_REST_DOW ||
     (scheduleSignal.postureToday === "normal" && weeklyRoadmap.find(day => day.isToday)?.restDay === true);
   // Last composition boundary: laterality, owner slots, overrides and warm-up anchors cannot reopen rest.

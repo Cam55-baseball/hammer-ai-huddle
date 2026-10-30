@@ -1855,6 +1855,17 @@ function applyBuntingPlan(blocks, facts, options) {
   });
 }
 
+// supabase/functions/_shared/wic/schedule/availability.ts
+function availableTrainingDays(days) {
+  const count = typeof days === "number" && Number.isFinite(days) ? Math.max(1, Math.min(6, Math.floor(days))) : 6;
+  const order = [1, 3, 5, 2, 4, 6];
+  return order.slice(0, count).sort((a, b) => a - b);
+}
+function unavailableTrainingDate(date, days) {
+  const dow = (/* @__PURE__ */ new Date(`${date}T12:00:00Z`)).getUTCDay();
+  return !availableTrainingDays(days).includes(dow);
+}
+
 // src/lib/hammer/goals/subGoalCatalog.ts
 var SPEED = [
   { id: "first_step", label: "Quicker first step", helpText: "Explode out of your stance \u2014 the first 10 feet decide most plays.", weightHints: { speed_acceleration: 0.7, strength_lower: 0.3 } },
@@ -2306,13 +2317,6 @@ function label(m) {
   return m === "baserunning" ? "Baserunning" : m.charAt(0).toUpperCase() + m.slice(1);
 }
 
-// supabase/functions/_shared/wic/schedule/availability.ts
-function availableTrainingDays(days) {
-  const count = typeof days === "number" && Number.isFinite(days) ? Math.max(1, Math.min(6, Math.floor(days))) : 6;
-  const order = [1, 3, 5, 2, 4, 6];
-  return order.slice(0, count).sort((a, b) => a - b);
-}
-
 // src/lib/hammer/prescription/weeklyMicrocycle.ts
 var SCHEDULABLE_MODALITIES = [
   "speed",
@@ -2421,7 +2425,7 @@ var PRE_SEASON_5D = {
     speed: { 5: "secondary" }
   },
   dayLabels: {
-    strength: { 1: "Full-body heavy", 3: "Dynamic effort", 5: "Repetition effort" },
+    strength: { 1: "Full-body heavy", 3: "Full-body dynamic", 5: "Full-body repetition" },
     speed: { 1: "Acceleration", 3: "Max velocity", 5: "Tempo / freshness" }
   },
   priorityDayOrder: {
@@ -2468,7 +2472,7 @@ var IN_SEASON = {
     speed: { 2: "activation" }
   },
   dayLabels: {
-    strength: { 1: "Maintenance", 4: "Maintenance" },
+    strength: { 1: "Full-body maintenance", 4: "Full-body maintenance" },
     speed: { 2: "Freshness (short reps)" }
   },
   priorityDayOrder: {
@@ -2500,7 +2504,7 @@ var POST_SEASON = {
     throwing: { 3: "activation" }
   },
   dayLabels: {
-    strength: { 2: "Rebuild base", 5: "Rebuild base" }
+    strength: { 2: "Full-body rebuild", 5: "Full-body rebuild" }
   },
   priorityDayOrder: {
     hitting: [2, 5, 3, 1, 4, 6, 0],
@@ -2530,7 +2534,7 @@ var YOUTH = {
     speed: { 2: "activation", 4: "activation" }
   },
   dayLabels: {
-    strength: { 1: "Movement quality", 4: "Movement quality" },
+    strength: { 1: "Full-body movement quality", 4: "Full-body movement quality" },
     speed: { 2: "Short ATP-CP", 4: "Short ATP-CP" }
   },
   priorityDayOrder: {
@@ -8559,7 +8563,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const reason = scheduleSignal.postureToday !== "normal" || b.status !== "ready" ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...b.because ?? [], reason] };
   }), focusProjection);
-  const fullRestDay = roadmapInputs.fullRestDay === true || physio.recoveryOnly || today.getDay() === SIX_DAY_REST_DOW || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day2) => day2.isToday)?.restDay === true;
+  const fullRestDay = roadmapInputs.fullRestDay === true || physio.recoveryOnly || unavailableTrainingDate(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`, proj.weeklyAvailabilityDays) || today.getDay() === SIX_DAY_REST_DOW || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day2) => day2.isToday)?.restDay === true;
   const bunting = roadmapInputs.bunting;
   const requestedBunting = roadmapInputs.testPreferences?.weekly_minimums?.bunting;
   const baseBunting = bunting?.traits?.speedy === true || bunting?.traits?.lacksPower === true ? 3 : 2;
