@@ -1,5 +1,21 @@
 # Saved scheduling certification — October 30, 2026 · close-out (8)
 
+## October 30 game-week correction — partial live readback
+
+The owner-authorized `wk-generate-daily` correction is live (latest submitted source hash `5f0e9a588fd4fc87ae53f00f7383b26fba5d71173afba0cbc45baa7496be0604`). Two new catalog identities declare real low-intensity baseball/softball base-route jogs, not relabeled bike/walk work. Short ready game-day hitting and baserunning stations and five-attempt bunting replacements are built inside existing safe skill work. Post-game recovery and Sunday closure remain.
+
+Three exact baseball demos saved Off-season and season dates through the app at 390×844; canonical settings readback confirmed all three. Manual phase wins over dates, so their later in-season samples must be switched back through the app before certification. Do not treat the pro November16 sample below as in-season proof.
+
+| Fresh rebuilt/read-back sample | Hitting ≥3 | Defense ≥4 | Baserunning ≥1 | Bunting ≥2 | Running ≥2 | Result |
+|---|---:|---:|---:|---:|---:|---|
+| Pro baseball 5Tool · Nov2–8 · off-season setting, five scheduled game days | 6 | 6 | 6 | 2 | 1 | FAIL; built before latest suppression correction, requires fresh rebuild |
+| Pro baseball 5Tool · Nov16–22 · off-season, no scheduled games | 6 | 6 | 6 | 2 | 6 | Floor counts pass; not an in-season/game-week sample |
+| College softball Golden2Way · Nov16–22 · in-season, four scheduled game dates | 6 | 6 | 6 | 2 | 3 | Floor counts pass; Sunday has no ready skill work |
+
+Only these three weeks were freshly rebuilt in this run, one date at a time with a 60-second pause and database-health check after each unit. Memory stayed below 63%, connections at most24/60, and no newer DiskIO alert was reported. The sixteen-week audit, six-game pro scenario, complete first-two-week off-season rebuilds and live arm-execution acceptance are **not completed**. Existing sample detail below is retained historical evidence, not regenerated latest-plan certification.
+
+Validation:82 focused tests across7 files and six client/server parity cases passed; latest preview check was clean. TEST training UI for the HS demo remains behind its legitimate parent-waiver gate; non-training assessment season settings were accessible and no waiver was bypassed. No publishing, cron, iOS or real-player settings changes.
+
 **Saved-date count: 224 / 224, freshly read back.** Eight exact TEST identities each have 28 distinct sport/physical snapshots, October 30–November 26. All carry `sport_physical_v1`. This is not a declaration that every requested weekly floor or scheduling scenario passes.
 
 The readback also returned 1,576 physical prescription rows on 217 dates; seven game dates have no physical work. No plan was regenerated for this audit. The existing per-row reports contain warnings, not fatal errors. Empty game days remain visible as game cards, not invented lifting.
