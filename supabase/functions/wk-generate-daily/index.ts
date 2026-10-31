@@ -3832,7 +3832,7 @@ const handler = async (req: Request): Promise<Response> => {
             let eased = 0;
             for (const r of finalRxs) {
               const fact = catalogMap[r.movement_slug];
-              if (classify(fact)?.channel !== "LIFT") continue;
+              if (classify(fact)?.channel !== "LIFT" && !(r.slot === "lift" && isPapStrengthRow(r as any))) continue;
               const why = ((r as any).why_payload ?? {}) as Record<string, any>;
               const fromPct = (r as any).load_pct ?? null;
               (r as any).load_pct = easeBackLoadPct(fromPct);
