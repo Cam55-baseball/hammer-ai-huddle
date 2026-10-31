@@ -1135,6 +1135,13 @@
       "when": 1793377749616,
       "tag": "0161_scout_applications_allow_both_sport",
       "breakpoints": true
+    },
+    {
+      "idx": 162,
+      "version": "7",
+      "when": 1793419012389,
+      "tag": "0162_coach_player_week_calendar",
+      "breakpoints": true
     }
   ]
 }
