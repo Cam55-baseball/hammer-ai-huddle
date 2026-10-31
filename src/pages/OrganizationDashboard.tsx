@@ -29,6 +29,7 @@ import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
 import { MeaningSection } from '@/components/progress/SectionMeaning';
 import { OrganizationProgress } from '@/components/organization/OrganizationProgress';
 import { InviteCoach } from '@/components/organization/InviteCoach';
+import { SendWorkouts } from '@/components/coach/SendWorkouts';
 
 export default function OrganizationDashboard() {
   const { myOrgs, members } = useOrganization();
@@ -76,7 +77,7 @@ export default function OrganizationDashboard() {
               <MeaningSection organization title="Testing Results" use="Pick one test and look for players far below the group. Give them extra work on that skill and retest." explanation="Compare the latest recorded result for one test. Check the test name, dates, positions, ages, levels and whether higher or lower is better. These numbers do not rank overall ability."><CompareByTest orgId={activeOrg.id}/></MeaningSection>
             </TabsContent>
             <TabsContent value="workouts" className="space-y-6">
-              <MeaningSection organization title="Workouts" use="Send a workout, then check back for the player's answer. Follow up with anyone who hasn't responded." explanation="Send existing workouts and see the player's saved response. Sent is not completed; the player's recorded work is shown separately."><Button asChild variant="outline"><Link to="/my-custom-activities">My Workouts</Link></Button><CoachPrescriptionStatus/></MeaningSection>
+              <SendWorkouts/><CoachPrescriptionStatus/>
               <MeaningSection organization title="Team Discipline" use="Find players who skip required items and talk with them about what's getting in the way." explanation="Discipline shows the existing required-item completion record, not a judgment about a player's character." collapsed><TeamDisciplineSummary orgId={activeOrg.id}/></MeaningSection>
             </TabsContent>
             <TabsContent value="results" className="space-y-6">

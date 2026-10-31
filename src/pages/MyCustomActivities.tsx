@@ -29,6 +29,8 @@ import { toast } from 'sonner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { CoachCardTemplates } from '@/components/coach/CoachCardTemplates';
+import { SendWorkouts } from '@/components/coach/SendWorkouts';
+import { useWorkoutStaff } from '@/hooks/useWorkoutStaff';
 
 export default function MyCustomActivities() {
   const { t } = useTranslation();
@@ -36,7 +38,7 @@ export default function MyCustomActivities() {
   const [selectedSport] = useState<'baseball' | 'softball'>(() => {
     return (localStorage.getItem('selectedSport') as 'baseball' | 'softball') || 'baseball';
   });
-  const [isCoach, setIsCoach] = useState(false);
+  const { isStaff: isCoach, ready: staffReady } = useWorkoutStaff();
   
   const {
     templates,
@@ -53,23 +55,6 @@ export default function MyCustomActivities() {
   const { deletedCount, refetch: refetchDeleted } = useDeletedActivities(selectedSport);
   const { pendingCount: folderPendingCount } = useReceivedFolders();
   const { fromCoaches: coachWorkoutsWaiting } = useMyCoachWorkouts();
-
-  // Check if user is a coach
-  useEffect(() => {
-    const checkCoach = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
-      const { data } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', userData.user.id)
-        .eq('role', 'coach')
-        .eq('status', 'active')
-        .maybeSingle();
-      setIsCoach(!!data);
-    };
-    checkCoach();
-  }, []);
 
   const handleUseTemplate = (exercises: any[], templateName: string) => {
     toast.success(t('workoutTemplates.templateLoaded', `Template "${templateName}" loaded! Create a new activity to use it.`));
@@ -92,7 +77,7 @@ export default function MyCustomActivities() {
 
   const tabs = [
     isCoach
-      ? { value: 'coach-workouts', icon: ClipboardList, label: 'Send a workout', badge: 0 }
+      ? { value: 'coach-workouts', icon: ClipboardList, label: 'Send workouts', badge: 0 }
       : { value: 'coach-workouts', icon: ClipboardList, label: 'Coach workouts', badge: coachWorkoutsWaiting.length },
     isCoach
       ? { value: 'saved-coach-workouts', icon: Inbox, label: 'Sent workouts' }
@@ -108,6 +93,7 @@ export default function MyCustomActivities() {
     { value: 'presets', icon: Footprints, label: t('myCustomActivities.tabs.presets', 'Presets') },
   ];
 
+  if (!staffReady) return <DashboardLayout><p role="status">Loading workouts…</p></DashboardLayout>;
   return (
     <DashboardLayout>
       <div className="p-4 sm:p-6 space-y-6">
@@ -221,11 +207,7 @@ export default function MyCustomActivities() {
             {isCoach ? (
               <>
                 <TabsContent value="coach-workouts" className="mt-0 animate-fade-in">
-                  <CoachCardTemplates/>
-                  <div className="space-y-3 rounded-lg border border-border p-4">
-                    <p className="text-sm text-muted-foreground">Pick your players on your Coach Dashboard, then tap Send Activities to choose what to send.</p>
-                    <Button onClick={() => navigate('/coach-dashboard')}>Go to my players</Button>
-                  </div>
+                  <SendWorkouts/>
                 </TabsContent>
                 <TabsContent value="saved-coach-workouts" className="mt-0 animate-fade-in">
                   <CoachPrescriptionStatus />
