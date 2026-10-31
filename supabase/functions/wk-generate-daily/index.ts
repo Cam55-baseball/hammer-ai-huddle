@@ -3691,6 +3691,13 @@ const handler = async (req: Request): Promise<Response> => {
     );
     let finalRxs = orderedRxs;
 
+    // Owner Oct 31: no conditioning session passes 1000 yards (reps × declared distance).
+    {
+      const cond = finalRxs.filter((r) => r.slot === "conditioning");
+      const capped = capSessionYards(cond as any[]);
+      cond.forEach((r, i) => { if ((capped[i] as any).sets !== r.sets) { (r as any).why_payload = { ...((r as any).why_payload ?? {}), yard_cap: { cap_yards: SESSION_YARD_CAP, sets_from: r.sets, sets_to: (capped[i] as any).sets } }; r.sets = (capped[i] as any).sets; } });
+      if (cond.some((r) => r.sets === 0)) finalRxs = assignSequenceOrder(finalRxs.filter((r) => !(r.slot === "conditioning" && r.sets === 0)));
+    }
     // -------- Step 14 — Spike Governor (TI-2, §5.3), switch-gated --------
     // Off for everyone by default. When `load_spike_protection` does not
     // resolve on for this athlete nothing below runs and the day is byte-for-
