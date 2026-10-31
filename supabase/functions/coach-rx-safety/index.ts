@@ -230,7 +230,6 @@ Deno.serve(async (req) => {
       const block = blocks[0] ?? null;
       if(category==='warmup') return json({applied:false,reasons:['The full warm-up protects the work that follows. Keep its preparation steps and use the existing activity controls for optional work.']});
       if(body.target?.prescription_ids){
-        const canonical=(revisionPlaceholder:unknown)=>revisionPlaceholder;
         const current=await admin.from('wk_prescriptions').select('id').eq('user_id',pid).eq('plan_date',date).in('slot',categorySlots(category)).is('replaced_by_coach_rx',null).not('status','in','(completed,skipped)');
         if(current.error)throw current.error;
         const actual=(current.data ?? []).map((r:any)=>r.id).sort();const selected=Array.isArray(body.target.prescription_ids)?[...body.target.prescription_ids].sort():[];
