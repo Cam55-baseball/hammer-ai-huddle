@@ -14,6 +14,9 @@ import { REPORT_INJURY_REGIONS } from "@/lib/hammer/injury/reportInjury";
 import { readChangeConfirmation } from '@/lib/hammer/changeConfirmation';
 import { ActiveSportSwitch } from './ActiveSportSwitch';
 import { SeasonDatesDialog } from './SeasonDatesDialog';
+import { PitcherRoleQuestions } from './pitching/PitcherRoleQuestions';
+import { usePitcherSchedule } from '@/hooks/usePitcherSchedule';
+import { parseRoleMessage, describeRoleChange, type RoleChange } from '@/lib/hammer/pitching/pitcherRoleAnswers';
 
 type Flow = "games" | "season" | "cancelled" | "pain" | "break" | "event" | "travel" | "resume" | "ask";
 const BUTTONS = [
@@ -98,6 +101,8 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   }
   function prepare() {
     const words = text.trim();
+    const roleChange = (!flow || flow === "ask") && words ? parseRoleMessage(words) : null;
+    if (roleChange) { setRoleConfirm(roleChange); return; }
     if (flow === "pain") {
       if (!pending) return; // a pain entry always needs a face
       if (checkIn) { setPending(words ? { ...pending, payload: { ...pending.payload, text: words } } : pending); setFlow(null); }
@@ -157,6 +162,8 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     {(open || checkIn) && <div className="space-y-3">
       {!checkIn && user && <ActiveSportSwitch userId={user.id} />}
       {!checkIn && <Button variant="outline" className="w-full" onClick={() => setDatesOpen(true)}>Season dates</Button>}
+      {!checkIn && <><Button variant="outline" className="w-full" aria-expanded={roleOpen} data-testid="tell-pitcher-role" onClick={() => setRoleOpen(v => !v)}>Pitcher or position player</Button>{roleOpen && <PitcherRoleQuestions />}</>}
+      {roleConfirm && <div className="rounded-md border p-3 space-y-2" data-testid="role-confirm"><p>I'll save: <strong>{describeRoleChange(roleConfirm)}</strong>. Is that right?</p><div className="flex gap-2"><Button disabled={pitcher.saveSettings.isPending} onClick={() => pitcher.saveSettings.mutate(roleConfirm, { onSuccess: () => { setRoleConfirm(null); setText(""); } })}>Yes, save</Button><Button variant="outline" onClick={() => setRoleConfirm(null)}>Back</Button></div></div>}
       {!checkIn && flow && backBtn}
       {lastMessage && <div role="status" data-testid="tell-hammers-result" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm"><strong>Got it — Hammer has it</strong><p>{lastMessage}</p></div>}
       {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
