@@ -1,4 +1,7 @@
 // Owner Part B (Oct 31 2026): pitcher role cycle, mound/circle minimum, role lifts,
+import { pitchingCounts, type PitcherGameRow } from "../pitchingCounts.ts";
+import { judgePitching } from "../masteryPitchingStandards.ts";
+import type { MasteryLevel } from "../masteryStandards.ts";
 // sprint conditioning and the two-way arm split. Pure; shared by app and server.
 // Only ORGANIZES work: every throw still passes the arm ledger, Pitch Smart, age,
 // windmill and injury rules downstream, which may only remove work.
@@ -196,4 +199,21 @@ export function commandExtraDays(i: { sport: Sport; week: readonly { date: strin
     room--;
   }
   return { extra, blocked, baseline };
+}
+
+/**
+ * First-pitch strike % and two-ball % (and walk %) judged on the latest COMPLETE batters-faced
+ * window of logged pitching game lines — same window/standards as the Pitching identity card.
+ * An incomplete window or unknown level returns no stats, so missing data never adds a day.
+ */
+export function commandStatsFromLines(
+  games: readonly PitcherGameRow[], sport: Sport, level: MasteryLevel | null, overrides: Record<string, number | null | undefined>, size: number,
+): { key: string; status: string }[] {
+  if (!level || !(size > 0)) return [];
+  const out: PitcherGameRow[] = []; let bf = 0, complete = false;
+  for (const g of [...games].reverse()) { out.unshift(g); bf += typeof g.batters_faced === "number" ? g.batters_faced : 0; if (bf >= size) { complete = true; break; } }
+  if (!complete) return [];
+  return judgePitching(pitchingCounts(out), sport, level, overrides).parts
+    .filter((p) => p.key === "first_pitch_strike_pct" || p.key === "two_ball_pct" || p.key === "bb_pct")
+    .map((p) => ({ key: p.key, status: p.status }));
 }
