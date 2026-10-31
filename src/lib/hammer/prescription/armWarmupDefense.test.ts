@@ -32,7 +32,7 @@ describe('Fix 3: warm-up throws come from the arm card', () => {
 });
 
 describe('Fix 4: defense days keep throwing', () => {
-  const ready = { modality: 'throwing', status: 'ready', side: null };
+  const ready: { modality: string; status: string; side?: string | null } = { modality: 'throwing', status: 'ready', side: null };
   it('restores a microcycle-only off-day throwing card on a defense day', () => {
     const out = withDefenseDayThrowing([{ modality: 'defense', status: 'ready' }, { modality: 'throwing', status: 'off-day' }], [{ modality: 'defense', status: 'ready' }, ready]);
     expect(out[1].status).toBe('ready');
