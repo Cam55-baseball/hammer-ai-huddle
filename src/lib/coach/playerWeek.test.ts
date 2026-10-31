@@ -24,4 +24,6 @@ describe('canonical player week',()=>{
     expect(playerWeekCards(d)[0].status).toBe('partial');expect(playerWeekCards(d)[0].activities[0].results).toEqual(['Set 1: Reps: 5']);
   });
   it('missing plan never invents cards or completion',()=>{const d=base();d.plan={state:'unavailable'};expect(playerWeekCards(d)).toEqual([]);});
+  it('keeps coach exercises in their original sent card without duplicate slot cards',()=>{const d=base();d.prescriptions=[{...rx,coach_rx:'coach1'}];d.coachWorkouts=[{id:'coach1',title:'Coach strength',category:'lift',status:'added',cancelled_at:null,exercises:[]}];expect(playerWeekCards(d).map(c=>c.title)).toEqual(['Coach strength']);});
+  it('joins an unambiguous saved exercise to its prescription and does not duplicate it',()=>{const d=base();d.prescriptions=[rx];d.plan.blocks=[{modality:'strength',title:'Strength',status:'ready',durationMin:10,because:[],roadmapReason:'',drills:[{name:'Squat',slug:'squat',dosage:'3 × 5',stage:null,cue:null}]}];expect(playerWeekCards(d)).toHaveLength(1);expect(playerWeekCards(d)[0].activities[0].id).toBe('rx1');});
 });

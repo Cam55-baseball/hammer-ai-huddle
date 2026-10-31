@@ -1,0 +1,3 @@
+CREATE OR REPLACE FUNCTION public.coach_week_rx_lineage(_athlete uuid,_from date) RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public AS $$ BEGIN IF NOT public._coach_training_access(_athlete) THEN RETURN '{}'::jsonb; END IF; RETURN COALESCE((SELECT jsonb_object_agg(id::text,why_payload->>'coach_rx') FROM public.wk_prescriptions WHERE user_id=_athlete AND plan_date BETWEEN _from AND _from+6 AND why_payload ? 'coach_rx'),'{}'::jsonb); END $$;
+REVOKE ALL ON FUNCTION public.coach_week_rx_lineage(uuid,date) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.coach_week_rx_lineage(uuid,date) TO authenticated,service_role;

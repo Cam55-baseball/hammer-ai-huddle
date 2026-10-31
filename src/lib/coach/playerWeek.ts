@@ -4,7 +4,7 @@ import type { SavedCoachPlan } from './planHistory';
 
 export type WorkStatus = 'done' | 'partial' | 'not_done' | 'skipped' | 'removed' | 'rest';
 export const WORK_STATUS: Record<WorkStatus, string> = { done: 'Done ✓', partial: 'Partly done', not_done: 'Not done', skipped: 'Skipped (allowed)', removed: 'Removed by coach', rest: 'Rest day' };
-interface Prescription { id: string; slot: string; movement_name: string; movement_slug: string; sets: number | null; reps: number | null; status: string; replaced_by_coach_rx: string | null; dosage_unit: string | null }
+interface Prescription { id: string; slot: string; movement_name: string; movement_slug: string; sets: number | null; reps: number | null; status: string; replaced_by_coach_rx: string | null; dosage_unit: string | null; coach_rx?: string | null }
 interface Task { task_id: string; side: string | null; completed: boolean; outcome: string | null; name: string; dosage: string; log?: { rounds?: Record<string, unknown>[]; fields?: { key: string; label: string; unit: string | null }[] } }
 export interface WeekDay { date: string; plan: SavedCoachPlan; restDay: boolean; prescriptions: Prescription[]; logs: (WorkoutActual & { prescription_id: string; load_used?: number | null })[]; tasks: Task[]; coachWorkouts: { id: string; title: string; category: string; status: string; cancelled_at: string | null; exercises: {name?: string; movement_name?: string; slug?: string; movement_slug?: string; sets?: number; reps?: number}[] }[] }
 export interface WeekResult { state: 'ok' | 'denied'; sport?: string; days: WeekDay[] }
@@ -45,6 +45,8 @@ export function playerWeekCards(day: WeekDay): WeekCard[] {
   };
   const cards: WeekCard[] = (day.plan.blocks ?? []).filter(b => (b.status==='ready' || b.replacedByCoachRx) && (b.modality!=='game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES)).map((b,index) => {
     const activities: WeekActivity[] = b.drills.map((drill,i) => {
+      const matches = day.prescriptions.filter(p => !used.has(p.id) && !p.coach_rx && p.movement_name === drill.name && (drill.slug ? p.movement_slug === drill.slug : true));
+      if (matches.length === 1 && !b.replacedByCoachRx) return rxActivity(matches[0]);
       const slug = (drill.slug ?? drill.name).toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80);
       const side = (b as typeof b & {side?:string}).side ?? null;
       const task = day.tasks.find(t => t.task_id===`${b.modality}:${slug}` && t.side===side);
@@ -52,13 +54,20 @@ export function playerWeekCards(day: WeekDay): WeekCard[] {
     });
     return {id:`block:${index}`,title:b.title,status:b.replacedByCoachRx?'removed':aggregate(activities),activities};
   });
+  for (const coach of day.coachWorkouts) {
+    const rows = day.prescriptions.filter(p => p.coach_rx === coach.id);
+    if (rows.length) {
+      const activities = rows.map(rxActivity);
+      cards.push({id:coach.id,title:coach.title,status:coach.cancelled_at?'removed':aggregate(activities),activities});
+    }
+  }
   const slots = new Map<string,WeekActivity[]>();
   day.prescriptions.forEach(p => { if (used.has(p.id)) return; const list=slots.get(p.slot) ?? []; list.push(rxActivity(p)); slots.set(p.slot,list); });
   for (const [slot,activities] of slots) cards.push({id:`rx:${slot}`,title:({lift:'Lifts',ub_primer:'Power Primer',bat_speed:'Bat speed',conditioning:'Conditioning',speed:'Speed'} as Record<string,string>)[slot] ?? slot.replace(/_/g,' '),status:aggregate(activities),activities});
   for (const coach of day.coachWorkouts) {
     if (!['accepted','added','replaced','cancelled','removed'].includes(coach.status) && !coach.cancelled_at) continue;
     // Canonical prescription rows already show accepted exercises and exact logs.
-    if (coach.cancelled_at || ['cancelled','removed'].includes(coach.status)) cards.push({id:coach.id,title:coach.title,status:'removed',activities:coach.exercises.map((e,i)=>({id:`${coach.id}:${i}`,name:e.name ?? e.movement_name ?? 'Exercise',dosage:'',status:'removed',results:[]}))});
+    if (!cards.some(c => c.id===coach.id) && (coach.cancelled_at || ['cancelled','removed'].includes(coach.status))) cards.push({id:coach.id,title:coach.title,status:'removed',activities:coach.exercises.map((e,i)=>({id:`${coach.id}:${i}`,name:e.name ?? e.movement_name ?? 'Exercise',dosage:'',status:'removed',results:[]}))});
   }
   return cards;
 }
