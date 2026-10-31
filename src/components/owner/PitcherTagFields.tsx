@@ -29,7 +29,7 @@ export function PitcherTagFields({ draft, set }: { draft: Draft; set: (k: string
   const num = (v: string) => (v === "" ? null : Number(v));
   return <fieldset className="grid grid-cols-2 gap-2 rounded-md border border-border/60 p-3 sm:col-span-2" aria-label="Pitcher tags">
     <legend className="px-1 text-sm font-semibold">Pitcher tags</legend>
-    <div><Label>Mound type</Label><Select value={draft.pitch_mound_type ?? "none"} onValueChange={v => { set("pitch_mound_type", v === "none" ? null : v); if (v === "shortbox" || v === "shortbox_circle") { set("pitch_distance_fraction", SHORTBOX_FRACTION); set("pitch_distance_feet", Math.round(FULL_DISTANCE_FT[v === "shortbox_circle" ? "softball" : "baseball"] * SHORTBOX_FRACTION)); } }}>
+    <div><Label>Mound type</Label><Select value={draft.pitch_mound_type ?? "none"} onValueChange={v => { set("pitch_mound_type", v === "none" ? null : v); if (v === "shortbox" || v === "shortbox_circle") { set("pitch_distance_fraction", Math.round(SHORTBOX_FRACTION * 100) / 100); set("pitch_distance_feet", Math.round(FULL_DISTANCE_FT[v === "shortbox_circle" ? "softball" : "baseball"] * SHORTBOX_FRACTION)); } }}>
       <SelectTrigger aria-label="Mound type"><SelectValue /></SelectTrigger>
       <SelectContent><SelectItem value="none">Not a pitching drill</SelectItem>{MOUND_TYPES.map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent></Select></div>
     <div><Label>Intensity</Label><Select value={draft.pitch_intensity ?? "none"} onValueChange={v => set("pitch_intensity", v === "none" ? null : v)}>
