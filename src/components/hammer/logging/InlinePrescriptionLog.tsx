@@ -1,5 +1,6 @@
 import { jumpMeasure, timedMobilityMeasure, ownerExerciseMeasure, fieldsForMeasure, declaredCount, displayDistance, storeDistance } from "@/lib/logging/measureType";
 import { useFocusExercise } from "../cards/FocusSession";
+import { SprintRepFeedback } from "./SprintRepFeedback";
 import { ExerciseTimer } from "../cards/ExerciseTimer";
 import { ActivityBasics } from "../cards/ActivityBasics";
 import { ExerciseTools } from "../cards/ExerciseTools";
@@ -198,6 +199,8 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   // never hydrate stale fields from the pre-swap draft.
   const key = `hammer-log-draft:${rx.id}:${rx.movement_slug}`;
   const [rounds, setRounds] = useState<Draft>(() => seed(spec));
+  const [extraReps, setExtraReps] = useState(0);
+  const [feedbackRows, setFeedbackRows] = useState<Set<number>>(() => new Set());
   const onSynced = useCallback(() => {
     if (!user?.id) return;
     qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
@@ -301,6 +304,10 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     {!focus.active && !isSprint && (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank/.test(rx.movement_slug)) && <RestTimer label="Rest between sets" seconds={restBand.min} maxSeconds={restBand.max} />}
     {isSprint && <>{!focus.active && <RestTimer label="Rest after each run set" seconds={sprintSeconds} />}<p className="text-xs text-muted-foreground">{sprintRestWhy(rx.distance_feet) ?? "Run distance not entered — rest time is not yet set."}</p></>}
     {!focus.active && basesPerRep && <ConditioningBaseRest basesPerRep={basesPerRep} />}
+    {repFeedback && (() => { const row = focus.active ? focus.row : Math.min(rowsNow - 1, Math.max(0, [...Array(rowsNow).keys()].find(i => !feedbackRows.has(i)) ?? rowsNow - 1)); const t = Number(rounds[row]?.time); return <SprintRepFeedback userId={user?.id} prescriptionId={rx.id} planDate={rx.plan_date} row={row}
+      kind={rx.slot === "speed" ? "max_sprint" : "repeat_sprint"} repFeet={rx.distance_feet as number} prescribedReps={spec.rows} seconds={t > 0 ? t : null} extraUsed={extraReps}
+      onSaved={i => setFeedbackRows(p => p.has(i) ? p : new Set(p).add(i))} onStop={() => { void autosave.flush(); focus.end(); }}
+      onAddMore={n => { setExtraReps(e => e + n); persist([...rounds, ...Array.from({ length: n }, () => Object.fromEntries(spec.fields.map(f => [f.key, ""])))]); }} />; })()}
     <div className="grid gap-1.5 px-1 text-[10px] uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
       <span>Set</span>{spec.fields.map((f) => <span key={f.key}>{f.label}{f.unit && f.key !== "time" ? ` (${f.unit})` : ""}{f.key === "time" && f.prefill ? ` · target ${formatTime(timeKindFor({ stopwatch, targetSeconds: f.prefill }), f.prefill)}` : ""}</span>)}
     </div>
