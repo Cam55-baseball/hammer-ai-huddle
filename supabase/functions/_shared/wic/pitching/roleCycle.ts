@@ -125,7 +125,8 @@ export const minorityAllowance = (majorityKept: number) => Math.floor(majorityKe
 /** Week checks used by the simulations. Returns plain-word violations. */
 export function weekViolations(sport: Sport, role: PitchRole, days: readonly { date: string; day: CycleDay }[]): string[] {
   const out: string[] = [];
-  const mound = days.filter((d) => moundWork(sport, d.day)).length;
+  // Game outings are real mound/circle throws and count toward the minimum.
+  const mound = days.filter((d) => moundWork(sport, d.day) || d.day === "outing" || d.day === "start").length;
   if (mound < MOUND_MINIMUM_PER_WEEK) out.push(`only ${mound} ${sport === "softball" ? "circle" : "mound"} days`);
   for (let k = 1; k < days.length; k++) {
     const prev = days[k - 1].day, cur = days[k].day;

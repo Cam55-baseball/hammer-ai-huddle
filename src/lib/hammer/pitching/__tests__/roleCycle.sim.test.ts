@@ -31,7 +31,7 @@ describe("owner Oct 31 role cycle — 8-week simulations", () => {
     for (let w = 0; w < 8; w++) {
       const week = days.slice(w * 7, w * 7 + 7);
       expect(weekViolations(sport, role, week)).toEqual([]);
-      expect(week.filter(d => moundWork(sport, d.day)).length).toBeGreaterThanOrEqual(3);
+      expect(week.filter(d => moundWork(sport, d.day) || d.day === "outing" || d.day === "start").length).toBeGreaterThanOrEqual(3);
       expect(week.some(d => d.day === "shortbox")).toBe(true);
     }
     const sample = days.slice(7, 14).map(d => `${d.date}: ${dayLabel(sport, d.day)}`);
