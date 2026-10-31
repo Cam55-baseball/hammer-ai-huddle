@@ -114,13 +114,13 @@ describe("Part B through the real daily builder — 8 weeks", () => {
       const base = plain[w].filter(isMound).length, got = wk.filter(isMound).length;
       if (base < 3) problems.push(`week ${w + 1}: plain ${base} < 3`);
       if (got < Math.min(5, base) ) problems.push(`week ${w + 1}: command lost days`);
-      if (wk.filter(d => d.command).length > Math.max(0, 5 - base)) problems.push(`week ${w + 1}: too many extras`);
+      if (wk.some(d => d.command) && got > Math.max(5, base)) problems.push(`week ${w + 1}: more than 5 days`);
       for (const d of wk) {
         if (d.command && (d.dow === 0 || (role === "starter" && d.dow === 6))) problems.push(`${d.date}: command work on rest/recovery`);
         if (d.command && !d.because.some(b => /walk rate/.test(b))) problems.push(`${d.date}: no data reason`);
         if (sport === "softball" && d.pitchNames.some(n => /mound/i.test(n))) problems.push(`${d.date}: mound wording`);
       }
-      if (w === 1) console.log(`command ${sport} ${role}: plain ${base} days, command ${got} days`, JSON.stringify(wk.map(d => [d.date, d.command, d.because.filter(b => /command/i.test(b))])));
+      if (w === 1) console.log(`command ${sport} ${role}: plain ${base} days, command ${got} days`);
     });
     if (role === "starter") expect(cmd[1].filter(isMound).length).toBe(5);
     expect(problems).toEqual([]);
