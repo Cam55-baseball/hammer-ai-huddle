@@ -1085,7 +1085,7 @@ function HammerDailyPlanBody({
             ...wkRx.grouped.speedCard.length ? ["Speed"] : [],
             ...wkRx.grouped.batSpeedCard.length ? ["Bat speed"] : [],
             ...wkRx.grouped.conditioningCard.length ? [combinedBaseRunning ? "Base running & conditioning" : "Conditioning"] : [],
-            ...wkRx.grouped.lifts.length ? ["Lift / tissue care"] : [],
+            ...wkRx.grouped.lifts.length ? [liftIsTissueCare ? "Tissue care" : "Lift / tissue care"] : [],
           ])]} />
       </BeforeYouStartSection>
     <Card id="hammer-plan" className="scroll-mt-24">
@@ -1379,7 +1379,7 @@ function HammerDailyPlanBody({
               </ErrorBoundary>
               {coachCards(["conditioning"])}
               <ErrorBoundary label="wk-lifts">
-                <PocketCard id="lift" progress={progressOf(wkRx.grouped.lifts)} intro={POCKET_INTROS.lift} category="Full-body lift" focus={null} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
+                <PocketCard id="lift" progress={progressOf(wkRx.grouped.lifts)} intro={POCKET_INTROS.lift} category={liftIsTissueCare ? "Tissue care" : "Full-body lift"} focus={null} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
                   {() => <WkLiftsCard pocket />}
                 </PocketCard>
               </ErrorBoundary>

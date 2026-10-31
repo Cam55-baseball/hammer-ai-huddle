@@ -153,10 +153,10 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
 
 const CATEGORY_ABBR: Record<string, string> = {
   Hitting: "HIT", Defense: "DEF", Baserunning: "BR", Throwing: "THR", Pitching: "PIT", Bunting: "BUNT",
-  Lifts: "LIFT", "Lift / tissue care": "LIFT", Speed: "SPD", "Bat speed": "BAT", Conditioning: "COND",
+  Lifts: "LIFT", "Lift / tissue care": "LIFT", "Tissue care": "CARE", Speed: "SPD", "Bat speed": "BAT", Conditioning: "COND",
   "Base running & conditioning": "COND", Recovery: "REC",
 };
-const CATEGORY_LABEL: Record<string, string> = { Lifts: "Full-body lift", "Lift / tissue care": "Full-body lift" };
+const CATEGORY_LABEL: Record<string, string> = { Lifts: "Full-body lift", "Lift / tissue care": "Full-body lift", "Tissue care": "Tissue care" };
 const categoryLabel = (c: string) => CATEGORY_LABEL[c] ?? c;
 const CHIP = "rounded border font-normal px-1 py-[1px] text-[9px] leading-none";
 
