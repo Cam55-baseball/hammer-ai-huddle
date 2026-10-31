@@ -2612,7 +2612,7 @@ export function buildHammerDailyPlan(
     const defenseToday=prehabbed.some(x=>x.modality==='defense'&&x.status==='ready');
     return [pitching,...(throwingDrills.length&&(!access.pitcherOnly||defenseToday)?[{...b,drills:throwingDrills,steps:drillsToSteps(throwingDrills),title:'Throwing — position work within your shared arm budget',gamePlanTemplate:null}]:[])];
   });
-  const blocks=access?.hasPitching?finalArmGuard(unguardedBlocks,{sport,role:access.pitcherOnly?'pitcher':'two_way',age:ctx.get<number>('age_years')?.value??null,date:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,history:roadmapInputs.armHistory,limitPitching:roadmapInputs.pitcherOutings?.limitPitching===true}).map(b=>({...b,steps:drillsToSteps(b.drills)})):unguardedBlocks;
+  const blocks=access?.hasPitching?finalArmGuard(unguardedBlocks,{sport,role:access.pitcherOnly?'pitcher':'two_way',age:ctx.get<number>('age_years')?.value??null,date:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,history:roadmapInputs.armHistory,limitPitching:roadmapInputs.pitcherOutings?.limitPitching===true,primaryFocus:roadmapInputs.pitcherOutings?.primaryFocus??null}).map(b=>({...b,steps:drillsToSteps(b.drills)})):unguardedBlocks;
   const warmed = withWarmupThrows(blocks);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
