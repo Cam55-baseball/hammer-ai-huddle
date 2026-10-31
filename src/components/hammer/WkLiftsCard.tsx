@@ -190,7 +190,13 @@ export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
             ) : items.length === 0 ? (
               <p className="text-xs text-muted-foreground py-2">Tap refresh to generate today's full-body template.</p>
             ) : (
-              items.map((rx) => (
+              <>
+              {items.some((rx) => (rx.why_payload as any)?.ease_back) ? (
+                <p data-testid="lift-ease-back-note" className="rounded-md border border-border/60 bg-card p-2 text-xs text-foreground">
+                  Easing back in: same sets, lighter weight — about 65–70%, and stop each set with 3 or more reps left in the tank.
+                </p>
+              ) : null}
+              {items.map((rx) => (
                 <div key={rx.id} className="space-y-1">
                   <WkPrescriptionCard rx={rx} phaseDisplay={phaseDisplay} phaseKey={phaseKey} allowSwap
                     extraLogging={rx.load_pct ? <TestedMaxLog movementSlug={rx.movement_slug} movementName={rx.movement_name} /> : null} />
