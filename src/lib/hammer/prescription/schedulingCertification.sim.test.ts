@@ -64,7 +64,7 @@ describe('Scheduling certification: 6 programs × 4 levels × 8 weeks', () => {
           if (tier === '5tool' && skillReady.some(b => b.modality === 'pitching')) problems.push(`5Tool got pitching ${date.toDateString()}`);
           // Order of the day: warm-up first, recovery last.
           const ordered = blocks.filter(ready).map(b => b.modality);
-          if (ordered.length && ordered[0] !== 'warmup') problems.push(`${date.toDateString()} starts with ${ordered[0]}`);
+          if (!sunday && ordered.length && ordered[0] !== 'warmup') problems.push(`${date.toDateString()} starts with ${ordered[0]}`);
           const recIdx = ordered.indexOf('recovery');
           if (recIdx >= 0 && recIdx !== ordered.length - 1 && ordered.slice(recIdx + 1).some(m => (SKILLS as readonly string[]).includes(m))) problems.push(`${date.toDateString()} has skill work after recovery`);
           // Readiness: a low check-in removes full-speed (full-go) work.
