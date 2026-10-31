@@ -52,10 +52,9 @@ export function cycleDay(i: CycleInput): CycleDay {
   }
   // Bullpen arms and closers.
   if (i.outingDates.includes(i.date)) return "outing";
-  const backToBack = since === 1 && past[1] != null && between(past[1], last!) === 1;
+  const backToBack = past[1] != null && between(past[1], last!) === 1;
   if (since === 1) return "day_after";
-  if (since === 2 && backToBack === false && past[1] != null && between(past[1], last!) === 1) return "rest";
-  if (since === 2 && past[1] != null && between(past[1], last!) === 1) return "day_after";
+  if (since === 2 && backToBack) return "day_after"; // 2nd recovery day after back-to-back outings
   if (i.gameDates.includes(i.date)) return "available";
   const dow = new Date(ms(i.date)).getUTCDay();
   if (dow === 0) return "rest";
