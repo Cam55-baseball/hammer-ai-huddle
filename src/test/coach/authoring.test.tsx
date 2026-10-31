@@ -10,6 +10,7 @@ function Editor({ changed }: { changed: (rows: Exercise[]) => void }) {
 }
 afterEach(cleanup);
 describe("coach authoring preserves declared catalog metadata", () => {
+  it('saves exercise notes through the existing editor',()=>{const changed=vi.fn();render(<Editor changed={changed}/>);fireEvent.click(screen.getByRole('button',{name:'My own item'}));fireEvent.change(screen.getByLabelText('Notes'),{target:{value:'Stay relaxed'}});expect(changed.mock.lastCall?.[0][0].notes).toBe('Stay relaxed');});
   it("keeps exact catalog identity, dose, measure and complete gear alternatives", () => {
     const changed = vi.fn(); render(<Editor changed={changed} />);
     fireEvent.change(screen.getByRole("combobox", { name: "Exercise Vault item" }), { target: { value: "catalog_drill" } });

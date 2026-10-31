@@ -228,6 +228,14 @@ Deno.serve(async (req) => {
       // rather than quietly replacing another card in that same category.
       if(blocks.length>1) return json({applied:false,reasons:['This day has multiple cards of that kind. Keep the saved cards and edit individual activities with your existing controls.']});
       const block = blocks[0] ?? null;
+      if(category==='warmup') return json({applied:false,reasons:['The full warm-up protects the work that follows. Keep its preparation steps and use the existing activity controls for optional work.']});
+      if(body.target?.prescription_ids){
+        const canonical=(revisionPlaceholder:unknown)=>revisionPlaceholder;
+        const current=await admin.from('wk_prescriptions').select('id').eq('user_id',pid).eq('plan_date',date).in('slot',categorySlots(category)).is('replaced_by_coach_rx',null).not('status','in','(completed,skipped)');
+        if(current.error)throw current.error;
+        const actual=(current.data ?? []).map((r:any)=>r.id).sort();const selected=Array.isArray(body.target.prescription_ids)?[...body.target.prescription_ids].sort():[];
+        if(JSON.stringify(actual)!==JSON.stringify(selected))return json({applied:false,reasons:['The card changed, or includes other work. Refresh before editing.']});
+      }
       if(body.target?.block_index != null && snapshot.payload?.blocks?.[body.target.block_index] !== undefined && JSON.stringify(snapshot.payload.blocks[body.target.block_index])!==JSON.stringify(block)) return json({applied:false,reasons:['The selected card changed. Refresh before editing.']});
       const ownItems = certifyCoachOwnItems(body.exercises);
       if(!ownItems.ok) return json({applied:false,reasons:ownItems.reasons});
