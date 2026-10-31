@@ -14,6 +14,7 @@ import { ClipboardList, Loader2, CalendarDays } from "lucide-react";
 import { useManageSentWorkouts } from "@/hooks/useCoachPrescriptions";
 import { scheduleSummary, type ScheduleInput } from "@/lib/coachRx/schedule";
 import { actualResultText, type WorkoutActual } from "@/lib/coachRx/results";
+import { SentSessionControls } from './SentSessionControls';
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Not yet answered",
@@ -30,7 +31,7 @@ export function CoachPrescriptionStatus() {
 
   if (isLoading) return <p role="status" className="text-sm text-muted-foreground">Loading sent workouts…</p>;
   if (error) return <p role="alert" className="text-sm text-destructive">Couldn't load sent workouts. Try again.</p>;
-  if (rows.length === 0) return <p className="text-sm text-muted-foreground">No sent workouts yet.</p>;
+  if (rows.length === 0) return <><p className="text-sm text-muted-foreground">No sent workouts yet.</p><SentSessionControls/></>;
   const perform = async (action: Promise<unknown>) => { try { await action; } catch { /* Mutation reports the error. */ } };
 
   const fmtDay = (iso: string) =>
@@ -45,6 +46,7 @@ export function CoachPrescriptionStatus() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
+        <SentSessionControls/>
         {rows.map((rx) => {
           const future = rx.status === "pending" && !rx.cancelled_at && rx.plan_date >= today;
           const sched = scheduleSummary({

@@ -4,6 +4,7 @@ import {describe,it,expect,vi} from 'vitest';
 const rpc=vi.hoisted(()=>vi.fn());
 vi.mock('@/hooks/useAuth',()=>({useAuth:()=>({user:{id:'coach'}})}));
 vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc}}));
+vi.mock('@/hooks/useSessionControls',()=>({useSessionControls:()=>({controls:[],isLoading:false})}));
 import {CoachPlayerWeek} from './CoachPlayerWeek';
 describe('week sharing permission',()=>{
  it('stops at a denied training read and never requests workout lineage',async()=>{
