@@ -33,3 +33,22 @@ describe("owner Oct 31 mound/circle minimum and command days", () => {
     expect(r.extra).toEqual([]); expect(r.blocked[0].reason).toMatch(/limit/);
   });
 });
+
+import { commandStatsFromLines } from "../../../../../supabase/functions/_shared/wic/pitching/roleCycle";
+describe("command stats from logged pitching game lines", () => {
+  // One batter: ball, ball, ball, ball → walk, no first-pitch strike, reached two balls.
+  const walk = (n: number) => [0, 1, 2, 3].map((b) => ({ batter_opportunity: n, count_balls: b, count_strikes: 0, result: "ball", batter_result: b === 3 ? "BB" : null }));
+  const game = { batters_faced: 4, pitch_count: 16, pitches: [1, 2, 3, 4].flatMap(walk) };
+  it("incomplete window or unknown level gives no stats (never adds a day)", () => {
+    expect(commandStatsFromLines([game], "baseball", null, {}, 4)).toEqual([]);
+    expect(commandStatsFromLines([game], "baseball", "high_school" as never, {}, 10)).toEqual([]);
+    expect(commandStatsFromLines([], "baseball", "high_school" as never, {}, 4)).toEqual([]);
+  });
+  it("a complete window with poor first-pitch strikes and two-ball counts flags command", () => {
+    const stats = commandStatsFromLines([game], "baseball", "high_school" as never, {}, 4);
+    const by = Object.fromEntries(stats.map((s) => [s.key, s.status]));
+    expect(by.first_pitch_strike_pct).toBe("Building");
+    expect(by.two_ball_pct).toBe("Building");
+    expect(commandStruggle({ stats }).struggling).toBe(true);
+  });
+});
