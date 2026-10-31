@@ -1018,7 +1018,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         const phase=pitchingPhase??(seasonPhase==='off'?'os_q1':seasonPhase==='pre'?'preseason':seasonPhase==='in'?'in_season':'post_season');
         eass.drills=[...care,...(planDate&&!eassCtx.isRecoveryDay?windmillPlanningDrills({date:planDate,phase,age:ageYears,readiness:readinessScore,armPain:armSore||injuryRegions.some(r=>['shoulder','elbow','ucl','forearm'].includes(r)),equipment:[...proj.equipmentList],history:armHistory,outings:pitcherOutings}):[])];
       }
-      if(armRole==='two_way') {
+      if(armRole==='two_way'||armRole==='pitcher') {
         const position=normalizePosition(declaredPos)==='pitcher'?normalizePosition(ctx.get('position_secondary')?.value):normalizePosition(declaredPos);
         const positionWork=buildEassPrescription({...eassCtx,position:position==='pitcher'?'utility':position,isThrowingDay:!pitcherOutings?.startsToday&&!pitcherOutings?.startsTomorrow&&!pitcherOutings?.pitchedYesterday,isRecoveryDay:eassCtx.isRecoveryDay||!!pitcherOutings?.startsToday||!!pitcherOutings?.startsTomorrow});
         eass.drills=[...eass.drills.map(d=>({...d,armCard:'pitching' as const})),...positionWork.drills.filter(d=>!['band_prep','cooldown','recovery'].includes(d.category)).map(d=>({...d,armCard:'throwing' as const}))];
@@ -2494,7 +2494,7 @@ export function buildHammerDailyPlan(
   // and trims activation/secondary volume. Runs BEFORE schedule modulation so
   // that games/tournaments still override an already-off-day modality when
   // needed (schedule posture stays supreme over microcycle rest).
-  const cycled = applyWeeklyMicrocycle(ordered, microcycle);
+  const cycled = withDefenseDayThrowing(applyWeeklyMicrocycle(ordered, microcycle), ordered);
 
   // Timestamp-driven recovery windows (24/48/72/96h) — trims lift/speed/bat-
   // speed/throwing blocks based on when they were last completed. Never
@@ -2609,9 +2609,11 @@ export function buildHammerDailyPlan(
     const pitchingDrills=b.drills.filter(d=>d.armCard!=='throwing');
     const throwingDrills=b.drills.filter(d=>d.armCard==='throwing');
     const pitching={...b,drills:pitchingDrills,steps:drillsToSteps(pitchingDrills),modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
-    return [pitching,...(throwingDrills.length?[{...b,drills:throwingDrills,steps:drillsToSteps(throwingDrills),title:'Throwing — position work within your shared arm budget',gamePlanTemplate:null}]:[])];
+    const defenseToday=prehabbed.some(x=>x.modality==='defense'&&x.status==='ready');
+    return [pitching,...(throwingDrills.length&&(!access.pitcherOnly||defenseToday)?[{...b,drills:throwingDrills,steps:drillsToSteps(throwingDrills),title:'Throwing — position work within your shared arm budget',gamePlanTemplate:null}]:[])];
   });
   const blocks=access?.hasPitching?finalArmGuard(unguardedBlocks,{sport,role:access.pitcherOnly?'pitcher':'two_way',age:ctx.get<number>('age_years')?.value??null,date:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,history:roadmapInputs.armHistory}).map(b=>({...b,steps:drillsToSteps(b.drills)})):unguardedBlocks;
+  const warmed = withWarmupThrows(blocks);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
@@ -2635,8 +2637,8 @@ export function buildHammerDailyPlan(
     console.debug("[dailyPlan] gp-signal bias →", gpBiasTags);
   }
   return {
-    blocks: enforceSkillStageOrder(placeBreathing(blocks, (d) => drillsToSteps(d))),
-    sanity: validatePlanSanity({ restDay: fullRestDay, work: blocks.filter(b => b.status === 'ready').flatMap(b => b.drills.map(d => ({ category: b.modality, slug: d.slug }))) }),
+    blocks: enforceSkillStageOrder(placeBreathing(warmed, (d) => drillsToSteps(d))),
+    sanity: validatePlanSanity({ restDay: fullRestDay, work: warmed.filter(b => b.status === 'ready').flatMap(b => b.drills.map(d => ({ category: b.modality, slug: d.slug }))) }),
     practiceLoad,
     seasonPhase: proj.seasonPhase,
     missingnessCount: blocks.filter((b) => b.status === "awaiting-input").length,
@@ -2695,3 +2697,44 @@ function countEarnedSkillDays(
 
 
 
+
+/** Owner Fix 4: a defense day keeps its throwing card when only the weekly microcycle switched it off.
+ *  The restored card then passes every later recovery, schedule, Pitch Smart and arm-budget layer. */
+export function withDefenseDayThrowing<B extends {modality:string;status:string;side?:string|null;because?:readonly string[]}>(cycled:readonly B[],ordered:readonly B[]):B[]{
+  if(!cycled.some(b=>b.modality==='defense'&&b.status==='ready'))return [...cycled];
+  return cycled.map(b=>{
+    if(b.modality!=='throwing'||b.status!=='off-day')return b;
+    const orig=ordered.find(o=>o.modality==='throwing'&&(o.side??'x')===(b.side??'x'));
+    return orig&&orig.status==='ready'?{...orig,because:[...(orig.because??[]),'Defense days include throwing, inside your arm limits.']}:b;
+  });
+}
+
+const ARM_PREP=/band|neural prep|wrist snap|lat \+ hip/i;
+const WARMUP_TOSS=/warm-up toss/i;
+const THROW_ROW=(d:DrillStep)=>!!d.armEvent||/toss|throw|pitch/i.test(d.name)&&!ARM_PREP.test(d.name)&&!/cooldown|cool-down/i.test(d.name);
+/** Owner Fix 3: on a day whose Throwing or Pitching card has throws, its arm prep and easy-to-building
+ *  warm-up throws move into the full-body warm-up. They are the card's own rows (same counts, same arm
+ *  budget, already guarded) — never extra throws — and they are logged on that arm card. */
+export function withWarmupThrows<B extends {modality:string;status:string;title:string;drills:readonly DrillStep[];steps:readonly string[]}>(blocks:readonly B[]):B[]{
+  const wi=blocks.findIndex(b=>b.modality==='warmup'&&b.status==='ready');
+  if(wi<0)return [...blocks];
+  const out=[...blocks];const moved:DrillStep[]=[];
+  out.forEach((b,i)=>{
+    if((b.modality!=='throwing'&&b.modality!=='pitching')||b.status!=='ready'||!b.drills.some(THROW_ROW))return;
+    const card=b.modality==='pitching'?'Pitching':'Throwing';
+    const take=(d:DrillStep)=>d.stage!=='full_go'&&(ARM_PREP.test(d.name)||WARMUP_TOSS.test(d.name));
+    const prep=b.drills.filter(take);
+    const rest=b.drills.filter(d=>!take(d));
+    if(!rest.some(THROW_ROW))return;
+    const note=`Log these on your ${card} card.`;
+    const rows:DrillStep[]=prep.map(d=>({...d,name:ARM_PREP.test(d.name)?`Arm prep — ${d.name}`:`Warm-up throws — ${d.name}`,cue:[d.cue,note].filter(Boolean).join(' ')}));
+    if(!prep.some(d=>WARMUP_TOSS.test(d.name)))rows.push({name:'Warm-up throws — easy to building',dosage:`Start your ${card} card's first throws easy and build up. Not extra throws.`,stage:'prep',cue:note,stopIf:'Stop if your arm hurts.'});
+    if(!prep.some(d=>ARM_PREP.test(d.name)))rows.unshift({name:'Arm prep — arm circles and band pull-aparts',dosage:'1 × 10 each, easy',stage:'prep',cue:note,stopIf:'Stop if your arm hurts.'});
+    moved.push(...rows);
+    out[i]={...b,drills:rest,steps:['Your arm prep and warm-up throws are in the full-body warm-up. Log their counts here.',...drillsToSteps(rest)]};
+  });
+  if(!moved.length)return out;
+  const w=out[wi];const drills=[...w.drills,...moved];
+  out[wi]={...w,drills,steps:drillsToSteps(drills)};
+  return out;
+}
