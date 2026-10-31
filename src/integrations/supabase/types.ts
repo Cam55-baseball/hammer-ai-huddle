@@ -23909,6 +23909,10 @@ export type Database = {
           unit: string
         }[]
       }
+      coach_athlete_week: {
+        Args: { _athlete: string; _from: string }
+        Returns: Json
+      }
       coach_calibration_summary: { Args: never; Returns: Json }
       coach_connected_to: {
         Args: { _athlete: string; _me: string }

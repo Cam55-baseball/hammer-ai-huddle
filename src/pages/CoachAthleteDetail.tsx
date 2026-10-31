@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { CoachLogForPlayer } from "@/components/coach/CoachLogForPlayer";
 import { CoachCheckinSummary } from "@/components/coach/CoachCheckinSummary";
 import { CoachPlanCard } from "@/components/coach/CoachPlanCard";
+import { CoachPlayerWeek } from "@/components/coach/CoachPlayerWeek";
 import { CoachDisciplineTab } from "@/components/coach/CoachDisciplineTab";
 import { CoachOnSpotAssessment } from "@/components/coach/CoachOnSpotAssessment";
 import { CoachMessageBox } from "@/components/coach/CoachMessageBox";
@@ -69,6 +70,8 @@ export default function CoachAthleteDetail() {
         .eq("status", "accepted")
         .maybeSingle();
       if (!error && data) return true;
+      const { data: trainingAccess, error: trainingError } = await supabase.rpc('_coach_training_access' as never, { _athlete: athleteId } as never);
+      if (!trainingError && trainingAccess === true) return true;
       // Org coaches reach their assigned athletes through org_athlete_assignments
       // (server-checked), not scout_follows — same roster, different doorway.
       const { data: isCoach } = await supabase.rpc("is_coach_of", {
@@ -214,6 +217,7 @@ export default function CoachAthleteDetail() {
           <TabsList className="grid h-auto w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="development">Development</TabsTrigger>
+            <TabsTrigger value="week">Week calendar</TabsTrigger>
             <TabsTrigger value="discipline">Discipline</TabsTrigger>
             <TabsTrigger value="training">Training</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
@@ -234,6 +238,10 @@ export default function CoachAthleteDetail() {
             {athleteId && <CoachCheckinSummary athleteId={athleteId} />}
             {athleteId && <CoachDevelopmentTab athleteId={athleteId} />}
             {athleteId && <CoachOnSpotAssessment athleteId={athleteId} />}
+          </TabsContent>
+
+          <TabsContent value="week" className="space-y-4 pt-4">
+            {athleteId && rosterAccess === true && <CoachPlayerWeek athleteId={athleteId} />}
           </TabsContent>
 
           <TabsContent value="trends" className="space-y-4 pt-4">
