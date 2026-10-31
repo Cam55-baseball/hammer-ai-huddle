@@ -3414,7 +3414,7 @@ const handler = async (req: Request): Promise<Response> => {
                   .contains("placements", ["hammers_today:conditioning"]).limit(100);
                 const gear = new Set(assumedEquipment.map((e) => String(e).trim().toLowerCase()));
                 const pool = ((ownerRows ?? []) as any[])
-                  .filter((r) => ownerConditioningFits(r, { sport, isPitcher: isPitcherAthlete }))
+                  .filter((r) => ownerConditioningFits(r, { sport, isPitcher: isPitcherAthlete, modules: schedulingModules, role: outingFacts?.pitchingRole ?? null }))
                   .filter((r) => (r.equipment ?? []).every((e: string) => gear.has(String(e).trim().toLowerCase())))
                   .sort((a, b) => String(a.id).localeCompare(String(b.id)));
                 if (pool.length) {

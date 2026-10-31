@@ -4,7 +4,11 @@
 // floor. Low readiness halves the rounds (rounded up); rest is never shortened.
 import { sprintRestSeconds } from "../runRest.ts";
 
-export type OwnerConditioningKind = "run" | "base_route";
+export type OwnerConditioningKind = "run" | "base_route" | "sprint" | "shuttle" | "jump" | "carry" | "sled";
+/** Owner Oct 31: yard-measured kinds count toward the 1000-yard session cap; jumps count contacts. */
+export const YARD_KINDS = new Set(["run", "base_route", "sprint", "shuttle", "carry", "sled"]);
+export const RUNNING_KINDS = new Set(["run", "base_route", "sprint", "shuttle"]);
+export const PROGRAMS = [["5tool", "5Tool Player"], ["pitcher", "Complete Pitcher"], ["golden2way", "Golden 2Way"]] as const;
 export interface OwnerConditioningFields {
   conditioning_kind?: string | null;
   work_seconds?: number | null;
@@ -14,6 +18,11 @@ export interface OwnerConditioningFields {
   bases_per_rep?: number | null;
   base_distance_feet?: number | null;
   sports?: string[];
+  contacts?: number | null;
+  load_lbs?: number | null;
+  carry_yards?: number | null;
+  conditioning_programs?: string[] | null;
+  pitch_role_fit?: string[] | null;
 }
 
 const int = (v: unknown, lo: number, hi: number) => typeof v === "number" && Number.isInteger(v) && v >= lo && v <= hi;
@@ -23,12 +32,26 @@ export const sportBaseFeet = (sport: string) => (sport === "softball" ? 60 : 90)
 export function ownerConditioningProblems(r: OwnerConditioningFields): string[] {
   const out: string[] = [];
   const kind = r.conditioning_kind;
-  if (kind !== "run" && kind !== "base_route") return ["a conditioning type (run or base route)"];
+  if (!kind || !["run", "base_route", "sprint", "shuttle", "jump", "carry", "sled"].includes(kind)) return ["a conditioning type"];
   if (!int(r.rounds, 1, 20)) out.push("rounds (1 to 20)");
+  if (kind === "jump") {
+    if (!int(r.contacts, 1, 200)) out.push("contacts per round (1 to 200)");
+    if (!int(r.rest_seconds, 0, 600)) out.push("a rest time (0 to 600 seconds)");
+    return out;
+  }
+  if (kind === "carry" || kind === "sled") {
+    if (!int(r.carry_yards, 1, 200)) out.push("yards per round (1 to 200)");
+    if (typeof r.load_lbs !== "number" || !(r.load_lbs > 0) || r.load_lbs > 1000) out.push("a load in pounds");
+    if (kind === "carry" && !int(r.work_seconds, 1, 600)) out.push("a carry time (1 to 600 seconds)");
+    if (!int(r.rest_seconds, 0, 600)) out.push("a rest time (0 to 600 seconds)");
+    if (int(r.rounds, 1, 20) && int(r.carry_yards, 1, 200) && (r.rounds as number) * (r.carry_yards as number) > 1000) out.push("no more than 1000 yards in total");
+    return out;
+  }
   if (!int(r.work_seconds, 1, 600)) out.push("a work time (1 to 600 seconds)");
   if (!int(r.rest_seconds, 0, 600)) out.push("a rest time (0 to 600 seconds)");
-  if (kind === "run") {
+  if (kind === "run" || kind === "sprint" || kind === "shuttle") {
     if (!int(r.distance_feet, 1, 1200)) out.push("a run distance in feet");
+    else if (int(r.rounds, 1, 20) && (r.rounds as number) * (r.distance_feet as number) > 3000) out.push("no more than 1000 yards in total");
     else {
       const min = sprintRestSeconds(r.distance_feet)!;
       if (int(r.rest_seconds, 0, 600) && (r.rest_seconds as number) < min) out.push(`at least ${min} seconds rest for ${r.distance_feet} ft (1 minute per 10 yards, up to 5)`);
@@ -57,8 +80,13 @@ export function ownerConditioningDose(r: OwnerConditioningFields, lowReadiness: 
 }
 
 /** Who may get this drill: base routes are position-player work; pitchers keep run drills only. */
-export function ownerConditioningFits(r: OwnerConditioningFields, ctx: { sport: string; isPitcher: boolean }): boolean {
+export function ownerConditioningFits(r: OwnerConditioningFields, ctx: { sport: string; isPitcher: boolean; modules?: string[]; role?: string | null; runningOnly?: boolean }): boolean {
   if (!(r.sports ?? []).includes(ctx.sport)) return false;
+  if (ctx.runningOnly !== false && !RUNNING_KINDS.has(String(r.conditioning_kind))) return false;
+  const programs = r.conditioning_programs ?? [];
+  if (programs.length && ctx.modules && !programs.some((p) => ctx.modules!.includes(`${ctx.sport}_${p}`))) return false;
+  const roles = r.pitch_role_fit ?? [];
+  if (ctx.isPitcher && roles.length && ctx.role && !roles.includes(ctx.role)) return false;
   if (ctx.isPitcher && r.conditioning_kind === "base_route") return false;
   return ownerConditioningProblems(r).length === 0;
 }
