@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 export function OrganizationMemberList() {
   const { members } = useOrganization();
@@ -71,6 +73,7 @@ export function OrganizationMemberList() {
                   <span className="text-xs text-muted-foreground">
                     {m.joined_at ? new Date(m.joined_at).toLocaleDateString() : ''}
                   </span>
+                  {m.role_in_org === 'player' && m.status === 'active' && <Button asChild size="sm" variant="outline"><Link to={`/coach/athlete/${m.user_id}`}>Player profile</Link></Button>}
                 </div>
               );
             })}

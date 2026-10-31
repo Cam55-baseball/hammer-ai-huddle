@@ -1,0 +1,55 @@
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { getTodayDate } from '@/utils/dateUtils';
+import { playerWeekCards, weekDates, WORK_STATUS, type WeekResult } from '@/lib/coach/playerWeek';
+
+const dateLabel = (date:string, options:Intl.DateTimeFormatOptions) => new Date(`${date}T12:00:00`).toLocaleDateString('en-US',options);
+export function CoachPlayerWeek({athleteId}:{athleteId:string}) {
+  const {user} = useAuth();
+  const [offset,setOffset] = useState(0);
+  const [selected,setSelected] = useState(getTodayDate());
+  const dates = weekDates(getTodayDate(),offset);
+  const query = useQuery({queryKey:['coach-player-week',user?.id,athleteId,dates[0]],enabled:!!user?.id,staleTime:60_000,
+    queryFn:async ():Promise<WeekResult> => {
+      const {data,error}=await supabase.rpc('coach_athlete_week' as never,{_athlete:athleteId,_from:dates[0]} as never);
+      if(error) throw error;
+      return data as unknown as WeekResult;
+    }});
+  const selectWeek = (n:number) => {setOffset(n);setSelected(weekDates(getTodayDate(),n)[0]);};
+  const active = query.data?.days?.find(d=>d.date===selected);
+  const cards = active ? playerWeekCards(active):[];
+  return <section aria-label="Player week calendar" className="space-y-4">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <h2 className="text-lg font-semibold">Player week</h2>
+      <div className="flex items-center gap-1">
+        <Button variant="outline" size="icon" aria-label="Previous week" title="Previous week" onClick={()=>selectWeek(offset-1)}><ChevronLeft className="h-4 w-4"/></Button>
+        <Button variant="ghost" size="sm" onClick={()=>selectWeek(0)}>This week</Button>
+        <Button variant="outline" size="icon" aria-label="Next week" title="Next week" onClick={()=>selectWeek(offset+1)}><ChevronRight className="h-4 w-4"/></Button>
+        <Button variant="ghost" size="icon" aria-label="Refresh player week" title="Refresh player week" disabled={query.isFetching} onClick={()=>void query.refetch()}><RefreshCw className="h-4 w-4"/></Button>
+      </div>
+    </div>
+    <p className="text-sm text-muted-foreground">{dateLabel(dates[0],{month:'short',day:'numeric'})} – {dateLabel(dates[6],{month:'short',day:'numeric',year:'numeric'})}</p>
+    {query.isLoading ? <p role="status">Loading saved week…</p> : query.error ? <p role="alert" className="text-destructive">Couldn't load this week. Try refresh.</p> : query.data?.state==='denied' ? <p role="alert">Training sharing isn't available for this player.</p> : <>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-7">
+        {dates.map(date=>{const day=query.data?.days?.find(d=>d.date===date);const daily=day?playerWeekCards(day):[];
+          return <div key={date} className={`min-w-0 rounded-md border p-2 ${date===selected?'border-primary bg-accent':'border-border'}`}>
+            <Button className="mb-2 w-full" variant={date===selected?'default':'ghost'} aria-pressed={date===selected} onClick={()=>setSelected(date)} aria-label={`Open ${date}`}>
+              {dateLabel(date,{weekday:'short',day:'numeric'})}
+            </Button>
+            {day?.restDay && <p className="mb-2 text-xs font-semibold">Rest day</p>}
+            {!day || day.plan.state==='unavailable' ? <p className="text-xs text-muted-foreground">No saved plan</p>:null}
+            <ul className="space-y-3">{daily.map(card=><li key={card.id} className="text-xs break-words"><p className="font-semibold">{card.title}</p><p className={card.status==='done'?'text-primary':'text-muted-foreground'}>{WORK_STATUS[card.status]}</p><ul className="mt-1 space-y-1">{card.activities.map(a=><li key={a.id}>{a.name} · {WORK_STATUS[a.status]}</li>)}</ul></li>)}</ul>
+          </div>;})}
+      </div>
+      <div className="space-y-3 border-t border-border pt-4" data-week-day-details>
+        <h3 className="font-semibold">{dateLabel(selected,{weekday:'long',month:'short',day:'numeric'})}{active?.restDay?' · Rest day':''}</h3>
+        {!cards.length && <p className="text-sm text-muted-foreground">{active?.plan.state==='unavailable'?'No plan saved for this day.':'No saved activities for this day.'}</p>}
+        {cards.map(card=><div key={card.id} className="space-y-2 border-b border-border pb-3"><h4 className="font-semibold">{card.title} <span className="text-sm font-normal text-muted-foreground">· {WORK_STATUS[card.status]}</span></h4><ul className="space-y-3">{card.activities.map(a=><li key={a.id} className="text-sm break-words"><p className="font-medium">{a.name} · {WORK_STATUS[a.status]}</p>{a.dosage && <p className="text-xs text-muted-foreground">Planned: {a.dosage}</p>}{a.results.length?a.results.map((r,i)=><p key={i} className="text-xs">Logged: {r}</p>):<p className="text-xs text-muted-foreground">No entered results</p>}</li>)}</ul></div>)}
+      </div>
+    </>}
+  </section>;
+}
