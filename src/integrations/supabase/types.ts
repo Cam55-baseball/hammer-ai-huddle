@@ -13534,6 +13534,7 @@ export type Database = {
       owner_drills: {
         Row: {
           active: boolean
+          arm_tax_level: string | null
           base_distance_feet: number | null
           bases_per_rep: number | null
           bat_speed_kind: string | null
@@ -13557,6 +13558,14 @@ export type Database = {
           overrides_drill_id: string | null
           phase: string | null
           pinned: boolean
+          pitch_count: number | null
+          pitch_distance_feet: number | null
+          pitch_distance_fraction: number | null
+          pitch_intensity: string | null
+          pitch_mound_type: string | null
+          pitch_purposes: string[]
+          pitch_role_fit: string[]
+          pitch_types: string[]
           placements: string[]
           rest_seconds: number | null
           rounds: number | null
@@ -13572,6 +13581,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          arm_tax_level?: string | null
           base_distance_feet?: number | null
           bases_per_rep?: number | null
           bat_speed_kind?: string | null
@@ -13595,6 +13605,14 @@ export type Database = {
           overrides_drill_id?: string | null
           phase?: string | null
           pinned?: boolean
+          pitch_count?: number | null
+          pitch_distance_feet?: number | null
+          pitch_distance_fraction?: number | null
+          pitch_intensity?: string | null
+          pitch_mound_type?: string | null
+          pitch_purposes?: string[]
+          pitch_role_fit?: string[]
+          pitch_types?: string[]
           placements?: string[]
           rest_seconds?: number | null
           rounds?: number | null
@@ -13610,6 +13628,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          arm_tax_level?: string | null
           base_distance_feet?: number | null
           bases_per_rep?: number | null
           bat_speed_kind?: string | null
@@ -13633,6 +13652,14 @@ export type Database = {
           overrides_drill_id?: string | null
           phase?: string | null
           pinned?: boolean
+          pitch_count?: number | null
+          pitch_distance_feet?: number | null
+          pitch_distance_fraction?: number | null
+          pitch_intensity?: string | null
+          pitch_mound_type?: string | null
+          pitch_purposes?: string[]
+          pitch_role_fit?: string[]
+          pitch_types?: string[]
           placements?: string[]
           rest_seconds?: number | null
           rounds?: number | null

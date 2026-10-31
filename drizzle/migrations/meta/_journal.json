@@ -1205,6 +1205,13 @@
       "when": 1793481367244,
       "tag": "0171_start_gate_pitcher_role",
       "breakpoints": true
+    },
+    {
+      "idx": 172,
+      "version": "7",
+      "when": 1793482895500,
+      "tag": "0172_owner_drill_pitcher_tags",
+      "breakpoints": true
     }
   ]
 }
