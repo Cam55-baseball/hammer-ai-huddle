@@ -223,6 +223,7 @@ import { DayNoticesDrawerItem } from "@/components/hammer/DayNoticesDrawerItem";
 import { DefensivePrepVideo } from "@/components/hammer/DefensivePrepVideo";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
+import { isPapStrengthRow } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
 
 
 /**
@@ -740,6 +741,8 @@ function HammerDailyPlanBody({
   const { phaseStartedAt, resolvedPhase, phaseSource } = useSeasonStatus();
   const { data: recentCompletions } = useRecentMaxIntentCompletions();
   const wkRx = useHammersToday();
+  // Owner Fix 11: a lift card with no real strength row is off-day tissue work.
+  const liftIsTissueCare = wkRx.grouped.lifts.length > 0 && !wkRx.grouped.lifts.some((r: any) => isPapStrengthRow(r));
   const pocketDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   // Presentation only: per-card drill progress for the day's rhythm (reads existing check-offs).
   const dayTasks = useHammerDailyTasks(pocketDate);
