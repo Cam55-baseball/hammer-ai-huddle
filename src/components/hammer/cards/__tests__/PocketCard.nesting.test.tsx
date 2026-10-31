@@ -3,6 +3,7 @@ import { render, fireEvent, cleanup } from "@testing-library/react";
 vi.mock("@/components/support/ReportProblemButton", () => ({ ReportProblemButton: () => null }));
 vi.mock("@/components/hammer/logging/ExtraLogs", () => ({ PracticeLog: () => null }));
 vi.mock("../todayRhythm", () => ({ DomainGlyph: () => null, domainOf: () => "other", useRhythm: () => "open" }));
+vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "u1" } }) }));
 import { PocketCard } from "../PocketCard";
 
 const card = (id: string, title: string, inner?: React.ReactNode) => (
