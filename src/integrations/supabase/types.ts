@@ -5477,6 +5477,48 @@ export type Database = {
         }
         Relationships: []
       }
+      conditioning_rep_feedback: {
+        Row: {
+          created_at: string
+          effort: number | null
+          feel: string | null
+          id: string
+          pain: boolean
+          plan_date: string
+          prescription_id: string
+          rep_index: number
+          seconds: number | null
+          user_id: string
+          verdict: string | null
+        }
+        Insert: {
+          created_at?: string
+          effort?: number | null
+          feel?: string | null
+          id?: string
+          pain?: boolean
+          plan_date: string
+          prescription_id: string
+          rep_index: number
+          seconds?: number | null
+          user_id: string
+          verdict?: string | null
+        }
+        Update: {
+          created_at?: string
+          effort?: number | null
+          feel?: string | null
+          id?: string
+          pain?: boolean
+          plan_date?: string
+          prescription_id?: string
+          rep_index?: number
+          seconds?: number | null
+          user_id?: string
+          verdict?: string | null
+        }
+        Relationships: []
+      }
       connection_requests: {
         Row: {
           created_at: string
@@ -13540,8 +13582,11 @@ export type Database = {
           bat_speed_kind: string | null
           bunt_side: string | null
           bunt_type: string | null
+          carry_yards: number | null
           common_mistake: string | null
           conditioning_kind: string | null
+          conditioning_programs: string[]
+          contacts: number | null
           created_at: string
           created_by: string | null
           cue: string | null
@@ -13554,6 +13599,7 @@ export type Database = {
           id: string
           level: string | null
           library_video_id: string | null
+          load_lbs: number | null
           name: string
           overrides_drill_id: string | null
           phase: string | null
@@ -13587,8 +13633,11 @@ export type Database = {
           bat_speed_kind?: string | null
           bunt_side?: string | null
           bunt_type?: string | null
+          carry_yards?: number | null
           common_mistake?: string | null
           conditioning_kind?: string | null
+          conditioning_programs?: string[]
+          contacts?: number | null
           created_at?: string
           created_by?: string | null
           cue?: string | null
@@ -13601,6 +13650,7 @@ export type Database = {
           id?: string
           level?: string | null
           library_video_id?: string | null
+          load_lbs?: number | null
           name: string
           overrides_drill_id?: string | null
           phase?: string | null
@@ -13634,8 +13684,11 @@ export type Database = {
           bat_speed_kind?: string | null
           bunt_side?: string | null
           bunt_type?: string | null
+          carry_yards?: number | null
           common_mistake?: string | null
           conditioning_kind?: string | null
+          conditioning_programs?: string[]
+          contacts?: number | null
           created_at?: string
           created_by?: string | null
           cue?: string | null
@@ -13648,6 +13701,7 @@ export type Database = {
           id?: string
           level?: string | null
           library_video_id?: string | null
+          load_lbs?: number | null
           name?: string
           overrides_drill_id?: string | null
           phase?: string | null
