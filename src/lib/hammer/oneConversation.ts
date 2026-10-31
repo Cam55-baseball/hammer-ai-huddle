@@ -8,6 +8,7 @@
  * to invented memory.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { PLAYER_THREAD_FILTER } from "@/lib/hammer/philosophyThreads";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 const HISTORY_LIMIT = 30;
@@ -18,7 +19,7 @@ async function currentUserId(): Promise<string | null> {
 }
 
 export async function latestThreadId(userId: string): Promise<string | null> {
-  const { data } = await supabase.from("recall_threads").select("id").eq("user_id", userId)
+  const { data } = await supabase.from("recall_threads").select("id").eq("user_id", userId).or(PLAYER_THREAD_FILTER)
     .order("updated_at", { ascending: false }).limit(1).maybeSingle();
   return (data?.id as string | undefined) ?? null;
 }

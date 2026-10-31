@@ -16,6 +16,7 @@
  * stores nothing.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PLAYER_THREAD_FILTER } from "@/lib/hammer/philosophyThreads";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
@@ -86,7 +87,7 @@ export function useHammerChat(options: HammerChatOptions = {}): HammerChatApi {
       const { data: auth } = await supabase.auth.getUser();
       const uid = auth?.user?.id;
       if (!uid) return;
-      const { data: t } = await supabase.from("recall_threads").select("id").eq("user_id", uid)
+      const { data: t } = await supabase.from("recall_threads").select("id").eq("user_id", uid).or(PLAYER_THREAD_FILTER)
         .order("updated_at", { ascending: false }).limit(1).maybeSingle();
       if (!active || !t?.id) return;
       threadRef.current = t.id;

@@ -77,7 +77,7 @@ export function DayNoticesCard({
   const seen = new Set(unique.map(notice => athleteNoticeCopy(notice).trim().toLowerCase()));
   const changes = extraLines.filter(line => { const key = line.trim().toLowerCase(); if (seen.has(key)) return false; seen.add(key); return true; });
   return (
-    <details className="border-b border-border py-3">
+    <details className="rounded-md border border-border/60 bg-card p-3">
       <summary className="min-h-11 cursor-pointer text-sm font-semibold">
           Why today's plan changed
       </summary>

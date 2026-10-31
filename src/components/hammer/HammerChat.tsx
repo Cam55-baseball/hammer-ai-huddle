@@ -22,11 +22,17 @@ interface Props {
   readonly categoryFocus?: HammerCategoryFocus | null;
 }
 
+/** Ask Hammer opens at the newest turns; older ones load on request. */
+export const CHAT_PAGE = 6;
+
 export function HammerChat({ compact = false, categoryFocus = null }: Props) {
   const identity = getHammerIdentity();
   const chat = useHammerChat({ categoryFocus });
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(CHAT_PAGE);
+  const visible = chat.messages.slice(-shown);
+  const hidden = chat.messages.length - visible.length;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -56,7 +62,12 @@ export function HammerChat({ compact = false, categoryFocus = null }: Props) {
               Ask me about today, your plan, or anything you're stuck on.
             </p>
           ) : (
-            chat.messages.map((m, i) => (
+            <>{hidden > 0 && (
+              <button type="button" className="w-full text-xs font-semibold text-primary py-1" onClick={() => setShown((n) => n + CHAT_PAGE)}>
+                Show earlier ({hidden})
+              </button>
+            )}
+            {visible.map((m, i) => (
               <div
                 key={i}
                 className={`text-xs whitespace-pre-wrap rounded px-2 py-1 ${
@@ -67,7 +78,7 @@ export function HammerChat({ compact = false, categoryFocus = null }: Props) {
               >
                 {m.content}
               </div>
-            ))
+            ))}</>
           )}
           {chat.isSending && (
             <p className="text-[10px] text-muted-foreground italic">Hammer is thinking…</p>

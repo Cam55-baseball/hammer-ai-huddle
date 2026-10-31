@@ -15,11 +15,13 @@ import { RoyalTimingExplanation } from '@/components/royal-timing/RoyalTimingExp
 export function RoyalTimingReminderCard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  return <section className="space-y-3 border-b border-border py-4" aria-label="Royal timing reminder">
-    <h3 className="flex items-center gap-2 text-sm font-semibold"><Crown className="h-5 w-5 shrink-0 text-primary" />{t('royalTiming.reminder')}</h3>
-    <RoyalTimingExplanation />
-    <Button size="sm" onClick={() => navigate('/royal-timing')}>{t('royalTiming.open')}</Button>
-  </section>;
+  return <details className="rounded-md border border-border/60 bg-card p-3" aria-label="Royal timing reminder">
+    <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-semibold"><Crown className="h-5 w-5 shrink-0 text-primary" />{t('royalTiming.reminder')}</summary>
+    <div className="space-y-3 pt-2">
+      <RoyalTimingExplanation />
+      <Button size="sm" onClick={() => navigate('/royal-timing')}>{t('royalTiming.open')}</Button>
+    </div>
+  </details>;
 }
 
 /** Unavailable history never becomes a due reminder or a new training day. */

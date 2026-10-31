@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PLAYER_THREAD_FILTER } from "@/lib/hammer/philosophyThreads";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -72,6 +73,7 @@ export default function HammerRecall() {
       .from("recall_threads")
       .select("id,title,updated_at")
       .eq("user_id", user.id)
+      .or(PLAYER_THREAD_FILTER)
       .order("updated_at", { ascending: false })
       .limit(50);
     if (error) {
