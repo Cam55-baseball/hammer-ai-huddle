@@ -45,7 +45,7 @@ export function CoachExerciseAuthoring({ exercises, onChange }: { exercises: Exe
         <Label className="space-y-1 text-xs">Rest (seconds)<Input type="number" min="0" value={e.rest ?? ""} onChange={event => update(e.id, { rest: event.target.value ? Number(event.target.value) : undefined })} /></Label></div>
       <Label className="block space-y-1 text-xs">Gear<Input list="coach-common-gear" readOnly={!!e.slug} value={e.gear ?? ""} onChange={event => update(e.id, { gear: event.target.value, equipment_requirements: ownerGear(event.target.value.split(",")).equipment })} /></Label>
       <Label className="block space-y-1 text-xs">Notes<Input value={e.notes ?? ''} onChange={event=>update(e.id,{notes:event.target.value})}/></Label>
-      {!e.slug && ownerGear((e.gear ?? "").split(",")).unknown.length ? <p role="alert" className="text-xs text-destructive">Not in the common gear list: {ownerGear((e.gear ?? "").split(",")).unknown.join(", ")}. The player can't use this item until the gear matches the common list.</p> : null}
+      {!e.slug && ownerGear((e.gear ?? "").split(",").filter(word=>word.trim())).unknown.length ? <p role="alert" className="text-xs text-destructive">Not in the common gear list: {ownerGear((e.gear ?? "").split(",").filter(word=>word.trim())).unknown.join(", ")}. The player can't use this item until the gear matches the common list.</p> : null}
       {e.equipment_alternatives?.length ? <p className="text-xs text-muted-foreground">One complete setup: {e.equipment_alternatives.map(group => group.join(" + ")).join(" or ")}</p> : null}
     </div>)}
   </section>;
