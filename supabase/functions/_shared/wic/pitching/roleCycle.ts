@@ -137,3 +137,63 @@ export function weekViolations(sport: Sport, role: PitchRole, days: readonly { d
   }
   return out;
 }
+
+// ── Owner Oct 31: command development (up to 5 mound/circle days) ─────────────
+/** Pitchers struggling with command (from data only) may get up to this many mound/circle days. */
+export const MOUND_COMMAND_MAX_PER_WEEK = 5;
+
+export interface CommandEvidence {
+  /** Walk rate of the latest COMPLETE batters-faced window and its starting standard (max). */
+  walkRate?: number | null;
+  walkMax?: number | null;
+  /** Judged command stats against starting standards (first-pitch strike %, two-ball %). */
+  stats?: readonly { key: string; status: string }[];
+  /** Root pattern ids of accessible analysis findings for pitching. */
+  analysisFindings?: readonly string[];
+  /** Picked pitching/throwing goal ids. */
+  goalIds?: readonly string[];
+}
+
+const COMMAND_STATS: Record<string, string> = {
+  bb_pct: "Your walk rate is above the starting standard.",
+  first_pitch_strike_pct: "Your first-pitch strikes are below the starting standard.",
+  two_ball_pct: "Too many batters reach two balls compared with the starting standard.",
+};
+
+/** Data-only judge: never invents a struggle from missing data. */
+export function commandStruggle(e: CommandEvidence | null | undefined): { struggling: boolean; reasons: string[] } {
+  const reasons: string[] = [];
+  if (!e) return { struggling: false, reasons };
+  if (typeof e.walkRate === "number" && typeof e.walkMax === "number" && e.walkRate > e.walkMax) reasons.push(COMMAND_STATS.bb_pct);
+  for (const s of e.stats ?? []) if (COMMAND_STATS[s.key] && s.status === "Building" && !reasons.includes(COMMAND_STATS[s.key])) reasons.push(COMMAND_STATS[s.key]);
+  if ((e.analysisFindings ?? []).some((f) => /command/i.test(f))) reasons.push("Your video analysis found a command problem.");
+  if ((e.goalIds ?? []).includes("command")) reasons.push("You picked a command goal.");
+  return { struggling: reasons.length > 0, reasons };
+}
+
+export const countsAsMoundDay = (sport: Sport, day: CycleDay) => !!moundWork(sport, day) || day === "start" || day === "outing";
+
+const BLOCKED: Partial<Record<CycleDay, string>> = {
+  rest: "it is your rest day",
+  day_after: "it is a recovery day after pitching",
+};
+
+/**
+ * Pick the extra light command days for one week (date order). Only non-mound throwing days
+ * qualify; rest and recovery days never do. Adds only up to MOUND_COMMAND_MAX_PER_WEEK total.
+ */
+export function commandExtraDays(i: { sport: Sport; week: readonly { date: string; day: CycleDay }[]; struggling: boolean; limitPitching?: boolean }): { extra: string[]; blocked: { date: string; reason: string }[]; baseline: number } {
+  const baseline = i.week.filter((d) => countsAsMoundDay(i.sport, d.day)).length;
+  const extra: string[] = [];
+  const blocked: { date: string; reason: string }[] = [];
+  if (!i.struggling) return { extra, blocked, baseline };
+  let room = Math.max(0, MOUND_COMMAND_MAX_PER_WEEK - baseline);
+  for (const d of i.week) {
+    if (countsAsMoundDay(i.sport, d.day) || room === 0) continue;
+    const why = BLOCKED[d.day] ?? (i.limitPitching ? "you asked to limit your pitching" : null);
+    if (why) { blocked.push({ date: d.date, reason: why }); continue; }
+    extra.push(d.date);
+    room--;
+  }
+  return { extra, blocked, baseline };
+}
