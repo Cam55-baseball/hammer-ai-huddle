@@ -9,6 +9,10 @@ import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import { rebuildAfterChange } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
 import { priorityAccess } from '@/lib/hammer/priorityAccess';
+import { useNavigate } from "react-router-dom";
+import { getActiveTier } from "@/utils/tierAccess";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { goToStripe } from "@/lib/purchase/goToStripe";
 
 type Sport = "baseball" | "softball";
 const NAME: Record<Sport, string> = { baseball: "Baseball", softball: "Softball" };
@@ -16,8 +20,11 @@ const NAME: Record<Sport, string> = { baseball: "Baseball", softball: "Softball"
 /** For players who play Both: switch which sport the daily plan is built for. */
 export function ActiveSportSwitch({ userId }: { userId: string }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { canShowPurchaseUI } = usePurchaseAvailability();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [purchase, setPurchase] = useState<{ sport: Sport; tier: string | null } | null>(null);
   const ctx = useQuery({
     queryKey: ["active-sport", userId],
     queryFn: async () => {
@@ -32,13 +39,14 @@ export function ActiveSportSwitch({ userId }: { userId: string }) {
 
   async function choose(next: Sport) {
     if (busy || !primary || next === primary) return;
-    setBusy(true); setResult(null);
+    setBusy(true); setResult(null); setPurchase(null);
     try {
       const {data:subscription,error:accessError}=await supabase.from('subscriptions').select('status,subscribed_modules').eq('user_id',userId).maybeSingle();
       if(accessError) throw accessError;
       const access=priorityAccess(subscription?.status==='active'?subscription.subscribed_modules??[]:[],next);
       if(!access.hasHitting&&!access.hasPitching&&!access.hasThrowing){
-        const message=`Your paid plan does not include ${NAME[next]} yet. Your current sport and saved work have not changed.`;
+        const message=`Your plan covers ${NAME[primary]} only. Add a ${NAME[next]} plan or switch your subscription. Your sport and saved work have not changed.`;
+        setPurchase({ sport: next, tier: getActiveTier(subscription?.subscribed_modules ?? [], primary) });
         setResult(message);toast.error(message);return;
       }
       await persistContextAnswer(userId, "sport_primary", next, "tell_hammer", "self_report");
@@ -55,6 +63,19 @@ export function ActiveSportSwitch({ userId }: { userId: string }) {
     } finally { setBusy(false); }
   }
 
+  async function managePlan() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (!data?.url) throw new Error("Couldn't open Manage my plan. Please try again.");
+      goToStripe(data.url, "portal");
+    } catch {
+      toast.error("Couldn't open Manage my plan. Please try again.");
+    } finally { setBusy(false); }
+  }
+
   return (
     <div data-active-sport-switch>
       <Label className="text-xs">You play both — which sport is your plan for?</Label>
@@ -66,6 +87,15 @@ export function ActiveSportSwitch({ userId }: { userId: string }) {
         ))}
       </div>
       <p className="mt-1 text-[11px] text-muted-foreground">{busy ? "Rebuilding your next 7 days…" : result ?? "Switching rebuilds your next 7 days for that sport only."}</p>
+      {purchase && canShowPurchaseUI && (
+        <div className="mt-2 flex flex-col gap-2">
+          <Button size="sm" className="min-h-11 whitespace-normal" disabled={busy} onClick={() => {
+            if (purchase.tier) navigate("/checkout", { state: { tier: purchase.tier, sport: purchase.sport } });
+            else navigate("/pricing", { state: { sport: purchase.sport } });
+          }}>Add the {purchase.sport} plan</Button>
+          <Button size="sm" variant="outline" className="min-h-11 whitespace-normal" disabled={busy} onClick={managePlan}>Switch my plan to {purchase.sport}</Button>
+        </div>
+      )}
     </div>
   );
 }
