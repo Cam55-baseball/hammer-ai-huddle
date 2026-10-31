@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { judgeReps, conditioningRules, CONDITIONING_RULES_KEY, SESSION_YARD_CAP, type RepFeedback, type Feel } from "../../../../supabase/functions/_shared/wic/conditioning/yards";
@@ -12,11 +11,13 @@ export function SprintRepFeedback({ userId, prescriptionId, planDate, row, kind,
   userId?: string; prescriptionId: string; planDate: string; row: number; kind: "max_sprint" | "repeat_sprint"; repFeet: number; prescribedReps: number;
   seconds: number | null; extraUsed: number; onSaved: (row: number) => void; onStop: (message: string) => void; onAddMore: (reps: number) => void;
 }) {
-  const rules = useQuery({ queryKey: ["conditioning-rules"], queryFn: async () => { const r = await db.from("app_settings").select("setting_value").eq("setting_key", CONDITIONING_RULES_KEY).maybeSingle(); return conditioningRules(r.data?.setting_value); } });
-  const saved = useQuery({ queryKey: ["rep-feedback", prescriptionId], enabled: !!userId, queryFn: async () => {
-    const r = await db.from("conditioning_rep_feedback").select("rep_index, seconds, feel, effort, pain, verdict").eq("prescription_id", prescriptionId).order("rep_index");
-    if (r.error) throw r.error; return (r.data ?? []) as any[];
-  } });
+  // Plain effects (no query cache) so the log works wherever it is mounted.
+  const [rules, setRules] = useState<{ data?: ReturnType<typeof conditioningRules> }>({});
+  const [rows, setRows] = useState<any[] | undefined>(undefined);
+  const load = async () => { try { const r = await db.from("conditioning_rep_feedback").select("rep_index, seconds, feel, effort, pain, verdict").eq("prescription_id", prescriptionId).order("rep_index"); if (!r?.error) setRows((r?.data ?? []) as any[]); } catch { /* keeps the form usable */ } };
+  useEffect(() => { void (async () => { try { const r = await db.from("app_settings").select("setting_value").eq("setting_key", CONDITIONING_RULES_KEY).maybeSingle(); setRules({ data: conditioningRules(r?.data?.setting_value) }); } catch { setRules({ data: conditioningRules(null) }); } })(); }, []);
+  useEffect(() => { if (userId) void load(); }, [userId, prescriptionId]);
+  const saved = { data: rows, refetch: load };
   const [feel, setFeel] = useState<Feel | null>(null);
   const [effort, setEffort] = useState<number | null>(null);
   const [pain, setPain] = useState<boolean | null>(null);
