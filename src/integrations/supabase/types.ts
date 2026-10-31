@@ -23987,6 +23987,10 @@ export type Database = {
         Returns: string
       }
       coach_undo_entry: { Args: { _entry: string }; Returns: undefined }
+      coach_week_rx_lineage: {
+        Args: { _athlete: string; _from: string }
+        Returns: Json
+      }
       coach_weekly_summary: { Args: never; Returns: Json }
       combine_evaluator_context: {
         Args: { p_athlete: string; p_sport: string }
