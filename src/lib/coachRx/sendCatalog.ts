@@ -35,6 +35,7 @@ export function sendCatalog(catalog: CatalogMovement[], templates: CustomActivit
       category: (t as CustomActivityTemplate & { coach_card_category?: string }).coach_card_category ?? (t.activity_type === 'running' ? 'speed' : t.activity_type === 'practice' || t.activity_type === 'short_practice' ? 'hitting' : ['warmup', 'recovery'].includes(t.activity_type) ? t.activity_type : 'lift'), exercises: t.exercises })) ];
 }
 export function filterSendCatalog(items: SendCatalogItem[], search: string, category: string) {
-  const term = search.trim().toLowerCase();
-  return items.filter(item => (category === 'all' || item.category === category) && `${item.title} ${item.category} ${item.source}`.toLowerCase().includes(term));
+  const normalize = (value: string) => value.toLowerCase().replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+  const term = normalize(search);
+  return items.filter(item => (category === 'all' || item.category === category) && normalize(`${item.title} ${item.category} ${item.source}`).includes(term));
 }
