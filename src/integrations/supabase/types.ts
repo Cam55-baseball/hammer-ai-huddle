@@ -5750,6 +5750,7 @@ export type Database = {
         Row: {
           action: string | null
           activity_type: string
+          coach_card_category: string | null
           color: string
           completion_binding: Json | null
           completion_type: string | null
@@ -5793,6 +5794,7 @@ export type Database = {
         Insert: {
           action?: string | null
           activity_type: string
+          coach_card_category?: string | null
           color?: string
           completion_binding?: Json | null
           completion_type?: string | null
@@ -5836,6 +5838,7 @@ export type Database = {
         Update: {
           action?: string | null
           activity_type?: string
+          coach_card_category?: string | null
           color?: string
           completion_binding?: Json | null
           completion_type?: string | null
@@ -23974,6 +23977,21 @@ export type Database = {
       coach_connected_to: {
         Args: { _athlete: string; _me: string }
         Returns: boolean
+      }
+      coach_day_edit_commit: {
+        Args: {
+          p_actor: string
+          p_date: string
+          p_exercises: Json
+          p_rows: Json
+          p_rx: string
+          p_safety: Json
+          p_sport: string
+          p_template: string
+          p_title: string
+          p_user: string
+        }
+        Returns: Json
       }
       coach_log_entry: {
         Args: {

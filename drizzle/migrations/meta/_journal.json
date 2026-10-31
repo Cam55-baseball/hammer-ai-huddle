@@ -1170,6 +1170,13 @@
       "when": 1793457946214,
       "tag": "0166_team_discipline_dated_exemptions",
       "breakpoints": true
+    },
+    {
+      "idx": 167,
+      "version": "7",
+      "when": 1793459844729,
+      "tag": "0167_coach_dated_card_edit",
+      "breakpoints": true
     }
   ]
 }
