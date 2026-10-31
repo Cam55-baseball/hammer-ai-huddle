@@ -187,17 +187,17 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
             <p className="text-xs text-muted-foreground">{selectedPlayers.length} player(s) · {lockedFields.length ? `Locked: ${lockedFields.join(', ')}` : 'No locked fields'}</p>
           </section> : <div className="space-y-6 py-4">
             {/* Activity Preview */}
-            <Card style={{ borderColor: hexToRgba(template.color, 0.5) }}>
+            <Card className="border-primary/40">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div 
                     className="p-2 rounded-lg"
-                    style={{ backgroundColor: hexToRgba(template.color, 0.2) }}
+                    className="bg-primary/10 p-2 rounded-lg"
                   >
                     {template.custom_logo_url ? (
                       <img src={template.custom_logo_url} alt="" className="h-6 w-6 object-contain" />
                     ) : (
-                      <Icon className="h-6 w-6" style={{ color: template.color }} />
+                      <Icon className="h-6 w-6 text-primary" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
