@@ -5,7 +5,7 @@ import { activityControl, sessionExempt, type SessionControl, type SessionTarget
 
 export type WorkStatus = 'done' | 'partial' | 'not_done' | 'skipped' | 'removed' | 'rest';
 export const WORK_STATUS: Record<WorkStatus, string> = { done: 'Done ✓', partial: 'Partly done', not_done: 'Not done', skipped: 'Skipped (allowed)', removed: 'Removed by coach', rest: 'Rest day' };
-interface Prescription { id: string; slot: string; movement_name: string; movement_slug: string; sets: number | null; reps: number | null; status: string; replaced_by_coach_rx: string | null; dosage_unit: string | null; coach_rx?: string | null }
+interface Prescription { id: string; slot: string; movement_name: string; movement_slug: string; sets: number | null; reps: number | null; duration_seconds?: number | null; rest_seconds?: number | null; distance_feet?: number | null; status: string; replaced_by_coach_rx: string | null; dosage_unit: string | null; coach_rx?: string | null }
 interface Task { task_id: string; side: string | null; completed: boolean; outcome: string | null; name: string; dosage: string; log?: { rounds?: Record<string, unknown>[]; fields?: { key: string; label: string; unit: string | null }[] } }
 export interface WeekDay { date: string; plan: SavedCoachPlan; restDay: boolean; prescriptions: Prescription[]; logs: (WorkoutActual & { prescription_id: string; load_used?: number | null })[]; tasks: Task[]; coachWorkouts: { id: string; title: string; category: string; status: string; cancelled_at: string | null; exercises: {name?: string; movement_name?: string; slug?: string; movement_slug?: string; sets?: number; reps?: number}[] }[] }
 export interface WeekResult { state: 'ok' | 'denied'; sport?: string; days: WeekDay[] }
