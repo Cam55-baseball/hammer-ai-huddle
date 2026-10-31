@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { detectFullGoPhrasing } from "../../supabase/functions/_shared/health/fullGo";
+import { FullGoPrompts } from "@/components/hammer/injury/FullGo";
 import { PLAYER_THREAD_FILTER, isPhilosophyMessage } from "@/lib/hammer/philosophyThreads";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +64,8 @@ export default function HammerRecall() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(6);
+  const [lastSent, setLastSent] = useState('');
+  const fullGo = detectFullGoPhrasing(lastSent);
 
   const focusComposer = useCallback(() => {
     setTimeout(() => textareaRef.current?.focus(), 30);
@@ -147,6 +151,7 @@ export default function HammerRecall() {
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || sending) return;
+      setLastSent(trimmed);
       setSending(true);
       const optimisticId = `tmp-${Date.now()}`;
       setMessages((prev) => [
@@ -248,6 +253,7 @@ export default function HammerRecall() {
                       Recalling…
                     </div>
                   )}
+                  {fullGo.matched && <FullGoPrompts only={fullGo.region} />}
                   <div ref={bottomRef} />
                 </div>
               )}

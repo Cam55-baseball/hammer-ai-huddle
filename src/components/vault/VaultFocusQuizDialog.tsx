@@ -1,4 +1,6 @@
 import { useOptionalAuth } from "@/hooks/useAuth";
+import { InjuryCheckSection } from "@/components/hammer/injury/FullGo";
+import { saveInjuryChecks } from "@/lib/hammer/injury/fullGo";
 import { CheckInLifeChips } from "@/components/checkin/CheckInLifeChips";
 import { toast } from "sonner";
 import { NextGameConfirmation } from "@/components/checkin/NextGameConfirmation";
@@ -410,6 +412,7 @@ export function VaultFocusQuizDialog({
   const [painScales, setPainScales] = useState<Record<string, number>>({});
   const painQc = usePainQc();
   const { user: painUser } = useOptionalAuth();
+  const [injuryChecks, setInjuryChecks] = useState<Record<string, { pain: number; function: number }>>({});
   const [painTissueTypes, setPainTissueTypes] = useState<Record<string, string[]>>({});
   const [painIncreasesWithMovement, setPainIncreasesWithMovement] = useState<boolean | null>(null);
   const [painMovementPerArea, setPainMovementPerArea] = useState<Record<string, boolean>>({});
@@ -698,6 +701,12 @@ export function VaultFocusQuizDialog({
       toast.error("Your check-in wasn't saved. Your answers are still here — check your connection and tap Save again.");
       return;
     }
+    // Fix 7: daily injury check answers live on the player's own active injury entries.
+    const answered = Object.entries(injuryChecks).filter(([, v]) => v.pain >= 0 && v.function >= 0);
+    if (painUser?.id && answered.length) {
+      try { await saveInjuryChecks(painUser.id, answered.map(([area, v]) => ({ area, date: getTodayDate(), ...v }))); setInjuryChecks({}); painQc.invalidateQueries({ queryKey: ['injury-history'] }); }
+      catch { toast.error("Your check-in was saved, but your injury check wasn't. Try again."); }
+    }
     // v1.2 §A: body-map pain becomes the same one pain record as every other screen.
     if (result.success && painUser?.id && painLocations.length > 0) {
       const today = getTodayDate();
@@ -856,6 +865,8 @@ export function VaultFocusQuizDialog({
               </AlertDescription>
             </Alert>
           )}
+
+          {quizType === 'morning' && <InjuryCheckSection value={injuryChecks} onChange={setInjuryChecks} />}
 
           {/* Morning Quiz - Sleep Tracking Section */}
           {quizType === 'morning' && (

@@ -1,6 +1,7 @@
 import { sortByWarmupStage } from "./warmupStages";
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "../athleteFeatureAvailability";
 import { mapPhysio, PREHAB_SLUGS, type PhysioMapping } from '../../../../supabase/functions/_shared/health/physioMapping';
+import { cooldownCareDue } from '../../../../supabase/functions/_shared/health/fullGo';
 import { WARMUP_LIBRARY } from './warmupLibrary';
 import { enforceSkillStageOrder, validatePlanSanity } from './planSanity';
 import { recoveryDrills } from './recoveryDrills';
@@ -2592,8 +2593,15 @@ export function buildHammerDailyPlan(
         const drill=WARMUP_LIBRARY.find(d=>d.slug===slug);
         return drill ? [{slug:drill.slug,name:drill.name,dosage:drill.baseDose,setup:drill.setup,cue:drill.cue,stopIf:drill.stopIf??'Stop if this hurts.',stage:'prep' as const}] : [];
       }) : [];
-    const drills=available.length?sortByWarmupStage([...b.drills,...available],d=>d.slug??''):b.drills;
-    return {...b,drills,steps:available.length?drillsToSteps(drills):b.steps,because:[...(b.because??[]),...notices]};
+    // Occasional cool-down care for healed areas (owner Fix 7): every third day, recovery card only.
+    const care: DrillStep[] = b.modality === 'recovery' && b.status === 'ready' && !physio.illnessActive && cooldownCareDue(today.toLocaleDateString('en-CA'))
+      ? [...new Set(physio.healedAreas.filter(a=>!physio.activeAreas.includes(a)).map(a=>PREHAB_SLUGS[a]))].flatMap(slug=>{
+        if(!slug||b.drills.some(d=>d.slug===slug))return [];
+        const drill=WARMUP_LIBRARY.find(d=>d.slug===slug);
+        return drill ? [{slug:drill.slug,name:`${drill.name} (cool-down care)`,dosage:drill.baseDose,setup:drill.setup,cue:drill.cue,stopIf:drill.stopIf??'Stop if this hurts.'}] : [];
+      }) : [];
+    const drills=available.length?sortByWarmupStage([...b.drills,...available],d=>d.slug??''):care.length?[...b.drills,...care]:b.drills;
+    return {...b,drills,steps:available.length||care.length?drillsToSteps(drills):b.steps,because:[...(b.because??[]),...notices,...(care.length?['Easy care for an area you marked healed. Stop if it hurts.']:[])]};
   });
   const unguardedBlocks = prehabbed.flatMap(b => {
     if(!access?.hasPitching || b.modality!=='throwing')return [b];
