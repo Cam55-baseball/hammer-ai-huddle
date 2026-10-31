@@ -275,6 +275,7 @@ import { StripeHandoffDialog } from "@/components/purchase/StripeHandoffDialog";
 import { GlobalBackFallback } from "@/components/common/GlobalBackFallback";
 import LegalDocumentPage from "./pages/legal/LegalDocumentPage";
 import ParentWaiverSign from "./pages/legal/ParentWaiverSign";
+import ParentFullGo from "./pages/legal/ParentFullGo";
 import { TeenWaiverGate } from "@/components/legal/TeenWaiverGate";
 import LegalSettings from "./pages/legal/LegalSettings";
 import DeleteAccountSettings from "./pages/settings/DeleteAccountSettings";
@@ -348,6 +349,7 @@ const App = () => {
               <Routes>
               <Route path="/legal/:slug" element={<LegalDocumentPage />} />
               <Route path="/parent-sign/:token" element={<ParentWaiverSign />} />
+              <Route path="/parent-full-go/:token" element={<ParentFullGo />} />
               <Route path="/parent-waiver/:token" element={<ParentWaiverSign />} />
               <Route path="/settings/legal" element={<LegalSettings />} />
               <Route path="/settings/account" element={<DeleteAccountSettings />} />
