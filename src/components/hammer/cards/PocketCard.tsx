@@ -22,6 +22,9 @@ import { toast } from "sonner";
 import { PracticeLog } from "@/components/hammer/logging/ExtraLogs";
 import { createContext, useContext } from "react";
 import { FocusSession } from "./FocusSession";
+import { useAuth } from '@/hooks/useAuth';
+import { useSessionControls } from '@/hooks/useSessionControls';
+import { controlNote, sessionExempt } from '@/lib/coachRx/sessionControls';
 
 const PocketDetailsContext = createContext(false);
 const PocketLogContext = createContext<HTMLElement | null>(null);
@@ -88,6 +91,14 @@ export function PocketCard(props: Props) {
 }
 
 function PocketCardShell({ id, category, focus, tone, planDate, prescribed, countLabel, notPrescribedNote, children, progress, intro, link, onNavigate, practiceLogging = false }: Props) {
+  const {user}=useAuth();
+  const decisions=useSessionControls(user?.id,planDate,planDate);
+  const blockMatch=/^block_(.+)_([LRx])$/.exec(id);
+  const cardControls=decisions.controls.filter(c=>blockMatch ? c.source==='block_drill' && c.source_ref===blockMatch[1] && c.side===(blockMatch[2]==='x'?null:blockMatch[2]) : c.source==='wk_prescription' && (c.source_ref===id || id==='lift' && c.source_ref==='supplemental' || id===`activity_${c.task_id}`));
+  const exemptions=cardControls.filter(sessionExempt).length;
+  const originalTotal=progress?.total ?? 0;
+  if(progress && exemptions) progress={done:Math.min(progress.done,Math.max(0,progress.total-exemptions)),total:Math.max(0,progress.total-exemptions)};
+  const allExempt=originalTotal>0 && exemptions>=originalTotal;
   const [logHost, setLogHost] = useState<HTMLElement | null>(null);
   const [showIntro, setShowIntro] = useState(false);
   const allDone = !!progress && progress.total > 0 && progress.done >= progress.total;
@@ -144,6 +155,8 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
   const pct = progress && progress.total > 0 ? Math.min(1, progress.done / progress.total) : 0;
   return (
     <>
+      {cardControls.length>0 && <div className="space-y-2 border-l-2 border-primary pl-3 text-sm" data-card-coach-notes><p>{controlNote(cardControls[0])}</p>{cardControls.some(c=>c.mode==='allow' && !c.skipped_at) && <Button variant="outline" size="sm" disabled={decisions.saving} onClick={()=>void decisions.save({ids:cardControls.filter(c=>c.mode==='allow' && !c.skipped_at).map(c=>c.id)}).catch(()=>undefined)}>Skip (allowed)</Button>}{allExempt && <p className="text-muted-foreground">{cardControls.every(c=>c.mode==='remove')?'Removed for this session':'Skipped (allowed)'} · No Discipline penalty</p>}</div>}
+      {!allExempt && <>
       <Button variant="ghost"
         type="button"
         onClick={openPocket}
@@ -271,6 +284,7 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
         </div>,
         document.body,
       )}
+      </>}
     </>
   );
 }
