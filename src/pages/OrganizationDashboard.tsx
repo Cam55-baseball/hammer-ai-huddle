@@ -30,6 +30,7 @@ import { MeaningSection } from '@/components/progress/SectionMeaning';
 import { OrganizationProgress } from '@/components/organization/OrganizationProgress';
 import { InviteCoach } from '@/components/organization/InviteCoach';
 import { SendWorkouts } from '@/components/coach/SendWorkouts';
+import { CoachCardGuide } from '@/components/coach/CoachCardGuide';
 
 export default function OrganizationDashboard() {
   const { myOrgs, members } = useOrganization();
@@ -52,6 +53,7 @@ export default function OrganizationDashboard() {
 
         {activeOrg ? (
           <>
+          <CoachCardGuide />
           <Tabs defaultValue="roster" className="space-y-6">
             <TabsList className="grid h-auto w-full grid-cols-2 gap-1 lg:grid-cols-6">
               <TabsTrigger className="min-h-11 whitespace-normal" value="roster">Roster</TabsTrigger>

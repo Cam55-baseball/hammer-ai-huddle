@@ -2,6 +2,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { SendAthleteRequest } from "@/components/connections/SendAthleteRequest";
 import { CoachProgramCard } from "@/components/coach/CoachProgramCard";
+import { CoachCardGuide } from "@/components/coach/CoachCardGuide";
 import { TeamDisciplineSummary } from "@/components/coach/TeamDisciplineSummary";
 import { CoachWeeklySummary } from "@/components/coach/CoachWeeklySummary";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
@@ -287,6 +288,7 @@ export default function CoachDashboard() {
           </TabsList>
         </Tabs>
         <Button asChild className="gap-2"><Link to="/my-custom-activities"><Send className="h-4 w-4"/>Send workouts</Link></Button>
+        <CoachCardGuide />
 
         <Card>
           <CardHeader>
