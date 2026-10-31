@@ -132,6 +132,12 @@ function activeInjuryHistory(raw) {
   return Array.isArray(raw) ? raw.filter((r) => !r || typeof r !== "object" || r.recovery_status !== "healed") : raw;
 }
 
+// supabase/functions/_shared/health/fullGo.ts
+function cooldownCareDue(dateIso) {
+  const t = Date.parse(`${dateIso}T00:00:00Z`);
+  return Number.isFinite(t) && Math.floor(t / 864e5) % 3 === 0;
+}
+
 // src/lib/hammer/prescription/movementGuide.ts
 function norm(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
@@ -8628,8 +8634,13 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       const drill = WARMUP_LIBRARY.find((d3) => d3.slug === slug);
       return drill ? [{ slug: drill.slug, name: drill.name, dosage: drill.baseDose, setup: drill.setup, cue: drill.cue, stopIf: drill.stopIf ?? "Stop if this hurts.", stage: "prep" }] : [];
     }) : [];
-    const drills = available.length ? sortByWarmupStage([...b.drills, ...available], (d3) => d3.slug ?? "") : b.drills;
-    return { ...b, drills, steps: available.length ? drillsToSteps(drills) : b.steps, because: [...b.because ?? [], ...notices] };
+    const care = b.modality === "recovery" && b.status === "ready" && !physio.illnessActive && cooldownCareDue(today.toLocaleDateString("en-CA")) ? [...new Set(physio.healedAreas.filter((a) => !physio.activeAreas.includes(a)).map((a) => PREHAB_SLUGS[a]))].flatMap((slug) => {
+      if (!slug || b.drills.some((d3) => d3.slug === slug)) return [];
+      const drill = WARMUP_LIBRARY.find((d3) => d3.slug === slug);
+      return drill ? [{ slug: drill.slug, name: `${drill.name} (cool-down care)`, dosage: drill.baseDose, setup: drill.setup, cue: drill.cue, stopIf: drill.stopIf ?? "Stop if this hurts." }] : [];
+    }) : [];
+    const drills = available.length ? sortByWarmupStage([...b.drills, ...available], (d3) => d3.slug ?? "") : care.length ? [...b.drills, ...care] : b.drills;
+    return { ...b, drills, steps: available.length || care.length ? drillsToSteps(drills) : b.steps, because: [...b.because ?? [], ...notices, ...care.length ? ["Easy care for an area you marked healed. Stop if it hurts."] : []] };
   });
   const unguardedBlocks = prehabbed.flatMap((b) => {
     if (!access?.hasPitching || b.modality !== "throwing") return [b];
