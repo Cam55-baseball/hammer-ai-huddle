@@ -2612,6 +2612,7 @@ export function buildHammerDailyPlan(
     if(access?.hasPitching&&b.modality==='strength'&&b.status==='ready'){
       const rule=applyPitcherLiftRule(b.drills as any[],{role:pitchFacts?.pitchingRole??null,startsTomorrow:!!pitchFacts?.startsTomorrow});
       if(!rule.because.length)return [b];
+      if(!rule.drills.length)return [];
       return [{...b,drills:rule.drills as typeof b.drills,steps:drillsToSteps(rule.drills as typeof b.drills),because:[...(b.because??[]),...rule.because]}];
     }
     if(!access?.hasPitching || b.modality!=='throwing')return [b];

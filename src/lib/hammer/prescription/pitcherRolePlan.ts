@@ -27,14 +27,14 @@ export function withTaggedPitchDrill<D extends Drill>(drills: D[], ctx: { sport:
 }
 
 const SETS = /^(\d+)\s*[x×]\s*(.+)$/i;
-/** Same weight, fewer sets for bullpen arms/closers; no lower-body lift the day before a start. */
+/** Same weight, fewer sets for bullpen arms/closers; no lift the day before a start. */
 export function applyPitcherLiftRule<D extends Drill>(drills: D[], ctx: { role?: PitchRole | null; startsTomorrow?: boolean }): { drills: D[]; because: string[] } {
   const because: string[] = [];
   let out = drills;
   if (ctx.startsTomorrow) {
-    const kept = out.filter((d) => !isLowerBodyLift(d.name));
-    if (kept.length !== out.length) because.push("No lower-body lift the day before a start.");
-    out = kept;
+    // Owner Oct 31 (A): no lift at all the day before a start — mobility and activation only.
+    if (out.length) because.push("No lift the day before a start — mobility and activation only.");
+    out = [];
   }
   if (ctx.role && ctx.role !== "starter") {
     let changed = false;

@@ -1,5 +1,6 @@
 // supabase/functions/wk-generate-daily/index.ts
-import { reliefSets, isLowerBodyLift, sprintDose } from "../_shared/wic/pitching/roleCycle.ts";
+import { reliefSets, isLowerBodyLift } from "../_shared/wic/pitching/roleCycle.ts";
+import { pitcherYardTarget, repsForYards, capSessionYards, SESSION_YARD_CAP } from "../_shared/wic/conditioning/yards.ts";
 import { applyLiveTracking } from "../_shared/vault/tracking.ts";
 import { isPlanGameDay } from "../_shared/schedule/isGameDay.ts";
 // Hammer Workout & Speed — elite daily prescription generator.
@@ -3342,7 +3343,10 @@ const handler = async (req: Request): Promise<Response> => {
       const pitchRoleForSprint = isPitcherAthlete ? (outingFacts?.pitchingRole ?? null) : null;
       const sprintWeek = Math.max(0, Number((progression as any).blockIndex ?? 0) * 4 + Number((progression as any).weekInBlock ?? 0) - ((progression as any).isDeloadWeek ? 1 : 0));
       for (const m of conditioning) {
-        const sprintDoseNow = pitchRoleForSprint && !restrictedConditioningWhy && !conditioningSelection.dialedDown && /^repeat_/.test(m.slug) ? sprintDose(pitchRoleForSprint, sprintWeek) : null;
+        // Owner Oct 31: pitcher sprints are prescribed in yards (starters 300→1000, relievers 300→600 over 8 weeks; low readiness lighter).
+        const repFeet = Number((m as any).default_distance_feet ?? 0);
+        const yardTarget = pitchRoleForSprint && !restrictedConditioningWhy && /^repeat_/.test(m.slug) && repFeet > 0 ? pitcherYardTarget(pitchRoleForSprint, sprintWeek, undefined, !!conditioningSelection.dialedDown) : null;
+        const sprintDoseNow = yardTarget ? { reps: repsForYards(yardTarget.yards, repFeet), kind: yardTarget.kind, yards: yardTarget.yards } : null;
         // Only the rep count changes; distance and the canonical sprint rest rule stay as declared.
         const sprintOverrides = sprintDoseNow ? { sets: sprintDoseNow.reps } : {};
         push("conditioning", "conditioning", restrictedConditioningWhy ? {...m,why_prescribed:restrictedConditioningWhy,cue:'Seated stationary bike, comfortable pace, arms relaxed. Pain or a professional restriction — stop.'} : m, sprintOverrides, conditioningSelection.why, {
@@ -3354,7 +3358,7 @@ const handler = async (req: Request): Promise<Response> => {
           conditioning_restriction_reason: restrictedConditioningWhy,
           conditioning_counts_as_running: !restrictedConditioningWhy && isRunningConditioning([m.slug]),
           ...(m.slug.startsWith('easy_base_jog_') ? {rest_seconds:60,conditioning_easy_running:true} : {}),
-          ...(sprintDoseNow ? {pitcher_sprint_dose:{role:pitchRoleForSprint,week:sprintWeek,reps:sprintDoseNow.reps,kind:sprintDoseNow.kind}} : {}),
+          ...(sprintDoseNow ? {pitcher_sprint_dose:{role:pitchRoleForSprint,week:sprintWeek,reps:sprintDoseNow.reps,kind:sprintDoseNow.kind,target_yards:sprintDoseNow.yards,total_yards:Math.round(sprintDoseNow.reps*repFeet/3),cap_yards:SESSION_YARD_CAP}} : {}),
         });
       }
     }
@@ -3687,6 +3691,13 @@ const handler = async (req: Request): Promise<Response> => {
     );
     let finalRxs = orderedRxs;
 
+    // Owner Oct 31: no conditioning session passes 1000 yards (reps × declared distance).
+    {
+      const cond = finalRxs.filter((r) => r.slot === "conditioning");
+      const capped = capSessionYards(cond as any[]);
+      cond.forEach((r, i) => { if ((capped[i] as any).sets !== r.sets) { (r as any).why_payload = { ...((r as any).why_payload ?? {}), yard_cap: { cap_yards: SESSION_YARD_CAP, sets_from: r.sets, sets_to: (capped[i] as any).sets } }; r.sets = (capped[i] as any).sets; } });
+      if (cond.some((r) => r.sets === 0)) finalRxs = assignSequenceOrder(finalRxs.filter((r) => !(r.slot === "conditioning" && r.sets === 0)));
+    }
     // -------- Step 14 — Spike Governor (TI-2, §5.3), switch-gated --------
     // Off for everyone by default. When `load_spike_protection` does not
     // resolve on for this athlete nothing below runs and the day is byte-for-
@@ -3699,7 +3710,7 @@ const handler = async (req: Request): Promise<Response> => {
         const kept: typeof finalRxs = [];
         for (const r of finalRxs) {
           const isLift = r.slot === "lift";
-          if (isLift && outingFacts?.startsTomorrow && isPitcherAthlete && isLowerBodyLift(String(r.movement_slug), (r as any).movement_pattern ?? null)) continue;
+          if (isLift && outingFacts?.startsTomorrow && isPitcherAthlete) continue; // Owner Oct 31 (A): no lift the day before a start
           if (isLift && pitchRole && pitchRole !== "starter" && typeof r.sets === "number" && r.sets > 2) {
             const why = ((r as any).why_payload ?? {}) as Record<string, any>;
             const to = reliefSets(r.sets, pitchRole);
@@ -3707,7 +3718,7 @@ const handler = async (req: Request): Promise<Response> => {
           }
           kept.push(r);
         }
-        if (kept.length !== finalRxs.length) reductions.push({ reason: "pre_start_lower_body", detail: "No lower-body lift the day before a start." });
+        if (kept.length !== finalRxs.length) reductions.push({ reason: "pre_start_no_lift", detail: "No lift the day before a start — mobility and activation only." });
         finalRxs = assignSequenceOrder(kept);
       }
     } catch (roleErr) { console.warn("[wk-generate-daily] role lift rule skipped", roleErr); }
