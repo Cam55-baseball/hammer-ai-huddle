@@ -120,7 +120,7 @@ describe("Part B through the real daily builder — 8 weeks", () => {
         if (d.command && !d.because.some(b => /walk rate/.test(b))) problems.push(`${d.date}: no data reason`);
         if (sport === "softball" && d.pitchNames.some(n => /mound/i.test(n))) problems.push(`${d.date}: mound wording`);
       }
-      if (w === 1) console.log(`command ${sport} ${role}: plain ${base} days, command ${got} days`);
+      if (w === 1) console.log(`command ${sport} ${role}: plain ${base} days, command ${got} days`, JSON.stringify(wk.map(d => [d.date, d.command, d.because.filter(b => /command/i.test(b))])));
     });
     if (role === "starter") expect(cmd[1].filter(isMound).length).toBe(5);
     expect(problems).toEqual([]);
