@@ -8,7 +8,7 @@ import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 
 export function SeasonCounter() {
-  const { phaseDaysIn, phaseDaysRemaining } = useSeasonStatus();
+  const { phaseDaysIn, phaseDaysRemaining, resolvedPhase, inSeasonEndDate } = useSeasonStatus();
   const { display } = useCanonicalPhaseDisplay();
   const day = phaseDaysIn != null ? phaseDaysIn + 1 : null;
   return (
@@ -24,6 +24,7 @@ export function SeasonCounter() {
           {phaseDaysRemaining != null && phaseDaysRemaining >= 0 && (
             <p className="text-xs text-muted-foreground">Days left in this season: {phaseDaysRemaining}</p>
           )}
+          {resolvedPhase === 'in_season' && inSeasonEndDate && <p className="text-xs text-muted-foreground">Season ends: {new Date(`${inSeasonEndDate}T12:00:00`).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>}
         </div>
       </CardContent>
     </Card>

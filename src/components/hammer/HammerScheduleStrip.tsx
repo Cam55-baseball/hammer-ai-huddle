@@ -28,7 +28,7 @@ const PHASE_TONE: Record<string, string> = {
 
 export function HammerScheduleStrip() {
   const ctx = useGameDayContext();
-  const { updateSeasonStatus } = useSeasonStatus();
+  const { updateSeasonStatus, inSeasonEndDate } = useSeasonStatus();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importerOpen, setImporterOpen] = useState(false);
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
@@ -68,6 +68,7 @@ export function HammerScheduleStrip() {
             </div>
           </div>
           <p className="text-xs text-foreground/90 leading-snug">{ctx.summaryLine}</p>
+          {ctx.seasonPhase === 'in_season' && inSeasonEndDate && <p className="text-xs text-muted-foreground">Season ends: {new Date(`${inSeasonEndDate}T12:00:00`).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>}
           <div className="flex flex-wrap gap-1.5 pt-1">
             {showMarkInSeason && (
               <Button
