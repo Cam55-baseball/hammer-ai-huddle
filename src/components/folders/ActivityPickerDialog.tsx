@@ -74,7 +74,7 @@ export function ActivityPickerDialog({ open, onOpenChange, sport, onImport }: Ac
         intensity: d.intensity as any,
         distance_unit: d.distance_unit as any,
         embedded_running_sessions: (d.embedded_running_sessions as any) ?? [],
-      } as CustomActivityTemplate)));
+      } as unknown as CustomActivityTemplate)));
     }
     setLoading(false);
   }, [sport]);
