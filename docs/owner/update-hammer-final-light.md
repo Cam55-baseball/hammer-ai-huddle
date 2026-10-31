@@ -1,0 +1,12 @@
+# Update Hammer final light run — incomplete
+
+Same TEST demo2way, connected democoach; all browser sessions sequential and preceded by load checks. No live suites, subagents, publishing, deployments, cron or iOS changes.
+
+- Coach Development view opened as democoach: saved softball plan still off-season. Separate health-sharing flag is false, so shoulder detail remained correctly private. Screenshot `/tmp/browser/update-finish/coach-after.png` is discrepancy evidence, not acceptance.
+- Schedule & What Changed was entered through Open identity card. Its date form originally contained Nov13–Mar1. Real UI edits saved the requested Oct30–Nov20 window. End-date display was added to Schedule and The General in preview; no generator changes were made.
+- Schedule's Update Hammer what changed dialog saved `Offseason begins Nov 21`, producing an active dated SEASON entry for 2026-11-21. Actual current date is Oct30/31, so Nov21 is not in today's seven-day window. The existing future-effective rebuild path starts its seven dates on Nov21 instead; no clock was falsified.
+- Readback: Nov21 softball snapshot is os_q1, rest=true, composition_version=sport_physical_v1. After the season-date edit, Oct31, Nov1, Nov2, Nov3 and Nov5 softball snapshots show in_season. Oct30 still contains os_q1, and Nov4 has no softball composed snapshot. Thus the complete seven-day success and unchanged in-season Today are not certified. Final General also showed Offseason Q1, not the requested consistent In-Season state.
+- Screenshots: `/tmp/browser/update-finish/season-edit-result.png`, `/tmp/browser/update-finish/future-result.png`, `/tmp/browser/update-finish/season-card.png`, `/tmp/browser/update-finish/general.png`. These are observed outcomes, not all positive acceptance images. The first edit screenshot was captured while Saving; no successful seven-date confirmation is claimed.
+- 19 offline seasonTimeline/rebuildAfterChange tests passed; latest automatic preview check build OK at 2026-10-31T00:04:23Z. No safety, subscription or health gates weakened; no TEST subscriptions, health-sharing preferences or plan snapshots manually rewritten.
+
+Update Hammer E2E: no. Remaining diagnosis: why today's saved plan was retained and Nov4 failed, then certify all seven days and recheck General/coach without overriding protected work or sport entitlements. Coach shoulder evidence requires the athlete's own health-sharing consent.
