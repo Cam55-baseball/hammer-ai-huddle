@@ -2856,7 +2856,10 @@ function resolveOutingFacts(input) {
     pitchedYesterday: thrown.some((o) => o.actual_date === yesterday && o.outing_type !== "bullpen"),
     relieverAvailableSoon: isReliever && (avail.get(planDate) === true || avail.get(tomorrow) === true),
     relieverUnavailableToday: avail.get(planDate) === false,
-    unconfirmed
+    unconfirmed,
+    limitPitching: settings?.limit_pitching === true,
+    pitchingRole: settings?.pitching_role ?? null,
+    primaryFocus: settings?.primary_focus ?? null
   };
 }
 
@@ -3429,21 +3432,51 @@ function pitchingDay(date, sport, quarter, facts) {
 }
 
 // src/lib/hammer/prescription/finalArmGuard.ts
+var WARMUP_TOSS = /warm-up toss|warm-up throws/i;
+function throwKind(d3, blockModality) {
+  if (d3.stage !== "full_go" && WARMUP_TOSS.test(d3.name ?? "")) return "warmup";
+  if (d3.armCard === "pitching" || d3.armCard !== "throwing" && blockModality === "pitching") return "pitching";
+  return "position";
+}
+var NO_THROWING_REASON = "No throwing today: your arm budget can't fit warm-up throws plus a throwing activity. Your arm gets the day to recover.";
 function finalArmGuard(blocks, input) {
   const budget = armBudget(input);
   const by = equivalentsByDay((input.history?.rows ?? []).filter((r) => r.entry_date <= input.date));
   const since = new Date(Date.parse(input.date) - 6 * 864e5).toISOString().slice(0, 10);
   let room = input.history && !input.history.unavailable && input.age !== null ? Math.max(0, Math.min(budget.daily - (by.get(input.date) ?? 0), budget.weekly - [...by].filter(([d3]) => d3 >= since).reduce((n, [, v]) => n + v, 0))) : 0;
-  return blocks.map((block) => {
-    if (block.status !== "ready") return block;
-    const drills = block.drills.filter((d3) => {
-      if (!d3.armEvent) return true;
-      const cost = throwUnits([d3.armEvent]);
-      if (cost > room) return false;
-      room -= cost;
-      return true;
+  const order = input.limitPitching ? ["warmup", "position", "pitching"] : ["warmup", "pitching", "position"];
+  const rows3 = [];
+  blocks.forEach((b, bi) => {
+    if (b.status !== "ready") return;
+    b.drills.forEach((d3, di) => {
+      if (d3.armEvent) rows3.push({ bi, di, kind: throwKind(d3, b.modality), cost: throwUnits([d3.armEvent]) });
     });
-    return drills.length === block.drills.length ? block : { ...block, drills, because: [...block.because ?? [], "Pitching and position throws use one arm budget. Extra throwing was left out to keep you within it."] };
+  });
+  const kept = /* @__PURE__ */ new Set();
+  const cut = /* @__PURE__ */ new Set();
+  for (const kind of order) for (const r of rows3.filter((x) => x.kind === kind)) {
+    if (r.cost > room) {
+      cut.add(kind);
+      continue;
+    }
+    room -= r.cost;
+    kept.add(`${r.bi}:${r.di}`);
+  }
+  const hadActivity = rows3.some((r) => r.kind !== "warmup");
+  const keptActivity = rows3.some((r) => r.kind !== "warmup" && kept.has(`${r.bi}:${r.di}`));
+  const warmupsFit = !rows3.some((r) => r.kind === "warmup" && !kept.has(`${r.bi}:${r.di}`));
+  const noThrowing = hadActivity && (!keptActivity || !warmupsFit);
+  const firstCut = input.limitPitching ? "pitching" : "position";
+  return blocks.map((block, bi) => {
+    if (block.status !== "ready") return block;
+    const drills = block.drills.filter((d3, di) => !d3.armEvent || !noThrowing && kept.has(`${bi}:${di}`));
+    if (drills.length === block.drills.length) return block;
+    if (noThrowing) {
+      const armCard = block.modality === "pitching" || block.modality === "throwing" || block.modality === void 0;
+      return { ...block, drills, status: armCard ? "suppressed" : block.status, because: [...block.because ?? [], NO_THROWING_REASON] };
+    }
+    const why = cut.has(firstCut) && !cut.has(firstCut === "position" ? "pitching" : "position") ? input.limitPitching ? "You asked to limit your pitching, so pitching throws were cut first to stay inside your arm budget. Warm-up throws are kept." : "Position throws were cut first to stay inside your arm budget. Warm-up throws and pitching are kept." : "Pitching and position throws use one arm budget. Extra throwing was left out to keep you within it. Warm-up throws are kept first.";
+    return { ...block, drills, because: [...block.because ?? [], why] };
   });
 }
 
@@ -8651,7 +8684,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const defenseToday = prehabbed.some((x) => x.modality === "defense" && x.status === "ready");
     return [pitching, ...throwingDrills.length && (!access.pitcherOnly || defenseToday) ? [{ ...b, drills: throwingDrills, steps: drillsToSteps(throwingDrills), title: "Throwing \u2014 position work within your shared arm budget", gamePlanTemplate: null }] : []];
   });
-  const blocks = access?.hasPitching ? finalArmGuard(unguardedBlocks, { sport, role: access.pitcherOnly ? "pitcher" : "two_way", age: ctx.get("age_years")?.value ?? null, date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`, history: roadmapInputs.armHistory }).map((b) => ({ ...b, steps: drillsToSteps(b.drills) })) : unguardedBlocks;
+  const blocks = access?.hasPitching ? finalArmGuard(unguardedBlocks, { sport, role: access.pitcherOnly ? "pitcher" : "two_way", age: ctx.get("age_years")?.value ?? null, date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`, history: roadmapInputs.armHistory, limitPitching: roadmapInputs.pitcherOutings?.limitPitching === true }).map((b) => ({ ...b, steps: drillsToSteps(b.drills) })) : unguardedBlocks;
   const warmed = withWarmupThrows(blocks);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
@@ -8724,28 +8757,34 @@ function withDefenseDayThrowing(cycled, ordered) {
   });
 }
 var ARM_PREP = /band|neural prep|wrist snap|lat \+ hip/i;
-var WARMUP_TOSS = /warm-up toss/i;
+var WARMUP_TOSS2 = /warm-up toss/i;
 var THROW_ROW = (d3) => !!d3.armEvent || /toss|throw|pitch/i.test(d3.name) && !ARM_PREP.test(d3.name) && !/cooldown|cool-down/i.test(d3.name);
 function withWarmupThrows(blocks) {
   const wi = blocks.findIndex((b) => b.modality === "warmup" && b.status === "ready");
-  if (wi < 0) return [...blocks];
   const out = [...blocks];
   const moved = [];
+  const throws = (b) => b.status === "ready" && (b.modality === "throwing" || b.modality === "pitching" ? b.drills.some(THROW_ROW) : b.modality !== "warmup" && b.drills.some((d3) => !!d3.armEvent));
   out.forEach((b, i) => {
-    if (b.modality !== "throwing" && b.modality !== "pitching" || b.status !== "ready" || !b.drills.some(THROW_ROW)) return;
-    const card = b.modality === "pitching" ? "Pitching" : "Throwing";
-    const take = (d3) => d3.stage !== "full_go" && (ARM_PREP.test(d3.name) || WARMUP_TOSS.test(d3.name));
+    if (!throws(b)) return;
+    const card = b.modality === "pitching" ? "Pitching" : b.modality === "throwing" ? "Throwing" : b.title.split(/[—·-]/)[0].trim() || "arm";
+    const take = (d3) => d3.stage !== "full_go" && (ARM_PREP.test(d3.name) || WARMUP_TOSS2.test(d3.name));
     const prep = b.drills.filter(take);
     const rest = b.drills.filter((d3) => !take(d3));
-    if (!rest.some(THROW_ROW)) return;
+    if (!rest.some((d3) => THROW_ROW(d3) || !!d3.armEvent)) return;
     const note = `Log these on your ${card} card.`;
     const rows3 = prep.map((d3) => ({ ...d3, name: ARM_PREP.test(d3.name) ? `Arm prep \u2014 ${d3.name}` : `Warm-up throws \u2014 ${d3.name}`, cue: [d3.cue, note].filter(Boolean).join(" ") }));
-    if (!prep.some((d3) => WARMUP_TOSS.test(d3.name))) rows3.push({ name: "Warm-up throws \u2014 easy to building", dosage: `Start your ${card} card's first throws easy and build up. Not extra throws.`, stage: "prep", cue: note, stopIf: "Stop if your arm hurts." });
+    if (!prep.some((d3) => WARMUP_TOSS2.test(d3.name))) rows3.push({ name: "Warm-up throws \u2014 easy to building", dosage: `Start your ${card} card's first throws easy and build up. Not extra throws.`, stage: "prep", cue: note, stopIf: "Stop if your arm hurts." });
     if (!prep.some((d3) => ARM_PREP.test(d3.name))) rows3.unshift({ name: "Arm prep \u2014 arm circles and band pull-aparts", dosage: "1 \xD7 10 each, easy", stage: "prep", cue: note, stopIf: "Stop if your arm hurts." });
+    if (wi < 0) {
+      const drills2 = [...rows3, ...rest];
+      out[i] = { ...b, drills: drills2, steps: drillsToSteps(drills2) };
+      return;
+    }
+    if (moved.some((m) => m.name === rows3[rows3.length - 1]?.name && m.cue === rows3[rows3.length - 1]?.cue)) return;
     moved.push(...rows3);
     out[i] = { ...b, drills: rest, steps: ["Your arm prep and warm-up throws are in the full-body warm-up. Log their counts here.", ...drillsToSteps(rest)] };
   });
-  if (!moved.length) return out;
+  if (!moved.length || wi < 0) return out;
   const w = out[wi];
   const drills = [...w.drills, ...moved];
   out[wi] = { ...w, drills, steps: drillsToSteps(drills) };

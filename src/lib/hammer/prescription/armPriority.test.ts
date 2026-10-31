@@ -17,7 +17,7 @@ describe('Owner Oct 31 arm-budget priority',()=>{
   const out=finalArmGuard([{status:'ready',modality:'pitching',drills:[warm,pitch]},{status:'ready',modality:'throwing',drills:[big]}],room(0));
   expect(out[0].drills.map(d=>d.name)).toEqual([warm.name,pitch.name]);
   expect(out[1].drills).toEqual([]);
-  expect(out[1].because?.join(' ')).toMatch(/Position throws were cut first/);
+  expect((out[1] as any).because?.join(' ')).toMatch(/Position throws were cut first/);
  });
  it('cuts pitching first when the player asked to limit pitching',()=>{
   const big={...pitch,armEvent:ev(500,'pitch')};
@@ -29,7 +29,7 @@ describe('Owner Oct 31 arm-budget priority',()=>{
   const out=finalArmGuard([{status:'ready',modality:'pitching',drills:[warm,pitch]},{status:'ready',modality:'throwing',drills:[pos]}],{...input(),history:{rows:[],unavailable:true}} as any);
   expect(out.every(b=>b.status==='suppressed')).toBe(true);
   expect(out[0].drills).toEqual([]);
-  expect(out[0].because).toContain(NO_THROWING_REASON);
+  expect((out[0] as any).because).toContain(NO_THROWING_REASON);
  });
 });
 
