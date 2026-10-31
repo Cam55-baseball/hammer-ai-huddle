@@ -195,6 +195,7 @@ export const PITCH_DAY_TAGS: Record<string, { baseball: string[]; softball: stri
   side: { baseball: ["shortbox"], softball: ["shortbox_circle"] },
   touch: { baseball: ["light_mound"], softball: ["circle"] },
   bullpen: { baseball: ["full_bullpen", "light_mound"], softball: ["circle"] },
+  available: { baseball: ["light_mound"], softball: ["circle"] },
   flush: { baseball: ["flat_ground"], softball: ["flat_ground"], purpose: "throwing_mobility" },
 };
 /** Owner/library pitcher drill picked by its tags for this pitching day, sport and role, or null. */

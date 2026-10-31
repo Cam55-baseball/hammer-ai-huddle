@@ -14,7 +14,7 @@ export function withTaggedPitchDrill<D extends Drill>(drills: D[], ctx: { sport:
   const pick = ownerPitchDrill({ sport: ctx.sport, dayType: ctx.dayType, role: ctx.role ?? null, owned: ctx.owned ?? null, day: ctx.day });
   if (!pick) return drills;
   let target = -1;
-  for (let i = drills.length - 1; i >= 0; i--) { const d = drills[i]; if (d.prescriptionOrigin !== "owner" && d.stage !== "prep" && d.stage !== "log") { target = i; break; } }
+  for (let i = drills.length - 1; i >= 0; i--) { const d = drills[i]; if (d.prescriptionOrigin !== "owner" && d.armEvent && (d.stage === undefined || d.stage === "drills")) { target = i; break; } }
   const count = pick.pitch_count ?? 0;
   const row = {
     name: pick.name, dosage: pick.dosage ?? "", cue: pick.cue ?? "", setup: pick.setup ?? undefined,
