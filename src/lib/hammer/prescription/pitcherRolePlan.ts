@@ -57,7 +57,9 @@ export function commandDayPlan(ctx: { sport: "baseball" | "softball"; role?: Pit
   if (!judge.struggling || !ctx.role || !ctx.facts?.hasSchedule) return { add: false, because: [] };
   const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const monday = new Date(ctx.day); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
-  const week = Array.from({ length: 7 }, (_, k) => { const d = new Date(monday); d.setDate(monday.getDate() + k); const date = iso(d); return { date, day: cycleDay({ sport: ctx.sport, role: ctx.role!, date, outingDates: ctx.facts!.thrownDates, plannedStarts: ctx.facts!.plannedStartDates, gameDates: [] }) }; });
+  const week = Array.from({ length: 7 }, (_, k) => { const d = new Date(monday); d.setDate(monday.getDate() + k); const date = iso(d); // Planned starts earlier in the week are treated as pitched (the week is planned ahead); Sunday stays rest as in pitchingDay.
+    const outingDates = [...ctx.facts!.thrownDates, ...ctx.facts!.plannedStartDates.filter((p) => p < date)];
+    return { date, day: d.getDay() === 0 ? "rest" as const : cycleDay({ sport: ctx.sport, role: ctx.role!, date, outingDates, plannedStarts: ctx.facts!.plannedStartDates, gameDates: [] }) }; });
   const plan = commandExtraDays({ sport: ctx.sport, week, struggling: true, limitPitching: ctx.facts.limitPitching });
   const today = iso(ctx.day);
   const place = ctx.sport === "softball" ? "circle" : "mound";
