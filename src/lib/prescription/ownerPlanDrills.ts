@@ -189,4 +189,23 @@ export function ownerMindDrill(ctx: { sport: string; day?: Date }): OwnerDrillRo
   return rotate(ownerDrillsForSlot(["hammers_today:mind"], { sport: ctx.sport, owned: null }), ctx.day ?? new Date());
 }
 
+/** Owner Oct 31: which pitcher tags fit each pitching day type, per sport. */
+export const PITCH_DAY_TAGS: Record<string, { baseball: string[]; softball: string[]; purpose?: string }> = {
+  side: { baseball: ["shortbox"], softball: ["shortbox_circle"] },
+  touch: { baseball: ["light_mound"], softball: ["circle"] },
+  bullpen: { baseball: ["full_bullpen", "light_mound"], softball: ["circle"] },
+  flush: { baseball: ["flat_ground"], softball: ["flat_ground"], purpose: "throwing_mobility" },
+};
+/** Owner/library pitcher drill picked by its tags for this pitching day, sport and role, or null. */
+export function ownerPitchDrill(ctx: { sport: string; dayType: string; role?: string | null; owned?: ReadonlySet<string> | null; day?: Date }): OwnerDrillRow | null {
+  const want = PITCH_DAY_TAGS[ctx.dayType];
+  if (!want) return null;
+  const types = ctx.sport === "softball" ? want.softball : want.baseball;
+  const pool = ownerDrillsForSlot(["hammers_today:skill"], { sport: ctx.sport, skill: "throwing", owned: ctx.owned ?? null } as MergeContext)
+    .filter((r) => r.pitch_mound_type && types.includes(r.pitch_mound_type))
+    .filter((r) => !want.purpose || (r.pitch_purposes ?? []).includes(want.purpose))
+    .filter((r) => !ctx.role || !(r.pitch_role_fit ?? []).length || (r.pitch_role_fit ?? []).includes(ctx.role));
+  return rotate(pool, ctx.day ?? new Date());
+}
+
 if (typeof window !== "undefined" && import.meta.env.MODE !== "test") void loadOwnerPlanDrills();
