@@ -17,7 +17,12 @@ export function CoachPlayerWeek({athleteId}:{athleteId:string}) {
     queryFn:async ():Promise<WeekResult> => {
       const {data,error}=await supabase.rpc('coach_athlete_week' as never,{_athlete:athleteId,_from:dates[0]} as never);
       if(error) throw error;
-      return data as unknown as WeekResult;
+      const result = data as unknown as WeekResult;
+      if (result.state === 'denied') return result;
+      const lineage = await supabase.rpc('coach_week_rx_lineage' as never, {_athlete:athleteId,_from:dates[0]} as never);
+      if (lineage.error) throw lineage.error;
+      const ids = lineage.data as unknown as Record<string,string>;
+      return {...result,days:result.days.map(day=>({...day,prescriptions:day.prescriptions.map(p=>({...p,coach_rx:ids[p.id] ?? null}))}))};
     }});
   const selectWeek = (n:number) => {setOffset(n);setSelected(weekDates(getTodayDate(),n)[0]);};
   const active = query.data?.days?.find(d=>d.date===selected);
@@ -36,13 +41,13 @@ export function CoachPlayerWeek({athleteId}:{athleteId:string}) {
     {query.isLoading ? <p role="status">Loading saved week…</p> : query.error ? <p role="alert" className="text-destructive">Couldn't load this week. Try refresh.</p> : query.data?.state==='denied' ? <p role="alert">Training sharing isn't available for this player.</p> : <>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-7">
         {dates.map(date=>{const day=query.data?.days?.find(d=>d.date===date);const daily=day?playerWeekCards(day):[];
-          return <div key={date} className={`min-w-0 rounded-md border p-2 ${date===selected?'border-primary bg-accent':'border-border'}`}>
+          return <div key={date} className={`min-w-0 rounded-md border p-2 ${date===selected?'border-primary':'border-border'}`}>
             <Button className="mb-2 w-full" variant={date===selected?'default':'ghost'} aria-pressed={date===selected} onClick={()=>setSelected(date)} aria-label={`Open ${date}`}>
               {dateLabel(date,{weekday:'short',day:'numeric'})}
             </Button>
             {day?.restDay && <p className="mb-2 text-xs font-semibold">Rest day</p>}
             {!day || day.plan.state==='unavailable' ? <p className="text-xs text-muted-foreground">No saved plan</p>:null}
-            <ul className="space-y-3">{daily.map(card=><li key={card.id} className="text-xs break-words"><p className="font-semibold">{card.title}</p><p className={card.status==='done'?'text-primary':'text-muted-foreground'}>{WORK_STATUS[card.status]}</p><ul className="mt-1 space-y-1">{card.activities.map(a=><li key={a.id}>{a.name} · {WORK_STATUS[a.status]}</li>)}</ul></li>)}</ul>
+            <ul className="max-h-72 space-y-3 overflow-y-auto">{daily.map(card=><li key={card.id} className="text-xs break-words"><p className="font-semibold">{card.title}</p><p className={card.status==='done'?'text-primary':'text-muted-foreground'}>{WORK_STATUS[card.status]}</p><details className="mt-1"><summary className="cursor-pointer text-muted-foreground">Activities ({card.activities.length})</summary><ul className="mt-1 space-y-1">{card.activities.map(a=><li key={a.id}>{a.name} · {WORK_STATUS[a.status]}</li>)}</ul></details></li>)}</ul>
           </div>;})}
       </div>
       <div className="space-y-3 border-t border-border pt-4" data-week-day-details>
