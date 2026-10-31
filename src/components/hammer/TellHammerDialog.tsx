@@ -32,6 +32,8 @@ import { ActiveSportSwitch } from "@/components/hammer/ActiveSportSwitch";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 import { CompetitionLevelPicker } from "@/components/shared/CompetitionLevelPicker";
 import { detectInjuryPhrasing, type ReportInjuryRegionKey } from "@/lib/hammer/injury/reportInjury";
+import { detectFullGoPhrasing } from "../../../supabase/functions/_shared/health/fullGo";
+import { FullGoPrompts } from "@/components/hammer/injury/FullGo";
 import { useScheduleTimeline } from '@/hooks/useScheduleTimeline';
 import { parseScheduleRequest } from '@/lib/hammer/tellHammers/parse';
 import { getTodayDate } from '@/utils/dateUtils';
@@ -62,7 +64,9 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
 
   // Deterministic phrase detection — surfaces a one-tap promotion to a real
   // RR-6 injury report. NEVER auto-emits; the athlete still confirms.
-  const injuryHint = useMemo(() => detectInjuryPhrasing(note), [note]);
+  const fullGoHint = useMemo(() => detectFullGoPhrasing(note), [note]);
+  // Healed / full go words never offer "Report injury" (owner Fix 7).
+  const injuryHint = useMemo(() => fullGoHint.matched ? { matched: false, region: null } : detectInjuryPhrasing(note), [note, fullGoHint.matched]);
 
   function openInjuryFromText() {
     setPrefillRegion(injuryHint.region);
@@ -172,6 +176,8 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
               className="text-xs mt-1"
             />
           </div>
+
+          {fullGoHint.matched && <FullGoPrompts only={fullGoHint.region} />}
 
           {injuryHint.matched && (
             <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-[11px]">

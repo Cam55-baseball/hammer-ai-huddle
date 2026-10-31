@@ -159,6 +159,7 @@ import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
+import { ActiveInjuryCards } from "@/components/hammer/injury/FullGo";
 import { CompetitionLevelPrompt } from "@/components/hammer/cards/CompetitionLevelPrompt";
 import { PitchingCard } from "@/components/hammer/PitchingCard";
 import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitching/pitcherProfile";
@@ -1045,6 +1046,7 @@ function HammerDailyPlanBody({
           <DayNoticesDrawerItem />
         </ErrorBoundary>
         <ErrorBoundary><TestingDayNotice /></ErrorBoundary>
+        <ErrorBoundary><ActiveInjuryCards /></ErrorBoundary>
         {faultContext.isError && <p role="alert" className="text-sm text-destructive">Couldn't check your analysis history. No analysis drill changes were applied.</p>}
         {drillCirculation.error && <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. No analysis drill changes were applied.</p>}
         {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}
