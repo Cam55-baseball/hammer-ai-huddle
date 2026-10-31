@@ -204,13 +204,13 @@ export function buildPitchingMicrocycle(input: Input): PitchingMicrocycle {
       if (!facts.hasSchedule) return entry;
       // A scheduled competition is an anchor, not permission to add practice pitches.
       // Recovery and pain clamps remain downstream and authoritative.
-      if (facts.pitchedYesterday) return mkDay(entry.dow, "flush");
-      if (facts.startsToday) return mkDay(entry.dow, "start");
-      if (facts.startsTomorrow) return mkDay(entry.dow, "touch");
+      if (facts.pitchedYesterday) return mkDay(entry.dow, "flush", sport);
+      if (facts.startsToday) return mkDay(entry.dow, "start", sport);
+      if (facts.startsTomorrow) return mkDay(entry.dow, "touch", sport);
       const available = input.pitcherSchedule.availability.find((a) => a.date === planDate);
-      if (available?.available && (input.pitcherSchedule.settings?.role === "reliever" || input.pitcherSchedule.settings?.role === "both")) return mkDay(entry.dow, "available");
+      if (available?.available && (input.pitcherSchedule.settings?.role === "reliever" || input.pitcherSchedule.settings?.role === "both")) return mkDay(entry.dow, "available", sport);
       // Never invent a start from a weekday template once real scheduling exists.
-      if (entry.dayType === "start" || entry.dayType === "game" || entry.dayType === "available") return mkDay(entry.dow, "touch");
+      if (entry.dayType === "start" || entry.dayType === "game" || entry.dayType === "available") return mkDay(entry.dow, "touch", sport);
       return entry;
     });
   }

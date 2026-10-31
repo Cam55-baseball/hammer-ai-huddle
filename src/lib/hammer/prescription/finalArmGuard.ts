@@ -1,5 +1,6 @@
 import {armBudget,throwUnits,type ThrowEvent,type ThrowRole} from '../../../../supabase/functions/_shared/wic/phases/armLedger';
 import {equivalentsByDay} from '../../../../supabase/functions/_shared/wic/phases/nextThrowDate';
+import {minorityCap} from '../../../../supabase/functions/_shared/wic/pitching/roleCycle';
 import type {PlanningArmHistory} from './pitchingDay';
 
 type GuardDrill={armEvent?:ThrowEvent;name?:string;stage?:string;armCard?:string};
@@ -17,7 +18,7 @@ export function throwKind(d:GuardDrill,blockModality?:string):ThrowKind{
 export const NO_THROWING_REASON="No throwing today: your arm budget can't fit warm-up throws plus a throwing activity. Your arm gets the day to recover.";
 
 /** Removal-only final envelope over explicit arm metadata across every card. */
-export function finalArmGuard<T extends {status:string;modality?:string;drills:readonly D[];because?:readonly string[]},D extends GuardDrill>(blocks:readonly T[],input:{sport:'baseball'|'softball';role:ThrowRole;age:number|null;date:string;history?:PlanningArmHistory;limitPitching?:boolean}):T[]{
+export function finalArmGuard<T extends {status:string;modality?:string;drills:readonly D[];because?:readonly string[]},D extends GuardDrill>(blocks:readonly T[],input:{sport:'baseball'|'softball';role:ThrowRole;age:number|null;date:string;history?:PlanningArmHistory;limitPitching?:boolean;primaryFocus?:'pitcher'|'position'|null}):T[]{
  const budget=armBudget(input);
  const by=equivalentsByDay((input.history?.rows??[]).filter(r=>r.entry_date<=input.date));
  const since=new Date(Date.parse(input.date)-6*86400000).toISOString().slice(0,10);
@@ -26,9 +27,12 @@ export function finalArmGuard<T extends {status:string;modality?:string;drills:r
  const rows:{bi:number;di:number;kind:ThrowKind;cost:number}[]=[];
  blocks.forEach((b,bi)=>{if(b.status!=='ready')return;b.drills.forEach((d,di)=>{if(d.armEvent)rows.push({bi,di,kind:throwKind(d,b.modality),cost:throwUnits([d.armEvent])});});});
  const kept=new Set<string>();const cut=new Set<ThrowKind>();
+ // Owner Oct 31 two-way split: after warm-ups, the minority kind may use at most ~30% of the room.
+ let caps:{pitching:number;position:number}|null=null;const used={pitching:0,position:0};
  for(const kind of order)for(const r of rows.filter(x=>x.kind===kind)){
-  if(r.cost>room){cut.add(kind);continue;}
-  room-=r.cost;kept.add(`${r.bi}:${r.di}`);
+  if(kind!=='warmup'&&!caps)caps=input.role==='two_way'?minorityCap(room,input.primaryFocus):{pitching:Infinity,position:Infinity};
+  if(r.cost>room||(kind!=='warmup'&&caps&&used[kind]+r.cost>caps[kind])){cut.add(kind);continue;}
+  room-=r.cost;kept.add(`${r.bi}:${r.di}`);if(kind!=='warmup')used[kind]+=r.cost;
  }
  const hadActivity=rows.some(r=>r.kind!=='warmup');
  const keptActivity=rows.some(r=>r.kind!=='warmup'&&kept.has(`${r.bi}:${r.di}`));

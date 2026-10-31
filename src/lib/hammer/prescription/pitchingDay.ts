@@ -2,6 +2,7 @@ import { buildPitchingMicrocycle, type PitcherDayType } from '../pitching/pitchi
 import { DEFAULT_PITCHER_PROFILE } from '../pitching/pitcherProfile';
 import type { QuarterDescriptor } from '../roadmap/seasonQuarters';
 import type { OutingFacts } from '../../../../supabase/functions/_shared/wic/pitching/outingFacts';
+import { cycleDay } from '../../../../supabase/functions/_shared/wic/pitching/roleCycle';
 import type { EassDrill } from './eassLibrary';
 import { armBudget, throwUnits, windmillCheck, type ThrowRole, type ThrowEvent } from '../../../../supabase/functions/_shared/wic/phases/armLedger';
 import { equivalentsByDay, type ArmRow } from '../../../../supabase/functions/_shared/wic/phases/nextThrowDate';
@@ -76,6 +77,13 @@ export function pitchingDay(date:Date,sport:'baseball'|'softball',quarter:Quarte
   if(facts?.pitchedYesterday)return 'flush';
   if(facts?.startsToday)return 'start';
   if(facts?.startsTomorrow)return 'touch';
+  // Owner Oct 31 role cycle: second day after a start is rest; back-to-back relief gets a 2nd recovery day.
+  if(facts?.pitchingRole&&facts.hasSchedule){
+   const iso=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+   const day=cycleDay({sport,role:facts.pitchingRole,date:iso,outingDates:facts.thrownDates,plannedStarts:facts.plannedStartDates,gameDates:[]});
+   const map:Record<string,PitcherDayType>={rest:'rest',day_after:'flush',long_toss:'long_toss',bullpen:'bullpen',shortbox:'side',light_mound:'touch',pre_start:'touch'};
+   if(map[day]&&!(facts.relieverAvailableSoon&&facts.pitchingRole!=='starter'))return map[day];
+  }
   if(facts?.relieverAvailableSoon)return 'available';
   // No extra Saturday pen: the existing microcycle alone sets bullpen days (outing-equivalent + one pen).
   const cycle=buildPitchingMicrocycle({sport,rung:'sustain',quarter,profile:DEFAULT_PITCHER_PROFILE,today:date,gameDows:[],preferredBullpenDow:null});
