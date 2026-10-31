@@ -18,6 +18,7 @@ export function useSessionControls(athleteId?: string, from?: string, to?: strin
       if (error) throw error;
       if(data?.length===1000)throw new Error('All coach notes could not be checked. Choose one day.');
       // A dated decision cannot spill into a later sport switch.
+      if(user?.id !== athleteId) return (data ?? []) as SessionControl[];
       const context = await supabase.from('athlete_context').select('sport_primary').eq('user_id', athleteId).maybeSingle();
       if (context.error) throw context.error;
       return (data ?? []).filter(c => c.sport === context.data?.sport_primary) as SessionControl[];
