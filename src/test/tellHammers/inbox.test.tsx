@@ -8,6 +8,7 @@ vi.mock("@/hooks/useScheduleTimeline", () => ({
   useScheduleTimeline: () => ({ enabled, entries: [], save, undo, loading: false, switchOn: enabled }),
 }));
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn(), message: vi.fn() }) }));
+vi.mock("@/hooks/usePitcherSchedule", () => ({ usePitcherSchedule: () => ({ data: null, facts: null, today: null, unconfirmed: [], upcoming: [], saveSettings: vi.fn(), planStart: vi.fn(), resolveOuting: vi.fn(), threwToday: vi.fn(), setAvailable: vi.fn() }) }));
 
 import { TellHammersInbox } from "@/components/hammer/TellHammersInbox";
 
