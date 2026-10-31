@@ -82,6 +82,8 @@ describe("Part B through the real daily builder — 8 weeks", () => {
           if (!sat.pitchNames.some(n => /med-ball/.test(n))) problems.push(`${sat.date}: day after start lacks med-ball`);
           if (sun.pitches > 0) problems.push(`${sun.date}: pitches on rest day`);
           if (thu.strength.some(x => /squat|deadlift|lunge/i.test(x))) problems.push(`${thu.date}: lower-body lift before start`);
+          if (thu.pitches > 20) problems.push(`${thu.date}: ${thu.pitches} pitches the day before a start`);
+          if (!thu.pitchNames.some(n => /Light (mound|circle)/i.test(n))) problems.push(`${thu.date}: no light catch before start`);
         }
       } else {
         for (const d of wk) if (d.strength.some(x => /^Main lift.*\b(4|5) x/i.test(x))) problems.push(`${d.date}: reliever lift not reduced`);

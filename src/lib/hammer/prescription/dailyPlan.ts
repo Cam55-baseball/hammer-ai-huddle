@@ -68,7 +68,7 @@ import {
 } from "./eassLibrary";
 import { selectDefenseDrills, resolveDefenseTier } from "./defenseLibrary";
 import { mergeOwnerSlotDrills } from "@/lib/prescription/ownerPlanDrills";
-import { withTaggedPitchDrill, applyPitcherLiftRule, commandDayPlan, withCommandDrill } from "./pitcherRolePlan";
+import { withTaggedPitchDrill, applyPitcherLiftRule, commandDayPlan, withCommandDrill, lightPreStart } from "./pitcherRolePlan";
 import {
   resolveWeeklyTemplate,
   applyMicrocycle,
@@ -2620,7 +2620,10 @@ export function buildHammerDailyPlan(
     // Owner Oct 31: up to 5 mound/circle days for data-shown command trouble; extra day is light and arm limits still decide.
     const command=b.status==='ready'?commandDayPlan({sport,role:pitchFacts?.pitchingRole??null,facts:pitchFacts,evidence:roadmapInputs.pitchCommand,day:today}):{add:false,because:[] as string[]};
     if(command.add){const r=withCommandDrill(pitchingDrills as any[],{sport,role:pitchFacts?.pitchingRole??null,day:today});pitchingDrills=r.drills as typeof b.drills;if(!r.id)command.because=[];}
-    const throwingDrills=b.drills.filter(d=>d.armCard==='throwing');
+    // Owner-approved: the day before a start is light — light mound/circle catch (~15), arm care, no heavy throwing drills.
+    const preStart=!!pitchFacts?.startsTomorrow&&b.status==='ready';
+    if(preStart){const light=lightPreStart(pitchingDrills as any[]);pitchingDrills=light.drills as typeof b.drills;command.because=[...command.because,...light.because];}
+    const throwingDrills=b.drills.filter(d=>d.armCard==='throwing'&&!(preStart&&d.armEvent));
     const pitching={...b,drills:pitchingDrills,steps:drillsToSteps(pitchingDrills),modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),...command.because,"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
     const defenseToday=prehabbed.some(x=>x.modality==='defense'&&x.status==='ready');
     return [pitching,...(throwingDrills.length&&(!access.pitcherOnly||defenseToday)?[{...b,drills:throwingDrills,steps:drillsToSteps(throwingDrills),title:'Throwing — position work within your shared arm budget',gamePlanTemplate:null}]:[])];
