@@ -87,6 +87,8 @@ export function runGovernor(input: {
   alternatives?: GovAlternative[];
   /** Caller preserves the composed row's legal intent when stepping down. */
   canSubstitute?: (from: GovItem, alternative: GovAlternative) => boolean;
+  /** Owner Fix 9: channels whose rows the cap may trim to floor but never drop. */
+  noDropChannels?: Channel[];
 }): GovernorResult {
   const items = input.items.map((i) => ({ ...i }));
   const trims: Trim[] = [];
@@ -271,7 +273,7 @@ export function runGovernor(input: {
     // 3) Still over — drop the row. The Safe Plan ladder keeps the card.
     // Skill channels are never dropped: a cap may reduce a skill row toward
     // the programme's own minimum dose, never below it (Step 24 item 1).
-    if (planned > cap && !SKILL_CHANNELS.includes(channel)) {
+    if (planned > cap && !SKILL_CHANNELS.includes(channel) && !(input.noDropChannels ?? []).includes(channel)) {
       for (const { it } of sortRows().reverse()) {
         if (planned <= cap) break;
         const idx = items.indexOf(it);

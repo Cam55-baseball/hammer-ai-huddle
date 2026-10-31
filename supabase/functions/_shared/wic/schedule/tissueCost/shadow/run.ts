@@ -13,6 +13,7 @@ import {
   SHADOW_ADAPTER_VERSION,
   type ShadowInputs,
 } from "./adapter.ts";
+import type { Phase } from "../types.ts";
 
 export const SHADOW_VERSION = `${TCS_VERSION}_shadow`;
 
@@ -225,9 +226,11 @@ export async function runShadowDecision(
   today: string,
   timezone = "UTC",
   source = "nightly",
+  phaseOverride: Phase | null = null,
 ): Promise<{ ok: boolean; fallback: boolean; error?: string }> {
   try {
     const raw = await fetchShadowData(db, userId, today, timezone);
+    if (phaseOverride) raw.phaseOverride = phaseOverride;
     const result = decideFromRaw(raw);
     const { error } = await db
       .from("wk_schedule_decisions")
