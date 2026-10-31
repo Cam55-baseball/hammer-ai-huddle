@@ -202,7 +202,8 @@ export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
                     extraLogging={rx.load_pct ? <TestedMaxLog movementSlug={rx.movement_slug} movementName={rx.movement_name} /> : null} />
                   {(rx.why_payload as any)?.power_primer && isPapStrengthRow(rx as any) ? <PowerPrimerBlock prescriptionId={rx.id} pp={(rx.why_payload as any).power_primer} planDate={(rx as any).plan_date ?? null} liftName={rx.movement_name} liftSets={Number(rx.sets) || 0} /> : null}
                 </div>
-              ))
+              ))}
+              </>
             )}
 
             {/* Blocked-this-phase collapsible hidden from athlete UI — override flow still available elsewhere. */}
