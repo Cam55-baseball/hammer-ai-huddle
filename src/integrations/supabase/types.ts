@@ -14344,6 +14344,9 @@ export type Database = {
       pitcher_schedule_settings: {
         Row: {
           created_at: string
+          limit_pitching: boolean
+          pitching_role: string | null
+          primary_focus: string | null
           role: string
           rotation_active: boolean
           rotation_anchor_date: string | null
@@ -14353,6 +14356,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          limit_pitching?: boolean
+          pitching_role?: string | null
+          primary_focus?: string | null
           role?: string
           rotation_active?: boolean
           rotation_anchor_date?: string | null
@@ -14362,6 +14368,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          limit_pitching?: boolean
+          pitching_role?: string | null
+          primary_focus?: string | null
           role?: string
           rotation_active?: boolean
           rotation_anchor_date?: string | null

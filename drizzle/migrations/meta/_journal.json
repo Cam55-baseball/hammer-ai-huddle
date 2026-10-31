@@ -1191,6 +1191,20 @@
       "when": 1793461033422,
       "tag": "0169_coach_workout_sender_note",
       "breakpoints": true
+    },
+    {
+      "idx": 170,
+      "version": "7",
+      "when": 1793481236180,
+      "tag": "0170_pitcher_role_questions",
+      "breakpoints": true
+    },
+    {
+      "idx": 171,
+      "version": "7",
+      "when": 1793481367244,
+      "tag": "0171_start_gate_pitcher_role",
+      "breakpoints": true
     }
   ]
 }

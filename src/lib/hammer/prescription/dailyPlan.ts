@@ -2612,7 +2612,7 @@ export function buildHammerDailyPlan(
     const defenseToday=prehabbed.some(x=>x.modality==='defense'&&x.status==='ready');
     return [pitching,...(throwingDrills.length&&(!access.pitcherOnly||defenseToday)?[{...b,drills:throwingDrills,steps:drillsToSteps(throwingDrills),title:'Throwing — position work within your shared arm budget',gamePlanTemplate:null}]:[])];
   });
-  const blocks=access?.hasPitching?finalArmGuard(unguardedBlocks,{sport,role:access.pitcherOnly?'pitcher':'two_way',age:ctx.get<number>('age_years')?.value??null,date:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,history:roadmapInputs.armHistory}).map(b=>({...b,steps:drillsToSteps(b.drills)})):unguardedBlocks;
+  const blocks=access?.hasPitching?finalArmGuard(unguardedBlocks,{sport,role:access.pitcherOnly?'pitcher':'two_way',age:ctx.get<number>('age_years')?.value??null,date:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,history:roadmapInputs.armHistory,limitPitching:roadmapInputs.pitcherOutings?.limitPitching===true}).map(b=>({...b,steps:drillsToSteps(b.drills)})):unguardedBlocks;
   const warmed = withWarmupThrows(blocks);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
@@ -2717,23 +2717,32 @@ const THROW_ROW=(d:DrillStep)=>!!d.armEvent||/toss|throw|pitch/i.test(d.name)&&!
  *  budget, already guarded) — never extra throws — and they are logged on that arm card. */
 export function withWarmupThrows<B extends {modality:string;status:string;title:string;drills:readonly DrillStep[];steps:readonly string[]}>(blocks:readonly B[]):B[]{
   const wi=blocks.findIndex(b=>b.modality==='warmup'&&b.status==='ready');
-  if(wi<0)return [...blocks];
   const out=[...blocks];const moved:DrillStep[]=[];
+  // Owner Oct 31: every card that throws (pitching, throwing, defense, PFP, catcher throws, long toss)
+  // starts with arm prep and progressive warm-up throws. Mandatory while any throwing is on the day.
+  const throws=(b:B)=>b.status==='ready'&&(b.modality==='throwing'||b.modality==='pitching'?b.drills.some(THROW_ROW):b.modality!=='warmup'&&b.drills.some(d=>!!d.armEvent));
   out.forEach((b,i)=>{
-    if((b.modality!=='throwing'&&b.modality!=='pitching')||b.status!=='ready'||!b.drills.some(THROW_ROW))return;
-    const card=b.modality==='pitching'?'Pitching':'Throwing';
+    if(!throws(b))return;
+    const card=b.modality==='pitching'?'Pitching':b.modality==='throwing'?'Throwing':b.title.split(/[—·-]/)[0].trim()||'arm';
     const take=(d:DrillStep)=>d.stage!=='full_go'&&(ARM_PREP.test(d.name)||WARMUP_TOSS.test(d.name));
     const prep=b.drills.filter(take);
     const rest=b.drills.filter(d=>!take(d));
-    if(!rest.some(THROW_ROW))return;
+    if(!rest.some(d=>THROW_ROW(d)||!!d.armEvent))return;
     const note=`Log these on your ${card} card.`;
     const rows:DrillStep[]=prep.map(d=>({...d,name:ARM_PREP.test(d.name)?`Arm prep — ${d.name}`:`Warm-up throws — ${d.name}`,cue:[d.cue,note].filter(Boolean).join(' ')}));
     if(!prep.some(d=>WARMUP_TOSS.test(d.name)))rows.push({name:'Warm-up throws — easy to building',dosage:`Start your ${card} card's first throws easy and build up. Not extra throws.`,stage:'prep',cue:note,stopIf:'Stop if your arm hurts.'});
     if(!prep.some(d=>ARM_PREP.test(d.name)))rows.unshift({name:'Arm prep — arm circles and band pull-aparts',dosage:'1 × 10 each, easy',stage:'prep',cue:note,stopIf:'Stop if your arm hurts.'});
+    if(wi<0){
+      // No full-body warm-up today: the warm-up throws open this card instead. Never skipped.
+      const drills=[...rows,...rest];
+      out[i]={...b,drills,steps:drillsToSteps(drills)};
+      return;
+    }
+    if(moved.some(m=>m.name===rows[rows.length-1]?.name&&m.cue===rows[rows.length-1]?.cue))return;
     moved.push(...rows);
     out[i]={...b,drills:rest,steps:['Your arm prep and warm-up throws are in the full-body warm-up. Log their counts here.',...drillsToSteps(rest)]};
   });
-  if(!moved.length)return out;
+  if(!moved.length||wi<0)return out;
   const w=out[wi];const drills=[...w.drills,...moved];
   out[wi]={...w,drills,steps:drillsToSteps(drills)};
   return out;

@@ -13,6 +13,9 @@ export interface PitcherSettingsRow {
   rotation_anchor_date: string | null;
   rotation_every_days: number | null;
   rotation_active: boolean;
+  primary_focus?: "pitcher" | "position" | null;
+  pitching_role?: "starter" | "bullpen" | "closer" | null;
+  limit_pitching?: boolean | null;
 }
 export interface PitcherOutingRow {
   id: string;
@@ -40,6 +43,10 @@ export interface OutingFacts {
   relieverUnavailableToday: boolean;
   /** Past planned outings with no answer yet. */
   unconfirmed: Array<{ id: string; planned_date: string; outing_type: string }>;
+  /** Player asked us to limit their pitching: pitching throws are cut first when the arm budget is tight. */
+  limitPitching?: boolean;
+  pitchingRole?: "starter" | "bullpen" | "closer" | null;
+  primaryFocus?: "pitcher" | "position" | null;
 }
 
 const DAY = 86_400_000;
@@ -95,5 +102,8 @@ export function resolveOutingFacts(input: {
     relieverAvailableSoon: isReliever && (avail.get(planDate) === true || avail.get(tomorrow) === true),
     relieverUnavailableToday: avail.get(planDate) === false,
     unconfirmed,
+    limitPitching: settings?.limit_pitching === true,
+    pitchingRole: settings?.pitching_role ?? null,
+    primaryFocus: settings?.primary_focus ?? null,
   };
 }
