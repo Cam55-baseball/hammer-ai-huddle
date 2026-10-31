@@ -1571,7 +1571,7 @@ function ownerDrillsForSlot(slots, ctx) {
 }
 function mergeOwnerSlotDrills(drills, slots, ctxOrSport, day2 = /* @__PURE__ */ new Date()) {
   const ctx = typeof ctxOrSport === "string" ? { sport: ctxOrSport, day: day2 } : ctxOrSport;
-  const pool = ownerDrillsForSlot(slots, ctx).sort((a, b) => a.id.localeCompare(b.id));
+  const pool = ownerDrillsForSlot(slots, ctx).filter((r) => !r.pitch_mound_type).sort((a, b) => a.id.localeCompare(b.id));
   if (pool.length === 0 || drills.length === 0) return drills;
   let target = -1;
   for (let i = drills.length - 1; i >= 0; i--) {
@@ -1607,6 +1607,20 @@ var rotate = (pool, day2) => {
 };
 function ownerBuntDrill(ctx) {
   return rotate(ownerDrillsForSlot(["hammers_today:bunting"], ctx).filter((r) => r.bunt_side === ctx.side && r.bunt_type === ctx.type), ctx.day ?? /* @__PURE__ */ new Date());
+}
+var PITCH_DAY_TAGS = {
+  side: { baseball: ["shortbox"], softball: ["shortbox_circle"] },
+  touch: { baseball: ["light_mound"], softball: ["circle"] },
+  bullpen: { baseball: ["full_bullpen", "light_mound"], softball: ["circle"] },
+  available: { baseball: ["light_mound"], softball: ["circle"] },
+  flush: { baseball: ["flat_ground"], softball: ["flat_ground"], purpose: "throwing_mobility" }
+};
+function ownerPitchDrill(ctx) {
+  const want = PITCH_DAY_TAGS[ctx.dayType];
+  if (!want) return null;
+  const types = ctx.sport === "softball" ? want.softball : want.baseball;
+  const pool = ownerDrillsForSlot(["hammers_today:skill"], { sport: ctx.sport, skill: "throwing", owned: ctx.owned ?? null }).filter((r) => r.pitch_mound_type && types.includes(r.pitch_mound_type)).filter((r) => !want.purpose || (r.pitch_purposes ?? []).includes(want.purpose)).filter((r) => !ctx.role || !(r.pitch_role_fit ?? []).length || (r.pitch_role_fit ?? []).includes(ctx.role));
+  return rotate(pool, ctx.day ?? /* @__PURE__ */ new Date());
 }
 if (false) void loadOwnerPlanDrills();
 
@@ -2854,6 +2868,9 @@ function cycleDay(i) {
   if (dow === 0) return "rest";
   return dow % 3 === 0 ? "long_toss" : dow % 2 === 0 ? "shortbox" : "light_mound";
 }
+var reliefSets = (sets, role) => role === "starter" ? sets : Math.max(2, Math.round(sets * RELIEVER_VOLUME));
+var LOWER = /squat|deadlift|rdl|hinge|lunge|step[-_ ]?up|split|jump|bound|leg|calf|nordic|hip[-_ ]thrust|sled|cossack|clean|snatch/i;
+var isLowerBodyLift = (slug, pattern) => LOWER.test(`${slug} ${pattern ?? ""}`);
 var minorityAllowance = (majorityKept) => Math.floor(majorityKept * (1 - TWO_WAY_MAJOR_SHARE) / TWO_WAY_MAJOR_SHARE);
 
 // supabase/functions/_shared/wic/pitching/outingFacts.ts
@@ -6424,6 +6441,59 @@ function selectDefenseDrills(input) {
   };
 }
 
+// src/lib/hammer/prescription/pitcherRolePlan.ts
+var INTENT = { catch_light: "low", medium: "moderate", full: "high" };
+function withTaggedPitchDrill(drills, ctx) {
+  const pick = ownerPitchDrill({ sport: ctx.sport, dayType: ctx.dayType, role: ctx.role ?? null, owned: ctx.owned ?? null, day: ctx.day });
+  if (!pick) return drills;
+  let target = -1;
+  for (let i = drills.length - 1; i >= 0; i--) {
+    const d3 = drills[i];
+    if (d3.prescriptionOrigin !== "owner" && d3.armEvent && (d3.stage === void 0 || d3.stage === "drills")) {
+      target = i;
+      break;
+    }
+  }
+  const count = pick.pitch_count ?? 0;
+  const row = {
+    name: pick.name,
+    dosage: pick.dosage ?? "",
+    cue: pick.cue ?? "",
+    setup: pick.setup ?? void 0,
+    stage: "drills",
+    armCard: "pitching",
+    prescriptionOrigin: "owner",
+    ownerDrillId: pick.id,
+    pitchTags: { moundType: pick.pitch_mound_type, feet: pick.pitch_distance_feet, intensity: pick.pitch_intensity, purposes: pick.pitch_purposes ?? [] },
+    ...count > 0 ? { armEvent: { kind: "pitch", count, intent: INTENT[pick.pitch_intensity ?? ""] ?? "moderate", estimated: false } } : {}
+  };
+  if (target < 0) return [...drills, row];
+  return drills.map((d3, i) => i === target ? row : d3);
+}
+var SETS = /^(\d+)\s*[x×]\s*(.+)$/i;
+function applyPitcherLiftRule(drills, ctx) {
+  const because = [];
+  let out = drills;
+  if (ctx.startsTomorrow) {
+    const kept = out.filter((d3) => !isLowerBodyLift(d3.name));
+    if (kept.length !== out.length) because.push("No lower-body lift the day before a start.");
+    out = kept;
+  }
+  if (ctx.role && ctx.role !== "starter") {
+    let changed = false;
+    out = out.map((d3) => {
+      const m = SETS.exec(d3.dosage ?? "");
+      if (!m) return d3;
+      const to = reliefSets(Number(m[1]), ctx.role);
+      if (to === Number(m[1])) return d3;
+      changed = true;
+      return { ...d3, dosage: `${to} x ${m[2]}` };
+    });
+    if (changed) because.push("Bullpen arms and closers keep the same weight with fewer sets.");
+  }
+  return { drills: out, because };
+}
+
 // src/lib/hammer/roadmap/roadmapLadder.ts
 var RUNG_ORDER = [
   "foundation",
@@ -8726,10 +8796,16 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const drills = available.length ? sortByWarmupStage([...b.drills, ...available], (d3) => d3.slug ?? "") : care.length ? [...b.drills, ...care] : b.drills;
     return { ...b, drills, steps: available.length || care.length ? drillsToSteps(drills) : b.steps, because: [...b.because ?? [], ...notices, ...care.length ? ["Easy care for an area you marked healed. Stop if it hurts."] : []] };
   });
+  const pitchFacts = roadmapInputs.pitcherOutings;
   const unguardedBlocks = prehabbed.flatMap((b) => {
+    if (access?.hasPitching && b.modality === "strength" && b.status === "ready") {
+      const rule = applyPitcherLiftRule(b.drills, { role: pitchFacts?.pitchingRole ?? null, startsTomorrow: !!pitchFacts?.startsTomorrow });
+      if (!rule.because.length) return [b];
+      return [{ ...b, drills: rule.drills, steps: drillsToSteps(rule.drills), because: [...b.because ?? [], ...rule.because] }];
+    }
     if (!access?.hasPitching || b.modality !== "throwing") return [b];
     const type = pitchingDay(today, sport, quarter, roadmapInputs.pitcherOutings);
-    const pitchingDrills = b.drills.filter((d3) => d3.armCard !== "throwing");
+    const pitchingDrills = b.status === "ready" ? withTaggedPitchDrill(b.drills.filter((d3) => d3.armCard !== "throwing"), { sport, dayType: type, role: pitchFacts?.pitchingRole ?? null, day: today }) : b.drills.filter((d3) => d3.armCard !== "throwing");
     const throwingDrills = b.drills.filter((d3) => d3.armCard === "throwing");
     const pitching = { ...b, drills: pitchingDrills, steps: drillsToSteps(pitchingDrills), modality: "pitching", title: `Pitching \u2014 ${sport === "softball" ? "windmill" : "baseball"} \xB7 ${type.replace(/_/g, " ")}`, route: "/practice?module=pitching", ctaLabel: "Open pitching", gamePlanTemplate: null, because: [...b.because ?? [], "Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."] };
     const defenseToday = prehabbed.some((x) => x.modality === "defense" && x.status === "ready");

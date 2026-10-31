@@ -108,9 +108,10 @@ const LOWER = /squat|deadlift|rdl|hinge|lunge|step[-_ ]?up|split|jump|bound|leg|
 export const isLowerBodyLift = (slug: string, pattern?: string | null) => LOWER.test(`${slug} ${pattern ?? ""}`);
 
 /** Sprint conditioning: starters build max-effort capacity week to week; relievers repeat short sprints. */
-export function sprintDose(role: PitchRole, weekIndex: number): { reps: number; yards: number; restSeconds: number; kind: "max_sprint" | "repeat_sprint" } {
-  if (role === "starter") return { reps: Math.min(10, 4 + weekIndex), yards: 30, restSeconds: 45, kind: "max_sprint" };
-  return { reps: 6, yards: 20, restSeconds: 20, kind: "repeat_sprint" };
+/** Rep count only: distance and rest stay the sprint row's declared values and runRest rule. */
+export function sprintDose(role: PitchRole, weekIndex: number): { reps: number; kind: "max_sprint" | "repeat_sprint" } {
+  if (role === "starter") return { reps: Math.min(10, 4 + Math.max(0, Math.floor(weekIndex))), kind: "max_sprint" };
+  return { reps: 6, kind: "repeat_sprint" };
 }
 
 /** Two-way split inside one budget: the minority kind may use at most 30% of the room left after warm-ups. */

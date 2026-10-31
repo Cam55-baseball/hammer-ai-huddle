@@ -68,6 +68,7 @@ import {
 } from "./eassLibrary";
 import { selectDefenseDrills, resolveDefenseTier } from "./defenseLibrary";
 import { mergeOwnerSlotDrills } from "@/lib/prescription/ownerPlanDrills";
+import { withTaggedPitchDrill, applyPitcherLiftRule } from "./pitcherRolePlan";
 import {
   resolveWeeklyTemplate,
   applyMicrocycle,
@@ -2603,10 +2604,17 @@ export function buildHammerDailyPlan(
     const drills=available.length?sortByWarmupStage([...b.drills,...available],d=>d.slug??''):care.length?[...b.drills,...care]:b.drills;
     return {...b,drills,steps:available.length||care.length?drillsToSteps(drills):b.steps,because:[...(b.because??[]),...notices,...(care.length?['Easy care for an area you marked healed. Stop if it hurts.']:[])]};
   });
+  const pitchFacts=roadmapInputs.pitcherOutings;
   const unguardedBlocks = prehabbed.flatMap(b => {
+    // Owner Oct 31 lift parity with the server: same weight with fewer sets for relievers; no lower-body lift before a start.
+    if(access?.hasPitching&&b.modality==='strength'&&b.status==='ready'){
+      const rule=applyPitcherLiftRule(b.drills as any[],{role:pitchFacts?.pitchingRole??null,startsTomorrow:!!pitchFacts?.startsTomorrow});
+      if(!rule.because.length)return [b];
+      return [{...b,drills:rule.drills as typeof b.drills,steps:drillsToSteps(rule.drills as typeof b.drills),because:[...(b.because??[]),...rule.because]}];
+    }
     if(!access?.hasPitching || b.modality!=='throwing')return [b];
     const type=pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings);
-    const pitchingDrills=b.drills.filter(d=>d.armCard!=='throwing');
+    const pitchingDrills=b.status==='ready'?withTaggedPitchDrill(b.drills.filter(d=>d.armCard!=='throwing') as any[],{sport,dayType:type,role:pitchFacts?.pitchingRole??null,day:today}) as typeof b.drills:b.drills.filter(d=>d.armCard!=='throwing');
     const throwingDrills=b.drills.filter(d=>d.armCard==='throwing');
     const pitching={...b,drills:pitchingDrills,steps:drillsToSteps(pitchingDrills),modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
     const defenseToday=prehabbed.some(x=>x.modality==='defense'&&x.status==='ready');
