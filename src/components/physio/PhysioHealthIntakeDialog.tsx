@@ -1,3 +1,4 @@
+import { FullGoPrompt, useInjuryHistory } from '@/components/hammer/injury/FullGo';
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -120,6 +121,7 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
   const [medicationsText, setMedicationsText] = useState('');
   const [conditions, setConditions] = useState<string[]>([]);
   const [injuryText, setInjuryText] = useState('');
+  const inj=useInjuryHistory();
   const [injuryArea,setInjuryArea]=useState('');
   const [injuryStatus,setInjuryStatus]=useState<'healed'|'active'>('healed');
   const [supplementsText, setSupplementsText] = useState('');
@@ -222,7 +224,7 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
         setSaveError("Couldn't save your health profile. Your answers are still here. Try again.");
         return;
       }
-      if (injuryArea && user) {
+      if (injuryArea && user && !(injuryStatus==='healed' && inj.areas.includes(injuryArea))) {
         const current=await supabase.from('athlete_context').select('injury_history').eq('user_id',user.id).maybeSingle();
         if(current.error)throw current.error;
         const previous=Array.isArray(current.data?.injury_history)?current.data.injury_history:[];
@@ -377,7 +379,9 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
               <Select value={injuryArea} onValueChange={setInjuryArea}><SelectTrigger id="health-injury-area"><SelectValue placeholder="Choose an area" /></SelectTrigger><SelectContent>{['shoulder','elbow','wrist','hip','knee','ankle','back'].map(area=><SelectItem key={area} value={area}>{area[0].toUpperCase()+area.slice(1)}</SelectItem>)}</SelectContent></Select>
               <Label htmlFor="health-injury-status">Current status</Label>
               <Select value={injuryStatus} onValueChange={v=>setInjuryStatus(v==='active'?'active':'healed')}><SelectTrigger id="health-injury-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="healed">Healed past injury — history only</SelectItem><SelectItem value="active">Active injury or pain</SelectItem></SelectContent></Select>
-              <p className="text-xs text-muted-foreground">A healed history entry never clears a separate active injury or return-to-play restriction.</p>
+              {injuryArea && injuryStatus==='healed' && inj.areas.includes(injuryArea)
+                ? <div className="space-y-1 rounded-md border border-border/60 bg-card p-2"><p className="text-xs">Your {injuryArea} is an active injury. To mark it healed, confirm here — your existing {injuryArea} entry is updated, not copied.</p><FullGoPrompt area={injuryArea} history={inj.data?.history ?? []} minor={inj.data?.minor ?? true} /></div>
+                : <p className="text-xs text-muted-foreground">A healed history entry never clears a separate active injury or return-to-play restriction.</p>}
             </div>
             <div className="space-y-2">
               <Label>Regular Supplements (comma-separated)</Label>
