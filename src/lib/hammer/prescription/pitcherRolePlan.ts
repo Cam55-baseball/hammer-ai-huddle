@@ -82,3 +82,10 @@ export function withCommandDrill<D extends Drill>(drills: D[], ctx: { sport: "ba
   } as unknown as D;
   return { drills: [...drills, row], id: pick.id };
 }
+
+/** Day before a start: keep arm care/prep (no counted throws) and the tagged light mound/circle catch only. */
+export function lightPreStart<D extends Drill>(drills: D[]): { drills: D[]; because: string[] } {
+  const kept = drills.filter((d) => !d.armEvent || (d.prescriptionOrigin === "owner" && (d as { pitchTags?: { intensity?: string } }).pitchTags?.intensity === "catch_light"));
+  if (kept.length === drills.length) return { drills, because: [] };
+  return { drills: kept, because: ["You start tomorrow, so today is light: an easy catch at the mound or circle and arm care only."] };
+}
