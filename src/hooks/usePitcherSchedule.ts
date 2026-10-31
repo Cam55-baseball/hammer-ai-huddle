@@ -11,7 +11,7 @@ import { announceChange } from '@/hooks/useScheduleTimeline';
 import { toast } from 'sonner';
 
 export type PitcherRole = "starter" | "reliever" | "both";
-export interface PitcherSettings { role: PitcherRole; rotation_anchor_date: string | null; rotation_every_days: number | null; rotation_active: boolean }
+export interface PitcherSettings { role: PitcherRole; rotation_anchor_date: string | null; rotation_every_days: number | null; rotation_active: boolean; primary_focus?: "pitcher" | "position" | null; pitching_role?: "starter" | "bullpen" | "closer" | null; limit_pitching?: boolean }
 export interface PitcherOuting { id: string; outing_type: "start" | "relief" | "bullpen"; planned_date: string | null; actual_date: string | null; status: "planned" | "thrown" | "skipped" }
 export interface PitcherAvailability { date: string; available: boolean }
 
@@ -27,6 +27,7 @@ export const shiftIso = (iso: string, n: number) => {
 
 const db = supabase as any;
 
+import { scheduleRoleFor } from "@/lib/hammer/pitching/pitcherRoleAnswers";
 export function usePitcherSchedule(planDate?: string) {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -39,7 +40,7 @@ export function usePitcherSchedule(planDate?: string) {
     queryFn: async () => {
       if (!user) throw new Error("Sign in to check your pitching schedule.");
       const [s, o, a] = await Promise.all([
-        db.from("pitcher_schedule_settings").select("role, rotation_anchor_date, rotation_every_days, rotation_active").eq("user_id", user?.id).maybeSingle(),
+        db.from("pitcher_schedule_settings").select("role, rotation_anchor_date, rotation_every_days, rotation_active, primary_focus, pitching_role, limit_pitching").eq("user_id", user?.id).maybeSingle(),
         db.from("pitcher_outings").select("id, outing_type, planned_date, actual_date, status").eq("user_id", user?.id)
           .or(`planned_date.gte.${shiftIso(today, -21)},actual_date.gte.${shiftIso(today, -21)}`).order("planned_date", { ascending: true }).limit(200),
         db.from("pitcher_availability").select("date, available").eq("user_id", user?.id).gte("date", today).lte("date", shiftIso(today, 6)),
@@ -67,7 +68,8 @@ export function usePitcherSchedule(planDate?: string) {
   const saveSettings = useMutation({
     mutationFn: async (next: Partial<PitcherSettings>) => {
       const cur = q.data?.settings ?? { role: "starter", rotation_anchor_date: null, rotation_every_days: null, rotation_active: false };
-      const { error } = await db.from("pitcher_schedule_settings").upsert({ user_id: user?.id, ...cur, ...next }, { onConflict: "user_id" });
+      const role = next.pitching_role ? scheduleRoleFor(next.pitching_role) : null;
+      const { error } = await db.from("pitcher_schedule_settings").upsert({ user_id: user?.id, ...cur, ...next, ...(role ? { role } : {}) }, { onConflict: "user_id" });
       if (error) throw error;
     },
     onSuccess: done,

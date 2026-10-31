@@ -981,7 +981,7 @@ const handler = async (req: Request): Promise<Response> => {
     let pitcherScheduleReadFailed = false;
     try {
       const [pss, pout, pav, armGames] = await Promise.all([
-        admin.from("pitcher_schedule_settings").select("role, rotation_anchor_date, rotation_every_days, rotation_active").eq("user_id", user.id).maybeSingle(),
+        admin.from("pitcher_schedule_settings").select("role, rotation_anchor_date, rotation_every_days, rotation_active, primary_focus, pitching_role, limit_pitching").eq("user_id", user.id).maybeSingle(),
         admin.from("pitcher_outings").select("id, outing_type, planned_date, actual_date, status").eq("user_id", user.id)
           .or(`planned_date.gte.${isoShift(planDate, -21)},actual_date.gte.${isoShift(planDate, -21)}`).limit(200),
         admin.from("pitcher_availability").select("date, available").eq("user_id", user.id)
