@@ -5,14 +5,14 @@ import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
 import {Label} from '@/components/ui/label';
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
-import {latestThreadId} from '@/lib/hammer/oneConversation';
+import {philosophyThreadId} from '@/lib/hammer/oneConversation';
 import {PHILOSOPHY_TEST_USERS,settingsChanges,type SettingChange,type SettingsReceipt} from '@/lib/intelligence/testSettings';
 import {PHILOSOPHY_ENTRY,parsePhilosophyReply} from '@/lib/intelligence/philosophyConversation';
 const TARGETS={mastery_identity_settings:['elite_grade','pitching_standards','prescription_weights','weekly_minimums'],library_videos:['tags'],owner_drills:['fault_keys','placements','routine_role'],engine_dynamic_weights:['weight']};
 export function PhilosophySettingsConversation({onSaved}:{onSaved:()=>void}){
  const [uid,setUid]=useState<string>(PHILOSOPHY_TEST_USERS[0]),[target,setTarget]=useState<SettingChange['target']>('mastery_identity_settings'),[id,setId]=useState('baseball'),[field,setField]=useState('elite_grade');
  const [before,setBefore]=useState<unknown>(),[after,setAfter]=useState(''),[changes,setChanges]=useState<SettingChange[]>([]),[point,setPoint]=useState(''),[reply,setReply]=useState(''),[proposal,setProposal]=useState<{body:string;benefit:string;sport:string;area:string}|null>(null),[receipt,setReceipt]=useState<SettingsReceipt|null>(null),[thread,setThread]=useState<string|null>(null),[busy,setBusy]=useState(false),[turns,setTurns]=useState<{role:string;text:string}[]>([]),[error,setError]=useState('');
- useEffect(()=>{void(async()=>{try{const s=await supabase.auth.getSession();const owner=s.data.session?.user.id;if(!owner)return;const tid=await latestThreadId(owner);setThread(tid);if(tid){const r=await supabase.from('recall_messages').select('role,parts').eq('thread_id',tid).eq('user_id',owner).order('created_at',{ascending:false}).limit(100);if(r.error)throw r.error;
+ useEffect(()=>{void(async()=>{try{const s=await supabase.auth.getSession();const owner=s.data.session?.user.id;if(!owner)return;const tid=await philosophyThreadId(owner);setThread(tid);if(tid){const r=await supabase.from('recall_messages').select('role,parts').eq('user_id',owner).filter('parts','cs',JSON.stringify([{entry:PHILOSOPHY_ENTRY}])).order('created_at',{ascending:false}).limit(100);if(r.error)throw r.error;
   // Restore the newest receipt and, if no receipt follows it, the newest saved settings review turn.
   const saved=(r.data??[]).flatMap(row=>{const p=(Array.isArray(row.parts)?row.parts[0]:null) as {entry?:string;text?:string}|null;return p?.entry===PHILOSOPHY_ENTRY&&p.text?[{role:row.role,text:p.text}]:[];}).reverse();setTurns(saved);
   let foundReceipt=false,foundReview=false;

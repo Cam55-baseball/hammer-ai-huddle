@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PLAYER_THREAD_FILTER, isPhilosophyMessage } from "@/lib/hammer/philosophyThreads";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -60,6 +61,7 @@ export default function HammerRecall() {
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(6);
 
   const focusComposer = useCallback(() => {
     setTimeout(() => textareaRef.current?.focus(), 30);
@@ -72,6 +74,7 @@ export default function HammerRecall() {
       .from("recall_threads")
       .select("id,title,updated_at")
       .eq("user_id", user.id)
+      .or(PLAYER_THREAD_FILTER)
       .order("updated_at", { ascending: false })
       .limit(50);
     if (error) {
@@ -97,6 +100,7 @@ export default function HammerRecall() {
   // Load thread messages when threadId changes
   useEffect(() => {
     setMessages([]);
+    setShown(6);
     if (!threadId || !user) return;
     let cancelled = false;
     (async () => {
@@ -112,7 +116,7 @@ export default function HammerRecall() {
         console.error("[recall] messages", error);
         return;
       }
-      const ui: UIMessage[] = (data || []).map((r: any) => {
+      const ui: UIMessage[] = (data || []).filter((r: any) => !isPhilosophyMessage(r.parts)).map((r: any) => {
         const first = Array.isArray(r.parts) ? r.parts[0] : null;
         return {
           id: r.id,
@@ -230,7 +234,12 @@ export default function HammerRecall() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {messages.map((m) => (
+                  {messages.length > shown && (
+                    <button type="button" className="w-full text-sm font-semibold text-primary py-1" onClick={() => setShown((n) => n + 10)}>
+                      Show earlier ({messages.length - shown})
+                    </button>
+                  )}
+                  {messages.slice(-shown).map((m) => (
                     <MessageBubble key={m.id} msg={m} />
                   ))}
                   {sending && (

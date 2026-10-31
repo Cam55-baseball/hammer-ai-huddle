@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { PHILOSOPHY_ENTRY, PHILOSOPHY_REQUEST, parsePhilosophyReply, type PhilosophyReply } from '@/lib/intelligence/philosophyConversation';
-import { latestThreadId } from '@/lib/hammer/oneConversation';
+import { philosophyThreadId } from '@/lib/hammer/oneConversation';
 import { cueChanges, type PhilosophyReceipt } from '@/lib/intelligence/philosophySettings';
 import {PhilosophySettingsConversation} from './PhilosophySettingsConversation';
 type Turn = {role:'user'|'assistant';text:string;review?:PhilosophyReply;confirmed?:string;receipt?:PhilosophyReceipt};
@@ -18,9 +18,9 @@ export function PhilosophyConversation({onSaved}:{onSaved:()=>void}) {
   const [replacement,setReplacement]=useState('');
   useEffect(()=>{let alive=true;void(async()=>{try{
     const {data}=await supabase.auth.getSession();const uid=data.session?.user.id;if(!uid)throw Error('Sign in to open your saved conversation.');
-    const tid=await latestThreadId(uid);if(!alive)return;setThread(tid);
+    const tid=await philosophyThreadId(uid);if(!alive)return;setThread(tid);
     const {data:catalog,error:catalogError}=await supabase.from('wk_movement_catalog').select('id,name,cue').not('visible_to','is',null).order('name').limit(100);if(catalogError)throw catalogError;if(alive)setSettings(catalog??[]);
-    if(tid){const {data:rows,error}=await supabase.from('recall_messages').select('role,parts').eq('thread_id',tid).eq('user_id',uid).filter('parts','cs',JSON.stringify([{entry:PHILOSOPHY_ENTRY}])).order('created_at',{ascending:true}).order('role',{ascending:false});if(error)throw error;
+    if(tid){const {data:rows,error}=await supabase.from('recall_messages').select('role,parts').eq('user_id',uid).filter('parts','cs',JSON.stringify([{entry:PHILOSOPHY_ENTRY}])).order('created_at',{ascending:true}).order('role',{ascending:false});if(error)throw error;
       const history:Turn[]=[];for(const row of rows??[]){const parts=row.parts as unknown as Array<{entry?:string;text?:string;review?:PhilosophyReply;confirmed?:string;receipt?:PhilosophyReceipt}>;const p=Array.isArray(parts)?parts[0]:null;if(p?.entry===PHILOSOPHY_ENTRY&&p.text)history.push({role:row.role==='assistant'?'assistant':'user',text:p.text,review:p.review,confirmed:p.confirmed,receipt:p.receipt});}
       if(alive){setTurns(history);const last=history[history.length-1];setReceipt(last?.receipt??null);setSaved(last?.receipt?.principle_id??last?.confirmed??null);}
     }
