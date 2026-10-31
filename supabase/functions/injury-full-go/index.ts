@@ -118,6 +118,11 @@ Deno.serve(async (req) => {
       email = r.ok ? "sent" : "failed";
       if (!r.ok) console.error("[injury-full-go] resend", r.status, (await r.text()).slice(0, 200));
     }
+    if (email !== "sent" && !isTest) {
+      // The parent never got it: take the request back so the player can try again.
+      await admin.from("athlete_context").update({ injury_history: history }).eq("user_id", uid);
+      return json({ status: "email_failed", area });
+    }
     return json({ status: "parent_requested", area, email, ...(isTest ? { test_link: link } : {}) });
   } catch (e) {
     console.error("[injury-full-go]", e);
