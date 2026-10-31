@@ -805,6 +805,7 @@ function HammerDailyPlanBody({
   const hittingPowerGoal = savedGoals?.[sportKey]?.position?.hitting?.some(p=>p.id==='oppo_power') === true ||
     projectedAthlete.categoryGoals?.goals.some(g=>g.category==='hitting'&&g.intent==='power_hitting') === true;
   const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
+  const faultContext = usePlanFaultContext(sportKey);
   // Owner Oct 31 command development: DATA only — identity walk rate vs starting standard, pitching analysis findings, a command goal.
   const pitchCommand = useMemo(() => {
     const id = masteryIdentity.data as { pitching?: { latest?: { bb?: number | null } | null }; level?: string | null; settings?: Record<string, unknown> | null } | undefined;
@@ -819,7 +820,6 @@ function HammerDailyPlanBody({
     (pitcherSchedule.facts.startsToday || pitcherSchedule.facts.startsTomorrow || pitcherSchedule.facts.pitchedYesterday);
   const hasBaseStealer = has5Tool || (hasG2W && !g2wPitchingDay);
   const planAdjust = usePlanAdjustments(bodyPlanDate);
-  const faultContext = usePlanFaultContext(sportKey);
   const drillCirculation = useDrillCirculation();
   const influencedLoggedServe = useRef<string | null>(null);
   // Game-day defense override — athlete-owned, one tap, resets each day.
