@@ -31,10 +31,10 @@ const DRILLS: OwnerDrillRow[] = [
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 type Role = "starter" | "bullpen" | "closer";
 
-function run(sport: "baseball" | "softball", role: Role, tier = "pitcher", focus: "pitcher" | "position" | null = null) {
+function run(sport: "baseball" | "softball", role: Role, tier = "pitcher", focus: "pitcher" | "position" | null = null, pitchCommand: any = null) {
   const settings: PitcherSettingsRow = { role: role === "starter" ? "starter" : "reliever", rotation_anchor_date: "2026-06-05", rotation_every_days: role === "starter" ? 7 : null, rotation_active: role === "starter", pitching_role: role, primary_focus: focus, limit_pitching: false };
   const outings: PitcherOutingRow[] = [];
-  const weeks: { date: string; dow: number; title: string; pitchNames: string[]; strength: string[]; pitches: number; because: string[]; position: number }[][] = [];
+  const weeks: { date: string; dow: number; outing: boolean; command: boolean; title: string; pitchNames: string[]; strength: string[]; pitches: number; because: string[]; position: number }[][] = [];
   for (let w = 0; w < 8; w++) {
     const week = [];
     for (let d = 0; d < 7; d++) {
@@ -50,12 +50,12 @@ function run(sport: "baseball" | "softball", role: Role, tier = "pitcher", focus
       }
       const facts = resolveOutingFacts({ planDate: day, settings, outings: rows, availability: role === "starter" ? [] : [{ date: day, available: date.getDay() === 2 }] });
       const plan = buildHammerDailyPlan(context({ sport_primary: sport, position_primary: tier === "pitcher" ? "P" : "SS", season_phase: "in", weekly_availability_days: 6, injury_history: [], equipment_effective: gear, lifecycle_band: "adult", age_years: 20, lifting_age_years: 4 }), NORMAL_SIGNAL, null, null, undefined, date,
-        { subscriptionModules: [`${sport}_${tier}`], resolvedSeasonPhase: "in", pitcherOutings: facts, armHistory: { rows: [] } } as any);
+        { subscriptionModules: [`${sport}_${tier}`], resolvedSeasonPhase: "in", pitcherOutings: facts, pitchCommand, armHistory: { rows: [] } } as any);
       const p = plan.blocks.find(b => b.modality === "pitching");
       const t = plan.blocks.find(b => b.modality === "throwing" && b.status === "ready");
       const s = plan.blocks.find(b => b.modality === "strength" && b.status === "ready");
       const count = (ds: readonly any[] | undefined) => (ds ?? []).reduce((n, x) => n + (x.armEvent && x.name && !/warm-up/i.test(x.name) ? x.armEvent.count : 0), 0);
-      week.push({ date: day, dow: date.getDay(), title: p?.status === "ready" ? p.title : p ? `${p.title} (${p.status})` : "no pitching card", pitchNames: (p?.drills ?? []).map((x: any) => x.name), strength: (s?.drills ?? []).map((x: any) => `${x.name} ${x.dosage}`), pitches: count(p?.status === "ready" ? p.drills : []), position: count(t?.drills), because: [...(p?.because ?? []), ...(s?.because ?? [])] });
+      week.push({ date: day, dow: date.getDay(), outing: role === "starter" ? date.getDay() === 5 : date.getDay() === 5 || date.getDay() === 6, command: (p?.drills ?? []).some((x: any) => x.commandDay), title: p?.status === "ready" ? p.title : p ? `${p.title} (${p.status})` : "no pitching card", pitchNames: (p?.drills ?? []).map((x: any) => x.name), strength: (s?.drills ?? []).map((x: any) => `${x.name} ${x.dosage}`), pitches: count(p?.status === "ready" ? p.drills : []), position: count(t?.drills), because: [...(p?.because ?? []), ...(s?.because ?? [])] });
     }
     weeks.push(week);
   }
@@ -103,5 +103,31 @@ describe("Part B through the real daily builder — 8 weeks", () => {
     expect([4, 5, 3].map(s => reliefSets(s, "bullpen"))).toEqual([3, 3, 2]);
     expect(Array.from({ length: 8 }, (_, w) => sprintDose("starter", w).reps)).toEqual([4, 5, 6, 7, 8, 9, 10, 10]);
     expect(sprintDose("closer", 3)).toEqual({ reps: 6, kind: "repeat_sprint" });
+  });
+
+  const isMound = (d: any) => d.outing || d.pitchNames.some((n: string) => DRILLS.some(x => x.name === n && x.pitch_mound_type !== "flat_ground"));
+  for (const sport of ["baseball", "softball"] as const) for (const role of ["starter", "bullpen", "closer"] as Role[]) it(`command: ${sport} ${role} gets up to 5 mound/circle days (outings count), never on rest/recovery`, () => {
+    const plain = run(sport, role);
+    const cmd = run(sport, role, "pitcher", null, { walkRate: 0.18, walkMax: 0.1 });
+    const problems: string[] = [];
+    cmd.forEach((wk, w) => {
+      const base = plain[w].filter(isMound).length, got = wk.filter(isMound).length;
+      if (base < 3) problems.push(`week ${w + 1}: plain ${base} < 3`);
+      if (got < Math.min(5, base) ) problems.push(`week ${w + 1}: command lost days`);
+      if (wk.some(d => d.command) && got > Math.max(5, base)) problems.push(`week ${w + 1}: more than 5 days`);
+      for (const d of wk) {
+        if (d.command && (d.dow === 0 || (role === "starter" && d.dow === 6))) problems.push(`${d.date}: command work on rest/recovery`);
+        if (d.command && !d.because.some(b => /walk rate/.test(b))) problems.push(`${d.date}: no data reason`);
+        if (sport === "softball" && d.pitchNames.some(n => /mound/i.test(n))) problems.push(`${d.date}: mound wording`);
+      }
+      if (w === 1) console.log(`command ${sport} ${role}: plain ${base} days, command ${got} days`);
+    });
+    if (role === "starter") expect(cmd[1].filter(isMound).length).toBe(5);
+    expect(problems).toEqual([]);
+  });
+
+  it("command never comes from missing data", () => {
+    const wk = run("baseball", "starter", "pitcher", null, { walkRate: null, walkMax: 0.1, analysisFindings: [], goalIds: [] })[1];
+    expect(wk.some(d => d.command)).toBe(false);
   });
 });
