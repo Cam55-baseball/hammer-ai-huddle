@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { resolveOutingFacts } from "../../supabase/functions/_shared/wic/pitching/outingFacts";
 import { announceChange } from '@/hooks/useScheduleTimeline';
 import { toast } from 'sonner';
+import { scheduleRoleFor } from "@/lib/hammer/pitching/pitcherRoleAnswers";
 
 export type PitcherRole = "starter" | "reliever" | "both";
 export interface PitcherSettings { role: PitcherRole; rotation_anchor_date: string | null; rotation_every_days: number | null; rotation_active: boolean; primary_focus?: "pitcher" | "position" | null; pitching_role?: "starter" | "bullpen" | "closer" | null; limit_pitching?: boolean }
@@ -27,7 +28,6 @@ export const shiftIso = (iso: string, n: number) => {
 
 const db = supabase as any;
 
-import { scheduleRoleFor } from "@/lib/hammer/pitching/pitcherRoleAnswers";
 export function usePitcherSchedule(planDate?: string) {
   const { user } = useAuth();
   const qc = useQueryClient();
