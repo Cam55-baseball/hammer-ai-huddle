@@ -68,7 +68,7 @@ import {
 } from "./eassLibrary";
 import { selectDefenseDrills, resolveDefenseTier } from "./defenseLibrary";
 import { mergeOwnerSlotDrills } from "@/lib/prescription/ownerPlanDrills";
-import { withTaggedPitchDrill, applyPitcherLiftRule } from "./pitcherRolePlan";
+import { withTaggedPitchDrill, applyPitcherLiftRule, commandDayPlan, withCommandDrill } from "./pitcherRolePlan";
 import {
   resolveWeeklyTemplate,
   applyMicrocycle,
@@ -2333,6 +2333,8 @@ export interface RoadmapInputs {
   readonly fullRestDay?: boolean;
   readonly practiceRecords?: ReadonlyArray<PracticeLoadRecord>;
   readonly pitcherOutings?: OutingFacts | null;
+  /** Owner Oct 31: command data (identity window, judged stats, analysis findings, goals). Never self-invented. */
+  readonly pitchCommand?: import('../../../../supabase/functions/_shared/wic/pitching/roleCycle').CommandEvidence | null;
   readonly recentCompletions?: RecentCompletions;
   readonly phaseStartedAt?: string | null;
   /** Canonical phase from resolveSeasonPhase (short form: off/pre/in/post). */
@@ -2614,14 +2616,20 @@ export function buildHammerDailyPlan(
     }
     if(!access?.hasPitching || b.modality!=='throwing')return [b];
     const type=pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings);
-    const pitchingDrills=b.status==='ready'?withTaggedPitchDrill(b.drills.filter(d=>d.armCard!=='throwing') as any[],{sport,dayType:type,role:pitchFacts?.pitchingRole??null,day:today}) as typeof b.drills:b.drills.filter(d=>d.armCard!=='throwing');
+    let pitchingDrills=b.status==='ready'?withTaggedPitchDrill(b.drills.filter(d=>d.armCard!=='throwing') as any[],{sport,dayType:type,role:pitchFacts?.pitchingRole??null,day:today}) as typeof b.drills:b.drills.filter(d=>d.armCard!=='throwing');
+    // Owner Oct 31: up to 5 mound/circle days for data-shown command trouble; extra day is light and arm limits still decide.
+    const command=b.status==='ready'?commandDayPlan({sport,role:pitchFacts?.pitchingRole??null,facts:pitchFacts,evidence:roadmapInputs.pitchCommand,day:today}):{add:false,because:[] as string[]};
+    if(command.add){const r=withCommandDrill(pitchingDrills as any[],{sport,role:pitchFacts?.pitchingRole??null,day:today});pitchingDrills=r.drills as typeof b.drills;if(!r.id)command.because=[];}
     const throwingDrills=b.drills.filter(d=>d.armCard==='throwing');
-    const pitching={...b,drills:pitchingDrills,steps:drillsToSteps(pitchingDrills),modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
+    const pitching={...b,drills:pitchingDrills,steps:drillsToSteps(pitchingDrills),modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),...command.because,"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
     const defenseToday=prehabbed.some(x=>x.modality==='defense'&&x.status==='ready');
     return [pitching,...(throwingDrills.length&&(!access.pitcherOnly||defenseToday)?[{...b,drills:throwingDrills,steps:drillsToSteps(throwingDrills),title:'Throwing — position work within your shared arm budget',gamePlanTemplate:null}]:[])];
   });
   const blocks=access?.hasPitching?finalArmGuard(unguardedBlocks,{sport,role:access.pitcherOnly?'pitcher':'two_way',age:ctx.get<number>('age_years')?.value??null,date:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,history:roadmapInputs.armHistory,limitPitching:roadmapInputs.pitcherOutings?.limitPitching===true,primaryFocus:roadmapInputs.pitcherOutings?.primaryFocus??null}).map(b=>({...b,steps:drillsToSteps(b.drills)})):unguardedBlocks;
-  const warmed = withWarmupThrows(blocks);
+  // A command drill the arm limits removed gets an honest reason instead of a promise.
+  const commandChecked = blocks.map(b=>b.modality==='pitching'&&(b.because??[]).some(x=>x.startsWith('Extra light'))&&!b.drills.some(d=>(d as {commandDay?:boolean}).commandDay)
+    ? {...b,because:(b.because??[]).filter(x=>!x.startsWith('Extra light')).concat(b.status==='ready'?['No extra command work today because your arm limits are full.']:[])} : b);
+  const warmed = withWarmupThrows(commandChecked);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
