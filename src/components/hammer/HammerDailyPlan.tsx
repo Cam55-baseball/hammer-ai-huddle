@@ -146,6 +146,7 @@ import { DelaycamReminder } from "@/components/hammer/DelaycamReminder";
 import { RankGoalsPromptCard } from "@/components/hammer/RankGoalsPromptCard";
 import { TestingDayNotice } from "@/components/hammer/TestingDayNotice";
 import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
+import { startingStandards } from '../../../supabase/functions/_shared/wic/masteryPitchingStandards';
 import { PitcherScheduleGate } from "@/components/hammer/pitching/PitcherScheduleCard";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { useGpSignal } from "@/hooks/useGpSignal";
@@ -804,6 +805,15 @@ function HammerDailyPlanBody({
   const hittingPowerGoal = savedGoals?.[sportKey]?.position?.hitting?.some(p=>p.id==='oppo_power') === true ||
     projectedAthlete.categoryGoals?.goals.some(g=>g.category==='hitting'&&g.intent==='power_hitting') === true;
   const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
+  // Owner Oct 31 command development: DATA only — identity walk rate vs starting standard, pitching analysis findings, a command goal.
+  const pitchCommand = useMemo(() => {
+    const id = masteryIdentity.data as { pitching?: { latest?: { bb?: number | null } | null }; level?: string | null; settings?: Record<string, unknown> | null } | undefined;
+    const lvl = id?.level ?? null;
+    const walkMax = lvl ? startingStandards(sportKey, lvl as never, ((id?.settings as { pitching_standards?: Record<string, number> } | null)?.pitching_standards) ?? {}).find(x => x.key === 'bb_pct')?.value ?? null : null;
+    const goals = [...(savedGoals?.[sportKey]?.pitcher?.pitching ?? []), ...(savedGoals?.[sportKey]?.pitcher?.throwing ?? []), ...(savedGoals?.[sportKey]?.position?.pitching ?? [])].map(g => g.id);
+    const findings = faultContext.isError ? [] : accessiblePlanFaults(faultContext.data?.rankedFaults ?? [], modules, sportKey).filter(f => f.disciplines.includes('pitching')).map(f => f.rootPatternId);
+    return { walkRate: masteryIdentity.isError ? null : id?.pitching?.latest?.bb ?? null, walkMax, analysisFindings: findings, goalIds: goals };
+  }, [masteryIdentity.data, masteryIdentity.isError, sportKey, savedGoals, faultContext.data, faultContext.isError, modules]);
   // Golden 2Way: position days only — not a start day, the primer day before, or the flush day after.
   const g2wPitchingDay = !!pitcherSchedule.facts &&
     (pitcherSchedule.facts.startsToday || pitcherSchedule.facts.startsTomorrow || pitcherSchedule.facts.pitchedYesterday);
@@ -853,6 +863,7 @@ function HammerDailyPlanBody({
           positionOverride: planAdjust.positionWorked,
           defenseFullOverride,
           pitcherOutings: pitcherSchedule.facts,
+          pitchCommand,
           practiceRecords: practiceLoadHistory.data,
           subscriptionModules: modules,
           alwaysMissingGear:gearMemory.data??[],
@@ -862,7 +873,7 @@ function HammerDailyPlanBody({
           fullRestDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []),
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady,armHistory.data,gearMemory.data,physioMapping.data,testPreferences.data],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, pitchCommand, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady,armHistory.data,gearMemory.data,physioMapping.data,testPreferences.data],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
