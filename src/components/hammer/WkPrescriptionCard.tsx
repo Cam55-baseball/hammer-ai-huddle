@@ -48,6 +48,7 @@ import { InlinePrescriptionLog } from "@/components/hammer/logging/InlinePrescri
 import { BASE_REST_TEXT, prescribedBases, sprintRestWhy } from "../../../supabase/functions/_shared/wic/runRest";
 import { SPEED_SWAP_CATALOG } from "../../../supabase/functions/_shared/planSwap/speedSwapCatalog";
 import { masteryPlanGuidance } from "../../../supabase/functions/_shared/wic/masteryPlanContext";
+import { ControlledActivity } from './SessionControlNote';
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -98,7 +99,10 @@ function cleanAthleteCopy(value: string | null | undefined): string | null {
   return cleaned.length > 0 ? cleaned : null;
 }
 
-export function WkPrescriptionCard({
+export function WkPrescriptionCard(props: Parameters<typeof WkPrescriptionContent>[0]) {
+  return <ControlledActivity date={props.rx.plan_date} taskId={props.rx.id} side={props.side ?? null} name={props.rx.movement_name}><WkPrescriptionContent {...props}/></ControlledActivity>;
+}
+function WkPrescriptionContent({
   rx: rawRx,
   extraLogging,
   phaseDisplay,

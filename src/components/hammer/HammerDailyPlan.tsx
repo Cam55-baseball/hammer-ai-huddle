@@ -281,7 +281,10 @@ function legacyRepair(dosage: string | undefined, modality: string) {
   return (t: string) => (feet ? repairInstruction(t, { distance_feet: feet, slot }, "legacy") ?? t : repairInstruction(t, { slot: "other" }, "legacy") ?? t);
 }
 
-function DrillRow({
+function DrillRow(props: Parameters<typeof DrillRowContent>[0]) {
+  return <ControlledActivity date={props.planDate} taskId={makeBlockTaskId(props.modality,props.drill.slug ?? props.drill.name)} side={props.side ?? null} name={props.drill.name}><DrillRowContent {...props}/></ControlledActivity>;
+}
+function DrillRowContent({
   drill: d,
   modality,
   planDate,
