@@ -147,6 +147,8 @@ import { RankGoalsPromptCard } from "@/components/hammer/RankGoalsPromptCard";
 import { TestingDayNotice } from "@/components/hammer/TestingDayNotice";
 import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
 import { startingStandards } from '../../../supabase/functions/_shared/wic/masteryPitchingStandards';
+import { commandStatsFromLines } from '../../../supabase/functions/_shared/wic/pitching/roleCycle';
+import type { PitcherGameRow } from '../../../supabase/functions/_shared/wic/pitchingCounts';
 import { PitcherScheduleGate } from "@/components/hammer/pitching/PitcherScheduleCard";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { useGpSignal } from "@/hooks/useGpSignal";
@@ -806,6 +808,8 @@ function HammerDailyPlanBody({
     projectedAthlete.categoryGoals?.goals.some(g=>g.category==='hitting'&&g.intent==='power_hitting') === true;
   const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
   const faultContext = usePlanFaultContext(sportKey);
+  // Logged pitching game lines (same source as the Pitching identity card) for first-pitch strike % and two-ball %.
+  const pitchingLines = useQuery({ queryKey: ['pitching-lines', sportKey, null, bodyPlanDate], enabled: !!bodyUser?.id, staleTime: 60_000, queryFn: async () => { const r = await supabase.rpc('mastery_pitching_lines' as never, { p_sport: sportKey, p_date: bodyPlanDate, p_athlete: null } as never); if (r.error) throw r.error; return (r.data ?? []) as unknown as PitcherGameRow[]; } });
   // Owner Oct 31 command development: DATA only — identity walk rate vs starting standard, pitching analysis findings, a command goal.
   const pitchCommand = useMemo(() => {
     const id = masteryIdentity.data as unknown as { pitching?: { latest?: { bb?: number | null } | null }; level?: string | null; settings?: Record<string, unknown> | null } | undefined;
@@ -813,8 +817,10 @@ function HammerDailyPlanBody({
     const walkMax = lvl ? startingStandards(sportKey, lvl as never, (id?.settings ?? {}) as Record<string, number | null>).find(x => x.key === 'bb_pct')?.value ?? null : null;
     const goals = [...(savedGoals?.[sportKey]?.pitcher?.pitching ?? []), ...(savedGoals?.[sportKey]?.pitcher?.throwing ?? []), ...(savedGoals?.[sportKey]?.position?.pitching ?? [])].map(g => g.id);
     const findings = faultContext.isError ? [] : accessiblePlanFaults(faultContext.data?.rankedFaults ?? [], modules, sportKey).filter(f => f.disciplines.includes('pitching')).map(f => f.rootPatternId);
-    return { walkRate: masteryIdentity.isError ? null : id?.pitching?.latest?.bb ?? null, walkMax, analysisFindings: findings, goalIds: goals };
-  }, [masteryIdentity.data, masteryIdentity.isError, sportKey, savedGoals, faultContext.data, faultContext.isError, modules]);
+    const size = (id as { pitching?: { current?: { size?: number } } } | undefined)?.pitching?.current?.size ?? 0;
+    const stats = pitchingLines.isError || masteryIdentity.isError || !pitchingLines.data ? [] : commandStatsFromLines(pitchingLines.data, sportKey, lvl as never, (id?.settings ?? {}) as Record<string, number | null>, size);
+    return { walkRate: masteryIdentity.isError ? null : id?.pitching?.latest?.bb ?? null, walkMax, stats, analysisFindings: findings, goalIds: goals };
+  }, [pitchingLines.data, pitchingLines.isError, masteryIdentity.data, masteryIdentity.isError, sportKey, savedGoals, faultContext.data, faultContext.isError, modules]);
   // Golden 2Way: position days only — not a start day, the primer day before, or the flush day after.
   const g2wPitchingDay = !!pitcherSchedule.facts &&
     (pitcherSchedule.facts.startsToday || pitcherSchedule.facts.startsTomorrow || pitcherSchedule.facts.pitchedYesterday);
