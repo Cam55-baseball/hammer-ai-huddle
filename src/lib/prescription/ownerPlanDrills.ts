@@ -141,7 +141,8 @@ interface StepLike { name: string; dosage?: string; cue?: string; stage?: string
 /** Swap one drill (the last) for today's owner drill. Count unchanged. */
 export function mergeOwnerSlotDrills<T extends StepLike>(drills: T[], slots: PlanSlot[], ctxOrSport: MergeContext | string, day = new Date()): T[] {
   const ctx: MergeContext = typeof ctxOrSport === "string" ? { sport: ctxOrSport, day } : ctxOrSport;
-  const pool = ownerDrillsForSlot(slots, ctx).sort((a, b) => a.id.localeCompare(b.id));
+  // Pitcher-tagged drills are placed only by ownerPitchDrill on their tagged day type.
+  const pool = ownerDrillsForSlot(slots, ctx).filter((r) => !r.pitch_mound_type).sort((a, b) => a.id.localeCompare(b.id));
   if (pool.length === 0 || drills.length === 0) return drills;
   // Catalog tags cannot replace preparation, live execution, logging, or
   // another owner's already chosen slot. Legacy unstaged slots remain eligible.
