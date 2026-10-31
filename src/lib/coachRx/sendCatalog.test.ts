@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { filterSendCatalog, vaultSendItem, drillSendItem, sendCatalog } from './sendCatalog';
 import type { CatalogMovement } from '@/hooks/useWorkoutCatalog';
+import type { CustomActivityTemplate } from '@/types/customActivity';
 describe('coach sends retain declared work', () => {
+  it('saved recovery templates keep their explicit category rather than becoming lifts', () => {
+    const template = { id:'saved',title:'Recovery',sport:'baseball',activity_type:'workout',coach_card_category:'recovery',exercises:[{id:'a',name:'Breathing'}] } as unknown as CustomActivityTemplate;
+    expect(sendCatalog([], [template], 'baseball').find(item => item.id === 'saved')?.category).toBe('recovery');
+  });
   it('does not list another sport’s Vault items', () => {
     const rows = [{ id: 'softball-only', name: 'Windmill', sport_scope: 'softball', category: 'windmill_pitching' }, { id: 'shared', name: 'Shared', sport_scope: 'both', category: 'warmup' }] as CatalogMovement[];
     const list = sendCatalog(rows, [], 'baseball');

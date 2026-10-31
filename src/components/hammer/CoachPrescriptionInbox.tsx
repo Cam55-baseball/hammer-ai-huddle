@@ -49,11 +49,11 @@ export function CoachPrescriptionInbox({ planDate }: { planDate: string }) {
   };
 
   return (
-    <Card data-coach-rx-inbox className="border-primary/40">
+    <Card data-coach-rx-inbox className="border-primary bg-primary/5">
       <CardContent className="space-y-3 p-4">
         <p className="flex items-center gap-2 text-sm font-bold">
           <ClipboardList className="h-4 w-4" />
-          From your coach
+          From Coach
         </p>
         {pending.map((rx) => {
           const label = CATEGORY_LABEL[rx.category] ?? rx.category;
@@ -64,12 +64,13 @@ export function CoachPrescriptionInbox({ planDate }: { planDate: string }) {
                 <p className="text-sm font-medium">{rx.title}</p>
                 <Badge variant="secondary" className="text-xs capitalize">{label}</Badge>
               </div>
+              {rx.sender_name && <p className="text-xs text-muted-foreground">From Coach {rx.sender_name}</p>}
+              {rx.coach_message && <p className="text-sm">{rx.coach_message}</p>}
               {Array.isArray(rx.exercises) && rx.exercises.length > 0 && (
                 <ul className="list-inside list-disc text-xs text-muted-foreground">
-                  {rx.exercises.slice(0, 5).map((e, i) => (
-                    <li key={i}>{String((e as any).name ?? "Exercise")}</li>
+                  {rx.exercises.map((e, i) => (
+                    <li key={i} className="mb-2">{String(e.name ?? 'Exercise')}<p className="pl-4">{e.sets ? `${e.sets} sets · ` : ''}{String(e.dosage_unit === 'seconds' ? e.duration ?? '' : e.dosage_unit === 'feet' ? e.distance_feet ?? '' : e.reps ?? '')} {String(e.dosage_unit ?? '')}{e.rest != null ? ` · Rest: ${e.rest} seconds` : ''}</p>{e.gear ? <p className="pl-4">Gear: {String(e.gear)}</p> : null}{e.notes ? <p className="pl-4">{String(e.notes)}</p> : null}</li>
                   ))}
-                  {rx.exercises.length > 5 && <li>+{rx.exercises.length - 5} more</li>}
                 </ul>
               )}
               {b && (

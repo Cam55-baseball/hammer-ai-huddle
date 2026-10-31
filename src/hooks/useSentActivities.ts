@@ -6,8 +6,10 @@ import { computeScheduleDates, type ScheduleInput } from '@/lib/coachRx/schedule
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { runCoachWarningAction } from '@/lib/coachRx/warningAction';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useSentActivities() {
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [followedPlayers, setFollowedPlayers] = useState<FollowedPlayer[]>([]);
@@ -19,43 +21,9 @@ export function useSentActivities() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
 
-      // Get players the scout is following (accepted connections only)
-      const { data: follows, error: followsError } = await supabase
-        .from('scout_follows')
-        .select('player_id')
-        .eq('scout_id', userData.user.id)
-        .eq('status', 'accepted');
-
-      if (followsError) throw followsError;
-
-      // Org admins/coaches can also send to their assigned athletes
-      // (owner request Oct 24, run 6) — same send path, same per-player safety.
-      const { data: assignments, error: assignmentsError } = await supabase
-        .from('org_athlete_assignments' as any)
-        .select('athlete_user_id')
-        .eq('coach_user_id', userData.user.id)
-        .is('revoked_at', null);
-
-      if (assignmentsError) throw assignmentsError;
-
-      const assignedIds = ((assignments ?? []) as any[]).map((a) => a.athlete_user_id as string);
-      const followIds = (follows ?? []).map((f) => f.player_id);
-      const allIds = [...new Set([...followIds, ...assignedIds])];
-
-      if (allIds.length > 0) {
-        const playerIds = allIds;
-        
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url, position')
-          .in('id', playerIds);
-
-        if (profilesError) throw profilesError;
-
-        setFollowedPlayers(profiles || []);
-      } else {
-        setFollowedPlayers([]);
-      }
+      const { data, error } = await supabase.functions.invoke('coach-rx-safety', { body: { mode: 'recipients' } });
+      if (error || data?.error) throw error ?? new Error(data.error);
+      setFollowedPlayers(data?.players ?? []);
     } catch (error) {
       console.error('Error fetching followed players:', error);
       toast.error(t('sentActivity.fetchPlayersError', 'Failed to load players'));
@@ -130,6 +98,8 @@ export function useSentActivities() {
             category: rxOptions.category,
             plan_date: day,
             title: template.title,
+            coach_message: message ?? null,
+            locked_fields: lockedFields,
             exercises: templateSnapshot.exercises ?? [],
             gear_labels: (templateSnapshot.exercises ?? []).flatMap((e: any) => e?.gear ? [String(e.gear)] : []),
             source_template_id: rxOptions.sourceTemplateId === undefined ? template.id : rxOptions.sourceTemplateId,
@@ -152,6 +122,7 @@ export function useSentActivities() {
         // A prescription is the one received card. Do not also create a
         // legacy acceptance invitation or leave one behind on a failed send.
         toast.success(t('sentActivity.sent', `Activity sent to ${playerIds.length} player(s)!`));
+        void queryClient.invalidateQueries({queryKey:['coach-rx-manage']});
         return true;
       }
 

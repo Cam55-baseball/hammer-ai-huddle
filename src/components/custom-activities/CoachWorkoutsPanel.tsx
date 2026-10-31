@@ -67,6 +67,8 @@ export function CoachWorkoutsPanel({ shelf }: { shelf?: "from-coaches" | "saved"
           <p className="text-sm font-medium">{rx.title}</p>
           <Badge variant="secondary" className="text-xs capitalize">{label}</Badge>
         </div>
+        {rx.sender_name && <p className="text-xs text-muted-foreground">From Coach {rx.sender_name}</p>}
+        {rx.coach_message && <p className="text-sm">{rx.coach_message}</p>}
         <p className="flex items-center gap-1 text-xs text-muted-foreground">
           <CalendarDays className="h-3 w-3" />
           {dayLabel(rx, today)} · {rxSchedule(rx)}

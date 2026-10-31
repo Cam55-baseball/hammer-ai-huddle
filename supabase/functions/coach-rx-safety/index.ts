@@ -43,6 +43,8 @@ const SendRows = z.array(z.object({
   recur_monthly_ordinal: z.number().int().min(1).max(5).nullable(), recur_monthly_weekday: z.number().int().min(0).max(6).nullable(),
   recur_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(), recur_count: z.number().int().min(1).max(60).nullable(),
   safety_result: z.object({ intensity: z.enum(["light", "standard", "high", "max"]).optional() }),
+  coach_message: z.string().trim().max(2000).nullable().optional(),
+  locked_fields: z.array(z.string().max(80)).max(50).optional(),
 })).min(1).max(3600);
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
@@ -207,6 +209,25 @@ Deno.serve(async (req) => {
       return null;
     };
 
+    if (mode === "recipients") {
+      const follows = await userClient.from('scout_follows').select('player_id').eq('scout_id',me).eq('status','accepted').eq('relationship_type','linked');
+      const assignments = await userClient.from('org_athlete_assignments').select('athlete_user_id').eq('coach_user_id',me).is('revoked_at',null);
+      const members = await userClient.from('organization_members').select('user_id').eq('status','active').eq('role_in_org','player');
+      if (follows.error || assignments.error || members.error) return json({error:'Could not load your players.'},400);
+      const candidates = [...new Set([...(follows.data ?? []).map(row=>row.player_id),...(assignments.data ?? []).map(row=>row.athlete_user_id),...(members.data ?? []).map(row=>row.user_id)])];
+      const allowed:string[]=[];
+      for (const id of candidates) {
+        const check = await userClient.rpc('_coach_training_access',{_athlete:id});
+        if (!check.error && check.data === true && id !== me) allowed.push(id);
+      }
+      const gate = await recruitingGate(admin,me,allowed,'metrics');
+      const visible=allowed.filter(id=>gate.get(id)==='visible');
+      if (!visible.length) return json({players:[]});
+      const profiles = await admin.from('profiles').select('id,full_name,avatar_url,position').in('id',visible);
+      if(profiles.error) throw profiles.error;
+      return json({players:profiles.data ?? []});
+    }
+
     if (mode === "edit_day") {
       const pid = typeof body.athlete_id === 'string' ? body.athlete_id : '';
       const date = typeof body.plan_date === 'string' ? body.plan_date : '';
@@ -287,7 +308,9 @@ Deno.serve(async (req) => {
       }
       const sendAckError = ackError(warnings);
       if (sendAckError) return sendAckError;
-      const { data: inserted, error } = await admin.from("coach_prescriptions").insert(sends.map(send => ({ ...send, sender_id: me,
+      const sender = await admin.from('profiles').select('full_name').eq('id',me).maybeSingle();
+      if(sender.error) throw sender.error;
+      const { data: inserted, error } = await admin.from("coach_prescriptions").insert(sends.map(send => ({ ...send, sender_id: me, sender_name: sender.data?.full_name ?? null,
         safety_result: { ...send.safety_result, overrides: warnings.filter(w => w.player_id === send.recipient_id && w.date === send.plan_date).length ? [overrideRecord(warnings.filter(w => w.player_id === send.recipient_id && w.date === send.plan_date), "send")] : [] },
       }))).select("id");
       if (error) throw error;

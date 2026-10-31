@@ -19,6 +19,7 @@ import { scheduleSummary, type ScheduleInput } from '@/lib/coachRx/schedule';
 import { getActivityIcon } from './IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
 import { CoachExerciseAuthoring } from './CoachExerciseAuthoring';
+import { Input } from '@/components/ui/input';
 import type { Exercise } from '@/types/customActivity';
 
 /** Coach prescription categories (owner request Oct 24) — every category a plan can contain. */
@@ -54,9 +55,10 @@ interface SendToPlayerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   template: CustomActivityTemplate | null;
+  initialPlayerIds?: string[];
 }
 
-export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlayerDialogProps) {
+export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayerIds }: SendToPlayerDialogProps) {
   const { t } = useTranslation();
   const { loading, loadingPlayers, followedPlayers, fetchFollowedPlayers, sendActivityToPlayers } = useSentActivities();
   
@@ -78,11 +80,15 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
   const [recurCount, setRecurCount] = useState<number>(4);
   const [recurEnd, setRecurEnd] = useState<string>('');
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [preview, setPreview] = useState(false);
+  const [title, setTitle] = useState('');
 
   useEffect(() => {
     if (open) {
       fetchFollowedPlayers();
-      setSelectedPlayers([]);
+      setSelectedPlayers(initialPlayerIds ?? []);
+      setPreview(false);
+      setTitle(template?.title ?? '');
       setLockPreset('none');
       setCustomLocks([]);
       setMessage('');
@@ -147,11 +153,11 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
     if (!template) return;
 
     const success = await sendActivityToPlayers(
-      { ...template, exercises },
+      { ...template, title, exercises },
       selectedPlayers,
       getLockedFields(),
       message.trim() || undefined,
-      { category: rxCategory, planDate: rxDate, schedule: buildSchedule() }
+      { category: rxCategory, planDate: rxDate, schedule: buildSchedule(), sourceTemplateId: (template as CustomActivityTemplate & { source_template_id?: string | null }).source_template_id }
     );
 
     if (success) {
@@ -170,24 +176,30 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl font-black flex items-center gap-2">
             <Send className="h-5 w-5" />
-            {t('sentActivity.sendTitle', 'Send Activity to Player')}
+            Send workouts
           </DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(90vh-140px)] px-6">
-          <div className="space-y-6 py-4">
+          {preview ? <section aria-label="Player workout preview" className="space-y-4 py-4">
+            <h3 className="font-bold">From Coach · {title}</h3>
+            <p className="text-sm">{scheduleSummary(buildSchedule())}</p>
+            {message && <p className="text-sm">{message}</p>}
+            <ul className="space-y-3">{exercises.map(exercise => <li key={exercise.id} className="border-b border-border pb-2 text-sm"><p className="font-semibold">{exercise.name}</p><p>{exercise.sets ? `${exercise.sets} sets · ` : ''}{exercise.dosage_unit === 'seconds' ? exercise.duration : exercise.dosage_unit === 'feet' ? exercise.distance_feet : exercise.reps} {exercise.dosage_unit}{exercise.rest != null ? ` · Rest: ${exercise.rest} seconds` : ''}</p>{exercise.gear && <p>Gear: {exercise.gear}</p>}{exercise.notes && <p>{exercise.notes}</p>}</li>)}</ul>
+            <div className="flex flex-wrap gap-2"><Button disabled size="sm">Use instead of my {rxCategory} card</Button><Button disabled size="sm" variant="outline">Add alongside</Button><Button disabled size="sm" variant="ghost">Save for later</Button></div>
+            <p className="text-xs text-muted-foreground">{selectedPlayers.length} player(s) · {lockedFields.length ? `Locked: ${lockedFields.join(', ')}` : 'No locked fields'}</p>
+          </section> : <div className="space-y-6 py-4">
             {/* Activity Preview */}
-            <Card style={{ borderColor: hexToRgba(template.color, 0.5) }}>
+            <Card className="border-primary/40">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div 
-                    className="p-2 rounded-lg"
-                    style={{ backgroundColor: hexToRgba(template.color, 0.2) }}
+                    className="bg-primary/10 p-2 rounded-lg"
                   >
                     {template.custom_logo_url ? (
                       <img src={template.custom_logo_url} alt="" className="h-6 w-6 object-contain" />
                     ) : (
-                      <Icon className="h-6 w-6" style={{ color: template.color }} />
+                      <Icon className="h-6 w-6 text-primary" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -208,6 +220,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
             <Separator />
 
             {/* Lock Settings */}
+            <Label className="block space-y-1">Workout name<Input value={title} maxLength={255} onChange={event => setTitle(event.target.value)}/></Label>
             <CoachExerciseAuthoring exercises={exercises} onChange={setExercises} />
             <Separator />
             <div className="space-y-4">
@@ -308,7 +321,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
                     ['recurring', 'Repeating'],
                     ['any_day', 'Any day — player picks'],
                   ] as const).map(([v, l]) => (
-                    <button
+                    <Button variant="outline"
                       key={v}
                       type="button"
                       data-sched-type={v}
@@ -316,7 +329,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
                       className={`rounded-md border px-2 py-1.5 text-xs ${schedType === v ? 'border-primary bg-primary/10 font-semibold' : 'border-input'}`}
                     >
                       {l}
-                    </button>
+                    </Button>
                   ))}
                 </div>
 
@@ -343,14 +356,14 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
                 {schedType === 'recurring' && (
                   <div className="space-y-2 rounded-md border border-border p-2">
                     <div className="flex items-center gap-2 text-xs">
-                      <button type="button" data-recur-kind="weekly" onClick={() => setMonthly(false)} className={`rounded px-2 py-1 ${!monthly ? 'bg-primary/10 font-semibold' : ''}`}>Weekly</button>
-                      <button type="button" data-recur-kind="monthly" onClick={() => setMonthly(true)} className={`rounded px-2 py-1 ${monthly ? 'bg-primary/10 font-semibold' : ''}`}>Monthly</button>
+                      <Button variant="outline" type="button" data-recur-kind="weekly" onClick={() => setMonthly(false)} className={`rounded px-2 py-1 ${!monthly ? 'bg-primary/10 font-semibold' : ''}`}>Weekly</Button>
+                      <Button variant="outline" type="button" data-recur-kind="monthly" onClick={() => setMonthly(true)} className={`rounded px-2 py-1 ${monthly ? 'bg-primary/10 font-semibold' : ''}`}>Monthly</Button>
                     </div>
                     {!monthly ? (
                       <>
                         <div className="flex flex-wrap gap-1">
                           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
-                            <button
+                            <Button variant="outline"
                               key={d}
                               type="button"
                               data-weekday={i}
@@ -358,7 +371,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
                               className={`rounded-md border px-2 py-1 text-xs ${weekdays.includes(i) ? 'border-primary bg-primary/10 font-semibold' : 'border-input'}`}
                             >
                               {d}
-                            </button>
+                            </Button>
                           ))}
                         </div>
                         <div className="flex items-center gap-2 text-xs">
@@ -384,8 +397,8 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
                       </div>
                     )}
                     <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <button type="button" data-end-mode="count" onClick={() => setEndMode('count')} className={`rounded px-2 py-1 ${endMode === 'count' ? 'bg-primary/10 font-semibold' : ''}`}>Number of times</button>
-                      <button type="button" data-end-mode="end" onClick={() => setEndMode('end')} className={`rounded px-2 py-1 ${endMode === 'end' ? 'bg-primary/10 font-semibold' : ''}`}>End date</button>
+                      <Button variant="outline" type="button" data-end-mode="count" onClick={() => setEndMode('count')} className={`rounded px-2 py-1 ${endMode === 'count' ? 'bg-primary/10 font-semibold' : ''}`}>Number of times</Button>
+                      <Button variant="outline" type="button" data-end-mode="end" onClick={() => setEndMode('end')} className={`rounded px-2 py-1 ${endMode === 'end' ? 'bg-primary/10 font-semibold' : ''}`}>End date</Button>
                       {endMode === 'count' ? (
                         <input
                           type="number" min={1} max={60} value={recurCount}
@@ -483,16 +496,16 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
                 rows={3}
               />
             </div>
-          </div>
+          </div>}
         </ScrollArea>
 
         <div className="flex items-center justify-end gap-3 p-6 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t('common.cancel')}
+          <Button variant="outline" disabled={loading} onClick={() => preview ? setPreview(false) : onOpenChange(false)}>
+            {preview ? 'Back to edit' : t('common.cancel')}
           </Button>
           <Button
-            onClick={handleSend}
-            disabled={loading || selectedPlayers.length === 0 || !scheduleValid || !exercises.length || exercises.some(e => !e.name.trim() || !e.dosage_unit)}
+            onClick={() => preview ? void handleSend() : setPreview(true)}
+            disabled={loading || !title.trim() || selectedPlayers.length === 0 || !scheduleValid || !exercises.length || exercises.some(e => !e.name.trim() || !e.dosage_unit)}
             className="gap-2"
           >
             {loading ? (
@@ -500,7 +513,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
             ) : (
               <Send className="h-4 w-4" />
             )}
-            {t('sentActivity.send', 'Send Activity')}
+            {preview ? 'Send workout' : 'Preview player card'}
           </Button>
         </div>
       </DialogContent>
