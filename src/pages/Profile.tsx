@@ -1,4 +1,5 @@
 import { goToStripe } from "@/lib/purchase/goToStripe";
+import { PitcherRoleQuestions } from '@/components/hammer/pitching/PitcherRoleQuestions';
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { HeightFeetInchesInput } from "@/components/shared/HeightFeetInchesInput";
 import { useEffect, useState } from "react";
@@ -1764,6 +1765,13 @@ export default function Profile() {
           <div className="mb-6">
             <DelayCamSessionsCard userId={user.id} isStaff={isOwner || isAdmin} />
           </div>
+        )}
+
+        {!viewingOtherProfile && (
+          <Card className="p-6 mb-6">
+            <h3 className="text-xl font-bold mb-3">Pitcher or position player</h3>
+            <PitcherRoleQuestions compact />
+          </Card>
         )}
 
         {/* People & access — the only discoverable entry point for parent

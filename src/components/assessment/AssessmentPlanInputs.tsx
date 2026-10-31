@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PitcherRoleQuestions } from '@/components/hammer/pitching/PitcherRoleQuestions';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,6 +117,7 @@ export function AssessmentPlanInputs({ registerFlush, onBack }: { registerFlush?
       {EXTRA_NUTRITION_FIELDS.map(([key,label]) => <div key={key}><Label htmlFor={`assessment-${key}`}>{label} · optional</Label><Input id={`assessment-${key}`} type="number" min="0" value={values[key] ?? ''} onChange={e => set(key,e.target.value)} /></div>)}
       <Label htmlFor="assessment-supplements">Existing supplements (comma-separated, optional)</Label><Input id="assessment-supplements" value={supplements} onChange={e => setSupplements(e.target.value)} />
     </fieldset>
+    <fieldset className="space-y-2 border-t border-border pt-4"><legend className="text-sm font-semibold">Pitching</legend><PitcherRoleQuestions compact /></fieldset>
     <Button variant="outline" onClick={() => setHealthOpen(true)}>Health & physio information</Button>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     <Button disabled={saving} onClick={() => { void save().then(ok => { if (ok) onBack(); }); }}>{saving ? 'Saving…' : 'Save & return'}</Button>
