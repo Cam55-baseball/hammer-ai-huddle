@@ -102,7 +102,7 @@ export function liftRule(role: PitchRole, day: CycleDay, prevDay: CycleDay | nul
     loadChange: false,
     heavy: role === "starter" && prevDay === "rest",
     noLowerBody: day === "pre_start" || day === "start",
-    noLift: day === "start" || day === "rest",
+    noLift: day === "start" || day === "rest" || day === "pre_start",
   };
 }
 export const reliefSets = (sets: number, role: PitchRole) => role === "starter" ? sets : Math.max(2, Math.round(sets * RELIEVER_VOLUME));
