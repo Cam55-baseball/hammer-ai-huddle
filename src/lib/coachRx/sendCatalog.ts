@@ -32,7 +32,7 @@ export function drillSendItem(drill: DrillDefinition, sport: string): SendCatalo
 export function sendCatalog(catalog: CatalogMovement[], templates: CustomActivityTemplate[], sport: string): SendCatalogItem[] {
   return [ ...catalog.filter(row => !row.sport_scope || row.sport_scope === 'both' || row.sport_scope === sport).map(vaultSendItem), ...(sport === 'softball' ? softballDrills : baseballDrills).map(d => drillSendItem(d, sport)),
     ...templates.filter(t => t.sport === sport && t.exercises?.length).map(t => ({ id: t.id, title: t.title, source: 'My activities', templateId: t.id,
-      category: t.activity_type === 'running' ? 'speed' : t.activity_type === 'practice' || t.activity_type === 'short_practice' ? 'hitting' : ['warmup', 'recovery'].includes(t.activity_type) ? t.activity_type : 'lift', exercises: t.exercises })) ];
+      category: (t as CustomActivityTemplate & { coach_card_category?: string }).coach_card_category ?? (t.activity_type === 'running' ? 'speed' : t.activity_type === 'practice' || t.activity_type === 'short_practice' ? 'hitting' : ['warmup', 'recovery'].includes(t.activity_type) ? t.activity_type : 'lift'), exercises: t.exercises })) ];
 }
 export function filterSendCatalog(items: SendCatalogItem[], search: string, category: string) {
   const term = search.trim().toLowerCase();
