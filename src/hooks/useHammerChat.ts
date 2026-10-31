@@ -16,7 +16,7 @@
  * stores nothing.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PLAYER_THREAD_FILTER } from "@/lib/hammer/philosophyThreads";
+import { PLAYER_THREAD_FILTER, isPhilosophyMessage } from "@/lib/hammer/philosophyThreads";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
@@ -94,7 +94,7 @@ export function useHammerChat(options: HammerChatOptions = {}): HammerChatApi {
       const { data: rows } = await supabase.from("recall_messages").select("role,parts,created_at")
         .eq("thread_id", t.id).order("created_at", { ascending: true }).limit(200);
       if (!active || !rows) return;
-      const prior: HammerChatMessage[] = rows.map((r: any) => ({
+      const prior: HammerChatMessage[] = rows.filter((r: any) => !isPhilosophyMessage(r.parts)).map((r: any) => ({
         role: r.role === "assistant" ? "assistant" : "user",
         content: (Array.isArray(r.parts) ? r.parts[0]?.text : "") ?? "",
         ts: new Date(r.created_at).getTime(),

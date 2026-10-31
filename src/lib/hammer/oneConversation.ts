@@ -8,7 +8,7 @@
  * to invented memory.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { PLAYER_THREAD_FILTER } from "@/lib/hammer/philosophyThreads";
+import { PHILOSOPHY_THREAD_TITLE, PLAYER_THREAD_FILTER, isPhilosophyMessage } from "@/lib/hammer/philosophyThreads";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 const HISTORY_LIMIT = 30;
@@ -24,6 +24,13 @@ export async function latestThreadId(userId: string): Promise<string | null> {
   return (data?.id as string | undefined) ?? null;
 }
 
+/** The owner philosophy tool's own conversation, never a player thread. */
+export async function philosophyThreadId(userId: string): Promise<string | null> {
+  const { data } = await supabase.from("recall_threads").select("id").eq("user_id", userId)
+    .eq("title", PHILOSOPHY_THREAD_TITLE).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+  return (data?.id as string | undefined) ?? null;
+}
+
 /** Most recent turns of the shared conversation, oldest first. */
 export async function loadSharedHistory(limit = HISTORY_LIMIT): Promise<ChatTurn[]> {
   try {
@@ -33,7 +40,7 @@ export async function loadSharedHistory(limit = HISTORY_LIMIT): Promise<ChatTurn
     if (!tid) return [];
     const { data } = await supabase.from("recall_messages").select("role,parts,created_at")
       .eq("thread_id", tid).order("created_at", { ascending: false }).limit(limit);
-    return (data ?? []).reverse().map((r: any) => {
+    return (data ?? []).filter((r: any) => !isPhilosophyMessage(r.parts)).reverse().map((r: any) => {
       const p = Array.isArray(r.parts) ? r.parts[0] : null;
       const from = p?.entry ? `[Earlier, from ${p.entry}] ` : "";
       return { role: r.role === "assistant" ? "assistant" : "user", content: from + (p?.text ?? "") } as ChatTurn;

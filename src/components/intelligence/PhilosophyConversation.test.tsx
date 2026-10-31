@@ -4,7 +4,7 @@ import { PhilosophyConversation } from './PhilosophyConversation';
 const s=vi.hoisted(()=>({saves:0,messages:[] as unknown[],fail:false}));
 const change={target:'wk_movement_catalog',id:'03b31613-9eb1-4196-9193-d208c68469ab',field:'cue',before:'Comfortable range.',after:'Stay in a comfortable range.'};
 const proposal={body:'TEST balance teaching',sport:'baseball',area:'hitting',applies_when:'Offseason',not_when:'Pain',connected_work:'',benefit:'Clearer teaching',changes:[change]};
-vi.mock('@/lib/hammer/oneConversation',()=>({latestThreadId:async()=> 'thread'}));
+vi.mock('@/lib/hammer/oneConversation',()=>({philosophyThreadId:async()=> 'thread'}));
 vi.mock('@/integrations/supabase/client',()=>({supabase:{
  auth:{getSession:async()=>({data:{session:{user:{id:'owner'}}}})},
  functions:{invoke:async()=>({data:{reply:JSON.stringify({reply:'Review ready',questions:[],proposal})},error:null})},

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PLAYER_THREAD_FILTER } from "@/lib/hammer/philosophyThreads";
+import { PLAYER_THREAD_FILTER, isPhilosophyMessage } from "@/lib/hammer/philosophyThreads";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -116,7 +116,7 @@ export default function HammerRecall() {
         console.error("[recall] messages", error);
         return;
       }
-      const ui: UIMessage[] = (data || []).map((r: any) => {
+      const ui: UIMessage[] = (data || []).filter((r: any) => !isPhilosophyMessage(r.parts)).map((r: any) => {
         const first = Array.isArray(r.parts) ? r.parts[0] : null;
         return {
           id: r.id,
