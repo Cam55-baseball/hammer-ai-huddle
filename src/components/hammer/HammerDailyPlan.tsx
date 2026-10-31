@@ -1256,7 +1256,7 @@ function HammerDailyPlanBody({
                     focus={blockFocus(b.title, BLOCK_CATEGORY[b.modality] ?? b.title, b.side)}
                     tone="bg-muted-foreground"
                     planDate={pocketDate}
-                    practiceLogging={logPractice && (b.modality === "throwing" || b.modality === "hitting")}
+                    practiceLogging={logPractice && ["throwing", "pitching", "defense", "hitting"].includes(b.modality)}
                     prescribed={prescribedToday(b)}
                     progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
@@ -1354,7 +1354,7 @@ function HammerDailyPlanBody({
                     focus={blockFocus(b.title, category, b.side)}
                     tone="bg-muted-foreground"
                     planDate={pocketDate}
-                    practiceLogging={logPractice && (b.modality === "throwing" || b.modality === "hitting")}
+                    practiceLogging={logPractice && ["throwing", "pitching", "defense", "hitting"].includes(b.modality)}
                     prescribed={prescribedToday(b)}
                     progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
@@ -1394,7 +1394,7 @@ function HammerDailyPlanBody({
                     focus={blockFocus(b.title, BLOCK_CATEGORY[b.modality] ?? b.title, b.side)}
                     tone="bg-muted-foreground"
                     planDate={pocketDate}
-                    practiceLogging={logPractice && (b.modality === "throwing" || b.modality === "hitting")}
+                    practiceLogging={logPractice && ["throwing", "pitching", "defense", "hitting"].includes(b.modality)}
                     prescribed={prescribedToday(b)}
                     progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
