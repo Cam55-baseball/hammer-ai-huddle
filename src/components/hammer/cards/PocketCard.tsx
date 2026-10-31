@@ -97,7 +97,8 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
   const cardControls=decisions.controls.filter(c=>blockMatch ? c.source==='block_drill' && c.source_ref===blockMatch[1] && c.side===(blockMatch[2]==='x'?null:blockMatch[2]) : c.source==='wk_prescription' && (c.source_ref===id || id==='lift' && c.source_ref==='supplemental' || id===`activity_${c.task_id}`));
   const exemptions=cardControls.filter(sessionExempt).length;
   const originalTotal=progress?.total ?? 0;
-  if(progress && exemptions) progress={done:Math.min(progress.done,Math.max(0,progress.total-exemptions)),total:Math.max(0,progress.total-exemptions)};
+  // Block checklist progress already includes exemptions; physical row status does not.
+  if(progress && exemptions) progress={done:Math.max(0,Math.min(blockMatch ? progress.done-exemptions : progress.done,Math.max(0,progress.total-exemptions))),total:Math.max(0,progress.total-exemptions)};
   const allExempt=originalTotal>0 && exemptions>=originalTotal;
   const [logHost, setLogHost] = useState<HTMLElement | null>(null);
   const [showIntro, setShowIntro] = useState(false);

@@ -21,7 +21,7 @@ export function useSessionControls(athleteId?: string, from?: string, to?: strin
       return (data ?? []).filter(c => c.sport === context.data?.sport_primary) as SessionControl[];
     } });
   const invalidate = async () => {
-    for (const key of ['session-controls','coach-player-week','hammer-daily-tasks','wk-rx','coach-discipline','team-discipline','coach-rx-manage']) await qc.invalidateQueries({queryKey:[key]});
+    for (const key of ['session-controls','sent-session-controls','coach-player-week','hammer-daily-tasks','wk-rx','coach-discipline','team-discipline','coach-rx-manage']) await qc.invalidateQueries({queryKey:[key]});
   };
   const mutation = useMutation({mutationFn:async (input: { ids: string[] } | { date: string; sport: string; targets: SessionTarget[]; mode: 'allow' | 'remove'; reason: string }) => {
     const response = 'ids' in input

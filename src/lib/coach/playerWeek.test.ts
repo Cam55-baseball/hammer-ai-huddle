@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { playerWeekCards, weekDates, type WeekDay } from './playerWeek';
+import type { SessionControl } from '@/lib/coachRx/sessionControls';
 const base = ():WeekDay => ({date:'2026-10-30',plan:{state:'ok',blocks:[]},restDay:false,prescriptions:[],logs:[],tasks:[],coachWorkouts:[]});
 const rx = {id:'rx1',slot:'lift',movement_name:'Squat',movement_slug:'squat',sets:3,reps:5,status:'planned',replaced_by_coach_rx:null,dosage_unit:'reps'};
 describe('canonical player week',()=>{
+  it('a dated removal retains canonical results but does not show as unfinished',()=>{const d=base();d.prescriptions=[rx];d.logs=[{id:'l',prescription_id:'rx1',plan_date:d.date,movement_slug:'squat',sets_completed:1,reps_completed:[5],total_reps_completed:5,duration_seconds_precise:null,duration_seconds_completed:null,distance_feet_completed:null}];const c={id:'c',task_id:'rx1',side:null,mode:'remove',skipped_at:null} as SessionControl;const card=playerWeekCards(d,[c])[0];expect(card.status).toBe('removed');expect(card.activities[0].results[0]).toContain('Sets: 1');expect(card.activities[0].target?.taskId).toBe('rx1');});
   it('shows exactly Monday through Sunday with previous and next weeks',()=>{
     expect(weekDates('2026-10-31')).toEqual(['2026-10-26','2026-10-27','2026-10-28','2026-10-29','2026-10-30','2026-10-31','2026-11-01']);
     expect(weekDates('2026-10-31',1)[0]).toBe('2026-11-02');
