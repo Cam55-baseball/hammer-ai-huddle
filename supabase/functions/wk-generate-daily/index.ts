@@ -395,6 +395,7 @@ import { isolationAllowed, robustnessAreas, robustnessPool, ROBUSTNESS_IN_SEASON
 import { oppositeLowerPool } from "../_shared/wic/lift/areaMap.ts";
 import { runningReadiness, type ReadinessCheckin, type RunningReadiness } from "../_shared/readiness/runningReadiness.ts";
 import { readPhysioMapping } from '../_shared/health/readPhysioMapping.ts';
+import { injuryCheckPainByDate } from '../_shared/health/fullGo.ts';
 import { conditioningFloorDue, isRunningConditioning, floorConditioningSlugs } from "../_shared/wic/conditioning/weeklyFloor.ts";
 import { combinedRunningRowsToDrop, isCombinedBaseConditioningProgram } from "../_shared/wic/conditioning/combinedBaseRunning.ts";
 import { activeRestrictedAreas, restrictedConditioningReason } from '../_shared/wic/conditioning/restrictedConditioning.ts';
@@ -1388,6 +1389,8 @@ const handler = async (req: Request): Promise<Response> => {
         const checkins: ReadinessCheckin[] = ((rq.data ?? []) as any[]).map((q) => ({ date: q.entry_date, bodyReadiness: q.physical_readiness,
           hoursSlept: q.hours_slept, sorenessAreas: Array.isArray(q.soreness_locations) ? q.soreness_locations.length : null,
           painAreas: Array.isArray(q.pain_location) ? q.pain_location.length : null, painScale: q.pain_scale }));
+        // Daily injury check answers (Fix 7) count as pain for readiness, same rule as body-map pain.
+        for (const [d, pain] of injuryCheckPainByDate(ctx?.injury_history)) if (d >= from14 && d <= planDate) checkins.push({ date: d, painScale: pain });
         const seenDay = new Set<string>();
         for (const e of (ra.data ?? []) as any[]) {
           const d = String(e.occurred_at).slice(0, 10); if (seenDay.has(d)) continue; seenDay.add(d);
