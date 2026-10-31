@@ -18,6 +18,7 @@
 import type { RoadmapRung } from "@/lib/hammer/roadmap/roadmapLadder";
 import type { QuarterDescriptor } from "@/lib/hammer/roadmap/seasonQuarters";
 import type { PitcherProfile } from "./pitcherProfile";
+import { shortboxFeet } from "../../../../supabase/functions/_shared/wic/pitching/roleCycle";
 import { resolveOutingFacts, type PitcherSettingsRow, type PitcherOutingRow, type PitcherAvailabilityRow } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 
 export type PitcherDayType =
@@ -47,14 +48,16 @@ export interface PitchingMicrocycle {
 
 const DOW_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function labelFor(t: PitcherDayType): { headline: string; detail: string } {
+function labelFor(t: PitcherDayType, sport: "baseball" | "softball" = "baseball"): { headline: string; detail: string } {
+  const place = sport === "softball" ? "circle" : "mound";
+  const sb = shortboxFeet(sport);
   switch (t) {
     case "start":         return { headline: "Start",         detail: "Compete on the mound today." };
-    case "bullpen":       return { headline: "Bullpen",       detail: "Structured pen — build the outing." };
-    case "side":          return { headline: "Side / Touch",  detail: "Short mound work at feel intensity." };
-    case "touch":         return { headline: "Touch-and-feel",detail: "10–15 easy pitches, no radar chase." };
+    case "bullpen":       return sport === "softball" ? { headline: "Circle session", detail: "Structured circle work — build the outing." } : { headline: "Bullpen", detail: "Structured pen — build the outing." };
+    case "side":          return { headline: "Shortbox",      detail: `Pitch from the ${place} at ${sb} ft (2/3 distance) — light, pitches in the zone.` };
+    case "touch":         return { headline: `Light ${place} work`, detail: "As light as playing catch, no radar chase." };
     case "long_toss":     return { headline: "Long toss",     detail: "Distance ladder + pulldowns if unlocked." };
-    case "flush":         return { headline: "Flush / recover",detail: "Recovery throws + arm care. No mound." };
+    case "flush":         return { headline: "Light catch + mobility", detail: `Light catch plus 2-hand med-ball overhead throws. No ${place}.` };
     case "fielding_only": return { headline: "PFP + catch play",detail: "Fielding routine, no bullpen work." };
     case "rest":          return { headline: "Full rest",     detail: "No throwing. Sleep is the workout." };
     case "available":     return { headline: "Available",     detail: "Reliever ready. Warm on demand only." };
@@ -62,8 +65,8 @@ function labelFor(t: PitcherDayType): { headline: string; detail: string } {
   }
 }
 
-function mkDay(dow: number, t: PitcherDayType): PitcherDay {
-  const { headline, detail } = labelFor(t);
+function mkDay(dow: number, t: PitcherDayType, sport: "baseball" | "softball" = "baseball"): PitcherDay {
+  const { headline, detail } = labelFor(t, sport);
   return { dow, dayType: t, headline, detail };
 }
 
@@ -98,12 +101,14 @@ function baseballStarter(input: Input): PitcherDay[] {
     else if (isGame) t = "game";
     else {
       switch (offset) {
+        // Owner Oct 31 starter cycle: day after = light catch + med-ball mobility,
+        // second day after = rest, then long toss, a bullpen, shortbox, and a light day before.
         case 1: t = "flush"; break;
-        case 2: t = "long_toss"; break;
-        case 3: t = rung === "foundation" ? "touch" : "bullpen"; break;
-        case 4: t = "fielding_only"; break;
-        case 5: t = "touch"; break;
-        case 6: t = quarter.phase === "in" ? "rest" : "touch"; break; // owner rule: no max long toss the day before a start
+        case 2: t = "rest"; break;
+        case 3: t = "long_toss"; break;
+        case 4: t = rung === "foundation" ? "side" : "bullpen"; break;
+        case 5: t = "side"; break;
+        case 6: t = "touch"; break; // light the day before a start; never max long toss
         default: t = "start"; break;
       }
     }
@@ -132,7 +137,7 @@ function baseballReliever(input: Input): PitcherDay[] {
     if (isGame) t = "available";
     else if (preferredBullpenDow !== null && dow === preferredBullpenDow) t = rung === "foundation" ? "side" : "bullpen";
     else if (dow === 0) t = "rest";
-    else t = "touch";
+    else t = dow % 2 === 0 ? "side" : "touch";
     week.push(mkDay(dow, t));
   }
   return week;
@@ -155,7 +160,7 @@ function softballStarter(input: Input): PitcherDay[] {
     if (isGame) t = dow === anchor ? "start" : "game";
     if (rung === "foundation" && t === "start" && !isGame) t = "side";
     if (quarter.phase === "in" && !isGame && t === "start") t = "side";
-    week.push(mkDay(dow, t));
+    week.push(mkDay(dow, t, "softball"));
   }
   return week;
 }
@@ -169,8 +174,8 @@ function softballReliever(input: Input): PitcherDay[] {
     let t: PitcherDayType;
     if (isGame) t = "available";
     else if (dow === 0) t = "rest";
-    else t = "touch";
-    week.push(mkDay(dow, t));
+    else t = dow % 2 === 0 ? "side" : "touch";
+    week.push(mkDay(dow, t, "softball"));
   }
   return week;
 }
