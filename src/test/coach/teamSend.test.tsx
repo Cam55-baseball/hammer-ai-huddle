@@ -9,6 +9,7 @@ import { useSentActivities } from "@/hooks/useSentActivities";
 import type { CustomActivityTemplate } from "@/types/customActivity";
 
 const inserts: Record<string, unknown[][]> = {};
+vi.mock('@tanstack/react-query', () => ({useQueryClient: () => ({invalidateQueries: vi.fn()})}));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: { getUser: async () => ({ data: { user: { id: "coach-1" } } }) },
