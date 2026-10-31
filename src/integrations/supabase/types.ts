@@ -5236,6 +5236,63 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_session_controls: {
+        Row: {
+          actor_id: string
+          actor_name: string
+          athlete_id: string
+          card_title: string
+          created_at: string
+          id: string
+          mode: string
+          plan_date: string
+          reason: string
+          side: string | null
+          skipped_at: string | null
+          source: string
+          source_ref: string
+          sport: string
+          target_name: string
+          task_id: string
+        }
+        Insert: {
+          actor_id: string
+          actor_name: string
+          athlete_id: string
+          card_title: string
+          created_at?: string
+          id?: string
+          mode: string
+          plan_date: string
+          reason?: string
+          side?: string | null
+          skipped_at?: string | null
+          source: string
+          source_ref: string
+          sport: string
+          target_name: string
+          task_id: string
+        }
+        Update: {
+          actor_id?: string
+          actor_name?: string
+          athlete_id?: string
+          card_title?: string
+          created_at?: string
+          id?: string
+          mode?: string
+          plan_date?: string
+          reason?: string
+          side?: string | null
+          skipped_at?: string | null
+          source?: string
+          source_ref?: string
+          sport?: string
+          target_name?: string
+          task_id?: string
+        }
+        Relationships: []
+      }
       coaching_principle_versions: {
         Row: {
           applies_when: string | null
@@ -23986,6 +24043,26 @@ export type Database = {
         Args: { _name: string; _players: Json }
         Returns: string
       }
+      coach_session_control_write: {
+        Args: {
+          p_athlete: string
+          p_date: string
+          p_mode: string
+          p_reason?: string
+          p_sport: string
+          p_targets: Json
+        }
+        Returns: Json
+      }
+      coach_session_exempt: {
+        Args: {
+          p_athlete: string
+          p_date: string
+          p_side?: string
+          p_task: string
+        }
+        Returns: boolean
+      }
       coach_undo_entry: { Args: { _entry: string }; Returns: undefined }
       coach_week_rx_lineage: {
         Args: { _athlete: string; _from: string }
@@ -24585,6 +24662,7 @@ export type Database = {
         }
         Returns: Json
       }
+      player_allowed_skip: { Args: { p_ids: string[] }; Returns: Json }
       player_resolve_coach_entry: {
         Args: {
           _confirm: boolean

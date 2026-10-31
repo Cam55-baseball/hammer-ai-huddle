@@ -1149,6 +1149,13 @@
       "when": 1793456582501,
       "tag": "0163_coach_week_prescription_lineage",
       "breakpoints": true
+    },
+    {
+      "idx": 164,
+      "version": "7",
+      "when": 1793457073875,
+      "tag": "0164_coach_dated_session_controls",
+      "breakpoints": true
     }
   ]
 }
