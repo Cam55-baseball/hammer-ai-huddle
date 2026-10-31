@@ -808,7 +808,7 @@ function HammerDailyPlanBody({
   const faultContext = usePlanFaultContext(sportKey);
   // Owner Oct 31 command development: DATA only — identity walk rate vs starting standard, pitching analysis findings, a command goal.
   const pitchCommand = useMemo(() => {
-    const id = masteryIdentity.data as { pitching?: { latest?: { bb?: number | null } | null }; level?: string | null; settings?: Record<string, unknown> | null } | undefined;
+    const id = masteryIdentity.data as unknown as { pitching?: { latest?: { bb?: number | null } | null }; level?: string | null; settings?: Record<string, unknown> | null } | undefined;
     const lvl = id?.level ?? null;
     const walkMax = lvl ? startingStandards(sportKey, lvl as never, ((id?.settings as { pitching_standards?: Record<string, number> } | null)?.pitching_standards) ?? {}).find(x => x.key === 'bb_pct')?.value ?? null : null;
     const goals = [...(savedGoals?.[sportKey]?.pitcher?.pitching ?? []), ...(savedGoals?.[sportKey]?.pitcher?.throwing ?? []), ...(savedGoals?.[sportKey]?.position?.pitching ?? [])].map(g => g.id);
