@@ -138,7 +138,7 @@ export function PrescribedOrderLine() {
 
 export function DayCommandCenter({ checkIns = { morning: false, night: false, preLift: false, requiresPreLift: false } }: { checkIns?: { morning: boolean; night: boolean; preLift: boolean; requiresPreLift: boolean } }) {
   const view = useContext(ViewCtx);
-  const tracked = (view?.entries ?? []).filter((e) => e.progress && e.progress.total > 0);
+  const tracked = (view?.entries ?? []).filter((e) => e.progress && e.progress.total >= 0);
   const done = tracked.reduce((s, e) => s + (e.progress!.done >= e.progress!.total ? 1 : 0), 0);
   const items = tracked.reduce((s, e) => s + Math.min(e.progress!.done, e.progress!.total), 0);
   const totalItems = tracked.reduce((s, e) => s + e.progress!.total, 0);

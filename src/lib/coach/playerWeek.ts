@@ -73,5 +73,10 @@ export function playerWeekCards(day: WeekDay, controls: SessionControl[] = []): 
     // Canonical prescription rows already show accepted exercises and exact logs.
     if (!cards.some(c => c.id===coach.id) && (coach.cancelled_at || ['cancelled','removed'].includes(coach.status))) cards.push({id:coach.id,title:coach.title,status:'removed',activities:coach.exercises.map((e,i)=>({id:`${coach.id}:${i}`,name:e.name ?? e.movement_name ?? 'Exercise',dosage:'',status:'removed',results:[]}))});
   }
+  // A later safe rebuild may change the exact activity. Keep the dated decision
+  // visible as history without applying it to the new activity or its dose.
+  const shown=new Set(cards.flatMap(card=>card.activities.flatMap(a=>a.control?[a.control.id]:[])));
+  const historical=controls.filter(c=>!shown.has(c.id));
+  if(historical.length)cards.push({id:'session-decision-history',title:'Session decisions · earlier saved work',status:historical.every(c=>c.mode==='remove')?'removed':historical.some(c=>c.skipped_at)?'skipped':'not_done',activities:historical.map(c=>({id:c.id,name:c.target_name,dosage:'',status:c.mode==='remove'?'removed':c.skipped_at?'skipped':'not_done',results:[],control:c}))});
   return cards;
 }
