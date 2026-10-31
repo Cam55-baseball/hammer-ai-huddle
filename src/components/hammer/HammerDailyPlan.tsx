@@ -1015,6 +1015,8 @@ function HammerDailyPlanBody({
       <ErrorBoundary>
         <div data-tour="update-hammer"><TellHammersInbox /></div>
       </ErrorBoundary>
+      {/* Active injuries only: each entry carries its progress and the healed step (owner Fix 7). */}
+      <ErrorBoundary><ActiveInjuryCards /></ErrorBoundary>
       <ErrorBoundary>
         {hasSavedSportDay&&<AnalysisRotationNotice sport={sportKey} date={pocketDate}/>}
       </ErrorBoundary>
@@ -1046,7 +1048,6 @@ function HammerDailyPlanBody({
           <DayNoticesDrawerItem />
         </ErrorBoundary>
         <ErrorBoundary><TestingDayNotice /></ErrorBoundary>
-        <ErrorBoundary><ActiveInjuryCards /></ErrorBoundary>
         {faultContext.isError && <p role="alert" className="text-sm text-destructive">Couldn't check your analysis history. No analysis drill changes were applied.</p>}
         {drillCirculation.error && <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. No analysis drill changes were applied.</p>}
         {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}
