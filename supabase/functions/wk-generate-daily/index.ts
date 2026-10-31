@@ -3343,7 +3343,8 @@ const handler = async (req: Request): Promise<Response> => {
       const sprintWeek = Math.max(0, Number((progression as any).blockIndex ?? 0) * 4 + Number((progression as any).weekInBlock ?? 0) - ((progression as any).isDeloadWeek ? 1 : 0));
       for (const m of conditioning) {
         const sprintDoseNow = pitchRoleForSprint && !restrictedConditioningWhy && !conditioningSelection.dialedDown && /^repeat_/.test(m.slug) ? sprintDose(pitchRoleForSprint, sprintWeek) : null;
-        const sprintOverrides = sprintDoseNow ? { sets: sprintDoseNow.reps, reps: 1, distance_feet: sprintDoseNow.yards * 3 } : {};
+        // Only the rep count changes; distance and the canonical sprint rest rule stay as declared.
+        const sprintOverrides = sprintDoseNow ? { sets: sprintDoseNow.reps } : {};
         push("conditioning", "conditioning", restrictedConditioningWhy ? {...m,why_prescribed:restrictedConditioningWhy,cue:'Seated stationary bike, comfortable pace, arms relaxed. Pain or a professional restriction — stop.'} : m, sprintOverrides, conditioningSelection.why, {
           conditioning_why: conditioningSelection.why,
           conditioning_path: conditioningSelection.path,
@@ -3353,7 +3354,7 @@ const handler = async (req: Request): Promise<Response> => {
           conditioning_restriction_reason: restrictedConditioningWhy,
           conditioning_counts_as_running: !restrictedConditioningWhy && isRunningConditioning([m.slug]),
           ...(m.slug.startsWith('easy_base_jog_') ? {rest_seconds:60,conditioning_easy_running:true} : {}),
-          ...(sprintDoseNow ? {rest_seconds:sprintDoseNow.restSeconds,pitcher_sprint_dose:{role:pitchRoleForSprint,week:sprintWeek,...sprintDoseNow}} : {}),
+          ...(sprintDoseNow ? {pitcher_sprint_dose:{role:pitchRoleForSprint,week:sprintWeek,reps:sprintDoseNow.reps,kind:sprintDoseNow.kind}} : {}),
         });
       }
     }
