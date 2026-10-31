@@ -24,7 +24,6 @@ import type {
 import type { ModalityKey } from "@/lib/hammer/prescription/dailyPlan";
 import { RoadmapExplainerSheet } from "./RoadmapExplainerSheet";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
-import { UpcomingSessionDecisions } from './UpcomingSessionDecisions';
 
 const MODALITY_ABBR: Record<ModalityKey, string> = {
   warmup: "WU",
@@ -148,7 +147,6 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
       )}
 
       <WeeklyBodyLoadBar embedded />
-      <UpcomingSessionDecisions/>
     </section>
   );
 }
