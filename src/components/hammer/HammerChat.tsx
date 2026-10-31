@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useHammerChat } from "@/hooks/useHammerChat";
 import { getHammerIdentity } from "@/lib/hammer/identity";
+import { detectFullGoPhrasing } from "../../../supabase/functions/_shared/health/fullGo";
+import { FullGoPrompts } from "@/components/hammer/injury/FullGo";
 
 export interface HammerCategoryFocus {
   readonly id: string;
@@ -30,9 +32,12 @@ export function HammerChat({ compact = false, categoryFocus = null }: Props) {
   const chat = useHammerChat({ categoryFocus });
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const mountedAt = useRef(Date.now());
   const [shown, setShown] = useState(CHAT_PAGE);
   const visible = chat.messages.slice(-shown);
   const hidden = chat.messages.length - visible.length;
+  const lastUser = [...chat.messages].reverse().find((m) => m.role === "user" && m.ts > mountedAt.current);
+  const fullGo = detectFullGoPhrasing(lastUser?.content ?? "");
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -84,6 +89,7 @@ export function HammerChat({ compact = false, categoryFocus = null }: Props) {
             <p className="text-[10px] text-muted-foreground italic">Hammer is thinking…</p>
           )}
         </div>
+        {fullGo.matched && <FullGoPrompts only={fullGo.region} />}
         {chat.error && <p className="text-[10px] text-destructive">{chat.error}</p>}
         <div className="flex gap-2">
           <Textarea
