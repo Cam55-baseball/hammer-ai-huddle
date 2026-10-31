@@ -1,6 +1,6 @@
 // supabase/functions/wk-generate-daily/index.ts
 import { reliefSets, isLowerBodyLift } from "../_shared/wic/pitching/roleCycle.ts";
-import { pitcherYardTarget, repsForYards, capSessionYards, SESSION_YARD_CAP } from "../_shared/wic/conditioning/yards.ts";
+import { pitcherYardTarget, repsForYards, capSessionYards, SESSION_YARD_CAP, conditioningRules, CONDITIONING_RULES_KEY } from "../_shared/wic/conditioning/yards.ts";
 import { applyLiveTracking } from "../_shared/vault/tracking.ts";
 import { isPlanGameDay } from "../_shared/schedule/isGameDay.ts";
 // Hammer Workout & Speed — elite daily prescription generator.
@@ -3342,10 +3342,12 @@ const handler = async (req: Request): Promise<Response> => {
       // bullpen arms and closers do short repeat sprints. Only on an already-chosen hard sprint row.
       const pitchRoleForSprint = isPitcherAthlete ? (outingFacts?.pitchingRole ?? null) : null;
       const sprintWeek = Math.max(0, Number((progression as any).blockIndex ?? 0) * 4 + Number((progression as any).weekInBlock ?? 0) - ((progression as any).isDeloadWeek ? 1 : 0));
+      let condTargets = conditioningRules(null).targets;
+      if (pitchRoleForSprint) { try { const { data: cr } = await admin.from("app_settings").select("setting_value").eq("setting_key", CONDITIONING_RULES_KEY).maybeSingle(); condTargets = conditioningRules(cr?.setting_value).targets; } catch { /* defaults */ } }
       for (const m of conditioning) {
         // Owner Oct 31: pitcher sprints are prescribed in yards (starters 300→1000, relievers 300→600 over 8 weeks; low readiness lighter).
         const repFeet = Number((m as any).default_distance_feet ?? 0);
-        const yardTarget = pitchRoleForSprint && !restrictedConditioningWhy && /^repeat_/.test(m.slug) && repFeet > 0 ? pitcherYardTarget(pitchRoleForSprint, sprintWeek, undefined, !!conditioningSelection.dialedDown) : null;
+        const yardTarget = pitchRoleForSprint && !restrictedConditioningWhy && /^repeat_/.test(m.slug) && repFeet > 0 ? pitcherYardTarget(pitchRoleForSprint, sprintWeek, condTargets, !!conditioningSelection.dialedDown) : null;
         const sprintDoseNow = yardTarget ? { reps: repsForYards(yardTarget.yards, repFeet), kind: yardTarget.kind, yards: yardTarget.yards } : null;
         // Only the rep count changes; distance and the canonical sprint rest rule stay as declared.
         const sprintOverrides = sprintDoseNow ? { sets: sprintDoseNow.reps } : {};
@@ -3414,7 +3416,7 @@ const handler = async (req: Request): Promise<Response> => {
                   .contains("placements", ["hammers_today:conditioning"]).limit(100);
                 const gear = new Set(assumedEquipment.map((e) => String(e).trim().toLowerCase()));
                 const pool = ((ownerRows ?? []) as any[])
-                  .filter((r) => ownerConditioningFits(r, { sport, isPitcher: isPitcherAthlete }))
+                  .filter((r) => ownerConditioningFits(r, { sport, isPitcher: isPitcherAthlete, modules: schedulingModules, role: outingFacts?.pitchingRole ?? null }))
                   .filter((r) => (r.equipment ?? []).every((e: string) => gear.has(String(e).trim().toLowerCase())))
                   .sort((a, b) => String(a.id).localeCompare(String(b.id)));
                 if (pool.length) {

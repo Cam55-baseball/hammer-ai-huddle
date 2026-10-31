@@ -38,6 +38,10 @@ export interface OwnerDrillRow {
   bunt_side?: string | null;
   conditioning_kind?: string | null;
   work_seconds?: number | null;
+  contacts?: number | null;
+  load_lbs?: number | null;
+  carry_yards?: number | null;
+  conditioning_programs?: string[];
   /** Owner Oct 31 pitcher tags; the plan engine places mound/circle work from these. */
   pitch_mound_type?: string | null;
   pitch_distance_fraction?: number | null;

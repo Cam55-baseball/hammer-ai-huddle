@@ -9,7 +9,7 @@ type Exercise = { id: string; name: string; rows: number; ready: boolean[]; rest
 type Cursor = { exercise: number; exerciseId: string | null; row: number; restingUntil: number | null; restStartedAt: number | null; restSeconds: number | null; conditioningBases: number | null; awaitingManualRest: boolean; phase: "work" | "action" };
 const INITIAL: Cursor = { exercise: 0, exerciseId: null, row: 0, restingUntil: null, restStartedAt: null, restSeconds: null, conditioningBases: null, awaitingManualRest: false, phase: "work" };
 const Context = createContext<{
-  active: boolean; cursor: Cursor; currentId?: string; register: (entry: Exercise) => () => void; refresh: () => void;
+  active: boolean; cursor: Cursor; currentId?: string; register: (entry: Exercise) => () => void; refresh: () => void; end: (id: string) => void;
 } | null>(null);
 
 /** Focus is a cursor over mounted canonical log rows; it never creates a prescription or another log. */
@@ -49,6 +49,13 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
     const moreRows = prior.row + 1 < exercise.rows;
     const nextIndex = moreRows ? index : index + 1;
     return { ...INITIAL, conditioningBases: prior.conditioningBases, exercise: nextIndex, exerciseId: all[nextIndex]?.id ?? null, row: moreRows ? prior.row + 1 : 0 };
+  }), []);
+  /** Smart stop: the remaining reps of this exercise end now (already saved), no rest is shortened elsewhere. */
+  const end = useCallback((id: string) => setCursor(prior => {
+    const all = [...entries.current.values()].filter(entry => !entry.afterExerciseId);
+    const index = all.findIndex(entry => entry.id === id);
+    if (index < 0 || prior.exerciseId !== id) return prior;
+    return { ...INITIAL, conditioningBases: prior.conditioningBases, exercise: index + 1, exerciseId: all[index + 1]?.id ?? null };
   }), []);
   useEffect(() => { sessionStorage.setItem(storageKey, JSON.stringify(cursor)); }, [cursor, storageKey]);
   useEffect(() => {
@@ -96,7 +103,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
     window.addEventListener(`hm:focus-exit:${storageKey}`, exit);
     return () => window.removeEventListener(`hm:focus-exit:${storageKey}`, exit);
   });
-  return <Context.Provider value={{ active, cursor, currentId: current?.id, register, refresh }}>
+  return <Context.Provider value={{ active, cursor, currentId: current?.id, register, refresh, end }}>
     {active && <section data-focus-session className="mb-3 space-y-2 border-b border-border pb-3">
       <h3 className="text-base font-semibold">{current ? `${current.name} · Set ${cursor.row + 1} of ${current.rows}` : "End of guided sets"}</h3>
       {cursor.restingUntil != null && <RestTimer key={cursor.restStartedAt} label="Rest before the next set" seconds={cursor.restSeconds} initialStartedAt={cursor.restStartedAt} managed />}
@@ -127,7 +134,7 @@ export function useFocusExercise(entry: Exercise) {
   const signature = entry.ready.join(",");
   const refresh = context?.refresh;
   useEffect(() => { refresh?.(); }, [signature, refresh]);
-  return { active: context?.active ?? false, visible: !context?.active || context.currentId === entry.id, row: context?.cursor.row ?? 0, resting: context?.cursor.restingUntil != null };
+  return { active: context?.active ?? false, visible: !context?.active || context.currentId === entry.id, row: context?.cursor.row ?? 0, resting: context?.cursor.restingUntil != null, end: () => context?.end(entry.id) };
 }
 
 export function useFocusState() {

@@ -105,3 +105,21 @@ export function judgeReps(reps: readonly RepFeedback[], opts: { kind: "max_sprin
   if (!opts.extraUsed && nearBest && roomYards >= 0) return { action: "offer_more", reps: t.offerReps, message: `You're still fast. Add ${t.offerReps} more reps?` };
   return { action: "done" };
 }
+
+/** Owner-edited Coaching Console values over the defaults; anything missing or invalid keeps the default. */
+export function conditioningRules(raw: unknown): { targets: ConditioningTargets; stop: StopThresholds } {
+  const o = (raw && typeof raw === "object" ? raw : {}) as { targets?: Record<string, unknown>; stop?: Record<string, unknown> };
+  const pick = <T extends Record<string, number>>(d: T, src: Record<string, unknown> | undefined, max: Partial<Record<keyof T, number>>): T => {
+    const out = { ...d };
+    for (const k of Object.keys(d) as (keyof T)[]) {
+      const v = src?.[k as string];
+      if (typeof v === "number" && Number.isFinite(v) && v > 0 && v <= (max[k] ?? Infinity)) (out as any)[k] = v;
+    }
+    return out;
+  };
+  return {
+    targets: pick(DEFAULT_CONDITIONING_TARGETS as any, o.targets, { starterFromYards: 1000, starterToYards: 1000, relieverFromYards: 1000, relieverToYards: 1000, buildWeeks: 26, lowReadinessShare: 1 }) as ConditioningTargets,
+    stop: pick(DEFAULT_STOP_THRESHOLDS as any, o.stop, { maxSprintDropPct: 50, repeatDropPct: 50, slowerInARow: 5, highEffort: 10, highEffortInARow: 5, offerEffortMax: 10, offerNearBestPct: 50, offerReps: 4 }) as StopThresholds,
+  };
+}
+export const CONDITIONING_RULES_KEY = "conditioning_rules";

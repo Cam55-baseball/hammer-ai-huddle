@@ -11,7 +11,21 @@ describe("owner conditioning drills (Add fields)", () => {
   it("rejects a 60 ft run resting under 2 minutes", () =>
     expect(ownerConditioningProblems({ ...run, rest_seconds: 90 }).join()).toContain("at least 120 seconds"));
   it("caps the required run rest at 5 minutes", () =>
-    expect(ownerConditioningProblems({ ...run, distance_feet: 600, rest_seconds: 300 })).toEqual([]));
+    expect(ownerConditioningProblems({ ...run, distance_feet: 600, rest_seconds: 300, rounds: 5 })).toEqual([]));
+  it("owner Oct 31: a drill over 1000 yards in total is refused", () =>
+    expect(ownerConditioningProblems({ ...run, distance_feet: 600, rest_seconds: 300, rounds: 6 }).join()).toContain("1000 yards"));
+  it("jumps need contacts; carries and sleds need yards and load", () => {
+    expect(ownerConditioningProblems({ conditioning_kind: "jump", rounds: 3, contacts: 10, rest_seconds: 60, sports: ["baseball"] })).toEqual([]);
+    expect(ownerConditioningProblems({ conditioning_kind: "sled", rounds: 4, rest_seconds: 90, sports: ["baseball"] }).join()).toContain("load");
+    expect(ownerConditioningProblems({ conditioning_kind: "carry", rounds: 4, carry_yards: 40, load_lbs: 50, work_seconds: 30, rest_seconds: 60, sports: ["baseball"] })).toEqual([]);
+  });
+  it("Programs picker aims a drill only at matching subscribers", () => {
+    const d = { ...run, distance_feet: 90, rest_seconds: 180, rounds: 4, conditioning_programs: ["pitcher"] };
+    expect(ownerConditioningFits(d, { sport: "baseball", isPitcher: true, modules: ["baseball_pitcher"] })).toBe(true);
+    expect(ownerConditioningFits(d, { sport: "baseball", isPitcher: false, modules: ["baseball_5tool"] })).toBe(false);
+    expect(ownerConditioningFits({ ...d, conditioning_programs: [] }, { sport: "baseball", isPitcher: false, modules: ["baseball_5tool"] })).toBe(true);
+    expect(ownerConditioningFits({ ...d, pitch_role_fit: ["closer"] }, { sport: "baseball", isPitcher: true, modules: ["baseball_pitcher"], role: "starter" })).toBe(false);
+  });
   it("requires the sport's base distance: 60 ft softball, 90 ft baseball", () => {
     expect(ownerConditioningProblems(bases)).toEqual([]);
     expect(ownerConditioningProblems({ ...bases, base_distance_feet: 90 }).join()).toContain("60 ft base distance");
