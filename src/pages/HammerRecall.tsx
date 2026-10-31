@@ -61,6 +61,7 @@ export default function HammerRecall() {
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(6);
 
   const focusComposer = useCallback(() => {
     setTimeout(() => textareaRef.current?.focus(), 30);
@@ -99,6 +100,7 @@ export default function HammerRecall() {
   // Load thread messages when threadId changes
   useEffect(() => {
     setMessages([]);
+    setShown(6);
     if (!threadId || !user) return;
     let cancelled = false;
     (async () => {
@@ -232,7 +234,12 @@ export default function HammerRecall() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {messages.map((m) => (
+                  {messages.length > shown && (
+                    <button type="button" className="w-full text-sm font-semibold text-primary py-1" onClick={() => setShown((n) => n + 10)}>
+                      Show earlier ({messages.length - shown})
+                    </button>
+                  )}
+                  {messages.slice(-shown).map((m) => (
                     <MessageBubble key={m.id} msg={m} />
                   ))}
                   {sending && (
