@@ -85,7 +85,7 @@ export function dayLabel(sport: Sport, day: CycleDay): string {
     case "long_toss": return "Long toss";
     case "bullpen": return sport === "softball" ? "Circle session" : "Bullpen";
     case "pre_start": return `Light ${place} work, no lower-body lift`;
-    case "available": return "Available — on call, short PFP";
+    case "available": return moundWork(sport, day)!.label;
     case "pfp": return "Short PFP";
     default: return moundWork(sport, day)?.label ?? "";
   }
