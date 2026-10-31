@@ -277,9 +277,13 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   const isSprint = (rx.slot === "speed" && hasTime) || ((rx.slot === "lift" || rx.slot === "supplemental") && /sprint/.test(rx.movement_slug.toLowerCase()));
   const sprintSeconds = isSprint ? sprintRestSeconds(rx.distance_feet) : null;
   const basesPerRep = rx.slot === "conditioning" ? prescribedBases(rx.movement_slug, rx.distance_feet) : null;
-  const focus = useFocusExercise({ id: `rx:${rx.id}`, name: rx.movement_name, rows: spec.rows,
-    ready: rounds.map((round, i) => enteredPrescriptionRounds([round], spec, { requireTouch: true }).length > 0 && i < spec.rows),
-    restSeconds: isSprint ? sprintSeconds : rx.rest_seconds != null ? rx.rest_seconds : rx.slot === "warmup" ? 30 : (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank|throw|pitch/.test(rx.movement_slug)) ? restBand.min : null,
+  // Owner Oct 31: every timed run rep (speed or conditioning) gets one-tap feedback and smart stopping.
+  const repFeedback = (isSprint || rx.slot === "conditioning") && typeof rx.distance_feet === "number" && rx.distance_feet > 0;
+  const condRunRest = rx.slot === "conditioning" && !basesPerRep && repFeedback ? Math.max(rx.rest_seconds ?? 0, sprintRestSeconds(rx.distance_feet) ?? 0) : null;
+  const rowsNow = Math.max(spec.rows, spec.rows + extraReps);
+  const focus = useFocusExercise({ id: `rx:${rx.id}`, name: rx.movement_name, rows: rowsNow,
+    ready: rounds.map((round, i) => enteredPrescriptionRounds([round], spec, { requireTouch: true }).length > 0 && i < rowsNow && (!repFeedback || feedbackRows.has(i))),
+    restSeconds: condRunRest != null ? condRunRest : isSprint ? sprintSeconds : rx.rest_seconds != null ? rx.rest_seconds : rx.slot === "warmup" ? 30 : (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank|throw|pitch/.test(rx.movement_slug)) ? restBand.min : null,
     bases: basesPerRep,
     save: async () => { if (!(await autosave.flush())) throw new Error("Save pending"); },
   });
