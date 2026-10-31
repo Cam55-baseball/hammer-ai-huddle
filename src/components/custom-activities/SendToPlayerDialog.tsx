@@ -87,7 +87,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
       setCustomLocks([]);
       setMessage('');
       setExercises(template?.exercises ?? []);
-      setRxCategory(template ? defaultRxCategory(template.activity_type) : 'lift');
+      setRxCategory(template ? ((template as CustomActivityTemplate & {coach_card_category?:string}).coach_card_category ?? defaultRxCategory(template.activity_type)) : 'lift');
       setRxDate(new Date().toLocaleDateString('en-CA'));
       setSchedType('date');
       setExtraDates([]);

@@ -30,6 +30,7 @@ import { factGuidelineWarnings, medicalFactWarnings, factsWithoutAdvisories, fac
 import { EMAIL_FROM, EMAIL_REPLY_TO } from "../_shared/email.ts";
 import { z } from "npm:zod@3";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { editCategory, validateEditedExercises } from '../_shared/coach/dayEdit.ts';
 
 const cors = corsHeaders;
 const SendRows = z.array(z.object({
@@ -205,6 +206,64 @@ Deno.serve(async (req) => {
       if (warnings.some(w => w.requires_reason) && !overrideReasonOk(overrideReason)) return json({ applied: false, reason_required: true, warnings });
       return null;
     };
+
+    if (mode === "edit_day") {
+      const pid = typeof body.athlete_id === 'string' ? body.athlete_id : '';
+      const date = typeof body.plan_date === 'string' ? body.plan_date : '';
+      if (!z.string().uuid().safeParse(pid).success || !isCoachPrescriptionDate(date) || date < today) return json({error:'Choose a player and a date today or later.'},400);
+      const linked = await admin.rpc('coach_connected_to',{_me:me,_athlete:pid});
+      if (linked.error || linked.data !== true) return json({error:'Training sharing is not available for this player.'},403);
+      const gate = await recruitingGate(admin,me,[pid],'metrics');
+      if (gate.get(pid) !== 'visible') return json({error:'Training sharing is not available for this player.'},403);
+      const category = editCategory(String(body.category ?? ''));
+      const invalid = validateEditedExercises(body.exercises);
+      const title = typeof body.title === 'string' ? body.title.trim().slice(0,255) : '';
+      if (!category || invalid || !title) return json({applied:false,reasons:[invalid ?? 'Name the edited card and choose its category.']});
+      const {data:context,error:contextError} = await admin.from('athlete_context').select('sport_primary').eq('user_id',pid).single();
+      const {data:snapshot,error:snapshotError} = await admin.from('athlete_plan_snapshots').select('payload').eq('user_id',pid).eq('plan_date',date).eq('sport',context?.sport_primary).single();
+      if(contextError || snapshotError) return json({applied:false,reasons:['No matching saved sport day. Open the player’s saved week first.']});
+      const modality = category === 'fielding' ? 'defense' : category;
+      const blocks = (snapshot.payload?.blocks ?? []).filter((b:any)=>b.modality===modality && b.status==='ready' && !b.replacedByCoachRx && !b.coachRx);
+      // Canonical replacement operates on a category. Refuse ambiguous cards,
+      // rather than quietly replacing another card in that same category.
+      if(blocks.length>1) return json({applied:false,reasons:['This day has multiple cards of that kind. Keep the saved cards and edit individual activities with your existing controls.']});
+      const block = blocks[0] ?? null;
+      if(category==='warmup') return json({applied:false,reasons:['The full warm-up protects the work that follows. Keep its preparation steps and use the existing activity controls for optional work.']});
+      if(body.target?.prescription_ids){
+        const current=await admin.from('wk_prescriptions').select('id').eq('user_id',pid).eq('plan_date',date).in('slot',categorySlots(category)).is('replaced_by_coach_rx',null).not('status','in','(completed,skipped)');
+        if(current.error)throw current.error;
+        const actual=(current.data ?? []).map((r:any)=>r.id).sort();const selected=Array.isArray(body.target.prescription_ids)?[...body.target.prescription_ids].sort():[];
+        if(JSON.stringify(actual)!==JSON.stringify(selected))return json({applied:false,reasons:['The card changed, or includes other work. Refresh before editing.']});
+      }
+      if(body.target?.block_index != null && snapshot.payload?.blocks?.[body.target.block_index] !== undefined && JSON.stringify(snapshot.payload.blocks[body.target.block_index])!==JSON.stringify(block)) return json({applied:false,reasons:['The selected card changed. Refresh before editing.']});
+      const ownItems = certifyCoachOwnItems(body.exercises);
+      if(!ownItems.ok) return json({applied:false,reasons:ownItems.reasons});
+      const revision = await admin.rpc('coach_rx_safety_revision',{p_user:pid,p_date:date});
+      const catalogRevision = await admin.rpc('coach_rx_catalog_revision');
+      if(revision.error || catalogRevision.error) return json({applied:false,reasons:['Could not check the latest safety details. Nothing changed.']});
+      const facts = await gatherFacts(admin,pid,category,date,prescriptionIntensity(body.intensity),THROWING_CATEGORIES.has(category),today);
+      facts.hasCard = facts.hasCard || !!block;
+      const result = checkPrescriptionReplace(factsWithoutWarnings(facts));
+      if(result.verdict!=='allow') return json({applied:false,reasons:result.reasons,safeOption:result.safeOption});
+      const rxId = crypto.randomUUID();
+      const profile = await admin.from('profiles').select('full_name').eq('id',me).single();
+      if(profile.error) throw profile.error;
+      const because = `Because: edited by Coach ${profile.data.full_name ?? 'your coach'}`;
+      let rows = coachRxToWkRows({userId:pid,planDate:date,category,prescriptionId:rxId,coachName:profile.data.full_name,exercises:body.exercises,usedInstead:true});
+      rows = rows.map((row:any,i:number)=>({...row,rationale:`${because}${body.exercises[i]?.notes ? ` — ${body.exercises[i].notes}` : ''}`,why_payload:{...row.why_payload,why:because,coach_day_edit:true,...(!row.movement_slug?{own_item_certified:true,certified_gear:ownItems.gearByName.get(row.movement_name) ?? []}:{})}}));
+      const envelope = await loadPrescriptionEnvelope(admin,pid,date,category,rows,true);
+      if(!envelope.allowed) return json({applied:false,reasons:envelope.reasons,safeOption:envelope.safeOption});
+      const warnings = [...collectWarnings(facts,pid),...('warnings' in envelope ? envelope.warnings ?? [] : []).map(w=>({...w,player_id:pid,requires_reason:w.medical===true && (facts.age==null || facts.age<18)}))];
+      // Every under-18 day edit needs a reason and linked-parent notice.
+      if(facts.age==null || facts.age<18) warnings.push({code:'injury_flag',date,rule:'You are editing a player under 18. Record why and notify their linked parent.',medical:true,requires_reason:true,player_id:pid});
+      const acknowledgementError = ackError(warnings);
+      if(acknowledgementError) return acknowledgementError;
+      const safety = {verdict:'allow',action:'coach_day_edit',category,envelope:'wic-swap',block_expected:block,expected_revision:revision.data,expected_catalog_revision:catalogRevision.data,intensity:prescriptionIntensity(body.intensity),cns_result:'cnsResult' in envelope ? envelope.cnsResult : null,overrides:warnings.length?[overrideRecord(warnings,'edit_day')]:[]};
+      const committed = await admin.rpc('coach_day_edit_commit',{p_actor:me,p_user:pid,p_date:date,p_sport:context.sport_primary,p_rx:rxId,p_title:title,p_exercises:body.exercises,p_rows:envelope.rows,p_safety:safety,p_template:body.template_id ?? null});
+      if(committed.error) return json({applied:false,reasons:[committed.error.message ?? 'Could not save. Refresh and check again.']});
+      if(warnings.some(w=>w.requires_reason)) await notifyParentsOfMedicalOverride(admin,pid,'edit_day',warnings,overrideReason,testInbox);
+      return json(committed.data);
+    }
 
     if (mode === "send") {
       const parsed = SendRows.safeParse(body.rows);

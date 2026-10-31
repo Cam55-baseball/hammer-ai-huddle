@@ -5,7 +5,7 @@ import { activityControl, sessionExempt, type SessionControl, type SessionTarget
 
 export type WorkStatus = 'done' | 'partial' | 'not_done' | 'skipped' | 'removed' | 'rest';
 export const WORK_STATUS: Record<WorkStatus, string> = { done: 'Done ✓', partial: 'Partly done', not_done: 'Not done', skipped: 'Skipped (allowed)', removed: 'Removed by coach', rest: 'Rest day' };
-interface Prescription { id: string; slot: string; movement_name: string; movement_slug: string; sets: number | null; reps: number | null; status: string; replaced_by_coach_rx: string | null; dosage_unit: string | null; coach_rx?: string | null }
+interface Prescription { id: string; slot: string; movement_name: string; movement_slug: string; sets: number | null; reps: number | null; duration_seconds?: number | null; rest_seconds?: number | null; distance_feet?: number | null; status: string; replaced_by_coach_rx: string | null; dosage_unit: string | null; coach_rx?: string | null }
 interface Task { task_id: string; side: string | null; completed: boolean; outcome: string | null; name: string; dosage: string; log?: { rounds?: Record<string, unknown>[]; fields?: { key: string; label: string; unit: string | null }[] } }
 export interface WeekDay { date: string; plan: SavedCoachPlan; restDay: boolean; prescriptions: Prescription[]; logs: (WorkoutActual & { prescription_id: string; load_used?: number | null })[]; tasks: Task[]; coachWorkouts: { id: string; title: string; category: string; status: string; cancelled_at: string | null; exercises: {name?: string; movement_name?: string; slug?: string; movement_slug?: string; sets?: number; reps?: number}[] }[] }
 export interface WeekResult { state: 'ok' | 'denied'; sport?: string; days: WeekDay[] }
@@ -45,7 +45,7 @@ export function playerWeekCards(day: WeekDay, controls: SessionControl[] = []): 
     const control=activityControl(controls,p.id);
     return { id:p.id,name:p.movement_name,dosage:[p.sets != null ? `${p.sets} sets`:null,p.reps != null ? `${p.reps} ${p.dosage_unit ?? 'reps'}`:null].filter(Boolean).join(' × '),status:control?.mode==='remove'?'removed':sessionExempt(control)?'skipped':status,results:logs.length ? logs.map(l => `${actualResultText({...l,prescription:{movement_name:p.movement_name,dosage_unit:p.dosage_unit,slot:p.slot}})}${l.load_used != null ? ` · Load: ${l.load_used}`:''}`):actual.results,control,target:{taskId:p.id,side:null,source:'wk_prescription',sourceRef:p.slot} };
   };
-  const cards: WeekCard[] = (day.plan.blocks ?? []).filter(b => (b.status==='ready' || b.replacedByCoachRx) && (b.modality!=='game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES)).map((b,index) => {
+  const cards: WeekCard[] = (day.plan.blocks ?? []).map((b,index)=>({b,index})).filter(({b}) => (b.status==='ready' || b.replacedByCoachRx) && (b.modality!=='game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES)).map(({b,index}) => {
     const activities: WeekActivity[] = b.drills.map((drill,i) => {
       const matches = day.prescriptions.filter(p => !used.has(p.id) && !p.coach_rx && p.movement_name === drill.name && (drill.slug ? p.movement_slug === drill.slug : true));
       if (matches.length === 1 && !b.replacedByCoachRx) return rxActivity(matches[0]);

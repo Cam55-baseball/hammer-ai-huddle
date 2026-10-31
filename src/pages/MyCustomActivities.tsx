@@ -28,6 +28,7 @@ import { LayoutGrid, History, Droplets, Footprints, BookOpen, Inbox, Sparkles, T
 import { toast } from 'sonner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
+import { CoachCardTemplates } from '@/components/coach/CoachCardTemplates';
 
 export default function MyCustomActivities() {
   const { t } = useTranslation();
@@ -220,6 +221,7 @@ export default function MyCustomActivities() {
             {isCoach ? (
               <>
                 <TabsContent value="coach-workouts" className="mt-0 animate-fade-in">
+                  <CoachCardTemplates/>
                   <div className="space-y-3 rounded-lg border border-border p-4">
                     <p className="text-sm text-muted-foreground">Pick your players on your Coach Dashboard, then tap Send Activities to choose what to send.</p>
                     <Button onClick={() => navigate('/coach-dashboard')}>Go to my players</Button>

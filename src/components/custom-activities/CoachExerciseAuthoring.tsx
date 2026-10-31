@@ -3,7 +3,7 @@ import { useWorkoutCatalog } from "@/hooks/useWorkoutCatalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { ownerGear } from "../../../supabase/functions/_shared/vault/ownerDefaults";
 import { COMMON_SWAP_GEAR } from "../../../supabase/functions/_shared/planSwap/commonGear";
 import type { Exercise } from "@/types/customActivity";
@@ -15,6 +15,7 @@ export function CoachExerciseAuthoring({ exercises, onChange }: { exercises: Exe
   const items = (catalog.data ?? []).filter(item => item.name.toLowerCase().includes(search.toLowerCase()));
   const units = (unit?: string) => [...new Set(["reps", "reps per arm", "reps per leg", "reps each side", "throws", "seconds", "feet", ...(unit ? [unit] : [])])];
   const update = (id: string, values: Partial<Exercise>) => onChange(exercises.map(e => e.id === id ? { ...e, ...values } : e));
+  const move = (id:string,delta:number) => { const index=exercises.findIndex(e=>e.id===id);const next=index+delta;if(index<0 || next<0 || next>=exercises.length)return;const reordered=[...exercises];[reordered[index],reordered[next]]=[reordered[next],reordered[index]];onChange(reordered); };
   const addCatalog = () => {
     const row = items.find(item => item.slug === selected);
     if (!row) return;
@@ -37,13 +38,14 @@ export function CoachExerciseAuthoring({ exercises, onChange }: { exercises: Exe
       <Button type="button" variant="outline" size="sm" onClick={() => onChange([...exercises, { id: crypto.randomUUID(), name: "", type: "other" }])}><Plus className="mr-1 h-4 w-4" />My own item</Button></div>
     <datalist id="coach-common-gear">{COMMON_SWAP_GEAR.map(gear => <option key={gear} value={gear.replace(/_/g, " ")} />)}</datalist>
     {exercises.map(e => <div key={e.id} className="space-y-2 border-b border-border pb-3">
-      <div className="flex items-center gap-2"><Input aria-label="Exercise name" value={e.name} onChange={event => update(e.id, { name: event.target.value, slug: undefined })} /><Button type="button" variant="ghost" size="icon" aria-label={`Remove ${e.name || "item"}`} onClick={() => onChange(exercises.filter(item => item.id !== e.id))}><Trash2 className="h-4 w-4" /></Button></div>
+      <div className="flex items-center gap-2"><Input aria-label="Exercise name" value={e.name} onChange={event => update(e.id, { name: event.target.value, slug: undefined })} /><Button type="button" variant="ghost" size="icon" title="Move up" aria-label={`Move ${e.name || 'item'} up`} disabled={exercises[0]?.id===e.id} onClick={()=>move(e.id,-1)}><ArrowUp className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" title="Move down" aria-label={`Move ${e.name || 'item'} down`} disabled={exercises[exercises.length-1]?.id===e.id} onClick={()=>move(e.id,1)}><ArrowDown className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" aria-label={`Remove ${e.name || "item"}`} onClick={() => onChange(exercises.filter(item => item.id !== e.id))}><Trash2 className="h-4 w-4" /></Button></div>
       <div className="grid grid-cols-2 gap-2"><Label className="space-y-1 text-xs">Sets<Input type="number" min="1" value={e.sets ?? ""} onChange={event => update(e.id, { sets: event.target.value ? Number(event.target.value) : undefined })} /></Label>
         <Label className="space-y-1 text-xs">Measure<select aria-label={`Measure for ${e.name}`} disabled={!!e.slug} value={e.dosage_unit ?? ""} onChange={event => update(e.id, { dosage_unit: event.target.value })} className="w-full rounded-md border border-input bg-background p-2"><option value="">Choose measure</option>{units(e.dosage_unit).map(unit => <option key={unit}>{unit}</option>)}</select></Label>
         <Label className="space-y-1 text-xs">{e.dosage_unit === "seconds" ? "Time target (seconds)" : e.dosage_unit === "feet" ? "Distance (feet)" : e.dosage_unit === "throws" ? "Throws per set" : e.dosage_unit === "total_reps" ? "Total reps" : "Reps per set"}<Input type="number" min="0" step={e.dosage_unit === "seconds" ? "0.01" : "1"} value={(e.dosage_unit === "seconds" ? e.duration : e.dosage_unit === "feet" ? e.distance_feet : e.reps) ?? ""} onChange={event => { const value = event.target.value ? Number(event.target.value) : undefined; update(e.id, e.dosage_unit === "seconds" ? { duration: value } : e.dosage_unit === "feet" ? { distance_feet: value } : { reps: value }); }} /></Label>
         <Label className="space-y-1 text-xs">Rest (seconds)<Input type="number" min="0" value={e.rest ?? ""} onChange={event => update(e.id, { rest: event.target.value ? Number(event.target.value) : undefined })} /></Label></div>
       <Label className="block space-y-1 text-xs">Gear<Input list="coach-common-gear" readOnly={!!e.slug} value={e.gear ?? ""} onChange={event => update(e.id, { gear: event.target.value, equipment_requirements: ownerGear(event.target.value.split(",")).equipment })} /></Label>
-      {!e.slug && ownerGear((e.gear ?? "").split(",")).unknown.length ? <p role="alert" className="text-xs text-destructive">Not in the common gear list: {ownerGear((e.gear ?? "").split(",")).unknown.join(", ")}. The player can't use this item until the gear matches the common list.</p> : null}
+      <Label className="block space-y-1 text-xs">Notes<Input value={e.notes ?? ''} onChange={event=>update(e.id,{notes:event.target.value})}/></Label>
+      {!e.slug && ownerGear((e.gear ?? "").split(",").filter(word=>word.trim())).unknown.length ? <p role="alert" className="text-xs text-destructive">Not in the common gear list: {ownerGear((e.gear ?? "").split(",").filter(word=>word.trim())).unknown.join(", ")}. The player can't use this item until the gear matches the common list.</p> : null}
       {e.equipment_alternatives?.length ? <p className="text-xs text-muted-foreground">One complete setup: {e.equipment_alternatives.map(group => group.join(" + ")).join(" or ")}</p> : null}
     </div>)}
   </section>;

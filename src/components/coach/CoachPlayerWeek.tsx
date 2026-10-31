@@ -9,6 +9,7 @@ import { playerWeekCards, weekDates, WORK_STATUS, type WeekResult } from '@/lib/
 import { useSessionControls } from '@/hooks/useSessionControls';
 import { SessionControlActions } from './SessionControlActions';
 import { controlNote } from '@/lib/coachRx/sessionControls';
+import { CoachDayEditor } from './CoachDayEditor';
 
 const dateLabel = (date:string, options:Intl.DateTimeFormatOptions) => new Date(`${date}T12:00:00`).toLocaleDateString('en-US',options);
 export function CoachPlayerWeek({athleteId}:{athleteId:string}) {
@@ -60,6 +61,7 @@ export function CoachPlayerWeek({athleteId}:{athleteId:string}) {
         {!cards.length && <p className="text-sm text-muted-foreground">{active?.plan.state==='unavailable'?'No plan saved for this day.':'No saved activities for this day.'}</p>}
         {controlQuery.error && <p role="alert">Coach decisions could not be loaded. Refresh before changing work.</p>}
         {cards.map(card=><details key={card.id} open={card.activities.some(a=>a.results.length>0 || a.control)} className="space-y-2 border-b border-border pb-3"><summary className="cursor-pointer font-semibold">{card.title} <span className="text-sm font-normal text-muted-foreground">· {WORK_STATUS[card.status]}</span></summary>
+          {active && <CoachDayEditor athleteId={athleteId} day={active} card={card} sport={query.data?.sport ?? ''}/>}
           {!controlQuery.error && !controlQuery.isLoading && <SessionControlActions athleteId={athleteId} date={selected} sport={query.data?.sport ?? ''} name={card.title} targets={card.activities.filter(a=>a.target && !a.control && a.status!=='removed').flatMap(a=>a.target?[{...a.target,cardTitle:card.title}]:[])}/>}
           <ul className="space-y-3 pt-2">{card.activities.map(a=><li key={a.id} className="text-sm break-words"><p className="font-medium">{a.name} · {WORK_STATUS[a.status]}</p>{a.control && <div className="border-l-2 border-primary pl-2"><p>{controlNote(a.control)}</p><p className="text-xs text-muted-foreground">{new Date(a.control.created_at).toLocaleString()}{a.control.skipped_at?` · Player skipped ${new Date(a.control.skipped_at).toLocaleString()}`:''}</p></div>}{a.dosage && <p className="text-xs text-muted-foreground">Planned: {a.dosage}</p>}{a.results.length?a.results.map((r,i)=><p key={i} className="text-xs">Logged: {r}</p>):<p className="text-xs text-muted-foreground">No entered results</p>}
           {a.target && !a.control && a.status!=='removed' && !controlQuery.error && !controlQuery.isLoading && <SessionControlActions athleteId={athleteId} date={selected} sport={query.data?.sport ?? ''} name={a.name} targets={[{...a.target,cardTitle:card.title}]}/>}
