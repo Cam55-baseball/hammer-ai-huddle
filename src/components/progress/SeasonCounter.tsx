@@ -5,11 +5,9 @@
 import { CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
-import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 
 export function SeasonCounter() {
-  const { phaseDaysIn, phaseDaysRemaining, resolvedPhase, inSeasonEndDate } = useSeasonStatus();
-  const { display } = useCanonicalPhaseDisplay();
+  const { phaseDaysIn, phaseDaysRemaining, resolvedPhase, inSeasonEndDate, phaseProfile } = useSeasonStatus();
   const day = phaseDaysIn != null ? phaseDaysIn + 1 : null;
   return (
     <Card data-season-counter className="border-primary/20">
@@ -18,7 +16,7 @@ export function SeasonCounter() {
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">Season</p>
           <p className="font-bold text-foreground">
-            {display}
+            {phaseProfile.label}
             {day != null && ` · Week ${Math.floor((day - 1) / 7) + 1}, day ${day}`}
           </p>
           {phaseDaysRemaining != null && phaseDaysRemaining >= 0 && (

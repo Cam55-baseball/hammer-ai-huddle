@@ -18,6 +18,7 @@ import { sixWeekPlanDates } from '@/lib/coach/sixWeekPlanSummary';
 import { CoachSixWeekSummary } from './CoachSixWeekSummary';
 import { CoachPlanActuals } from './CoachPlanActuals';
 import { isoShift } from '../../../supabase/functions/_shared/wic/schedule/timeline';
+import { useAuth } from '@/hooks/useAuth';
 
 function SavedWork({ blocks }: { blocks: SavedPlanBlock[] }) {
   return <ul className="space-y-3">
@@ -35,6 +36,7 @@ function SavedWork({ blocks }: { blocks: SavedPlanBlock[] }) {
 }
 
 export function CoachPlanCard({ athleteId }: { athleteId: string }) {
+  const { user } = useAuth();
   const today = localIso();
   const [ahead, setAhead] = useState(0);
   const viewDate = isoShift(today, ahead);
@@ -73,6 +75,22 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
       return savedTrainingHistory(rows, query.data?.sport);
     },
   });
+  const seasonQuery = useQuery({
+    queryKey: ['coach-athlete-season', user?.id, athleteId, today],
+    enabled: !!user?.id && !!query.data && query.data.state !== 'denied',
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('phase-state', { body: { athlete_id: athleteId, date: today } });
+      if (error) throw error;
+      return data?.live as { season: string; season_label: string; season_end_date: string | null } | undefined;
+    },
+  });
+  const seasonLine = <div data-coach-season>
+    {seasonQuery.error ? <p role="alert" className="text-xs text-destructive">Couldn't load the player's current season.</p> : seasonQuery.data && <>
+      <p className="text-sm font-medium">Season: {seasonQuery.data.season_label}</p>
+      {seasonQuery.data.season === 'in_season' && seasonQuery.data.season_end_date && <p className="text-xs text-muted-foreground">Season ends: {new Date(`${seasonQuery.data.season_end_date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
+    </>}
+  </div>;
   const summaryQuery = useQuery({
     queryKey: ['coach-athlete-six-week-plans', athleteId, today, query.data?.sport],
     enabled: summaryOpen && query.data?.state === 'ok',
@@ -116,6 +134,7 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
       <section className="space-y-2 rounded-xl border border-border p-4" aria-label="Hammers' plan for this player">
         <h3 className="text-sm font-semibold">Hammers' plan for this player</h3>
         {dayToggle}
+        {seasonLine}
         <p className="text-sm text-muted-foreground">{ahead === 0 ? "No plan saved for today yet. It appears here after the player opens today's plan." : 'No plan saved for tomorrow yet.'}</p>
       </section>
     );
@@ -127,10 +146,11 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-sm font-semibold">Hammers' plan for this player</h3>
         <div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">{dayLabel}{plan.sport ? ` · ${plan.sport}` : ""}</span>
-          <Button variant="ghost" size="icon" aria-label="Refresh player's saved plan" title="Refresh player's saved plan" disabled={query.isFetching} onClick={()=>void query.refetch()}><RefreshCw className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" aria-label="Refresh player's saved plan" title="Refresh player's saved plan" disabled={query.isFetching} onClick={()=>{void query.refetch();void seasonQuery.refetch();}}><RefreshCw className="h-4 w-4" /></Button>
         </div>
       </div>
       {dayToggle}
+      {seasonLine}
       {plan.health_shared === false && (
         <p className="text-xs text-muted-foreground">Health details stay private — the player hasn't turned on health sharing.</p>
       )}

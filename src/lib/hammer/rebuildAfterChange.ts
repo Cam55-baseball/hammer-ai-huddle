@@ -45,7 +45,9 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
     if(!sport||!userId)weekIssues=['saved_week_identity_unconfirmed'];
     else try {const start=kept.length&&kept.every((d,i)=>d===isoShift(firstDate,i))?isoShift(firstDate,kept.length):firstDate;weekIssues=(await readComposedWeek(userId,start,isoShift(start,6),sport,boughtBunting)).issues;}catch{weekIssues=['saved_week_readback_unavailable'];}
   }
-  const keptNote = kept.length ? ` ${kept.length === 1 && kept[0] === today ? 'Today' : `${kept.length} day${kept.length === 1 ? '' : 's'}`} kept the work you already marked done.` : '';
+  const keptNote = kept.length ? kept.includes(today)
+    ? ' Today keeps the work you already logged; your change starts tomorrow.'
+    : ` ${kept.length} day${kept.length === 1 ? '' : 's'} kept the work you already marked done.` : '';
   return { ok: failed.length === 0&&!weekIssues.length, failed, kept, weekIssues, missingInputs, message: (missingInputs
     ? `${reason} — saved. Your week can't be rebuilt until you finish your missing starting details.`
     : failed.length

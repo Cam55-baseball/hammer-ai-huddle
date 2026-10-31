@@ -4,12 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CoachPlanCard } from './CoachPlanCard';
 vi.mock('./CoachPlanActuals', () => ({ CoachPlanActuals: () => null }));
 vi.mock('@/components/intelligence/StrategyLine', () => ({ StrategyLine: () => null }));
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'test-coach' } }) }));
 
 const state = vi.hoisted(() => ({ calls: [] as Array<{ name: string; args: Record<string, string> }>, revoked: false }));
 vi.mock('@/hooks/usePitcherSchedule', () => ({ localIso: (date?: Date) => date
   ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   : '2026-10-20' }));
-vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc: async (name: string, args: Record<string, string>) => {
+vi.mock('@/integrations/supabase/client', () => ({ supabase: { functions: { invoke: vi.fn(async () => ({ data: { live: { season: 'in_season', season_label: 'In-Season', season_end_date: '2026-11-20' } }, error: null })) }, rpc: async (name: string, args: Record<string, string>) => {
   state.calls.push({ name, args });
   if (name === 'coach_athlete_outcomes') return { data: { state: 'ok', outcomes: [] }, error: null };
   if (state.revoked) return { data: { state: 'denied' }, error: null };
