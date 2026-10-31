@@ -1,4 +1,7 @@
 import { MindItemCard } from "./MindItemCard";
+import { ControlledActivity } from './SessionControlNote';
+import { useSessionControls } from '@/hooks/useSessionControls';
+import { activityControl, sessionExempt } from '@/lib/coachRx/sessionControls';
 import { RunningReadinessLine } from "./RunningReadinessLine";
 import { usePlanningArmHistory } from '@/hooks/usePlanningArmHistory';
 import { rememberedMissingGear } from '../../../supabase/functions/_shared/planSwap/simpleSwap';
@@ -746,6 +749,7 @@ function HammerDailyPlanBody({
       : null;
   const sportIsBaseball = (ctx.get<unknown>("sport_primary")?.value ?? "baseball") !== "softball";
   const { user: bodyUser } = useAuth();
+  const sessionControls=useSessionControls(bodyUser?.id,pocketDate,pocketDate);
   const { modules } = useSubscription();
   const showPitching = (modules.includes(`${sportIsBaseball?'baseball':'softball'}_pitcher`) || modules.includes(`${sportIsBaseball?'baseball':'softball'}_golden2way`)) && shouldShowPitchingCard(
     readPitcherProfile(bodyUser?.id),

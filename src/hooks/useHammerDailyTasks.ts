@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { setTaskCompletion } from "@/lib/hammer/taskCompletionWrite";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useSessionControls } from './useSessionControls';
+import { activityControl, sessionExempt } from '@/lib/coachRx/sessionControls';
 
 export type LateralSide = "L" | "R" | null;
 
@@ -61,15 +63,17 @@ export function useHammerDailyTasks(planDate: string) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const queryKey = ["hammer-daily-tasks", user?.id, planDate];
+  const controlQuery=useSessionControls(user?.id,planDate,planDate);
 
   const query = useQuery({
     queryKey,
     enabled: !!user?.id,
     queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from("hammer_daily_task_completions" as any)
         .select("*")
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .eq("plan_date", planDate);
       if (error) throw error;
       return ((data ?? []) as unknown as TaskRow[]);
@@ -81,8 +85,8 @@ export function useHammerDailyTasks(planDate: string) {
   for (const r of query.data ?? []) byId.set(localKey(r.task_id, r.side ?? null), r);
 
   const isDone = useCallback(
-    (taskId: string, side: LateralSide = null) => !!byId.get(localKey(taskId, side))?.completed,
-    [byId],
+    (taskId: string, side: LateralSide = null) => !!byId.get(localKey(taskId, side))?.completed || sessionExempt(activityControl(controlQuery.controls,taskId,side)),
+    [byId,controlQuery.controls],
   );
 
   const upsertMut = useMutation({
