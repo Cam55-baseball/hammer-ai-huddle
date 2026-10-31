@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ownerConditioningProblems, ownerConditioningFits, ownerConditioningDose, ownerConditioningFits } from "../../../../supabase/functions/_shared/wic/conditioning/ownerConditioning";
+import { ownerConditioningProblems, ownerConditioningDose, ownerConditioningFits } from "../../../../supabase/functions/_shared/wic/conditioning/ownerConditioning";
 import { conditioningFloorDue } from "../../../../supabase/functions/_shared/wic/conditioning/weeklyFloor";
 import { missingForPlacement } from "@/lib/prescription/ownerPlanDrills";
 
