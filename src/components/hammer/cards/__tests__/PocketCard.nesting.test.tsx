@@ -4,6 +4,7 @@ vi.mock("@/components/support/ReportProblemButton", () => ({ ReportProblemButton
 vi.mock("@/components/hammer/logging/ExtraLogs", () => ({ PracticeLog: () => null }));
 vi.mock("../todayRhythm", () => ({ DomainGlyph: () => null, domainOf: () => "other", useRhythm: () => "open" }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "u1" } }) }));
+vi.mock("@/hooks/useSessionControls", () => ({ useSessionControls: () => ({ controls: [] }) }));
 import { PocketCard } from "../PocketCard";
 
 const card = (id: string, title: string, inner?: React.ReactNode) => (
