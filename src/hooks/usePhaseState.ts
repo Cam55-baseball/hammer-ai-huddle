@@ -21,6 +21,7 @@ export interface PhaseState {
   days_in: number | null;
   days_left: number | null;
   source: string;
+  season_end_date?: string | null;
 }
 
 const localDay = () => {

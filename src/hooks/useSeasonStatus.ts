@@ -146,7 +146,7 @@ export function useSeasonStatus() {
   // ONE SYSTEM, ONE PHASE: the server's one resolver answers; the device
   // only shows it. Until it answers, nothing is guessed (off-season default,
   // same as the server's own default).
-  const { phaseState } = usePhaseState();
+  const { livePhaseState: phaseState, isLoading: phaseLoading } = usePhaseState();
   const resolution = phaseState
     ? { phase: phaseState.season as SeasonPhase, phaseStartedAt: null as string | null, daysIntoPhase: phaseState.days_in, daysUntilNextPhase: phaseState.days_left, source: phaseState.source as any }
     : { phase: 'off_season' as SeasonPhase, phaseStartedAt: null as string | null, daysIntoPhase: null as number | null, daysUntilNextPhase: null as number | null, source: 'default' as const };
@@ -166,7 +166,7 @@ export function useSeasonStatus() {
     inSeasonEndDate: query.data?.in_season_end_date ?? null,
     postSeasonStartDate: query.data?.post_season_start_date ?? null,
     postSeasonEndDate: query.data?.post_season_end_date ?? null,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || phaseLoading,
     /** Set by the athlete's own hand — the app must not override it. */
     seasonStatusManual: query.data?.season_status_manual ?? false,
     /** What the saved dates imply for today, when it differs. Offer, never apply. */

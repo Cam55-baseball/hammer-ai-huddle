@@ -21,7 +21,7 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
       });
       if (error) {
         const conflict = await (error as { context?: Response }).context?.clone?.().json?.().catch(() => null);
-        if (conflict?.error === 'adjust_failed' && conflict?.message === 'Day changed; rebuild from fresh saved work') {
+        if ((conflict?.error === 'adjust_failed' && conflict?.message === 'Day changed; rebuild from fresh saved work') || conflict?.error === 'Sport day changed; rebuild from fresh saved work') {
           // One fresh server reread under the same lock; never bypass a safety or protected-work refusal.
           const retry = await supabase.functions.invoke('wk-generate-daily', {body:{plan_date:date,compose_sport_day:true,change_reason:'player_request',change_text:reason,change_key:`${key}:${date}:fresh`}});
           if (!retry.error && retry.data?.ok===true && retry.data?.composed===true && retry.data?.degraded!==true) {
@@ -45,7 +45,9 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
     if(!sport||!userId)weekIssues=['saved_week_identity_unconfirmed'];
     else try {const start=kept.length&&kept.every((d,i)=>d===isoShift(firstDate,i))?isoShift(firstDate,kept.length):firstDate;weekIssues=(await readComposedWeek(userId,start,isoShift(start,6),sport,boughtBunting)).issues;}catch{weekIssues=['saved_week_readback_unavailable'];}
   }
-  const keptNote = kept.length ? ` ${kept.length === 1 && kept[0] === today ? 'Today' : `${kept.length} day${kept.length === 1 ? '' : 's'}`} kept the work you already marked done.` : '';
+  const keptNote = kept.length ? kept.includes(today)
+    ? ' Today keeps the work you already logged; your change starts tomorrow.'
+    : ` ${kept.length} day${kept.length === 1 ? '' : 's'} kept the work you already marked done.` : '';
   return { ok: failed.length === 0&&!weekIssues.length, failed, kept, weekIssues, missingInputs, message: (missingInputs
     ? `${reason} — saved. Your week can't be rebuilt until you finish your missing starting details.`
     : failed.length
