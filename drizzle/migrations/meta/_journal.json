@@ -1156,6 +1156,13 @@
       "when": 1793457073875,
       "tag": "0164_coach_dated_session_controls",
       "breakpoints": true
+    },
+    {
+      "idx": 165,
+      "version": "7",
+      "when": 1793457285061,
+      "tag": "0165_coach_session_control_log_guard",
+      "breakpoints": true
     }
   ]
 }
