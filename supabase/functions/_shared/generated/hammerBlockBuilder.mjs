@@ -2834,6 +2834,46 @@ function planningGear(owned, missing2, declarations = []) {
   return [.../* @__PURE__ */ new Set([...basics, ...owned, ...declarations.flatMap(requiredGear)])].filter((item) => avoidsMissingGear({ equipment_requirements: [item] }, missing2));
 }
 
+// supabase/functions/_shared/wic/masteryPitchingStandards.ts
+var base = [
+  { key: "k_bb", dir: "min", value: 5 },
+  { key: "first_pitch_strike_pct", dir: "min", value: 0.67 },
+  { key: "two_ball_pct", dir: "max", value: 0.3 },
+  { key: "whip", dir: "max", value: 1 },
+  { key: "opp_avg", dir: "max", value: 0.2 },
+  { key: "soft_contact_pct", dir: "min", value: 0.25 },
+  { key: "scoring_pos_inning_pct", dir: "max", value: 0.25 },
+  { key: "sb_per_game", dir: "max", value: 0.2 },
+  { key: "opp_sb_success_pct", dir: "max", value: 0.6 },
+  { key: "time_to_plate_s", dir: "max", value: 1.3 },
+  { key: "pfp_clean_pct", dir: "min", value: 0.98 }
+];
+var bbKB = { pro: [0.3, 0.06], college: [0.32, 0.055], high_school: [0.35, 0.05], youth: [0.35, 0.05] };
+var sbBase = [
+  { key: "k_bb", dir: "min", value: 6 },
+  { key: "whip", dir: "max", value: 0.85 },
+  { key: "opp_avg", dir: "max", value: 0.17 },
+  { key: "era", dir: "max", value: 1.25 },
+  { key: "two_ball_pct", dir: "max", value: 0.3 },
+  { key: "scoring_pos_inning_pct", dir: "max", value: 0.2 },
+  { key: "sb_per_game", dir: "max", value: 0.3 },
+  { key: "pfp_clean_pct", dir: "min", value: 0.98 }
+];
+function startingStandards(sport, level, overrides2 = {}) {
+  let list3;
+  if (sport === "baseball") {
+    const [k, bb] = bbKB[level];
+    list3 = [{ key: "k_pct", dir: "min", value: k }, { key: "bb_pct", dir: "max", value: bb }, ...base];
+  } else {
+    const hs = level === "high_school" || level === "youth";
+    list3 = [{ key: "k_per_7", dir: "min", value: hs ? 12 : 10 }, { key: "bb_per_7", dir: "max", value: hs ? 1.2 : 1.5 }, ...sbBase];
+  }
+  return list3.map((s) => {
+    const o = overrides2[`${sport}_${level}_${s.key}`];
+    return typeof o === "number" && Number.isFinite(o) ? { ...s, value: o } : s;
+  });
+}
+
 // supabase/functions/_shared/wic/pitching/roleCycle.ts
 var FULL_DISTANCE_FT = { baseball: 60.5, softball: 43 };
 var SHORTBOX_FRACTION = 2 / 3;
@@ -2868,10 +2908,58 @@ function cycleDay(i) {
   if (dow === 0) return "rest";
   return dow % 3 === 0 ? "long_toss" : dow % 2 === 0 ? "shortbox" : "light_mound";
 }
+function moundWork(sport, day2) {
+  const full = FULL_DISTANCE_FT[sport];
+  const sb = shortboxFeet(sport);
+  const place = sport === "softball" ? "circle" : "mound";
+  if (day2 === "bullpen") return { kind: sport === "softball" ? "circle" : "full_bullpen", feet: full, intensity: "medium", label: sport === "softball" ? "Circle session" : "Bullpen" };
+  if (day2 === "shortbox") return { kind: sport === "softball" ? "shortbox_circle" : "shortbox", feet: sb, intensity: "catch_light", label: `Shortbox from the ${place} (${sb} ft) \u2014 command, pitches in the zone` };
+  if (day2 === "available") return { kind: sport === "softball" ? "circle" : "light_mound", feet: full, intensity: "catch_light", label: `Available \u2014 light ${place} catch, short PFP` };
+  if (day2 === "light_mound" || day2 === "pre_start") return { kind: sport === "softball" ? "circle" : "light_mound", feet: full, intensity: "catch_light", label: sport === "softball" ? "Light circle work \u2014 as light as playing catch" : "Light mound work \u2014 as light as playing catch" };
+  return null;
+}
 var reliefSets = (sets, role) => role === "starter" ? sets : Math.max(2, Math.round(sets * RELIEVER_VOLUME));
 var LOWER = /squat|deadlift|rdl|hinge|lunge|step[-_ ]?up|split|jump|bound|leg|calf|nordic|hip[-_ ]thrust|sled|cossack|clean|snatch/i;
 var isLowerBodyLift = (slug, pattern) => LOWER.test(`${slug} ${pattern ?? ""}`);
 var minorityAllowance = (majorityKept) => Math.floor(majorityKept * (1 - TWO_WAY_MAJOR_SHARE) / TWO_WAY_MAJOR_SHARE);
+var MOUND_COMMAND_MAX_PER_WEEK = 5;
+var COMMAND_STATS = {
+  bb_pct: "Your walk rate is above the starting standard.",
+  first_pitch_strike_pct: "Your first-pitch strikes are below the starting standard.",
+  two_ball_pct: "Too many batters reach two balls compared with the starting standard."
+};
+function commandStruggle(e) {
+  const reasons = [];
+  if (!e) return { struggling: false, reasons };
+  if (typeof e.walkRate === "number" && typeof e.walkMax === "number" && e.walkRate > e.walkMax) reasons.push(COMMAND_STATS.bb_pct);
+  for (const s of e.stats ?? []) if (COMMAND_STATS[s.key] && s.status === "Building" && !reasons.includes(COMMAND_STATS[s.key])) reasons.push(COMMAND_STATS[s.key]);
+  if ((e.analysisFindings ?? []).some((f) => /command/i.test(f))) reasons.push("Your video analysis found a command problem.");
+  if ((e.goalIds ?? []).includes("command")) reasons.push("You picked a command goal.");
+  return { struggling: reasons.length > 0, reasons };
+}
+var countsAsMoundDay = (sport, day2) => !!moundWork(sport, day2) || day2 === "start" || day2 === "outing";
+var BLOCKED = {
+  rest: "it is your rest day",
+  day_after: "it is a recovery day after pitching"
+};
+function commandExtraDays(i) {
+  const baseline = i.week.filter((d3) => countsAsMoundDay(i.sport, d3.day)).length;
+  const extra = [];
+  const blocked = [];
+  if (!i.struggling) return { extra, blocked, baseline };
+  let room = Math.max(0, MOUND_COMMAND_MAX_PER_WEEK - baseline);
+  for (const d3 of i.week) {
+    if (countsAsMoundDay(i.sport, d3.day) || room === 0) continue;
+    const why = BLOCKED[d3.day] ?? (i.limitPitching ? "you asked to limit your pitching" : null);
+    if (why) {
+      blocked.push({ date: d3.date, reason: why });
+      continue;
+    }
+    extra.push(d3.date);
+    room--;
+  }
+  return { extra, blocked, baseline };
+}
 
 // supabase/functions/_shared/wic/pitching/outingFacts.ts
 var DAY2 = 864e5;
@@ -2912,7 +3000,8 @@ function resolveOutingFacts(input) {
     unconfirmed,
     limitPitching: settings?.limit_pitching === true,
     pitchingRole: settings?.pitching_role ?? null,
-    primaryFocus: settings?.primary_focus ?? null
+    primaryFocus: settings?.primary_focus ?? null,
+    plannedReliefDates: [...new Set(outings.filter((o) => o.status === "planned" && o.outing_type === "relief" && o.planned_date && o.planned_date >= planDate).map((o) => o.planned_date))].sort()
   };
 }
 
@@ -6493,6 +6582,51 @@ function applyPitcherLiftRule(drills, ctx) {
   }
   return { drills: out, because };
 }
+function commandDayPlan(ctx) {
+  const judge = commandStruggle(ctx.evidence);
+  if (!judge.struggling || !ctx.role || !ctx.facts?.hasSchedule) return { add: false, because: [] };
+  const iso3 = (d3) => `${d3.getFullYear()}-${String(d3.getMonth() + 1).padStart(2, "0")}-${String(d3.getDate()).padStart(2, "0")}`;
+  const monday = new Date(ctx.day);
+  monday.setDate(monday.getDate() - (monday.getDay() + 6) % 7);
+  const week = Array.from({ length: 7 }, (_, k) => {
+    const d3 = new Date(monday);
+    d3.setDate(monday.getDate() + k);
+    const date = iso3(d3);
+    const relief = ctx.facts.plannedReliefDates ?? [];
+    const outingDates = [...ctx.facts.thrownDates, ...ctx.facts.plannedStartDates.filter((p) => p < date), ...relief.filter((p) => p < date)];
+    return { date, day: d3.getDay() === 0 ? "rest" : relief.includes(date) ? "outing" : cycleDay({ sport: ctx.sport, role: ctx.role, date, outingDates, plannedStarts: ctx.facts.plannedStartDates, gameDates: [] }) };
+  });
+  const plan = commandExtraDays({ sport: ctx.sport, week, struggling: true, limitPitching: ctx.facts.limitPitching });
+  const today = iso3(ctx.day);
+  const place = ctx.sport === "softball" ? "circle" : "mound";
+  if (plan.extra.includes(today)) return { add: true, because: [`Extra light ${place} day for command (up to ${MOUND_COMMAND_MAX_PER_WEEK} a week). Why: ${judge.reasons.join(" ")}`] };
+  const blocked = plan.blocked.find((b) => b.date === today);
+  return { add: false, because: blocked ? [`No extra command ${place} work today because ${blocked.reason}.`] : [] };
+}
+function withCommandDrill(drills, ctx) {
+  const pick = ownerPitchDrill({ sport: ctx.sport, dayType: "side", role: ctx.role ?? null, day: ctx.day });
+  if (!pick || drills.some((d3) => d3.ownerDrillId === pick.id)) return { drills, id: null };
+  const count = pick.pitch_count ?? 0;
+  const row = {
+    name: pick.name,
+    dosage: pick.dosage ?? "",
+    cue: pick.cue ?? "",
+    setup: pick.setup ?? void 0,
+    stage: "drills",
+    armCard: "pitching",
+    prescriptionOrigin: "owner",
+    ownerDrillId: pick.id,
+    commandDay: true,
+    pitchTags: { moundType: pick.pitch_mound_type, feet: pick.pitch_distance_feet, intensity: "catch_light", purposes: pick.pitch_purposes ?? [] },
+    ...count > 0 ? { armEvent: { kind: "pitch", count, intent: "low", estimated: false } } : {}
+  };
+  return { drills: [...drills, row], id: pick.id };
+}
+function lightPreStart(drills) {
+  const kept = drills.filter((d3) => !d3.armEvent || d3.prescriptionOrigin === "owner" && d3.pitchTags?.intensity === "catch_light");
+  if (kept.length === drills.length) return { drills, because: [] };
+  return { drills: kept, because: ["You start tomorrow, so today is light: an easy catch at the mound or circle and arm care only."] };
+}
 
 // src/lib/hammer/roadmap/roadmapLadder.ts
 var RUNG_ORDER = [
@@ -8805,14 +8939,27 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     }
     if (!access?.hasPitching || b.modality !== "throwing") return [b];
     const type = pitchingDay(today, sport, quarter, roadmapInputs.pitcherOutings);
-    const pitchingDrills = b.status === "ready" ? withTaggedPitchDrill(b.drills.filter((d3) => d3.armCard !== "throwing"), { sport, dayType: type, role: pitchFacts?.pitchingRole ?? null, day: today }) : b.drills.filter((d3) => d3.armCard !== "throwing");
-    const throwingDrills = b.drills.filter((d3) => d3.armCard === "throwing");
-    const pitching = { ...b, drills: pitchingDrills, steps: drillsToSteps(pitchingDrills), modality: "pitching", title: `Pitching \u2014 ${sport === "softball" ? "windmill" : "baseball"} \xB7 ${type.replace(/_/g, " ")}`, route: "/practice?module=pitching", ctaLabel: "Open pitching", gamePlanTemplate: null, because: [...b.because ?? [], "Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."] };
+    let pitchingDrills = b.status === "ready" ? withTaggedPitchDrill(b.drills.filter((d3) => d3.armCard !== "throwing"), { sport, dayType: type, role: pitchFacts?.pitchingRole ?? null, day: today }) : b.drills.filter((d3) => d3.armCard !== "throwing");
+    const command = b.status === "ready" ? commandDayPlan({ sport, role: pitchFacts?.pitchingRole ?? null, facts: pitchFacts, evidence: roadmapInputs.pitchCommand, day: today }) : { add: false, because: [] };
+    if (command.add) {
+      const r = withCommandDrill(pitchingDrills, { sport, role: pitchFacts?.pitchingRole ?? null, day: today });
+      pitchingDrills = r.drills;
+      if (!r.id) command.because = [];
+    }
+    const preStart = !!pitchFacts?.startsTomorrow && b.status === "ready";
+    if (preStart) {
+      const light = lightPreStart(pitchingDrills);
+      pitchingDrills = light.drills;
+      command.because = [...command.because, ...light.because];
+    }
+    const throwingDrills = b.drills.filter((d3) => d3.armCard === "throwing" && !(preStart && d3.armEvent));
+    const pitching = { ...b, drills: pitchingDrills, steps: drillsToSteps(pitchingDrills), modality: "pitching", title: `Pitching \u2014 ${sport === "softball" ? "windmill" : "baseball"} \xB7 ${type.replace(/_/g, " ")}`, route: "/practice?module=pitching", ctaLabel: "Open pitching", gamePlanTemplate: null, because: [...b.because ?? [], ...command.because, "Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."] };
     const defenseToday = prehabbed.some((x) => x.modality === "defense" && x.status === "ready");
     return [pitching, ...throwingDrills.length && (!access.pitcherOnly || defenseToday) ? [{ ...b, drills: throwingDrills, steps: drillsToSteps(throwingDrills), title: "Throwing \u2014 position work within your shared arm budget", gamePlanTemplate: null }] : []];
   });
   const blocks = access?.hasPitching ? finalArmGuard(unguardedBlocks, { sport, role: access.pitcherOnly ? "pitcher" : "two_way", age: ctx.get("age_years")?.value ?? null, date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`, history: roadmapInputs.armHistory, limitPitching: roadmapInputs.pitcherOutings?.limitPitching === true, primaryFocus: roadmapInputs.pitcherOutings?.primaryFocus ?? null }).map((b) => ({ ...b, steps: drillsToSteps(b.drills) })) : unguardedBlocks;
-  const warmed = withWarmupThrows(blocks);
+  const commandChecked = blocks.map((b) => b.modality === "pitching" && (b.because ?? []).some((x) => x.startsWith("Extra light")) && !b.drills.some((d3) => d3.commandDay) ? { ...b, because: (b.because ?? []).filter((x) => !x.startsWith("Extra light")).concat(b.status === "ready" ? ["No extra command work today because your arm limits are full."] : []) } : b);
+  const warmed = withWarmupThrows(commandChecked);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));
@@ -10909,46 +11056,6 @@ function developmentStrategy(i) {
     sixWeekLine: reason,
     sourceIds: s.mode === "secure_natural" && primaryFact ? [...primaryFact.sourceIds] : []
   };
-}
-
-// supabase/functions/_shared/wic/masteryPitchingStandards.ts
-var base = [
-  { key: "k_bb", dir: "min", value: 5 },
-  { key: "first_pitch_strike_pct", dir: "min", value: 0.67 },
-  { key: "two_ball_pct", dir: "max", value: 0.3 },
-  { key: "whip", dir: "max", value: 1 },
-  { key: "opp_avg", dir: "max", value: 0.2 },
-  { key: "soft_contact_pct", dir: "min", value: 0.25 },
-  { key: "scoring_pos_inning_pct", dir: "max", value: 0.25 },
-  { key: "sb_per_game", dir: "max", value: 0.2 },
-  { key: "opp_sb_success_pct", dir: "max", value: 0.6 },
-  { key: "time_to_plate_s", dir: "max", value: 1.3 },
-  { key: "pfp_clean_pct", dir: "min", value: 0.98 }
-];
-var bbKB = { pro: [0.3, 0.06], college: [0.32, 0.055], high_school: [0.35, 0.05], youth: [0.35, 0.05] };
-var sbBase = [
-  { key: "k_bb", dir: "min", value: 6 },
-  { key: "whip", dir: "max", value: 0.85 },
-  { key: "opp_avg", dir: "max", value: 0.17 },
-  { key: "era", dir: "max", value: 1.25 },
-  { key: "two_ball_pct", dir: "max", value: 0.3 },
-  { key: "scoring_pos_inning_pct", dir: "max", value: 0.2 },
-  { key: "sb_per_game", dir: "max", value: 0.3 },
-  { key: "pfp_clean_pct", dir: "min", value: 0.98 }
-];
-function startingStandards(sport, level, overrides2 = {}) {
-  let list3;
-  if (sport === "baseball") {
-    const [k, bb] = bbKB[level];
-    list3 = [{ key: "k_pct", dir: "min", value: k }, { key: "bb_pct", dir: "max", value: bb }, ...base];
-  } else {
-    const hs = level === "high_school" || level === "youth";
-    list3 = [{ key: "k_per_7", dir: "min", value: hs ? 12 : 10 }, { key: "bb_per_7", dir: "max", value: hs ? 1.2 : 1.5 }, ...sbBase];
-  }
-  return list3.map((s) => {
-    const o = overrides2[`${sport}_${level}_${s.key}`];
-    return typeof o === "number" && Number.isFinite(o) ? { ...s, value: o } : s;
-  });
 }
 
 // supabase/functions/_shared/wic/masteryPitching.ts
