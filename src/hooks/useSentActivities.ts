@@ -6,8 +6,10 @@ import { computeScheduleDates, type ScheduleInput } from '@/lib/coachRx/schedule
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { runCoachWarningAction } from '@/lib/coachRx/warningAction';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useSentActivities() {
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [followedPlayers, setFollowedPlayers] = useState<FollowedPlayer[]>([]);
@@ -120,6 +122,7 @@ export function useSentActivities() {
         // A prescription is the one received card. Do not also create a
         // legacy acceptance invitation or leave one behind on a failed send.
         toast.success(t('sentActivity.sent', `Activity sent to ${playerIds.length} player(s)!`));
+        void queryClient.invalidateQueries({queryKey:['coach-rx-manage']});
         return true;
       }
 

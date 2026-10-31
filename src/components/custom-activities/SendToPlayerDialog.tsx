@@ -19,6 +19,7 @@ import { scheduleSummary, type ScheduleInput } from '@/lib/coachRx/schedule';
 import { getActivityIcon } from './IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
 import { CoachExerciseAuthoring } from './CoachExerciseAuthoring';
+import { Input } from '@/components/ui/input';
 import type { Exercise } from '@/types/customActivity';
 
 /** Coach prescription categories (owner request Oct 24) — every category a plan can contain. */
@@ -80,12 +81,14 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
   const [recurEnd, setRecurEnd] = useState<string>('');
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [preview, setPreview] = useState(false);
+  const [title, setTitle] = useState('');
 
   useEffect(() => {
     if (open) {
       fetchFollowedPlayers();
       setSelectedPlayers(initialPlayerIds ?? []);
       setPreview(false);
+      setTitle(template?.title ?? '');
       setLockPreset('none');
       setCustomLocks([]);
       setMessage('');
@@ -150,7 +153,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
     if (!template) return;
 
     const success = await sendActivityToPlayers(
-      { ...template, exercises },
+      { ...template, title, exercises },
       selectedPlayers,
       getLockedFields(),
       message.trim() || undefined,
@@ -179,7 +182,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
 
         <ScrollArea className="max-h-[calc(90vh-140px)] px-6">
           {preview ? <section aria-label="Player workout preview" className="space-y-4 py-4">
-            <h3 className="font-bold">From Coach · {template.title}</h3>
+            <h3 className="font-bold">From Coach · {title}</h3>
             <p className="text-sm">{scheduleSummary(buildSchedule())}</p>
             {message && <p className="text-sm">{message}</p>}
             <ul className="space-y-3">{exercises.map(exercise => <li key={exercise.id} className="border-b border-border pb-2 text-sm"><p className="font-semibold">{exercise.name}</p><p>{exercise.sets ? `${exercise.sets} sets · ` : ''}{exercise.dosage_unit === 'seconds' ? exercise.duration : exercise.dosage_unit === 'feet' ? exercise.distance_feet : exercise.reps} {exercise.dosage_unit}{exercise.rest != null ? ` · Rest: ${exercise.rest} seconds` : ''}</p>{exercise.gear && <p>Gear: {exercise.gear}</p>}{exercise.notes && <p>{exercise.notes}</p>}</li>)}</ul>
@@ -217,6 +220,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
             <Separator />
 
             {/* Lock Settings */}
+            <Label className="block space-y-1">Workout name<Input value={title} maxLength={255} onChange={event => setTitle(event.target.value)}/></Label>
             <CoachExerciseAuthoring exercises={exercises} onChange={setExercises} />
             <Separator />
             <div className="space-y-4">
@@ -317,7 +321,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
                     ['recurring', 'Repeating'],
                     ['any_day', 'Any day — player picks'],
                   ] as const).map(([v, l]) => (
-                    <button
+                    <Button variant="outline"
                       key={v}
                       type="button"
                       data-sched-type={v}
@@ -325,7 +329,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
                       className={`rounded-md border px-2 py-1.5 text-xs ${schedType === v ? 'border-primary bg-primary/10 font-semibold' : 'border-input'}`}
                     >
                       {l}
-                    </button>
+                    </Button>
                   ))}
                 </div>
 
@@ -352,14 +356,14 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
                 {schedType === 'recurring' && (
                   <div className="space-y-2 rounded-md border border-border p-2">
                     <div className="flex items-center gap-2 text-xs">
-                      <button type="button" data-recur-kind="weekly" onClick={() => setMonthly(false)} className={`rounded px-2 py-1 ${!monthly ? 'bg-primary/10 font-semibold' : ''}`}>Weekly</button>
-                      <button type="button" data-recur-kind="monthly" onClick={() => setMonthly(true)} className={`rounded px-2 py-1 ${monthly ? 'bg-primary/10 font-semibold' : ''}`}>Monthly</button>
+                      <Button variant="outline" type="button" data-recur-kind="weekly" onClick={() => setMonthly(false)} className={`rounded px-2 py-1 ${!monthly ? 'bg-primary/10 font-semibold' : ''}`}>Weekly</Button>
+                      <Button variant="outline" type="button" data-recur-kind="monthly" onClick={() => setMonthly(true)} className={`rounded px-2 py-1 ${monthly ? 'bg-primary/10 font-semibold' : ''}`}>Monthly</Button>
                     </div>
                     {!monthly ? (
                       <>
                         <div className="flex flex-wrap gap-1">
                           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
-                            <button
+                            <Button variant="outline"
                               key={d}
                               type="button"
                               data-weekday={i}
@@ -367,7 +371,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
                               className={`rounded-md border px-2 py-1 text-xs ${weekdays.includes(i) ? 'border-primary bg-primary/10 font-semibold' : 'border-input'}`}
                             >
                               {d}
-                            </button>
+                            </Button>
                           ))}
                         </div>
                         <div className="flex items-center gap-2 text-xs">
@@ -393,8 +397,8 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
                       </div>
                     )}
                     <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <button type="button" data-end-mode="count" onClick={() => setEndMode('count')} className={`rounded px-2 py-1 ${endMode === 'count' ? 'bg-primary/10 font-semibold' : ''}`}>Number of times</button>
-                      <button type="button" data-end-mode="end" onClick={() => setEndMode('end')} className={`rounded px-2 py-1 ${endMode === 'end' ? 'bg-primary/10 font-semibold' : ''}`}>End date</button>
+                      <Button variant="outline" type="button" data-end-mode="count" onClick={() => setEndMode('count')} className={`rounded px-2 py-1 ${endMode === 'count' ? 'bg-primary/10 font-semibold' : ''}`}>Number of times</Button>
+                      <Button variant="outline" type="button" data-end-mode="end" onClick={() => setEndMode('end')} className={`rounded px-2 py-1 ${endMode === 'end' ? 'bg-primary/10 font-semibold' : ''}`}>End date</Button>
                       {endMode === 'count' ? (
                         <input
                           type="number" min={1} max={60} value={recurCount}
@@ -501,7 +505,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
           </Button>
           <Button
             onClick={() => preview ? void handleSend() : setPreview(true)}
-            disabled={loading || selectedPlayers.length === 0 || !scheduleValid || !exercises.length || exercises.some(e => !e.name.trim() || !e.dosage_unit)}
+            disabled={loading || !title.trim() || selectedPlayers.length === 0 || !scheduleValid || !exercises.length || exercises.some(e => !e.name.trim() || !e.dosage_unit)}
             className="gap-2"
           >
             {loading ? (
