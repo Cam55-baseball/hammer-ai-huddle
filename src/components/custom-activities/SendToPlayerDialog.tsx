@@ -54,9 +54,10 @@ interface SendToPlayerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   template: CustomActivityTemplate | null;
+  initialPlayerIds?: string[];
 }
 
-export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlayerDialogProps) {
+export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayerIds }: SendToPlayerDialogProps) {
   const { t } = useTranslation();
   const { loading, loadingPlayers, followedPlayers, fetchFollowedPlayers, sendActivityToPlayers } = useSentActivities();
   
@@ -78,11 +79,13 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
   const [recurCount, setRecurCount] = useState<number>(4);
   const [recurEnd, setRecurEnd] = useState<string>('');
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [preview, setPreview] = useState(false);
 
   useEffect(() => {
     if (open) {
       fetchFollowedPlayers();
-      setSelectedPlayers([]);
+      setSelectedPlayers(initialPlayerIds ?? []);
+      setPreview(false);
       setLockPreset('none');
       setCustomLocks([]);
       setMessage('');
@@ -151,7 +154,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
       selectedPlayers,
       getLockedFields(),
       message.trim() || undefined,
-      { category: rxCategory, planDate: rxDate, schedule: buildSchedule() }
+      { category: rxCategory, planDate: rxDate, schedule: buildSchedule(), sourceTemplateId: (template as CustomActivityTemplate & { source_template_id?: string | null }).source_template_id }
     );
 
     if (success) {
@@ -170,12 +173,19 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl font-black flex items-center gap-2">
             <Send className="h-5 w-5" />
-            {t('sentActivity.sendTitle', 'Send Activity to Player')}
+            Send workouts
           </DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(90vh-140px)] px-6">
-          <div className="space-y-6 py-4">
+          {preview ? <section aria-label="Player workout preview" className="space-y-4 py-4">
+            <h3 className="font-bold">From Coach · {template.title}</h3>
+            <p className="text-sm">{scheduleSummary(buildSchedule())}</p>
+            {message && <p className="text-sm">{message}</p>}
+            <ul className="space-y-3">{exercises.map(exercise => <li key={exercise.id} className="border-b border-border pb-2 text-sm"><p className="font-semibold">{exercise.name}</p><p>{exercise.sets ? `${exercise.sets} sets · ` : ''}{exercise.dosage_unit === 'seconds' ? exercise.duration : exercise.dosage_unit === 'feet' ? exercise.distance_feet : exercise.reps} {exercise.dosage_unit}{exercise.rest != null ? ` · Rest: ${exercise.rest} seconds` : ''}</p>{exercise.gear && <p>Gear: {exercise.gear}</p>}{exercise.notes && <p>{exercise.notes}</p>}</li>)}</ul>
+            <div className="flex flex-wrap gap-2"><Button disabled size="sm">Use instead of my {rxCategory} card</Button><Button disabled size="sm" variant="outline">Add alongside</Button><Button disabled size="sm" variant="ghost">Save for later</Button></div>
+            <p className="text-xs text-muted-foreground">{selectedPlayers.length} player(s) · {lockedFields.length ? `Locked: ${lockedFields.join(', ')}` : 'No locked fields'}</p>
+          </section> : <div className="space-y-6 py-4">
             {/* Activity Preview */}
             <Card style={{ borderColor: hexToRgba(template.color, 0.5) }}>
               <CardContent className="p-4">
@@ -483,15 +493,15 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
                 rows={3}
               />
             </div>
-          </div>
+          </div>}
         </ScrollArea>
 
         <div className="flex items-center justify-end gap-3 p-6 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t('common.cancel')}
+          <Button variant="outline" disabled={loading} onClick={() => preview ? setPreview(false) : onOpenChange(false)}>
+            {preview ? 'Back to edit' : t('common.cancel')}
           </Button>
           <Button
-            onClick={handleSend}
+            onClick={() => preview ? void handleSend() : setPreview(true)}
             disabled={loading || selectedPlayers.length === 0 || !scheduleValid || !exercises.length || exercises.some(e => !e.name.trim() || !e.dosage_unit)}
             className="gap-2"
           >
