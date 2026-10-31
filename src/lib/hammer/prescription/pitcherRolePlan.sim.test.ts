@@ -40,9 +40,15 @@ function run(sport: "baseball" | "softball", role: Role, tier = "pitcher", focus
     for (let d = 0; d < 7; d++) {
       const date = new Date(2026, 5, 1 + w * 7 + d); // Mon Jun 1
       const day = iso(date);
-      if (role === "starter" && date.getDay() === 5) outings.push({ id: `s${day}`, outing_type: "start", planned_date: day, actual_date: day, status: "thrown" });
-      if (role !== "starter" && (date.getDay() === 5 || date.getDay() === 6)) outings.push({ id: `r${day}`, outing_type: "relief", planned_date: null, actual_date: day, status: "thrown" });
-      const facts = resolveOutingFacts({ planDate: day, settings, outings: outings.filter(o => o.actual_date! < day || o.outing_type === "start"), availability: [] });
+      const rows: PitcherOutingRow[] = [];
+      for (let k = 0; k < 63; k++) {
+        const od = new Date(2026, 5, 1 + k), oi = iso(od);
+        const isOuting = role === "starter" ? od.getDay() === 5 : od.getDay() === 5 || od.getDay() === 6;
+        if (!isOuting) continue;
+        const past = oi < day;
+        rows.push({ id: oi, outing_type: role === "starter" ? "start" : "relief", planned_date: oi, actual_date: past ? oi : null, status: past ? "thrown" : "planned" });
+      }
+      const facts = resolveOutingFacts({ planDate: day, settings, outings: rows, availability: role === "starter" ? [] : [{ date: day, available: date.getDay() === 2 }] });
       const plan = buildHammerDailyPlan(context({ sport_primary: sport, position_primary: tier === "pitcher" ? "P" : "SS", season_phase: "in", weekly_availability_days: 6, injury_history: [], equipment_effective: gear, lifecycle_band: "adult", age_years: 20, lifting_age_years: 4 }), NORMAL_SIGNAL, null, null, undefined, date,
         { subscriptionModules: [`${sport}_${tier}`], resolvedSeasonPhase: "in", pitcherOutings: facts, armHistory: { rows: [] } } as any);
       const p = plan.blocks.find(b => b.modality === "pitching");
