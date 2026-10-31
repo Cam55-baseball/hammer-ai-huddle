@@ -5138,10 +5138,12 @@ export type Database = {
         Row: {
           cancelled_at: string | null
           category: string
+          coach_message: string | null
           created_at: string
           exercises: Json
           gear_labels: Json
           id: string
+          locked_fields: string[]
           plan_date: string
           recipient_id: string
           recur_count: number | null
@@ -5153,6 +5155,7 @@ export type Database = {
           safety_result: Json | null
           schedule_type: string
           sender_id: string
+          sender_name: string | null
           series_id: string | null
           source_template_id: string | null
           status: string
@@ -5163,10 +5166,12 @@ export type Database = {
         Insert: {
           cancelled_at?: string | null
           category: string
+          coach_message?: string | null
           created_at?: string
           exercises?: Json
           gear_labels?: Json
           id?: string
+          locked_fields?: string[]
           plan_date: string
           recipient_id: string
           recur_count?: number | null
@@ -5178,6 +5183,7 @@ export type Database = {
           safety_result?: Json | null
           schedule_type?: string
           sender_id: string
+          sender_name?: string | null
           series_id?: string | null
           source_template_id?: string | null
           status?: string
@@ -5188,10 +5194,12 @@ export type Database = {
         Update: {
           cancelled_at?: string | null
           category?: string
+          coach_message?: string | null
           created_at?: string
           exercises?: Json
           gear_labels?: Json
           id?: string
+          locked_fields?: string[]
           plan_date?: string
           recipient_id?: string
           recur_count?: number | null
@@ -5203,6 +5211,7 @@ export type Database = {
           safety_result?: Json | null
           schedule_type?: string
           sender_id?: string
+          sender_name?: string | null
           series_id?: string | null
           source_template_id?: string | null
           status?: string

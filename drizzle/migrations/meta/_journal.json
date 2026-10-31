@@ -1184,6 +1184,13 @@
       "when": 1793460561349,
       "tag": "0168_coach_day_edit_acknowledgement",
       "breakpoints": true
+    },
+    {
+      "idx": 169,
+      "version": "7",
+      "when": 1793461033422,
+      "tag": "0169_coach_workout_sender_note",
+      "breakpoints": true
     }
   ]
 }
