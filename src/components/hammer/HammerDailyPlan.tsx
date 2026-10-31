@@ -1,5 +1,6 @@
 import { MindItemCard } from "./MindItemCard";
 import { ControlledActivity } from './SessionControlNote';
+import { UpcomingSessionDecisions } from './UpcomingSessionDecisions';
 import { RunningReadinessLine } from "./RunningReadinessLine";
 import { usePlanningArmHistory } from '@/hooks/usePlanningArmHistory';
 import { rememberedMissingGear } from '../../../supabase/functions/_shared/planSwap/simpleSwap';
@@ -1231,6 +1232,7 @@ function HammerDailyPlanBody({
             <ArmCareBudgetProvider owner={armCareOwner}>
              <TodayRhythmProvider planDate={pocketDate}>
               <WkSafePlanNotice />
+              <UpcomingSessionDecisions/>
               <TrendDeloadNotice />
               <PrescribedOrderLine />
               <DayCommandCenter checkIns={{ morning: vaultQuizzes.hasCompleted('morning'), night: vaultQuizzes.hasCompleted('night'), preLift: vaultQuizzes.hasCompleted('pre_lift'), requiresPreLift: wkRx.grouped.lifts.length > 0 }} />
