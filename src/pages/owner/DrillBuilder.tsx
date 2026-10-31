@@ -27,6 +27,7 @@ import { OwnerDrillFavorite } from '@/components/owner/OwnerDrillFavorite';
 import { DrillCmsManager } from '@/components/owner/DrillCmsManager';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ownerConditioningProblems } from '../../../supabase/functions/_shared/wic/conditioning/ownerConditioning';
+import { PitcherTagFields } from '@/components/owner/PitcherTagFields';
 import { SKILL_AREAS, ROUTINE_ROLES, BAT_SPEED_KINDS, validDrillRoleTags } from '@/lib/prescription/drillRoleTags';
 
 const SLOT_LABEL: Record<PlanSlot, string> = {
@@ -468,6 +469,7 @@ export default function DrillBuilder() {
                   <div><Label>Bunt type</Label><Select value={draft.bunt_type ?? 'none'} onValueChange={value => set('bunt_type', value === 'none' ? null : value)}><SelectTrigger aria-label="Bunt type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem>{BUNT_TYPES.map(value => <SelectItem key={value} value={value}>{value.replace(/_/g, ' ')}</SelectItem>)}</SelectContent></Select></div>
                   <div><Label>Bunt side</Label><Select value={draft.bunt_side ?? 'none'} onValueChange={value => set('bunt_side', value === 'none' ? null : value)}><SelectTrigger aria-label="Bunt side"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem><SelectItem value="R">Right-handed</SelectItem><SelectItem value="L">Left-handed</SelectItem></SelectContent></Select></div>
                 </div>}
+                <PitcherTagFields draft={draft} set={set as any} />
                 {draft.placements.includes('hammers_today:conditioning') && <div className="grid grid-cols-2 gap-2 sm:col-span-2">
                   <div className="col-span-2"><Label>Conditioning type</Label><Select value={draft.conditioning_kind ?? 'none'} onValueChange={value => setDraft(d => d && ({ ...d, conditioning_kind: value === 'none' ? null : value, base_distance_feet: value === 'base_route' && d.sports.length === 1 ? (d.sports[0] === 'softball' ? 60 : 90) : d.base_distance_feet }))}><SelectTrigger aria-label="Conditioning type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not set</SelectItem><SelectItem value="run">Run (set distance)</SelectItem><SelectItem value="base_route">Base route</SelectItem></SelectContent></Select></div>
                   <div><Label>Rounds</Label><Input aria-label="Rounds" type="number" inputMode="numeric" value={draft.rounds ?? ''} onChange={e => set('rounds', e.target.value === '' ? null : Math.round(Number(e.target.value)))} /></div>
