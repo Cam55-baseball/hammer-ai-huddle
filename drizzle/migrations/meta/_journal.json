@@ -1177,6 +1177,13 @@
       "when": 1793459844729,
       "tag": "0167_coach_dated_card_edit",
       "breakpoints": true
+    },
+    {
+      "idx": 168,
+      "version": "7",
+      "when": 1793460561349,
+      "tag": "0168_coach_day_edit_acknowledgement",
+      "breakpoints": true
     }
   ]
 }
