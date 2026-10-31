@@ -1,4 +1,5 @@
 // supabase/functions/wk-generate-daily/index.ts
+import { reliefSets, isLowerBodyLift } from "../_shared/wic/pitching/roleCycle.ts";
 import { applyLiveTracking } from "../_shared/vault/tracking.ts";
 import { isPlanGameDay } from "../_shared/schedule/isGameDay.ts";
 // Hammer Workout & Speed — elite daily prescription generator.
@@ -3682,6 +3683,26 @@ const handler = async (req: Request): Promise<Response> => {
     // Off for everyone by default. When `load_spike_protection` does not
     // resolve on for this athlete nothing below runs and the day is byte-for-
     // byte the day it would have been. Any failure leaves the plan untouched.
+    // Owner Oct 31 role lifts: bullpen arms and closers keep the quarter-system weight
+    // and lose volume (sets); no lower-body lift the day before a start, for every role.
+    try {
+      const pitchRole = isPitcherAthlete ? (outingFacts?.pitchingRole ?? null) : null;
+      if (pitchRole || outingFacts?.startsTomorrow) {
+        const kept: typeof finalRxs = [];
+        for (const r of finalRxs) {
+          const isLift = r.slot === "lift";
+          if (isLift && outingFacts?.startsTomorrow && isPitcherAthlete && isLowerBodyLift(String(r.movement_slug), (r as any).movement_pattern ?? null)) continue;
+          if (isLift && pitchRole && pitchRole !== "starter" && typeof r.sets === "number" && r.sets > 2) {
+            const why = ((r as any).why_payload ?? {}) as Record<string, any>;
+            const to = reliefSets(r.sets, pitchRole);
+            if (to < r.sets) { why.role_volume = { role: pitchRole, sets_from: r.sets, sets_to: to, load_unchanged: true, reason: "Bullpen arms and closers keep the same weight with fewer sets." }; r.sets = to; (r as any).why_payload = why; }
+          }
+          kept.push(r);
+        }
+        if (kept.length !== finalRxs.length) reductions.push({ reason: "pre_start_lower_body", detail: "No lower-body lift the day before a start." });
+        finalRxs = assignSequenceOrder(kept);
+      }
+    } catch (roleErr) { console.warn("[wk-generate-daily] role lift rule skipped", roleErr); }
     let governorDiagnostics: Record<string, unknown> | null = null;
     try {
       if (features.load_spike_protection === true) {

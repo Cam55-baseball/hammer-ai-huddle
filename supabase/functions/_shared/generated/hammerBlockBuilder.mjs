@@ -2820,17 +2820,53 @@ function planningGear(owned, missing2, declarations = []) {
   return [.../* @__PURE__ */ new Set([...basics, ...owned, ...declarations.flatMap(requiredGear)])].filter((item) => avoidsMissingGear({ equipment_requirements: [item] }, missing2));
 }
 
-// supabase/functions/_shared/wic/pitching/outingFacts.ts
+// supabase/functions/_shared/wic/pitching/roleCycle.ts
+var FULL_DISTANCE_FT = { baseball: 60.5, softball: 43 };
+var SHORTBOX_FRACTION = 2 / 3;
+var shortboxFeet = (sport) => Math.round(FULL_DISTANCE_FT[sport] * SHORTBOX_FRACTION);
+var RELIEVER_VOLUME = 2 / 3;
+var TWO_WAY_MAJOR_SHARE = 0.7;
 var DAY = 864e5;
-var ms = (d3) => (/* @__PURE__ */ new Date(`${d3}T00:00:00Z`)).getTime();
+var ms = (d3) => Date.parse(`${d3}T00:00:00Z`);
+var between = (a, b) => Math.round((ms(b) - ms(a)) / DAY);
+function cycleDay(i) {
+  const past = [...i.outingDates].filter((d3) => d3 < i.date).sort().reverse();
+  const last = past[0];
+  const since = last ? between(last, i.date) : 99;
+  const startsToday = i.plannedStarts.includes(i.date) || i.role === "starter" && i.outingDates.includes(i.date);
+  const next = [...i.plannedStarts].filter((d3) => d3 > i.date).sort()[0];
+  const until = next ? between(i.date, next) : 99;
+  if (i.role === "starter") {
+    if (startsToday) return "start";
+    if (since === 1) return "day_after";
+    if (since === 2) return i.sport === "softball" && i.windmillAllowsDayTwo ? "light_mound" : "rest";
+    if (until === 1) return "pre_start";
+    if (since === 3) return "long_toss";
+    if (since === 4) return "bullpen";
+    return since % 2 === 1 ? "shortbox" : "light_mound";
+  }
+  if (i.outingDates.includes(i.date)) return "outing";
+  const backToBack = past[1] != null && between(past[1], last) === 1;
+  if (since === 1) return "day_after";
+  if (since === 2 && backToBack) return "day_after";
+  if (i.gameDates.includes(i.date)) return "available";
+  const dow = new Date(ms(i.date)).getUTCDay();
+  if (dow === 0) return "rest";
+  return dow % 3 === 0 ? "long_toss" : dow % 2 === 0 ? "shortbox" : "light_mound";
+}
+var minorityAllowance = (majorityKept) => Math.floor(majorityKept * (1 - TWO_WAY_MAJOR_SHARE) / TWO_WAY_MAJOR_SHARE);
+
+// supabase/functions/_shared/wic/pitching/outingFacts.ts
+var DAY2 = 864e5;
+var ms2 = (d3) => (/* @__PURE__ */ new Date(`${d3}T00:00:00Z`)).getTime();
 var iso = (t) => new Date(t).toISOString().slice(0, 10);
-var shift = (d3, n) => iso(ms(d3) + n * DAY);
+var shift = (d3, n) => iso(ms2(d3) + n * DAY2);
 function projectRotation(settings, latestStart, from, to) {
   if (!settings?.rotation_active || !settings.rotation_every_days || !settings.rotation_anchor_date) return [];
   const n = settings.rotation_every_days;
-  const anchor = latestStart && ms(latestStart) >= ms(settings.rotation_anchor_date) ? latestStart : settings.rotation_anchor_date;
+  const anchor = latestStart && ms2(latestStart) >= ms2(settings.rotation_anchor_date) ? latestStart : settings.rotation_anchor_date;
   const out = [];
-  for (let t = ms(anchor); t <= ms(to); t += n * DAY) if (t >= ms(from)) out.push(iso(t));
+  for (let t = ms2(anchor); t <= ms2(to); t += n * DAY2) if (t >= ms2(from)) out.push(iso(t));
   return out;
 }
 function resolveOutingFacts(input) {
@@ -2864,20 +2900,22 @@ function resolveOutingFacts(input) {
 }
 
 // src/lib/hammer/pitching/pitchingMicrocycle.ts
-function labelFor(t) {
+function labelFor(t, sport = "baseball") {
+  const place = sport === "softball" ? "circle" : "mound";
+  const sb = shortboxFeet(sport);
   switch (t) {
     case "start":
       return { headline: "Start", detail: "Compete on the mound today." };
     case "bullpen":
-      return { headline: "Bullpen", detail: "Structured pen \u2014 build the outing." };
+      return sport === "softball" ? { headline: "Circle session", detail: "Structured circle work \u2014 build the outing." } : { headline: "Bullpen", detail: "Structured pen \u2014 build the outing." };
     case "side":
-      return { headline: "Side / Touch", detail: "Short mound work at feel intensity." };
+      return { headline: "Shortbox", detail: `Pitch from the ${place} at ${sb} ft (2/3 distance) \u2014 light, pitches in the zone.` };
     case "touch":
-      return { headline: "Touch-and-feel", detail: "10\u201315 easy pitches, no radar chase." };
+      return { headline: `Light ${place} work`, detail: "As light as playing catch, no radar chase." };
     case "long_toss":
       return { headline: "Long toss", detail: "Distance ladder + pulldowns if unlocked." };
     case "flush":
-      return { headline: "Flush / recover", detail: "Recovery throws + arm care. No mound." };
+      return { headline: "Light catch + mobility", detail: `Light catch plus 2-hand med-ball overhead throws. No ${place}.` };
     case "fielding_only":
       return { headline: "PFP + catch play", detail: "Fielding routine, no bullpen work." };
     case "rest":
@@ -2888,8 +2926,8 @@ function labelFor(t) {
       return { headline: "Game day", detail: "Compete \u2014 plan is subordinate to the game." };
   }
 }
-function mkDay(dow, t) {
-  const { headline, detail } = labelFor(t);
+function mkDay(dow, t, sport = "baseball") {
+  const { headline, detail } = labelFor(t, sport);
   return { dow, dayType: t, headline, detail };
 }
 function baseballStarter(input) {
@@ -2905,25 +2943,27 @@ function baseballStarter(input) {
     else if (isGame) t = "game";
     else {
       switch (offset) {
+        // Owner Oct 31 starter cycle: day after = light catch + med-ball mobility,
+        // second day after = rest, then long toss, a bullpen, shortbox, and a light day before.
         case 1:
           t = "flush";
           break;
         case 2:
-          t = "long_toss";
+          t = "rest";
           break;
         case 3:
-          t = rung === "foundation" ? "touch" : "bullpen";
+          t = "long_toss";
           break;
         case 4:
-          t = "fielding_only";
+          t = rung === "foundation" ? "side" : "bullpen";
           break;
         case 5:
-          t = "touch";
+          t = "side";
           break;
         case 6:
-          t = quarter.phase === "in" ? "rest" : "touch";
+          t = "touch";
           break;
-        // owner rule: no max long toss the day before a start
+        // light the day before a start; never max long toss
         default:
           t = "start";
           break;
@@ -2947,7 +2987,7 @@ function baseballReliever(input) {
     if (isGame) t = "available";
     else if (preferredBullpenDow !== null && dow === preferredBullpenDow) t = rung === "foundation" ? "side" : "bullpen";
     else if (dow === 0) t = "rest";
-    else t = "touch";
+    else t = dow % 2 === 0 ? "side" : "touch";
     week.push(mkDay(dow, t));
   }
   return week;
@@ -2973,7 +3013,7 @@ function softballStarter(input) {
     if (isGame) t = dow === anchor ? "start" : "game";
     if (rung === "foundation" && t === "start" && !isGame) t = "side";
     if (quarter.phase === "in" && !isGame && t === "start") t = "side";
-    week.push(mkDay(dow, t));
+    week.push(mkDay(dow, t, "softball"));
   }
   return week;
 }
@@ -2986,8 +3026,8 @@ function softballReliever(input) {
     let t;
     if (isGame) t = "available";
     else if (dow === 0) t = "rest";
-    else t = "touch";
-    week.push(mkDay(dow, t));
+    else t = dow % 2 === 0 ? "side" : "touch";
+    week.push(mkDay(dow, t, "softball"));
   }
   return week;
 }
@@ -3009,12 +3049,12 @@ function buildPitchingMicrocycle(input) {
       const planDate = date.toISOString().slice(0, 10);
       const facts = resolveOutingFacts({ planDate, ...input.pitcherSchedule });
       if (!facts.hasSchedule) return entry;
-      if (facts.pitchedYesterday) return mkDay(entry.dow, "flush");
-      if (facts.startsToday) return mkDay(entry.dow, "start");
-      if (facts.startsTomorrow) return mkDay(entry.dow, "touch");
+      if (facts.pitchedYesterday) return mkDay(entry.dow, "flush", sport);
+      if (facts.startsToday) return mkDay(entry.dow, "start", sport);
+      if (facts.startsTomorrow) return mkDay(entry.dow, "touch", sport);
       const available = input.pitcherSchedule.availability.find((a) => a.date === planDate);
-      if (available?.available && (input.pitcherSchedule.settings?.role === "reliever" || input.pitcherSchedule.settings?.role === "both")) return mkDay(entry.dow, "available");
-      if (entry.dayType === "start" || entry.dayType === "game" || entry.dayType === "available") return mkDay(entry.dow, "touch");
+      if (available?.available && (input.pitcherSchedule.settings?.role === "reliever" || input.pitcherSchedule.settings?.role === "both")) return mkDay(entry.dow, "available", sport);
+      if (entry.dayType === "start" || entry.dayType === "game" || entry.dayType === "available") return mkDay(entry.dow, "touch", sport);
       return entry;
     });
   }
@@ -3215,7 +3255,7 @@ var THROW_WEIGHTS = {
 
 // supabase/functions/_shared/wic/phases/nextThrowDate.ts
 var dayMs2 = 864e5;
-var ms2 = (d3) => Date.parse(`${d3}T00:00:00Z`);
+var ms3 = (d3) => Date.parse(`${d3}T00:00:00Z`);
 var iso2 = (n) => new Date(n).toISOString().slice(0, 10);
 function kindOfRow(r) {
   const t = String(r.throw_type ?? "").toLowerCase();
@@ -3240,18 +3280,18 @@ function equivalentsByDay(rows3) {
 function nextThrowDate(age, level, rows3, today) {
   if (!pitchSmartApplies(age, level)) return null;
   const band = PITCH_SMART_BANDS[bandIndex(age)];
-  let next = ms2(today) + dayMs2;
+  let next = ms3(today) + dayMs2;
   for (const [d3, eq] of equivalentsByDay(rows3)) {
     if (d3 > today) continue;
     const rest = restDaysFor(band, Math.ceil(eq));
-    next = Math.max(next, ms2(d3) + (rest + 1) * dayMs2);
+    next = Math.max(next, ms3(d3) + (rest + 1) * dayMs2);
   }
   return iso2(next);
 }
 
 // supabase/functions/_shared/wic/phases/u13ThrowGate.ts
 var dayMs3 = 864e5;
-var ms3 = (d3) => Date.parse(`${d3}T00:00:00Z`);
+var ms4 = (d3) => Date.parse(`${d3}T00:00:00Z`);
 function u13ThrowBlockFrom(age, days, today) {
   if (!isUnder13(age)) return null;
   const band = PITCH_SMART_BANDS[bandIndex(age)];
@@ -3259,7 +3299,7 @@ function u13ThrowBlockFrom(age, days, today) {
   for (const d3 of prior) {
     if (d3.pitches <= 0) continue;
     const rest = restDaysFor(band, d3.pitches);
-    const gap = Math.round((ms3(today) - ms3(d3.date)) / dayMs3) - 1;
+    const gap = Math.round((ms4(today) - ms4(d3.date)) / dayMs3) - 1;
     if (gap < rest) return `Pitch Smart rest: ${d3.pitches} pitches on ${d3.date} need ${rest} day${rest === 1 ? "" : "s"} off.`;
   }
   const pitchDates = prior.filter((d3) => d3.pitches > 0).map((d3) => d3.date);
@@ -3425,6 +3465,12 @@ function pitchingDay(date, sport, quarter, facts) {
   if (facts?.pitchedYesterday) return "flush";
   if (facts?.startsToday) return "start";
   if (facts?.startsTomorrow) return "touch";
+  if (facts?.pitchingRole && facts.hasSchedule) {
+    const iso3 = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const day2 = cycleDay({ sport, role: facts.pitchingRole, date: iso3, outingDates: facts.thrownDates, plannedStarts: facts.plannedStartDates, gameDates: [] });
+    const map = { rest: "rest", day_after: "flush", long_toss: "long_toss", bullpen: "bullpen", shortbox: "side", light_mound: "touch", pre_start: "touch" };
+    if (map[day2] && !(facts.relieverAvailableSoon && facts.pitchingRole !== "starter")) return map[day2];
+  }
   if (facts?.relieverAvailableSoon) return "available";
   const cycle = buildPitchingMicrocycle({ sport, rung: "sustain", quarter, profile: DEFAULT_PITCHER_PROFILE, today: date, gameDows: [], preferredBullpenDow: null });
   const type = cycle.today.dayType;
@@ -3454,13 +3500,18 @@ function finalArmGuard(blocks, input) {
   });
   const kept = /* @__PURE__ */ new Set();
   const cut = /* @__PURE__ */ new Set();
-  for (const kind of order) for (const r of rows3.filter((x) => x.kind === kind)) {
-    if (r.cost > room) {
+  const focus = input.role === "two_way" && !input.limitPitching && input.primaryFocus ? input.primaryFocus === "pitcher" ? "pitching" : "position" : null;
+  const seq = focus ? ["warmup", focus, focus === "pitching" ? "position" : "pitching"] : order;
+  const used = { warmup: 0, pitching: 0, position: 0 };
+  for (const kind of seq) for (const r of rows3.filter((x) => x.kind === kind)) {
+    const minorityOver = focus && kind !== "warmup" && kind !== focus && used[focus] > 0 && used[kind] + r.cost > minorityAllowance(used[focus]);
+    if (r.cost > room || minorityOver) {
       cut.add(kind);
       continue;
     }
     room -= r.cost;
     kept.add(`${r.bi}:${r.di}`);
+    used[kind] += r.cost;
   }
   const hadActivity = rows3.some((r) => r.kind !== "warmup");
   const keptActivity = rows3.some((r) => r.kind !== "warmup" && kept.has(`${r.bi}:${r.di}`));
@@ -6663,9 +6714,9 @@ function weeksBetween(startIso, today) {
   if (!startIso) return -1;
   const start = new Date(startIso);
   if (Number.isNaN(start.getTime())) return -1;
-  const ms4 = today.getTime() - start.getTime();
-  if (ms4 < 0) return 0;
-  return Math.floor(ms4 / (7 * 24 * 60 * 60 * 1e3));
+  const ms5 = today.getTime() - start.getTime();
+  if (ms5 < 0) return 0;
+  return Math.floor(ms5 / (7 * 24 * 60 * 60 * 1e3));
 }
 function quartersFromWeeks(weeks) {
   if (weeks < 0) return 2;
@@ -8684,7 +8735,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const defenseToday = prehabbed.some((x) => x.modality === "defense" && x.status === "ready");
     return [pitching, ...throwingDrills.length && (!access.pitcherOnly || defenseToday) ? [{ ...b, drills: throwingDrills, steps: drillsToSteps(throwingDrills), title: "Throwing \u2014 position work within your shared arm budget", gamePlanTemplate: null }] : []];
   });
-  const blocks = access?.hasPitching ? finalArmGuard(unguardedBlocks, { sport, role: access.pitcherOnly ? "pitcher" : "two_way", age: ctx.get("age_years")?.value ?? null, date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`, history: roadmapInputs.armHistory, limitPitching: roadmapInputs.pitcherOutings?.limitPitching === true }).map((b) => ({ ...b, steps: drillsToSteps(b.drills) })) : unguardedBlocks;
+  const blocks = access?.hasPitching ? finalArmGuard(unguardedBlocks, { sport, role: access.pitcherOnly ? "pitcher" : "two_way", age: ctx.get("age_years")?.value ?? null, date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`, history: roadmapInputs.armHistory, limitPitching: roadmapInputs.pitcherOutings?.limitPitching === true, primaryFocus: roadmapInputs.pitcherOutings?.primaryFocus ?? null }).map((b) => ({ ...b, steps: drillsToSteps(b.drills) })) : unguardedBlocks;
   const warmed = withWarmupThrows(blocks);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
