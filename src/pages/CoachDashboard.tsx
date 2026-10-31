@@ -286,6 +286,7 @@ export default function CoachDashboard() {
             <TabsTrigger value="softball">{t('dashboard.softball')}</TabsTrigger>
           </TabsList>
         </Tabs>
+        <Button asChild className="gap-2"><Link to="/my-custom-activities"><Send className="h-4 w-4"/>Send workouts</Link></Button>
 
         <Card>
           <CardHeader>
@@ -297,7 +298,7 @@ export default function CoachDashboard() {
               {selectedPlayers.length > 0 && (
                 <Button onClick={() => setBulkSendDialogOpen(true)} className="gap-2">
                   <Package className="h-4 w-4" />
-                  {t('coach.sendActivities', 'Send Activities')} ({selectedPlayers.length})
+                  Send workouts ({selectedPlayers.length})
                 </Button>
               )}
             </CardTitle>
@@ -349,7 +350,7 @@ export default function CoachDashboard() {
                         <BookMarked className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.viewLibrary', 'View Library')}</span>
                       </Button>
-                      <Button aria-label={`Send activity: ${player.full_name}`} title="Send activity" data-tour="coach-send" onClick={() => navigate('/my-custom-activities?tab=templates')} size="sm" variant="default" className="flex-shrink-0">
+                      <Button aria-label={`Send workout: ${player.full_name}`} title="Send workout" data-tour="coach-send" onClick={() => { setSelectedPlayers([player.id]); setBulkSendDialogOpen(true); }} size="sm" variant="default" className="flex-shrink-0">
                         <Send className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.sendActivity', 'Send Activity')}</span>
                       </Button>

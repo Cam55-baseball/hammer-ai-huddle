@@ -1007,6 +1007,7 @@ function HammerDailyPlanBody({
   return (
     <PlanAdjustContext.Provider value={adjustApi}>
     <div className="space-y-6">
+      <ErrorBoundary><CoachPrescriptionInbox planDate={pocketDate} /></ErrorBoundary>
       {!hasSavedSportDay&&masteryIdentity.isError&&<p role="alert" className="text-sm text-destructive">Your identity evidence could not be checked. No new plan focus was saved.</p>}
       {buntHistory.isError && (has5Tool||hasG2W) && <p role="alert" className="text-sm text-destructive">Your bunting history could not be checked. No new bunting work was added.</p>}
       {/* Always visible — never inside a collapsed box: Update Hammer must not be missed. */}
@@ -1014,7 +1015,6 @@ function HammerDailyPlanBody({
         <div data-tour="update-hammer"><TellHammersInbox /></div>
       </ErrorBoundary>
       <ErrorBoundary>
-        <CoachPrescriptionInbox planDate={pocketDate} />
         {hasSavedSportDay&&<AnalysisRotationNotice sport={sportKey} date={pocketDate}/>}
       </ErrorBoundary>
       <ErrorBoundary>

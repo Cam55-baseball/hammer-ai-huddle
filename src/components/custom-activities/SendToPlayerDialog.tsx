@@ -510,7 +510,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
             ) : (
               <Send className="h-4 w-4" />
             )}
-            {t('sentActivity.send', 'Send Activity')}
+            {preview ? 'Send workout' : 'Preview player card'}
           </Button>
         </div>
       </DialogContent>

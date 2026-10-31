@@ -24,6 +24,9 @@ export interface CoachPrescription {
   category: CoachRxCategory;
   plan_date: string;
   title: string;
+  sender_name?: string | null;
+  coach_message?: string | null;
+  locked_fields?: string[];
   exercises: Array<Record<string, unknown>>;
   gear_labels: string[];
   source_template_id: string | null;
