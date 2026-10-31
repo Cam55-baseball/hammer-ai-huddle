@@ -157,6 +157,8 @@ export interface RawShadowData {
   dailyLogs: RawDailyLog[];
   pitcherSchedule?: { settings: PitcherSettingsRow | null; outings: PitcherOutingRow[]; availability: PitcherAvailabilityRow[] };
   pitcherScheduleError?: boolean;
+  /** Owner Fix 12: the plan builder's own resolved season (one season source). */
+  phaseOverride?: Phase | null;
 }
 
 export interface ShadowInputs {
@@ -222,6 +224,16 @@ export function phaseFrom(mpi: RawMpi | null, context: RawContext | null, today:
   return p === "in_season" ? "in_season" : p === "post_season" ? "post_season" : p === "preseason" ? "pre_season" : "offseason";
 }
 
+/** Owner Fix 12: map the plan builder's phase onto the lift check's phase. */
+export function tissuePhaseFromWk(wkPhase: string | null | undefined): Phase | null {
+  const p = String(wkPhase ?? "");
+  if (!p) return null;
+  if (p === "in_season") return "in_season";
+  if (p === "post_season") return "post_season";
+  if (p === "preseason" || p === "pre_season") return "pre_season";
+  return "offseason";
+}
+
 export function trainingAgeBandFrom(context: RawContext | null): TrainingAgeBand {
   const level = (context?.competition_level ?? "").toLowerCase();
   if (level.includes("pro")) return "professional";
@@ -279,7 +291,7 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
     return fresh;
   };
 
-  const phase = phaseFrom(raw.mpi, raw.context, raw.today);
+  const phase = raw.phaseOverride ?? phaseFrom(raw.mpi, raw.context, raw.today);
   const position = raw.mpi?.primary_position ?? raw.context?.position_primary ?? null;
 
   /* lifts — prescribed counts as done unless marked skipped or missed.

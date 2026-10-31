@@ -250,11 +250,12 @@ import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "
 import { goalDose, goalDoseKey, GOAL_DOSE_VERSION } from "../_shared/wic/goals/goalDose.ts";
 import { applyProgramContent, BATCH_KEYS } from "../_shared/wic/content/programContent.ts";
 import { limbGuidance, attachLimbHints } from "../_shared/wic/limb/limbGuidance.ts";
-import { planPowerPrimer, isPapStrengthRow, liftPatternOf, painAreasFromInjuries, type PapRole, type PapPitchBudget } from "../_shared/wic/pap/powerPrimer.ts";
+import { isExperiencedLifter, liftFloorSets, easeBackLoadPct, EASE_BACK_RIR_MIN, EASE_BACK_SENTENCE, RETURNER_VERSION } from "../_shared/wic/exposure/returner.ts";
+import { planPowerPrimer, primerOnStrengthRowsOnly, isPapStrengthRow, liftPatternOf, painAreasFromInjuries, type PapRole, type PapPitchBudget } from "../_shared/wic/pap/powerPrimer.ts";
 import { PITCH_SMART_BANDS, bandIndex, restDaysFor, checkCaps, pitchSmartApplies } from "../_shared/wic/phases/youthThrowing.ts";
 import { planWindmillSession, WINDMILL_PROGRAM_VERSION } from "../_shared/wic/pitching/windmillProgram.ts";
 import { enteredInningsByDate, windmillHistory } from "../_shared/wic/pitching/windmillInnings.ts";
-import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
+import { loadedLiftRows, tissuePhaseFromWk } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
 
 /** Short plain note shown to the player when the rule check removes a card. */
@@ -917,6 +918,8 @@ const handler = async (req: Request): Promise<Response> => {
         : p.training_age_years !== null && p.training_age_years !== undefined;
     const trainingAgeYears = Number((ctx as any)?.lifting_age_years ?? p.years_lifting ?? p.training_age_years ?? 0);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
+    // Owner Fix 9: stated lifting history or lifting age decides who keeps template sets when easing back.
+    const experiencedLifter = isExperiencedLifter((ctx as any)?.lifting_history, (ctx as any)?.lifting_age_years ?? p.years_lifting ?? p.training_age_years ?? null);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
     for (const region of activeRestrictedAreas(ctx?.injury_history)) injurySlugs.add(region);
     const restrictedConditioningWhy = restrictedConditioningReason([...injurySlugs]);
@@ -1700,7 +1703,10 @@ const handler = async (req: Request): Promise<Response> => {
           .eq("decision_date", planDate)
           .eq("version", SHADOW_VERSION)
           .maybeSingle();
-        if (cached) {
+        // Owner Fix 12: a cached decision may carry a different season source;
+        // always decide on the plan builder's own season.
+        const useSeasonCache = false;
+        if (useSeasonCache && cached) {
           d = {
             allowedClass: cached.allowed_class,
             timing: cached.timing,
@@ -1712,6 +1718,7 @@ const handler = async (req: Request): Promise<Response> => {
         } else {
           decisionSource = "computed";
           const raw = await fetchShadowData(admin as any, user.id, planDate, "UTC");
+          raw.phaseOverride = tissuePhaseFromWk(phaseRes.phase);
           const result = decideFromRaw(raw);
           d = result.decision;
           try {
@@ -3700,7 +3707,9 @@ const handler = async (req: Request): Promise<Response> => {
             tier: cls.tier,
             sets: Math.max(1, Number(r.sets ?? 1)),
             amountPerSet: per,
-            floorSets: 1,
+            floorSets: cls.channel === "LIFT"
+              ? liftFloorSets(Math.max(1, Number(r.sets ?? 1)), ((r as any).why_payload?.dose_doctrine?.envelope?.sets ?? [])[0] ?? null, experiencedLifter)
+              : 1,
             substitutionFamily: (fact as any).substitution_family ?? null,
           });
         }
@@ -3758,6 +3767,7 @@ const handler = async (req: Request): Promise<Response> => {
             pitchSmartRestDay: false,
           },
           alternatives,
+          noDropChannels: experiencedLifter ? ["LIFT"] : [],
           canSubstitute: (from, alternative) => {
             const row = finalRxs.find(r => r.movement_slug === from.slug);
             return preservesSpeedIntent(row?.slot, lib.find(m => m.slug === from.slug)?.speed_category,
@@ -3814,6 +3824,25 @@ const handler = async (req: Request): Promise<Response> => {
             next.push(r);
           }
           finalRxs = assignSequenceOrder(next);
+          // Owner Fix 9: an experienced returner the cap reached eases back by
+          // intensity, not sets — same template sets, about 65–70%, 3–4 RIR.
+          const liftDiag = (gov.diagnostics as any).LIFT;
+          const liftCapped = !!liftDiag && (liftDiag.cold_start === true || (liftDiag.cap != null && Number(liftDiag.planned_before) > Number(liftDiag.cap)));
+          if (experiencedLifter && liftCapped) {
+            let eased = 0;
+            for (const r of finalRxs) {
+              const fact = catalogMap[r.movement_slug];
+              if (classify(fact)?.channel !== "LIFT") continue;
+              const why = ((r as any).why_payload ?? {}) as Record<string, any>;
+              const fromPct = (r as any).load_pct ?? null;
+              (r as any).load_pct = easeBackLoadPct(fromPct);
+              why.reps_in_reserve_min = Math.max(Number(why.reps_in_reserve_min ?? 0), EASE_BACK_RIR_MIN);
+              why.ease_back = { version: RETURNER_VERSION, from_pct: fromPct, to_pct: (r as any).load_pct, pct_range: [65, 70], rir_min: EASE_BACK_RIR_MIN, sets_kept: r.sets, reason: EASE_BACK_SENTENCE };
+              (r as any).why_payload = why;
+              eased++;
+            }
+            if (eased > 0) reductions.push({ reason: "ease_back_intensity", detail: EASE_BACK_SENTENCE });
+          }
           for (const reason of gov.reasons) {
             reductions.push({ reason: "load_spike", detail: reason });
           }
@@ -5374,6 +5403,8 @@ const handler = async (req: Request): Promise<Response> => {
     } catch (ppErr) {
       console.warn("[wk-generate-daily] power primer skipped", ppErr);
     }
+    // Owner Fix 10: never leave a primer on tissue / breathing / core rows.
+    primerOnStrengthRowsOnly(rows as any[]);
 
     // Caller JWT only: a service job cannot impersonate the athlete to read health/identity.
     // Newly built days retain sourced focus, while lifting choices, doses and saved days stay unchanged.
@@ -5565,7 +5596,7 @@ const handler = async (req: Request): Promise<Response> => {
     // this only records what the scheduler would have said. It can never change
     // or delay a card: it runs after the fact and swallows every error.
     try {
-      const shadow = await runShadowDecision(admin, user.id, planDate, "UTC", "daily_generation");
+      const shadow = await runShadowDecision(admin, user.id, planDate, "UTC", "daily_generation", tissuePhaseFromWk(phaseRes.phase));
       if (!shadow.ok && shadow.error) {
         console.warn("[wk-generate-daily] shadow decision skipped", shadow.error);
       }

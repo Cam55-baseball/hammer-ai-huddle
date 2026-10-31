@@ -376,3 +376,25 @@ export function papAlternatives(slug: string, target: PapTarget, opts: { painFre
     && (!c.isPress || !!o.isPress)
     && c.painBlocks.every((p) => o.painBlocks.includes(p) || (opts.painFree ?? []).includes(p)));
 }
+
+/**
+ * Owner Fix 10 (2026-10-31): the Primer lives only on a main lift day's
+ * strength row. Strips any primer left on tissue / breathing / core rows.
+ */
+export function primerOnStrengthRowsOnly<T extends { slot?: string | null; sequence_role?: string | null; movement_slug?: string | null; why_payload?: any }>(rows: T[]): number {
+  let stripped = 0;
+  for (const r of rows) {
+    const wp = r.why_payload;
+    if (!wp || typeof wp !== "object" || !("power_primer" in wp)) continue;
+    if (isPapStrengthRow(r)) continue;
+    const { power_primer: _drop, ...rest } = wp;
+    r.why_payload = rest;
+    stripped++;
+  }
+  return stripped;
+}
+
+/** A main lift day has at least one real strength row (not tissue care). */
+export function isMainLiftDay(rows: ReadonlyArray<{ slot?: string | null; sequence_role?: string | null; movement_slug?: string | null }>): boolean {
+  return rows.some((r) => isPapStrengthRow(r));
+}
