@@ -191,7 +191,6 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div 
-                    className="p-2 rounded-lg"
                     className="bg-primary/10 p-2 rounded-lg"
                   >
                     {template.custom_logo_url ? (

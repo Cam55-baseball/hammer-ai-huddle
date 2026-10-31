@@ -81,6 +81,13 @@ describe("coach team send", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].team_send_id).toBeNull();
   });
+  it('keeps the player note and locked controls on the canonical prescription', async () => {
+    const { result } = renderHook(() => useSentActivities());
+    await result.current.sendActivityToPlayers(template, ['p1'], ['exercises'], 'Keep this light', {category:'hitting',planDate:'2026-10-24'});
+    const rows = inserts['coach_prescriptions']?.[0] as Array<Record<string, unknown>>;
+    expect(rows[0].coach_message).toBe('Keep this light');
+    expect(rows[0].locked_fields).toEqual(['exercises']);
+  });
 
   it("an invalid recurring schedule leaves no invitation or prescription behind", async () => {
     const { result } = renderHook(() => useSentActivities());
