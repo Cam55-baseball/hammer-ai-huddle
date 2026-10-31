@@ -156,7 +156,7 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
   const pct = progress && progress.total > 0 ? Math.min(1, progress.done / progress.total) : 0;
   return (
     <>
-      {cardControls.length>0 && <div className="space-y-2 border-l-2 border-primary pl-3 text-sm" data-card-coach-notes><p>{controlNote(cardControls[0])}</p>{cardControls.some(c=>c.mode==='allow' && !c.skipped_at) && <Button variant="outline" size="sm" disabled={decisions.saving} onClick={()=>void decisions.save({ids:cardControls.filter(c=>c.mode==='allow' && !c.skipped_at).map(c=>c.id)}).catch(()=>undefined)}>Skip (allowed)</Button>}{allExempt && <p className="text-muted-foreground">{cardControls.every(c=>c.mode==='remove')?'Removed for this session':'Skipped (allowed)'} · No Discipline penalty</p>}</div>}
+      {cardControls.length>0 && <div className="space-y-2 border-l-2 border-primary pl-3 text-sm" data-card-coach-notes>{cardControls.map(c=><div key={c.id}><p className="font-medium">{c.target_name}</p><p>{controlNote(c)}</p>{c.skipped_at && <p className="text-muted-foreground">Skipped (allowed)</p>}</div>)}{cardControls.some(c=>c.mode==='allow' && !c.skipped_at) && <Button variant="outline" size="sm" disabled={decisions.saving} onClick={()=>void decisions.save({ids:cardControls.filter(c=>c.mode==='allow' && !c.skipped_at).map(c=>c.id)}).catch(()=>undefined)}>Skip (allowed)</Button>}{allExempt && <p className="text-muted-foreground">{cardControls.every(c=>c.mode==='remove')?'Removed for this session':'Skipped (allowed)'} · No Discipline penalty</p>}</div>}
       {!allExempt && <>
       <Button variant="ghost"
         type="button"

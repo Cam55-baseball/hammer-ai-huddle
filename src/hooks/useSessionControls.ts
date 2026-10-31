@@ -12,9 +12,11 @@ export function useSessionControls(athleteId?: string, from?: string, to?: strin
       if (!athleteId) return [];
       let q = supabase.from('coach_session_controls').select('*').eq('athlete_id', athleteId).order('created_at');
       if (from) q = q.gte('plan_date', from);
-      if (to) q = q.lte('plan_date', to);
+      const last=to ?? (()=>{const d=new Date(`${from ?? new Date().toLocaleDateString('en-CA')}T12:00:00Z`);d.setUTCDate(d.getUTCDate()+42);return d.toISOString().slice(0,10);})();
+      q=q.lte('plan_date',last).limit(1000);
       const { data, error } = await q;
       if (error) throw error;
+      if(data?.length===1000)throw new Error('All coach notes could not be checked. Choose one day.');
       // A dated decision cannot spill into a later sport switch.
       const context = await supabase.from('athlete_context').select('sport_primary').eq('user_id', athleteId).maybeSingle();
       if (context.error) throw context.error;
