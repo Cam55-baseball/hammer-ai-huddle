@@ -46,6 +46,8 @@ export interface OutingFacts {
   /** Player asked us to limit their pitching: pitching throws are cut first when the arm budget is tight. */
   limitPitching?: boolean;
   pitchingRole?: "starter" | "bullpen" | "closer" | null;
+  /** Planned relief outings (not bullpens) from today forward; game outings count toward the mound/circle days. */
+  plannedReliefDates?: string[];
   primaryFocus?: "pitcher" | "position" | null;
 }
 
@@ -105,5 +107,6 @@ export function resolveOutingFacts(input: {
     limitPitching: settings?.limit_pitching === true,
     pitchingRole: settings?.pitching_role ?? null,
     primaryFocus: settings?.primary_focus ?? null,
+    plannedReliefDates: [...new Set(outings.filter((o) => o.status === "planned" && o.outing_type === "relief" && o.planned_date && o.planned_date >= planDate).map((o) => o.planned_date as string))].sort(),
   };
 }

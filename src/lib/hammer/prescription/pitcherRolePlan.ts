@@ -52,14 +52,15 @@ export function applyPitcherLiftRule<D extends Drill>(drills: D[], ctx: { role?:
 }
 
 /** Owner Oct 31: extra light command day for a pitcher whose DATA shows command trouble. */
-export function commandDayPlan(ctx: { sport: "baseball" | "softball"; role?: PitchRole | null; facts?: { hasSchedule?: boolean; thrownDates: string[]; plannedStartDates: string[]; limitPitching?: boolean } | null; evidence?: CommandEvidence | null; day: Date }): { add: boolean; because: string[] } {
+export function commandDayPlan(ctx: { sport: "baseball" | "softball"; role?: PitchRole | null; facts?: { hasSchedule?: boolean; thrownDates: string[]; plannedStartDates: string[]; plannedReliefDates?: string[]; limitPitching?: boolean } | null; evidence?: CommandEvidence | null; day: Date }): { add: boolean; because: string[] } {
   const judge = commandStruggle(ctx.evidence);
   if (!judge.struggling || !ctx.role || !ctx.facts?.hasSchedule) return { add: false, because: [] };
   const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const monday = new Date(ctx.day); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
   const week = Array.from({ length: 7 }, (_, k) => { const d = new Date(monday); d.setDate(monday.getDate() + k); const date = iso(d); // Planned starts earlier in the week are treated as pitched (the week is planned ahead); Sunday stays rest as in pitchingDay.
-    const outingDates = [...ctx.facts!.thrownDates, ...ctx.facts!.plannedStartDates.filter((p) => p < date)];
-    return { date, day: d.getDay() === 0 ? "rest" as const : cycleDay({ sport: ctx.sport, role: ctx.role!, date, outingDates, plannedStarts: ctx.facts!.plannedStartDates, gameDates: [] }) }; });
+    const relief = ctx.facts!.plannedReliefDates ?? [];
+    const outingDates = [...ctx.facts!.thrownDates, ...ctx.facts!.plannedStartDates.filter((p) => p < date), ...relief.filter((p) => p < date)];
+    return { date, day: d.getDay() === 0 ? "rest" as const : relief.includes(date) ? "outing" as const : cycleDay({ sport: ctx.sport, role: ctx.role!, date, outingDates, plannedStarts: ctx.facts!.plannedStartDates, gameDates: [] }) }; });
   const plan = commandExtraDays({ sport: ctx.sport, week, struggling: true, limitPitching: ctx.facts.limitPitching });
   const today = iso(ctx.day);
   const place = ctx.sport === "softball" ? "circle" : "mound";
