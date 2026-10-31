@@ -57,3 +57,9 @@ it('one concurrent saved-day revision gets one fresh locked rebuild, not a safet
   expect(r.ok).toBe(true);expect(invoke).toHaveBeenCalledTimes(8);
   expect(invoke.mock.calls.map(c=>c[1].body.plan_date)).toEqual(['2026-10-30','2026-10-30','2026-10-31','2026-11-01','2026-11-02','2026-11-03','2026-11-04','2026-11-05']);
 });
+it('sport snapshot revision gets only one fresh retry under the same server day lock', async () => {
+  invoke.mockResolvedValueOnce({ data: null, error: httpError({ error: 'Sport day changed; rebuild from fresh saved work' }) });
+  const r = await rebuildAfterChange('Offseason started today', '2026-10-31');
+  expect(r.ok).toBe(true);
+  expect(invoke.mock.calls.map(c => c[1].body.plan_date)).toEqual(['2026-10-31','2026-10-31','2026-11-01','2026-11-02','2026-11-03','2026-11-04','2026-11-05','2026-11-06']);
+});

@@ -21,7 +21,7 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
       });
       if (error) {
         const conflict = await (error as { context?: Response }).context?.clone?.().json?.().catch(() => null);
-        if (conflict?.error === 'adjust_failed' && conflict?.message === 'Day changed; rebuild from fresh saved work') {
+        if ((conflict?.error === 'adjust_failed' && conflict?.message === 'Day changed; rebuild from fresh saved work') || conflict?.error === 'Sport day changed; rebuild from fresh saved work') {
           // One fresh server reread under the same lock; never bypass a safety or protected-work refusal.
           const retry = await supabase.functions.invoke('wk-generate-daily', {body:{plan_date:date,compose_sport_day:true,change_reason:'player_request',change_text:reason,change_key:`${key}:${date}:fresh`}});
           if (!retry.error && retry.data?.ok===true && retry.data?.composed===true && retry.data?.degraded!==true) {
