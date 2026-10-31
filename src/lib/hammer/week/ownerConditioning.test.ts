@@ -20,7 +20,7 @@ describe("owner conditioning drills (Add fields)", () => {
     expect(ownerConditioningProblems({ conditioning_kind: "carry", rounds: 4, carry_yards: 40, load_lbs: 50, work_seconds: 30, rest_seconds: 60, sports: ["baseball"] })).toEqual([]);
   });
   it("Programs picker aims a drill only at matching subscribers", () => {
-    const d = { ...run, distance_feet: 90, rest_seconds: 60, rounds: 4, conditioning_programs: ["pitcher"] };
+    const d = { ...run, distance_feet: 90, rest_seconds: 180, rounds: 4, conditioning_programs: ["pitcher"] };
     expect(ownerConditioningFits(d, { sport: "baseball", isPitcher: true, modules: ["baseball_pitcher"] })).toBe(true);
     expect(ownerConditioningFits(d, { sport: "baseball", isPitcher: false, modules: ["baseball_5tool"] })).toBe(false);
     expect(ownerConditioningFits({ ...d, conditioning_programs: [] }, { sport: "baseball", isPitcher: false, modules: ["baseball_5tool"] })).toBe(true);
