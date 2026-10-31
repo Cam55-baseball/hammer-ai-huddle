@@ -1,0 +1,9 @@
+# Both sport purchase choices — Oct31 light run
+
+- Current refusal preserved. Added Add the softball/baseball plan to the normal checkout with the current sport's matching program, using canonical getActiveTier (including legacy modules). Switch my plan opens the existing customer-portal / Stripe handoff. Existing storefront visibility gate applies.
+- Load check: database/pooler up, memory 52%, disk 45%, connections 22/60, pool clients 1/200. Historical DiskIO alert is not evidence of current pressure.
+- Exact demo2way readback: baseball active; active baseball_hitting/baseball_pitching/baseball_throwing. No player, subscription or plan changes made.
+- Stripe price and coupon reads returned livemode=true. Prior $0 TEST coupons were live-mode discounted subscriptions, not Stripe test-mode checkout. No accessible separate standard connection exists. Current create-checkout and webhook use one configured Stripe secret with no test-mode selector. Did not replace live secrets, invent entitlements, create a live discounted subscription, or reuse another coupon.
+- Specific TEST auth-session mint refused because approval is unavailable in this context; no saved TEST password/session was available. Therefore authenticated browser screenshot and seven-day softball rebuild were not performed.
+- Item10 remains OPEN: needs an available Stripe test-mode checkout plus canonical test purchase confirmation, and an authorized TEST session. No new $0 plan exists to cancel; demo2way remains baseball.
+- Verification: offline rule and mocked handoff tests only; no Live suite, subagents, publish, deploy, cron or iOS changes.
