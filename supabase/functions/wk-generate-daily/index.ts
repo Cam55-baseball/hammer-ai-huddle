@@ -1,5 +1,5 @@
 // supabase/functions/wk-generate-daily/index.ts
-import { reliefSets, isLowerBodyLift } from "../_shared/wic/pitching/roleCycle.ts";
+import { reliefSets, isLowerBodyLift, sprintDose } from "../_shared/wic/pitching/roleCycle.ts";
 import { applyLiveTracking } from "../_shared/vault/tracking.ts";
 import { isPlanGameDay } from "../_shared/schedule/isGameDay.ts";
 // Hammer Workout & Speed — elite daily prescription generator.
@@ -3337,8 +3337,14 @@ const handler = async (req: Request): Promise<Response> => {
           why: `Couldn't read your pitching schedule. This uses your existing games and check-ins. ${conditioningSelection.why}` };
       }
       conditioningEmptyPool = conditioning.length === 0;
+      // Owner Oct 31: pitchers stay sprint-based — starters build max-sprint volume week to week,
+      // bullpen arms and closers do short repeat sprints. Only on an already-chosen hard sprint row.
+      const pitchRoleForSprint = isPitcherAthlete ? (outingFacts?.pitchingRole ?? null) : null;
+      const sprintWeek = Math.max(0, Number((progression as any).blockIndex ?? 0) * 4 + Number((progression as any).weekInBlock ?? 0) - ((progression as any).isDeloadWeek ? 1 : 0));
       for (const m of conditioning) {
-        push("conditioning", "conditioning", restrictedConditioningWhy ? {...m,why_prescribed:restrictedConditioningWhy,cue:'Seated stationary bike, comfortable pace, arms relaxed. Pain or a professional restriction — stop.'} : m, {}, conditioningSelection.why, {
+        const sprintDoseNow = pitchRoleForSprint && !restrictedConditioningWhy && !conditioningSelection.dialedDown && /^repeat_/.test(m.slug) ? sprintDose(pitchRoleForSprint, sprintWeek) : null;
+        const sprintOverrides = sprintDoseNow ? { sets: sprintDoseNow.reps, reps: 1, distance_feet: sprintDoseNow.yards * 3 } : {};
+        push("conditioning", "conditioning", restrictedConditioningWhy ? {...m,why_prescribed:restrictedConditioningWhy,cue:'Seated stationary bike, comfortable pace, arms relaxed. Pain or a professional restriction — stop.'} : m, sprintOverrides, conditioningSelection.why, {
           conditioning_why: conditioningSelection.why,
           conditioning_path: conditioningSelection.path,
           conditioning_template_id: conditioningSelection.templateId,
@@ -3347,6 +3353,7 @@ const handler = async (req: Request): Promise<Response> => {
           conditioning_restriction_reason: restrictedConditioningWhy,
           conditioning_counts_as_running: !restrictedConditioningWhy && isRunningConditioning([m.slug]),
           ...(m.slug.startsWith('easy_base_jog_') ? {rest_seconds:60,conditioning_easy_running:true} : {}),
+          ...(sprintDoseNow ? {rest_seconds:sprintDoseNow.restSeconds,pitcher_sprint_dose:{role:pitchRoleForSprint,week:sprintWeek,...sprintDoseNow}} : {}),
         });
       }
     }
