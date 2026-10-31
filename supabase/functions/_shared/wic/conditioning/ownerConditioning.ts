@@ -92,6 +92,7 @@ export function ownerConditioningFits(r: OwnerConditioningFields, ctx: { sport: 
 }
 
 export function ownerConditioningLine(name: string, d: OwnerConditioningDose): string {
-  const run = d.bases_per_rep ? `${d.bases_per_rep} base${d.bases_per_rep > 1 ? "s" : ""} (${d.distance_feet} ft)` : `${d.distance_feet} ft`;
-  return `${name}: ${d.rounds} round${d.rounds > 1 ? "s" : ""} of ${run}, about ${d.work_seconds} seconds of work, rest ${d.rest_seconds} seconds.${d.low ? " Fewer rounds today because your readiness is lower. It still counts." : ""}`;
+  const yd = Math.round(d.distance_feet / 3);
+  const run = d.bases_per_rep ? `${d.bases_per_rep} base${d.bases_per_rep > 1 ? "s" : ""} (${yd} yd)` : `${yd} yd`;
+  return `${name}: ${d.rounds} round${d.rounds > 1 ? "s" : ""} of ${run} (${d.rounds * yd} yd total, max 1000 yd), about ${d.work_seconds} seconds of work, rest ${d.rest_seconds} seconds.${d.low ? " Fewer rounds today because your readiness is lower. It still counts." : ""}`;
 }
