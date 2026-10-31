@@ -30,7 +30,7 @@ export function CoachPlayerWeek({athleteId}:{athleteId:string}) {
     }});
   const selectWeek = (n:number) => {setOffset(n);setSelected(weekDates(getTodayDate(),n)[0]);};
   const active = query.data?.days?.find(d=>d.date===selected);
-  const controlsFor=(date:string)=>controlQuery.controls.filter(c=>c.plan_date===date);
+  const controlsFor=(date:string)=>controlQuery.controls.filter(c=>c.plan_date===date && c.sport===query.data?.sport);
   const cards = active ? playerWeekCards(active,controlsFor(selected)):[];
   return <section aria-label="Player week calendar" className="space-y-4">
     <div className="flex flex-wrap items-center justify-between gap-2">
