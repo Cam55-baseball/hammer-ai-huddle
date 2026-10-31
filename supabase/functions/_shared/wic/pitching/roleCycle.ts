@@ -47,7 +47,7 @@ export function cycleDay(i: CycleInput): CycleDay {
     if (since === 2) return i.sport === "softball" && i.windmillAllowsDayTwo ? "light_mound" : "rest";
     if (until === 1) return "pre_start";
     if (since === 3) return "long_toss";
-    if (since === 4 || until === 2) return "bullpen";
+    if (since === 4) return "bullpen";
     return since % 2 === 1 ? "shortbox" : "light_mound";
   }
   // Bullpen arms and closers.
@@ -70,6 +70,7 @@ export function moundWork(sport: Sport, day: CycleDay): MoundWork | null {
   const place = sport === "softball" ? "circle" : "mound";
   if (day === "bullpen") return { kind: sport === "softball" ? "circle" : "full_bullpen", feet: full, intensity: "medium", label: sport === "softball" ? "Circle session" : "Bullpen" };
   if (day === "shortbox") return { kind: sport === "softball" ? "shortbox_circle" : "shortbox", feet: sb, intensity: "catch_light", label: `Shortbox from the ${place} (${sb} ft) — command, pitches in the zone` };
+  if (day === "available") return { kind: sport === "softball" ? "circle" : "light_mound", feet: full, intensity: "catch_light", label: `Available — light ${place} catch, short PFP` };
   if (day === "light_mound" || day === "pre_start") return { kind: sport === "softball" ? "circle" : "light_mound", feet: full, intensity: "catch_light", label: sport === "softball" ? "Light circle work — as light as playing catch" : "Light mound work — as light as playing catch" };
   return null;
 }
@@ -118,6 +119,8 @@ export function minorityCap(room: number, focus: "pitcher" | "position" | null |
   if (focus === "position") return { pitching: Math.floor(room * (1 - TWO_WAY_MAJOR_SHARE)), position: room };
   return { pitching: room, position: room };
 }
+/** Minority allowance given what the majority kind actually kept: minority ≤ 30% of the arm work. */
+export const minorityAllowance = (majorityKept: number) => Math.floor(majorityKept * (1 - TWO_WAY_MAJOR_SHARE) / TWO_WAY_MAJOR_SHARE);
 
 /** Week checks used by the simulations. Returns plain-word violations. */
 export function weekViolations(sport: Sport, role: PitchRole, days: readonly { date: string; day: CycleDay }[]): string[] {
@@ -126,7 +129,7 @@ export function weekViolations(sport: Sport, role: PitchRole, days: readonly { d
   if (mound < MOUND_MINIMUM_PER_WEEK) out.push(`only ${mound} ${sport === "softball" ? "circle" : "mound"} days`);
   for (let k = 1; k < days.length; k++) {
     const prev = days[k - 1].day, cur = days[k].day;
-    if ((prev === "start" || prev === "outing") && cur !== "day_after") out.push(`${days[k].date}: no recovery day after outing`);
+    if ((prev === "start" || prev === "outing") && cur !== "day_after" && !(role !== "starter" && cur === "outing")) out.push(`${days[k].date}: no recovery day after outing`);
     if (role === "starter" && prev === "start" && k + 1 < days.length && !(days[k + 1].day === "rest" || (sport === "softball" && days[k + 1].day === "light_mound"))) out.push(`${days[k + 1].date}: second day after start not rest`);
     if (cur === "start" && prev !== "pre_start" && k > 0) out.push(`${days[k].date}: day before start not light`);
   }

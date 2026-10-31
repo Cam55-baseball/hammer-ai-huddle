@@ -1,6 +1,6 @@
 import {armBudget,throwUnits,type ThrowEvent,type ThrowRole} from '../../../../supabase/functions/_shared/wic/phases/armLedger';
 import {equivalentsByDay} from '../../../../supabase/functions/_shared/wic/phases/nextThrowDate';
-import {minorityCap} from '../../../../supabase/functions/_shared/wic/pitching/roleCycle';
+import {minorityAllowance} from '../../../../supabase/functions/_shared/wic/pitching/roleCycle';
 import type {PlanningArmHistory} from './pitchingDay';
 
 type GuardDrill={armEvent?:ThrowEvent;name?:string;stage?:string;armCard?:string};
@@ -27,12 +27,14 @@ export function finalArmGuard<T extends {status:string;modality?:string;drills:r
  const rows:{bi:number;di:number;kind:ThrowKind;cost:number}[]=[];
  blocks.forEach((b,bi)=>{if(b.status!=='ready')return;b.drills.forEach((d,di)=>{if(d.armEvent)rows.push({bi,di,kind:throwKind(d,b.modality),cost:throwUnits([d.armEvent])});});});
  const kept=new Set<string>();const cut=new Set<ThrowKind>();
- // Owner Oct 31 two-way split: after warm-ups, the minority kind may use at most ~30% of the room.
- let caps:{pitching:number;position:number}|null=null;const used={pitching:0,position:0};
- for(const kind of order)for(const r of rows.filter(x=>x.kind===kind)){
-  if(kind!=='warmup'&&!caps)caps=input.role==='two_way'?minorityCap(room,input.primaryFocus):{pitching:Infinity,position:Infinity};
-  if(r.cost>room||(kind!=='warmup'&&caps&&used[kind]+r.cost>caps[kind])){cut.add(kind);continue;}
-  room-=r.cost;kept.add(`${r.bi}:${r.di}`);if(kind!=='warmup')used[kind]+=r.cost;
+ // Owner Oct 31 two-way split: warm-ups first, then the focus kind; the other kind keeps ≤ ~30% of arm work.
+ const focus=input.role==='two_way'&&!input.limitPitching&&input.primaryFocus?(input.primaryFocus==='pitcher'?'pitching':'position'):null;
+ const seq:ThrowKind[]=focus?['warmup',focus,focus==='pitching'?'position':'pitching']:order;
+ const used={warmup:0,pitching:0,position:0};
+ for(const kind of seq)for(const r of rows.filter(x=>x.kind===kind)){
+  const minorityOver=focus&&kind!=='warmup'&&kind!==focus&&used[focus]>0&&used[kind]+r.cost>minorityAllowance(used[focus]);
+  if(r.cost>room||minorityOver){cut.add(kind);continue;}
+  room-=r.cost;kept.add(`${r.bi}:${r.di}`);used[kind]+=r.cost;
  }
  const hadActivity=rows.some(r=>r.kind!=='warmup');
  const keptActivity=rows.some(r=>r.kind!=='warmup'&&kept.has(`${r.bi}:${r.di}`));
