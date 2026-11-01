@@ -34,7 +34,7 @@ export function GreenlightSettings() {
   }
   return <section aria-label="Step-up ready check-in" className="space-y-3 border-b border-border py-4">
     <h2 className="text-lg font-semibold">Step-up rule: "ready" check-in</h2>
-    <p className="text-sm text-muted-foreground">A day counts as ready when the player's check-in readiness is at or above this share of the scale (for example 60 means 3.4 of 5, or 6 of 10). Until you set it, no player steps up or back. Bunts are never gated.</p>
+    <p className="text-sm text-muted-foreground">A day counts as ready when the player's check-in readiness is at or above this share of the scale (owner setting: 60 = GOOD, 4–5 of 5; 3 of 5 is OKAY; 1–2 is LOW. A green week needs 5 GOOD days and no LOW day). Until you set it, no player steps up or back. Bunts are never gated.</p>
     {q.isError ? <p role="alert" className="text-sm text-destructive">Couldn't read the saved setting.</p> : <div className="space-y-1 sm:max-w-xs">
       <Label htmlFor="greenlight-ready">Ready at (%)</Label>
       <Input id="greenlight-ready" type="number" min={1} max={100} value={val} placeholder="Not set" onChange={e => setVal(e.target.value)} />
