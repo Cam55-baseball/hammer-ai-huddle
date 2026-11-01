@@ -145,7 +145,8 @@ describe("shape and voice guarantees", () => {
   });
   it("on/off switches are untouched in the generator", () => {
     const src = readFileSync("supabase/functions/wk-generate-daily/index.ts", "utf8");
-    expect(src).toContain("!conditioningSafetyStop && !timelineToday.hold && !wholePlanRest(planDate)");
+    // Nov 1 B1: wholePlanRest also receives the player's chosen rest weekday.
+    expect(src).toContain("!conditioningSafetyStop && !timelineToday.hold && !wholePlanRest(planDate, false, planRestDow)");
     // Owner Oct 28: the only extra conditioning pushes are the 2-a-week running floor
     // (built-in) and its owner-drill stand-in ("Add fields"), both inside the floor block.
     expect((src.match(/push\("conditioning"/g) ?? []).length).toBe(3);
