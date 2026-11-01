@@ -1049,10 +1049,8 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
-        <WkRestDayBanner />
         <FinishProfileCard />
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
-        <ErrorBoundary><RunningReadinessLine /></ErrorBoundary>
         <ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary>
         <ErrorBoundary><InformationalVideos placement="before_you_start" sport={sportKey} /></ErrorBoundary>
         <ErrorBoundary><InformationalVideos placement="recurring" sport={sportKey} faultKeys={faultContext.data?.recurringIssues.filter(issue => stillRecurring(issue)).map(issue => issue.fault_key) ?? []} /></ErrorBoundary>

@@ -19,8 +19,9 @@ export function TimingStudyMoments({ sport, position, flags = [], goals = [], sa
   }});
   const applicable = [...new Set<TimingStudyRole>([...(position === "P" || /pitch/i.test(position ?? "") ? ["pitcher" as const] : position ? ["defender" as const] : []), ...roles])];
   if (!applicable.length) return null;
-  return <section className="space-y-3 border-b border-border py-3" aria-label="Royal timing study">
-    <h3 className="text-sm font-semibold">Royal timing study</h3>
+  return <details className="rounded-md border border-border/60 bg-card p-3" aria-label="Royal timing study">
+    <summary className="min-h-11 cursor-pointer text-sm font-semibold">Royal timing study</summary>
+    <div className="space-y-3 pt-2">
     {applicable.map(role => {
       const selected = getV2(savedGoals)?.[sport];
       const pane = role === "pitcher" ? selected?.pitcher : selected?.position;
@@ -30,5 +31,6 @@ export function TimingStudyMoments({ sport, position, flags = [], goals = [], sa
     })}
     {steals.isError && <p role="alert" className="text-xs text-destructive">Couldn't check your recent games. These are position examples, not game findings.</p>}
     <Button size="sm" variant="outline" onClick={() => navigate("/royal-timing")}>Open Royal timing</Button>
-  </section>;
+    </div>
+  </details>;
 }
