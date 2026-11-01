@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
+import { PAP_NO_FIXED_SET_CAP,
   planPowerPrimer, shouldStop, PAP_LIBRARY, type PapInput, type PapRole, type LiftPattern,
 } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
 
