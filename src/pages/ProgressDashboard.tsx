@@ -46,6 +46,7 @@ import { useReadinessState } from '@/hooks/useReadinessState';
 import { PerformanceAreaRows } from '@/components/intelligence/PerformanceAreaRows';
 import { LearningLoopList } from '@/components/intelligence/LearningLoopList';
 import { BullpenBeforeStartCard } from '@/components/intelligence/BullpenBeforeStartCard';
+import { useAuth } from '@/hooks/useAuth';
 import { HealthFlagsCard } from '@/components/intelligence/HealthFlagsCard';
 import { WorkoutActuals } from '@/components/hammer/WorkoutActuals';
 import {MasteryIdentityPanel} from '@/components/intelligence/MasteryIdentityPanel';
@@ -107,6 +108,7 @@ export interface GeneralExtras {
 
 export default function ProgressDashboard({ header, today, performance, gameIq, growth }: GeneralExtras = {}) {
   const { modules } = useSubscription();
+  const { user } = useAuth();
   const { isOwner } = useOwnerAccess();
   const { snapshot } = useHIESnapshot();
   const { profile } = useUserProfile();
