@@ -720,6 +720,26 @@ const handler = async (req: Request): Promise<Response> => {
       return json({ ok: true, stale_dates: dates, plan_date: planDate }, 200);
     }
 
+    // -------- Owner Nov 1 (round 2 item 4): saved-week rule sweep facts --------
+    // Read-only: the app checks the saved 7 days and rebuilds only unprotected
+    // dates through the normal change path (which still refuses protected work).
+    if ((rawBody as any).week_rule_sweep === true) {
+      const to = isoShift(planDate, 6);
+      const [{ data: wRows, error: wErr }, { data: wLogs }, { data: wCtx }, { data: wSub }] = await Promise.all([
+        admin.from("wk_prescriptions").select("plan_date, status").eq("user_id", user.id).gte("plan_date", planDate).lte("plan_date", to).limit(2000),
+        admin.from("wk_session_logs").select("plan_date").eq("user_id", user.id).gte("plan_date", planDate).lte("plan_date", to).limit(2000),
+        admin.from("athlete_context").select("sport_primary").eq("user_id", user.id).maybeSingle(),
+        admin.from("subscriptions").select("status, subscribed_modules").eq("user_id", user.id).maybeSingle(),
+      ]);
+      if (wErr) return json({ error: "week_rule_sweep_unavailable" }, 503);
+      const wSport = String((wCtx as any)?.sport_primary ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
+      const mods: string[] = (wSub as any)?.status === "active" ? ((wSub as any).subscribed_modules ?? []) : [];
+      const bunting = mods.includes(`${wSport}_5tool`) || mods.includes(`${wSport}_golden2way`) || (["hitting", `${wSport}_hitting`].some((m) => mods.includes(m)) && ["throwing", `${wSport}_throwing`].some((m) => mods.includes(m)));
+      const prot = new Set<string>(((wLogs ?? []) as any[]).map((l) => String(l.plan_date)));
+      for (const r of (wRows ?? []) as any[]) if (isMarkedRow(r)) prot.add(String(r.plan_date));
+      return json({ ok: true, user_id: user.id, sport: wSport, bunting_entitled: bunting, protected_dates: [...prot].sort(), plan_date: planDate }, 200);
+    }
+
     // -------- Saved-plan re-check --------
     // `verify_saved: true` runs the final rule check on the saved plan (the app
     // sends it whenever a saved plan is shown). A passing plan is left alone; a
