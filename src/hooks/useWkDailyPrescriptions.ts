@@ -31,7 +31,7 @@ import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useSchedu
 import { partitionCoachRows } from "@/lib/coachRx/planRows";
 import { composedDayRequest } from "@/lib/hammer/composedDayRequest";
 import { startingDetailsMissing } from "@/lib/hammer/startingDetailsMissing";
-import { rebuildWrongSeasonDays } from "@/lib/hammer/rebuildAfterChange";
+import { rebuildWrongSeasonDays, repairSavedWeek } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
 
 // Must equal the version the generator stamps on every row. A mismatch made
@@ -573,10 +573,13 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     if (!user?.id || !serverFresh || planDate !== getTodayDate()) return;
     const k = `season-fix:${user.id}:${planDate}`;
     try { if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, "1"); } catch { return; }
-    void rebuildWrongSeasonDays(planDate).then((r) => {
-      if (r.rebuilt.length) { void qc.invalidateQueries({ queryKey: ["wk-rx"] }); void qc.invalidateQueries({ queryKey: ["composed-plan-week"] }); }
-      if (!r.checked || r.failed.length) { try { sessionStorage.removeItem(k); } catch { /* retry next visit */ } }
-      console.debug("[season-fix]", r);
+    void rebuildWrongSeasonDays(planDate).then(async (r) => {
+      // Round 2 item 4: then rebuild a week missing its rest day or a weekly minimum.
+      const w = await repairSavedWeek(planDate);
+      if (r.rebuilt.length || w.rebuilt.length) { void qc.invalidateQueries({ queryKey: ["wk-rx"] }); void qc.invalidateQueries({ queryKey: ["composed-plan-week"] }); }
+      if (w.blocked) toast(w.blocked);
+      if (!r.checked || r.failed.length || !w.checked || w.failed.length) { try { sessionStorage.removeItem(k); } catch { /* retry next visit */ } }
+      console.debug("[season-fix]", r, w);
     });
   }, [user?.id, serverFresh, planDate, qc]);
 
