@@ -39,10 +39,10 @@ describe("approved starting points (owner Nov 1 round 4)", () => {
     expect(["Right now", "1–2 weeks ago", "3–6 weeks ago", "2–6 months ago", "6+ months ago", "Never"].map(recencyFactor)).toEqual([1, 0.9, 0.75, 0.5, null, null]);
   });
   it("throwing = middle of the answer × throwing days", () => {
-    expect(startingLevels("baseball", "5tool", full, 300).throwsPerWeek).toBe(Math.round(62.5 * 3.5));
+    expect(startingLevels("baseball", "5tool", full, 300).throwsPerWeek).toBe(Math.round(62.5 * 3.5) + 16); // + 3.5 days × 37.5 reps × 12.5% defense throws
   });
   it("0 throwing days = half the low end of the position's week", () => {
-    expect(startingLevels("baseball", "5tool", { ...full, throw_days: "0" }, 300).throwsPerWeek).toBe(150);
+    expect(startingLevels("baseball", "5tool", { ...full, throw_days: "0" }, 300).throwsPerWeek).toBe(150 + 16);
   });
   it("hitting/defense = middle of the answer, scaled by time off", () => {
     const l = startingLevels("baseball", "5tool", { ...full, last_trained: "3–6 weeks ago" }, 300);
