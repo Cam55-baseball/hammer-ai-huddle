@@ -17,6 +17,7 @@ import { subscriptionSchedule } from './subscriptionSchedule';
 import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
 import { pitchingDay, guardArmDrills, eassArmEvent, windmillPlanningDrills, type PlanningArmHistory } from './pitchingDay';
 import {finalArmGuard} from './finalArmGuard';
+import { ownerConditioningPlan } from './ownerConditioningPlan';
 import { structureSkillSession } from './skillSessionStructure';
 import { restrictedFielding } from './restrictedFielding';
 import { applyPracticePlanContext } from './practicePlanContext';
@@ -2633,7 +2634,12 @@ export function buildHammerDailyPlan(
   // A command drill the arm limits removed gets an honest reason instead of a promise.
   const commandChecked = blocks.map(b=>b.modality==='pitching'&&(b.because??[]).some(x=>x.startsWith('Extra light'))&&!b.drills.some(d=>(d as {commandDay?:boolean}).commandDay)
     ? {...b,because:(b.because??[]).filter(x=>!x.startsWith('Extra light')).concat(b.status==='ready'?['No extra command work today because your arm limits are full.']:[])} : b);
-  const warmed = withWarmupThrows(commandChecked);
+  const conditioned = ownerConditioningPlan(commandChecked, { sport, modules: roadmapInputs.subscriptionModules ?? [],
+    isPitcher: access?.hasPitching === true, role: pitchFacts?.pitchingRole ?? null, day: today,
+    owned: new Set(proj.equipmentList), low: (ctx.get<number>('readiness')?.value ?? 1) < 0.4,
+    rest: fullRestDay, game: scheduleSignal.postureToday === 'game' || scheduleSignal.postureToday === 'tournament',
+    restricted: physio.activeAreas.length > 0 || physio.illnessActive });
+  const warmed = withWarmupThrows(conditioned);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {

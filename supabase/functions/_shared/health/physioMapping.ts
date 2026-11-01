@@ -6,7 +6,7 @@ export function physioDefaults(raw: unknown): PhysioDefaults {
   return { illnessMode: r.illnessMode === 'recovery' ? 'recovery' : 'light',
     professionalAfterDays: typeof r.professionalAfterDays === 'number' && Number.isInteger(r.professionalAfterDays) && r.professionalAfterDays >= 1 && r.professionalAfterDays <= 3 ? r.professionalAfterDays : 3 };
 }
-const AREAS = new Set(['shoulder', 'elbow', 'wrist', 'hip', 'knee', 'ankle', 'back']);
+const AREAS = new Set(['shoulder', 'ucl', 'elbow', 'forearm', 'wrist', 'hand', 'hip', 'knee', 'ankle', 'foot', 'back', 'hamstring', 'quad', 'groin', 'calf', 'achilles', 'neck']);
 export const PREHAB_SLUGS: Record<string, string> = {
   shoulder: 'wu_shoulder_cars', wrist: 'wu_wrist_cars',
   hip: 'wu_hip_cars', ankle: 'wu_ankle_cars', back: 'wu_thoracic_windmill',

@@ -149,6 +149,7 @@ export async function reportInjury(input: ReportInjuryInput): Promise<ReportInju
         note: (note?.trim() || region) + sideLabel,
         region,
         severity: SEVERITY_BAND[severity],
+        recovery_status: 'active',
         participation: PARTICIPATION[severity],
         symptoms,
         reported_at: occurredAt,

@@ -14,7 +14,7 @@ import {
   type ReportInjuryRegionKey, type ReportInjurySeverity,
 } from "@/lib/hammer/injury/reportInjury";
 
-export type PainOrigin = "report_dialog" | "onboarding" | "tell_hammers" | "checkin_chip" | "checkin_body_map" | "something_off" | "physio";
+export type PainOrigin = "report_dialog" | "onboarding" | "tell_hammers" | "checkin_chip" | "checkin_body_map" | "something_off" | "physio" | "conditioning_rep";
 export type PainFace = "little" | "lot" | "cant";
 
 export const FACE_TO_SEVERITY: Record<PainFace, ReportInjurySeverity> = { little: "sore", lot: "limiting", cant: "cannot_train" };

@@ -403,6 +403,8 @@ import { conditioningFloorDue, isRunningConditioning, floorConditioningSlugs } f
 import { combinedRunningRowsToDrop, isCombinedBaseConditioningProgram } from "../_shared/wic/conditioning/combinedBaseRunning.ts";
 import { activeRestrictedAreas, restrictedConditioningReason } from '../_shared/wic/conditioning/restrictedConditioning.ts';
 import { PHILOSOPHY_TEST_USERS, testSettingsFor, boundedSkillFloor } from '../_shared/generated/hammerBlockBuilder.mjs';
+import { placeOwnerConditioning } from '../_shared/wic/conditioning/placeOwnerConditioning.ts';
+import { ownerConditioningDose, ownerConditioningFits, ownerConditioningLine } from '../_shared/wic/conditioning/ownerConditioning.ts';
 
 // Step 20 C3 — the first request an isolate serves pays for loading the code.
 // That build is not comparable with a warm one, so the watchdog logs it for
@@ -3421,7 +3423,8 @@ const handler = async (req: Request): Promise<Response> => {
                   .sort((a, b) => String(a.id).localeCompare(String(b.id)));
                 if (pool.length) {
                   const pick = pool[Math.floor(new Date(`${planDate}T12:00:00Z`).getTime() / 86_400_000) % pool.length];
-                  const dose = ownerConditioningDose(pick, low)!;
+                  const dose = ownerConditioningDose(pick, low);
+                  if (!dose) throw new Error('Owner conditioning dose is incomplete');
                   const synth = {
                     ...template, slug: `owner_cond_${pick.id}`, name: String(pick.name), cue: String(pick.cue ?? template.cue),
                     why_prescribed: ownerConditioningLine(String(pick.name), dose), family: null, regression_slug: null, progression_slug: null,
@@ -3692,6 +3695,22 @@ const handler = async (req: Request): Promise<Response> => {
       applyManualOrder(dedupePrescriptions(rxs), priorOrderRows),
     );
     let finalRxs = orderedRxs;
+
+    // Owner conditioning replaces existing legal slots before contact governance/certification.
+    // Failed catalog reads do not invent work; keep the original legal session.
+    {
+      const ownerRows = await userClient.from('owner_drills').select('*').eq('active', true).contains('placements', ['hammers_today:conditioning']).limit(1000);
+      if (!ownerRows.error && (ownerRows.data ?? []).length < 1000) {
+        const placed = placeOwnerConditioning(finalRxs as any[], lib as any[], ownerRows.data ?? [], {
+          sport, isPitcher: isPitcherAthlete, modules: schedulingModules, role: outingFacts?.pitchingRole ?? null,
+          date: planDate, low: (running?.score ?? dailyLog?.readiness ?? 1) < 0.4,
+          rest: wholePlanRest(planDate, timelineToday.hold) || availabilityRest,
+          game: isGameDay, restricted: injurySlugs.size > 0, equipment: declaredEquipment,
+        });
+        finalRxs = assignSequenceOrder(placed.rows as typeof finalRxs);
+        lib = placed.catalog as typeof lib;
+      }
+    }
 
     // Owner Oct 31: no conditioning session passes 1000 yards (reps × declared distance).
     {

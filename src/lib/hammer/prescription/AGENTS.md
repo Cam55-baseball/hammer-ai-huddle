@@ -1,4 +1,5 @@
 # Prescription rules
+- Owner conditioning replaces explicit legal slots before final governance; jumps spend the displaced contact allowance and carries/sleds share the yard cap. Rep pain uses recordPain and existing area check-in/healed rules. Why: tags and feedback cannot create independent safety or clearance authority.
 - Purchased game-week floors use short ready pre-game skill stations and five-attempt bunts inside existing safe hitting budgets; never revive suppressed work. Why: game titles and suppressed cards cannot certify real skill sessions.
 - Restricted defense sustains its purchased floor only with explicit dry siblings of canonical position drills; leg restrictions use seated reads with no arm or leg loading. Why: normal fielding ceilings must not erase compatible non-loading skill work.
 - Pitching cards partition existing arm work through pitchingDay and guardArmDrills before schedule/stage reductions. Why: card identity never authorizes a second pitch dose or arm budget.

@@ -10,6 +10,7 @@ import { ageFromDob } from './age/ageFromDob.ts';
 import { planningGear } from './planSwap/planningGear.ts';
 import { readPlanningArmHistory } from './wic/pitching/readPlanningArmHistory.ts';
 import type { PhysioMapping } from './health/physioMapping.ts';
+import { readPitchCommand } from './wic/pitching/readPitchCommand.ts';
 
 /** Self JWT reads only; service jobs do not acquire an athlete's identity/health authority. */
 export async function composeSportDay(db: any, input: {
@@ -103,11 +104,17 @@ export async function composeSportDay(db: any, input: {
   for(let n=0;n<7;n++){const date=isoShift(monday,n);if(dayEffect(tlWeek.data??[],date).games.length)gameWeekdays.push(new Date(`${date}T12:00:00Z`).getUTCDay());}
   const schedule={todayKinds:[],tomorrowKinds:[],isGameToday:posture==='game',isTournamentToday:posture==='tournament',isCampToday:false,isTravelToday:posture==='travel',hasTeamPracticeToday:posture==='team_practice',isGameTomorrow:input.gameTomorrow,isTournamentTomorrow:false,tournamentWindow:null,tournamentDayLabel:null,postureToday:posture,eventLabel:null,rationale:posture==='normal'?'':`Your saved schedule: ${posture.replace(/_/g,' ')}.`};
   const adjRows=complete(adjustments);
+  const savedGoals = envelope.category_goals?.value as any;
+  const goals = savedGoals?.[sport];
+  const goalIds = [...(goals?.pitcher?.pitching ?? []), ...(goals?.pitcher?.throwing ?? []), ...(goals?.position?.pitching ?? [])].map((g:any) => g.id).filter((id:any) => typeof id === 'string');
+  const commandFindings = accessiblePlanFaults(faults.rankedFaults, modules, sport, { clips: clipRows, now: day.getTime() })
+    .filter((f:any) => f.disciplines.includes('pitching')).map((f:any) => f.rootPatternId);
+  const pitchCommand = access.hasPitching ? await readPitchCommand(db, uid, sport, date, goalIds, commandFindings) : undefined;
   setOwnerPlanDrills(circulation.rows);
   setWarmupStageOverrides(input.warmupStages);
   const evidence=projectBuntingEvidence(sessionRows,abRows,pitchRows.filter((p:any)=>p.perspective==='hitter'&&['bunt_foul','bunt_in_play'].includes(p.result)),complete(tasks),sport);
   const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
-    alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,physio:input.physio,testPreferences,
+    alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,physio:input.physio,testPreferences,pitchCommand,
     bunting:access.hasHitting?{gameWeekdays,evidence,catalog:complete(bunts),age,userId:uid,phase:input.phase}:undefined});
   const plan=finalizeDatedPlan(raw,{sport,userId:uid,ownerRows:circulation.rows,now:day,cnsHigh:input.cns>=7,adjustments:adjRows,clips:clipRows,games:gp,principles:complete(principles),rankedFaults:accessiblePlanFaults(faults.rankedFaults,modules,sport,{clips:clipRows,now:day.getTime()}),signalScopes:faults.signalScopes,recurringIssues:accessibleRecurringIssues(issues,modules,sport),ownedEquipment:new Set(planningGear(input.equipment,input.alwaysMissingGear??[])),catalog:mergeCatalog(ELITE_DRILL_CATALOG,circulation.rows),circulation:{servedToUser:circulation.served,usage:circulation.usage}});
   if(plan.sanity?.ok===false&&!input.rest)throw new Error(`Sport day failed structural validation: ${(plan.sanity.issues ?? []).join(',')}`);
