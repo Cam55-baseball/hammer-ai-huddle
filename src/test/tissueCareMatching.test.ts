@@ -96,6 +96,9 @@ describe("tissue care matching — owner required checks", () => {
   });
   it("Swap: missing roller swaps a foam roll to the closest available like-for-like", () => {
     const choices = blockSwapChoices({ name: "T-spine foam roll extensions", slug: "wu_foam_roll_tspine", dosage: "8 slow reps" }, "warmup", "baseball", [], ["foam_roller"]);
-    for (const c of choices) expect(c.replacement.dosage).toBe("8 slow reps");
+    expect(choices.map((c) => c.name)).toEqual(["T-spine open book"]); // existing owner sibling kept
+    const towel = blockSwapChoices({ name: "Barefoot towel scrunch (foot fascia)", slug: "wu_barefoot_towel_scrunch", dosage: "30 sec per foot" }, "warmup", "baseball", [], ["towel"]);
+    expect(towel.map((c) => c.slug)).toEqual(["wu_tissue_prep_roll_and_rhythm"]); // soft tissue → foam roll (no sibling existed)
+    expect(towel[0].replacement.dosage).toBe("30 sec per foot");
   });
 });
