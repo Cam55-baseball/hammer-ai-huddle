@@ -404,6 +404,7 @@ import { combinedRunningRowsToDrop, isCombinedBaseConditioningProgram } from "..
 import { activeRestrictedAreas, restrictedConditioningReason } from '../_shared/wic/conditioning/restrictedConditioning.ts';
 import { PHILOSOPHY_TEST_USERS, testSettingsFor, boundedSkillFloor } from '../_shared/generated/hammerBlockBuilder.mjs';
 import { placeOwnerConditioning } from '../_shared/wic/conditioning/placeOwnerConditioning.ts';
+import { ownerConditioningDose, ownerConditioningFits, ownerConditioningLine } from '../_shared/wic/conditioning/ownerConditioning.ts';
 
 // Step 20 C3 — the first request an isolate serves pays for loading the code.
 // That build is not comparable with a warm one, so the watchdog logs it for
@@ -3422,7 +3423,8 @@ const handler = async (req: Request): Promise<Response> => {
                   .sort((a, b) => String(a.id).localeCompare(String(b.id)));
                 if (pool.length) {
                   const pick = pool[Math.floor(new Date(`${planDate}T12:00:00Z`).getTime() / 86_400_000) % pool.length];
-                  const dose = ownerConditioningDose(pick, low)!;
+                  const dose = ownerConditioningDose(pick, low);
+                  if (!dose) throw new Error('Owner conditioning dose is incomplete');
                   const synth = {
                     ...template, slug: `owner_cond_${pick.id}`, name: String(pick.name), cue: String(pick.cue ?? template.cue),
                     why_prescribed: ownerConditioningLine(String(pick.name), dose), family: null, regression_slug: null, progression_slug: null,
