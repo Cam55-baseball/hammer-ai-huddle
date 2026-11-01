@@ -141,7 +141,7 @@ export function IdentityCommandCard({ className }: Props) {
   const { user } = useAuth();
   const { snapshot, label, accent, loading } = useIdentityState();
   const { snapshot: hieSnapshot } = useHIESnapshot();
-  const { dayType } = useDayState();
+  useDayState();
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
   const { execute, running } = useQuickActionExecutor();
   const rotatingAlert = useMemo(() => pickRotatingAlert(allEvents), [allEvents]);
@@ -218,16 +218,6 @@ export function IdentityCommandCard({ className }: Props) {
                  <span className="text-xs font-bold uppercase text-primary-foreground/80">
                    Your current standing
                 </span>
-                {dayType !== 'standard' && (
-                  <span
-                    className={cn(
-                      'text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border',
-                      "bg-muted text-muted-foreground border-border",
-                    )}
-                  >
-                    {dayType.toUpperCase()} day
-                  </span>
-                )}
               </div>
 
                <div className="mt-5 flex items-end justify-between gap-3 sm:block">

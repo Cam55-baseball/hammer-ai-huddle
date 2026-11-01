@@ -687,6 +687,39 @@ const handler = async (req: Request): Promise<Response> => {
     const expectedDayRows = existingDay.map(r=>({id:r.id,status:r.status,phase:r.phase,slot:r.slot,movement_slug:r.movement_slug,sets:r.sets,reps:r.reps,duration_seconds:r.duration_seconds,distance_feet:r.distance_feet,total_reps:r.total_reps})).sort((a,b)=>a.id.localeCompare(b.id));
     const isMarkedRow = (r: any) => r.status && r.status !== "planned" && r.status !== "pending";
 
+    // -------- Owner Nov 1 round 2: find saved future days with the wrong season --------
+    // Read-only: returns the dates; the app rebuilds each one through the normal
+    // change path, which still refuses protected (logged or marked) work.
+    if ((rawBody as any).stale_season_sweep === true) {
+      const to = new Date(Date.parse(`${planDate}T00:00:00Z`) + 120 * 86_400_000).toISOString().slice(0, 10);
+      const [{ data: sRows, error: sErr }, { data: sLogs }, { data: sMpi }, { data: sCtx }, { data: sTl }] = await Promise.all([
+        admin.from("wk_prescriptions").select("plan_date, phase, status").eq("user_id", user.id).gt("plan_date", planDate).lte("plan_date", to).limit(5000),
+        admin.from("wk_session_logs").select("plan_date").eq("user_id", user.id).gt("plan_date", planDate).lte("plan_date", to).limit(2000),
+        admin.from("athlete_mpi_settings").select("season_status, season_status_manual, season_status_manual_at, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date").eq("user_id", user.id).maybeSingle(),
+        admin.from("athlete_context").select("season_phase").eq("user_id", user.id).maybeSingle(),
+        admin.from("schedule_timeline_entries").select("id,tag,start_date,end_date,dates,source,payload,summary,created_at,undone_at")
+          .eq("user_id", user.id).eq("tag", "SEASON").is("undone_at", null).lte("start_date", to).order("created_at", { ascending: false }).limit(50),
+      ]);
+      if (sErr) return json({ error: "stale_season_unavailable" }, 503);
+      const { seasonWithTimeline } = await import("../_shared/seasonTimeline.ts");
+      const { staleSeasonDates } = await import("../_shared/wic/schedule/staleSeason.ts");
+      const m: any = sMpi ?? {};
+      const expected = (date: string) => {
+        const tl = ((sTl ?? []) as any[]).filter((e) => String(e.start_date) <= date).slice(0, 1) as TimelineEntry[];
+        const settings = seasonWithTimeline({
+          season_status: m.season_status ?? (sCtx as any)?.season_phase ?? null,
+          season_status_manual: m.season_status_manual === true, season_status_manual_at: m.season_status_manual_at,
+          preseason_start_date: m.preseason_start_date ?? null, preseason_end_date: m.preseason_end_date ?? null,
+          in_season_start_date: m.in_season_start_date ?? null, in_season_end_date: m.in_season_end_date ?? null,
+          post_season_start_date: m.post_season_start_date ?? null, post_season_end_date: m.post_season_end_date ?? null,
+        }, tl, date);
+        return resolveWkPhase(settings, new Date(`${date}T12:00:00Z`), date).phase ?? null;
+      };
+      const logged = new Set(((sLogs ?? []) as any[]).map((l) => String(l.plan_date)));
+      const dates = staleSeasonDates((sRows ?? []) as any[], logged, planDate, expected);
+      return json({ ok: true, stale_dates: dates, plan_date: planDate }, 200);
+    }
+
     // -------- Saved-plan re-check --------
     // `verify_saved: true` runs the final rule check on the saved plan (the app
     // sends it whenever a saved plan is shown). A passing plan is left alone; a

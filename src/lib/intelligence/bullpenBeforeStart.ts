@@ -52,6 +52,29 @@ function line(label: string, g: GroupSummary): string {
   return `${label} (${g.starts} start${g.starts === 1 ? "" : "s"}): ${parts.length ? parts.join(", ") : "nothing logged yet"}.`;
 }
 
+/**
+ * Owner Nov 1 round 2: which logged measures came out worse after a bullpen the day before.
+ * Worse = fewer pitches in the start, fewer first-pitch strikes, more walks, lower readiness,
+ * a higher share of starts followed by pain/soreness, or fewer work days. Effort is left out
+ * (higher effort isn't clearly better or worse). Measures missing in either group are skipped.
+ */
+export function worseMeasures(a: GroupSummary, b: GroupSummary): { worse: string[]; better: string[] } {
+  const worse: string[] = []; const better: string[] = [];
+  const cmp = (x: number | null, y: number | null, higherIsWorse: boolean, label: string, tol: number) => {
+    if (x == null || y == null) return;
+    const d = higherIsWorse ? x - y : y - x;
+    if (d > tol) worse.push(label); else if (d < -tol) better.push(label);
+  };
+  cmp(a.pitches, b.pitches, false, "pitch count", 5);
+  cmp(a.fpsPct, b.fpsPct, false, "first-pitch strikes", 3);
+  cmp(a.walkPct, b.walkPct, true, "walks", 2);
+  cmp(a.readiness, b.readiness, false, "body readiness", 0.3);
+  const rate = (g: GroupSummary) => g.painOrSoreDays == null || !g.starts ? null : Math.round((g.painOrSoreDays / g.starts) * 100);
+  cmp(rate(a), rate(b), true, "pain or soreness", 10);
+  cmp(a.workDays, b.workDays, false, "work done the next days", 0.3);
+  return { worse, better };
+}
+
 export interface BullpenCard { show: boolean; weSee: string; because: string; howSure: HowSure; samples: number; doThis: string; checkBack: string }
 
 export function bullpenBeforeStartCard(f: Followups | null, games: readonly (PitcherGameRow & { game_date?: string })[], who: "player" | "coach"): BullpenCard {
@@ -67,11 +90,16 @@ export function bullpenBeforeStartCard(f: Followups | null, games: readonly (Pit
     weSee: `${you} threw a bullpen the day before a start ${tracked.length} time${tracked.length === 1 ? "" : "s"}. We're watching what happens next.`,
     because: "", ...base,
   };
+  const { worse, better } = worseMeasures(a, b);
+  const trendsWorse = worse.length >= 2 && worse.length > better.length;
+  const doThis = !trendsWorse ? base.doThis : who === "player"
+    ? `Skip bullpens the day before a start. After them your ${worse.join(", ")} came out worse.`
+    : `Advise against bullpens the day before a start. After them this player's ${worse.join(", ")} came out worse.`;
   return {
     show: true, samples: a.starts,
     howSure: howSureFor({ samples: a.starts }),
     weSee: `${line("After a bullpen the day before", a)} ${line("Other starts", b)}`,
     because: `This only compares what was logged. It doesn't show what caused any difference.${f.health_shared ? "" : " Health answers aren't shared, so they're left out."}`,
-    ...base,
+    ...base, doThis,
   };
 }

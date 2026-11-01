@@ -2426,7 +2426,9 @@ export function buildHammerDailyPlan(
     const week = weeklyThrowTarget({ group, sport: sport === 'softball' ? 'softball' : 'baseball', age: (ctx.get<number>('age_years')?.value as number | null) ?? null, lastWeekRaw, inSeason: proj.seasonPhase === 'in' });
     return { group, ...week, line: throwTargetLine(group, week) };
   })();
-  const throwingLadder = throwTarget && !throwTarget.needsStart
+  const throwingLadder = throwTarget?.hidden
+    ? (throwTarget.needsStart ? ladderBase : { ...ladderBase, throwsToday: throwTarget.daily })
+    : throwTarget && !throwTarget.needsStart
     ? { ...ladderBase, throwsToday: throwTarget.daily, headline: `Throw about ${throwTarget.daily} today (every throw counts) · ${ladderBase.maxIntentPercent}% intent${ladderBase.longTossUnlocked ? ' · long-toss unlocked' : ' · long-toss locked'}`, rationale: `${throwTarget.line} ${ladderBase.rationale}` }
     : throwTarget ? { ...ladderBase, rationale: `${throwTarget.line} ${ladderBase.rationale}` } : ladderBase;
 

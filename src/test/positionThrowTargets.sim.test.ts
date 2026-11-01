@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { THROW_TARGETS, weeklyThrowTarget, fullGoConflicts, throwGroup, unitsForRawDay, type ThrowGroup } from "../../supabase/functions/_shared/wic/phases/positionThrowTargets";
+import { THROW_TARGETS, weeklyThrowTarget, fullGoConflicts, throwGroup, unitsForRawDay, throwTargetLine, type ThrowGroup } from "../../supabase/functions/_shared/wic/phases/positionThrowTargets";
 import { armBudget, fieldDistances } from "../../supabase/functions/_shared/wic/phases/armLedger";
 
 const groups: ThrowGroup[] = ["middle_infield", "first_base", "outfield", "catcher"];
@@ -44,6 +44,16 @@ describe("owner Nov 1 position throw targets", () => {
     let last = 200;
     for (let w = 0; w < 20; w++) last = weeklyThrowTarget({ group: "middle_infield", sport: "baseball", age: 20, lastWeekRaw: last, inSeason: false }).weekly;
     expect(last).toBeGreaterThanOrEqual(400);
+  });
+
+  it("under 19: target is hidden and builds 3x more slowly than adults", () => {
+    const youth = weeklyThrowTarget({ group: "outfield", sport: "baseball", age: 17, lastWeekRaw: 300, inSeason: false });
+    const adult = weeklyThrowTarget({ group: "outfield", sport: "baseball", age: 20, lastWeekRaw: 300, inSeason: false });
+    expect(adult.weekly).toBe(330);
+    expect(youth.weekly).toBe(310);
+    expect(youth.hidden).toBe(true);
+    expect(adult.hidden).toBe(false);
+    expect(throwTargetLine("outfield", youth)).toBe("");
   });
 
   it("no logged throws asks for a starting point instead of guessing", () => {

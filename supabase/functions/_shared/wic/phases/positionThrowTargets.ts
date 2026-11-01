@@ -31,6 +31,10 @@ export const THROW_TARGETS: Record<ThrowGroup, ThrowTarget> = {
 export const WEEKLY_BUILD = 0.10;
 export const MAX_WEEKLY_JUMP = 0.30;
 export const TRAINING_DAYS = 6;
+/** Owner Nov 1 round 2: players under 19 build 3x more slowly and never see the target. */
+export const YOUTH_TARGET_MAX_AGE = 18;
+export const YOUTH_SLOWDOWN = 3;
+export function isYouthThrower(age: number | null): boolean { return age !== null && age <= YOUTH_TARGET_MAX_AGE; }
 
 /** Position token → group. Pitchers and unknown positions get no target (null). */
 export function throwGroup(position: unknown): ThrowGroup | null {
@@ -71,16 +75,21 @@ export interface WeekTarget {
   conflicts: string[];
   /** No history: the owner has not set a starting point. */
   needsStart: boolean;
+  /** Under 19: the target is used for the plan but never shown. */
+  hidden: boolean;
 }
 
 export function weeklyThrowTarget(i: WeekTargetInput): WeekTarget {
   const t = THROW_TARGETS[i.group];
   const conflicts: string[] = [];
-  if (i.lastWeekRaw === null || i.lastWeekRaw <= 0) return { weekly: 0, daily: 0, holding: false, conflicts, needsStart: true };
+  if (i.lastWeekRaw === null || i.lastWeekRaw <= 0) return { weekly: 0, daily: 0, holding: false, conflicts, needsStart: true, hidden: isYouthThrower(i.age) };
   const last = i.lastWeekRaw;
   let weekly: number;
   if (i.inSeason) weekly = Math.min(last, t.week[1]);
-  else weekly = Math.min(t.week[1], Math.round(last * (1 + WEEKLY_BUILD)), Math.floor(last * (1 + MAX_WEEKLY_JUMP)));
+  else {
+    const slow = isYouthThrower(i.age) ? YOUTH_SLOWDOWN : 1;
+    weekly = Math.min(t.week[1], Math.round(last * (1 + WEEKLY_BUILD / slow)), Math.floor(last * (1 + MAX_WEEKLY_JUMP / slow)));
+  }
   let daily = Math.min(t.day[1], Math.round(weekly / TRAINING_DAYS));
   const budget = armBudget({ sport: i.sport, role: i.group === "catcher" ? "catcher" : "position", age: i.age });
   const dailyFit = rawThatFits(i.group, budget.daily);
@@ -94,7 +103,7 @@ export function weeklyThrowTarget(i: WeekTargetInput): WeekTarget {
     weekly = weeklyFit;
     daily = Math.min(daily, Math.floor(weeklyFit / TRAINING_DAYS));
   }
-  return { weekly, daily, holding: i.inSeason, conflicts, needsStart: false };
+  return { weekly, daily, holding: i.inSeason, conflicts, needsStart: false, hidden: isYouthThrower(i.age) };
 }
 
 /** Full-go target conflicts with the caps for one position and age (for the owner report). */
@@ -113,6 +122,7 @@ export function fullGoConflicts(group: ThrowGroup, sport: Sport, age: number | n
 /** Player wording (no arm units). */
 export function throwTargetLine(group: ThrowGroup, w: WeekTarget): string {
   const t = THROW_TARGETS[group];
+  if (w.hidden) return "";
   if (w.needsStart) return `${t.label} goal at full go: about ${t.week[0]}–${t.week[1]} throws a week. Log your throws so we can build you toward it.`;
   return w.holding
     ? `In-season: hold steady at about ${w.weekly} throws this week (${w.daily} a day), counting every throw.`
