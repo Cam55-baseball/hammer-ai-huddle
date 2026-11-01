@@ -1240,6 +1240,20 @@
       "when": 1793557947738,
       "tag": "0176_bullpen_before_start_all_history",
       "breakpoints": true
+    },
+    {
+      "idx": 177,
+      "version": "7",
+      "when": 1793568422114,
+      "tag": "0177_athlete_starting_points",
+      "breakpoints": true
+    },
+    {
+      "idx": 178,
+      "version": "7",
+      "when": 1793568723594,
+      "tag": "0178_start_gate_starting_point",
+      "breakpoints": true
     }
   ]
 }

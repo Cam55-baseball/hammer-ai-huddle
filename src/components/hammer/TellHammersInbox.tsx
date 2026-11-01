@@ -14,6 +14,7 @@ import { REPORT_INJURY_REGIONS } from "@/lib/hammer/injury/reportInjury";
 import { readChangeConfirmation } from '@/lib/hammer/changeConfirmation';
 import { ActiveSportSwitch } from './ActiveSportSwitch';
 import { SeasonDatesDialog } from './SeasonDatesDialog';
+import { StartingPointForm } from './StartingPointForm';
 import { PitcherRoleQuestions } from './pitching/PitcherRoleQuestions';
 import { ActiveInjuryCards } from './injury/FullGo';
 import { usePitcherSchedule } from '@/hooks/usePitcherSchedule';
@@ -44,6 +45,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   const storageKey = `hammer:tell-open:${user?.id ?? "guest"}`;
   const [open, setOpen] = useState(checkIn);
   const [flow, setFlow] = useState<Flow | null>(null);
+  const [startOpen, setStartOpen] = useState(false);
   const [datesOpen, setDatesOpen] = useState(false);
   const [roleOpen, setRoleOpen] = useState(false);
   const [roleConfirm, setRoleConfirm] = useState<RoleChange | null>(null);
@@ -168,6 +170,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       {!checkIn && <ActiveInjuryCards />}
       {!checkIn && user && <ActiveSportSwitch userId={user.id} />}
       {!checkIn && <Button variant="outline" className="w-full" onClick={() => setDatesOpen(true)}>Season dates</Button>}
+      {!checkIn && <><Button variant="outline" className="w-full" aria-expanded={startOpen} data-testid="tell-starting-point" onClick={() => setStartOpen(v => !v)}>Where I'm starting from</Button>{startOpen && <StartingPointForm />}</>}
       {!checkIn && <><Button variant="outline" className="w-full" aria-expanded={roleOpen} data-testid="tell-pitcher-role" onClick={() => setRoleOpen(v => !v)}>Pitcher or position player</Button>{roleOpen && <PitcherRoleQuestions />}</>}
       {roleConfirm && <div className="rounded-md border p-3 space-y-2" data-testid="role-confirm"><p>I'll save: <strong>{describeRoleChange(roleConfirm)}</strong>. Is that right?</p><div className="flex gap-2"><Button disabled={pitcher.saveSettings.isPending} onClick={() => pitcher.saveSettings.mutate(roleConfirm, { onSuccess: () => { setRoleConfirm(null); setText(""); } })}>Yes, save</Button><Button variant="outline" onClick={() => setRoleConfirm(null)}>Back</Button></div></div>}
       {!checkIn && flow && backBtn}

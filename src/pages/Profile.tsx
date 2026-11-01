@@ -31,6 +31,7 @@ import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
 import { OnboardingStatusCard } from "@/components/settings/OnboardingStatusCard";
 import { OnboardingQuickAccess } from "@/components/settings/OnboardingQuickAccess";
 import { CategoryGoalsCard } from "@/components/settings/CategoryGoalsCard";
+import { StartingPointProfileCard } from "@/components/hammer/StartingPointForm";
 import { LegalSettingsLink } from "@/components/legal/LegalSettingsLink";
 import { DeleteAccountSection } from "@/components/account/DeleteAccountSection";
 import { ParentControls } from "@/components/parent/ParentControls";
@@ -1757,6 +1758,7 @@ export default function Profile() {
         <div className="mb-6 grid gap-4 md:grid-cols-2">
           <OnboardingStatusCard />
           {!viewingOtherProfile && <CategoryGoalsCard />}
+          {!viewingOtherProfile && <StartingPointProfileCard />}
         </div>
 
         {/* DelayCam sessions — own profile only. Coach/guardian viewing will go

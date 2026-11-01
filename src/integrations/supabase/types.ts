@@ -4006,6 +4006,63 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_starting_point_log: {
+        Row: {
+          answers: Json
+          changed_at: string
+          changed_by: string | null
+          id: string
+          sport: string
+          user_id: string
+        }
+        Insert: {
+          answers: Json
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          sport: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          sport?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      athlete_starting_points: {
+        Row: {
+          answers: Json
+          created_at: string
+          program: string | null
+          sport: string
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          program?: string | null
+          sport: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          program?: string | null
+          sport?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
