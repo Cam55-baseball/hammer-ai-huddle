@@ -134,9 +134,9 @@ export function startingLevels(sport: Sport, program: Program, a: Answers, posit
   let lifting: StartingLevels["lifting"] = null;
   if (cats.has("lifting")) {
     const h = a.lift_history;
-    if (beginner || h === "Never" || h === "Under 6 months") lifting = "foundation";
-    else if (h === "2+ years" && a.lift_days !== "0" && f === 1) lifting = "written";
-    else lifting = a.lift_days === "0" || (f ?? 0) < 1 ? "easing_back" : "written";
+    // Lifting's own history decides: never/<6 months → Foundation; lifting now → written; a break → easing back in.
+    if (h === "Never" || h === "Under 6 months") lifting = "foundation";
+    else lifting = a.lift_days !== "0" && f === 1 ? "written" : "easing_back";
     why.lifting = lifting === "foundation" ? "the beginner Foundation track" : lifting === "easing_back" ? `${EASING} for 2–4 weeks` : "your normal written lifting";
   }
   const jumps = cats.has("jumps") ? (beginner || a.jumps === "Never" ? "easiest" : "written") : null;

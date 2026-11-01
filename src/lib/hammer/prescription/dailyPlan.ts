@@ -22,7 +22,7 @@ import { ownerConditioningPlan } from './ownerConditioningPlan';
 import { structureSkillSession } from './skillSessionStructure';
 import { restrictedFielding } from './restrictedFielding';
 import { applyPracticePlanContext } from './practicePlanContext';
-import { applyGreenlightPlan, type GreenlightStarts } from './greenlightPlan';
+import { applyGreenlightPlan, type GreenlightStarts, type GreenlightTargets } from './greenlightPlan';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
 import type { OutingFacts } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 /**
@@ -2361,6 +2361,9 @@ export interface RoadmapInputs {
   readonly greenlight?: Partial<Record<import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightArea, import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightResult>> | null;
   /** Owner Nov 1 round 4: starting share of the written dose per area (Group 2 answers). */
   readonly greenlightStarts?: GreenlightStarts | null;
+  readonly greenlightTargets?: GreenlightTargets | null;
+  /** Starting weekly throws used only while no throws are logged. */
+  readonly startThrowsPerWeek?: number | null;
   readonly bunting?: {gameWeekdays?:readonly number[];evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
@@ -2430,7 +2433,7 @@ export function buildHammerDailyPlan(
     const lastWeekRaw = hist && !hist.unavailable
       ? hist.rows.filter(r => r.entry_date >= from && r.entry_date <= to && !/skip|missed|cancel/i.test(String(r.status ?? ''))).reduce((n, r) => n + Number(r.count ?? 0), 0)
       : null;
-    const week = weeklyThrowTarget({ group, sport: sport === 'softball' ? 'softball' : 'baseball', age: (ctx.get<number>('age_years')?.value as number | null) ?? null, lastWeekRaw, inSeason: proj.seasonPhase === 'in', greenlight: roadmapInputs.greenlight?.throwing ?? null });
+    const week = weeklyThrowTarget({ group, sport: sport === 'softball' ? 'softball' : 'baseball', age: (ctx.get<number>('age_years')?.value as number | null) ?? null, lastWeekRaw: lastWeekRaw && lastWeekRaw > 0 ? lastWeekRaw : (roadmapInputs.startThrowsPerWeek ?? lastWeekRaw), inSeason: proj.seasonPhase === 'in', greenlight: roadmapInputs.greenlight?.throwing ?? null });
     return { group, ...week, line: throwTargetLine(group, week) };
   })();
   const throwingLadder = throwTarget?.hidden
@@ -2575,7 +2578,7 @@ export function buildHammerDailyPlan(
       roadmapInputs.defenseFullOverride === true,
     ),
   ), practiceLoad);
-  const greenlit = applyGreenlightPlan(practiced, roadmapInputs.greenlight, roadmapInputs.greenlightStarts);
+  const greenlit = applyGreenlightPlan(practiced, roadmapInputs.greenlight, roadmapInputs.greenlightStarts, roadmapInputs.greenlightTargets);
   const goalOrdered = secondGoalFirst(greenlit.map(b => {
     if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== focusProjection.categoryGoals?.goals.find(g => g.rank === 1)?.category)) return b;
     const reason = scheduleSignal.postureToday !== 'normal' || b.status !== 'ready'
