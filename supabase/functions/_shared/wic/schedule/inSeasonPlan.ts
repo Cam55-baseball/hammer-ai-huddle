@@ -107,6 +107,8 @@ export interface InSeasonPlanInput {
   readonly pitchedInReliefToday?: boolean;
   /** Slot of the last completed lift, so A and B alternate. */
   readonly lastLiftSlot?: LiftSlot | null;
+  /** Owner Nov 1 C1: the rest-day calculator already removed today's lift. */
+  readonly liftRemoved?: boolean;
   readonly tournamentToday?: boolean;
   readonly doubleheaderToday?: boolean;
   /** Days since the last sprint effort at 90% or more (§9.4). */
@@ -182,6 +184,11 @@ export function resolveInSeasonPlan(input: InSeasonPlanInput): InSeasonPlanResul
   }
   if (input.doubleheaderToday) {
     return none(["Doubleheader today — no lift."], preGamePrimer);
+  }
+  // Owner Nov 1 C1: a day without a real lift never takes an A/B slot, so
+  // tissue days cannot be labelled as heavy or speed lifts.
+  if (input.liftRemoved === true) {
+    return none(["Recovery day — no lift today."], preGamePrimer);
   }
   if (isStarter && input.startsToday) {
     return none(["You start today — no lift."], preGamePrimer);

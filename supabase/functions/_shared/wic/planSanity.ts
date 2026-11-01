@@ -42,3 +42,56 @@ export function validatePlanWeek(days: readonly PlanSanityInput[], floors: Reado
   }
   return { ok: issues.length === 0, issues, counts };
 }
+
+/**
+ * Owner Nov 1 C3 — weekly-structure invariants for one Monday–Sunday week of
+ * saved or about-to-be-saved days. Pure. Encodes only rules already written in
+ * the builder: ≥2 full rest days between loaded lifts, at most 2 loaded lifts
+ * in-season, exactly one rest day, the weekly floors, no lift the day before a
+ * start, arm limits as judged by the arm guard, and one season phase per date.
+ */
+export interface WeekStructureDay {
+  date: string;
+  phase: string | null;
+  /** Phase the season settings give for this date (resolver), when known. */
+  expectedPhase?: string | null;
+  restDay: boolean;
+  liftLoaded: boolean;
+  startsNextDay?: boolean;
+  /** False when the arm guard reported a breach for this day. */
+  armWithinLimits?: boolean;
+  categories?: readonly string[];
+}
+export const MIN_REST_DAYS_BETWEEN_LIFTS = 2;
+export const IN_SEASON_WEEKLY_LIFT_MAX = 2;
+const dn = (iso: string) => Math.floor(Date.parse(`${iso}T00:00:00Z`) / 86_400_000);
+
+export function validateWeekStructure(
+  days: readonly WeekStructureDay[],
+  floors: Readonly<Record<string, number>> = {},
+  opts: { fullWeek?: boolean } = {},
+): { ok: boolean; issues: string[] } {
+  const issues: string[] = [];
+  const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date));
+  const lifts = sorted.filter((d) => d.liftLoaded);
+  for (let i = 1; i < lifts.length; i++) {
+    const gap = dn(lifts[i].date) - dn(lifts[i - 1].date) - 1;
+    if (gap < MIN_REST_DAYS_BETWEEN_LIFTS) issues.push(`lift_spacing:${lifts[i].date}:${gap}/${MIN_REST_DAYS_BETWEEN_LIFTS}`);
+  }
+  const inSeasonLifts = lifts.filter((d) => d.phase === "in_season" || d.phase === "post_season").length;
+  if (inSeasonLifts > IN_SEASON_WEEKLY_LIFT_MAX) issues.push(`weekly_lift_max:${inSeasonLifts}/${IN_SEASON_WEEKLY_LIFT_MAX}`);
+  for (const d of sorted) {
+    if (d.liftLoaded && d.restDay) issues.push(`lift_on_rest_day:${d.date}`);
+    if (d.liftLoaded && d.startsNextDay) issues.push(`lift_day_before_start:${d.date}`);
+    if (d.armWithinLimits === false) issues.push(`arm_limit:${d.date}`);
+    if (d.expectedPhase && d.phase && d.expectedPhase !== d.phase) issues.push(`season_mismatch:${d.date}:${d.phase}/${d.expectedPhase}`);
+  }
+  if (opts.fullWeek) {
+    const rest = sorted.filter((d) => d.restDay).length;
+    if (rest !== 1) issues.push(`rest_days:${rest}/1`);
+    const counts: Record<string, number> = {};
+    for (const d of sorted) if (!d.restDay) for (const c of new Set(d.categories ?? [])) counts[c] = (counts[c] ?? 0) + 1;
+    for (const [c, min] of Object.entries(floors)) if ((counts[c] ?? 0) < min) issues.push(`weekly_minimum:${c}:${counts[c] ?? 0}/${min}`);
+  }
+  return { ok: issues.length === 0, issues };
+}
