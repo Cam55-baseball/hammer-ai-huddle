@@ -1923,14 +1923,15 @@ function applyBuntingPlan(blocks, facts, options) {
 }
 
 // supabase/functions/_shared/wic/schedule/availability.ts
-function availableTrainingDays(days) {
+function availableTrainingDays(days, restDow = 0) {
   const count = typeof days === "number" && Number.isFinite(days) ? Math.max(1, Math.min(6, Math.floor(days))) : 6;
-  const order = [1, 3, 5, 2, 4, 6];
+  const r = Number.isInteger(restDow) && restDow >= 0 && restDow <= 6 ? restDow : 0;
+  const order = [1, 3, 5, 2, 4, 6].map((k) => (r + k) % 7);
   return order.slice(0, count).sort((a, b) => a - b);
 }
-function unavailableTrainingDate(date, days) {
+function unavailableTrainingDate(date, days, restDow = 0) {
   const dow = (/* @__PURE__ */ new Date(`${date}T12:00:00Z`)).getUTCDay();
-  return !availableTrainingDays(days).includes(dow);
+  return !availableTrainingDays(days, restDow).includes(dow);
 }
 
 // src/lib/hammer/goals/subGoalCatalog.ts
@@ -2635,12 +2636,14 @@ var PERMISSIVE_DAILY = {
 };
 function resolveWeeklyTemplate(proj) {
   const template = resolveBaseTemplate(proj);
-  const legal = new Set(availableTrainingDays(proj.weeklyAvailabilityDays));
+  const restDow = proj.weeklyRestDow ?? SIX_DAY_REST_DOW;
+  const legal = new Set(availableTrainingDays(proj.weeklyAvailabilityDays, restDow));
   return {
     ...template,
     perModality: Object.fromEntries(Object.entries(template.perModality).map(([key2, days]) => [key2, ANCHOR_MODALITIES.includes(key2) ? days : days.filter((day2) => legal.has(day2))])),
     priorityDayOrder: Object.fromEntries(Object.entries(template.priorityDayOrder ?? {}).map(([key2, days]) => [key2, days.filter((day2) => legal.has(day2))])),
-    availableDays: [...legal]
+    availableDays: [...legal],
+    restDow
   };
 }
 function resolveBaseTemplate(proj) {
@@ -2691,11 +2694,11 @@ function resolveSkillDays(template, modality, target) {
   const picked = [];
   for (const d3 of priority) {
     if (picked.length >= clamped) break;
-    if (d3 === SIX_DAY_REST_DOW || !allowed.has(d3)) continue;
+    if (d3 === (template.restDow ?? SIX_DAY_REST_DOW) || !allowed.has(d3)) continue;
     if (!picked.includes(d3)) picked.push(d3);
   }
   for (let d3 = 0; picked.length < clamped && d3 <= 6; d3 = d3 + 1) {
-    if (d3 !== SIX_DAY_REST_DOW && allowed.has(d3) && !picked.includes(d3)) picked.push(d3);
+    if (d3 !== (template.restDow ?? SIX_DAY_REST_DOW) && allowed.has(d3) && !picked.includes(d3)) picked.push(d3);
     if (d3 === 6) break;
   }
   const baselineSet = new Set(baseline);
@@ -3137,7 +3140,7 @@ function baseballReliever(input) {
     let t;
     if (isGame) t = "available";
     else if (preferredBullpenDow !== null && dow === preferredBullpenDow) t = rung === "foundation" ? "side" : "bullpen";
-    else if (dow === 0) t = "rest";
+    else if (dow === (input.restDow ?? 0)) t = "rest";
     else t = dow % 2 === 0 ? "side" : "touch";
     week.push(mkDay(dow, t));
   }
@@ -3176,7 +3179,7 @@ function softballReliever(input) {
     const isGame = gameDows.includes(dow);
     let t;
     if (isGame) t = "available";
-    else if (dow === 0) t = "rest";
+    else if (dow === (input.restDow ?? 0)) t = "rest";
     else t = dow % 2 === 0 ? "side" : "touch";
     week.push(mkDay(dow, t, "softball"));
   }
@@ -3611,7 +3614,7 @@ function guardArmDrills(drills, input) {
   }
   return drills.filter((d3) => kept.has(d3));
 }
-function pitchingDay(date, sport, quarter, facts) {
+function pitchingDay(date, sport, quarter, facts, restDow = 0) {
   if (date.getDay() === 0) return "rest";
   if (facts?.pitchedYesterday) return "flush";
   if (facts?.startsToday) return "start";
@@ -3623,7 +3626,7 @@ function pitchingDay(date, sport, quarter, facts) {
     if (map[day2] && !(facts.relieverAvailableSoon && facts.pitchingRole !== "starter")) return map[day2];
   }
   if (facts?.relieverAvailableSoon) return "available";
-  const cycle = buildPitchingMicrocycle({ sport, rung: "sustain", quarter, profile: DEFAULT_PITCHER_PROFILE, today: date, gameDows: [], preferredBullpenDow: null });
+  const cycle = buildPitchingMicrocycle({ sport, rung: "sustain", quarter, profile: DEFAULT_PITCHER_PROFILE, today: date, gameDows: [], preferredBullpenDow: null, restDow });
   const type = cycle.today.dayType;
   return type === "start" || type === "game" || type === "available" ? "bullpen" : type;
 }
@@ -4023,6 +4026,7 @@ function projectEnvelope(ctx) {
     seasonPhase: ctx.get("season_phase")?.value ?? null,
     developmentPriorities: devPriorities,
     weeklyAvailabilityDays: ctx.get("weekly_availability_days")?.value ?? null,
+    weeklyRestDow: ctx.get("weekly_rest_dow")?.value ?? null,
     goalSummary: ctx.get("goal_summary")?.value ?? null,
     goalHorizon: ctx.get("goal_horizon")?.value ?? null,
     categoryGoals: normalizeCategoryGoals(ctx.get("category_goals")?.value),
@@ -6681,7 +6685,7 @@ function commandDayPlan(ctx) {
     const date = iso3(d3);
     const relief = ctx.facts.plannedReliefDates ?? [];
     const outingDates = [...ctx.facts.thrownDates, ...ctx.facts.plannedStartDates.filter((p) => p < date), ...relief.filter((p) => p < date)];
-    return { date, day: d3.getDay() === 0 ? "rest" : relief.includes(date) ? "outing" : cycleDay({ sport: ctx.sport, role: ctx.role, date, outingDates, plannedStarts: ctx.facts.plannedStartDates, gameDates: [] }) };
+    return { date, day: d3.getDay() === (ctx.restDow ?? 0) ? "rest" : relief.includes(date) ? "outing" : cycleDay({ sport: ctx.sport, role: ctx.role, date, outingDates, plannedStarts: ctx.facts.plannedStartDates, gameDates: [] }) };
   });
   const plan = commandExtraDays({ sport: ctx.sport, week, struggling: true, limitPitching: ctx.facts.limitPitching });
   const today = iso3(ctx.day);
@@ -8869,7 +8873,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       gameTomorrow: scheduleSignal.isGameTomorrow,
       positionOverride: m === "throwing" && access?.hasPitching || m === "defense" && access?.pitcherOnly ? "P" : positionOverrideArg,
       pitcherOutings: roadmapInputs.pitcherOutings,
-      pitchingType: access?.hasPitching ? pitchingDay(today, sport, quarter, roadmapInputs.pitcherOutings) : void 0,
+      pitchingType: access?.hasPitching ? pitchingDay(today, sport, quarter, roadmapInputs.pitcherOutings, proj.weeklyRestDow ?? SIX_DAY_REST_DOW) : void 0,
       pitchingPhase: quarter.phase === "off" ? `os_q${quarter.quarter}` : quarter.phase === "pre" ? "preseason" : quarter.phase === "in" ? "in_season" : "post_season",
       armRole: access?.hasPitching ? access.pitcherOnly ? "pitcher" : "two_way" : void 0,
       positionThrowing: !!access && !access.hasPitching,
@@ -8944,7 +8948,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const reason = scheduleSignal.postureToday !== "normal" || b.status !== "ready" ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...b.because ?? [], reason] };
   }), focusProjection);
-  const fullRestDay = roadmapInputs.fullRestDay === true || physio.recoveryOnly || unavailableTrainingDate(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`, proj.weeklyAvailabilityDays) || today.getDay() === SIX_DAY_REST_DOW || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day2) => day2.isToday)?.restDay === true;
+  const fullRestDay = roadmapInputs.fullRestDay === true || physio.recoveryOnly || unavailableTrainingDate(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`, proj.weeklyAvailabilityDays, proj.weeklyRestDow ?? SIX_DAY_REST_DOW) || today.getDay() === (proj.weeklyRestDow ?? SIX_DAY_REST_DOW) || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day2) => day2.isToday)?.restDay === true;
   const bunting = roadmapInputs.bunting;
   const requestedBunting = roadmapInputs.testPreferences?.weekly_minimums?.bunting;
   const baseBunting = bunting?.traits?.speedy === true || bunting?.traits?.lacksPower === true ? 3 : 2;
@@ -9026,9 +9030,9 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       return [{ ...b, drills: rule.drills, steps: drillsToSteps(rule.drills), because: [...b.because ?? [], ...rule.because] }];
     }
     if (!access?.hasPitching || b.modality !== "throwing") return [b];
-    const type = pitchingDay(today, sport, quarter, roadmapInputs.pitcherOutings);
+    const type = pitchingDay(today, sport, quarter, roadmapInputs.pitcherOutings, proj.weeklyRestDow ?? SIX_DAY_REST_DOW);
     let pitchingDrills = b.status === "ready" ? withTaggedPitchDrill(b.drills.filter((d3) => d3.armCard !== "throwing"), { sport, dayType: type, role: pitchFacts?.pitchingRole ?? null, day: today }) : b.drills.filter((d3) => d3.armCard !== "throwing");
-    const command = b.status === "ready" ? commandDayPlan({ sport, role: pitchFacts?.pitchingRole ?? null, facts: pitchFacts, evidence: roadmapInputs.pitchCommand, day: today }) : { add: false, because: [] };
+    const command = b.status === "ready" ? commandDayPlan({ sport, role: pitchFacts?.pitchingRole ?? null, facts: pitchFacts, evidence: roadmapInputs.pitchCommand, day: today, restDow: proj.weeklyRestDow ?? SIX_DAY_REST_DOW }) : { add: false, because: [] };
     if (command.add) {
       const r = withCommandDrill(pitchingDrills, { sport, role: pitchFacts?.pitchingRole ?? null, day: today });
       pitchingDrills = r.drills;
@@ -9211,6 +9215,7 @@ function spineVariables(env) {
     fromEnvelope(env, "goal_horizon", "Goal horizon", "goals"),
     fromEnvelope(env, "category_goals", "Ranked category goals", "goals"),
     fromEnvelope(env, "weekly_availability_days", "Days per week", "schedule"),
+    fromEnvelope(env, "weekly_rest_dow", "Rest day", "schedule"),
     fromEnvelope(env, "weekly_availability_hours", "Hours per week", "schedule"),
     fromEnvelope(env, "typical_session_length_min", "Session length (min)", "schedule"),
     fromEnvelope(env, "training_focus", "Training focus", "goals"),
