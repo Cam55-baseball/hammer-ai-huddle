@@ -66,7 +66,7 @@ export function judgeRestMove(i: {
     return { ok: true, weekStart: ws, restDate: i.target };
   }
   const dow = new Date(`${i.target}T12:00:00Z`).getUTCDay();
-  const start = used || mondayOf(i.target) !== ws ? dateForDow(isoAddDays(ws, 7), 1) : ws;
+  const start = used || dateForDow(ws, dow) < i.today ? isoAddDays(ws, 7) : ws;
   return { ok: true, weekStart: start, restDate: dateForDow(start, dow) };
 }
 
