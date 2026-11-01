@@ -30,6 +30,7 @@ describe("pitcher return through the real builder", () => {
   for (const sport of ["baseball", "softball"] as const) {
     it(`${sport}: flat step has no mound/circle pitching, shortbox is 2/3 distance, first bullpen ≤ 25`, () => {
       const normal = week(sport, null);
+      console.log(JSON.stringify(normal.map(d=>d.drills.map((x:any)=>[x.name,x.armEvent?.kind,x.armEvent?.count,x.pitchTags?.moundType]))));
       expect(normal.some(d => d.drills.some(isMoundRow))).toBe(true); // the week normally has mound/circle work
       const flat = week(sport, prog("flat", sport));
       expect(flat.every(d => !d.drills.some(isMoundRow))).toBe(true);
