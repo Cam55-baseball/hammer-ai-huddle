@@ -16,7 +16,6 @@ export interface EliteTarget {
   readonly sport: EliteSport;
   readonly league: string;
   readonly gamesPerWeekHigh: number;
-  readonly weeklyThrowsCeiling: number;   // healthy sustained cap
   readonly liftSessionsPerWeek: number;
   readonly speedSessionsPerWeek: number;
   readonly batSpeedSessionsPerWeek: number;
@@ -28,7 +27,6 @@ export const ELITE_TARGETS: Record<EliteSport, EliteTarget> = {
     sport: "baseball",
     league: "MLB",
     gamesPerWeekHigh: 6,
-    weeklyThrowsCeiling: 250,
     liftSessionsPerWeek: 3,
     speedSessionsPerWeek: 2,
     batSpeedSessionsPerWeek: 4,
@@ -39,7 +37,6 @@ export const ELITE_TARGETS: Record<EliteSport, EliteTarget> = {
     sport: "softball",
     league: "AUSL",
     gamesPerWeekHigh: 6,
-    weeklyThrowsCeiling: 220,
     liftSessionsPerWeek: 3,
     speedSessionsPerWeek: 2,
     batSpeedSessionsPerWeek: 4,
