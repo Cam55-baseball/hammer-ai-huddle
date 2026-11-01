@@ -58,6 +58,12 @@ export function applyGreenlightPlan(
       if (r && start != null && r.lastColor && r.lastColor !== 'none') because.push(r.because);
       return because.length === (b.because ?? []).length ? b : { ...b, because };
     }
+    if (area === 'lifting') {
+      // Owner round 5: easing back in keeps the SAME sets; only the weight is lighter.
+      if (r) because.push(r.because);
+      because.push(`Because: you're easing back in, so use about ${Math.round(f * 100)}% of your normal weight with the same sets. It goes up about 5% each green week until normal.`);
+      return { ...b, because };
+    }
     const drills = b.drills.map((d) => (!isDrillStage(d) ? d : { ...d, dosage: greenlightDosage(d.dosage, f) }));
     if (r) because.push(r.because);
     because.push(greenlightStartBecause(area, f));

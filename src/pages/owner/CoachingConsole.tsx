@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import {MasterySettings} from '@/components/intelligence/MasterySettings';
 import {PitchingStandardsSettings} from '@/components/intelligence/PitchingStandardsSettings';
 import {ConditioningSettings} from '@/components/intelligence/ConditioningSettings';
+import {GreenlightSettings} from '@/components/intelligence/GreenlightSettings';
 import {PhysioMappingSettings} from '@/components/intelligence/PhysioMappingSettings';
 import {NATURAL_FIRST_PRINCIPLE} from '../../../supabase/functions/_shared/wic/goals/naturalFirst';
 import { OWNER_QUESTIONS, questionSituation, currentQuestionAnswer, type OwnerQuestion } from '@/lib/intelligence/ownerQuestions';
@@ -122,6 +123,7 @@ export default function CoachingConsole() {
       <MasterySettings />
       <PitchingStandardsSettings />
       <ConditioningSettings />
+      <GreenlightSettings />
       <PhysioMappingSettings />
       </details>
       <section aria-label="Development philosophy" className="space-y-1 py-2"><h2 className="text-lg font-semibold">Secure What's Natural First</h2><p className="text-base text-muted-foreground">{NATURAL_FIRST_PRINCIPLE}</p></section>
