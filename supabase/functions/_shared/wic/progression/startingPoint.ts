@@ -19,6 +19,11 @@ export function programOf(sport: Sport, modules: readonly string[]): Program | n
   return null;
 }
 
+/** Owner Nov 1 round 5: Golden 2Way must pick Pitcher or Position player first (no default). */
+export function golden2wayRoleMissing(sport: Sport, modules: readonly string[], primaryFocus: string | null | undefined): boolean {
+  return modules.includes(`${sport}_golden2way`) && primaryFocus !== "pitcher" && primaryFocus !== "position";
+}
+
 export function categoriesFor(program: Program): Category[] {
   const all: Category[] = ["overall", "throwing", "pitching", "hitting", "defense", "speed", "lifting", "jumps", "bunting"];
   if (program === "pitcher") return all.filter((c) => !["hitting", "defense", "bunting"].includes(c));

@@ -1131,6 +1131,10 @@ const handler = async (req: Request): Promise<Response> => {
     const {data: schedulingSubscription,error:schedulingSubscriptionError}=await admin.from('subscriptions').select('status,subscribed_modules').eq('user_id',user.id).maybeSingle();
     if(schedulingSubscriptionError)throw schedulingSubscriptionError;
     const schedulingModules:string[]=schedulingSubscription?.status==='active'?(schedulingSubscription.subscribed_modules??[]):[];
+    // Owner Nov 1 round 5: Golden 2Way builds only after the player picks Pitcher or Position player.
+    if(!pitcherScheduleReadFailed && golden2wayRoleMissing(sport, schedulingModules, pitcherPrimaryFocus)){
+      return new Response(JSON.stringify({ error: "role_required", message: "Pick Mainly pitcher or Mainly position player first so we can build your plan." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const purchasedPitcher=schedulingModules.some(m=>[`${sport}_pitcher`,`${sport}_golden2way`,`${sport}_pitching`,'pitching'].includes(m));
     const positionProgram=schedulingModules.includes(`${sport}_5tool`);
     const isPitcherAthlete = purchasedPitcher && !positionProgram;
