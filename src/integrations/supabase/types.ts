@@ -10362,6 +10362,42 @@ export type Database = {
         }
         Relationships: []
       }
+      hitting_swing_efforts: {
+        Row: {
+          actual: string
+          created_at: string
+          drill_name: string | null
+          id: string
+          plan_date: string
+          prescribed: string | null
+          task_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual: string
+          created_at?: string
+          drill_name?: string | null
+          id?: string
+          plan_date: string
+          prescribed?: string | null
+          task_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual?: string
+          created_at?: string
+          drill_name?: string | null
+          id?: string
+          plan_date?: string
+          prescribed?: string | null
+          task_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       hydration_beverage_database: {
         Row: {
           created_at: string
@@ -13710,6 +13746,7 @@ export type Database = {
           pitch_mound_type: string | null
           pitch_purposes: string[]
           pitch_role_fit: string[]
+          pitch_source: string | null
           pitch_types: string[]
           placements: string[]
           rest_seconds: number | null
@@ -13767,6 +13804,7 @@ export type Database = {
           pitch_mound_type?: string | null
           pitch_purposes?: string[]
           pitch_role_fit?: string[]
+          pitch_source?: string | null
           pitch_types?: string[]
           placements?: string[]
           rest_seconds?: number | null
@@ -13824,6 +13862,7 @@ export type Database = {
           pitch_mound_type?: string | null
           pitch_purposes?: string[]
           pitch_role_fit?: string[]
+          pitch_source?: string | null
           pitch_types?: string[]
           placements?: string[]
           rest_seconds?: number | null
@@ -15606,6 +15645,57 @@ export type Database = {
           undone_at?: string | null
           user_id?: string
           week_start?: string
+        }
+        Relationships: []
+      }
+      returning_hitter_programs: {
+        Row: {
+          bridge: boolean
+          completed_on: string | null
+          created_at: string
+          effort: string
+          environment: string
+          history: Json
+          id: string
+          last_change_on: string
+          prescribed: Json
+          reason: string
+          sport: string
+          started_on: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bridge?: boolean
+          completed_on?: string | null
+          created_at?: string
+          effort?: string
+          environment?: string
+          history?: Json
+          id?: string
+          last_change_on: string
+          prescribed?: Json
+          reason: string
+          sport: string
+          started_on: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bridge?: boolean
+          completed_on?: string | null
+          created_at?: string
+          effort?: string
+          environment?: string
+          history?: Json
+          id?: string
+          last_change_on?: string
+          prescribed?: Json
+          reason?: string
+          sport?: string
+          started_on?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
