@@ -1115,7 +1115,7 @@ export function VaultNutritionLogCard({
                     }))}>
                       <Lightbulb className="h-4 w-4" /> Not sure? Get suggestions
                     </Button>
-                    {suggestion && !suggestion.ok && <p className="text-xs text-muted-foreground">{suggestion.reason}</p>}
+                    {suggestion && suggestion.ok === false && <p className="text-xs text-muted-foreground">{suggestion.reason}</p>}
                     {suggestion?.ok && (
                       <div className="space-y-1 text-xs">
                         <p className="text-muted-foreground">Suggested daily ranges based on your goal, activity and training. You can change any number before saving.</p>
