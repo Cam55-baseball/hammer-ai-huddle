@@ -118,6 +118,7 @@ import {
   metricLabel,
   type ProgressionState,
 } from "../_shared/wic/progression/progressionState.ts";
+import { golden2wayRoleMissing } from "../_shared/wic/progression/startingPoint.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
 import { certifyLift, coerceCanonicalCategory } from "../_shared/wic/lift/sessionBuilder.ts";
