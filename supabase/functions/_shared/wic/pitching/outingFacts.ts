@@ -105,8 +105,19 @@ export function resolveOutingFacts(input: {
     relieverUnavailableToday: avail.get(planDate) === false,
     unconfirmed,
     limitPitching: settings?.limit_pitching === true,
-    pitchingRole: settings?.pitching_role ?? null,
+    pitchingRole: effectivePitchingRole(settings),
     primaryFocus: settings?.primary_focus ?? null,
     plannedReliefDates: [...new Set(outings.filter((o) => o.status === "planned" && o.outing_type === "relief" && o.planned_date && o.planned_date >= planDate).map((o) => o.planned_date as string))].sort(),
   };
+}
+
+
+/** Owner Nov 1 D1 — one source of truth. The "Your pitching days" card role
+ *  answers the pitching-role question: Starter means starter. A reliever's
+ *  bullpen-vs-closer choice is only known from the explicit answer. */
+export function effectivePitchingRole(
+  settings: { role?: string | null; pitching_role?: "starter" | "bullpen" | "closer" | null } | null | undefined,
+): "starter" | "bullpen" | "closer" | null {
+  if (settings?.pitching_role) return settings.pitching_role;
+  return settings?.role === "starter" ? "starter" : null;
 }
