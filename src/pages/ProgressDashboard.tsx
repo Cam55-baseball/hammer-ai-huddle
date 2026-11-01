@@ -45,6 +45,7 @@ import { howSureFor } from '@/lib/intelligence/howSure';
 import { useReadinessState } from '@/hooks/useReadinessState';
 import { PerformanceAreaRows } from '@/components/intelligence/PerformanceAreaRows';
 import { LearningLoopList } from '@/components/intelligence/LearningLoopList';
+import { BullpenBeforeStartCard } from '@/components/intelligence/BullpenBeforeStartCard';
 import { HealthFlagsCard } from '@/components/intelligence/HealthFlagsCard';
 import { WorkoutActuals } from '@/components/hammer/WorkoutActuals';
 import {MasteryIdentityPanel} from '@/components/intelligence/MasteryIdentityPanel';
@@ -147,6 +148,7 @@ Confidence: ${snapshot.development_confidence}%
           <TabsContent value="today" className="space-y-6">
             <MeaningSection title="Today’s Overview" use="Start with your Do-this list, then check how ready you are. Do your morning check-in so this stays accurate." explanation="Your recent check-ins and saved work help explain today. Missing answers are not a good-readiness signal. Follow the existing plan; these summaries do not add work.">
             <LearningLoopList />
+            {user?.id && <BullpenBeforeStartCard athleteId={user.id} sport={selectedSport} who="player" />}
             <ReadinessTodayCard />
             {today}
             </MeaningSection>
