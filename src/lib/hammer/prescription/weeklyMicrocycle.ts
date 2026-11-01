@@ -103,7 +103,7 @@ const DOW_SHORT: Record<Dow, string> = {
 
 /**
  * OFF-SEASON — 5-day athlete.
- * CNS pairing: heavy lift Mon/Thu (lower/upper split), max-velocity Tue/Fri
+ * Lifts Mon/Fri, full body (written spacing: 3 full days after a heavy lift), max-velocity Tue/Fri
  * (never adjacent to heavy lower), Wed full recovery, Sat skill volume,
  * Sun rest.
  */
@@ -116,7 +116,7 @@ const OFF_SEASON_5D: WeeklyTemplate = {
     recovery:    [0, 1, 2, 3, 4, 5, 6],
     game_iq:     [0, 1, 2, 3, 4, 5, 6],
     speed:       [2, 5],                   // Tue, Fri
-    strength:    [1, 2, 4, 5],             // Mon, Tue, Thu, Fri
+    strength:    [1, 5],                   // Mon, Fri — written spacing law
     hitting:     [1, 2, 4, 5, 6],          // Mon, Tue, Thu, Fri, Sat
     throwing:    [1, 2, 4, 5, 6],
     defense:     [2, 4, 6],                // Tue, Thu, Sat
@@ -128,7 +128,7 @@ const OFF_SEASON_5D: WeeklyTemplate = {
     speed:    { 5: "secondary" },            // Fri: accel base, not max-vel again
   },
   dayLabels: {
-    strength: { 1: "Full-body heavy", 2: "Full-body strength", 4: "Full-body heavy", 5: "Full-body dynamic" },
+    strength: { 1: "Full-body lift", 5: "Full-body lift" },
     speed:    { 2: "Max velocity", 5: "Acceleration base" },
   },
   priorityDayOrder: {
@@ -149,14 +149,14 @@ const OFF_SEASON_4D: WeeklyTemplate = {
     recovery: [0, 1, 2, 3, 4, 5, 6],
     game_iq: [0, 1, 2, 3, 4, 5, 6],
     speed:    [2, 5],
-    strength: [1, 2, 4, 5],
+    strength: [1, 5],
     hitting:  [1, 2, 4, 5],
     throwing: [1, 2, 4, 5],
     defense:  [2, 4],
     baserunning: [5],
   },
   dayLabels: {
-    strength: { 1: "Full-body heavy", 2: "Full-body strength", 4: "Full-body heavy", 5: "Full-body dynamic" },
+    strength: { 1: "Full-body lift", 5: "Full-body lift" },
     speed:    { 2: "Max velocity", 5: "Acceleration" },
   },
   priorityDayOrder: {
@@ -177,18 +177,17 @@ const PRE_SEASON_5D: WeeklyTemplate = {
     recovery: [0, 1, 2, 3, 4, 5, 6],
     game_iq: [0, 1, 2, 3, 4, 5, 6],
     speed:       [1, 3, 5],
-    strength:    [1, 3, 5],
+    strength:    [1, 5],
     hitting:     [1, 2, 3, 4, 5],
     throwing:    [1, 2, 3, 4, 5],
     defense:     [2, 4, 6],
     baserunning: [3, 6],
   },
   intensityOverrides: {
-    strength: { 5: "secondary" },
     speed:    { 5: "secondary" },
   },
   dayLabels: {
-    strength: { 1: "Full-body heavy", 3: "Full-body dynamic", 5: "Full-body repetition" },
+    strength: { 1: "Full-body lift", 5: "Full-body lift" },
     speed:    { 1: "Acceleration", 3: "Max velocity", 5: "Tempo / freshness" },
   },
   priorityDayOrder: {
@@ -227,11 +226,10 @@ const IN_SEASON: WeeklyTemplate = {
       1: "secondary", 2: "activation", 3: "secondary",
       4: "activation", 5: "activation",
     },
-    strength: { 1: "secondary", 4: "secondary" },
     speed:    { 2: "activation" },
   },
   dayLabels: {
-    strength: { 1: "Full-body maintenance", 4: "Full-body maintenance" },
+    strength: { 1: "Full-body lift", 4: "Full-body lift" },
     speed:    { 2: "Freshness (short reps)" },
   },
   priorityDayOrder: {
@@ -265,7 +263,7 @@ const POST_SEASON: WeeklyTemplate = {
     throwing: { 3: "activation" },
   },
   dayLabels: {
-    strength: { 2: "Full-body rebuild", 5: "Full-body rebuild" },
+    strength: { 2: "Full-body lift", 5: "Full-body lift" },
   },
   priorityDayOrder: {
     hitting:     [2, 5, 3, 1, 4, 6, 0],
@@ -296,7 +294,7 @@ const YOUTH: WeeklyTemplate = {
     speed:    { 2: "activation", 4: "activation" },
   },
   dayLabels: {
-    strength: { 1: "Full-body movement quality", 4: "Full-body movement quality" },
+    strength: { 1: "Full-body lift", 4: "Full-body lift" },
     speed:    { 2: "Short ATP-CP", 4: "Short ATP-CP" },
   },
   priorityDayOrder: {
