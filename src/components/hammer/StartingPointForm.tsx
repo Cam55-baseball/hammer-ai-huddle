@@ -85,11 +85,13 @@ export function StartingPointPromptCard() {
   const saved = useStartingPointAnswers(user?.id, sport);
   const [open, setOpen] = useState(false);
   const program = programOf(sport, modules);
-  if (!user || !program || saved.isLoading || saved.isError || saved.data) return null;
+  // Owner round 5 added questions: earlier answers missing them get the card again, once.
+  if (!user || !program || saved.isLoading || saved.isError || (saved.data && answersComplete(sport, program, saved.data.answers))) return null;
+  const update = !!saved.data;
   return <Card data-testid="starting-point-card">
     <CardHeader className="pb-2"><CardTitle className="text-base">Where are you starting from?</CardTitle></CardHeader>
     <CardContent className="space-y-3">
-      <p className="text-sm text-muted-foreground">A few quick taps so Hammer starts you at the right level. You only answer once — change it any time in Profile.</p>
+      <p className="text-sm text-muted-foreground">{update ? "We added a question or two. Your earlier answers are kept — just fill in the new ones." : "A few quick taps so Hammer starts you at the right level. You only answer once — change it any time in Profile."}</p>
       {open ? <StartingPointForm compact /> : <Button className="w-full" onClick={() => setOpen(true)}>Answer now</Button>}
     </CardContent>
   </Card>;
