@@ -8,8 +8,10 @@ import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { saveStartingPoint, useInvalidateStartingPoint, useStartingPointAnswers } from "@/hooks/useStartingPoint";
 import { rebuildAfterChange } from "@/lib/hammer/rebuildAfterChange";
 import { getLocalDateString } from "@/utils/dateUtils";
+import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
+import { PitcherRoleQuestions } from "@/components/hammer/pitching/PitcherRoleQuestions";
 import {
-  answersComplete, programOf, questionsFor, type Answers, type Sport,
+  answersComplete, golden2wayRoleMissing, programOf, questionsFor, type Answers, type Sport,
 } from "../../../supabase/functions/_shared/wic/progression/startingPoint";
 
 const TITLES: Record<string, string> = {
@@ -32,12 +34,14 @@ export function StartingPointForm({ onSaved, rebuild = true, compact = false }: 
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => { if (saved.data?.answers) setAnswers(saved.data.answers); }, [saved.data]);
   const questions = useMemo(() => (program ? questionsFor(sport, program) : []), [sport, program]);
+  const pitcher = usePitcherSchedule();
+  const roleMissing = golden2wayRoleMissing(sport, modules ?? [], pitcher.data?.settings?.primary_focus ?? null);
 
   if (!program) return <p className="text-sm text-muted-foreground">These questions open once you have a training program for {sport}.</p>;
   if (saved.isLoading) return <Loader2 className="h-5 w-5 animate-spin" aria-label="Loading your answers" />;
   if (saved.isError) return <p role="alert" className="text-sm text-destructive">Your answers could not be loaded. Try again.</p>;
 
-  const complete = answersComplete(sport, program, answers);
+  const complete = answersComplete(sport, program, answers) && !roleMissing;
   let lastCat = "";
   const save = async () => {
     if (!user?.id || !complete) return;
@@ -52,6 +56,7 @@ export function StartingPointForm({ onSaved, rebuild = true, compact = false }: 
 
   return <div className="space-y-4" data-testid="starting-point-form">
     {!compact && <p className="text-sm text-muted-foreground">Pick the answer closest to you right now. Hammer starts you there and steps you up when you're ready.</p>}
+    {program === "golden2way" && <fieldset className="space-y-2"><h4 className="pt-2 text-sm font-semibold">Your main role</h4><PitcherRoleQuestions compact />{roleMissing && <p className="text-xs text-muted-foreground">Pick one so Hammer can build your plan.</p>}</fieldset>}
     {questions.map((q) => {
       const head = q.category !== lastCat ? TITLES[q.category] : null; lastCat = q.category;
       return <fieldset key={q.id} className="space-y-2">
@@ -86,6 +91,22 @@ export function StartingPointPromptCard() {
     <CardContent className="space-y-3">
       <p className="text-sm text-muted-foreground">A few quick taps so Hammer starts you at the right level. You only answer once — change it any time in Profile.</p>
       {open ? <StartingPointForm compact /> : <Button className="w-full" onClick={() => setOpen(true)}>Answer now</Button>}
+    </CardContent>
+  </Card>;
+}
+
+/** Owner Nov 1 round 5: Golden 2Way players with no main role see this on Today until they pick. */
+export function Golden2WayRolePromptCard() {
+  const { modules } = useSubscription();
+  const ctx = useHammerAthleteContext();
+  const sport: Sport = String(ctx.get<string>("sport_primary")?.value ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
+  const pitcher = usePitcherSchedule();
+  if (pitcher.isLoading || pitcher.isError || !golden2wayRoleMissing(sport, modules ?? [], pitcher.data?.settings?.primary_focus ?? null)) return null;
+  return <Card data-testid="golden2way-role-card">
+    <CardHeader className="pb-2"><CardTitle className="text-base">Pitcher or position player?</CardTitle></CardHeader>
+    <CardContent className="space-y-3">
+      <p className="text-sm text-muted-foreground">Golden 2Way needs your main role before Hammer can build your plan. You can switch any time.</p>
+      <PitcherRoleQuestions compact />
     </CardContent>
   </Card>;
 }
