@@ -1,3 +1,4 @@
+import { restDowFor } from '../wic/schedule/restDay.ts';
 import { ELITE_DRILL_CATALOG, mergeCatalog, categoryGoals, analysisDrillBinding, analysisOwnerEligible, analysisDrillCategory, analysisDrillSlot, enrolledDrill, enrollmentBecause, applyAnalysisDrillRotation } from '../generated/analysisDrills.mjs';
 import { analysisDrillSafety } from './analysisDrillSafety.ts';
 import { isPlatformStaff } from '../authGuards.ts';
@@ -36,7 +37,8 @@ export async function addAnalysisDrill(client: any, admin: any, uid: string, inp
   const index = analysisDrillSlot(block.drills);
   if (index < 0) throw new Error('Today’s work has no changeable drill slot. Keep this drill saved.');
   const source = block.drills[index];
-  const safetyResult = analysisDrillSafety({...drill,sport:input.sport},block,safety,date);
+  const restRows = await checked(admin.from('rest_day_choices').select('rest_dow,scope,week_start,created_at,undone_at').eq('user_id',uid).is('undone_at',null).limit(200));
+  const safetyResult = analysisDrillSafety({...drill,sport:input.sport},block,{...safety,restDow:restDowFor(date,restRows ?? [])},date);
   if(!analysisOwnerEligible(drill,owners??[],input.sport,safetyResult.equipment,date))throw new Error('This owner drill is not cleared for its declared Today placement. Keep it in Saved drills.');
   if (source.analysisEnrollment?.drillId === drill.id) return {saved:true,because:'Already in your fix-it slot.'};
   if (!safetyResult.acknowledged(input.acknowledged ?? [])) return { saved:false, warnings:safetyResult.warnings, warningKeys:safetyResult.keys };

@@ -29,7 +29,7 @@ export function analysisDrillSafety(drill: Row, block: Row, facts: Row, date: st
     ...(facts.calendar ?? []).filter((e: Row) => !e.deleted_at && ['game','tournament','scrimmage'].includes(e.event_type)).map((e: Row) => e.event_date),
   ]);
   const tomorrow = new Date(Date.parse(`${date}T12:00:00Z`) + 86400000).toISOString().slice(0,10);
-  const rest = new Date(`${date}T12:00:00Z`).getUTCDay() === 0 || (facts.calendar ?? []).some((e: Row) => !e.deleted_at && e.event_type === 'rest' && e.event_date === date);
+  const rest = new Date(`${date}T12:00:00Z`).getUTCDay() === (typeof facts.restDow === 'number' ? facts.restDow : 0) || (facts.calendar ?? []).some((e: Row) => !e.deleted_at && e.event_type === 'rest' && e.event_date === date);
   const day = (facts.logs ?? [])[0];
   const injury = injuryWords(facts.context.injury_history).length > 0 || day?.injury_mode === true;
   const readiness = (facts.readiness ?? []).slice().reverse().find((r: Row) => typeof r.payload?.score === 'number')?.payload?.score;
