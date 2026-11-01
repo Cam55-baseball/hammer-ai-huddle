@@ -23,5 +23,7 @@ export function certifyComposedWeek(days:readonly ComposedDayEvidence[],sport:st
   }
   const floors={Hitting:3,Defense:4,Baserunning:1,Conditioning:2,...(boughtBunting?{Bunting:2}:{})};
   for(const [key,floor]of Object.entries(floors))if((counts[key]??0)<floor)issues.push(`${key}:${counts[key]??0}/${floor}`);
+  // Written rule: six training days + one rest day in every saved week.
+  if(days.length===7){const rest=days.filter(d=>d.restDay).length;if(rest!==1)issues.push(`rest_days:${rest}/1`);}
   return {ok:issues.length===0,counts,issues};
 }
