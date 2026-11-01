@@ -30,6 +30,7 @@ import { usePhaseState } from "@/hooks/usePhaseState";
 import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
 import { partitionCoachRows } from "@/lib/coachRx/planRows";
 import { composedDayRequest } from "@/lib/hammer/composedDayRequest";
+import { startingDetailsMissing } from "@/lib/hammer/startingDetailsMissing";
 
 // Must equal the version the generator stamps on every row. A mismatch made
 // every visit look "stale" and rebuild today's plan, wiping check-offs.
@@ -428,6 +429,15 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     setGenerating(true);
     setFailed(false);
     setFailureReason(null);
+    // Same server judge as Start: never ask for a plan the server must refuse.
+    if (await startingDetailsMissing()) {
+      console.debug("[wk-generate-daily] skipped — starting details missing");
+      setFailureReason({ code: "initial_inputs_missing", title: null, detail: "Finish your missing starting details first.", missingFields: [], engineFailures: {} });
+      setFailed(true);
+      inFlightRef.current = false;
+      setGenerating(false);
+      return;
+    }
     const started = Date.now();
     try {
       let lastErr: unknown = null;
