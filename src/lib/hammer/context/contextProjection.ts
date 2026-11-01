@@ -98,6 +98,7 @@ export function spineVariables(env: AthleteContextEnvelope | null): ContextVaria
     fromEnvelope(env, "goal_horizon", "Goal horizon", "goals"),
     fromEnvelope(env, "category_goals", "Ranked category goals", "goals"),
     fromEnvelope(env, "weekly_availability_days", "Days per week", "schedule"),
+    fromEnvelope(env, "weekly_rest_dow", "Rest day", "schedule"),
     fromEnvelope(env, "weekly_availability_hours", "Hours per week", "schedule"),
     fromEnvelope(env, "typical_session_length_min", "Session length (min)", "schedule"),
     fromEnvelope(env, "training_focus", "Training focus", "goals"),

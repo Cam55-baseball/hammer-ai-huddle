@@ -72,7 +72,7 @@ export function guardArmDrills(drills: readonly EassDrill[], input:{date:string;
 }
 
 /** Existing microcycle chooses the day; scheduled outings alone authorize an outing label. */
-export function pitchingDay(date:Date,sport:'baseball'|'softball',quarter:QuarterDescriptor,facts?:OutingFacts|null):PitcherDayType {
+export function pitchingDay(date:Date,sport:'baseball'|'softball',quarter:QuarterDescriptor,facts?:OutingFacts|null,restDow=0):PitcherDayType {
   if(date.getDay()===0)return 'rest';
   if(facts?.pitchedYesterday)return 'flush';
   if(facts?.startsToday)return 'start';
@@ -86,7 +86,7 @@ export function pitchingDay(date:Date,sport:'baseball'|'softball',quarter:Quarte
   }
   if(facts?.relieverAvailableSoon)return 'available';
   // No extra Saturday pen: the existing microcycle alone sets bullpen days (outing-equivalent + one pen).
-  const cycle=buildPitchingMicrocycle({sport,rung:'sustain',quarter,profile:DEFAULT_PITCHER_PROFILE,today:date,gameDows:[],preferredBullpenDow:null});
+  const cycle=buildPitchingMicrocycle({sport,rung:'sustain',quarter,profile:DEFAULT_PITCHER_PROFILE,today:date,gameDows:[],preferredBullpenDow:null,restDow});
   const type=cycle.today.dayType;
   return type==='start'||type==='game'||type==='available'?'bullpen':type;
 }

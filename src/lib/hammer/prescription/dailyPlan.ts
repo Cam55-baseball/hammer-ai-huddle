@@ -2453,7 +2453,7 @@ export function buildHammerDailyPlan(
   const allowed = (m: ModalityKey) => (m !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES) && (!access || (m === 'hitting' ? access.hasHitting : m === 'baserunning' ? access.hasBaserunning : m === 'defense' ? access.hasDefense : m === 'throwing' ? access.hasThrowing || access.hasPitching : true));
   const firstPass = ALL_MODALITIES.filter(allowed).map((m) =>
     builder({ modality: m, ctx, proj, speed, gameTomorrow:scheduleSignal.isGameTomorrow, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
-      pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings) : undefined,
+      pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings,proj.weeklyRestDow ?? SIX_DAY_REST_DOW) : undefined,
       pitchingPhase:quarter.phase==='off'?`os_q${quarter.quarter}`:quarter.phase==='pre'?'preseason':quarter.phase==='in'?'in_season':'post_season',
       armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,positionThrowing:!!access&&!access.hasPitching,armHistory:roadmapInputs.armHistory,
       planDate:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,skillExecutionAllowed: scheduleSignal.postureToday === 'normal' && !(m==='defense'&&access?.pitcherOnly) }),
@@ -2617,10 +2617,10 @@ export function buildHammerDailyPlan(
       return [{...b,drills:rule.drills as typeof b.drills,steps:drillsToSteps(rule.drills as typeof b.drills),because:[...(b.because??[]),...rule.because]}];
     }
     if(!access?.hasPitching || b.modality!=='throwing')return [b];
-    const type=pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings);
+    const type=pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings,proj.weeklyRestDow ?? SIX_DAY_REST_DOW);
     let pitchingDrills=b.status==='ready'?withTaggedPitchDrill(b.drills.filter(d=>d.armCard!=='throwing') as any[],{sport,dayType:type,role:pitchFacts?.pitchingRole??null,day:today}) as typeof b.drills:b.drills.filter(d=>d.armCard!=='throwing');
     // Owner Oct 31: up to 5 mound/circle days for data-shown command trouble; extra day is light and arm limits still decide.
-    const command=b.status==='ready'?commandDayPlan({sport,role:pitchFacts?.pitchingRole??null,facts:pitchFacts,evidence:roadmapInputs.pitchCommand,day:today}):{add:false,because:[] as string[]};
+    const command=b.status==='ready'?commandDayPlan({sport,role:pitchFacts?.pitchingRole??null,facts:pitchFacts,evidence:roadmapInputs.pitchCommand,day:today,restDow:proj.weeklyRestDow ?? SIX_DAY_REST_DOW}):{add:false,because:[] as string[]};
     if(command.add){const r=withCommandDrill(pitchingDrills as any[],{sport,role:pitchFacts?.pitchingRole??null,day:today});pitchingDrills=r.drills as typeof b.drills;if(!r.id)command.because=[];}
     // Owner-approved: the day before a start is light — light mound/circle catch (~15), arm care, no heavy throwing drills.
     const preStart=!!pitchFacts?.startsTomorrow&&b.status==='ready';

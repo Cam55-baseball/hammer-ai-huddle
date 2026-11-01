@@ -78,6 +78,8 @@ interface Input {
   readonly today: Date;
   readonly gameDows: ReadonlyArray<number>;   // JS getDay() values of games in the next 7 days
   readonly preferredBullpenDow: number | null;
+  /** Owner Nov 1 B1: the player's weekly rest weekday (default Sunday). */
+  readonly restDow?: number;
   readonly pitcherSchedule?: { settings: PitcherSettingsRow | null; outings: PitcherOutingRow[]; availability: PitcherAvailabilityRow[] };
 }
 
@@ -136,7 +138,7 @@ function baseballReliever(input: Input): PitcherDay[] {
     let t: PitcherDayType;
     if (isGame) t = "available";
     else if (preferredBullpenDow !== null && dow === preferredBullpenDow) t = rung === "foundation" ? "side" : "bullpen";
-    else if (dow === 0) t = "rest";
+    else if (dow === (input.restDow ?? 0)) t = "rest";
     else t = dow % 2 === 0 ? "side" : "touch";
     week.push(mkDay(dow, t));
   }
@@ -173,7 +175,7 @@ function softballReliever(input: Input): PitcherDay[] {
     const isGame = gameDows.includes(dow);
     let t: PitcherDayType;
     if (isGame) t = "available";
-    else if (dow === 0) t = "rest";
+    else if (dow === (input.restDow ?? 0)) t = "rest";
     else t = dow % 2 === 0 ? "side" : "touch";
     week.push(mkDay(dow, t, "softball"));
   }
