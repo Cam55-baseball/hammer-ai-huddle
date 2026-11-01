@@ -1261,6 +1261,13 @@
       "when": 1793574475254,
       "tag": "0179_owner_drills_tissue_care_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 180,
+      "version": "7",
+      "when": 1793575888648,
+      "tag": "0180_jump_taxonomy_and_landing_ratings",
+      "breakpoints": true
     }
   ]
 }

@@ -11469,6 +11469,42 @@ export type Database = {
           },
         ]
       }
+      jump_landing_ratings: {
+        Row: {
+          created_at: string
+          id: string
+          movement_slug: string | null
+          plan_date: string
+          prescription_id: string
+          rating: string
+          set_index: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          movement_slug?: string | null
+          plan_date: string
+          prescription_id: string
+          rating: string
+          set_index: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          movement_slug?: string | null
+          plan_date?: string
+          prescription_id?: string
+          rating?: string
+          set_index?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       landing_demo_video: {
         Row: {
           created_at: string
@@ -22268,6 +22304,7 @@ export type Database = {
           coach_cue: string | null
           concentric_profile: string | null
           conditioning_category: string | null
+          contact_method: string | null
           contacts_per_rep: number | null
           contraindications: string[] | null
           created_at: string
@@ -22305,6 +22342,25 @@ export type Database = {
           is_active: boolean
           is_eccentric_dominant: boolean
           joint_stress: number | null
+          jump_class: string[]
+          jump_common_errors: string[]
+          jump_direction: string[]
+          jump_execution: string | null
+          jump_instructions: string | null
+          jump_intensity: string | null
+          jump_landing_strategy: string | null
+          jump_level: string | null
+          jump_load: string | null
+          jump_mechanics: string[]
+          jump_min_readiness: number | null
+          jump_objectives: string[]
+          jump_progressions: string[]
+          jump_regressions: string[]
+          jump_rest_seconds: number | null
+          jump_role_tags: string[]
+          jump_safety: string[]
+          jump_sport_tags: string[]
+          jump_stance: string | null
           method: string | null
           min_age_years: number | null
           min_competition_level: string | null
@@ -22379,6 +22435,7 @@ export type Database = {
           coach_cue?: string | null
           concentric_profile?: string | null
           conditioning_category?: string | null
+          contact_method?: string | null
           contacts_per_rep?: number | null
           contraindications?: string[] | null
           created_at?: string
@@ -22416,6 +22473,25 @@ export type Database = {
           is_active?: boolean
           is_eccentric_dominant?: boolean
           joint_stress?: number | null
+          jump_class?: string[]
+          jump_common_errors?: string[]
+          jump_direction?: string[]
+          jump_execution?: string | null
+          jump_instructions?: string | null
+          jump_intensity?: string | null
+          jump_landing_strategy?: string | null
+          jump_level?: string | null
+          jump_load?: string | null
+          jump_mechanics?: string[]
+          jump_min_readiness?: number | null
+          jump_objectives?: string[]
+          jump_progressions?: string[]
+          jump_regressions?: string[]
+          jump_rest_seconds?: number | null
+          jump_role_tags?: string[]
+          jump_safety?: string[]
+          jump_sport_tags?: string[]
+          jump_stance?: string | null
           method?: string | null
           min_age_years?: number | null
           min_competition_level?: string | null
@@ -22490,6 +22566,7 @@ export type Database = {
           coach_cue?: string | null
           concentric_profile?: string | null
           conditioning_category?: string | null
+          contact_method?: string | null
           contacts_per_rep?: number | null
           contraindications?: string[] | null
           created_at?: string
@@ -22527,6 +22604,25 @@ export type Database = {
           is_active?: boolean
           is_eccentric_dominant?: boolean
           joint_stress?: number | null
+          jump_class?: string[]
+          jump_common_errors?: string[]
+          jump_direction?: string[]
+          jump_execution?: string | null
+          jump_instructions?: string | null
+          jump_intensity?: string | null
+          jump_landing_strategy?: string | null
+          jump_level?: string | null
+          jump_load?: string | null
+          jump_mechanics?: string[]
+          jump_min_readiness?: number | null
+          jump_objectives?: string[]
+          jump_progressions?: string[]
+          jump_regressions?: string[]
+          jump_rest_seconds?: number | null
+          jump_role_tags?: string[]
+          jump_safety?: string[]
+          jump_sport_tags?: string[]
+          jump_stance?: string | null
           method?: string | null
           min_age_years?: number | null
           min_competition_level?: string | null
@@ -25075,6 +25171,10 @@ export type Database = {
       }
       set_head_coach: {
         Args: { _athlete: string; _coach: string }
+        Returns: undefined
+      }
+      set_jump_tags: {
+        Args: { _slug: string; _tags: Json }
         Returns: undefined
       }
       set_parent_optional_sharing: {
