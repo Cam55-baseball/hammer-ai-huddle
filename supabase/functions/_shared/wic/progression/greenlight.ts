@@ -103,7 +103,7 @@ export function greenlightLevel(area: GreenlightArea, colors: readonly WeekColor
     } else if (c === "mixed") {
       streak = 0;
     }
-    // "none" (no work prescribed in the area) holds and keeps the streak.
+    else streak = 0; // "none": a week without this work holds and breaks "in a row" (don't rush).
   }
   const last = colors.length ? colors[colors.length - 1] : null;
   return { level, change, lastColor: last, streak, because: becauseLine(area, last, change, streak, need) };
