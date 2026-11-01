@@ -31,6 +31,8 @@ import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useSchedu
 import { partitionCoachRows } from "@/lib/coachRx/planRows";
 import { composedDayRequest } from "@/lib/hammer/composedDayRequest";
 import { startingDetailsMissing } from "@/lib/hammer/startingDetailsMissing";
+import { rebuildWrongSeasonDays } from "@/lib/hammer/rebuildAfterChange";
+import { getTodayDate } from "@/utils/dateUtils";
 
 // Must equal the version the generator stamps on every row. A mismatch made
 // every visit look "stale" and rebuild today's plan, wiping check-offs.
