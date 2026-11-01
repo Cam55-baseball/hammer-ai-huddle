@@ -32,7 +32,7 @@ describe("questions: subscription-specific, no bleed-over", () => {
   });
 });
 
-const full = { last_trained: "Right now", throw_days: "3–4", throws_per_day: "50–75", throw_distance: "90–120 ft", pitch_outings: "1", pitch_last_count: "50–75", pitch_days_since: "4–7", hit_days: "3–4", swings_per_session: "50–100", live_pitching: "Yes", defense_days: "3–4", defense_reps: "25–50", run_days: "1–2", sprint_volume: "200–500 yd", max_sprints: "Yes", lift_days: "2", lift_history: "2+ years", jumps: "Weekly", bunt_days: "1–2" };
+const full = { last_trained: "Right now", throw_days: "3–4", throws_per_day: "50–75", throw_distance: "90–120 ft", pitch_outings: "1", pitch_last_count: "50–75", pitch_days_since: "4–7", hit_days: "3–4", swings_per_session: "50–100", live_pitching: "Yes", defense_days: "3–4", defense_reps: "25–50", defense_throw_share: "0–25%", run_days: "1–2", sprint_volume: "200–500 yd", max_sprints: "Yes", lift_days: "2", lift_history: "2+ years", jumps: "Weekly", bunt_days: "1–2" };
 
 describe("approved starting points (owner Nov 1 round 4)", () => {
   it("recency: now / 10% / 25% / 50% / beginner", () => {
