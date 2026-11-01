@@ -5,7 +5,7 @@
  * steps each start up; with no owner "ready" threshold saved, everyone holds.
  */
 import { answersComplete, historyWins, programOf, startingLevels, EASING_BACK_LIFT_SHARE, EASING_BACK_LIFT_STEP, type Sport, type StartingLevels } from "./startingPoint.ts";
-import { areaWeeks, greenlightAll, mondayOf, readyThresholdFrom, READY_SETTING_KEY, type DayCheckIn, type GreenlightArea, type GreenlightResult } from "./greenlight.ts";
+import { areaWeeks, greenlightAll, weekColor, mondayOf, readyThresholdFrom, READY_SETTING_KEY, type DayCheckIn, type GreenlightArea, type GreenlightResult } from "./greenlight.ts";
 
 /** Easing-back lift weight (% of normal) at a greenlight level: ~68% then +5% per green week, max 100. */
 export function easeBackStartPct(level: number): number {
@@ -41,6 +41,10 @@ export interface ServerStarts {
   levels: StartingLevels;
   historyAreas: GreenlightArea[];
   greenlight: Record<GreenlightArea, GreenlightResult>;
+  /** Owner round 6: finished jump weeks with their green/not-green result (for landing competency). */
+  jumpWeeks?: { weekStart: string; green: boolean }[];
+  /** No owner "ready" threshold saved → every step-up holds. */
+  held?: boolean;
 }
 
 const shift = (d: string, n: number) => new Date(new Date(`${d}T12:00:00Z`).getTime() + n * 86_400_000).toISOString().slice(0, 10);
@@ -71,11 +75,14 @@ export async function readServerStarts(db: any, userId: string, sport: Sport, mo
     byDay.set(q.entry_date, { date: q.entry_date, readiness: prev?.readiness != null && norm != null ? Math.min(prev.readiness, norm) : norm ?? prev?.readiness ?? null, pain: pain || !!prev?.pain });
   }
   const rows = (rx.data ?? []) as { id: string; plan_date: string; slot: string }[];
-  const greenlight = greenlightAll(areaWeeks(today, rows, logged), [...byDay.values()], today, age, readyThresholdFrom(setting.data?.setting_value));
+  const readyAt = readyThresholdFrom(setting.data?.setting_value);
+  const weeks = areaWeeks(today, rows, logged);
+  const greenlight = greenlightAll(weeks, [...byDay.values()], today, age, readyAt);
+  const jumpWeeks = (weeks.jumps ?? []).map((w) => ({ weekStart: w.weekStart, green: readyAt != null && weekColor(w, [...byDay.values()], readyAt) === "green" }));
   // History in the last 28 days, this week included.
   const since = shift(today, -27);
   const after = shift(mondayOf(today), 7);
   const recent = areaWeeks(after, rows.filter((r) => r.plan_date >= since), logged);
   const historyAreas = (Object.keys(recent) as GreenlightArea[]).filter((a) => historyWins(recent[a].filter((w) => w.completed > 0).length));
-  return { levels: startingLevels(sport, program, answers, null), historyAreas, greenlight };
+  return { levels: startingLevels(sport, program, answers, null), historyAreas, greenlight, jumpWeeks, held: readyAt == null };
 }
