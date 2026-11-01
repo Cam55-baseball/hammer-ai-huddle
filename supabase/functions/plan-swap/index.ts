@@ -6,6 +6,7 @@ import { blockKnownGear, blockSwapChoices } from "../_shared/planSwap/blockSwap.
 import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, rememberedMissingGear, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
 import { speedRowSwap } from "../_shared/planSwap/speedRowSwap.ts";
 import { addAnalysisDrill, rotateAnalysisDrills,acknowledgeAnalysisRotation } from '../_shared/planSwap/analysisDrillAction.ts';
+import { currentSportDay } from '../_shared/planSwap/currentSportDay.ts';
 
 const base = { prescriptionId: z.string().uuid(), planDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   speedSetup: z.object({ spaceYards: z.number().finite().min(0).max(200).nullable(), hill: z.boolean(), sled: z.boolean(), band: z.boolean(), treadmill: z.boolean() }).strict().optional(),
@@ -98,6 +99,14 @@ Deno.serve(async req => {
           typeof score === "number" && score > 4 && score <= 10 ? "ready" as const : null,
           cnsLoad: ledger?.units_spent ?? null, cnsCap: ledger?.units_cap ?? null, phase: context?.season_phase ?? "",
           injuries: injuryWords(context?.injury_history), ageYears: Number.isFinite(born) ? Math.floor((Date.now() - born) / 31_557_600_000) : null };
+      }
+      // Pitcher swaps consume the current real builder's role/rest/command/arm
+      // answer, never a stale saved card's permission to throw or lift.
+      if (['pitching','throwing','strength'].includes(location.modality)) {
+        const current = await currentSportDay(client, uid, body.planDate, location.sport, [...owned], [...rememberedMissingGear(memory ?? [])]);
+        const legal = current.payload.blocks.find((b:any) => b.modality === location.modality && b.status === 'ready');
+        if (!legal?.drills.some((d:any) => d.name === source.name && d.dosage === source.dosage && JSON.stringify(d.armEvent ?? null) === JSON.stringify(source.armEvent ?? null)))
+          return reply({ error: 'Your pitching schedule or arm limits changed. Update Hammer before swapping this item. Nothing was saved.' }, 409);
       }
       const choices = blockSwapChoices(source, location.modality, location.sport, [...owned], [...missing, ...rememberedMissingGear(memory ?? [])], speedInputs);
       if (body.action === "options") return reply({ gear: swapGearList(knownGear), missing, choices });
