@@ -2,8 +2,8 @@
  * Owner Nov 1 round 4 — GREENLIGHT STEP-UP RULE. Pure; shared by the app and server.
  *
  * Per area, per completed Mon–Sun week:
- *  - GREEN: at least 85% of that area's prescribed work completed AND positive
- *    check-ins (ready, no pain flag) on at least 5 of 7 days.
+ *  - GREEN: at least 85% of that area's prescribed work completed AND GOOD check-ins
+ *    (>= 60%, i.e. 4–5 of 5, no pain) on at least 5 of 7 days AND no LOW day (< 40%).
  *  - RED: a pain flag, under 60% done, or 3+ low-readiness days.
  *  - MIXED: anything else. A week with no prescribed work in the area is NONE (holds).
  * Adults step up ONE level after 1 green week. Youth (under 19) need 3 green weeks in a row.
@@ -76,7 +76,8 @@ export function weekColor(area: AreaWeek, checkIns: readonly DayCheckIn[], ready
   const low = days.filter((c) => c.readiness != null && c.readiness < LOW_BELOW).length;
   if (pain || done < RED_DONE || low >= RED_LOW_DAYS) return "red";
   const positive = days.filter((c) => !c.pain && c.readiness != null && c.readiness >= readyAt).length;
-  return done >= GREEN_DONE && positive >= GREEN_POSITIVE_DAYS ? "green" : "mixed";
+  // Owner Nov 1 decision: GREEN also needs no LOW day at all (other days at least OKAY).
+  return done >= GREEN_DONE && positive >= GREEN_POSITIVE_DAYS && low === 0 ? "green" : "mixed";
 }
 
 export interface GreenlightResult {
@@ -122,7 +123,7 @@ export function greenlightLevel(area: GreenlightArea, colors: readonly WeekColor
 function becauseLine(area: GreenlightArea, last: WeekColor | null, change: -1 | 0 | 1, streak: number, need: number): string {
   const a = AREA_WORDS[area];
   if (last === null || last === "none") return `Because: no finished ${a} week to judge yet, so your ${a} stays where it is.`;
-  if (change === 1) return `Because: last week you finished at least 85% of your ${a} and felt ready with no pain on 5+ days, so your ${a} steps up a little.`;
+  if (change === 1) return `Because: last week you finished at least 85% of your ${a} and felt good with no pain on 5+ days and no low days, so your ${a} steps up a little.`;
   if (change === -1) return `Because: last week had pain, less than 60% of your ${a} done, or 3+ low-energy days, so your ${a} steps back one level.`;
   if (last === "red") return `Because: last week had pain, less than 60% of your ${a} done, or 3+ low-energy days, so your ${a} stays at your starting level.`;
   if (last === "green") return `Because: that's ${streak} of ${need} strong ${a} weeks in a row. You step up after ${need}.`;
