@@ -1426,12 +1426,15 @@ function HammerDailyPlanBody({
                     intro={POCKET_INTROS[b.modality] ?? null}
                   >
                     {() => (
-                      <BlockCard
-                        block={b}
-                        onNavigate={(r) => navigate(r)}
-                        onEngagementChanged={bumpEngagement}
-                        adaptiveNote={adj?.note}
-                      />
+                      <>
+                        <BlockCard
+                          block={b}
+                          onNavigate={(r) => navigate(r)}
+                          onEngagementChanged={bumpEngagement}
+                          adaptiveNote={adj?.note}
+                        />
+                        {tissueHere && <ErrorBoundary label="wk-lifts"><WkLiftsCard pocket recovery /></ErrorBoundary>}
+                      </>
                     )}
                   </PocketCard>
                 );
