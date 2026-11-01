@@ -262,7 +262,7 @@ interface BuilderArgs {
   readonly pitchingType?: ReturnType<typeof pitchingDay>;
   readonly armHistory?: PlanningArmHistory;
   /** Owner Nov 1 round 4: greenlight results per area (missing = hold). */
-  readonly greenlight?: import('../../../hooks/useGreenlight').GreenlightMap | null;
+  readonly greenlight?: Partial<Record<import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightArea, import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightResult>> | null;
   readonly planDate?: string;
   readonly armRole?: 'pitcher'|'two_way';
   readonly positionThrowing?: boolean;
@@ -2357,6 +2357,7 @@ export interface RoadmapInputs {
   readonly subscriptionModules?: readonly string[];
   readonly alwaysMissingGear?: readonly string[];
   readonly armHistory?: PlanningArmHistory;
+  readonly greenlight?: Partial<Record<import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightArea, import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightResult>> | null;
   readonly bunting?: {gameWeekdays?:readonly number[];evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
