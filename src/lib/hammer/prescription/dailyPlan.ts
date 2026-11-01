@@ -261,6 +261,8 @@ interface BuilderArgs {
   readonly gameTomorrow?: boolean;
   readonly pitchingType?: ReturnType<typeof pitchingDay>;
   readonly armHistory?: PlanningArmHistory;
+  /** Owner Nov 1 round 4: greenlight results per area (missing = hold). */
+  readonly greenlight?: import('../../../hooks/useGreenlight').GreenlightMap | null;
   readonly planDate?: string;
   readonly armRole?: 'pitcher'|'two_way';
   readonly positionThrowing?: boolean;
@@ -2424,7 +2426,7 @@ export function buildHammerDailyPlan(
     const lastWeekRaw = hist && !hist.unavailable
       ? hist.rows.filter(r => r.entry_date >= from && r.entry_date <= to && !/skip|missed|cancel/i.test(String(r.status ?? ''))).reduce((n, r) => n + Number(r.count ?? 0), 0)
       : null;
-    const week = weeklyThrowTarget({ group, sport: sport === 'softball' ? 'softball' : 'baseball', age: (ctx.get<number>('age_years')?.value as number | null) ?? null, lastWeekRaw, inSeason: proj.seasonPhase === 'in' });
+    const week = weeklyThrowTarget({ group, sport: sport === 'softball' ? 'softball' : 'baseball', age: (ctx.get<number>('age_years')?.value as number | null) ?? null, lastWeekRaw, inSeason: proj.seasonPhase === 'in', greenlight: roadmapInputs.greenlight?.throwing ?? null });
     return { group, ...week, line: throwTargetLine(group, week) };
   })();
   const throwingLadder = throwTarget?.hidden

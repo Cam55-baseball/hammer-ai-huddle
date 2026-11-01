@@ -1,3 +1,4 @@
+import { useGreenlight } from '@/hooks/useGreenlight';
 import { MindItemCard } from "./MindItemCard";
 import { ControlledActivity } from './SessionControlNote';
 import { UpcomingSessionDecisions } from './UpcomingSessionDecisions';
@@ -776,6 +777,7 @@ function HammerDailyPlanBody({
     const r=await supabase.from('mastery_identity_settings').select('*').eq('sport',sportKey).maybeSingle();if(r.error)throw r.error;
     return r.data?testSettingsFor(r.data,bodyUser.id) as import('@/lib/intelligence/testSettings').TestPlanPreferences:undefined;
   }});
+  const greenlight=useGreenlight(bodyUser?.id,bodyPlanDate,(ctx.get<number>('age_years')?.value as number|null)??null);
   const armHistory=usePlanningArmHistory(bodyUser?.id,bodyPlanDate,sportKey,modules.includes(`${sportKey}_pitcher`)||hasG2W);
   const gearMemory=useQuery({queryKey:['planning-gear-memory',bodyUser?.id],enabled:!!bodyUser,queryFn:async()=>{
     if(!bodyUser)throw new Error('Sign in to check saved equipment');
@@ -871,6 +873,7 @@ function HammerDailyPlanBody({
           subscriptionModules: modules,
           alwaysMissingGear:gearMemory.data??[],
           armHistory:armHistory.data??{rows:[],unavailable:true},
+          greenlight:greenlight.data??null,
           masteryFocus:masteryReady?masteryFocus:undefined,
           bunting: !hasSavedSportDay && buntHistory.data && !buntHistory.isError ? { ...buntHistory.data, age:buntAge, phase:resolvedPhase ?? '',userId:bodyUser?.id,traits:{...buntHistory.data.traits,powerGoal:hittingPowerGoal} } : undefined,
           fullRestDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []),
