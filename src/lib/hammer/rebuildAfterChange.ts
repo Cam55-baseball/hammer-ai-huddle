@@ -61,3 +61,20 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
       : kept.length ? `${reason} — your plan was rebuilt for the next 7 days.`
       : `${reason} — your plan was rebuilt for ${firstDate === today ? 'today and the next 6 days' : `${firstDate} and the next 6 days`}.`) + (failed.length || missingInputs ? '' : keptNote) };
 }
+/**
+ * Owner Nov 1 round 2 (item 2): saved future days whose season is wrong are rebuilt
+ * through the same day-lock change path. The server lists only unlogged, unmarked
+ * dates, and the change path still refuses protected work.
+ */
+export async function rebuildWrongSeasonDays(today: string): Promise<{ checked: boolean; rebuilt: string[]; failed: string[] }> {
+  const { data, error } = await supabase.functions.invoke('wk-generate-daily', { body: { plan_date: today, stale_season_sweep: true } });
+  if (error || data?.ok !== true || !Array.isArray(data?.stale_dates)) return { checked: false, rebuilt: [], failed: [] };
+  const rebuilt: string[] = []; const failed: string[] = [];
+  for (const date of data.stale_dates as string[]) {
+    const r = await supabase.functions.invoke('wk-generate-daily', {
+      body: { plan_date: date, compose_sport_day: true, change_reason: 'player_request', change_text: 'Your season for this day changed, so Hammer rebuilt it.', change_key: `season-fix:${date}:${today}` },
+    });
+    if (r.error || r.data?.ok !== true) failed.push(date); else rebuilt.push(date);
+  }
+  return { checked: true, rebuilt, failed };
+}

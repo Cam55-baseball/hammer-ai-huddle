@@ -566,6 +566,18 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       });
   }, [user?.id, planDate, query.data, generating, qc, serverFresh]);
 
+  // Owner Nov 1 round 2: once a day, rebuild saved future days whose season is wrong.
+  useEffect(() => {
+    if (!user?.id || !serverFresh || planDate !== getTodayDate()) return;
+    const k = `season-fix:${user.id}:${planDate}`;
+    try { if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, "1"); } catch { return; }
+    void rebuildWrongSeasonDays(planDate).then((r) => {
+      if (r.rebuilt.length) { void qc.invalidateQueries({ queryKey: ["wk-rx"] }); void qc.invalidateQueries({ queryKey: ["composed-plan-week"] }); }
+      if (!r.checked || r.failed.length) { try { sessionStorage.removeItem(k); } catch { /* retry next visit */ } }
+      console.debug("[season-fix]", r);
+    });
+  }, [user?.id, serverFresh, planDate, qc]);
+
   // Auto-generate exactly once per mount if empty.
   useEffect(() => {
     const first = query.data?.[0];
