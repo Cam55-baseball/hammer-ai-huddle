@@ -41,7 +41,7 @@ export function RestDayChooser({ date, label }: { date: string; label: string })
         </DialogHeader>
         <div className="grid gap-2">
           <Button disabled={busy} onClick={() => void pick("week")}>Only for this week</Button>
-          <Button disabled={busy} variant="outline" onClick={() => void pick("indefinitely" === "indefinitely" ? "indefinite" : "week")}>Indefinitely</Button>
+          <Button disabled={busy} variant="outline" onClick={() => void pick("indefinite")}>Indefinitely</Button>
         </div>
       </DialogContent>
     </Dialog>
