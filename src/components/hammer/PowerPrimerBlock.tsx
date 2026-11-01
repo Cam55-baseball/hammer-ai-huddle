@@ -205,7 +205,7 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
       <ExerciseDisclosure name={`${liftName ?? "Lift"}: how the heavy set + all-out effort works`}>
         {PRIMER_EXPLAINER.map((t) => <p key={t} className="text-xs text-muted-foreground">{t}</p>)}
         <p className="text-xs"><span className="font-medium">All-out effort:</span> {pp.action.name}{pp.action.oz ? ` (${pp.action.oz} oz ball)` : pp.action.lb ? ` (${pp.action.lb} lb med ball)` : ""}, {pp.action.reps[0]}–{pp.action.reps[1]} reps each time. {actionAlts.length > 0 && <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setActionIdx((i) => (i + 1) % (actionAlts.length + 1))}>Alternative</Button>}</p>
-        <p className="text-[11px] text-muted-foreground">Keep going after each lift set until your score dips{pp.max_total_reps != null ? ` (at most ${pp.max_total_reps} throws today)` : ""}.</p>
+        <p className="text-[11px] text-muted-foreground">Keep going after each lift set until your score dips{pp.max_total_reps != null ? ` (at most ${pp.max_total_reps} ${pp.action.real_throw ? "throws" : "sprints"} today)` : ""}.</p>
         {pp.requires_throwing_warmup && (
           <label className="flex items-center gap-2 text-xs">
             <input type="checkbox" checked={warm} onChange={(e) => { setWarm(e.target.checked); localStorage.setItem(warmKey, e.target.checked ? "1" : "0"); }} />

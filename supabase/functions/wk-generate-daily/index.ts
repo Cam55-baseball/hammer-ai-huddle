@@ -5552,6 +5552,8 @@ const handler = async (req: Request): Promise<Response> => {
           }
           const pp = planPowerPrimer({
             pitchBudget,
+            // Owner Nov 1 round 4: pitchers' primer sprint yards count toward the day's 1000-yd total.
+            sprintYardsLeft: yardsLeftToday(pitcherConditioning, (rows as any[]).filter((r) => r.slot === "conditioning")),
             sport, role, age: athleteAgeYears, growthMode: growthState.active,
             readiness: cns == null ? null : Math.max(0, Math.min(100, Number(cns) * 10)),
             pain: painAreasFromInjuries(injurySlugs),
