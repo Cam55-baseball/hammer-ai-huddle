@@ -9,6 +9,8 @@ export type ConditioningRow = { movement_slug: string; movement_name?: string; s
 export function placeOwnerConditioning<R extends ConditioningRow>(rows: readonly R[], catalog: readonly any[], owners: readonly Owner[], ctx: {
   sport: string; isPitcher: boolean; modules: string[]; role: string | null; date: string;
   low: boolean; rest: boolean; game: boolean; restricted: boolean; equipment: string[];
+  /** Owner Nov 1 round 4: the 1000-yd rule applies to pitchers only. Omitted = pitcher rule when isPitcher. */
+  yardCap?: boolean;
 }): { rows: R[]; catalog: any[] } {
   if (ctx.rest || ctx.game || ctx.restricted) return { rows: [...rows], catalog: [...catalog] };
   const gear = new Set(ctx.equipment.map(e => e.trim().toLowerCase()));
@@ -51,11 +53,12 @@ export function placeOwnerConditioning<R extends ConditioningRow>(rows: readonly
     return { ...row, movement_slug: slug, movement_name: pick.name, sets: rounds, reps: dose.contacts !== null ? dose.contacts / contactsPerRep : 1,
       distance_feet: dose.distance_feet || null, duration_seconds: dose.work_seconds || null, total_reps: null,
       dosage_unit: dose.contacts !== null ? 'reps' : 'feet', why_payload: { ...row.why_payload,
-        owner_drill_id: pick.id, cue: pick.cue, setup: pick.setup, why: ownerConditioningLine(pick.name, finalDose),
+        owner_drill_id: pick.id, cue: pick.cue, setup: pick.setup, why: ownerConditioningLine(pick.name, finalDose, ctx.yardCap ?? ctx.isPitcher),
         owner_conditioning: { ...finalDose, kind: pick.conditioning_kind, contact_allowance: allowance },
         ...(dose.load_lbs !== null ? { prescribed_load_lbs: dose.load_lbs } : {}) } };
   });
-  // Carries and sleds share the conditioning yard ceiling even in their original slots.
+  // Pitchers only: carries and sleds share the 1000-yd ceiling even in their original slots.
+  if (!(ctx.yardCap ?? ctx.isPitcher)) return { rows: next.filter(r => r.sets > 0) as R[], catalog: catalog.map(m => synthetic.find(s => s.slug === m.slug) ?? m) };
   const yardRows = next.filter(r => r.slot === 'conditioning' || ['carry','sled'].includes(String(r.why_payload?.owner_conditioning?.kind)));
   const capped = capSessionYards(yardRows);
   const byRow = new Map(yardRows.map((r,i) => [r,capped[i]]));
