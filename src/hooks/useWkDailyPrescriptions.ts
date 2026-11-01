@@ -439,6 +439,9 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
           break;
         } catch (e) {
           lastErr = e;
+          // A 409 is a definite answer (e.g. starting details missing);
+          // retrying cannot change it.
+          if ((e as any)?.context?.status === 409) break;
           if (attempt === 0) {
             await new Promise((r) => setTimeout(r, 1500));
           }
@@ -479,12 +482,17 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       }
       setFailureReason(parsed);
       setFailed(true);
-      // The toast never carries raw engine text (it contained catalog slugs
-      // repeated three times). The card explains the real reason in plain
-      // language via WkCardFailureNotice.
-      toast.error("Today's plan couldn't publish — see the card for why.", {
-        id: "wk-generate-failed",
-      });
+      // Missing starting details is an expected state, not a crash: the
+      // Start checklist already lists what to finish. No error toast.
+      if (parsed?.code === "initial_inputs_missing") {
+        console.debug("[wk-generate-daily] waiting for starting details");
+      } else {
+        // The toast never carries raw engine text. The card explains the
+        // real reason in plain language via WkCardFailureNotice.
+        toast.error("Today's plan couldn't publish — see the card for why.", {
+          id: "wk-generate-failed",
+        });
+      }
     } finally {
       inFlightRef.current = false;
       setGenerating(false);
