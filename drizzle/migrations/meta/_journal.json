@@ -1254,6 +1254,13 @@
       "when": 1793568723594,
       "tag": "0178_start_gate_starting_point",
       "breakpoints": true
+    },
+    {
+      "idx": 179,
+      "version": "7",
+      "when": 1793574475254,
+      "tag": "0179_owner_drills_tissue_care_tags",
+      "breakpoints": true
     }
   ]
 }

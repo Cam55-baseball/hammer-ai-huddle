@@ -44,6 +44,12 @@ export interface OwnerDrillRow {
   conditioning_programs?: string[];
   /** Owner Nov 1: tissue-care / focus-routine measure — time | rounds | check_off. */
   care_measure?: string | null;
+  /** Owner Nov 1: tissue-care matching tags (areas, movement types, contexts, roles, intensity). */
+  care_areas?: string[];
+  care_types?: string[];
+  care_contexts?: string[];
+  care_roles?: string[];
+  care_intensity?: string | null;
   /** Owner Oct 31 pitcher tags; the plan engine places mound/circle work from these. */
   pitch_mound_type?: string | null;
   pitch_distance_fraction?: number | null;
