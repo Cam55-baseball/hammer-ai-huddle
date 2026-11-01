@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { readiness10 } from "@/hooks/useRunningReadiness";
 import {
-  GREENLIGHT_AREAS, areaWeeks, colorsFor, greenlightLevel, mondayOf,
+  areaWeeks, greenlightAll, mondayOf, readyThresholdFrom, READY_SETTING_KEY,
   type DayCheckIn, type GreenlightArea, type GreenlightResult,
 } from "../../supabase/functions/_shared/wic/progression/greenlight";
 
@@ -23,12 +23,15 @@ export function useGreenlight(userId: string | undefined, today: string, age: nu
     staleTime: 5 * 60_000,
     queryFn: async () => {
       const from = shift(mondayOf(today), -7 * GREENLIGHT_WEEKS), to = shift(mondayOf(today), -1);
-      const [rx, logs, quiz] = await Promise.all([
+      const [rx, logs, quiz, setting] = await Promise.all([
         supabase.from("wk_prescriptions").select("id, plan_date, slot").eq("user_id", userId!).gte("plan_date", from).lte("plan_date", to).limit(3000),
         supabase.from("wk_session_logs").select("prescription_id").eq("user_id", userId!).gte("plan_date", from).lte("plan_date", to).limit(3000),
         supabase.from("vault_focus_quizzes").select("entry_date, physical_readiness, pain_location, pain_scale").eq("user_id", userId!).gte("entry_date", from).lte("entry_date", to).limit(400),
+        supabase.from("app_settings").select("setting_value").eq("setting_key", READY_SETTING_KEY).maybeSingle(),
       ]);
-      if (rx.error || logs.error || quiz.error) return null;
+      if (rx.error || logs.error || quiz.error || setting.error) return null;
+      // Owner round 5: until the owner saves a "ready" threshold, every area holds.
+      const readyAt = readyThresholdFrom(setting.data?.setting_value);
       const logged = new Set(((logs.data ?? []) as any[]).map((l) => l.prescription_id).filter(Boolean));
       const byDay = new Map<string, DayCheckIn>();
       for (const q of (quiz.data ?? []) as any[]) {
@@ -40,9 +43,7 @@ export function useGreenlight(userId: string | undefined, today: string, age: nu
       }
       const checkIns = [...byDay.values()];
       const weeks = areaWeeks(today, (rx.data ?? []) as any[], logged);
-      const out: GreenlightMap = {};
-      for (const a of GREENLIGHT_AREAS) out[a] = greenlightLevel(a, colorsFor(weeks[a], checkIns, today), age);
-      return out;
+      return greenlightAll(weeks, checkIns, today, age, readyAt);
     },
   });
 }

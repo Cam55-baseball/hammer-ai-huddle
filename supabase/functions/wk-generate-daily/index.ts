@@ -118,6 +118,7 @@ import {
   metricLabel,
   type ProgressionState,
 } from "../_shared/wic/progression/progressionState.ts";
+import { golden2wayRoleMissing } from "../_shared/wic/progression/startingPoint.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
 import { certifyLift, coerceCanonicalCategory } from "../_shared/wic/lift/sessionBuilder.ts";
@@ -1131,6 +1132,10 @@ const handler = async (req: Request): Promise<Response> => {
     const {data: schedulingSubscription,error:schedulingSubscriptionError}=await admin.from('subscriptions').select('status,subscribed_modules').eq('user_id',user.id).maybeSingle();
     if(schedulingSubscriptionError)throw schedulingSubscriptionError;
     const schedulingModules:string[]=schedulingSubscription?.status==='active'?(schedulingSubscription.subscribed_modules??[]):[];
+    // Owner Nov 1 round 5: Golden 2Way builds only after the player picks Pitcher or Position player.
+    if(!pitcherScheduleReadFailed && golden2wayRoleMissing(sport, schedulingModules, pitcherPrimaryFocus)){
+      return new Response(JSON.stringify({ error: "role_required", message: "Pick Mainly pitcher or Mainly position player first so we can build your plan." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const purchasedPitcher=schedulingModules.some(m=>[`${sport}_pitcher`,`${sport}_golden2way`,`${sport}_pitching`,'pitching'].includes(m));
     const positionProgram=schedulingModules.includes(`${sport}_5tool`);
     const isPitcherAthlete = purchasedPitcher && !positionProgram;

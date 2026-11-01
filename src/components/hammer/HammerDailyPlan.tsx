@@ -1,5 +1,5 @@
 import { useGreenlight } from '@/hooks/useGreenlight';
-import { StartingPointPromptCard } from './StartingPointForm';
+import { StartingPointPromptCard, Golden2WayRolePromptCard } from './StartingPointForm';
 import { useStartingPointAnswers, useLoggedWeeks28, planStartsFrom } from '@/hooks/useStartingPoint';
 import { throwGroup, THROW_TARGETS } from '../../../supabase/functions/_shared/wic/phases/positionThrowTargets';
 import { MindItemCard } from "./MindItemCard";
@@ -1057,6 +1057,7 @@ function HammerDailyPlanBody({
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
         <FinishProfileCard />
+        <ErrorBoundary><Golden2WayRolePromptCard /></ErrorBoundary>
         <ErrorBoundary><StartingPointPromptCard /></ErrorBoundary>
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
         <ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary>

@@ -32,17 +32,17 @@ describe("questions: subscription-specific, no bleed-over", () => {
   });
 });
 
-const full = { last_trained: "Right now", throw_days: "3–4", throws_per_day: "50–75", throw_distance: "90–120 ft", pitch_outings: "1", pitch_last_count: "50–75", pitch_days_since: "4–7", hit_days: "3–4", swings_per_session: "50–100", live_pitching: "Yes", defense_days: "3–4", defense_reps: "25–50", run_days: "1–2", sprint_volume: "200–500 yd", max_sprints: "Yes", lift_days: "2", lift_history: "2+ years", jumps: "Weekly", bunt_days: "1–2" };
+const full = { last_trained: "Right now", throw_days: "3–4", throws_per_day: "50–75", throw_distance: "90–120 ft", pitch_outings: "1", pitch_last_count: "50–75", pitch_days_since: "4–7", hit_days: "3–4", swings_per_session: "50–100", live_pitching: "Yes", defense_days: "3–4", defense_reps: "25–50", defense_throw_share: "0–25%", run_days: "1–2", sprint_volume: "200–500 yd", max_sprints: "Yes", lift_days: "2", lift_history: "2+ years", jumps: "Weekly", bunt_days: "1–2" };
 
 describe("approved starting points (owner Nov 1 round 4)", () => {
   it("recency: now / 10% / 25% / 50% / beginner", () => {
     expect(["Right now", "1–2 weeks ago", "3–6 weeks ago", "2–6 months ago", "6+ months ago", "Never"].map(recencyFactor)).toEqual([1, 0.9, 0.75, 0.5, null, null]);
   });
   it("throwing = middle of the answer × throwing days", () => {
-    expect(startingLevels("baseball", "5tool", full, 300).throwsPerWeek).toBe(Math.round(62.5 * 3.5));
+    expect(startingLevels("baseball", "5tool", full, 300).throwsPerWeek).toBe(Math.round(62.5 * 3.5) + 16); // + 3.5 days × 37.5 reps × 12.5% defense throws
   });
   it("0 throwing days = half the low end of the position's week", () => {
-    expect(startingLevels("baseball", "5tool", { ...full, throw_days: "0" }, 300).throwsPerWeek).toBe(150);
+    expect(startingLevels("baseball", "5tool", { ...full, throw_days: "0" }, 300).throwsPerWeek).toBe(150 + 16);
   });
   it("hitting/defense = middle of the answer, scaled by time off", () => {
     const l = startingLevels("baseball", "5tool", { ...full, last_trained: "3–6 weeks ago" }, 300);
