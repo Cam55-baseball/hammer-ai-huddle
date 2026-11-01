@@ -941,6 +941,10 @@ const handler = async (req: Request): Promise<Response> => {
     const physio = await readPhysioMapping(userClient, user.id, planDate, ctx?.injury_history);
     // ONE age source (owner ruling 2026-10-06): profiles.date_of_birth only.
     const athleteAgeYears: number | null = ageFromDob(p.date_of_birth, planDate);
+    // Owner Nov 1 round 4: age is required — no plan is built without a birthday (no bypass path).
+    if (athleteAgeYears == null) {
+      return new Response(JSON.stringify({ error: "age_required", message: "Add your birthday first so we can build a safe plan for your age." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     // ONE growth rule: measured height only (docs/wic/training-intelligence-v1.md §10.2).
     const { data: heightRows } = await admin
       .from("athlete_height_checks")
