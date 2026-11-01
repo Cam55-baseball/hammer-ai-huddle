@@ -29,7 +29,7 @@ export const GREENLIGHT_STEP: Record<GreenlightArea, { kind: "pct"; pct: number 
   speed: { kind: "pct", pct: 0.05 },        // sprint yards: +5%
   conditioning: { kind: "pct", pct: 0.05 }, // conditioning yards/rounds: +5%
   pitching: { kind: "pct", pct: 0.05 },     // pitch count: +5% (arm rules still bind)
-  lifting: { kind: "rung" },                // one progression rung
+  lifting: { kind: "pct", pct: 0.05 },      // owner round 5: about +5% weight per green week
   jumps: { kind: "rung" },                  // one progression rung
 };
 
@@ -48,8 +48,18 @@ export interface DayCheckIn {
   readiness: number | null;
   pain: boolean;
 }
+/** Legacy test value only. The live rule reads the owner's setting (READY_SETTING_KEY). */
 export const READY_AT = 0.6;
 export const LOW_BELOW = 0.4;
+/** Owner Nov 1 round 5: ONE owner-editable "ready" check-in threshold (Coaching Console). */
+export const READY_SETTING_KEY = "greenlight_ready_threshold";
+/** Saved setting → 0–1 threshold; anything missing or invalid = null (the rule holds everyone). */
+export function readyThresholdFrom(value: unknown): number | null {
+  const v = (value as { readyAt?: unknown } | null)?.readyAt;
+  return typeof v === "number" && Number.isFinite(v) && v > 0 && v <= 1 ? v : null;
+}
+/** Bunts are automatic (owner round 5): bunt volume follows identity/bunting rules, no greenlight gating. */
+export const GREENLIGHT_UNGATED: readonly GreenlightArea[] = ["bunting"];
 
 export interface AreaWeek {
   /** Monday of the week (YYYY-MM-DD). */
@@ -58,14 +68,14 @@ export interface AreaWeek {
   completed: number;
 }
 
-export function weekColor(area: AreaWeek, checkIns: readonly DayCheckIn[]): WeekColor {
+export function weekColor(area: AreaWeek, checkIns: readonly DayCheckIn[], readyAt: number = READY_AT): WeekColor {
   if (!(area.prescribed > 0)) return "none";
   const done = Math.min(1, area.completed / area.prescribed);
   const days = checkIns.filter((c) => inWeek(c.date, area.weekStart));
   const pain = days.some((c) => c.pain);
   const low = days.filter((c) => c.readiness != null && c.readiness < LOW_BELOW).length;
   if (pain || done < RED_DONE || low >= RED_LOW_DAYS) return "red";
-  const positive = days.filter((c) => !c.pain && c.readiness != null && c.readiness >= READY_AT).length;
+  const positive = days.filter((c) => !c.pain && c.readiness != null && c.readiness >= readyAt).length;
   return done >= GREEN_DONE && positive >= GREEN_POSITIVE_DAYS ? "green" : "mixed";
 }
 
@@ -117,6 +127,23 @@ function becauseLine(area: GreenlightArea, last: WeekColor | null, change: -1 | 
   if (last === "red") return `Because: last week had pain, less than 60% of your ${a} done, or 3+ low-energy days, so your ${a} stays at your starting level.`;
   if (last === "green") return `Because: that's ${streak} of ${need} strong ${a} weeks in a row. You step up after ${need}.`;
   return `Because: last week was a mixed ${a} week, so your ${a} holds steady.`;
+}
+
+/** A held result: no step up or back (unset threshold, or an ungated area). */
+export function greenlightHeld(area: GreenlightArea, reason: "unset" | "ungated"): GreenlightResult {
+  const a = AREA_WORDS[area];
+  return { level: 0, change: 0, lastColor: null, streak: 0, because: reason === "ungated" ? "Because: bunts follow your bunting rules each week, with no step-up check." : `Because: the step-up check isn't switched on yet, so your ${a} holds where it is.` };
+}
+
+/** Per-area results with the owner's threshold; null threshold holds every area. */
+export function greenlightAll(weeks: Record<GreenlightArea, AreaWeek[]>, checkIns: readonly DayCheckIn[], today: string, age: number | null, readyAt: number | null): Record<GreenlightArea, GreenlightResult> {
+  const out = {} as Record<GreenlightArea, GreenlightResult>;
+  for (const a of GREENLIGHT_AREAS) {
+    out[a] = GREENLIGHT_UNGATED.includes(a) ? greenlightHeld(a, "ungated")
+      : readyAt == null ? greenlightHeld(a, "unset")
+      : greenlightLevel(a, colorsFor(weeks[a] ?? [], checkIns, today, readyAt), age);
+  }
+  return out;
 }
 
 /**
@@ -183,7 +210,7 @@ export function areaWeeks(
 }
 
 /** Fill skipped weeks between the first judged week and last week as "none" so streaks stay honest. */
-export function colorsFor(weeks: readonly AreaWeek[], checkIns: readonly DayCheckIn[], today: string): WeekColor[] {
+export function colorsFor(weeks: readonly AreaWeek[], checkIns: readonly DayCheckIn[], today: string, readyAt: number = READY_AT): WeekColor[] {
   if (!weeks.length) return [];
   const byStart = new Map(weeks.map((w) => [w.weekStart, w]));
   const out: WeekColor[] = [];
@@ -191,7 +218,7 @@ export function colorsFor(weeks: readonly AreaWeek[], checkIns: readonly DayChec
   for (let d = new Date(`${weeks[0].weekStart}T12:00:00Z`); d.toISOString().slice(0, 10) < last; d.setUTCDate(d.getUTCDate() + 7)) {
     const ws = d.toISOString().slice(0, 10);
     const w = byStart.get(ws);
-    out.push(w ? weekColor(w, checkIns) : "none");
+    out.push(w ? weekColor(w, checkIns, readyAt) : "none");
   }
   return out;
 }
