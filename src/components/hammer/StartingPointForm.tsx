@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useHammerAthleteContext } from "@/hooks/useHammerAthleteContext";
+import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { saveStartingPoint, useInvalidateStartingPoint, useStartingPointAnswers } from "@/hooks/useStartingPoint";
 import { rebuildAfterChange } from "@/lib/hammer/rebuildAfterChange";
 import { getLocalDateString } from "@/utils/dateUtils";
