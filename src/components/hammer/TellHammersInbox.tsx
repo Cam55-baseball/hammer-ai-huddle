@@ -15,6 +15,7 @@ import { readChangeConfirmation } from '@/lib/hammer/changeConfirmation';
 import { ActiveSportSwitch } from './ActiveSportSwitch';
 import { SeasonDatesDialog } from './SeasonDatesDialog';
 import { PitcherRoleQuestions } from './pitching/PitcherRoleQuestions';
+import { ActiveInjuryCards } from './injury/FullGo';
 import { usePitcherSchedule } from '@/hooks/usePitcherSchedule';
 import { parseRoleMessage, describeRoleChange, type RoleChange } from '@/lib/hammer/pitching/pitcherRoleAnswers';
 
@@ -163,6 +164,8 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
         {open && <Button size="icon" variant="ghost" aria-label="Close Update Hammer" onClick={() => toggle(false)}><X className="h-4 w-4" /></Button>}
       </div>}
     {(open || checkIn) && <div className="space-y-3">
+      {/* Owner Nov 1 B4: healed / full-go step lives here, only while an injury is active. */}
+      {!checkIn && <ActiveInjuryCards />}
       {!checkIn && user && <ActiveSportSwitch userId={user.id} />}
       {!checkIn && <Button variant="outline" className="w-full" onClick={() => setDatesOpen(true)}>Season dates</Button>}
       {!checkIn && <><Button variant="outline" className="w-full" aria-expanded={roleOpen} data-testid="tell-pitcher-role" onClick={() => setRoleOpen(v => !v)}>Pitcher or position player</Button>{roleOpen && <PitcherRoleQuestions />}</>}

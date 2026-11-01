@@ -21,6 +21,7 @@ export async function composeSportDay(db: any, input: {
   alwaysMissingGear?: string[];
   physio?: PhysioMapping;
   availabilityDays?: number | null;
+  restDow?: number | null;
 }) {
   const { userId: uid, date, sport } = input;
   const day = new Date(`${date}T12:00:00Z`);
@@ -73,6 +74,7 @@ export async function composeSportDay(db: any, input: {
   const entry=(value:unknown,source:string)=>({value,source,owner:'canonical',confidence:'derived',missing:value==null,last_updated:null});
   envelope.equipment_effective=entry(input.equipment,'dated equipment resolver');
   if (input.availabilityDays != null) envelope.weekly_availability_days=entry(input.availabilityDays,'athlete_context.weekly_availability_days');
+  if (input.restDow != null) envelope.weekly_rest_dow=entry(input.restDow,'rest_day_choices');
   const existingInjuries=envelope.injury_history?.value;
   envelope.injury_history=entry([...(Array.isArray(existingInjuries)?existingInjuries:existingInjuries?[existingInjuries]:[]),...input.injuries].filter(Boolean),'canonical active injury/context');
   const age=ageFromDob(input.birthday,date);

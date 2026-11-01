@@ -50,6 +50,7 @@ import {
 import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_shared/wic/schedule/tissueCost/apply.ts";
 import { wholePlanRest, savedWholePlanRest } from "../_shared/wic/schedule/planDayScope.ts";
 import { unavailableTrainingDate } from '../_shared/wic/schedule/availability.ts';
+import { restDowFor, type RestChoice } from '../_shared/wic/schedule/restDay.ts';
 import { validatePlanSanity } from "../_shared/wic/planSanity.ts";
 // Step 20 C2 — every row resolves an intensity class, stored or derived from
 // the documented mapping, so the ceiling always compares like with like.
@@ -1790,8 +1791,16 @@ const handler = async (req: Request): Promise<Response> => {
     // day, stated once here like the rest-day calculator's "none", so the
     // session template becomes the recovery template and never demands
     // compound lifts the day must not contain. Only ever makes the day lighter.
-    const availabilityRest = unavailableTrainingDate(planDate, (ctx as any)?.weekly_availability_days);
-    if (wholePlanRest(planDate, timelineToday.hold) || availabilityRest) {
+    // Owner Nov 1 B1/B2: the player's chosen weekly rest day (default Sunday).
+    const { data: restChoiceRows, error: restChoiceErr } = await admin.from("rest_day_choices")
+      .select("rest_dow,scope,week_start,created_at,undone_at").eq("user_id", user.id).is("undone_at", null)
+      .order("created_at", { ascending: false }).limit(200);
+    if (restChoiceErr) throw restChoiceErr;
+    const restChoices = (restChoiceRows ?? []) as RestChoice[];
+    const restDowAt = (date: string) => restDowFor(date, restChoices);
+    const planRestDow = restDowAt(planDate);
+    const availabilityRest = unavailableTrainingDate(planDate, (ctx as any)?.weekly_availability_days, planRestDow);
+    if (wholePlanRest(planDate, timelineToday.hold, planRestDow) || availabilityRest) {
       trainingContext.day_type = "recovery_day";
       trainingContext.day_type_display = "Recovery Day";
     }
@@ -3050,7 +3059,7 @@ const handler = async (req: Request): Promise<Response> => {
     } catch (_e) { trendDecision = null; }
     // ONE SYSTEM, ONE PHASE: the one answer every card of this day carries.
     const phaseState = resolvePhaseState({ settings: seasonSettings as any, date: planDate, heights: heightReadings, plannedDeload: !!progression.isDeloadWeek, trendLighter: !!trendDecision?.apply && !progression.isDeloadWeek });
-    const stampPhase = (rs: any[]) => { for (const r of rs) r.why_payload = { ...(r.why_payload ?? {}), phase_state: phaseState, full_plan_rest: wholePlanRest(planDate, timelineToday.hold) || availabilityRest }; return rs; };
+    const stampPhase = (rs: any[]) => { for (const r of rs) r.why_payload = { ...(r.why_payload ?? {}), phase_state: phaseState, full_plan_rest: wholePlanRest(planDate, timelineToday.hold, planRestDow) || availabilityRest }; return rs; };
 
     const dayOfYearSeed = Math.floor(
       (new Date(planDate + "T00:00:00").getTime() - new Date(new Date(planDate).getFullYear(), 0, 0).getTime()) / 86400000,
@@ -3291,7 +3300,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Tell Hammers HOLD is a recovery day: no conditioning is built.
     const easyConditioningOnly = (isGameDay && adaptationDecision.primary === 'game_readiness') || (conditioningSuppressed && injurySlugs.size === 0 && !tcsAdjust?.recoveryOnly);
     const conditioningSafetyStop = conditioningSuppressed && !easyConditioningOnly;
-    if (!isPostSeason && !conditioningSafetyStop && !timelineToday.hold && !wholePlanRest(planDate)) {
+    if (!isPostSeason && !conditioningSafetyStop && !timelineToday.hold && !wholePlanRest(planDate, false, planRestDow)) {
       // Stage 1 (owner-authorised 2026-10-05): the session type chooses the
       // work from recorded facts. Same card, never more than two movements.
       const dialDownReasons = [
@@ -3386,7 +3395,7 @@ const handler = async (req: Request): Promise<Response> => {
           for (const r of (priorRows ?? []) as any[]) byDate.set(r.plan_date, [...(byDate.get(r.plan_date) ?? []), r.movement_slug]);
           const priorRunningDates = [...byDate].filter(([, slugs]) => isRunningConditioning(slugs)).map(([d]) => d);
           const blockedDates = Array.from({length:7},(_,n)=>isoShift(planDate,n)).filter(date =>
-            unavailableTrainingDate(date,(ctx as any)?.weekly_availability_days) || dayEffect(timelineEntries,date).hold ||
+            unavailableTrainingDate(date,(ctx as any)?.weekly_availability_days,restDowAt(date)) || dayEffect(timelineEntries,date).hold ||
             dayEffect(timelineEntries,date).games.length > 0 || scheduledGames.some(g=>g.date===date&&!g.ignored&&!['canceled','cancelled','rescheduled'].includes(String(g.status))));
           let minimum = 2;
           if(PHILOSOPHY_TEST_USERS.includes(user.id)) {
@@ -3704,7 +3713,7 @@ const handler = async (req: Request): Promise<Response> => {
         const placed = placeOwnerConditioning(finalRxs as any[], lib as any[], ownerRows.data ?? [], {
           sport, isPitcher: isPitcherAthlete, modules: schedulingModules, role: outingFacts?.pitchingRole ?? null,
           date: planDate, low: (running?.score ?? dailyLog?.readiness ?? 1) < 0.4,
-          rest: wholePlanRest(planDate, timelineToday.hold) || availabilityRest,
+          rest: wholePlanRest(planDate, timelineToday.hold, planRestDow) || availabilityRest,
           game: isGameDay, restricted: injurySlugs.size > 0, equipment: declaredEquipment,
         });
         finalRxs = assignSequenceOrder(placed.rows as typeof finalRxs);
@@ -3948,7 +3957,7 @@ const handler = async (req: Request): Promise<Response> => {
     // display-placed Mind item). Keep only explicit gentle identities so no
     // loaded/training row reaches a rest day; if none exist the existing
     // honest refusal below still applies. Only ever makes the day lighter.
-    if (wholePlanRest(planDate, timelineToday.hold) || availabilityRest) {
+    if (wholePlanRest(planDate, timelineToday.hold, planRestDow) || availabilityRest) {
       const gentle = restSafeFallback(finalRxs as any[], true);
       if (gentle.length) finalRxs = assignSequenceOrder(gentle as any) as typeof finalRxs;
     }
@@ -4981,7 +4990,7 @@ const handler = async (req: Request): Promise<Response> => {
         firstReport: validatorReport as any,
       });
 
-      const restFallback = wholePlanRest(planDate, timelineToday.hold) || availabilityRest;
+      const restFallback = wholePlanRest(planDate, timelineToday.hold, planRestDow) || availabilityRest;
       const fallbackRows = restSafeFallback(safePlan.rows as any[], restFallback);
       if (!fallbackRows.length) return json({ error: 'rest_recovery_unavailable', message: 'Rest today. No training was added; gentle recovery could not be saved.', issues: ['rest_fallback_without_soft_recovery'] }, 409);
       const safeRows = fallbackRows.map((r, i) => ({
@@ -5481,7 +5490,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Final structural validation runs AFTER safety trimming. A missing-input
     // recovery-only result is not a successfully built training day.
     const planSanity = validatePlanSanity({
-      restDay: wholePlanRest(planDate, timelineToday.hold) || availabilityRest,
+      restDay: wholePlanRest(planDate, timelineToday.hold, planRestDow) || availabilityRest,
       phase: phaseRes.phase,
       work: rows.map((r: any) => ({ category: String(r.slot), slug: r.movement_slug,
         phase: r.phase, primer: r.slot === "ub_primer" || r.sequence_role === "trunk_primer" })),
@@ -5492,7 +5501,7 @@ const handler = async (req: Request): Promise<Response> => {
     if(composeRequested){
       const posture=isTravelDay?'travel':isGameDay?'game':isHeavyPracticeDay?'team_practice':gameProximity.hoursToNearestGame!=null&&gameProximity.hoursToNearestGame>0&&gameProximity.hoursToNearestGame<=24?'taper':'normal';
       const phaseStart=phaseRes.phase.startsWith('os_')?seasonSettings.post_season_end_date:phaseRes.phase==='in_season'?seasonSettings.in_season_start_date:phaseRes.phase==='preseason'?seasonSettings.preseason_start_date:seasonSettings.post_season_start_date;
-      composed=await composeSportDay(userClient,{userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,alwaysMissingGear:[...alwaysMissing],injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null,physio,availabilityDays:typeof ctx?.weekly_availability_days==='number'?ctx.weekly_availability_days:null});
+      composed=await composeSportDay(userClient,{userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold,planRestDow)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,alwaysMissingGear:[...alwaysMissing],injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null,physio,availabilityDays:typeof ctx?.weekly_availability_days==='number'?ctx.weekly_availability_days:null,restDow:planRestDow});
       // Owner Oct 30: 5Tool/Golden 2Way base running + running conditioning are one same-day session.
       const brReady=(composed.payload.blocks as any[]).some((b:any)=>b?.modality==='baserunning'&&b?.status==='ready');
       const drop=combinedRunningRowsToDrop(rows as any[],{combined:isCombinedBaseConditioningProgram(schedulingModules,sport),baserunningReady:brReady});

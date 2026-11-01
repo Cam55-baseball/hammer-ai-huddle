@@ -9,6 +9,7 @@ import {localIso}from '@/hooks/usePitcherSchedule';
 import { Button } from "@/components/ui/button";
 import { SeasonDatesDialog } from "@/components/hammer/SeasonDatesDialog";
 import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
+import { RestDayChooser } from "@/components/hammer/RestDayChooser";
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 
 import { Calendar, Target } from "lucide-react";
@@ -80,6 +81,9 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
   const monday=isoShift(today,-((new Date(`${today}T12:00:00Z`).getUTCDay()+6)%7));
   const savedWeek=useQuery({queryKey:['composed-plan-week',user?.id,sport,monday],enabled:!!user&&!!sport,
     queryFn:()=>{if(!user||!sport)throw new Error('Sign in');return readComposedWeek(user.id,monday,isoShift(monday,6),sport,modules.includes(`${sport}_5tool`)||modules.includes(`${sport}_golden2way`));}});
+  const dateOf=(day:RoadmapDay)=>isoShift(monday,(day.dow+6)%7);
+  // Saved builder output wins: the player's chosen rest day (owner Nov 1 B1).
+  const restOf=(day:RoadmapDay)=>{const saved=savedWeek.data?.days.find(d=>d.date===dateOf(day));return saved?saved.restDay:day.restDay;};
   const savedCategories=(day:RoadmapDay)=>{const date=isoShift(monday,(day.dow+6)%7);const saved=savedWeek.data?.days.find(d=>d.date===date);return saved?composedDayCategories(saved):undefined;};
   const resolvedPhaseCode = { off_season: "off", preseason: "pre", in_season: "in", post_season: "post" }[season.resolvedPhase];
   const phaseWeek = roadmap.quarter.phaseKnown && season.phaseStartedAt && season.phaseDaysIn !== null && resolvedPhaseCode === roadmap.quarter.phase
@@ -134,7 +138,7 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
         {weeklyRoadmap.map((day, idx) => (
           <DayCell
             key={day.dow}
-            day={day}
+            day={{...day,restDay:restOf(day)}}
             onClick={() => setExpanded((cur) => (cur === idx ? null : idx))}
             active={expanded === idx}
             todayCategories={savedCategories(day)??(day.isToday ? todayCategories : undefined)}
@@ -143,7 +147,10 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
       </div>
 
       {expanded !== null && weeklyRoadmap[expanded] && (
-        <DayDetail day={weeklyRoadmap[expanded]} todayCategories={savedCategories(weeklyRoadmap[expanded])??(weeklyRoadmap[expanded].isToday ? todayCategories : undefined)} />
+        <>
+          <DayDetail day={{...weeklyRoadmap[expanded],restDay:restOf(weeklyRoadmap[expanded])}} todayCategories={savedCategories(weeklyRoadmap[expanded])??(weeklyRoadmap[expanded].isToday ? todayCategories : undefined)} />
+          {!restOf(weeklyRoadmap[expanded]) && <RestDayChooser date={dateOf(weeklyRoadmap[expanded])} label={weeklyRoadmap[expanded].short} />}
+        </>
       )}
 
       <WeeklyBodyLoadBar embedded />

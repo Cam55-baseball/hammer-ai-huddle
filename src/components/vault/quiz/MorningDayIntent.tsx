@@ -3,11 +3,18 @@ import { Moon, SkipForward, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDayState } from '@/hooks/useDayState';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
+import { announceChange } from '@/hooks/useScheduleTimeline';
+import { chooseRestDay, readRestChoices, restUsedThisWeek } from '@/lib/hammer/restDayChoice';
+import { getTodayDate } from '@/utils/dateUtils';
 
 /** The existing day override write, relocated to the final morning step. */
 export function MorningDayIntent() {
   const { dayType, setDayType, restBudgetLeft, overBudget } = useDayState();
   const [saving, setSaving] = useState(false);
+  const { user } = useAuth();
+  const qc = useQueryClient();
   const choices = [
     { type: 'rest' as const, label: 'Rest: take it easier', explanation: 'Dial back hard work still to do; keep completed work.', icon: Moon },
     { type: 'skip' as const, label: 'Skip: sit today out', explanation: 'No day credit; workout amounts stay the same.', icon: SkipForward },
@@ -21,6 +28,17 @@ export function MorningDayIntent() {
       if (next === 'rest' && restBudgetLeft <= 0) toast.warning('Rest budget exceeded', { description: 'Extra rest counts as missed.' });
       await setDayType(next);
       toast.success(next ? `${type[0].toUpperCase()}${type.slice(1)} day set.` : 'Standard day restored.');
+      // Owner Nov 1 B2: an unused weekly rest day moves to today (same rebuild as the calendar).
+      if (next === 'rest' && user) {
+        const today = getTodayDate();
+        try {
+          const choices = await readRestChoices(user.id);
+          if (!restUsedThisWeek(today, choices)) {
+            const r = await chooseRestDay({ userId: user.id, today, target: today, scope: 'week', source: 'check_in' });
+            if (r.ok) { await announceChange(qc, user.id, 'Today is your rest day this week', today); toast.success('Today is now this week’s rest day. Your week was rebuilt.'); }
+          }
+        } catch { toast.error('Your rest day for this week could not be moved. Your check-in is still saved.'); }
+      }
     } catch {
       toast.error('Day intent could not be saved. Please try again.');
     } finally {

@@ -51,6 +51,8 @@ export interface ModalityDayDecision {
 export type WeeklyTemplate = {
   readonly id: string;
   readonly availableDays?: ReadonlyArray<Dow>;
+  /** Whole rest weekday for this week (default Sunday). */
+  readonly restDow?: Dow;
   readonly label: string;
   readonly perModality: Partial<Record<ModalityKey, ReadonlyArray<Dow>>>;
   /**
@@ -333,7 +335,8 @@ const PERMISSIVE_DAILY: WeeklyTemplate = {
 
 export function resolveWeeklyTemplate(proj: AthleteContextProjection): WeeklyTemplate {
   const template = resolveBaseTemplate(proj);
-  const legal = new Set(availableTrainingDays(proj.weeklyAvailabilityDays));
+  const restDow = (proj.weeklyRestDow ?? SIX_DAY_REST_DOW) as Dow;
+  const legal = new Set(availableTrainingDays(proj.weeklyAvailabilityDays, restDow));
   return {
     ...template,
     perModality: Object.fromEntries(Object.entries(template.perModality).map(([key, days]) =>
@@ -341,6 +344,7 @@ export function resolveWeeklyTemplate(proj: AthleteContextProjection): WeeklyTem
     priorityDayOrder: Object.fromEntries(Object.entries(template.priorityDayOrder ?? {}).map(([key, days]) =>
       [key, days.filter(day => legal.has(day))])),
     availableDays: [...legal] as Dow[],
+    restDow,
   };
 }
 
@@ -433,13 +437,13 @@ export function resolveSkillDays(
   const picked: Dow[] = [];
   for (const d of priority) {
     if (picked.length >= clamped) break;
-    if (d === SIX_DAY_REST_DOW || !allowed.has(d)) continue;
+    if (d === (template.restDow ?? SIX_DAY_REST_DOW) || !allowed.has(d)) continue;
     if (!picked.includes(d)) picked.push(d);
   }
   // If priority list doesn't cover the target, top up from the remaining
   // days of the week in ascending order so the result is fully deterministic.
   for (let d = 0 as Dow; picked.length < clamped && d <= 6; d = (d + 1) as Dow) {
-    if (d !== SIX_DAY_REST_DOW && allowed.has(d) && !picked.includes(d)) picked.push(d);
+    if (d !== (template.restDow ?? SIX_DAY_REST_DOW) && allowed.has(d) && !picked.includes(d)) picked.push(d);
     if (d === 6) break;
   }
   const baselineSet = new Set(baseline);

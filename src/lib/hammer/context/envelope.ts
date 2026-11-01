@@ -1,3 +1,5 @@
+import { restDowFor } from "../../../../supabase/functions/_shared/wic/schedule/restDay";
+import { getTodayDate } from "@/utils/dateUtils";
 /**
  * Athlete Context Envelope — typed reader for the canonical
  * `public.get_athlete_context_envelope(p_user)` RPC.
@@ -78,7 +80,13 @@ export async function fetchAthleteContextEnvelope(
     { p_user: userId },
   );
   if (error) throw new Error(error.message);
-  return (data ?? {}) as AthleteContextEnvelope;
+  const env = (data ?? {}) as AthleteContextEnvelope;
+  // Owner Nov 1 B1/B2: the player's chosen rest weekday for today's week (default Sunday).
+  const rest = await (supabase as any).from("rest_day_choices")
+    .select("rest_dow,scope,week_start,created_at,undone_at").eq("user_id", userId).is("undone_at", null).limit(200);
+  if (rest.error) throw new Error(rest.error.message);
+  const dow = restDowFor(getTodayDate(), rest.data ?? []);
+  return { ...env, weekly_rest_dow: { value: dow, source: "rest_day_choices", owner: "canonical", confidence: "self_report", missing: false, last_updated: null } } as unknown as AthleteContextEnvelope;
 }
 
 /** Coach-onboarding hydration — reads the user's coach_context row, if any. */

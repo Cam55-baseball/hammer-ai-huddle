@@ -160,7 +160,6 @@ import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
-import { ActiveInjuryCards } from "@/components/hammer/injury/FullGo";
 import { CompetitionLevelPrompt } from "@/components/hammer/cards/CompetitionLevelPrompt";
 import { PitchingCard } from "@/components/hammer/PitchingCard";
 import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitching/pitcherProfile";
@@ -1033,8 +1032,6 @@ function HammerDailyPlanBody({
       <ErrorBoundary>
         <div data-tour="update-hammer"><TellHammersInbox /></div>
       </ErrorBoundary>
-      {/* Active injuries only: each entry carries its progress and the healed step (owner Fix 7). */}
-      <ErrorBoundary><ActiveInjuryCards /></ErrorBoundary>
       <ErrorBoundary>
         {hasSavedSportDay&&<AnalysisRotationNotice sport={sportKey} date={pocketDate}/>}
       </ErrorBoundary>
