@@ -19,7 +19,7 @@ import { sprintRestSeconds, sprintRestWhy } from "../../../supabase/functions/_s
 import { usePocketLogHost } from "@/components/hammer/cards/PocketCard";
 import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure";
 import { papAlternatives } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
-import { QUALITY, primerState, type PrimerRound } from "@/lib/prescription/primerRounds";
+import { QUALITY, primerState, primerSlots, type PrimerRound } from "@/lib/prescription/primerRounds";
 import { enqueue, sendJob } from "@/lib/logging/logOutbox";
 import { useFocusExercise } from "@/components/hammer/cards/FocusSession";
 
@@ -30,6 +30,7 @@ export type PowerPrimerPayload = {
   rest_s: [number, number];
   max_sets: number;
   max_total_reps: number | null;
+  carry?: Array<{ slug: string; name: string; sets: number }>;
   half_volume: boolean;
   stop: { kind: "throw_swing"; drop_pct: number; in_a_row: number } | { kind: "sprint"; drop_pct: number } | { kind: "feel" };
   stop_buttons: string[];
@@ -79,7 +80,8 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
     },
   });
   const lowerIsBetter = pp.target === "first_step";
-  const sets = Math.max(liftSets ?? 0, 1);
+  const slots = primerSlots(pp.carry, liftName ?? pp.primer.name, Math.max(liftSets ?? 0, 1));
+  const sets = slots.length;
   const rules = { max_sets: Math.min(pp.max_sets, sets), max_total_reps: pp.max_total_reps, stop: pp.stop, actionReps: pp.action.reps[1], realThrow: !!pp.action.real_throw };
   const st = primerState(rules, rounds);
   const stopReason = manualStop ?? st.stopReason;
@@ -166,7 +168,7 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
   const rows: JSX.Element[] = [];
   for (let i = 0; i < sets; i++) {
     if (focus.active && i !== focus.row) continue;
-    if (!focus.active) rows.push(<li key={`l${i}`} data-primer-lift-set={i + 1} className="text-xs"><span className="font-medium">Lift set {i + 1}</span> — {liftName ?? pp.primer.name} (log it above)</li>);
+    if (!focus.active) rows.push(<li key={`l${i}`} data-primer-lift-set={i + 1} data-primer-exercise={slots[i].exercise} className="text-xs"><span className="font-medium">{slots[i].exercise} — set {slots[i].set} of {slots[i].ofSets}</span> (log it in its row)</li>);
     const showExplosive = i < rounds.length && (focus.active || !(stopReason && i >= ratedCount)) && i < rules.max_sets;
     if (!showExplosive) continue;
     const r = rounds[i];

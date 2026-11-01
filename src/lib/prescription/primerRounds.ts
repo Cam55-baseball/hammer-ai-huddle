@@ -75,3 +75,19 @@ export function primerState(rules: PrimerRules, rounds: PrimerRound[]): PrimerSt
   const realThrows = rules.realThrow ? totalReps : 0;
   return { done, next: stopReason == null, stopReason, totalReps, realThrows, armUnits: realThrows * REAL_THROW_ARM_WEIGHT };
 }
+
+export interface PrimerSlot { exercise: string; set: number; ofSets: number }
+
+/**
+ * Owner Nov 1 round 3: every lift set across the carried exercises, in order.
+ * The all-out effort follows each lift set until primerState stops it.
+ */
+export function primerSlots(carry: ReadonlyArray<{ name: string; sets: number }> | null | undefined, liftName: string, liftSets: number): PrimerSlot[] {
+  const list = carry && carry.length ? carry : [{ name: liftName, sets: liftSets }];
+  const out: PrimerSlot[] = [];
+  for (const ex of list) {
+    const n = Math.max(1, Math.floor(Number(ex.sets) || 1));
+    for (let s = 1; s <= n; s++) out.push({ exercise: ex.name, set: s, ofSets: n });
+  }
+  return out;
+}
