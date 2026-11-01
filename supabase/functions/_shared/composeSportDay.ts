@@ -6,6 +6,7 @@ import {
   PHILOSOPHY_TEST_USERS, testSettingsFor,
 } from './generated/hammerBlockBuilder.mjs';
 import { isoShift, dayEffect } from './wic/schedule/timeline.ts';
+import { careConfigFrom, CARE_CONFIG_KEY } from './tissueCare/matching.ts';
 import { ageFromDob } from './age/ageFromDob.ts';
 import { planningGear } from './planSwap/planningGear.ts';
 import { readPlanningArmHistory } from './wic/pitching/readPlanningArmHistory.ts';
