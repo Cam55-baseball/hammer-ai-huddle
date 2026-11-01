@@ -3,7 +3,7 @@ import {afterEach,describe,expect,it,vi} from 'vitest';
 const mocks=vi.hoisted(()=>({bulk:vi.fn(),record:vi.fn(),changed:vi.fn()}));
 vi.mock('@/hooks/useAuth',()=>({useAuth:()=>({user:{id:'player'}})}));
 vi.mock('@/contexts/SportThemeContext',()=>({useSportTheme:()=>({sport:'softball'})}));
-vi.mock('@/hooks/useHammerDailyTasks',()=>({useHammerDailyTasks:()=>({bulkSet:mocks.bulk}),makeBlockTaskId:(m:string,s:string)=>`${m}:${s}`}));
+vi.mock('@/hooks/useHammerDailyTasks',()=>({useHammerDailyTasks:()=>({bulkSet:mocks.bulk,isDone:(id:string)=>mocks.logged.has(id)}),makeBlockTaskId:(m:string,s:string)=>`${m}:${s}`}));
 vi.mock('@/lib/hammer/prescription/dailyEngagement',()=>({loadEngagement:()=>({}),todayCompletion:()=>null,recordCompletion:mocks.record}));
 import {BlockCompletionControls} from './BlockCompletionControls';
 afterEach(()=>{cleanup();vi.resetAllMocks();});
