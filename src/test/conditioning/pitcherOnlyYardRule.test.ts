@@ -34,7 +34,7 @@ describe("1000-yard rule: pitchers only", () => {
   it("Add more reps is offered past 1000 yd only without a cap", () => {
     const reps = Array.from({ length: 11 }, () => ({ seconds: 4, feel: "same" as const, effort: 5, pain: false }));
     expect(judgeReps(reps, { kind: "repeat_sprint", prescribedReps: 11, repFeet: 270, capYards: 1000 }).action).toBe("done");
-    expect(judgeReps(reps, { kind: "repeat_sprint", prescribedReps: 11, repFeet: 270, capYards: null }).action).toBe("done");
+    expect(judgeReps(reps, { kind: "repeat_sprint", prescribedReps: 11, repFeet: 270, capYards: null }).action).toBe("offer_more");
   });
 });
 
