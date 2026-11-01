@@ -1274,7 +1274,7 @@ function HammerDailyPlanBody({
                     planDate={pocketDate}
                     practiceLogging={logPractice && ["throwing", "pitching", "defense", "hitting"].includes(b.modality)}
                     prescribed={prescribedToday(b)}
-                    progress={combined}
+                    progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
                     intro={POCKET_INTROS[b.modality] ?? null}
                   >
@@ -1372,7 +1372,7 @@ function HammerDailyPlanBody({
                     planDate={pocketDate}
                     practiceLogging={logPractice && ["throwing", "pitching", "defense", "hitting"].includes(b.modality)}
                     prescribed={prescribedToday(b)}
-                    progress={combined}
+                    progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
                     intro={POCKET_INTROS[b.modality] ?? null}
                   >
