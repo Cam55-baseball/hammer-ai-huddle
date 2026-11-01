@@ -41,6 +41,8 @@ export interface AthleteContextProjection {
   readonly seasonPhase: string | null; // off | pre | in | post
   readonly developmentPriorities: ReadonlyArray<string>; // ["strength","power","speed","mobility","skill","recovery","maintenance"]
   readonly weeklyAvailabilityDays: number | null;
+  /** Owner Nov 1 B1: chosen weekly rest weekday (0=Sunday default). */
+  readonly weeklyRestDow?: number | null;
   readonly goalSummary: string | null;
   readonly goalHorizon: string | null;
   readonly categoryGoals: CategoryGoalsPayload | null;
@@ -205,6 +207,7 @@ export function projectEnvelope(ctx: HammerAthleteContext): AthleteContextProjec
     developmentPriorities: devPriorities,
     weeklyAvailabilityDays:
       (ctx.get<number>("weekly_availability_days")?.value as number | null) ?? null,
+    weeklyRestDow: (ctx.get<number>("weekly_rest_dow")?.value as number | null) ?? null,
     goalSummary: (ctx.get<string>("goal_summary")?.value as string | null) ?? null,
     goalHorizon: (ctx.get<string>("goal_horizon")?.value as string | null) ?? null,
     categoryGoals: normalizeCategoryGoals(ctx.get<unknown>("category_goals")?.value),

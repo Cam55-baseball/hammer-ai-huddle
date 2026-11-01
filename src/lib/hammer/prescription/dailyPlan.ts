@@ -2554,8 +2554,8 @@ export function buildHammerDailyPlan(
   }), focusProjection);
   const fullRestDay = roadmapInputs.fullRestDay === true ||
     physio.recoveryOnly ||
-    unavailableTrainingDate(`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`, proj.weeklyAvailabilityDays) ||
-    today.getDay() === SIX_DAY_REST_DOW ||
+    unavailableTrainingDate(`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`, proj.weeklyAvailabilityDays, proj.weeklyRestDow ?? SIX_DAY_REST_DOW) ||
+    today.getDay() === (proj.weeklyRestDow ?? SIX_DAY_REST_DOW) ||
     (scheduleSignal.postureToday === "normal" && weeklyRoadmap.find(day => day.isToday)?.restDay === true);
   // Last composition boundary: laterality, owner slots, overrides and warm-up anchors cannot reopen rest.
   const bunting = roadmapInputs.bunting;
