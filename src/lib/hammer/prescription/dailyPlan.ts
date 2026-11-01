@@ -70,7 +70,8 @@ import {
   type EassContext,
 } from "./eassLibrary";
 import { selectDefenseDrills, resolveDefenseTier } from "./defenseLibrary";
-import { mergeOwnerSlotDrills, ownerCareDrill, careDosage } from "@/lib/prescription/ownerPlanDrills";
+import { mergeOwnerSlotDrills } from "@/lib/prescription/ownerPlanDrills";
+import { applyTissueCareMatching } from "@/lib/prescription/tissueCarePlan";
 import { positionTokenIsPitcher } from "@/lib/hammer/positions/positionNormalizer";
 import { throwGroup, weeklyThrowTarget, throwTargetLine, type ThrowGroup, type WeekTarget } from "../../../../supabase/functions/_shared/wic/phases/positionThrowTargets";
 import { withTaggedPitchDrill, applyPitcherLiftRule, commandDayPlan, withCommandDrill, lightPreStart } from "./pitcherRolePlan";
@@ -2677,19 +2678,11 @@ export function buildHammerDailyPlan(
     owned: new Set(proj.equipmentList), low: (ctx.get<number>('readiness')?.value ?? 1) < 0.4,
     rest: fullRestDay, game: scheduleSignal.postureToday === 'game' || scheduleSignal.postureToday === 'tournament',
     restricted: physio.activeAreas.length > 0 || physio.illnessActive });
-  // Owner Nov 1: an owner TISSUE CARE activity takes the Recovery card's built-in mobility/foam-roll slot
-  // (count unchanged; prehab, breath and cool-down care stay). Matched by sport, gear and Programs.
-  const careDrill = ownerCareDrill("hammers_today:tissue_care", { sport, modules: roadmapInputs.subscriptionModules ?? [], owned: new Set(proj.equipmentList), day: today });
-  const cared = careDrill ? conditioned.map(b => {
-    if (b.modality !== 'recovery' || b.status !== 'ready') return b;
-    const i = b.drills.findIndex(d => d.name === 'Mobility + foam roll' && (d as { prescriptionOrigin?: string }).prescriptionOrigin !== 'owner');
-    if (i < 0) return b;
-    const owned = { name: careDrill.name, dosage: careDosage(careDrill), cue: careDrill.cue ?? '', prescriptionOrigin: 'owner', ownerDrillId: careDrill.id, careMeasure: careDrill.care_measure ?? null,
-      ...(careDrill.setup?.trim() ? { setup: careDrill.setup } : {}), ...(careDrill.equipment.length ? { equipmentNote: careDrill.equipment.join(', ') } : {}),
-      stopIf: b.drills[i].stopIf } as unknown as DrillStep;
-    const drills = b.drills.map((d, j) => j === i ? owned : d);
-    return { ...b, drills, steps: drillsToSteps(drills) };
-  }) : conditioned;
+  // Owner Nov 1 (round 4/5): owner TISSUE CARE activities replace built-in tissue-care movements like-for-like
+  // (body area + movement type) in Warm-up, Recovery and cool-downs; same count/time budget; no forced matches.
+  const cared = applyTissueCareMatching(conditioned, { sport, modules: roadmapInputs.subscriptionModules ?? [], owned: new Set(proj.equipmentList), day: today,
+    role: access?.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === 'pitcher' ? 'pitcher' : 'position',
+    injuredRegions: physio.activeAreas, lightOnly: (ctx.get<number>('readiness')?.value ?? 1) < 0.4 || physio.illnessActive, restDay: fullRestDay });
   const warmed = withWarmupThrows(cared);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
