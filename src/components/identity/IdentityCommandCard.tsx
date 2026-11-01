@@ -218,10 +218,6 @@ export function IdentityCommandCard({ className }: Props) {
                  <span className="text-xs font-bold uppercase text-primary-foreground/80">
                    Your current standing
                 </span>
-                  >
-                    {dayType.toUpperCase()} day
-                  </span>
-                )}
               </div>
 
                <div className="mt-5 flex items-end justify-between gap-3 sm:block">
