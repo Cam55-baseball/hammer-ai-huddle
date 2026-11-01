@@ -32,7 +32,7 @@ describe("next game question screen", () => {
     render(<NextGameConfirmation />);
     expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Nothing's changed" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "No game scheduled" }));
+    fireEvent.click(await screen.findByRole("button", { name: "No game scheduled" }));
     await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
     expect(save.mock.calls[0][0]).toMatchObject({ tag: "NOTE", payload: { kind: "next_game_answer", answer: "none_scheduled" } });
   });
