@@ -1,6 +1,7 @@
 import { composeSportDay } from '../composeSportDay.ts';
 import { resolveOutingFacts } from '../wic/pitching/outingFacts.ts';
-import { isoShift, dayEffect, seasonWithTimeline } from '../wic/schedule/timeline.ts';
+import { isoShift, dayEffect } from '../wic/schedule/timeline.ts';
+import { seasonWithTimeline } from '../seasonTimeline.ts';
 import { resolvePhaseState } from '../phaseState.ts';
 import { wholePlanRest } from '../wic/schedule/planDayScope.ts';
 import { unavailableTrainingDate } from '../wic/schedule/availability.ts';
