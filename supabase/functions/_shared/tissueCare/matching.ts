@@ -160,7 +160,8 @@ export function rankCare(t: CareTarget, pool: readonly CareItem[], cfg: CareMatc
     score -= Math.max(0, item.areas.length - 3); // very broad items rank under specific ones
     out.push({ item, tier, score, because: careBecause(item, t, tier) });
   }
-  return out.sort((a, b) => b.score - a.score || a.item.id.localeCompare(b.item.id));
+  // Stable sort: equal scores keep pool order (callers rotate the pool by day for variety).
+  return out.sort((a, b) => b.score - a.score);
 }
 
 export function matchCare(t: CareTarget, pool: readonly CareItem[], cfg?: CareMatchConfig, used?: ReadonlySet<string>): CareMatch | null {
