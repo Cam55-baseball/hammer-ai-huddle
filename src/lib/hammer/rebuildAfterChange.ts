@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { isoShift } from '../../../supabase/functions/_shared/wic/schedule/timeline';
 import {readComposedWeek}from './readComposedWeek';
 import { startingDetailsMissing } from './startingDetailsMissing';
+import { weekRuleBreaks, datesToRebuild, blockedReason } from './weekRuleRepair';
 
 /** Same authenticated day-lock adjustment path as Today. Never replaces marked work. */
 export async function rebuildAfterChange(reason: string, today: string, effectiveDate?: string) {
@@ -77,4 +78,32 @@ export async function rebuildWrongSeasonDays(today: string): Promise<{ checked: 
     if (r.error || r.data?.ok !== true) failed.push(date); else rebuilt.push(date);
   }
   return { checked: true, rebuilt, failed };
+}
+
+/**
+ * Owner Nov 1 (round 2 item 4): rebuild a saved week that breaks the rest-day or
+ * weekly-minimum rules through the real builder; never only flag it. Logged or
+ * marked dates are never touched. If the rebuild can't fix it, it is blocked
+ * with a plain reason.
+ */
+export async function repairSavedWeek(today: string): Promise<{ checked: boolean; rebuilt: string[]; failed: string[]; blocked: string | null }> {
+  const none = { checked: false, rebuilt: [] as string[], failed: [] as string[], blocked: null as string | null };
+  const { data, error } = await supabase.functions.invoke('wk-generate-daily', { body: { plan_date: today, week_rule_sweep: true } });
+  if (error || data?.ok !== true || typeof data?.user_id !== 'string' || (data.sport !== 'baseball' && data.sport !== 'softball')) return none;
+  const last = isoShift(today, 6);
+  const read = () => readComposedWeek(data.user_id, today, last, data.sport, data.bunting_entitled === true);
+  let breaks: string[];
+  try { breaks = weekRuleBreaks((await read()).issues); } catch { return none; }
+  if (!breaks.length) return { ...none, checked: true };
+  const window = Array.from({ length: 7 }, (_, i) => isoShift(today, i));
+  const rebuilt: string[] = []; const failed: string[] = [];
+  for (const date of datesToRebuild(window, new Set<string>(data.protected_dates ?? []))) {
+    const r = await supabase.functions.invoke('wk-generate-daily', {
+      body: { plan_date: date, compose_sport_day: true, change_reason: 'player_request', change_text: 'Your week was missing a rest day or a weekly minimum, so Hammer rebuilt it.', change_key: `week-fix:${date}:${today}` },
+    });
+    if (r.error || r.data?.ok !== true) failed.push(date); else rebuilt.push(date);
+  }
+  let after: string[];
+  try { after = weekRuleBreaks((await read()).issues); } catch { return { checked: true, rebuilt, failed, blocked: null }; }
+  return { checked: true, rebuilt, failed, blocked: after.length ? blockedReason(after) : null };
 }
