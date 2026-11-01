@@ -3,6 +3,7 @@ import warmupCatalog from "./warmupSwapCatalog.json" with { type: "json" };
 import { ownsAllGear, avoidsMissingGear } from "./simpleSwap.ts";
 import { chooseNoFieldMix, type NoFieldInputs } from "./noFieldMix.ts";
 import { SPEED_SOURCE_INTENTS, SPEED_SWAP_CATALOG } from "./speedSwapCatalog.ts";
+import { builtinCareTags, matchCare, type CareItem } from "../tissueCare/matching.ts";
 
 type Drill = { name: string; slug?: string | null; dosage: string; stage?: string | null; cue?: string | null; swapReason?: string; speedMix?: unknown };
 export function blockKnownGear(source: Drill, modality: string, sport: "baseball" | "softball"): string[] {
@@ -47,8 +48,25 @@ export function blockSwapChoices(source: Drill, modality: string, sport: "baseba
   }
   if (modality === "warmup" || modality === "recovery") {
     const original = warmupCatalog.find(drill => drill.slug === source.slug || drill.name === source.name);
-    const sibling = original?.fallbackSlug ? warmupCatalog.find(drill => drill.slug === original.fallbackSlug) : undefined;
-    if (!sibling || !original || !missing.length) return [];
+    let sibling = original?.fallbackSlug ? warmupCatalog.find(drill => drill.slug === original.fallbackSlug) : undefined;
+    if (!original || !missing.length) return [];
+    if (!sibling || !ownsAllGear({ equipment_requirements: sibling.equipment, equipment_alternatives: [] }, owned) || !avoidsMissingGear({ equipment_requirements: sibling.equipment, equipment_alternatives: [] }, missing)) {
+      // Owner Nov 1: tissue-care rows swap like-for-like by body area + movement type; never an irrelevant pick.
+      const tags = builtinCareTags({ name: original.name, role: original.role, setup: original.setup });
+      sibling = undefined;
+      if (tags) {
+        const pool: CareItem[] = warmupCatalog.flatMap(drill => {
+          if (drill.slug === original.slug || drill.role === "arm_care") return [];
+          const gear = { equipment_requirements: drill.equipment, equipment_alternatives: [] };
+          if (!ownsAllGear(gear, owned) || !avoidsMissingGear(gear, missing)) return [];
+          const t = builtinCareTags({ name: drill.name, role: drill.role, setup: drill.setup });
+          return t ? [{ id: drill.slug, name: drill.name, areas: t.areas, types: t.types, origin: "builtin" as const }] : [];
+        });
+        const m = matchCare({ areas: tags.areas, type: tags.types[0], context: modality === "recovery" ? "recovery" : "warm_up", sport }, pool);
+        sibling = m ? warmupCatalog.find(drill => drill.slug === m.item.id) : undefined;
+      }
+    }
+    if (!sibling) return [];
     const gear = { equipment_requirements: sibling.equipment, equipment_alternatives: [] };
     if (!ownsAllGear(gear, owned) || !avoidsMissingGear(gear, missing)) return [];
     const reason = `Because the equipment is missing, ${sibling.name.toLowerCase()} keeps your ${source.dosage}.`;
