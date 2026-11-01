@@ -64,7 +64,7 @@ describe("tissue care matching — owner required checks", () => {
     expect(rankCare(t(["elbow_forearm"], "stretch"), [item("neck_s", ["neck"], ["stretch"]), item("shoulder_s", ["shoulders"], ["stretch"])], elbowNeck)[0].item.id).toBe("neck_s");
   });
 
-  const row = (o: any) => ({ active: true, sports: ["baseball"], dosage: "", cue: "c", equipment: [], steps: [], fault_keys: [], phase: null, level: null, setup: "", video_url: null, pinned: false, created_by: null, created_at: "", updated_at: "", overrides_drill_id: null, placements: ["hammers_today:tissue_care"], care_measure: "time", work_seconds: 300, ...o });
+  const row = (o: any) => ({ active: true, sports: ["baseball"], dosage: "", cue: "c", equipment: [], steps: [], fault_keys: [], phase: null, level: null, setup: "", video_url: null, pinned: false, created_by: null, created_at: "", updated_at: "", overrides_drill_id: null, placements: ["hammers_today:tissue_care"], dosage: "easy", care_measure: "time", work_seconds: 300, ...o });
   const blocks = () => [
     { modality: "warmup", status: "ready", drills: [{ name: "T-spine foam roll extensions", slug: "wu_foam_roll_tspine", dosage: "8 slow reps", stage: "prep" }, { name: "Controlled shoulder circles", slug: "wu_shoulder_cars", dosage: "2 per direction per side", stage: "prep" }] },
     { modality: "throwing", status: "ready", drills: [{ name: "Long toss", dosage: "20 throws" }] },
@@ -77,7 +77,7 @@ describe("tissue care matching — owner required checks", () => {
     expect(out[0]).toBe(blocks().length && out[0]); // warm-up untouched
     expect(out[0].drills.map((d: any) => d.name)).toEqual(["T-spine foam roll extensions", "Controlled shoulder circles"]);
     expect(out[2].drills[0].name).toBe("Calf care");
-    expect(out[2].drills[0].dosage).toBe("5 min");
+    expect(out[2].drills[0].dosage).toBe("5 min · easy");
     expect(out[2].drills).toHaveLength(2);
   });
   it("tagged rows replace warm-up and recovery like-for-like at the same budget, once each", () => {
