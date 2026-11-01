@@ -51,7 +51,7 @@ import { isDayStatementNotAReduction } from "@/components/hammer/WkPrescriptionC
 import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 import { isPapStrengthRow } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
 
-export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
+export function WkLiftsCard({ pocket = false, recovery = false }: { pocket?: boolean; recovery?: boolean } = {}) {
   const { user } = useAuth();
   const gp = useGpSignal();
   // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
@@ -147,7 +147,7 @@ export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
             <CollapsibleTrigger asChild disabled={pocket}>
               <button type="button" className="flex items-center gap-2 min-w-0 text-left flex-1" aria-expanded={pocket || open}>
                 <Dumbbell className="h-4 w-4 text-blue-500 shrink-0" />
-                <span className="truncate">Lifts — Full Body</span>
+                <span className="truncate">{recovery ? "Recovery — Tissue care" : "Lifts — Full Body"}</span>
                 <ChevronDown className={`h-4 w-4 ml-auto text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
               </button>
             </CollapsibleTrigger>
@@ -215,7 +215,7 @@ export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
             )}
             {items.length > 0 && <CardDashboard mode="lift" slugs={items.filter((r) => r.load_pct).map((r) => r.movement_slug)} />}
             <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
-            {items.length > 0 && <WkCardCompletion modality="lifts" modalityLabel="Lifts" items={items} />}
+            {items.length > 0 && <WkCardCompletion modality="lifts" modalityLabel={recovery ? "Recovery" : "Lifts"} items={items} />}
             {items.length > 0 && <CardActions modality="lifts" items={items} phaseDisplay={phaseDisplay} />}
           </CardContent>
         </CollapsibleContent>

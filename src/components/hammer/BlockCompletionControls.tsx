@@ -54,6 +54,9 @@ export function BlockCompletionControls({
   const [saving, setSaving] = useState(false);
   const date = planDate ?? new Date().toISOString().slice(0, 10);
   const tasks = useHammerDailyTasks(date);
+  // Owner Nov 1 A9: a block whose every drill has been logged reads as done.
+  const allLogged = !!drills && drills.length > 0 && drills.every((d) => tasks.isDone(makeBlockTaskId(String(modality), d.slug ?? d.name), side));
+  const shown = current ?? (allLogged ? "done" : null);
   const encouragement = useMemo(() => {
     const bank = [
       "That's a rep in the bank.",
@@ -104,14 +107,14 @@ export function BlockCompletionControls({
     <div className="flex items-center gap-1.5">
       <Button
         size="sm"
-        variant={current === "done" ? "default" : "outline"}
+        variant={shown === "done" ? "default" : "outline"}
         onClick={() => mark("done")}
         disabled={saving}
         className="h-7 text-[11px] gap-1"
         title="Mark this block done — feeds streaks + tomorrow's plan"
       >
         <Check className="h-3 w-3" />
-        {current === "done" ? "Done" : "Mark done"}
+        {shown === "done" ? "Done" : "Mark done"}
       </Button>
       <Button
         size="sm"

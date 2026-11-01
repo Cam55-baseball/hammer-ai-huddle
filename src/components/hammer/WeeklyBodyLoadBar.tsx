@@ -51,7 +51,6 @@ export function WeeklyBodyLoadBar({ embedded = false }: { embedded?: boolean } =
           );
         })}
       </div>
-      <p className="mt-1 text-[11px] text-muted-foreground">Dark = hard day done · light = hard day planned · grey = easy or rest day.</p>
     </div>
   );
 }

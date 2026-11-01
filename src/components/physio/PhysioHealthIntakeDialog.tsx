@@ -356,7 +356,7 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
               <Input
                 value={medicationsText}
                 onChange={e => setMedicationsText(e.target.value)}
-                placeholder="e.g. Advil, Vitamin D, Creatine"
+                placeholder="e.g. albuterol inhaler, cetirizine, ibuprofen"
               />
             </div>
             <div className="space-y-2">

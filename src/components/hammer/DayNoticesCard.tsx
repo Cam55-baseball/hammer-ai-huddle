@@ -5,7 +5,7 @@
  * The same notices also appear on the card they concern. This surface is the
  * athlete's single list; it never changes the plan.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AlertTriangle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,10 +31,13 @@ export function DayNoticesCard({
   notices,
   planDate,
   extraLines = [],
+  extra = null,
 }: {
   notices: ReadonlyArray<Notice>;
   planDate: string;
   extraLines?: readonly string[];
+  /** Owner Nov 1 A3: readiness line and recovery-day notice live inside this drawer. */
+  extra?: ReactNode;
 }) {
   const [read, setRead] = useState<string[]>([]);
   const { user } = useAuth();
@@ -71,7 +74,7 @@ export function DayNoticesCard({
     });
   };
 
-  if (notices.length === 0 && extraLines.length === 0) return null;
+  if (notices.length === 0 && extraLines.length === 0 && !extra) return null;
 
   const unique = notices.filter((notice, index) => notices.findIndex(other => surfaceForNotice(other) === surfaceForNotice(notice) && athleteNoticeCopy(other).trim().toLowerCase() === athleteNoticeCopy(notice).trim().toLowerCase()) === index);
   const seen = new Set(unique.map(notice => athleteNoticeCopy(notice).trim().toLowerCase()));
@@ -82,6 +85,7 @@ export function DayNoticesCard({
           Why today's plan changed
       </summary>
       <div className="space-y-2">
+        {extra}
         {notices.length > 0 && user && <Button size="sm" variant="outline" disabled={acking || recoveryAcked} onClick={acknowledgeRecovery}>{recoveryAcked ? "Lighter day acknowledged" : "Take the lighter day"}</Button>}
         {changes.map(line => <p key={line} className="border-l-2 border-primary pl-3 text-xs leading-relaxed">{line}</p>)}
         {unique.map((notice) => {

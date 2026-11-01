@@ -15,6 +15,9 @@ import { HammersTodayContext } from "@/components/hammer/HammersTodayProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitching/pitcherProfile";
+import { useHammerDailyTasks, type TaskSeed } from "@/hooks/useHammerDailyTasks";
+
+const PITCHING_DAYS_TASK: TaskSeed = { taskId: "pitching_days:card", source: "block_drill", sourceRef: "pitching_days", side: null, payload: { name: "Your pitching days" } };
 
 /** Mounts only for athletes who pitch — same rule as the pitching card. */
 export function PitcherScheduleGate() {
@@ -39,6 +42,22 @@ export function PitcherScheduleCard() {
   const [otherDay, setOtherDay] = useState<Record<string, string>>({});
   const role = s.data?.settings?.role ?? null;
   const rot = s.data?.settings;
+  const tasks = useHammerDailyTasks(s.today);
+  const [marking, setMarking] = useState(false);
+  // Owner Nov 1 A9: logging today's outing completes the card on its own.
+  const outingLoggedToday = (s.data?.outings ?? []).some((o) => o.status === "thrown" && o.actual_date === s.today);
+  const markedDone = tasks.isDone(PITCHING_DAYS_TASK.taskId, null);
+  const cardDone = outingLoggedToday || markedDone;
+  const toggleDone = async () => {
+    if (marking || outingLoggedToday) return;
+    setMarking(true);
+    try {
+      await tasks.bulkSet([PITCHING_DAYS_TASK], !markedDone);
+      toast.success(markedDone ? "Your pitching days card is open again." : "Your pitching days — done.");
+    } catch {
+      toast.error("Couldn't save — try again.");
+    } finally { setMarking(false); }
+  };
 
   const after = (msg: string) => () => {
     toast.success(msg);
@@ -150,6 +169,13 @@ export function PitcherScheduleCard() {
               </Button>
             ))}
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 pt-1">
+          <Button size="sm" variant={cardDone ? "default" : "outline"} className="h-7 text-[11px] gap-1" disabled={marking || outingLoggedToday} onClick={() => void toggleDone()} data-testid="pitching-days-done">
+            <Check className="h-3 w-3" />{cardDone ? "Done" : "Mark done"}
+          </Button>
+          {outingLoggedToday && <span className="text-[11px] text-muted-foreground">Today's outing is logged.</span>}
         </div>
       </CardContent>
     </Card>

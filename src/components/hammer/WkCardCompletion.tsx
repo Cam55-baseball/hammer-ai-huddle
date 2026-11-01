@@ -52,6 +52,9 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
     todayCompletion(loadEngagement(user?.id), modality, side),
   );
   const [busy, setBusy] = useState(false);
+  // Owner Nov 1 A9: a card whose every activity has been logged reads as done.
+  const allLogged = items.length > 0 && items.every((r) => r.status === "completed");
+  const shown = current ?? (allLogged ? "done" : null);
 
   const encouragement = useMemo(() => {
     const bank = [
@@ -249,14 +252,14 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
     <div className="flex items-center gap-1.5 pt-1">
       <Button
         size="sm"
-        variant={current === "done" ? "default" : "outline"}
+        variant={shown === "done" ? "default" : "outline"}
         onClick={() => mark("done")}
         disabled={busy}
         className="h-7 text-[11px] gap-1"
         title={`Mark ${modalityLabel} done — feeds streaks + tomorrow's plan`}
       >
         {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-        {current === "done" ? "Done" : "Mark done"}
+        {shown === "done" ? "Done" : "Mark done"}
       </Button>
       <Button
         size="sm"

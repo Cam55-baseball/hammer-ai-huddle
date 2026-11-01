@@ -1,7 +1,6 @@
 import { MindItemCard } from "./MindItemCard";
 import { ControlledActivity } from './SessionControlNote';
 import { UpcomingSessionDecisions } from './UpcomingSessionDecisions';
-import { RunningReadinessLine } from "./RunningReadinessLine";
 import { usePlanningArmHistory } from '@/hooks/usePlanningArmHistory';
 import { rememberedMissingGear } from '../../../supabase/functions/_shared/planSwap/simpleSwap';
 import { InformationalVideos } from '@/components/video-suggestions/InformationalVideos';
@@ -100,7 +99,6 @@ import { MovementGuideSheet } from "@/components/hammer/MovementGuideSheet";
 import { BookOpen } from "lucide-react";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { CoachPrescriptionInbox } from "@/components/hammer/CoachPrescriptionInbox";
-import { WkRestDayBanner } from "@/components/hammer/WkRestDayBanner";
 import { WkSomethingOffRow } from "@/components/hammer/WkSomethingOff";
 import {
   WkProgressionNote,
@@ -1049,10 +1047,8 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
-        <WkRestDayBanner />
         <FinishProfileCard />
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
-        <ErrorBoundary><RunningReadinessLine /></ErrorBoundary>
         <ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary>
         <ErrorBoundary><InformationalVideos placement="before_you_start" sport={sportKey} /></ErrorBoundary>
         <ErrorBoundary><InformationalVideos placement="recurring" sport={sportKey} faultKeys={faultContext.data?.recurringIssues.filter(issue => stillRecurring(issue)).map(issue => issue.fault_key) ?? []} /></ErrorBoundary>
@@ -1398,14 +1394,19 @@ function HammerDailyPlanBody({
                 </PocketCard>
               </ErrorBoundary>
               {coachCards(["conditioning"])}
-              <ErrorBoundary label="wk-lifts">
-                <PocketCard id="lift" progress={progressOf(wkRx.grouped.lifts)} intro={POCKET_INTROS.lift} category={liftIsTissueCare ? "Tissue care" : "Full-body lift"} focus={null} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
-                  {() => <WkLiftsCard pocket />}
+              {/* Owner Nov 1 A6: tissue-care days are recovery, never a lift card. */}
+              {!(liftIsTissueCare && recoveryBlocks.length > 0) && <ErrorBoundary label="wk-lifts">
+                <PocketCard id="lift" progress={progressOf(wkRx.grouped.lifts)} intro={liftIsTissueCare ? POCKET_INTROS.recovery : POCKET_INTROS.lift} category={liftIsTissueCare ? "Recovery" : "Full-body lift"} focus={null} tone={liftIsTissueCare ? "bg-muted-foreground" : "bg-destructive"} planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
+                  {() => <WkLiftsCard pocket recovery={liftIsTissueCare} />}
                 </PocketCard>
-              </ErrorBoundary>
+              </ErrorBoundary>}
               {coachCards(["lift", "supplemental"])}
-              {recoveryBlocks.map((b) => {
+              {recoveryBlocks.map((b, recoveryIndex) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
+                const tissueHere = liftIsTissueCare && recoveryIndex === 0;
+                const bp = blockProgress(b);
+                const lp = progressOf(wkRx.grouped.lifts);
+                const combined = tissueHere && (bp || lp) ? { done: (bp?.done ?? 0) + (lp?.done ?? 0), total: (bp?.total ?? 0) + (lp?.total ?? 0) } : bp;
                 return (
                   <PocketCard
                     key={`${b.modality}-${b.side ?? "x"}`}
@@ -1416,17 +1417,20 @@ function HammerDailyPlanBody({
                     planDate={pocketDate}
                     practiceLogging={logPractice && ["throwing", "pitching", "defense", "hitting"].includes(b.modality)}
                     prescribed={prescribedToday(b)}
-                    progress={blockProgress(b)}
+                    progress={combined}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
                     intro={POCKET_INTROS[b.modality] ?? null}
                   >
                     {() => (
-                      <BlockCard
-                        block={b}
-                        onNavigate={(r) => navigate(r)}
-                        onEngagementChanged={bumpEngagement}
-                        adaptiveNote={adj?.note}
-                      />
+                      <>
+                        <BlockCard
+                          block={b}
+                          onNavigate={(r) => navigate(r)}
+                          onEngagementChanged={bumpEngagement}
+                          adaptiveNote={adj?.note}
+                        />
+                        {tissueHere && <ErrorBoundary label="wk-lifts"><WkLiftsCard pocket recovery /></ErrorBoundary>}
+                      </>
                     )}
                   </PocketCard>
                 );

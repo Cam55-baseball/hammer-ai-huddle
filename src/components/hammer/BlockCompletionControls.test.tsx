@@ -1,9 +1,9 @@
 import {act,cleanup,fireEvent,render,screen} from '@testing-library/react';
 import {afterEach,describe,expect,it,vi} from 'vitest';
-const mocks=vi.hoisted(()=>({bulk:vi.fn(),record:vi.fn(),changed:vi.fn()}));
+const mocks=vi.hoisted(()=>({bulk:vi.fn(),record:vi.fn(),changed:vi.fn(),logged:new Set<string>()}));
 vi.mock('@/hooks/useAuth',()=>({useAuth:()=>({user:{id:'player'}})}));
 vi.mock('@/contexts/SportThemeContext',()=>({useSportTheme:()=>({sport:'softball'})}));
-vi.mock('@/hooks/useHammerDailyTasks',()=>({useHammerDailyTasks:()=>({bulkSet:mocks.bulk}),makeBlockTaskId:(m:string,s:string)=>`${m}:${s}`}));
+vi.mock('@/hooks/useHammerDailyTasks',()=>({useHammerDailyTasks:()=>({bulkSet:mocks.bulk,isDone:(id:string)=>mocks.logged.has(id)}),makeBlockTaskId:(m:string,s:string)=>`${m}:${s}`}));
 vi.mock('@/lib/hammer/prescription/dailyEngagement',()=>({loadEngagement:()=>({}),todayCompletion:()=>null,recordCompletion:mocks.record}));
 import {BlockCompletionControls} from './BlockCompletionControls';
 afterEach(()=>{cleanup();vi.resetAllMocks();});
@@ -18,5 +18,17 @@ describe('block credit follows canonical save',()=>{
   it('failed writes never grant local completion or learning credit',async()=>{
     mocks.bulk.mockRejectedValue(new Error('save failed'));open();await act(async()=>fireEvent.click(screen.getByRole('button',{name:'Mark done'})));
     expect(mocks.record).not.toHaveBeenCalled();expect(mocks.changed).not.toHaveBeenCalled();
+  });
+});
+describe('auto done after logging', () => {
+  it('reads Done once every drill in the block is logged, and Mark done while one is open', () => {
+    mocks.logged = new Set(['hitting:tee', 'hitting:front-toss']);
+    const drills = [{ slug: 'tee', name: 'Tee' }, { slug: 'front-toss', name: 'Front toss' }] as any;
+    render(<BlockCompletionControls modality="hitting" modalityLabel="Hitting" onChanged={() => {}} drills={drills} planDate="2026-11-01" />);
+    expect(screen.getByRole('button', { name: /^Done$/ })).toBeTruthy();
+    cleanup();
+    mocks.logged = new Set(['hitting:tee']);
+    render(<BlockCompletionControls modality="hitting" modalityLabel="Hitting" onChanged={() => {}} drills={drills} planDate="2026-11-01" />);
+    expect(screen.getByRole('button', { name: /Mark done/ })).toBeTruthy();
   });
 });

@@ -54,13 +54,6 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
   const rotation = useMemo(() => detectMonotony(state, plan.blocks), [state, plan.blocks]);
   const earned = milestones.filter((m) => m.earned);
 
-  const dayLabels = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-  // weekArc is oldest→newest (last 7 including today at end). Rotate labels so
-  // today is the last cell no matter what weekday it is.
-  const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0…Sun=6
-  const rotatedLabels: string[] = [];
-  for (let i = 6; i >= 0; i--) rotatedLabels.push(dayLabels[(todayIdx - i + 7) % 7]);
-  const activeCount = streak.weekArc.filter(Boolean).length;
 
   const [open, setOpen] = useState<boolean>(false);
   const { shouldGlow, markOpened } = useOpenedOnceToday("start-line");
@@ -132,48 +125,6 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
             </div>
           </div>
 
-          {/* Weekly rhythm arc */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Week rhythm
-              </span>
-              <span className="text-[10px] tabular-nums text-muted-foreground">
-                {activeCount} / 7 active
-              </span>
-            </div>
-            <div className="grid grid-cols-7 gap-1">
-              {streak.weekArc.map((active, i) => {
-                const isToday = i === 6;
-                return (
-                  <div
-                    key={i}
-                    className={`h-8 rounded flex flex-col items-center justify-center text-[9px] font-semibold border ${
-                      active
-                        ? "bg-primary/20 border-primary/40 text-primary"
-                        : "bg-muted/30 border-border/40 text-muted-foreground/60"
-                    } ${isToday ? "ring-1 ring-primary/60" : ""}`}
-                    title={
-                      isToday
-                        ? active
-                          ? "Today — active"
-                          : "Today — no blocks logged yet"
-                        : active
-                          ? "Active day"
-                          : "Rest / no logged blocks"
-                    }
-                  >
-                    <span>{rotatedLabels[i]}</span>
-                    {isToday && (
-                      <span className="text-[8px] font-bold uppercase tracking-wider opacity-80">
-                        Today
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </CollapsibleContent>
       </Collapsible>
 
