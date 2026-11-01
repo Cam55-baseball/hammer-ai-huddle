@@ -22,7 +22,7 @@ import { ownerConditioningPlan } from './ownerConditioningPlan';
 import { structureSkillSession } from './skillSessionStructure';
 import { restrictedFielding } from './restrictedFielding';
 import { applyPracticePlanContext } from './practicePlanContext';
-import { applyGreenlightPlan, type GreenlightStarts, type GreenlightTargets } from './greenlightPlan';
+import { applyGreenlightPlan, applyBuntStart, type GreenlightStarts, type GreenlightTargets } from './greenlightPlan';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
 import type { OutingFacts } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 /**
@@ -2364,6 +2364,8 @@ export interface RoadmapInputs {
   readonly greenlightTargets?: GreenlightTargets | null;
   /** Starting weekly throws used only while no throws are logged. */
   readonly startThrowsPerWeek?: number | null;
+  /** Owner Nov 1 round 5: starting bunts per side (5/7) from "Where are you starting from?". */
+  readonly buntStartPerSide?: number | null;
   readonly bunting?: {gameWeekdays?:readonly number[];evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
@@ -2604,7 +2606,8 @@ export function buildHammerDailyPlan(
     restDay:fullRestDay,gameDay:scheduleSignal.postureToday!=='normal',pregameStation:scheduleSignal.postureToday==='game'||scheduleSignal.postureToday==='tournament',
   },{weekday:today.getDay(),weekIndex:Math.floor(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()-((today.getDay()+6)%7))/604800000),
     owned:proj.equipmentList,age:bunting.age,phase:bunting.phase,catalog:bunting.catalog,userId:bunting.userId}) : masteryOrdered;
-  const restFiltered = fullRestDay ? bunted.map(b => {
+  const buntStarted = applyBuntStart(bunted, roadmapInputs.buntStartPerSide);
+  const restFiltered = fullRestDay ? buntStarted.map(b => {
     if (["fueling", "game_iq"].includes(b.modality)) return b;
     const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter(d => isSoftRecovery(d.slug)) : [];
     return { ...b, ...(b.modality==='warmup'?{title:'Gentle recovery preparation'}:{}), drills, steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
@@ -2612,7 +2615,7 @@ export function buildHammerDailyPlan(
       offDayOverridable: false, gamePlanTemplate: null,
       why: "Rest today — gentle recovery only. Save real training for your next training day.",
       roadmapReason: "Full rest day — soft recovery only.", durationMin: drills.length ? b.durationMin : null };
-  }) : bunted;
+  }) : buntStarted;
   // Pitching takes its own canonical card identity. This moves existing work,
   // never copies it into a second arm exposure.
   const illnessFiltered = physio.illnessActive ? restFiltered.map(b => {

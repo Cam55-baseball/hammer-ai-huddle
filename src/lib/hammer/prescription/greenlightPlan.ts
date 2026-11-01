@@ -70,3 +70,27 @@ export function applyGreenlightPlan(
     return { ...b, drills, because };
   });
 }
+
+/**
+ * Owner Nov 1 round 5: "Where are you starting from?" bunts — 5 or 7 attempts per side.
+ * Bunts are automatic (no greenlight gating). Attempts only ever go DOWN to the start;
+ * the attempts removed go back to that slot's swings, so no volume is added or lost.
+ */
+export function applyBuntStart(blocks: readonly PrescribedBlock[], perSide: number | null | undefined): readonly PrescribedBlock[] {
+  if (!(perSide && perSide > 0)) return blocks;
+  return blocks.map((b) => {
+    if (b.status !== 'ready' || !b.drills.some((d) => d.bunt && d.bunt.attempts > perSide)) return b;
+    const out: DrillStep[] = [];
+    for (let i = 0; i < b.drills.length; i++) {
+      const d = b.drills[i];
+      if (!d.bunt || d.bunt.attempts <= perSide) { out.push(d); continue; }
+      const back = d.bunt.attempts - perSide;
+      out.push({ ...d, dosage: `${perSide} attempts`, bunt: { ...d.bunt, attempts: perSide } });
+      const next = b.drills[i + 1];
+      const m = next ? /^(\d+) swings$/.exec(next.dosage) : null;
+      if (next && m && !next.bunt) { out.push({ ...next, dosage: `${parseInt(m[1], 10) + back} swings` }); i++; }
+      else out.push({ name: 'Swings', stage: 'drills', dosage: `${back} swings`, cue: 'Your normal swings from today\'s hitting work.' });
+    }
+    return { ...b, drills: out, because: [...(b.because ?? []), `Because: you're starting at ${perSide} bunts per side, and the rest go back to your swings.`] };
+  });
+}

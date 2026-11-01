@@ -119,6 +119,7 @@ import {
   type ProgressionState,
 } from "../_shared/wic/progression/progressionState.ts";
 import { golden2wayRoleMissing } from "../_shared/wic/progression/startingPoint.ts";
+import { readServerStarts, easeBackStartPct, sprintStartYards, capYardsTo, type ServerStarts } from "../_shared/wic/progression/serverStarts.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
 import { certifyLift, coerceCanonicalCategory } from "../_shared/wic/lift/sessionBuilder.ts";
@@ -979,10 +980,20 @@ const handler = async (req: Request): Promise<Response> => {
       p.years_lifting !== null && p.years_lifting !== undefined
         ? true
         : p.training_age_years !== null && p.training_age_years !== undefined;
-    const trainingAgeYears = Number((ctx as any)?.lifting_age_years ?? p.years_lifting ?? p.training_age_years ?? 0);
+    let trainingAgeYears = Number((ctx as any)?.lifting_age_years ?? p.years_lifting ?? p.training_age_years ?? 0);
+    // Owner Nov 1 round 5: "Where are you starting from?" for server-built lifts and sprints.
+    let serverStarts: ServerStarts | null = null;
+    try {
+      const { data: spSub } = await admin.from("subscriptions").select("status, subscribed_modules").eq("user_id", user.id).maybeSingle();
+      const spModules: string[] = (spSub as any)?.status === "active" ? ((spSub as any).subscribed_modules ?? []) : [];
+      serverStarts = await readServerStarts(admin, user.id, sport, spModules, planDate, athleteAgeYears);
+    } catch { serverStarts = null; }
+    const liftStartFromAnswers = serverStarts && !serverStarts.historyAreas.includes("lifting") ? serverStarts.levels.lifting : null;
+    // "Never" / "Under 6 months" lifting → the beginner Foundation track (training age under 1 year).
+    if (liftStartFromAnswers === "foundation") trainingAgeYears = Math.min(trainingAgeKnown ? trainingAgeYears : 0, 0.5);
     const isProProspect = !!(p.is_pro_prospect ?? p.pro_prospect ?? false);
     // Owner Fix 9: stated lifting history or lifting age decides who keeps template sets when easing back.
-    const experiencedLifter = isExperiencedLifter((ctx as any)?.lifting_history, (ctx as any)?.lifting_age_years ?? p.years_lifting ?? p.training_age_years ?? null);
+    const experiencedLifter = liftStartFromAnswers !== "foundation" && isExperiencedLifter((ctx as any)?.lifting_history, (ctx as any)?.lifting_age_years ?? p.years_lifting ?? p.training_age_years ?? null);
     const injurySlugs = new Set((injuries ?? []).map((r: any) => r.injury_slug as string));
     for (const region of activeRestrictedAreas(ctx?.injury_history)) injurySlugs.add(region);
     const restrictedConditioningWhy = restrictedConditioningReason([...injurySlugs]);
@@ -3801,6 +3812,13 @@ const handler = async (req: Request): Promise<Response> => {
       cond.forEach((r, i) => { if ((capped[i] as any).sets !== r.sets) { (r as any).why_payload = { ...((r as any).why_payload ?? {}), yard_cap: { cap_yards: SESSION_YARD_CAP, sets_from: r.sets, sets_to: (capped[i] as any).sets } }; r.sets = (capped[i] as any).sets; } });
       if (cond.some((r) => r.sets === 0)) finalRxs = assignSequenceOrder(finalRxs.filter((r) => !(r.slot === "conditioning" && r.sets === 0)));
     }
+    // Owner Nov 1 round 5: starting sprint yards (no experience → 40 yd), stepped up by the greenlight rule.
+    if (serverStarts && !serverStarts.historyAreas.includes("speed") && serverStarts.levels.sprintYards != null) {
+      const target = sprintStartYards(serverStarts.levels.sprintYards, serverStarts.greenlight.speed?.level ?? 0);
+      const sp = finalRxs.filter((r) => r.slot === "speed");
+      const capped = capYardsTo(sp as any[], target);
+      sp.forEach((r, i) => { if ((capped[i] as any).sets !== r.sets) { (r as any).why_payload = { ...((r as any).why_payload ?? {}), starting_point: { area: "speed", target_yards: target, sets_from: r.sets, sets_to: (capped[i] as any).sets, because: `Because: you're starting at about ${target} sprint yards a session and building up when you're ready.` } }; r.sets = (capped[i] as any).sets; } });
+    }
     // -------- Step 14 — Spike Governor (TI-2, §5.3), switch-gated --------
     // Off for everyone by default. When `load_spike_protection` does not
     // resolve on for this athlete nothing below runs and the day is byte-for-
@@ -4026,6 +4044,17 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
 
+    // Owner Nov 1 round 5: "easing back in" lifting — same sets, about 68% weight, +5% per green week.
+    if (liftStartFromAnswers === "easing_back") {
+      const pct = easeBackStartPct(serverStarts?.greenlight.lifting?.level ?? 0);
+      if (pct < 100) for (const r of finalRxs) {
+        if (r.slot !== "lift") continue;
+        const from = (r as any).load_pct ?? null;
+        const to = from == null ? pct : Math.min(Number(from), pct);
+        (r as any).load_pct = to;
+        (r as any).why_payload = { ...((r as any).why_payload ?? {}), starting_point: { area: "lifting", from_pct: from, to_pct: to, sets_kept: r.sets, because: `Because: you're easing back in, so use about ${to}% of your normal weight with the same sets. It goes up about 5% each green week until normal.` } };
+      }
+    }
     // Owner rule (Oct 28/29): a whole rest day is soft recovery only (+ the
     // display-placed Mind item). Keep only explicit gentle identities so no
     // loaded/training row reaches a rest day; if none exist the existing
