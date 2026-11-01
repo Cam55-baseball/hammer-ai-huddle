@@ -69,6 +69,7 @@ import {
 } from "./eassLibrary";
 import { selectDefenseDrills, resolveDefenseTier } from "./defenseLibrary";
 import { mergeOwnerSlotDrills } from "@/lib/prescription/ownerPlanDrills";
+import { positionTokenIsPitcher } from "@/lib/hammer/positions/positionNormalizer";
 import { throwGroup, weeklyThrowTarget, throwTargetLine, type ThrowGroup, type WeekTarget } from "../../../../supabase/functions/_shared/wic/phases/positionThrowTargets";
 import { withTaggedPitchDrill, applyPitcherLiftRule, commandDayPlan, withCommandDrill, lightPreStart } from "./pitcherRolePlan";
 import {
