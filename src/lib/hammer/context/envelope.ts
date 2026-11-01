@@ -40,7 +40,6 @@ export const SPINE_VARIABLE_KEYS = [
   "goal_horizon",
   "category_goals",
   "weekly_availability_days",
-  "weekly_rest_dow",
   "weekly_availability_hours",
   "typical_session_length_min",
   "training_focus",
