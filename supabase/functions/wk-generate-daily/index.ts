@@ -254,7 +254,7 @@ import { goalDose, goalDoseKey, GOAL_DOSE_VERSION } from "../_shared/wic/goals/g
 import { applyProgramContent, BATCH_KEYS } from "../_shared/wic/content/programContent.ts";
 import { limbGuidance, attachLimbHints } from "../_shared/wic/limb/limbGuidance.ts";
 import { isExperiencedLifter, liftFloorSets, easeBackLoadPct, EASE_BACK_RIR_MIN, EASE_BACK_SENTENCE, RETURNER_VERSION } from "../_shared/wic/exposure/returner.ts";
-import { planPowerPrimer, primerOnStrengthRowsOnly, isPapStrengthRow, liftPatternOf, painAreasFromInjuries, type PapRole, type PapPitchBudget } from "../_shared/wic/pap/powerPrimer.ts";
+import { planPowerPrimer, primerCarryExercises, primerOnStrengthRowsOnly, isPapStrengthRow, liftPatternOf, painAreasFromInjuries, type PapRole, type PapPitchBudget } from "../_shared/wic/pap/powerPrimer.ts";
 import { PITCH_SMART_BANDS, bandIndex, restDaysFor, checkCaps, pitchSmartApplies } from "../_shared/wic/phases/youthThrowing.ts";
 import { planWindmillSession, WINDMILL_PROGRAM_VERSION } from "../_shared/wic/pitching/windmillProgram.ts";
 import { enteredInningsByDate, windmillHistory } from "../_shared/wic/pitching/windmillInnings.ts";
@@ -5544,6 +5544,7 @@ const handler = async (req: Request): Promise<Response> => {
           });
           if (pp.block) {
             pp.block.reasons = pp.reasons;
+            (pp.block as any).carry = primerCarryExercises(rows as any[], first, pp.block.target);
             first.why_payload = { ...(first.why_payload ?? {}), power_primer: pp.block };
           }
         }
