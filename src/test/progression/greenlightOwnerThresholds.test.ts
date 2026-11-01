@@ -37,12 +37,12 @@ describe("owner check-in thresholds", () => {
     expect(weekColor(wk(1), days([2, 1, 2, 4, 4, 4, 4]), READY)).toBe("red");
   });
   it("rule is ON with the saved value: adult green week steps up, red steps back", () => {
-    const today = "2026-11-02";
+    const today = "2026-10-28";
     const greenAll = greenlightAll({ hitting: [wk(0.9)] } as any, days([4, 5, 4, 4, 5, 3, 3]), today, 25, READY);
     expect(greenAll.hitting.change).toBe(1);
     const held = greenlightAll({ hitting: [wk(0.9)] } as any, days([4, 5, 4, 4, 5, 3, 2]), today, 25, READY);
     expect(held.hitting.change).toBe(0);
-    const red = greenlightAll({ hitting: [wk(0.9), { ...wk(0.5), weekStart: "2026-10-26" }] } as any, days([4, 5, 4, 4, 5, 3, 3]), today, 25, READY);
+    const red = greenlightAll({ hitting: [wk(0.9), { ...wk(0.5), weekStart: "2026-10-26" }] } as any, days([4, 5, 4, 4, 5, 3, 3]), "2026-11-04", 25, READY);
     expect(red.hitting.change).toBe(-1);
     expect(greenAll.bunting.change).toBe(0);
   });
