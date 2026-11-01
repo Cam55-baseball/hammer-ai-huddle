@@ -11,7 +11,7 @@ const ctx = {sport:'baseball',isPitcher:true,modules:['baseball_pitcher'],role:'
 describe('owner jump carry sled placement', () => {
   it('places every kind and never exceeds source contacts or 1000 combined yards', () => {
     const out=placeOwnerConditioning(rows,catalog,owners,ctx).rows;
-    expect(out.slice(0,3).map(r=>r.movement_slug)).toEqual(['owner_cond_jump','owner_cond_carry','owner_cond_sled']);
+    expect(out.slice(0,3).map(r=>(r as any).why_payload.owner_drill_id)).toEqual(['jump','carry','sled']);
     expect(out[0].sets*(out[0].reps??1)).toBe(24);
     expect(out.reduce((n,r)=>n+r.sets*(r.reps??1)*((r as any).distance_feet??0)/3,0)).toBeLessThanOrEqual(1000);
   });

@@ -31,20 +31,24 @@ export function placeOwnerConditioning<R extends ConditioningRow>(rows: readonly
     if (!pick) return row;
     const dose = ownerConditioningDose(pick, ctx.low);
     if (!dose) return row;
+    const contactsPerRep = source.contacts_per_rep ?? 1;
+    if (dose.contacts !== null && dose.contacts % contactsPerRep !== 0) return row;
     // The row's already-legal contact count is the maximum, not an invented cap.
     const allowance = exposure?.channel === 'JUMP' ? row.sets * amountPerSet(source, 'JUMP', row.reps ?? null, row.distance_feet ?? null) : null;
     const rounds = allowance !== null && dose.contacts ? Math.min(dose.rounds, Math.floor(allowance / dose.contacts)) : dose.rounds;
     if (rounds < 1) return row;
     used.add(pick.id);
-    const slug = `owner_cond_${pick.id}`;
+    // Retain the canonical source identity so verify_saved, spacing, exposure and
+    // existing FK/readers still recognize the legal slot; owner identity is metadata.
+    const slug = row.movement_slug;
     const finalDose = { ...dose, rounds };
     synthetic.push({ ...source, slug, name: pick.name, cue: pick.cue, default_sets: rounds,
-      default_reps: dose.contacts ?? 1, contacts_per_rep: dose.contacts !== null ? 1 : source.contacts_per_rep,
+      default_reps: dose.contacts !== null ? dose.contacts / contactsPerRep : 1, contacts_per_rep: source.contacts_per_rep,
       default_distance_feet: dose.distance_feet, default_duration_seconds: dose.work_seconds,
       default_total_reps: null, dosage_unit: dose.contacts !== null ? 'reps' : 'feet',
       substitution_family: null, regression_slug: null, progression_slug: null,
       equipment: pick.equipment, equipment_requirements: pick.equipment, equipment_alternatives: [] });
-    return { ...row, movement_slug: slug, movement_name: pick.name, sets: rounds, reps: dose.contacts ?? 1,
+    return { ...row, movement_slug: slug, movement_name: pick.name, sets: rounds, reps: dose.contacts !== null ? dose.contacts / contactsPerRep : 1,
       distance_feet: dose.distance_feet || null, duration_seconds: dose.work_seconds || null, total_reps: null,
       dosage_unit: dose.contacts !== null ? 'reps' : 'feet', why_payload: { ...row.why_payload,
         owner_drill_id: pick.id, cue: pick.cue, setup: pick.setup, why: ownerConditioningLine(pick.name, finalDose),
@@ -55,5 +59,5 @@ export function placeOwnerConditioning<R extends ConditioningRow>(rows: readonly
   const yardRows = next.filter(r => r.slot === 'conditioning' || ['carry','sled'].includes(String(r.why_payload?.owner_conditioning?.kind)));
   const capped = capSessionYards(yardRows);
   const byRow = new Map(yardRows.map((r,i) => [r,capped[i]]));
-  return { rows: next.map(r => byRow.get(r) ?? r).filter(r => r.sets > 0) as R[], catalog: [...catalog, ...synthetic] };
+  return { rows: next.map(r => byRow.get(r) ?? r).filter(r => r.sets > 0) as R[], catalog: catalog.map(m => synthetic.find(s => s.slug === m.slug) ?? m) };
 }

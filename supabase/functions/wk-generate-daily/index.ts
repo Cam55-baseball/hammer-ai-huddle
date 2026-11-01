@@ -3706,7 +3706,7 @@ const handler = async (req: Request): Promise<Response> => {
           game: isGameDay, restricted: injurySlugs.size > 0, equipment: declaredEquipment,
         });
         finalRxs = assignSequenceOrder(placed.rows as typeof finalRxs);
-        for (const m of placed.catalog.slice(lib.length)) lib.push(m);
+        lib = placed.catalog as typeof lib;
       }
     }
 
