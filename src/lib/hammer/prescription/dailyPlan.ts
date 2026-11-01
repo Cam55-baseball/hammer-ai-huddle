@@ -72,6 +72,7 @@ import {
 import { selectDefenseDrills, resolveDefenseTier } from "./defenseLibrary";
 import { mergeOwnerSlotDrills } from "@/lib/prescription/ownerPlanDrills";
 import { applyTissueCareMatching } from "@/lib/prescription/tissueCarePlan";
+import { applyReturnStep } from '../../../../supabase/functions/_shared/wic/pitching/pitcherReturn';
 import { positionTokenIsPitcher } from "@/lib/hammer/positions/positionNormalizer";
 import { throwGroup, weeklyThrowTarget, throwTargetLine, type ThrowGroup, type WeekTarget } from "../../../../supabase/functions/_shared/wic/phases/positionThrowTargets";
 import { withTaggedPitchDrill, applyPitcherLiftRule, commandDayPlan, withCommandDrill, lightPreStart } from "./pitcherRolePlan";
@@ -2345,6 +2346,8 @@ export interface RoadmapInputs {
   readonly pitcherOutings?: OutingFacts | null;
   /** Owner Oct 31: command data (identity window, judged stats, analysis findings, goals). Never self-invented. */
   readonly pitchCommand?: import('../../../../supabase/functions/_shared/wic/pitching/roleCycle').CommandEvidence | null;
+  /** Owner Nov 1 round 6: active pitcher return program (read-only here; the server advances it). */
+  readonly pitcherReturn?: import('../../../../supabase/functions/_shared/wic/pitching/pitcherReturn').ReturnProgram | null;
   readonly recentCompletions?: RecentCompletions;
   readonly phaseStartedAt?: string | null;
   /** Canonical phase from resolveSeasonPhase (short form: off/pre/in/post). */
@@ -2662,6 +2665,8 @@ export function buildHammerDailyPlan(
     // Owner-approved: the day before a start is light — light mound/circle catch (~15), arm care, no heavy throwing drills.
     const preStart=!!pitchFacts?.startsTomorrow&&b.status==='ready';
     if(preStart){const light=lightPreStart(pitchingDrills as any[]);pitchingDrills=light.drills as typeof b.drills;command.because=[...command.because,...light.because];}
+    // Owner Nov 1 round 6: back from 14+ days off — flat ground → shortbox → a short first bullpen (arm limits still decide after).
+    if(b.status==='ready'&&roadmapInputs.pitcherReturn){const ret=applyReturnStep(pitchingDrills as any[],roadmapInputs.pitcherReturn,sport);pitchingDrills=ret.drills as typeof b.drills;command.because=[...command.because,...ret.because];}
     const throwingDrills=b.drills.filter(d=>d.armCard==='throwing'&&!(preStart&&d.armEvent));
     const pitching={...b,drills:pitchingDrills,steps:drillsToSteps(pitchingDrills),modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),...command.because,"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
     const defenseToday=prehabbed.some(x=>x.modality==='defense'&&x.status==='ready');
