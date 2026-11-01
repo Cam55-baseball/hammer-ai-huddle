@@ -42,7 +42,7 @@ import {
 import { useSideContext, type Discipline as SideDiscipline } from "@/contexts/SideContext";
 import {
   CATEGORIES_FOR,
-  offeredSubGoalsFor,
+  subGoalsFor,
   type Sport,
   type Discipline,
   type CategoryKey,
@@ -389,10 +389,15 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded, registerFlush 
       {active && (
         <div className="space-y-3">
           {CATEGORIES_FOR[active.discipline].map((cat) => {
-            const sgs = offeredSubGoalsFor(active.sport, active.discipline, cat);
-            if (!sgs.length) return null;
             const pane = picksByPane[paneKey(active)] ?? {};
             const picks = (pane[cat as keyof DisciplineGoals] as ReadonlyArray<SubGoalPick> | undefined) ?? [];
+            // Owner Nov 1 A8: an older saved goal that is no longer offered still
+            // shows as a chip so it can be removed or ranked; otherwise it would
+            // silently hold one of the two slots (this hit Fielding the most).
+            const sgs = subGoalsFor(active.sport, active.discipline, cat)
+              .filter(g => !g.retired || picks.some(p => p.id === g.id))
+              .map(g => g.retired ? { ...g, label: `${g.label} (older goal)` } : g);
+            if (!sgs.length) return null;
             return (
               <div key={cat} className="rounded-md border border-border bg-card p-3">
                 <div className="mb-2 flex items-center justify-between">
