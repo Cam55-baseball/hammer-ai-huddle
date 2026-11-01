@@ -14,7 +14,7 @@ it('eight weeks through the real daily builder and physical placement preserve j
   const date=new Date(Date.UTC(2026,5,1+n,12));const iso=date.toISOString().slice(0,10);
   const values={sport_primary:'baseball',position_primary:'P',season_phase:'off',weekly_availability_days:6,injury_history:[],equipment_effective:['sled','bands','glove','ball'],lifecycle_band:'adult',age_years:20,lifting_age_years:4,development_priorities:['speed']};
   const envelope=Object.fromEntries(Object.entries(values).map(([k,v])=>[k,{value:v,source:'fixture',confidence:'high',missing:false,last_updated:null,owner:'athlete'}]));
-  const plan=buildHammerDailyPlan(contextFromEnvelope(envelope),NORMAL_SIGNAL,null,null,undefined,date,{subscriptionModules:['baseball_pitcher'],resolvedSeasonPhase:'off',armHistory:{rows:[]}});
+  const plan=buildHammerDailyPlan(contextFromEnvelope(envelope as any),NORMAL_SIGNAL,null,null,undefined,date,{subscriptionModules:['baseball_pitcher'],resolvedSeasonPhase:'off',armHistory:{rows:[]}});
   for(const b of plan.blocks)for(const d of b.drills){const dose=(d as any).conditioningDose;if(dose){served.add(dose.kind);expect(dose.contacts===null||dose.contacts*dose.rounds<=dose.contactAllowance).toBe(true);expect(date.getUTCDay()).not.toBe(0);}}
   // The physical writer uses the same actual day's legal rest/game answer;
   // its existing catalog slots remain independent of sport skill blocks.
@@ -27,7 +27,7 @@ it('eight weeks through the real daily builder and physical placement preserve j
  expect([...served].sort()).toEqual(['carry','jump','sled']);
 });
 it('rep pain remains an active area caution through check-in and clears only through healed flow',()=>{
- let history:any[]=[{region:'calf',severity:'light',participation:'modified',reported_at:'2026-11-02',source_event_id:'rep-pain'}];
+ let history:any[]=[{region:'calf',severity:'light',recovery_status:'active',participation:'modified',reported_at:'2026-11-02',source_event_id:'rep-pain'}];
  expect(activeInjuryAreas(history)).toEqual(['calf']);expect(mapPhysio({injuries:history,today:'2026-11-03'}).activeAreas).toContain('calf');
  history=addInjuryCheck(history,'calf',{date:'2026-11-03',pain:4,function:6});
  expect(injuryCheckPainByDate(history).get('2026-11-03')).toBe(4);
