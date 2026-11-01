@@ -13582,6 +13582,7 @@ export type Database = {
           bat_speed_kind: string | null
           bunt_side: string | null
           bunt_type: string | null
+          care_measure: string | null
           carry_yards: number | null
           common_mistake: string | null
           conditioning_kind: string | null
@@ -13633,6 +13634,7 @@ export type Database = {
           bat_speed_kind?: string | null
           bunt_side?: string | null
           bunt_type?: string | null
+          care_measure?: string | null
           carry_yards?: number | null
           common_mistake?: string | null
           conditioning_kind?: string | null
@@ -13684,6 +13686,7 @@ export type Database = {
           bat_speed_kind?: string | null
           bunt_side?: string | null
           bunt_type?: string | null
+          care_measure?: string | null
           carry_yards?: number | null
           common_mistake?: string | null
           conditioning_kind?: string | null
@@ -14457,6 +14460,39 @@ export type Database = {
           rotation_anchor_date?: string | null
           rotation_every_days?: number | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pitching_tracked_events: {
+        Row: {
+          bullpen_date: string
+          bullpen_outing_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          start_date: string
+          start_outing_id: string | null
+          user_id: string
+        }
+        Insert: {
+          bullpen_date: string
+          bullpen_outing_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          start_date: string
+          start_outing_id?: string | null
+          user_id: string
+        }
+        Update: {
+          bullpen_date?: string
+          bullpen_outing_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          start_date?: string
+          start_outing_id?: string | null
           user_id?: string
         }
         Relationships: []
@@ -23861,6 +23897,10 @@ export type Database = {
       _coach_training_access: { Args: { _athlete: string }; Returns: boolean }
       _gen_code: { Args: never; Returns: string }
       _plan_line_is_health: { Args: { _t: string }; Returns: boolean }
+      _start_followup: {
+        Args: { _athlete: string; _health: boolean; _start: string }
+        Returns: Json
+      }
       _testing_day_can_manage: {
         Args: { _athlete: string; _org: string }
         Returns: boolean
@@ -23947,6 +23987,10 @@ export type Database = {
         Returns: number
       }
       blocked_user_ids: { Args: never; Returns: string[] }
+      bullpen_before_start_followups: {
+        Args: { _athlete: string }
+        Returns: Json
+      }
       can_edit_folder_item: {
         Args: { p_folder_item_id: string; p_user_id: string }
         Returns: boolean

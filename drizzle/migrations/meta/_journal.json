@@ -1226,6 +1226,13 @@
       "when": 1793546272328,
       "tag": "0174_rest_day_choices",
       "breakpoints": true
+    },
+    {
+      "idx": 175,
+      "version": "7",
+      "when": 1793552067069,
+      "tag": "0175_bullpen_before_start_and_care_measure",
+      "breakpoints": true
     }
   ]
 }
