@@ -13639,7 +13639,12 @@ export type Database = {
           bat_speed_kind: string | null
           bunt_side: string | null
           bunt_type: string | null
+          care_areas: string[]
+          care_contexts: string[]
+          care_intensity: string | null
           care_measure: string | null
+          care_roles: string[]
+          care_types: string[]
           carry_yards: number | null
           common_mistake: string | null
           conditioning_kind: string | null
@@ -13691,7 +13696,12 @@ export type Database = {
           bat_speed_kind?: string | null
           bunt_side?: string | null
           bunt_type?: string | null
+          care_areas?: string[]
+          care_contexts?: string[]
+          care_intensity?: string | null
           care_measure?: string | null
+          care_roles?: string[]
+          care_types?: string[]
           carry_yards?: number | null
           common_mistake?: string | null
           conditioning_kind?: string | null
@@ -13743,7 +13753,12 @@ export type Database = {
           bat_speed_kind?: string | null
           bunt_side?: string | null
           bunt_type?: string | null
+          care_areas?: string[]
+          care_contexts?: string[]
+          care_intensity?: string | null
           care_measure?: string | null
+          care_roles?: string[]
+          care_types?: string[]
           carry_yards?: number | null
           common_mistake?: string | null
           conditioning_kind?: string | null
