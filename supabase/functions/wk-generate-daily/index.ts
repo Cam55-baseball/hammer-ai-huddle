@@ -724,7 +724,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Read-only: the app checks the saved 7 days and rebuilds only unprotected
     // dates through the normal change path (which still refuses protected work).
     if ((rawBody as any).week_rule_sweep === true) {
-      const to = isoShift(planDate, 6);
+      const to = new Date(Date.parse(`${planDate}T00:00:00Z`) + 6 * 86_400_000).toISOString().slice(0, 10);
       const [{ data: wRows, error: wErr }, { data: wLogs }, { data: wCtx }, { data: wSub }] = await Promise.all([
         admin.from("wk_prescriptions").select("plan_date, status").eq("user_id", user.id).gte("plan_date", planDate).lte("plan_date", to).limit(2000),
         admin.from("wk_session_logs").select("plan_date").eq("user_id", user.id).gte("plan_date", planDate).lte("plan_date", to).limit(2000),
