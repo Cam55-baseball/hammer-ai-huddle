@@ -1462,20 +1462,35 @@ function sprintRestSeconds(distanceFeet) {
 }
 
 // supabase/functions/_shared/wic/conditioning/ownerConditioning.ts
+var RUNNING_KINDS = /* @__PURE__ */ new Set(["run", "base_route", "sprint", "shuttle"]);
 var int = (v, lo, hi) => typeof v === "number" && Number.isInteger(v) && v >= lo && v <= hi;
 var sportBaseFeet = (sport) => sport === "softball" ? 60 : 90;
 function ownerConditioningProblems(r) {
   const out = [];
   const kind = r.conditioning_kind;
-  if (kind !== "run" && kind !== "base_route") return ["a conditioning type (run or base route)"];
+  if (!kind || !["run", "base_route", "sprint", "shuttle", "jump", "carry", "sled"].includes(kind)) return ["a conditioning type"];
   if (!int(r.rounds, 1, 20)) out.push("rounds (1 to 20)");
+  if (kind === "jump") {
+    if (!int(r.contacts, 1, 200)) out.push("contacts per round (1 to 200)");
+    if (!int(r.rest_seconds, 0, 600)) out.push("a rest time (0 to 600 seconds)");
+    return out;
+  }
+  if (kind === "carry" || kind === "sled") {
+    if (!int(r.carry_yards, 1, 200)) out.push("yards per round (1 to 200)");
+    if (typeof r.load_lbs !== "number" || !(r.load_lbs > 0) || r.load_lbs > 1e3) out.push("a load in pounds");
+    if (kind === "carry" && !int(r.work_seconds, 1, 600)) out.push("a carry time (1 to 600 seconds)");
+    if (!int(r.rest_seconds, 0, 600)) out.push("a rest time (0 to 600 seconds)");
+    if (int(r.rounds, 1, 20) && int(r.carry_yards, 1, 200) && r.rounds * r.carry_yards > 1e3) out.push("no more than 1000 yards in total");
+    return out;
+  }
   if (!int(r.work_seconds, 1, 600)) out.push("a work time (1 to 600 seconds)");
   if (!int(r.rest_seconds, 0, 600)) out.push("a rest time (0 to 600 seconds)");
-  if (kind === "run") {
+  if (kind === "run" || kind === "sprint" || kind === "shuttle") {
     if (!int(r.distance_feet, 1, 1200)) out.push("a run distance in feet");
+    else if (int(r.rounds, 1, 20) && r.rounds * r.distance_feet > 3e3) out.push("no more than 1000 yards in total");
     else {
       const min = sprintRestSeconds(r.distance_feet);
-      if (int(r.rest_seconds, 0, 600) && r.rest_seconds < min) out.push(`at least ${min} seconds rest for ${r.distance_feet} ft (1 minute per 10 yards, up to 5)`);
+      if (min !== null && int(r.rest_seconds, 0, 600) && r.rest_seconds < min) out.push(`at least ${min} seconds rest for ${r.distance_feet} ft (1 minute per 10 yards, up to 5)`);
     }
   } else {
     const sports = r.sports ?? [];
@@ -1485,6 +1500,38 @@ function ownerConditioningProblems(r) {
     if (int(r.rest_seconds, 0, 600) && r.rest_seconds < 30) out.push("at least 30 seconds rest between base reps");
   }
   return out;
+}
+function ownerConditioningDose(r, lowReadiness) {
+  if (ownerConditioningProblems(r).length) return null;
+  const rounds = lowReadiness ? Math.max(1, Math.ceil(r.rounds / 2)) : r.rounds;
+  const base2 = r.conditioning_kind === "base_route";
+  return {
+    rounds,
+    work_seconds: r.work_seconds ?? 0,
+    rest_seconds: r.rest_seconds,
+    distance_feet: base2 ? r.bases_per_rep * r.base_distance_feet : r.conditioning_kind === "jump" ? 0 : ["carry", "sled"].includes(String(r.conditioning_kind)) ? (r.carry_yards ?? 0) * 3 : r.distance_feet,
+    contacts: r.conditioning_kind === "jump" ? r.contacts ?? null : null,
+    load_lbs: ["carry", "sled"].includes(String(r.conditioning_kind)) ? r.load_lbs ?? null : null,
+    bases_per_rep: base2 ? r.bases_per_rep : null,
+    base_distance_feet: base2 ? r.base_distance_feet : null,
+    low: lowReadiness
+  };
+}
+function ownerConditioningFits(r, ctx) {
+  if (!(r.sports ?? []).includes(ctx.sport)) return false;
+  if (ctx.runningOnly !== false && !RUNNING_KINDS.has(String(r.conditioning_kind))) return false;
+  const programs = r.conditioning_programs ?? [];
+  if (programs.length && !programs.some((p) => ctx.modules?.includes(`${ctx.sport}_${p}`))) return false;
+  const roles = r.pitch_role_fit ?? [];
+  if (roles.length && (!ctx.isPitcher || !ctx.role || !roles.includes(ctx.role))) return false;
+  if (ctx.isPitcher && r.conditioning_kind === "base_route") return false;
+  return ownerConditioningProblems(r).length === 0;
+}
+function ownerConditioningLine(name, d3) {
+  const yd = Math.round(d3.distance_feet / 3);
+  if (d3.contacts !== null) return `${name}: ${d3.rounds} rounds \xD7 ${d3.contacts} contacts (${d3.rounds * d3.contacts} contacts total), rest ${d3.rest_seconds} seconds.${d3.low ? " Fewer rounds today because your readiness is lower." : ""}`;
+  const run = d3.bases_per_rep ? `${d3.bases_per_rep} base${d3.bases_per_rep > 1 ? "s" : ""} (${yd} yd)` : `${yd} yd`;
+  return `${name}: ${d3.rounds} round${d3.rounds > 1 ? "s" : ""} of ${run} (${d3.rounds * yd} yd total, max 1000 yd)${d3.load_lbs !== null ? ` at ${d3.load_lbs} lb` : ""}${d3.work_seconds > 0 ? `, about ${d3.work_seconds} seconds of work` : ""}, rest ${d3.rest_seconds} seconds.${d3.low ? " Fewer rounds today because your readiness is lower. It still counts." : ""}`;
 }
 
 // src/lib/prescription/ownerPlanDrills.ts
@@ -2919,8 +2966,6 @@ function moundWork(sport, day2) {
   return null;
 }
 var reliefSets = (sets, role) => role === "starter" ? sets : Math.max(2, Math.round(sets * RELIEVER_VOLUME));
-var LOWER = /squat|deadlift|rdl|hinge|lunge|step[-_ ]?up|split|jump|bound|leg|calf|nordic|hip[-_ ]thrust|sled|cossack|clean|snatch/i;
-var isLowerBodyLift = (slug, pattern) => LOWER.test(`${slug} ${pattern ?? ""}`);
 var minorityAllowance = (majorityKept) => Math.floor(majorityKept * (1 - TWO_WAY_MAJOR_SHARE) / TWO_WAY_MAJOR_SHARE);
 var MOUND_COMMAND_MAX_PER_WEEK = 5;
 var COMMAND_STATS = {
@@ -3634,6 +3679,49 @@ function finalArmGuard(blocks, input) {
     }
     const why = cut.has(firstCut) && !cut.has(firstCut === "position" ? "pitching" : "position") ? input.limitPitching ? "You asked to limit your pitching, so pitching throws were cut first to stay inside your arm budget. Warm-up throws are kept." : "Position throws were cut first to stay inside your arm budget. Warm-up throws and pitching are kept." : "Pitching and position throws use one arm budget. Extra throwing was left out to keep you within it. Warm-up throws are kept first.";
     return { ...block, drills, because: [...block.because ?? [], why] };
+  });
+}
+
+// src/lib/hammer/prescription/ownerConditioningPlan.ts
+var identities = {
+  "Short-contact pogos": "jump",
+  "Single-leg pogos": "jump",
+  "Resisted starts (sled or band)": "sled",
+  "Optional resisted starts": "sled"
+};
+function ownerConditioningPlan(blocks, ctx) {
+  if (ctx.rest || ctx.game || ctx.restricted) return [...blocks];
+  const pool = ownerDrillsForSlot(["hammers_today:conditioning"], ctx).filter((r) => ownerConditioningFits(r, { ...ctx, modules: [...ctx.modules], runningOnly: false }));
+  const used = /* @__PURE__ */ new Set();
+  return blocks.map((b) => {
+    if (b.status !== "ready" || !["speed", "strength"].includes(b.modality)) return b;
+    const drills = b.drills.map((d3) => {
+      const kind = identities[d3.name];
+      if (!kind || d3.stage || d3.ownerDrillId || d3.armEvent) return d3;
+      const candidates = pool.filter((r) => r.conditioning_kind === kind && !used.has(r.id)).sort((a, c) => a.id.localeCompare(c.id));
+      const index = Math.floor(ctx.day.getTime() / 864e5);
+      const pick = candidates[index % candidates.length];
+      const dose = pick ? ownerConditioningDose(pick, ctx.low) : null;
+      const source = d3.dosage.match(/^(\d+)\s*(?:x|×)\s*(\d+)\b/);
+      if (!pick || !dose || !source) return d3;
+      const allowance = Number(source[1]) * Number(source[2]) * (d3.dosage.includes("per side") ? 2 : 1);
+      const rounds = kind === "jump" && dose.contacts ? Math.min(dose.rounds, Math.floor(allowance / dose.contacts)) : dose.rounds;
+      if (rounds < 1 || dose.distance_feet * rounds / 3 > 1e3) return d3;
+      used.add(pick.id);
+      return {
+        ...d3,
+        name: pick.name,
+        slug: `owner_cond_${pick.id}`,
+        ownerDrillId: pick.id,
+        prescriptionOrigin: "owner",
+        dosage: ownerConditioningLine(pick.name, { ...dose, rounds }),
+        setup: pick.setup ?? void 0,
+        cue: pick.cue ?? void 0,
+        stopIf: d3.stopIf ?? "Stop if you feel pain or tightness.",
+        conditioningDose: { ...dose, rounds, kind, contactAllowance: kind === "jump" ? allowance : null }
+      };
+    });
+    return { ...b, drills, steps: drills.map((d3) => `${d3.name}: ${d3.dosage}`) };
   });
 }
 
@@ -6564,9 +6652,8 @@ function applyPitcherLiftRule(drills, ctx) {
   const because = [];
   let out = drills;
   if (ctx.startsTomorrow) {
-    const kept = out.filter((d3) => !isLowerBodyLift(d3.name));
-    if (kept.length !== out.length) because.push("No lower-body lift the day before a start.");
-    out = kept;
+    if (out.length) because.push("No lift the day before a start \u2014 mobility and activation only.");
+    out = [];
   }
   if (ctx.role && ctx.role !== "starter") {
     let changed = false;
@@ -8935,6 +9022,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     if (access?.hasPitching && b.modality === "strength" && b.status === "ready") {
       const rule = applyPitcherLiftRule(b.drills, { role: pitchFacts?.pitchingRole ?? null, startsTomorrow: !!pitchFacts?.startsTomorrow });
       if (!rule.because.length) return [b];
+      if (!rule.drills.length) return [];
       return [{ ...b, drills: rule.drills, steps: drillsToSteps(rule.drills), because: [...b.because ?? [], ...rule.because] }];
     }
     if (!access?.hasPitching || b.modality !== "throwing") return [b];
@@ -8959,7 +9047,19 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   });
   const blocks = access?.hasPitching ? finalArmGuard(unguardedBlocks, { sport, role: access.pitcherOnly ? "pitcher" : "two_way", age: ctx.get("age_years")?.value ?? null, date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`, history: roadmapInputs.armHistory, limitPitching: roadmapInputs.pitcherOutings?.limitPitching === true, primaryFocus: roadmapInputs.pitcherOutings?.primaryFocus ?? null }).map((b) => ({ ...b, steps: drillsToSteps(b.drills) })) : unguardedBlocks;
   const commandChecked = blocks.map((b) => b.modality === "pitching" && (b.because ?? []).some((x) => x.startsWith("Extra light")) && !b.drills.some((d3) => d3.commandDay) ? { ...b, because: (b.because ?? []).filter((x) => !x.startsWith("Extra light")).concat(b.status === "ready" ? ["No extra command work today because your arm limits are full."] : []) } : b);
-  const warmed = withWarmupThrows(commandChecked);
+  const conditioned = ownerConditioningPlan(commandChecked, {
+    sport,
+    modules: roadmapInputs.subscriptionModules ?? [],
+    isPitcher: access?.hasPitching === true,
+    role: pitchFacts?.pitchingRole ?? null,
+    day: today,
+    owned: new Set(proj.equipmentList),
+    low: (ctx.get("readiness")?.value ?? 1) < 0.4,
+    rest: fullRestDay,
+    game: scheduleSignal.postureToday === "game" || scheduleSignal.postureToday === "tournament",
+    restricted: physio.activeAreas.length > 0 || physio.illnessActive
+  });
+  const warmed = withWarmupThrows(conditioned);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));
