@@ -51,7 +51,7 @@ import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_s
 import { wholePlanRest, savedWholePlanRest } from "../_shared/wic/schedule/planDayScope.ts";
 import { unavailableTrainingDate } from '../_shared/wic/schedule/availability.ts';
 import { restDowFor, type RestChoice } from '../_shared/wic/schedule/restDay.ts';
-import { validatePlanSanity } from "../_shared/wic/planSanity.ts";
+import { validatePlanSanity, validateWeekStructure } from "../_shared/wic/planSanity.ts";
 // Step 20 C2 — every row resolves an intensity class, stored or derived from
 // the documented mapping, so the ceiling always compares like with like.
 import { resolveIntensityClass } from "../_shared/wic/catalog/safetyAudit.ts";
@@ -5314,6 +5314,44 @@ const handler = async (req: Request): Promise<Response> => {
           feature_key: "final_rule_check", user_id: user.id, error_text: String(fcErr).slice(0, 500),
         });
       } catch { /* never blocks */ }
+    }
+
+    // -------- Owner Nov 1 C3: weekly structure (no drift) --------
+    // Today's loaded lift is checked against every saved lift day around it,
+    // before AND after, so a re-plan can never squeeze a lift between saved
+    // lifts or above the in-season weekly limit. A breach removes today's
+    // loaded lift (the day keeps its recovery work) and logs the reason.
+    try {
+      if (loadedLiftRows(rows as any[]).length > 0) {
+        const { data: wsRows } = await admin.from("wk_prescriptions").select("plan_date, slot, sequence_role, phase")
+          .eq("user_id", user.id).eq("slot", "lift")
+          .gte("plan_date", isoShift(planDate, -6)).lte("plan_date", isoShift(planDate, 6)).neq("plan_date", planDate).limit(600);
+        const wsByDate = new Map<string, any[]>();
+        for (const r of (wsRows ?? []) as any[]) wsByDate.set(String(r.plan_date), [...(wsByDate.get(String(r.plan_date)) ?? []), r]);
+        const mon = (iso: string) => { const dow = new Date(`${iso}T12:00:00Z`).getUTCDay(); return isoShift(iso, -((dow + 6) % 7)); };
+        const wk = mon(planDate);
+        const near = [...wsByDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0)
+          .map(([d, rs]) => ({ date: d, phase: String(rs[0]?.phase ?? phaseRes.phase), restDay: false, liftLoaded: true }));
+        const todayDay = { date: planDate, phase: String(phaseRes.phase), restDay: false, liftLoaded: true,
+          startsNextDay: isPitcherAthlete && gameProximity.primerOnly === true };
+        const spacing = validateWeekStructure([...near, todayDay]).issues
+          .filter((i) => i.startsWith("lift_spacing:") && (i.includes(planDate) || near.some((n) => i.includes(n.date) && isoShift(n.date, -3) <= planDate && n.date > planDate)));
+        const weekly = validateWeekStructure([...near.filter((n) => mon(n.date) === wk), todayDay]).issues
+          .filter((i) => i.startsWith("weekly_lift_max:") || i.startsWith("lift_day_before_start:"));
+        const wsIssues = [...spacing, ...weekly];
+        if (wsIssues.length > 0) {
+          const loaded = new Set(loadedLiftRows(rows as any[]));
+          const dropped = (rows as any[]).filter((r) => loaded.has(r));
+          rows.splice(0, rows.length, ...(rows as any[]).filter((r) => !loaded.has(r)));
+          reductions.push({ reason: "weekly_structure", detail: "Your body needs more rest between lifts, so today's lift came out." });
+          await admin.from("wk_final_check_swaps").insert(dropped.map((r: any) => ({
+            user_id: user.id, plan_date: planDate, rule: "weekly_structure",
+            movement_slug: r.movement_slug ?? null, slot: r.slot ?? null, detail: wsIssues.join("; ").slice(0, 500),
+          })));
+        }
+      }
+    } catch (wsErr) {
+      console.warn("[wk-generate-daily] weekly structure check failed", wsErr);
     }
 
     // -------- Prescription double-check (owner round 2, 2026-10-09): repair + log, never adds work --------
