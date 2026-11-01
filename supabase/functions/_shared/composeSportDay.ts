@@ -1,5 +1,5 @@
 import {
-  buildHammerDailyPlan, contextFromEnvelope, setOwnerPlanDrills, setWarmupStageOverrides,
+  buildHammerDailyPlan, contextFromEnvelope, setOwnerPlanDrills, setTissueCareConfig, setWarmupStageOverrides,
   finalizeDatedPlan, projectBuntingEvidence, planFaultContext, accessiblePlanFaults,
   accessibleRecurringIssues, mergeCatalog, ELITE_DRILL_CATALOG, readDrillCirculation,
   priorityAccess, ENGINE_CONTRACT,
@@ -113,6 +113,7 @@ export async function composeSportDay(db: any, input: {
     .filter((f:any) => f.disciplines.includes('pitching')).map((f:any) => f.rootPatternId);
   const pitchCommand = access.hasPitching ? await readPitchCommand(db, uid, sport, date, goalIds, commandFindings) : undefined;
   setOwnerPlanDrills(circulation.rows);
+  { const c=await db.from('app_settings').select('setting_value').eq('setting_key',CARE_CONFIG_KEY).maybeSingle(); setTissueCareConfig(careConfigFrom(c.error?null:c.data?.setting_value)); }
   setWarmupStageOverrides(input.warmupStages);
   const evidence=projectBuntingEvidence(sessionRows,abRows,pitchRows.filter((p:any)=>p.perspective==='hitter'&&['bunt_foul','bunt_in_play'].includes(p.result)),complete(tasks),sport);
   const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,

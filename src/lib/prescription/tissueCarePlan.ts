@@ -106,6 +106,7 @@ export function applyTissueCareMatching<B extends Block>(blocks: B[], ctx: CareP
   const picks = pickCareForDay(slots.map((s) => s.target), pool, config, already);
   const out = blocks.map((b) => ({ ...b, drills: [...b.drills] }));
   const notes = new Map<number, string[]>();
+  const changed = new Set<number>();
   picks.forEach((m, i) => {
     if (!m) return;
     const { bi, di } = slots[i];
@@ -121,7 +122,8 @@ export function applyTissueCareMatching<B extends Block>(blocks: B[], ctx: CareP
       ...(r.setup?.trim() ? { setup: r.setup } : {}), ...(r.equipment.length ? { equipmentNote: r.equipment.join(", ") } : {}),
       stopIf: src.stopIf, ...(legacy ? {} : { careMatch: { tier: m.tier, replaced: src.name } }),
     } as unknown as Row;
+    changed.add(bi);
     if (!legacy) notes.set(bi, [...(notes.get(bi) ?? []), m.because]);
   });
-  return out.map((b, bi) => (notes.has(bi) ? { ...b, because: [...(b.because ?? []), ...notes.get(bi)!.slice(0, 2)] } : b)) as B[];
+  return out.map((b, bi) => !changed.has(bi) ? blocks[bi] : (notes.has(bi) ? { ...b, because: [...(b.because ?? []), ...notes.get(bi)!.slice(0, 2)] } : b)) as B[];
 }

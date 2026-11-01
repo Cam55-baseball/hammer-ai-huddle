@@ -35,6 +35,10 @@ export function loadOwnerPlanDrills(): Promise<void> {
         const { supabase } = await import("@/integrations/supabase/client");
         const { data } = await (supabase as any).from("owner_drills").select("*").eq("active", true);
         rows = (data ?? []) as OwnerDrillRow[];
+        // Owner Nov 1: tissue-care matching settings (defaults when unset or unreadable).
+        const cfg = await (supabase as any).from("app_settings").select("setting_value").eq("setting_key", "tissue_care_matching").maybeSingle();
+        const [{ setTissueCareConfig }, { careConfigFrom }] = await Promise.all([import("./tissueCarePlan"), import("../../../supabase/functions/_shared/tissueCare/matching")]);
+        setTissueCareConfig(careConfigFrom(cfg.error ? null : cfg.data?.setting_value));
       } catch {
         /* built-in plan stays */
       }

@@ -2680,9 +2680,10 @@ export function buildHammerDailyPlan(
     restricted: physio.activeAreas.length > 0 || physio.illnessActive });
   // Owner Nov 1 (round 4/5): owner TISSUE CARE activities replace built-in tissue-care movements like-for-like
   // (body area + movement type) in Warm-up, Recovery and cool-downs; same count/time budget; no forced matches.
-  const cared = applyTissueCareMatching(conditioned, { sport, modules: roadmapInputs.subscriptionModules ?? [], owned: new Set(proj.equipmentList), day: today,
+  const caredRaw = applyTissueCareMatching(conditioned, { sport, modules: roadmapInputs.subscriptionModules ?? [], owned: new Set(proj.equipmentList), day: today,
     role: access?.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === 'pitcher' ? 'pitcher' : 'position',
     injuredRegions: physio.activeAreas, lightOnly: (ctx.get<number>('readiness')?.value ?? 1) < 0.4 || physio.illnessActive, restDay: fullRestDay });
+  const cared = caredRaw.map((b, i) => b === conditioned[i] ? b : { ...b, steps: drillsToSteps(b.drills) });
   const warmed = withWarmupThrows(cared);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
