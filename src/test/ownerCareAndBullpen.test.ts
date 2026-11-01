@@ -50,4 +50,14 @@ describe("bullpen before start insight", () => {
     expect(c.because).toContain("doesn't show what caused");
     expect(c.because).toContain("Health answers aren't shared");
   });
+  it("advises against pre-start bullpens when results trend worse", () => {
+    const worse = { start_pitch_count: 60, days_completed_next3: 1 };
+    const c = bullpenBeforeStartCard({ health_shared: false, tracked: [f("2026-10-02", worse), f("2026-10-09", worse)], other_starts: [f("2026-10-16"), f("2026-10-23")] }, [], "player");
+    expect(c.doThis).toContain("Skip bullpens the day before a start");
+    expect(c.howSure).toBe("hunch");
+  });
+  it("keeps the normal advice when only one measure is worse", () => {
+    const c = bullpenBeforeStartCard({ health_shared: false, tracked: [f("2026-10-02", { start_pitch_count: 60 }), f("2026-10-09", { start_pitch_count: 60 })], other_starts: [f("2026-10-16"), f("2026-10-23")] }, [], "player");
+    expect(c.doThis).not.toContain("Skip bullpens");
+  });
 });
