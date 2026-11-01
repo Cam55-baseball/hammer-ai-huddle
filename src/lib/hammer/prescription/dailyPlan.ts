@@ -17,6 +17,7 @@ import { subscriptionSchedule } from './subscriptionSchedule';
 import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
 import { pitchingDay, guardArmDrills, eassArmEvent, windmillPlanningDrills, type PlanningArmHistory } from './pitchingDay';
 import {finalArmGuard} from './finalArmGuard';
+import { pitcherYardRuleApplies } from '../../../../supabase/functions/_shared/wic/conditioning/yards';
 import { ownerConditioningPlan } from './ownerConditioningPlan';
 import { structureSkillSession } from './skillSessionStructure';
 import { restrictedFielding } from './restrictedFielding';
@@ -2658,6 +2659,8 @@ export function buildHammerDailyPlan(
     ? {...b,because:(b.because??[]).filter(x=>!x.startsWith('Extra light')).concat(b.status==='ready'?['No extra command work today because your arm limits are full.']:[])} : b);
   const conditioned = ownerConditioningPlan(commandChecked, { sport, modules: roadmapInputs.subscriptionModules ?? [],
     isPitcher: access?.hasPitching === true, role: pitchFacts?.pitchingRole ?? null, day: today,
+    // Owner Nov 1 round 4: 1000-yd rule for Complete Pitcher / Golden 2Way primary Pitcher only.
+    yardCap: access?.hasPitching === true && pitcherYardRuleApplies(sport, roadmapInputs.subscriptionModules ?? [], roadmapInputs.pitcherOutings?.primaryFocus ?? null),
     owned: new Set(proj.equipmentList), low: (ctx.get<number>('readiness')?.value ?? 1) < 0.4,
     rest: fullRestDay, game: scheduleSignal.postureToday === 'game' || scheduleSignal.postureToday === 'tournament',
     restricted: physio.activeAreas.length > 0 || physio.illnessActive });
