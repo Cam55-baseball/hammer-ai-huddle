@@ -3047,10 +3047,14 @@ function resolveOutingFacts(input) {
     relieverUnavailableToday: avail.get(planDate) === false,
     unconfirmed,
     limitPitching: settings?.limit_pitching === true,
-    pitchingRole: settings?.pitching_role ?? null,
+    pitchingRole: effectivePitchingRole(settings),
     primaryFocus: settings?.primary_focus ?? null,
     plannedReliefDates: [...new Set(outings.filter((o) => o.status === "planned" && o.outing_type === "relief" && o.planned_date && o.planned_date >= planDate).map((o) => o.planned_date))].sort()
   };
+}
+function effectivePitchingRole(settings) {
+  if (settings?.pitching_role) return settings.pitching_role;
+  return settings?.role === "starter" ? "starter" : null;
 }
 
 // src/lib/hammer/pitching/pitchingMicrocycle.ts
