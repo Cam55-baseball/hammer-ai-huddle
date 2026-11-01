@@ -266,7 +266,7 @@ function ruleCheckNote(rules: readonly string[]): string {
   const r = new Set(rules);
   if (r.has("trained_elsewhere_today")) return "You already trained in another program today, so we took that part out.";
   if (r.has("run_before_game")) return "No hard running the day before a game, so we took it out.";
-  if (r.has("lift_spacing") || r.has("weekly_lift_max") || r.has("rest_day")) return "Your body needs more rest between lifts, so today's lift came out.";
+  if (r.has("lift_spacing") || r.has("weekly_structure") || r.has("weekly_lift_max") || r.has("rest_day")) return "Your body needs more rest between lifts, so today's lift came out.";
   if (r.has("run_spacing")) return "You had hard running yesterday, so today's run came out.";
   if (r.has("jump_spacing")) return "You had big jumps yesterday, so today's jumps came out.";
   if (r.has("growth_mode")) return "You're growing fast right now, so big jumps and heavy eccentric work came out for now.";
@@ -5335,7 +5335,10 @@ const handler = async (req: Request): Promise<Response> => {
         const todayDay = { date: planDate, phase: String(phaseRes.phase), restDay: false, liftLoaded: true,
           startsNextDay: isPitcherAthlete && gameProximity.primerOnly === true };
         const spacing = validateWeekStructure([...near, todayDay]).issues
-          .filter((i) => i.startsWith("lift_spacing:") && (i.includes(planDate) || near.some((n) => i.includes(n.date) && isoShift(n.date, -3) <= planDate && n.date > planDate)));
+          .filter((i) => {
+            const nextAfter = near.map((n) => n.date).filter((d) => d > planDate).sort()[0];
+            return i.startsWith(`lift_spacing:${planDate}:`) || (!!nextAfter && i.startsWith(`lift_spacing:${nextAfter}:`));
+          });
         const weekly = validateWeekStructure([...near.filter((n) => mon(n.date) === wk), todayDay]).issues
           .filter((i) => i.startsWith("weekly_lift_max:") || i.startsWith("lift_day_before_start:"));
         const wsIssues = [...spacing, ...weekly];
