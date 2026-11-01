@@ -398,3 +398,23 @@ export function primerOnStrengthRowsOnly<T extends { slot?: string | null; seque
 export function isMainLiftDay(rows: ReadonlyArray<{ slot?: string | null; sequence_role?: string | null; movement_slug?: string | null }>): boolean {
   return rows.some((r) => isPapStrengthRow(r));
 }
+
+export interface PrimerCarryExercise { slug: string; name: string; sets: number }
+
+/**
+ * Owner Nov 1 round 3: the all-out effort starts between the sets of the first
+ * strength exercise and, while scores hold, moves forward with the next strength
+ * exercises in lift order, still between sets. Presses never carry a throw
+ * (no press before throwing). Doses of every lift row stay unchanged.
+ */
+export function primerCarryExercises(
+  rows: ReadonlyArray<{ slot?: string | null; sequence_role?: string | null; movement_slug?: string | null; movement_name?: string | null; sets?: number | string | null }>,
+  first: { movement_slug?: string | null },
+  target: PapTarget,
+): PrimerCarryExercise[] {
+  const strength = rows.filter((r) => isPapStrengthRow(r));
+  const start = strength.findIndex((r) => r.movement_slug === first.movement_slug);
+  if (start < 0) return [];
+  return strength.slice(start).filter((r, i) => i === 0 || !(target === "throw" && liftPatternOf(String(r.movement_slug ?? "")) === "press"))
+    .map((r) => ({ slug: String(r.movement_slug ?? ""), name: String(r.movement_name ?? r.movement_slug ?? ""), sets: Math.max(1, Number(r.sets) || 1) }));
+}
