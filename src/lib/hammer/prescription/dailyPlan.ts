@@ -69,6 +69,7 @@ import {
 } from "./eassLibrary";
 import { selectDefenseDrills, resolveDefenseTier } from "./defenseLibrary";
 import { mergeOwnerSlotDrills } from "@/lib/prescription/ownerPlanDrills";
+import { throwGroup, weeklyThrowTarget, throwTargetLine, type ThrowGroup, type WeekTarget } from "../../../../supabase/functions/_shared/wic/phases/positionThrowTargets";
 import { withTaggedPitchDrill, applyPitcherLiftRule, commandDayPlan, withCommandDrill, lightPreStart } from "./pitcherRolePlan";
 import {
   resolveWeeklyTemplate,
@@ -1538,6 +1539,8 @@ export interface HammerDailyPlanResult {
     readonly quarter: QuarterDescriptor;
     readonly eliteTarget: EliteTarget;
     readonly throwingLadder: ThrowingLadderPrescription | null;
+    /** Owner Nov 1 position-player throw target (null for pitchers / unknown position). */
+    readonly throwTarget?: ({ group: ThrowGroup; line: string } & WeekTarget) | null;
     /**
      * Skill-frequency ladder — days/week per skill modality the athlete is
      * building toward, with earned days from the last 7d. "Stack days
@@ -2408,7 +2411,23 @@ export function buildHammerDailyPlan(
     ctx.get<unknown>("position")?.value ??
     null;
   const eliteTarget = resolveEliteTarget(sportRaw);
-  const throwingLadder = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
+  const ladderBase = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
+  // Owner Nov 1: position-player throw targets (every throw counts; build ~10%/wk, hold in-season).
+  const throwTarget = (() => {
+    const group = positionTokenIsPitcher(positionRaw) ? null : throwGroup(positionRaw);
+    if (!group) return null;
+    const hist = roadmapInputs.armHistory;
+    const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const from = iso(new Date(today.getTime() - 7 * 86400000)), to = iso(new Date(today.getTime() - 86400000));
+    const lastWeekRaw = hist && !hist.unavailable
+      ? hist.rows.filter(r => r.entry_date >= from && r.entry_date <= to && !/skip|missed|cancel/i.test(String(r.status ?? ''))).reduce((n, r) => n + Number(r.count ?? 0), 0)
+      : null;
+    const week = weeklyThrowTarget({ group, sport: sport === 'softball' ? 'softball' : 'baseball', age: (ctx.get<number>('age_years')?.value as number | null) ?? null, lastWeekRaw, inSeason: proj.seasonPhase === 'in' });
+    return { group, ...week, line: throwTargetLine(group, week) };
+  })();
+  const throwingLadder = throwTarget && !throwTarget.needsStart
+    ? { ...ladderBase, throwsToday: throwTarget.daily, headline: `Throw about ${throwTarget.daily} today (every throw counts) · ${ladderBase.maxIntentPercent}% intent${ladderBase.longTossUnlocked ? ' · long-toss unlocked' : ' · long-toss locked'}`, rationale: `${throwTarget.line} ${ladderBase.rationale}` }
+    : throwTarget ? { ...ladderBase, rationale: `${throwTarget.line} ${ladderBase.rationale}` } : ladderBase;
 
   // Skill-frequency ladder — stack days first, then intensity. Feed the
   // targets into the microcycle so priorityDayOrder is honoured, and count
@@ -2682,6 +2701,7 @@ export function buildHammerDailyPlan(
       quarter,
       eliteTarget,
       throwingLadder,
+      throwTarget,
       skillLadder,
     },
   };
