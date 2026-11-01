@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
+import { effectivePitchingRole } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 import { useSubscription } from "@/hooks/useSubscription";
 import { FOCUS_LABEL, ROLE_LABEL, playerPitches, type PitchingRoleAnswer, type PrimaryFocus } from "@/lib/hammer/pitching/pitcherRoleAnswers";
 
@@ -11,7 +12,7 @@ export function PitcherRoleQuestions({ compact = false }: { compact?: boolean })
   const s = usePitcherSchedule();
   const settings = s.data?.settings ?? null;
   const focus = (settings?.primary_focus ?? null) as PrimaryFocus | null;
-  const role = (settings?.pitching_role ?? null) as PitchingRoleAnswer | null;
+  const role = effectivePitchingRole(settings) as PitchingRoleAnswer | null;
   const pitches = playerPitches(modules ?? [], focus);
   const busy = s.saveSettings.isPending || s.isLoading;
   if (s.isError) return <p role="alert" className="text-sm text-destructive">Couldn't load your pitching answers. Try again.</p>;

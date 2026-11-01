@@ -69,7 +69,13 @@ export function usePitcherSchedule(planDate?: string) {
     mutationFn: async (next: Partial<PitcherSettings>) => {
       const cur = q.data?.settings ?? { role: "starter", rotation_anchor_date: null, rotation_every_days: null, rotation_active: false };
       const role = next.pitching_role ? scheduleRoleFor(next.pitching_role) : null;
-      const { error } = await db.from("pitcher_schedule_settings").upsert({ user_id: user?.id, ...cur, ...next, ...(role ? { role } : {}) }, { onConflict: "user_id" });
+      // Owner Nov 1 D1: changing the card role keeps the pitching-role answer in step.
+      const roleSync = !next.pitching_role && next.role
+        ? { pitching_role: next.role === "starter" ? "starter" as const
+            : next.role === "reliever" && (cur.pitching_role === "bullpen" || cur.pitching_role === "closer") ? cur.pitching_role
+            : next.role === "both" ? (cur.pitching_role ?? null) : null }
+        : {};
+      const { error } = await db.from("pitcher_schedule_settings").upsert({ user_id: user?.id, ...cur, ...next, ...roleSync, ...(role ? { role } : {}) }, { onConflict: "user_id" });
       if (error) throw error;
     },
     onSuccess: done,

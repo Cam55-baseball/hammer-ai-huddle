@@ -4,7 +4,7 @@
  * Feeds the daily plan: priming the day before, recovery the day after,
  * lifting limits on start days, and the no-grip rule.
  */
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,14 @@ export function PitcherScheduleCard() {
   const outingLoggedToday = (s.data?.outings ?? []).some((o) => o.status === "thrown" && o.actual_date === s.today);
   const markedDone = tasks.isDone(PITCHING_DAYS_TASK.taskId, null);
   const cardDone = outingLoggedToday || markedDone;
+  // Owner Nov 1 D1: a logged outing saves the card's done mark too, so Today,
+  // the Player week calendar and the coach view all read it as complete.
+  const autoSaved = useRef(false);
+  useEffect(() => {
+    if (!outingLoggedToday || markedDone || autoSaved.current || tasks.isLoading) return;
+    autoSaved.current = true;
+    void tasks.bulkSet([PITCHING_DAYS_TASK], true).catch(() => { autoSaved.current = false; });
+  }, [outingLoggedToday, markedDone, tasks]);
   const toggleDone = async () => {
     if (marking || outingLoggedToday) return;
     setMarking(true);

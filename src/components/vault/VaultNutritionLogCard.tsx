@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTDEE } from '@/hooks/useTDEE';
+import { suggestNutritionTargets, midpoint, type SuggestionResult } from '@/lib/nutrition/targetSuggestions';
+import { calculateAge } from '@/utils/tdeeCalculations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -105,7 +107,8 @@ export function VaultNutritionLogCard({
 }: VaultNutritionLogCardProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { nutritionTargets } = useTDEE();
+  const { nutritionTargets, biometrics, activeGoal, todayEvent } = useTDEE();
+  const [suggestion, setSuggestion] = useState<SuggestionResult | null>(null);
 
   const [isOpen, setIsOpen] = useState(false);
   const [favoritesOpen, setFavoritesOpen] = useState(false);
@@ -1103,6 +1106,36 @@ export function VaultNutritionLogCard({
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
+                  <div className="rounded-md border border-border p-3 space-y-2" data-testid="nutrition-suggestions">
+                    <Button type="button" variant="outline" size="sm" className="w-full gap-1" onClick={() => setSuggestion(suggestNutritionTargets({
+                      weightLbs: biometrics?.weightLbs ?? null, heightInches: biometrics?.heightInches ?? null,
+                      age: biometrics?.dateOfBirth ? calculateAge(biometrics.dateOfBirth) : null, sex: biometrics?.sex ?? null,
+                      activityLevel: biometrics?.activityLevel ?? null, goalType: activeGoal?.goalType ?? null,
+                      dayType: (todayEvent?.eventType as any) ?? null,
+                    }))}>
+                      <Lightbulb className="h-4 w-4" /> Not sure? Get suggestions
+                    </Button>
+                    {suggestion && suggestion.ok === false && <p className="text-xs text-muted-foreground">{suggestion.reason}</p>}
+                    {suggestion?.ok && (
+                      <div className="space-y-1 text-xs">
+                        <p className="text-muted-foreground">Suggested daily ranges based on your goal, activity and training. You can change any number before saving.</p>
+                        {suggestion.calories && <p>Calories: {suggestion.calories.min}–{suggestion.calories.max} kcal</p>}
+                        <p>Protein: {suggestion.protein.min}–{suggestion.protein.max} g</p>
+                        <p>Carbs: {suggestion.carbs.min}–{suggestion.carbs.max} g</p>
+                        <p>Fats: {suggestion.fats.min}–{suggestion.fats.max} g</p>
+                        <p>Water: {suggestion.hydration.min}–{suggestion.hydration.max} oz</p>
+                        {suggestion.notes.map((n) => <p key={n} className="text-muted-foreground">{n}</p>)}
+                        <Button type="button" size="sm" className="w-full mt-1" onClick={() => {
+                          if (!suggestion.ok) return;
+                          if (suggestion.calories) setGoalCalories(String(midpoint(suggestion.calories)));
+                          setGoalProtein(String(midpoint(suggestion.protein)));
+                          setGoalCarbs(String(midpoint(suggestion.carbs)));
+                          setGoalFats(String(midpoint(suggestion.fats)));
+                          setGoalHydration(String(midpoint(suggestion.hydration)));
+                        }}>Use these (you can still edit)</Button>
+                      </div>
+                    )}
+                  </div>
                   <div className="space-y-2">
                     <Label>{t('vault.nutrition.calorieGoal')}</Label>
                     <Input
