@@ -132,6 +132,9 @@ export function papThrowsAllowed(age: number | null, b: PapPitchBudget | undefin
   return n;
 }
 
+/** Owner Nov 1 round 4: placeholder meaning "no fixed all-out set cap"; lift sets bound it structurally. */
+export const PAP_NO_FIXED_SET_CAP = 99;
+
 export interface PapBlock {
   version: string;
   target: PapTarget;
