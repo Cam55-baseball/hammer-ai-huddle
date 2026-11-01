@@ -1543,7 +1543,9 @@ var PLAN_SLOTS = [
   "hammers_today:baserunning",
   "hammers_today:bunting",
   "hammers_today:mind",
-  "hammers_today:conditioning"
+  "hammers_today:conditioning",
+  "hammers_today:tissue_care",
+  "hammers_today:focus_routine"
 ];
 var rows = [];
 function setOwnerPlanDrills(next) {
@@ -1576,7 +1578,27 @@ function missingForPlacement(r, slot) {
   }
   if (slot === "hammers_today:conditioning") miss.push(...ownerConditioningProblems(r));
   if (slot === "hammers_today:mind" && r.equipment.length > 0) miss.push("no equipment (Mind items are non-physical)");
+  if (slot === "hammers_today:tissue_care" || slot === "hammers_today:focus_routine") miss.push(...careMeasureProblems(r));
+  if (slot === "hammers_today:focus_routine" && r.equipment.length > 0) miss.push("no equipment (focus routines are non-physical)");
   return miss;
+}
+function careMeasureProblems(r) {
+  const m = r.care_measure ?? null;
+  if (m === "time") return (r.work_seconds ?? 0) > 0 ? [] : ["a time (minutes)"];
+  if (m === "rounds") return (r.rounds ?? 0) > 0 ? [] : ["a number of rounds"];
+  if (m === "check_off") return [];
+  return ["a measure (time, rounds or check-off)"];
+}
+function careDosage(r) {
+  const base2 = r.care_measure === "time" ? `${Math.max(1, Math.round((r.work_seconds ?? 0) / 60))} min` : r.care_measure === "rounds" ? `${r.rounds} rounds` : "Check off when done";
+  return [base2, (r.dosage ?? "").trim()].filter(Boolean).join(" \xB7 ");
+}
+function ownerCareDrill(slot, ctx) {
+  const pool = ownerDrillsForSlot([slot], { sport: ctx.sport, owned: slot === "hammers_today:focus_routine" ? null : ctx.owned ?? null }).filter((r) => {
+    const p = r.conditioning_programs ?? [];
+    return p.length === 0 || p.some((x) => (ctx.modules ?? []).includes(`${ctx.sport}_${x}`));
+  });
+  return rotate(pool, ctx.day ?? /* @__PURE__ */ new Date());
 }
 var norm2 = (s) => s.trim().toLowerCase();
 var TAG_SLOT = {
@@ -6626,6 +6648,65 @@ function selectDefenseDrills(input) {
   };
 }
 
+// supabase/functions/_shared/wic/phases/positionThrowTargets.ts
+var THROW_TARGETS = {
+  middle_infield: { group: "middle_infield", label: "SS / 2B / 3B", day: [60, 100], heavyDayMax: 150, week: [400, 600], lightReturnShare: 0 },
+  first_base: { group: "first_base", label: "First base", day: [40, 70], heavyDayMax: null, week: [250, 400], lightReturnShare: 0 },
+  outfield: { group: "outfield", label: "Outfield", day: [50, 80], heavyDayMax: null, week: [300, 480], lightReturnShare: 0 },
+  catcher: { group: "catcher", label: "Catcher", day: [120, 200], heavyDayMax: null, week: [700, 1e3], lightReturnShare: 0.8 }
+};
+var WEEKLY_BUILD = 0.1;
+var MAX_WEEKLY_JUMP = 0.3;
+var TRAINING_DAYS = 6;
+function throwGroup(position) {
+  const p = String(position ?? "").trim().toLowerCase().replace(/[\s_-]/g, "");
+  if (!p) return null;
+  if (["c", "catcher"].includes(p)) return "catcher";
+  if (["1b", "firstbase", "first"].includes(p)) return "first_base";
+  if (["ss", "shortstop", "2b", "secondbase", "3b", "thirdbase", "if", "infield", "infielder", "mi", "middleinfield"].includes(p)) return "middle_infield";
+  if (["of", "outfield", "outfielder", "lf", "cf", "rf", "leftfield", "centerfield", "rightfield"].includes(p)) return "outfield";
+  return null;
+}
+function unitsForRawDay(group, raw) {
+  const warm = Math.min(raw, 30);
+  const rest = raw - warm;
+  const light = rest * THROW_TARGETS[group].lightReturnShare;
+  return warm * THROW_WEIGHTS.warmup_catch + light * THROW_WEIGHTS.warmup_catch + (rest - light) * ARM_DEFAULTS.intentWeight.moderate;
+}
+function rawThatFits(group, unitCap) {
+  let n = 0;
+  while (n < 1e3 && unitsForRawDay(group, n + 1) <= unitCap) n++;
+  return n;
+}
+function weeklyThrowTarget(i) {
+  const t = THROW_TARGETS[i.group];
+  const conflicts = [];
+  if (i.lastWeekRaw === null || i.lastWeekRaw <= 0) return { weekly: 0, daily: 0, holding: false, conflicts, needsStart: true };
+  const last = i.lastWeekRaw;
+  let weekly;
+  if (i.inSeason) weekly = Math.min(last, t.week[1]);
+  else weekly = Math.min(t.week[1], Math.round(last * (1 + WEEKLY_BUILD)), Math.floor(last * (1 + MAX_WEEKLY_JUMP)));
+  let daily = Math.min(t.day[1], Math.round(weekly / TRAINING_DAYS));
+  const budget = armBudget({ sport: i.sport, role: i.group === "catcher" ? "catcher" : "position", age: i.age });
+  const dailyFit = rawThatFits(i.group, budget.daily);
+  if (daily > dailyFit) {
+    conflicts.push(`Daily target ${daily} is above the arm-safety daily cap (${dailyFit} throws at this age). The cap wins.`);
+    daily = dailyFit;
+  }
+  const weeklyFit = rawThatFits(i.group, budget.weekly / TRAINING_DAYS) * TRAINING_DAYS;
+  if (weekly > weeklyFit) {
+    conflicts.push(`Weekly target ${weekly} is above the arm-safety weekly cap (about ${weeklyFit} throws at this age). The cap wins.`);
+    weekly = weeklyFit;
+    daily = Math.min(daily, Math.floor(weeklyFit / TRAINING_DAYS));
+  }
+  return { weekly, daily, holding: i.inSeason, conflicts, needsStart: false };
+}
+function throwTargetLine(group, w) {
+  const t = THROW_TARGETS[group];
+  if (w.needsStart) return `${t.label} goal at full go: about ${t.week[0]}\u2013${t.week[1]} throws a week. Log your throws so we can build you toward it.`;
+  return w.holding ? `In-season: hold steady at about ${w.weekly} throws this week (${w.daily} a day), counting every throw.` : `Building toward ${t.week[0]}\u2013${t.week[1]} throws a week: about ${w.weekly} this week (${w.daily} a day), counting every throw.`;
+}
+
 // src/lib/hammer/prescription/pitcherRolePlan.ts
 var INTENT = { catch_light: "low", medium: "moderate", full: "high" };
 function withTaggedPitchDrill(drills, ctx) {
@@ -7262,7 +7343,6 @@ var ELITE_TARGETS = {
     sport: "baseball",
     league: "MLB",
     gamesPerWeekHigh: 6,
-    weeklyThrowsCeiling: 250,
     liftSessionsPerWeek: 3,
     speedSessionsPerWeek: 2,
     batSpeedSessionsPerWeek: 4,
@@ -7272,7 +7352,6 @@ var ELITE_TARGETS = {
     sport: "softball",
     league: "AUSL",
     gamesPerWeekHigh: 6,
-    weeklyThrowsCeiling: 220,
     liftSessionsPerWeek: 3,
     speedSessionsPerWeek: 2,
     batSpeedSessionsPerWeek: 4,
@@ -8829,7 +8908,18 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   const sportRaw = ctx.get("sport_primary")?.value ?? null;
   const positionRaw = ctx.get("position_primary")?.value ?? ctx.get("position")?.value ?? null;
   const eliteTarget = resolveEliteTarget(sportRaw);
-  const throwingLadder = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
+  const ladderBase = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
+  const throwTarget = (() => {
+    const group = positionTokenIsPitcher(positionRaw) ? null : throwGroup(positionRaw);
+    if (!group) return null;
+    const hist = roadmapInputs.armHistory;
+    const iso3 = (d3) => `${d3.getFullYear()}-${String(d3.getMonth() + 1).padStart(2, "0")}-${String(d3.getDate()).padStart(2, "0")}`;
+    const from = iso3(new Date(today.getTime() - 7 * 864e5)), to = iso3(new Date(today.getTime() - 864e5));
+    const lastWeekRaw = hist && !hist.unavailable ? hist.rows.filter((r) => r.entry_date >= from && r.entry_date <= to && !/skip|missed|cancel/i.test(String(r.status ?? ""))).reduce((n, r) => n + Number(r.count ?? 0), 0) : null;
+    const week = weeklyThrowTarget({ group, sport: sport === "softball" ? "softball" : "baseball", age: ctx.get("age_years")?.value ?? null, lastWeekRaw, inSeason: proj.seasonPhase === "in" });
+    return { group, ...week, line: throwTargetLine(group, week) };
+  })();
+  const throwingLadder = throwTarget && !throwTarget.needsStart ? { ...ladderBase, throwsToday: throwTarget.daily, headline: `Throw about ${throwTarget.daily} today (every throw counts) \xB7 ${ladderBase.maxIntentPercent}% intent${ladderBase.longTossUnlocked ? " \xB7 long-toss unlocked" : " \xB7 long-toss locked"}`, rationale: `${throwTarget.line} ${ladderBase.rationale}` } : throwTarget ? { ...ladderBase, rationale: `${throwTarget.line} ${ladderBase.rationale}` } : ladderBase;
   const skillTargets = SKILL_MODALITIES.reduce((acc, m) => {
     acc[m] = resolveSkillDaysTarget(
       "sustain",
@@ -9067,7 +9157,26 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     game: scheduleSignal.postureToday === "game" || scheduleSignal.postureToday === "tournament",
     restricted: physio.activeAreas.length > 0 || physio.illnessActive
   });
-  const warmed = withWarmupThrows(conditioned);
+  const careDrill = ownerCareDrill("hammers_today:tissue_care", { sport, modules: roadmapInputs.subscriptionModules ?? [], owned: new Set(proj.equipmentList), day: today });
+  const cared = careDrill ? conditioned.map((b) => {
+    if (b.modality !== "recovery" || b.status !== "ready") return b;
+    const i = b.drills.findIndex((d3) => d3.name === "Mobility + foam roll" && d3.prescriptionOrigin !== "owner");
+    if (i < 0) return b;
+    const owned = {
+      name: careDrill.name,
+      dosage: careDosage(careDrill),
+      cue: careDrill.cue ?? "",
+      prescriptionOrigin: "owner",
+      ownerDrillId: careDrill.id,
+      careMeasure: careDrill.care_measure ?? null,
+      ...careDrill.setup?.trim() ? { setup: careDrill.setup } : {},
+      ...careDrill.equipment.length ? { equipmentNote: careDrill.equipment.join(", ") } : {},
+      stopIf: b.drills[i].stopIf
+    };
+    const drills = b.drills.map((d3, j) => j === i ? owned : d3);
+    return { ...b, drills, steps: drillsToSteps(drills) };
+  }) : conditioned;
+  const warmed = withWarmupThrows(cared);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));
@@ -9105,6 +9214,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       quarter,
       eliteTarget,
       throwingLadder,
+      throwTarget,
       skillLadder
     }
   };
