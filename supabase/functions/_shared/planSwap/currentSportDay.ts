@@ -5,6 +5,7 @@ import { seasonWithTimeline } from '../seasonTimeline.ts';
 import { resolvePhaseState } from '../phaseState.ts';
 import { wholePlanRest } from '../wic/schedule/planDayScope.ts';
 import { unavailableTrainingDate } from '../wic/schedule/availability.ts';
+import { restDowFor } from '../wic/schedule/restDay.ts';
 import { mapPhysio } from '../health/physioMapping.ts';
 import { gamePitchLoads } from '../wic/pitching/gamePitchLoad.ts';
 
@@ -27,6 +28,9 @@ export async function currentSportDay(db:any,uid:string,date:string,sport:'baseb
   if((outings.data??[]).length>=200||(timeline.data??[]).length>=200||(heights.data??[]).length>=200)throw new Error('Complete current pitching context unavailable');
   const phase=resolvePhaseState({settings:seasonWithTimeline({...season.data,season_status:season.data?.season_status??context.data?.season_phase},timeline.data??[],date),date,heights:(heights.data??[]).map((h:any)=>({date:h.measured_on,inches:Number(h.inches)}))});
   const effect=dayEffect(timeline.data??[],date);
+  const restRows=await db.from('rest_day_choices').select('rest_dow,scope,week_start,created_at,undone_at').eq('user_id',uid).is('undone_at',null).limit(200);
+  if(restRows.error)throw restRows.error;
+  const restDow=restDowFor(date,restRows.data??[]);
   const games=await db.from('gp_games').select('id,user_id,game_date,sport,pitch_count,status,deleted_at,ignored_for_training,is_starting_pitcher,pitcher_innings').eq('user_id',uid).eq('sport',sport).is('deleted_at',null).gte('game_date',isoShift(date,-21)).lte('game_date',date).in('status',['final','completed']).limit(200);
   if(games.error||(games.data??[]).length>=200)throw games.error??new Error('Complete outing game history unavailable');
   const details=(games.data??[]).length?await db.from('gp_pitches').select('game_id').eq('user_id',uid).eq('perspective','pitcher').in('game_id',games.data.map((g:any)=>g.id)).limit(5000):{data:[],error:null};
@@ -40,9 +44,9 @@ export async function currentSportDay(db:any,uid:string,date:string,sport:'baseb
   if(calendar.error||scheduled.error||(calendar.data??[]).length>=50||(scheduled.data??[]).length>=50)throw new Error('Complete current game schedule unavailable');
   const gameOn=(d:string)=>{const e=dayEffect(timeline.data??[],d);return !e.cancelled&&(e.games.length>0||(calendar.data??[]).some((g:any)=>g.event_date===d&&g.ignored_for_training!==true)||(scheduled.data??[]).some((g:any)=>g.game_date===d&&g.ignored_for_training!==true));};
   return composeSportDay(db,{userId:uid,date,sport,phase:phase.sub_block,
-    rest:wholePlanRest(date,effect.hold)||unavailableTrainingDate(date,context.data?.weekly_availability_days),
+    rest:wholePlanRest(date,effect.hold,restDow)||unavailableTrainingDate(date,context.data?.weekly_availability_days,restDow),
     equipment,alwaysMissingGear:missing,injuries:physio.activeAreas,birthday:profile.data?.date_of_birth??null,
     outingFacts:facts.hasSchedule?facts:null,posture:gameOn(date)?'game':effect.travel?'travel':effect.practice?'team_practice':'normal',gameTomorrow:gameOn(isoShift(date,1)),
     warmupStages:{},readiness:readiness.data?.readiness??null,phaseStartedAt:null,cns:cns.data?.units_spent??0,physio,
-    availabilityDays:context.data?.weekly_availability_days??null});
+    availabilityDays:context.data?.weekly_availability_days??null,restDow});
 }
