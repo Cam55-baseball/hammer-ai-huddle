@@ -69,8 +69,9 @@ export function primerState(rules: PrimerRules, rounds: PrimerRound[]): PrimerSt
     if (rd.rating <= 3) { stopReason = "Quality dropped — that was your last all-out set. Finish your lift."; break; }
     const drop = speedDrop(rules, values);
     if (drop) { stopReason = drop; break; }
-    if (done >= rules.max_sets) { stopReason = "You reached today's limit of all-out sets. Finish your lift."; break; }
-    if (rules.max_total_reps != null && totalReps + rules.actionReps > rules.max_total_reps) { stopReason = "You reached today's throw limit. Finish your lift."; break; }
+    // Owner Nov 1 round 4: no fixed set cap; max_sets is the number of lift sets left to pair with.
+    if (done >= rules.max_sets) { stopReason = "That was your last lift set. Nice work."; break; }
+    if (rules.max_total_reps != null && totalReps + rules.actionReps > rules.max_total_reps) { stopReason = rules.realThrow ? "You reached today's throw limit. Finish your lift." : "You reached today's sprint-yard total. Finish your lift."; break; }
   }
   const realThrows = rules.realThrow ? totalReps : 0;
   return { done, next: stopReason == null, stopReason, totalReps, realThrows, armUnits: realThrows * REAL_THROW_ARM_WEIGHT };

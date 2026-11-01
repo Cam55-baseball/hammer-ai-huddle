@@ -17,6 +17,7 @@ import { subscriptionSchedule } from './subscriptionSchedule';
 import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
 import { pitchingDay, guardArmDrills, eassArmEvent, windmillPlanningDrills, type PlanningArmHistory } from './pitchingDay';
 import {finalArmGuard} from './finalArmGuard';
+import { pitcherYardRuleApplies } from '../../../../supabase/functions/_shared/wic/conditioning/yards';
 import { ownerConditioningPlan } from './ownerConditioningPlan';
 import { structureSkillSession } from './skillSessionStructure';
 import { restrictedFielding } from './restrictedFielding';
@@ -260,6 +261,8 @@ interface BuilderArgs {
   readonly gameTomorrow?: boolean;
   readonly pitchingType?: ReturnType<typeof pitchingDay>;
   readonly armHistory?: PlanningArmHistory;
+  /** Owner Nov 1 round 4: greenlight results per area (missing = hold). */
+  readonly greenlight?: Partial<Record<import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightArea, import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightResult>> | null;
   readonly planDate?: string;
   readonly armRole?: 'pitcher'|'two_way';
   readonly positionThrowing?: boolean;
@@ -2354,6 +2357,7 @@ export interface RoadmapInputs {
   readonly subscriptionModules?: readonly string[];
   readonly alwaysMissingGear?: readonly string[];
   readonly armHistory?: PlanningArmHistory;
+  readonly greenlight?: Partial<Record<import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightArea, import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightResult>> | null;
   readonly bunting?: {gameWeekdays?:readonly number[];evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
@@ -2423,7 +2427,7 @@ export function buildHammerDailyPlan(
     const lastWeekRaw = hist && !hist.unavailable
       ? hist.rows.filter(r => r.entry_date >= from && r.entry_date <= to && !/skip|missed|cancel/i.test(String(r.status ?? ''))).reduce((n, r) => n + Number(r.count ?? 0), 0)
       : null;
-    const week = weeklyThrowTarget({ group, sport: sport === 'softball' ? 'softball' : 'baseball', age: (ctx.get<number>('age_years')?.value as number | null) ?? null, lastWeekRaw, inSeason: proj.seasonPhase === 'in' });
+    const week = weeklyThrowTarget({ group, sport: sport === 'softball' ? 'softball' : 'baseball', age: (ctx.get<number>('age_years')?.value as number | null) ?? null, lastWeekRaw, inSeason: proj.seasonPhase === 'in', greenlight: roadmapInputs.greenlight?.throwing ?? null });
     return { group, ...week, line: throwTargetLine(group, week) };
   })();
   const throwingLadder = throwTarget?.hidden
@@ -2658,6 +2662,8 @@ export function buildHammerDailyPlan(
     ? {...b,because:(b.because??[]).filter(x=>!x.startsWith('Extra light')).concat(b.status==='ready'?['No extra command work today because your arm limits are full.']:[])} : b);
   const conditioned = ownerConditioningPlan(commandChecked, { sport, modules: roadmapInputs.subscriptionModules ?? [],
     isPitcher: access?.hasPitching === true, role: pitchFacts?.pitchingRole ?? null, day: today,
+    // Owner Nov 1 round 4: 1000-yd rule for Complete Pitcher / Golden 2Way primary Pitcher only.
+    yardCap: access?.hasPitching === true && pitcherYardRuleApplies(sport, roadmapInputs.subscriptionModules ?? [], roadmapInputs.pitcherOutings?.primaryFocus ?? null),
     owned: new Set(proj.equipmentList), low: (ctx.get<number>('readiness')?.value ?? 1) < 0.4,
     rest: fullRestDay, game: scheduleSignal.postureToday === 'game' || scheduleSignal.postureToday === 'tournament',
     restricted: physio.activeAreas.length > 0 || physio.illnessActive });

@@ -97,6 +97,11 @@ export interface PapInput {
   equipment: readonly string[] | null;
   firstLift: { slug: string; name: string; pattern: LiftPattern; heavy: boolean } | null;
   /**
+   * Owner Nov 1 round 4: pitchers only — yards left under the day's 1000-yd total
+   * after conditioning. Primer sprint yards count toward it. null/omitted = no yard rule.
+   */
+  sprintYardsLeft?: number | null;
+  /**
    * Pitch Smart budget for today (owner 2026-10-07: each max PAP throw counts 1.5
    * toward the daily limit, rest days and yearly caps). Omitted = no limits known.
    */
@@ -131,6 +136,9 @@ export function papThrowsAllowed(age: number | null, b: PapPitchBudget | undefin
   }
   return n;
 }
+
+/** Owner Nov 1 round 4: placeholder meaning "no fixed all-out set cap"; lift sets bound it structurally. */
+export const PAP_NO_FIXED_SET_CAP = 99;
 
 export interface PapBlock {
   version: string;
@@ -233,6 +241,9 @@ export function planPowerPrimer(i: PapInput): { block: PapBlock | null; reasons:
   return { block: null, reasons: [...reasons, "no_safe_action"] };
 }
 
+/** One primer sprint rep in yards (declared distance; 10-yd starts when undeclared). */
+function sprintYards(x: { distanceFeet?: number }): number { return Math.max(1, (x.distanceFeet ?? 30) / 3); }
+
 function build(target: PapTarget, i: PapInput, heavyOk: boolean, half: boolean, reasons: string[]): PapBlock | null {
   const age = i.age ?? 0;
   const lift = i.firstLift!;
@@ -254,6 +265,12 @@ function build(target: PapTarget, i: PapInput, heavyOk: boolean, half: boolean, 
     actions = actions.filter((x) => !x.constrainedOnly);
   }
   if (target === "first_step" && i.gameTomorrow) actions = actions.filter((x) => !x.isSprint);
+  // Pitchers: a sprint primer needs room for at least one full set inside today's 1000-yd total.
+  if (i.sprintYardsLeft != null) {
+    const before = actions.length;
+    actions = actions.filter((x) => !x.isSprint || i.sprintYardsLeft! >= 2 * sprintYards(x));
+    if (actions.length < before) reasons.push("pitcher_yard_total");
+  }
   const action = actions[0];
   if (!action) return null;
 
@@ -278,13 +295,16 @@ function build(target: PapTarget, i: PapInput, heavyOk: boolean, half: boolean, 
   const heavyPrimer = primer.heavy;
   const rest: [number, number] = !heavyPrimer ? [60, 90] : action.isSprint ? [180, 240] : [120, 180];
   const realThrow = !!action.realThrow;
-  let maxSets: number, reps: [number, number];
-  if (action.isSprint) { maxSets = 4; reps = [2, 3]; }
-  else if (action.isSwing) { maxSets = 5; reps = [3, 5]; }
-  else if (target === "throw") { maxSets = 4; reps = [3, 5]; }
-  else { maxSets = 4; reps = [2, 3]; }
-  if (half) maxSets = Math.max(1, Math.ceil(maxSets / 2));
-  const maxTotal = realThrow ? papThrowsAllowed(i.age, i.pitchBudget, half ? 3 : 5) : null;
+  // Owner Nov 1 round 4: no fixed all-out set cap. Only a score dip stops it;
+  // the throw limit (max_total_reps), rest rules and pitchers' sprint-yard total still bind.
+  // max_sets stays in the payload for older readers as "no fixed cap".
+  const maxSets = PAP_NO_FIXED_SET_CAP;
+  let reps: [number, number];
+  if (action.isSprint) reps = [2, 3];
+  else if (action.isSwing || target === "throw") reps = [3, 5];
+  else reps = [2, 3];
+  const maxTotal = realThrow ? papThrowsAllowed(i.age, i.pitchBudget, half ? 3 : 5)
+    : action.isSprint && i.sprintYardsLeft != null ? Math.floor(i.sprintYardsLeft / sprintYards(action)) : null;
 
   return {
     version: PAP_VERSION,

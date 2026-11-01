@@ -11,6 +11,7 @@
  */
 import { armBudget, ARM_DEFAULTS, type Sport } from "./armLedger.ts";
 import { THROW_WEIGHTS } from "./throwCount.ts";
+import { GREENLIGHT_STEP, type GreenlightResult } from "../progression/greenlight.ts";
 
 export type ThrowGroup = "middle_infield" | "first_base" | "outfield" | "catcher";
 
@@ -68,6 +69,8 @@ export interface WeekTargetInput {
   /** Raw throws logged in the previous 7 days; null when nothing is logged. */
   lastWeekRaw: number | null;
   inSeason: boolean;
+  /** Owner Nov 1 round 4: greenlight result for throwing. Missing = hold (never rush). */
+  greenlight?: GreenlightResult | null;
 }
 export interface WeekTarget {
   weekly: number; daily: number; holding: boolean;
@@ -77,6 +80,8 @@ export interface WeekTarget {
   needsStart: boolean;
   /** Under 19: the target is used for the plan but never shown. */
   hidden: boolean;
+  /** Owner Nov 1 round 4: plain greenlight "Because" line (off-season). */
+  because?: string | null;
 }
 
 export function weeklyThrowTarget(i: WeekTargetInput): WeekTarget {
@@ -87,8 +92,13 @@ export function weeklyThrowTarget(i: WeekTargetInput): WeekTarget {
   let weekly: number;
   if (i.inSeason) weekly = Math.min(last, t.week[1]);
   else {
+    // Owner Nov 1 round 4: step only on the greenlight rule (green → +5%, red → back, else hold),
+    // never past the existing weekly jump cap or the full-go top.
     const slow = isYouthThrower(i.age) ? YOUTH_SLOWDOWN : 1;
-    weekly = Math.min(t.week[1], Math.round(last * (1 + WEEKLY_BUILD / slow)), Math.floor(last * (1 + MAX_WEEKLY_JUMP / slow)));
+    const pct = (GREENLIGHT_STEP.throwing as { pct: number }).pct;
+    const change = i.greenlight?.change ?? 0;
+    const stepped = change === 1 ? last * (1 + pct) : change === -1 ? last / (1 + pct) : last;
+    weekly = Math.min(t.week[1], Math.round(stepped), Math.floor(last * (1 + MAX_WEEKLY_JUMP / slow)));
   }
   let daily = Math.min(t.day[1], Math.round(weekly / TRAINING_DAYS));
   const budget = armBudget({ sport: i.sport, role: i.group === "catcher" ? "catcher" : "position", age: i.age });
@@ -103,7 +113,7 @@ export function weeklyThrowTarget(i: WeekTargetInput): WeekTarget {
     weekly = weeklyFit;
     daily = Math.min(daily, Math.floor(weeklyFit / TRAINING_DAYS));
   }
-  return { weekly, daily, holding: i.inSeason, conflicts, needsStart: false, hidden: isYouthThrower(i.age) };
+  return { weekly, daily, holding: i.inSeason, conflicts, needsStart: false, hidden: isYouthThrower(i.age), because: i.inSeason ? null : (i.greenlight?.because ?? "Because: no finished throwing week to judge yet, so your throwing stays where it is.") };
 }
 
 /** Full-go target conflicts with the caps for one position and age (for the owner report). */
@@ -126,5 +136,5 @@ export function throwTargetLine(group: ThrowGroup, w: WeekTarget): string {
   if (w.needsStart) return `${t.label} goal at full go: about ${t.week[0]}–${t.week[1]} throws a week. Log your throws so we can build you toward it.`;
   return w.holding
     ? `In-season: hold steady at about ${w.weekly} throws this week (${w.daily} a day), counting every throw.`
-    : `Building toward ${t.week[0]}–${t.week[1]} throws a week: about ${w.weekly} this week (${w.daily} a day), counting every throw.`;
+    : `Building toward ${t.week[0]}–${t.week[1]} throws a week: about ${w.weekly} this week (${w.daily} a day), counting every throw.${w.because ? ` ${w.because}` : ""}`;
 }

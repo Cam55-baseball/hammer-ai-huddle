@@ -1,6 +1,6 @@
 // supabase/functions/wk-generate-daily/index.ts
 import { reliefSets, isLowerBodyLift } from "../_shared/wic/pitching/roleCycle.ts";
-import { pitcherYardTarget, repsForYards, capSessionYards, SESSION_YARD_CAP, conditioningRules, CONDITIONING_RULES_KEY } from "../_shared/wic/conditioning/yards.ts";
+import { pitcherYardTarget, repsForYards, capSessionYards, SESSION_YARD_CAP, conditioningRules, CONDITIONING_RULES_KEY, pitcherYardRuleApplies, yardsLeftToday } from "../_shared/wic/conditioning/yards.ts";
 import { applyLiveTracking } from "../_shared/vault/tracking.ts";
 import { isPlanGameDay } from "../_shared/schedule/isGameDay.ts";
 // Hammer Workout & Speed — elite daily prescription generator.
@@ -941,6 +941,10 @@ const handler = async (req: Request): Promise<Response> => {
     const physio = await readPhysioMapping(userClient, user.id, planDate, ctx?.injury_history);
     // ONE age source (owner ruling 2026-10-06): profiles.date_of_birth only.
     const athleteAgeYears: number | null = ageFromDob(p.date_of_birth, planDate);
+    // Owner Nov 1 round 4: age is required — no plan is built without a birthday (no bypass path).
+    if (athleteAgeYears == null) {
+      return new Response(JSON.stringify({ error: "age_required", message: "Add your birthday first so we can build a safe plan for your age." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     // ONE growth rule: measured height only (docs/wic/training-intelligence-v1.md §10.2).
     const { data: heightRows } = await admin
       .from("athlete_height_checks")
@@ -1037,6 +1041,7 @@ const handler = async (req: Request): Promise<Response> => {
     let outingLoadDates: string[] = [];
     let actualStartDates: string[] = [];
     let pitcherScheduleReadFailed = false;
+    let pitcherPrimaryFocus: string | null = null;
     try {
       const [pss, pout, pav, armGames] = await Promise.all([
         admin.from("pitcher_schedule_settings").select("role, rotation_anchor_date, rotation_every_days, rotation_active, primary_focus, pitching_role, limit_pitching").eq("user_id", user.id).maybeSingle(),
@@ -1047,6 +1052,7 @@ const handler = async (req: Request): Promise<Response> => {
         admin.from('gp_games').select('id,user_id,game_date,sport,pitch_count,status,deleted_at,ignored_for_training,is_starting_pitcher').eq('user_id',user.id).eq('sport',sport).gte('game_date',isoShift(planDate,-21)).lte('game_date',planDate).in('status',['final','completed']).is('deleted_at',null).limit(200),
       ]);
       for (const result of [pss, pout, pav, armGames]) if (result.error) throw result.error;
+      pitcherPrimaryFocus = ((pss as any)?.data?.primary_focus as string | null) ?? null;
       if ((armGames.data??[]).length>=200) throw new Error('Complete game arm history unavailable');
       const armGameIds=(armGames.data??[]).map((g:any)=>g.id);
       const details=armGameIds.length ? await admin.from('gp_pitches').select('game_id').eq('user_id',user.id).eq('perspective','pitcher').in('game_id',armGameIds).limit(5000) : {data:[],error:null};
@@ -1128,6 +1134,10 @@ const handler = async (req: Request): Promise<Response> => {
     const purchasedPitcher=schedulingModules.some(m=>[`${sport}_pitcher`,`${sport}_golden2way`,`${sport}_pitching`,'pitching'].includes(m));
     const positionProgram=schedulingModules.includes(`${sport}_5tool`);
     const isPitcherAthlete = purchasedPitcher && !positionProgram;
+    // Owner Nov 1 round 4: pitcher conditioning and the 1000-yd rule are for pitchers only
+    // (Complete Pitcher; Golden 2Way whose primary is Pitcher). Golden 2Way marked Position
+    // player takes position conditioning (base routes, base-count rest, no yard cap).
+    const pitcherConditioning = isPitcherAthlete && pitcherYardRuleApplies(sport, schedulingModules, pitcherPrimaryFocus);
     // Zero-exposure invariant input: the days in the last week on which the
     // athlete actually received a lift. Read-only, best-effort — a failure
     // here degrades to "no exposure known", which can only relax a removal to
@@ -3375,7 +3385,7 @@ const handler = async (req: Request): Promise<Response> => {
         pitcherStartedYesterday: isPitcherAthlete && (outingFacts
           ? outingFacts.pitchedYesterday
           : scheduledGames.some((g) => g.isStartingPitcher && !g.ignored && g.date === yesterday)),
-        isPitcher: isPitcherAthlete,
+        isPitcher: pitcherConditioning,
         pitcherStartsTomorrow: isPitcherAthlete && (outingFacts
           ? outingFacts.startsTomorrow
           : scheduledGames.some((g) => g.isStartingPitcher && !g.ignored && g.date === isoShift(planDate, 1))),
@@ -3408,7 +3418,7 @@ const handler = async (req: Request): Promise<Response> => {
       conditioningEmptyPool = conditioning.length === 0;
       // Owner Oct 31: pitchers stay sprint-based — starters build max-sprint volume week to week,
       // bullpen arms and closers do short repeat sprints. Only on an already-chosen hard sprint row.
-      const pitchRoleForSprint = isPitcherAthlete ? (outingFacts?.pitchingRole ?? null) : null;
+      const pitchRoleForSprint = pitcherConditioning ? (outingFacts?.pitchingRole ?? null) : null;
       const sprintWeek = Math.max(0, Number((progression as any).blockIndex ?? 0) * 4 + Number((progression as any).weekInBlock ?? 0) - ((progression as any).isDeloadWeek ? 1 : 0));
       let condTargets = conditioningRules(null).targets;
       if (pitchRoleForSprint) { try { const { data: cr } = await admin.from("app_settings").select("setting_value").eq("setting_key", CONDITIONING_RULES_KEY).maybeSingle(); condTargets = conditioningRules(cr?.setting_value).targets; } catch { /* defaults */ } }
@@ -3426,6 +3436,7 @@ const handler = async (req: Request): Promise<Response> => {
           conditioning_fallback: conditioningSelection.fallback,
           conditioning_dialed_down: conditioningSelection.dialedDown,
           conditioning_restriction_reason: restrictedConditioningWhy,
+          conditioning_yard_cap: pitcherConditioning ? SESSION_YARD_CAP : null,
           conditioning_counts_as_running: !restrictedConditioningWhy && isRunningConditioning([m.slug]),
           ...(m.slug.startsWith('easy_base_jog_') ? {rest_seconds:60,conditioning_easy_running:true} : {}),
           ...(sprintDoseNow ? {pitcher_sprint_dose:{role:pitchRoleForSprint,week:sprintWeek,reps:sprintDoseNow.reps,kind:sprintDoseNow.kind,target_yards:sprintDoseNow.yards,total_yards:Math.round(sprintDoseNow.reps*repFeet/3),cap_yards:SESSION_YARD_CAP}} : {}),
@@ -3465,10 +3476,10 @@ const handler = async (req: Request): Promise<Response> => {
           conditioningFloor = { due: floor.due, needed: floor.needed, added: [] };
           if (floor.due) {
             const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");
-            const slugs = floorConditioningSlugs({ sport, isPitcher: isPitcherAthlete && !isCombinedBaseConditioningProgram(schedulingModules, sport), lowReadiness: low });
+            const slugs = floorConditioningSlugs({ sport, isPitcher: pitcherConditioning && !isCombinedBaseConditioningProgram(schedulingModules, sport), lowReadiness: low });
             const why = low
               ? "Weekly running minimum: an easy run today because your readiness is lower. It still counts as one of your 2 this week."
-              : isPitcherAthlete
+              : pitcherConditioning
                 ? "Weekly running minimum: pitcher conditioning today so you get your 2 sessions this week."
                 : "Weekly running minimum: base-route conditioning today so you get your 2 sessions this week.";
             // Owner "Add fields" (Oct 28): a switched-on owner conditioning drill with
@@ -3477,14 +3488,14 @@ const handler = async (req: Request): Promise<Response> => {
             // the legality/category of the built-in floor movement it stands in for.
             let ownerServed = false;
             try {
-              const templateSlug = floorConditioningSlugs({ sport, isPitcher: isPitcherAthlete, lowReadiness: false })[0];
+              const templateSlug = floorConditioningSlugs({ sport, isPitcher: pitcherConditioning, lowReadiness: false })[0];
               const template = lib.find((x) => x.slug === templateSlug);
               if (template && eligible(template)) {
                 const { data: ownerRows } = await admin.from("owner_drills").select("*").eq("active", true)
                   .contains("placements", ["hammers_today:conditioning"]).limit(100);
                 const gear = new Set(assumedEquipment.map((e) => String(e).trim().toLowerCase()));
                 const pool = ((ownerRows ?? []) as any[])
-                  .filter((r) => ownerConditioningFits(r, { sport, isPitcher: isPitcherAthlete, modules: schedulingModules, role: outingFacts?.pitchingRole ?? null }))
+                  .filter((r) => ownerConditioningFits(r, { sport, isPitcher: pitcherConditioning, modules: schedulingModules, role: outingFacts?.pitchingRole ?? null }))
                   .filter((r) => (r.equipment ?? []).every((e: string) => gear.has(String(e).trim().toLowerCase())))
                   .sort((a, b) => String(a.id).localeCompare(String(b.id)));
                 if (pool.length) {
@@ -3493,13 +3504,13 @@ const handler = async (req: Request): Promise<Response> => {
                   if (!dose) throw new Error('Owner conditioning dose is incomplete');
                   const synth = {
                     ...template, slug: `owner_cond_${pick.id}`, name: String(pick.name), cue: String(pick.cue ?? template.cue),
-                    why_prescribed: ownerConditioningLine(String(pick.name), dose), family: null, regression_slug: null, progression_slug: null,
+                    why_prescribed: ownerConditioningLine(String(pick.name), dose, pitcherConditioning), family: null, regression_slug: null, progression_slug: null,
                     default_sets: dose.rounds, default_reps: 1, default_duration_seconds: dose.work_seconds, default_distance_feet: dose.distance_feet,
                     dosage_unit: "feet", substitution_family: null, transfer_group: null,
                     base_route: dose.bases_per_rep ? { sport, bases_per_rep: dose.bases_per_rep, base_distance_feet: dose.base_distance_feet } : null,
                   } as unknown as MovementRow;
                   lib = [...lib, synth];
-                  const ownerWhy = `Weekly running minimum: ${ownerConditioningLine(String(pick.name), dose)}`;
+                  const ownerWhy = `Weekly running minimum: ${ownerConditioningLine(String(pick.name), dose, pitcherConditioning)}`;
                   if (push("conditioning", "conditioning", synth, { sets: dose.rounds, distance_feet: dose.distance_feet, duration_seconds: dose.work_seconds } as any, ownerWhy, {
                     conditioning_why: ownerWhy, conditioning_path: "weekly_floor_owner", conditioning_template_id: "cond.weekly_floor",
                     conditioning_fallback: false, conditioning_dialed_down: low, owner_drill_id: pick.id,
@@ -3768,7 +3779,7 @@ const handler = async (req: Request): Promise<Response> => {
       const ownerRows = await userClient.from('owner_drills').select('*').eq('active', true).contains('placements', ['hammers_today:conditioning']).limit(1000);
       if (!ownerRows.error && (ownerRows.data ?? []).length < 1000) {
         const placed = placeOwnerConditioning(finalRxs as any[], lib as any[], ownerRows.data ?? [], {
-          sport, isPitcher: isPitcherAthlete, modules: schedulingModules, role: outingFacts?.pitchingRole ?? null,
+          sport, isPitcher: pitcherConditioning, yardCap: pitcherConditioning, modules: schedulingModules, role: outingFacts?.pitchingRole ?? null,
           date: planDate, low: (running?.score ?? dailyLog?.readiness ?? 1) < 0.4,
           rest: wholePlanRest(planDate, timelineToday.hold, planRestDow) || availabilityRest,
           game: isGameDay, restricted: injurySlugs.size > 0, equipment: declaredEquipment,
@@ -3778,8 +3789,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Owner Oct 31: no conditioning session passes 1000 yards (reps × declared distance).
-    {
+    // Owner Oct 31 / Nov 1 round 4: pitchers only — no conditioning session passes 1000 yards.
+    if (pitcherConditioning) {
       const cond = finalRxs.filter((r) => r.slot === "conditioning");
       const capped = capSessionYards(cond as any[]);
       cond.forEach((r, i) => { if ((capped[i] as any).sets !== r.sets) { (r as any).why_payload = { ...((r as any).why_payload ?? {}), yard_cap: { cap_yards: SESSION_YARD_CAP, sets_from: r.sets, sets_to: (capped[i] as any).sets } }; r.sets = (capped[i] as any).sets; } });
@@ -5545,6 +5556,8 @@ const handler = async (req: Request): Promise<Response> => {
           }
           const pp = planPowerPrimer({
             pitchBudget,
+            // Owner Nov 1 round 4: pitchers' primer sprint yards count toward the day's 1000-yd total.
+            sprintYardsLeft: yardsLeftToday(pitcherConditioning, (rows as any[]).filter((r) => r.slot === "conditioning")),
             sport, role, age: athleteAgeYears, growthMode: growthState.active,
             readiness: cns == null ? null : Math.max(0, Math.min(100, Number(cns) * 10)),
             pain: painAreasFromInjuries(injurySlugs),

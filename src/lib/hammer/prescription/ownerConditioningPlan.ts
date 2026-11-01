@@ -12,6 +12,8 @@ const identities: Record<string, 'jump' | 'sled'> = {
 export function ownerConditioningPlan(blocks: readonly PrescribedBlock[], ctx: {
   sport: string; modules: readonly string[]; isPitcher: boolean; role: string | null; day: Date;
   owned: ReadonlySet<string>; low: boolean; rest: boolean; game: boolean; restricted: boolean;
+  /** Owner Nov 1 round 4: 1000-yd rule for pitchers only. Omitted = follows isPitcher. */
+  yardCap?: boolean;
 }): PrescribedBlock[] {
   if (ctx.rest || ctx.game || ctx.restricted) return [...blocks];
   const pool = ownerDrillsForSlot(['hammers_today:conditioning'], ctx).filter(r => ownerConditioningFits(r, { ...ctx, modules: [...ctx.modules], runningOnly: false }));
@@ -29,10 +31,11 @@ export function ownerConditioningPlan(blocks: readonly PrescribedBlock[], ctx: {
       if (!pick || !dose || !source) return d;
       const allowance = Number(source[1]) * Number(source[2]) * (d.dosage.includes('per side') ? 2 : 1);
       const rounds = kind === 'jump' && dose.contacts ? Math.min(dose.rounds, Math.floor(allowance / dose.contacts)) : dose.rounds;
-      if (rounds < 1 || dose.distance_feet * rounds / 3 > 1000) return d;
+      const yardCap = ctx.yardCap ?? ctx.isPitcher;
+      if (rounds < 1 || (yardCap && dose.distance_feet * rounds / 3 > 1000)) return d;
       used.add(pick.id);
       return { ...d, name: pick.name, slug: `owner_cond_${pick.id}`, ownerDrillId: pick.id, prescriptionOrigin: 'owner' as const,
-        dosage: ownerConditioningLine(pick.name, { ...dose, rounds }), setup: pick.setup ?? undefined,
+        dosage: ownerConditioningLine(pick.name, { ...dose, rounds }, yardCap), setup: pick.setup ?? undefined,
         cue: pick.cue ?? undefined, stopIf: d.stopIf ?? 'Stop if you feel pain or tightness.',
         conditioningDose: { ...dose, rounds, kind, contactAllowance: kind === 'jump' ? allowance : null } };
     });

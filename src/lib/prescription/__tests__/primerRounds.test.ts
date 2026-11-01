@@ -15,7 +15,7 @@ describe("power primer inside the lift", () => {
   it("4,4,4,… stops at the set cap", () => {
     const s = primerState({ ...sprint, max_sets: 3 }, seq([4, 4, 4, 4, 4]));
     expect([s.done, s.next]).toEqual([3, false]);
-    expect(s.stopReason).toMatch(/limit/);
+    expect(s.stopReason).toMatch(/last lift set/);
   });
   it("a 3% slower sprint stops even when rated 5", () => {
     expect(primerState(sprint, seq([5, 5], [1.6, 1.65])).next).toBe(false);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
+import { PAP_NO_FIXED_SET_CAP,
   planPowerPrimer, shouldStop, PAP_LIBRARY, type PapInput, type PapRole, type LiftPattern,
 } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
 
@@ -76,10 +76,12 @@ describe("Power Primer — 8-week simulations", () => {
         if (i.pain.leg && (a.isSprint || block.target === "first_step")) v("leg pain sprint PAP");
         if (i.pain.back && block.primer.heavy && i.firstLift!.pattern === "hinge" && block.primer.source === "lift") v("back pain heavy hinge");
         if (block.target === "throw" && block.primer.source === "lift" && i.firstLift!.pattern === "press") v("press before throwing");
-        // caps
-        if (a.isSprint && (block.max_sets > 4 || block.action.reps[1] > 3)) v("sprint cap");
-        if (a.isSwing && (block.max_sets > 5 || block.action.reps[1] > 5)) v("swing cap");
-        if (block.target === "throw" && (block.max_sets > 4 || block.action.reps[1] > 5)) v("throw cap");
+        // Owner Nov 1 round 4: no fixed all-out set cap; reps per set and the throw limit still bind.
+        if (block.max_sets !== PAP_NO_FIXED_SET_CAP) v("fixed set cap returned");
+        if (a.isSprint && block.action.reps[1] > 3) v("sprint reps");
+        if (a.isSwing && block.action.reps[1] > 5) v("swing reps");
+        if (block.target === "throw" && block.action.reps[1] > 5) v("throw reps");
+        if (block.action.real_throw && (block.max_total_reps == null || block.max_total_reps > 5)) v("throw limit missing");
         if (block.primer.reps[1] > 3) v("primer > 3 reps");
         if (readiness != null && readiness < 60 && !block.half_volume) v("40-59 not half volume");
         // rest
