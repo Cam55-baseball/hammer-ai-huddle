@@ -21,7 +21,7 @@ export function placeOwnerConditioning<R extends ConditioningRow>(rows: readonly
     if (!source || row.why_payload?.owner_drill_id) return row;
     const exposure = classify(source);
     const kind = exposure?.channel === 'JUMP' ? 'jump' :
-      source.movement_category === 'carry' || source.category === 'carry' ? 'carry' :
+      ['carry','carry_antirotation'].includes(source.movement_category) || ['carry','carry_antirotation'].includes(source.category) ? 'carry' :
       source.speed_category === 'resisted' && row.slot === 'speed' ? 'sled' :
       row.slot === 'conditioning' ? 'running' : null;
     if (!kind) return row;

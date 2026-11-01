@@ -32,10 +32,16 @@ export async function currentSportDay(db:any,uid:string,date:string,sport:'baseb
   if(details.error||(details.data??[]).length>=5000)throw details.error??new Error('Complete game pitches unavailable');
   const facts=resolveOutingFacts({planDate:date,settings:settings.data,outings:outings.data??[],availability:availability.data??[],games:gamePitchLoads(games.data??[],details.data??[],uid,sport)});
   const physio=mapPhysio({injuries:context.data?.injury_history,today:date});
+  const [calendar,scheduled]=await Promise.all([
+    db.from('calendar_events').select('event_date,ignored_for_training').eq('user_id',uid).is('deleted_at',null).in('event_type',['game','tournament','scrimmage']).gte('event_date',date).lte('event_date',isoShift(date,1)).limit(50),
+    db.from('gp_games').select('game_date,ignored_for_training').eq('user_id',uid).eq('sport',sport).is('deleted_at',null).gte('game_date',date).lte('game_date',isoShift(date,1)).limit(50),
+  ]);
+  if(calendar.error||scheduled.error||(calendar.data??[]).length>=50||(scheduled.data??[]).length>=50)throw new Error('Complete current game schedule unavailable');
+  const gameOn=(d:string)=>{const e=dayEffect(timeline.data??[],d);return !e.cancelled&&(e.games.length>0||(calendar.data??[]).some((g:any)=>g.event_date===d&&g.ignored_for_training!==true)||(scheduled.data??[]).some((g:any)=>g.game_date===d&&g.ignored_for_training!==true));};
   return composeSportDay(db,{userId:uid,date,sport,phase:phase.sub_block,
     rest:wholePlanRest(date,effect.hold)||unavailableTrainingDate(date,context.data?.weekly_availability_days),
     equipment,alwaysMissingGear:missing,injuries:physio.activeAreas,birthday:profile.data?.date_of_birth??null,
-    outingFacts:facts.hasSchedule?facts:null,posture:effect.games.length?'game':'normal',gameTomorrow:dayEffect(timeline.data??[],isoShift(date,1)).games.length>0,
+    outingFacts:facts.hasSchedule?facts:null,posture:gameOn(date)?'game':effect.travel?'travel':effect.practice?'team_practice':'normal',gameTomorrow:gameOn(isoShift(date,1)),
     warmupStages:{},readiness:readiness.data?.readiness??null,phaseStartedAt:null,cns:cns.data?.units_spent??0,physio,
     availabilityDays:context.data?.weekly_availability_days??null});
 }
