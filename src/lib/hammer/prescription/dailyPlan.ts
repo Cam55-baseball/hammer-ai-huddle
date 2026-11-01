@@ -73,6 +73,7 @@ import { selectDefenseDrills, resolveDefenseTier } from "./defenseLibrary";
 import { mergeOwnerSlotDrills } from "@/lib/prescription/ownerPlanDrills";
 import { applyTissueCareMatching } from "@/lib/prescription/tissueCarePlan";
 import { applyReturnStep } from '../../../../supabase/functions/_shared/wic/pitching/pitcherReturn';
+import { applyHitterReturn } from '../../../../supabase/functions/_shared/wic/hitting/returningHitter';
 import { positionTokenIsPitcher } from "@/lib/hammer/positions/positionNormalizer";
 import { throwGroup, weeklyThrowTarget, throwTargetLine, type ThrowGroup, type WeekTarget } from "../../../../supabase/functions/_shared/wic/phases/positionThrowTargets";
 import { withTaggedPitchDrill, applyPitcherLiftRule, commandDayPlan, withCommandDrill, lightPreStart } from "./pitcherRolePlan";
@@ -2347,6 +2348,8 @@ export interface RoadmapInputs {
   /** Owner Oct 31: command data (identity window, judged stats, analysis findings, goals). Never self-invented. */
   readonly pitchCommand?: import('../../../../supabase/functions/_shared/wic/pitching/roleCycle').CommandEvidence | null;
   /** Owner Nov 1 round 6: active pitcher return program (read-only here; the server advances it). */
+  /** Owner Nov 1 round 6: active returning-hitter program (read-only here; the server advances it). */
+  readonly hitterReturn?: import('../../../../supabase/functions/_shared/wic/hitting/returningHitter').HitterProgram | null;
   readonly pitcherReturn?: import('../../../../supabase/functions/_shared/wic/pitching/pitcherReturn').ReturnProgram | null;
   readonly recentCompletions?: RecentCompletions;
   readonly phaseStartedAt?: string | null;
@@ -2689,7 +2692,9 @@ export function buildHammerDailyPlan(
     role: access?.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === 'pitcher' ? 'pitcher' : 'position',
     injuredRegions: physio.activeAreas, lightOnly: (ctx.get<number>('readiness')?.value ?? 1) < 0.4 || physio.illnessActive, restDay: fullRestDay }) as unknown as typeof conditioned;
   const cared = caredRaw.map((b, i) => b === conditioned[i] ? b : { ...b, steps: drillsToSteps(b.drills) });
-  const warmed = withWarmupThrows(cared);
+  // Owner Nov 1 round 6 Part 3: returning hitters — prescribed effort, tee/front toss only for injury/under-13 start or the bridge.
+  const hitReturned = roadmapInputs.hitterReturn ? cared.map(b => { if (b.modality !== 'hitting' || b.status !== 'ready') return b; const r = applyHitterReturn(b.drills as any[], roadmapInputs.hitterReturn ?? null, new Set(proj.equipmentList)); return { ...b, drills: r.drills as typeof b.drills, steps: drillsToSteps(r.drills as typeof b.drills), because: [...(b.because ?? []), ...r.because] }; }) : cared;
+  const warmed = withWarmupThrows(hitReturned);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
