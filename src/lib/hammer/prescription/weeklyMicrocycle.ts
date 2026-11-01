@@ -256,8 +256,8 @@ const POST_SEASON: WeeklyTemplate = {
     defense:     [5],
     baserunning: [],
   },
+  // Owner Nov 1 round 4: no unwritten 60% lift cut in post-season.
   intensityOverrides: {
-    strength: { 2: "secondary", 5: "secondary" },
     speed:    { 3: "activation" },
     hitting:  { 2: "activation", 5: "activation" },
     throwing: { 3: "activation" },
@@ -289,8 +289,9 @@ const YOUTH: WeeklyTemplate = {
     defense:     [2, 4, 6],
     baserunning: [3, 6],
   },
+  // Owner Nov 1 round 4: no unwritten 60% lift cut for youth. Written youth
+  // safety (age menus, Foundation, no spinal barbell <16, RIR, Growth Mode) stays.
   intensityOverrides: {
-    strength: { 1: "secondary", 4: "secondary" },
     speed:    { 2: "activation", 4: "activation" },
   },
   dayLabels: {
