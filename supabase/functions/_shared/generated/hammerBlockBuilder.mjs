@@ -2441,8 +2441,8 @@ var OFF_SEASON_5D = {
     game_iq: [0, 1, 2, 3, 4, 5, 6],
     speed: [2, 5],
     // Tue, Fri
-    strength: [1, 2, 4, 5],
-    // Mon, Tue, Thu, Fri
+    strength: [1, 5],
+    // Mon, Fri — written spacing law
     hitting: [1, 2, 4, 5, 6],
     // Mon, Tue, Thu, Fri, Sat
     throwing: [1, 2, 4, 5, 6],
@@ -2459,7 +2459,7 @@ var OFF_SEASON_5D = {
     // Fri: accel base, not max-vel again
   },
   dayLabels: {
-    strength: { 1: "Full-body heavy", 2: "Full-body strength", 4: "Full-body heavy", 5: "Full-body dynamic" },
+    strength: { 1: "Full-body lift", 5: "Full-body lift" },
     speed: { 2: "Max velocity", 5: "Acceleration base" }
   },
   priorityDayOrder: {
@@ -2478,14 +2478,14 @@ var OFF_SEASON_4D = {
     recovery: [0, 1, 2, 3, 4, 5, 6],
     game_iq: [0, 1, 2, 3, 4, 5, 6],
     speed: [2, 5],
-    strength: [1, 2, 4, 5],
+    strength: [1, 5],
     hitting: [1, 2, 4, 5],
     throwing: [1, 2, 4, 5],
     defense: [2, 4],
     baserunning: [5]
   },
   dayLabels: {
-    strength: { 1: "Full-body heavy", 2: "Full-body strength", 4: "Full-body heavy", 5: "Full-body dynamic" },
+    strength: { 1: "Full-body lift", 5: "Full-body lift" },
     speed: { 2: "Max velocity", 5: "Acceleration" }
   },
   priorityDayOrder: {
@@ -2504,18 +2504,17 @@ var PRE_SEASON_5D = {
     recovery: [0, 1, 2, 3, 4, 5, 6],
     game_iq: [0, 1, 2, 3, 4, 5, 6],
     speed: [1, 3, 5],
-    strength: [1, 3, 5],
+    strength: [1, 5],
     hitting: [1, 2, 3, 4, 5],
     throwing: [1, 2, 3, 4, 5],
     defense: [2, 4, 6],
     baserunning: [3, 6]
   },
   intensityOverrides: {
-    strength: { 5: "secondary" },
     speed: { 5: "secondary" }
   },
   dayLabels: {
-    strength: { 1: "Full-body heavy", 3: "Full-body dynamic", 5: "Full-body repetition" },
+    strength: { 1: "Full-body lift", 5: "Full-body lift" },
     speed: { 1: "Acceleration", 3: "Max velocity", 5: "Tempo / freshness" }
   },
   priorityDayOrder: {
@@ -2558,11 +2557,10 @@ var IN_SEASON = {
       4: "activation",
       5: "activation"
     },
-    strength: { 1: "secondary", 4: "secondary" },
     speed: { 2: "activation" }
   },
   dayLabels: {
-    strength: { 1: "Full-body maintenance", 4: "Full-body maintenance" },
+    strength: { 1: "Full-body lift", 4: "Full-body lift" },
     speed: { 2: "Freshness (short reps)" }
   },
   priorityDayOrder: {
@@ -2594,7 +2592,7 @@ var POST_SEASON = {
     throwing: { 3: "activation" }
   },
   dayLabels: {
-    strength: { 2: "Full-body rebuild", 5: "Full-body rebuild" }
+    strength: { 2: "Full-body lift", 5: "Full-body lift" }
   },
   priorityDayOrder: {
     hitting: [2, 5, 3, 1, 4, 6, 0],
@@ -2624,7 +2622,7 @@ var YOUTH = {
     speed: { 2: "activation", 4: "activation" }
   },
   dayLabels: {
-    strength: { 1: "Full-body movement quality", 4: "Full-body movement quality" },
+    strength: { 1: "Full-body lift", 4: "Full-body lift" },
     speed: { 2: "Short ATP-CP", 4: "Short ATP-CP" }
   },
   priorityDayOrder: {
@@ -2643,7 +2641,7 @@ var PERMISSIVE_DAILY = {
     recovery: [0, 1, 2, 3, 4, 5, 6],
     game_iq: [0, 1, 2, 3, 4, 5, 6],
     speed: [1, 3, 5],
-    strength: [1, 2, 4, 5],
+    strength: [1, 5],
     hitting: [1, 2, 3, 4, 5, 6],
     throwing: [1, 2, 3, 4, 5, 6],
     defense: [2, 4, 6],
@@ -6658,6 +6656,11 @@ var THROW_TARGETS = {
 var WEEKLY_BUILD = 0.1;
 var MAX_WEEKLY_JUMP = 0.3;
 var TRAINING_DAYS = 6;
+var YOUTH_TARGET_MAX_AGE = 18;
+var YOUTH_SLOWDOWN = 3;
+function isYouthThrower(age) {
+  return age !== null && age <= YOUTH_TARGET_MAX_AGE;
+}
 function throwGroup(position) {
   const p = String(position ?? "").trim().toLowerCase().replace(/[\s_-]/g, "");
   if (!p) return null;
@@ -6681,11 +6684,14 @@ function rawThatFits(group, unitCap) {
 function weeklyThrowTarget(i) {
   const t = THROW_TARGETS[i.group];
   const conflicts = [];
-  if (i.lastWeekRaw === null || i.lastWeekRaw <= 0) return { weekly: 0, daily: 0, holding: false, conflicts, needsStart: true };
+  if (i.lastWeekRaw === null || i.lastWeekRaw <= 0) return { weekly: 0, daily: 0, holding: false, conflicts, needsStart: true, hidden: isYouthThrower(i.age) };
   const last = i.lastWeekRaw;
   let weekly;
   if (i.inSeason) weekly = Math.min(last, t.week[1]);
-  else weekly = Math.min(t.week[1], Math.round(last * (1 + WEEKLY_BUILD)), Math.floor(last * (1 + MAX_WEEKLY_JUMP)));
+  else {
+    const slow = isYouthThrower(i.age) ? YOUTH_SLOWDOWN : 1;
+    weekly = Math.min(t.week[1], Math.round(last * (1 + WEEKLY_BUILD / slow)), Math.floor(last * (1 + MAX_WEEKLY_JUMP / slow)));
+  }
   let daily = Math.min(t.day[1], Math.round(weekly / TRAINING_DAYS));
   const budget = armBudget({ sport: i.sport, role: i.group === "catcher" ? "catcher" : "position", age: i.age });
   const dailyFit = rawThatFits(i.group, budget.daily);
@@ -6699,10 +6705,11 @@ function weeklyThrowTarget(i) {
     weekly = weeklyFit;
     daily = Math.min(daily, Math.floor(weeklyFit / TRAINING_DAYS));
   }
-  return { weekly, daily, holding: i.inSeason, conflicts, needsStart: false };
+  return { weekly, daily, holding: i.inSeason, conflicts, needsStart: false, hidden: isYouthThrower(i.age) };
 }
 function throwTargetLine(group, w) {
   const t = THROW_TARGETS[group];
+  if (w.hidden) return "";
   if (w.needsStart) return `${t.label} goal at full go: about ${t.week[0]}\u2013${t.week[1]} throws a week. Log your throws so we can build you toward it.`;
   return w.holding ? `In-season: hold steady at about ${w.weekly} throws this week (${w.daily} a day), counting every throw.` : `Building toward ${t.week[0]}\u2013${t.week[1]} throws a week: about ${w.weekly} this week (${w.daily} a day), counting every throw.`;
 }
@@ -8919,7 +8926,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const week = weeklyThrowTarget({ group, sport: sport === "softball" ? "softball" : "baseball", age: ctx.get("age_years")?.value ?? null, lastWeekRaw, inSeason: proj.seasonPhase === "in" });
     return { group, ...week, line: throwTargetLine(group, week) };
   })();
-  const throwingLadder = throwTarget && !throwTarget.needsStart ? { ...ladderBase, throwsToday: throwTarget.daily, headline: `Throw about ${throwTarget.daily} today (every throw counts) \xB7 ${ladderBase.maxIntentPercent}% intent${ladderBase.longTossUnlocked ? " \xB7 long-toss unlocked" : " \xB7 long-toss locked"}`, rationale: `${throwTarget.line} ${ladderBase.rationale}` } : throwTarget ? { ...ladderBase, rationale: `${throwTarget.line} ${ladderBase.rationale}` } : ladderBase;
+  const throwingLadder = throwTarget?.hidden ? throwTarget.needsStart ? ladderBase : { ...ladderBase, throwsToday: throwTarget.daily } : throwTarget && !throwTarget.needsStart ? { ...ladderBase, throwsToday: throwTarget.daily, headline: `Throw about ${throwTarget.daily} today (every throw counts) \xB7 ${ladderBase.maxIntentPercent}% intent${ladderBase.longTossUnlocked ? " \xB7 long-toss unlocked" : " \xB7 long-toss locked"}`, rationale: `${throwTarget.line} ${ladderBase.rationale}` } : throwTarget ? { ...ladderBase, rationale: `${throwTarget.line} ${ladderBase.rationale}` } : ladderBase;
   const skillTargets = SKILL_MODALITIES.reduce((acc, m) => {
     acc[m] = resolveSkillDaysTarget(
       "sustain",
