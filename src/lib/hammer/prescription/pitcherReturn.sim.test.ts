@@ -4,6 +4,9 @@ import { buildHammerDailyPlan } from "./dailyPlan";
 import { NORMAL_SIGNAL } from "./scheduleContext";
 import { resolveOutingFacts } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 import { isMoundRow, FIRST_BULLPEN_MAX, type ReturnProgram } from "../../../../supabase/functions/_shared/wic/pitching/pitcherReturn";
+import { setOwnerPlanDrills } from "@/lib/prescription/ownerPlanDrills";
+import type { OwnerDrillRow } from "@/lib/prescription/ownerDrills";
+import { beforeAll } from "vitest";
 import type { ContextVariable, HammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 
 const gear = ["tee", "gamer_bat", "net", "field", "glove", "ball", "open_space"];
@@ -26,11 +29,20 @@ function week(sport: "baseball" | "softball", ret: ReturnProgram | null) {
   });
 }
 
+const base = { active: true, placements: ["hammers_today:pitching"], equipment: [], fault_keys: [], steps: ["Do it"], cue: "Zone", setup: "A catcher or a net.", pitch_types: [], pitch_role_fit: ["starter", "bullpen", "closer"], created_at: "", level: null, phase: null, pinned: false } as unknown as OwnerDrillRow;
+const DRILLS: OwnerDrillRow[] = [
+  { ...base, id: "a-medball", name: "2-hand med-ball overhead throws (day after start)", sports: ["baseball", "softball"], dosage: "2x8 throws, easy", pitch_mound_type: "flat_ground", pitch_intensity: "catch_light", pitch_count: 0, pitch_purposes: ["throwing_mobility", "recovery"], pitch_role_fit: ["starter"] },
+  { ...base, id: "b-sb", name: "Shortbox mound (40 ft)", sports: ["baseball"], dosage: "20 pitches", pitch_mound_type: "shortbox", pitch_distance_feet: 40, pitch_intensity: "catch_light", pitch_count: 20, pitch_purposes: ["command"] },
+  { ...base, id: "c-lm", name: "Light mound catch", sports: ["baseball"], dosage: "15 pitches", pitch_mound_type: "light_mound", pitch_intensity: "catch_light", pitch_count: 15, pitch_purposes: ["mechanics"] },
+  { ...base, id: "d-sbc", name: "Shortbox circle (29 ft)", sports: ["softball"], dosage: "20 pitches", pitch_mound_type: "shortbox_circle", pitch_distance_feet: 29, pitch_intensity: "catch_light", pitch_count: 20, pitch_purposes: ["command"] },
+  { ...base, id: "e-lc", name: "Light circle work", sports: ["softball"], dosage: "15 pitches", pitch_mound_type: "circle", pitch_intensity: "catch_light", pitch_count: 15, pitch_purposes: ["mechanics"] },
+] as OwnerDrillRow[];
+beforeAll(() => setOwnerPlanDrills(DRILLS));
+
 describe("pitcher return through the real builder", () => {
   for (const sport of ["baseball", "softball"] as const) {
     it(`${sport}: flat step has no mound/circle pitching, shortbox is 2/3 distance, first bullpen ≤ 25`, () => {
       const normal = week(sport, null);
-      console.log(JSON.stringify(normal.map(d=>d.drills.map((x:any)=>[x.name,x.armEvent?.kind,x.armEvent?.count,x.pitchTags?.moundType]))));
       expect(normal.some(d => d.drills.some(isMoundRow))).toBe(true); // the week normally has mound/circle work
       const flat = week(sport, prog("flat", sport));
       expect(flat.every(d => !d.drills.some(isMoundRow))).toBe(true);
