@@ -95,7 +95,7 @@ function physioDefaults(raw) {
     professionalAfterDays: typeof r.professionalAfterDays === "number" && Number.isInteger(r.professionalAfterDays) && r.professionalAfterDays >= 1 && r.professionalAfterDays <= 3 ? r.professionalAfterDays : 3
   };
 }
-var AREAS = /* @__PURE__ */ new Set(["shoulder", "elbow", "wrist", "hip", "knee", "ankle", "back"]);
+var AREAS = /* @__PURE__ */ new Set(["shoulder", "ucl", "elbow", "forearm", "wrist", "hand", "hip", "knee", "ankle", "foot", "back", "hamstring", "quad", "groin", "calf", "achilles", "neck"]);
 var PREHAB_SLUGS = {
   shoulder: "wu_shoulder_cars",
   wrist: "wu_wrist_cars",
