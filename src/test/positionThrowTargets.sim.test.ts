@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { THROW_TARGETS, weeklyThrowTarget, fullGoConflicts, throwGroup, unitsForRawDay, throwTargetLine, type ThrowGroup } from "../../supabase/functions/_shared/wic/phases/positionThrowTargets";
+import { greenlightLevel } from "../../supabase/functions/_shared/wic/progression/greenlight";
 import { armBudget, fieldDistances } from "../../supabase/functions/_shared/wic/phases/armLedger";
 
 const groups: ThrowGroup[] = ["middle_infield", "first_base", "outfield", "catcher"];
@@ -40,17 +41,18 @@ describe("owner Nov 1 position throw targets", () => {
     });
   }
 
-  it("adults reach the full-go week range where the caps allow it", () => {
+  it("adults on green weeks reach the full-go week range where the caps allow it", () => {
     let last = 200;
-    for (let w = 0; w < 20; w++) last = weeklyThrowTarget({ group: "middle_infield", sport: "baseball", age: 20, lastWeekRaw: last, inSeason: false }).weekly;
+    const green = greenlightLevel("throwing", ["green"], 20);
+    for (let w = 0; w < 20; w++) last = weeklyThrowTarget({ group: "middle_infield", sport: "baseball", age: 20, lastWeekRaw: last, inSeason: false, greenlight: green }).weekly;
     expect(last).toBeGreaterThanOrEqual(400);
   });
 
-  it("under 19: target is hidden and builds 3x more slowly than adults", () => {
-    const youth = weeklyThrowTarget({ group: "outfield", sport: "baseball", age: 17, lastWeekRaw: 300, inSeason: false });
-    const adult = weeklyThrowTarget({ group: "outfield", sport: "baseball", age: 20, lastWeekRaw: 300, inSeason: false });
-    expect(adult.weekly).toBe(330);
-    expect(youth.weekly).toBe(310);
+  it("under 19: target is hidden and needs 3 green weeks to step (adults 1)", () => {
+    const youth = weeklyThrowTarget({ group: "outfield", sport: "baseball", age: 17, lastWeekRaw: 300, inSeason: false, greenlight: greenlightLevel("throwing", ["green"], 17) });
+    const adult = weeklyThrowTarget({ group: "outfield", sport: "baseball", age: 20, lastWeekRaw: 300, inSeason: false, greenlight: greenlightLevel("throwing", ["green"], 20) });
+    expect(adult.weekly).toBe(315);
+    expect(youth.weekly).toBe(300);
     expect(youth.hidden).toBe(true);
     expect(adult.hidden).toBe(false);
     expect(throwTargetLine("outfield", youth)).toBe("");
