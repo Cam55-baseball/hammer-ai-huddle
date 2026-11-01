@@ -315,7 +315,7 @@ const PERMISSIVE_DAILY: WeeklyTemplate = {
     recovery: [0, 1, 2, 3, 4, 5, 6],
     game_iq: [0, 1, 2, 3, 4, 5, 6],
     speed:       [1, 3, 5],
-    strength:    [1, 2, 4, 5],
+    strength:    [1, 5],
     hitting:     [1, 2, 3, 4, 5, 6],
     throwing:    [1, 2, 3, 4, 5, 6],
     defense:     [2, 4, 6],
