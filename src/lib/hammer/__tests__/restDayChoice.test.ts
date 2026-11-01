@@ -56,3 +56,15 @@ describe("owner Nov 1 B1: choose your rest day", () => {
       .toEqual({ ok: true, weekStart: "2026-11-09", restDate: "2026-11-13" });
   });
 });
+
+import { resolveSkillDays } from "../prescription/weeklyMicrocycle";
+describe("owner Nov 1 B1: weekly floors stay met after moving the rest day", () => {
+  it("defense 4 / hitting 3 / bunting 2 never land on the new rest day and still fill", () => {
+    const template: any = { perModality: { defense: [1, 3, 5], hitting: [2, 3, 4], bunting: [3] }, availableDays: availableTrainingDays(null, 3), restDow: 3 };
+    for (const [m, n] of [["defense", 4], ["hitting", 3], ["bunting", 2]] as const) {
+      const r = resolveSkillDays(template, m as any, n);
+      expect(r.days).toHaveLength(n);
+      expect(r.days).not.toContain(3);
+    }
+  });
+});
