@@ -278,12 +278,14 @@ function build(target: PapTarget, i: PapInput, heavyOk: boolean, half: boolean, 
   const heavyPrimer = primer.heavy;
   const rest: [number, number] = !heavyPrimer ? [60, 90] : action.isSprint ? [180, 240] : [120, 180];
   const realThrow = !!action.realThrow;
-  let maxSets: number, reps: [number, number];
-  if (action.isSprint) { maxSets = 4; reps = [2, 3]; }
-  else if (action.isSwing) { maxSets = 5; reps = [3, 5]; }
-  else if (target === "throw") { maxSets = 4; reps = [3, 5]; }
-  else { maxSets = 4; reps = [2, 3]; }
-  if (half) maxSets = Math.max(1, Math.ceil(maxSets / 2));
+  // Owner Nov 1 round 4: no fixed all-out set cap. Only a score dip stops it;
+  // the throw limit (max_total_reps), rest rules and pitchers' sprint-yard total still bind.
+  // max_sets stays in the payload for older readers as "no fixed cap".
+  const maxSets = PAP_NO_FIXED_SET_CAP;
+  let reps: [number, number];
+  if (action.isSprint) reps = [2, 3];
+  else if (action.isSwing || target === "throw") reps = [3, 5];
+  else reps = [2, 3];
   const maxTotal = realThrow ? papThrowsAllowed(i.age, i.pitchBudget, half ? 3 : 5) : null;
 
   return {
