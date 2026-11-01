@@ -11,6 +11,27 @@ export const yardsToFeet = (yards: number) => Math.round(yards * 3);
 
 export type PitchRole = "starter" | "bullpen" | "closer";
 
+/**
+ * Owner Nov 1 round 4: the 1000-yard rule is for PITCHERS ONLY — Complete Pitcher,
+ * and Golden 2Way players whose primary is Pitcher. Everyone else follows their own
+ * conditioning rules with no yard cap. Golden 2Way with no primary answer keeps the
+ * pitcher rule until they answer (owner question pending).
+ */
+export type ConditioningProgram = "pitcher" | "position";
+export function conditioningProgram(sport: string, modules: readonly string[], primaryFocus: string | null | undefined): ConditioningProgram {
+  const has = (m: string) => modules.includes(m);
+  if (has(`${sport}_golden2way`)) return primaryFocus === "position" ? "position" : "pitcher";
+  if (has(`${sport}_5tool`) || has(`${sport}_hitting`) || has("hitting")) return "position";
+  if ([`${sport}_pitcher`, `${sport}_pitching`, "pitching"].some(has)) return "pitcher";
+  return "position";
+}
+export const pitcherYardRuleApplies = (sport: string, modules: readonly string[], primaryFocus: string | null | undefined) =>
+  conditioningProgram(sport, modules, primaryFocus) === "pitcher";
+/** Yards a pitcher has left today after the given rows (null = no yard rule for this player). */
+export function yardsLeftToday(applies: boolean, rows: Parameters<typeof sessionYards>[0]): number | null {
+  return applies ? Math.max(0, SESSION_YARD_CAP - sessionYards(rows)) : null;
+}
+
 /** Owner-editable starting targets (Coaching Console). */
 export interface ConditioningTargets {
   starterFromYards: number;
@@ -84,7 +105,7 @@ export type RepVerdict =
   | { action: "offer_more"; reps: number; message: string }
   | { action: "done" };
 
-export function judgeReps(reps: readonly RepFeedback[], opts: { kind: "max_sprint" | "repeat_sprint"; prescribedReps: number; repFeet: number; extraUsed?: number }, t: StopThresholds = DEFAULT_STOP_THRESHOLDS): RepVerdict {
+export function judgeReps(reps: readonly RepFeedback[], opts: { kind: "max_sprint" | "repeat_sprint"; prescribedReps: number; repFeet: number; extraUsed?: number; capYards?: number | null }, t: StopThresholds = DEFAULT_STOP_THRESHOLDS): RepVerdict {
   const last = reps[reps.length - 1];
   if (!last) return { action: "continue" };
   if (last.pain) return { action: "stop", reason: "pain", caution: true, message: "Stopped: you felt pain or tightness. Logged for your check-in." };
@@ -101,7 +122,8 @@ export function judgeReps(reps: readonly RepFeedback[], opts: { kind: "max_sprin
   const recent = tail(2);
   const nearBest = recent.length === 2 && recent.every((r) => (r.effort ?? 99) <= t.offerEffortMax &&
     (best == null ? r.feel !== "slower" : typeof r.seconds === "number" && r.seconds <= best * (1 + t.offerNearBestPct / 100)));
-  const roomYards = SESSION_YARD_CAP - ((total + t.offerReps) * opts.repFeet) / 3;
+  const cap = opts.capYards === undefined ? SESSION_YARD_CAP : opts.capYards;
+  const roomYards = cap == null ? 0 : cap - ((total + t.offerReps) * opts.repFeet) / 3;
   if (!opts.extraUsed && nearBest && roomYards >= 0) return { action: "offer_more", reps: t.offerReps, message: `You're still fast. Add ${t.offerReps} more reps?` };
   return { action: "done" };
 }

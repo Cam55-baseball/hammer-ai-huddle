@@ -93,9 +93,9 @@ export function ownerConditioningFits(r: OwnerConditioningFields, ctx: { sport: 
   return ownerConditioningProblems(r).length === 0;
 }
 
-export function ownerConditioningLine(name: string, d: OwnerConditioningDose): string {
+export function ownerConditioningLine(name: string, d: OwnerConditioningDose, yardCap = false): string {
   const yd = Math.round(d.distance_feet / 3);
   if (d.contacts !== null) return `${name}: ${d.rounds} rounds × ${d.contacts} contacts (${d.rounds * d.contacts} contacts total), rest ${d.rest_seconds} seconds.${d.low ? ' Fewer rounds today because your readiness is lower.' : ''}`;
   const run = d.bases_per_rep ? `${d.bases_per_rep} base${d.bases_per_rep > 1 ? "s" : ""} (${yd} yd)` : `${yd} yd`;
-  return `${name}: ${d.rounds} round${d.rounds > 1 ? "s" : ""} of ${run} (${d.rounds * yd} yd total, max 1000 yd)${d.load_lbs !== null ? ` at ${d.load_lbs} lb` : ''}${d.work_seconds > 0 ? `, about ${d.work_seconds} seconds of work` : ''}, rest ${d.rest_seconds} seconds.${d.low ? " Fewer rounds today because your readiness is lower. It still counts." : ""}`;
+  return `${name}: ${d.rounds} round${d.rounds > 1 ? "s" : ""} of ${run} (${d.rounds * yd} yd total${yardCap ? ", max 1000 yd" : ""})${d.load_lbs !== null ? ` at ${d.load_lbs} lb` : ''}${d.work_seconds > 0 ? `, about ${d.work_seconds} seconds of work` : ''}, rest ${d.rest_seconds} seconds.${d.low ? " Fewer rounds today because your readiness is lower. It still counts." : ""}`;
 }
