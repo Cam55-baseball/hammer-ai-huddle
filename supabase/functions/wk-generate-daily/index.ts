@@ -1861,12 +1861,15 @@ const handler = async (req: Request): Promise<Response> => {
       if (features.in_season_post_game === true && isInSeason) {
         const { data: lastLift } = await admin
           .from("wk_prescriptions")
-          .select("why_payload, plan_date")
+          .select("why_payload, plan_date, slot, sequence_role")
           .eq("user_id", user.id)
           .lt("plan_date", planDate)
           .order("plan_date", { ascending: false })
-          .limit(40);
-        for (const row of (lastLift ?? []) as any[]) {
+          .limit(200);
+        // Owner Nov 1 C1: only a day that really lifted sets the next A/B slot.
+        const loadedSlotRows = ((lastLift ?? []) as any[]).filter((r) =>
+          String(r.slot ?? "") === "lift" && loadedLiftRows([r]).length > 0);
+        for (const row of loadedSlotRows) {
           const slot = (row.why_payload as any)?.in_season_slot;
           if (slot === "A" || slot === "B") {
             lastLiftSlot = slot;
@@ -1883,6 +1886,7 @@ const handler = async (req: Request): Promise<Response> => {
           startsToday: isPitcherAthlete && isGameDay && gameProximity.removeLift === true,
           startsTomorrow: isPitcherAthlete && !isGameDay && gameProximity.primerOnly === true,
           lastLiftSlot,
+          liftRemoved: tcsAdjust?.removeLift === true,
           doubleheaderToday: gameProximity.isDoubleheaderToday === true,
           highDensity: gameProximity.highDensity === true,
         });
