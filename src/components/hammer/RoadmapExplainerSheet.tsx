@@ -22,6 +22,7 @@ interface Props {
  */
 export function RoadmapExplainerSheet({ open, onOpenChange, roadmap }: Props) {
   const { rung, rungRationale, quarter, eliteTarget, throwingLadder, skillLadder } = roadmap;
+  const throwTarget = roadmap.throwTarget ?? null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -195,8 +196,9 @@ export function RoadmapExplainerSheet({ open, onOpenChange, roadmap }: Props) {
               <StatChip label="Lifts / wk" value={String(eliteTarget.liftSessionsPerWeek)} />
               <StatChip label="Speed / wk" value={String(eliteTarget.speedSessionsPerWeek)} />
               <StatChip label="Bat speed / wk" value={String(eliteTarget.batSpeedSessionsPerWeek)} />
-              <StatChip label="Throws / wk cap" value={String(eliteTarget.weeklyThrowsCeiling)} />
             </div>
+            {/* Owner Nov 1: the fixed 250/220 number is gone; position players see their own target. */}
+            {throwTarget && <p className="mt-2 text-xs text-foreground/90" data-testid="throw-target-line">{throwTarget.line}</p>}
           </section>
 
           <p className="text-[11px] text-muted-foreground">

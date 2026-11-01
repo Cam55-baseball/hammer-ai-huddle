@@ -68,7 +68,9 @@ import {
   type EassContext,
 } from "./eassLibrary";
 import { selectDefenseDrills, resolveDefenseTier } from "./defenseLibrary";
-import { mergeOwnerSlotDrills } from "@/lib/prescription/ownerPlanDrills";
+import { mergeOwnerSlotDrills, ownerCareDrill, careDosage } from "@/lib/prescription/ownerPlanDrills";
+import { positionTokenIsPitcher } from "@/lib/hammer/positions/positionNormalizer";
+import { throwGroup, weeklyThrowTarget, throwTargetLine, type ThrowGroup, type WeekTarget } from "../../../../supabase/functions/_shared/wic/phases/positionThrowTargets";
 import { withTaggedPitchDrill, applyPitcherLiftRule, commandDayPlan, withCommandDrill, lightPreStart } from "./pitcherRolePlan";
 import {
   resolveWeeklyTemplate,
@@ -1538,6 +1540,8 @@ export interface HammerDailyPlanResult {
     readonly quarter: QuarterDescriptor;
     readonly eliteTarget: EliteTarget;
     readonly throwingLadder: ThrowingLadderPrescription | null;
+    /** Owner Nov 1 position-player throw target (null for pitchers / unknown position). */
+    readonly throwTarget?: ({ group: ThrowGroup; line: string } & WeekTarget) | null;
     /**
      * Skill-frequency ladder — days/week per skill modality the athlete is
      * building toward, with earned days from the last 7d. "Stack days
@@ -2408,7 +2412,23 @@ export function buildHammerDailyPlan(
     ctx.get<unknown>("position")?.value ??
     null;
   const eliteTarget = resolveEliteTarget(sportRaw);
-  const throwingLadder = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
+  const ladderBase = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
+  // Owner Nov 1: position-player throw targets (every throw counts; build ~10%/wk, hold in-season).
+  const throwTarget = (() => {
+    const group = positionTokenIsPitcher(positionRaw) ? null : throwGroup(positionRaw);
+    if (!group) return null;
+    const hist = roadmapInputs.armHistory;
+    const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const from = iso(new Date(today.getTime() - 7 * 86400000)), to = iso(new Date(today.getTime() - 86400000));
+    const lastWeekRaw = hist && !hist.unavailable
+      ? hist.rows.filter(r => r.entry_date >= from && r.entry_date <= to && !/skip|missed|cancel/i.test(String(r.status ?? ''))).reduce((n, r) => n + Number(r.count ?? 0), 0)
+      : null;
+    const week = weeklyThrowTarget({ group, sport: sport === 'softball' ? 'softball' : 'baseball', age: (ctx.get<number>('age_years')?.value as number | null) ?? null, lastWeekRaw, inSeason: proj.seasonPhase === 'in' });
+    return { group, ...week, line: throwTargetLine(group, week) };
+  })();
+  const throwingLadder = throwTarget && !throwTarget.needsStart
+    ? { ...ladderBase, throwsToday: throwTarget.daily, headline: `Throw about ${throwTarget.daily} today (every throw counts) · ${ladderBase.maxIntentPercent}% intent${ladderBase.longTossUnlocked ? ' · long-toss unlocked' : ' · long-toss locked'}`, rationale: `${throwTarget.line} ${ladderBase.rationale}` }
+    : throwTarget ? { ...ladderBase, rationale: `${throwTarget.line} ${ladderBase.rationale}` } : ladderBase;
 
   // Skill-frequency ladder — stack days first, then intensity. Feed the
   // targets into the microcycle so priorityDayOrder is honoured, and count
@@ -2639,7 +2659,20 @@ export function buildHammerDailyPlan(
     owned: new Set(proj.equipmentList), low: (ctx.get<number>('readiness')?.value ?? 1) < 0.4,
     rest: fullRestDay, game: scheduleSignal.postureToday === 'game' || scheduleSignal.postureToday === 'tournament',
     restricted: physio.activeAreas.length > 0 || physio.illnessActive });
-  const warmed = withWarmupThrows(conditioned);
+  // Owner Nov 1: an owner TISSUE CARE activity takes the Recovery card's built-in mobility/foam-roll slot
+  // (count unchanged; prehab, breath and cool-down care stay). Matched by sport, gear and Programs.
+  const careDrill = ownerCareDrill("hammers_today:tissue_care", { sport, modules: roadmapInputs.subscriptionModules ?? [], owned: new Set(proj.equipmentList), day: today });
+  const cared = careDrill ? conditioned.map(b => {
+    if (b.modality !== 'recovery' || b.status !== 'ready') return b;
+    const i = b.drills.findIndex(d => d.name === 'Mobility + foam roll' && (d as { prescriptionOrigin?: string }).prescriptionOrigin !== 'owner');
+    if (i < 0) return b;
+    const owned = { name: careDrill.name, dosage: careDosage(careDrill), cue: careDrill.cue ?? '', prescriptionOrigin: 'owner', ownerDrillId: careDrill.id, careMeasure: careDrill.care_measure ?? null,
+      ...(careDrill.setup?.trim() ? { setup: careDrill.setup } : {}), ...(careDrill.equipment.length ? { equipmentNote: careDrill.equipment.join(', ') } : {}),
+      stopIf: b.drills[i].stopIf } as unknown as DrillStep;
+    const drills = b.drills.map((d, j) => j === i ? owned : d);
+    return { ...b, drills, steps: drillsToSteps(drills) };
+  }) : conditioned;
+  const warmed = withWarmupThrows(cared);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
@@ -2682,6 +2715,7 @@ export function buildHammerDailyPlan(
       quarter,
       eliteTarget,
       throwingLadder,
+      throwTarget,
       skillLadder,
     },
   };

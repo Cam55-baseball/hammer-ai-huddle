@@ -8,7 +8,8 @@ import { dailyMindItem, mindPlacement, type MindKind, type MindPlacement } from 
 import { useTexVisionS2Priority } from "./TexVisionS2Priority";
 import { useTexVisionProgress } from "@/hooks/useTexVisionProgress";
 import { useDailyDrillSelection } from "@/hooks/useDailyDrillSelection";
-import { loadOwnerPlanDrills, ownerMindDrill } from "@/lib/prescription/ownerPlanDrills";
+import { loadOwnerPlanDrills, ownerMindDrill, ownerCareDrill, careDosage } from "@/lib/prescription/ownerPlanDrills";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const COPY: Record<MindKind, { title: string; how: string }> = {
   situations: { title: "Game situations", how: "Pick 3 game spots (runner on 2nd, 1 out). Say out loud what you'd do before the pitch." },
@@ -45,7 +46,10 @@ export function MindItemCard({ planDate, placement }: { planDate: string; placem
   const builtIn = Number.isFinite(day) ? dailyMindItem(day, texVisionPrescribed).kind : null;
   const sport = typeof window !== "undefined" && localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball";
   // Owner Mind-tagged drills take the non-Tex-Vision days; a prescribed Tex Vision day stays Tex Vision.
-  const owner = ownerLoaded && builtIn && builtIn !== "tex_vision" ? ownerMindDrill({ sport, day: new Date(`${planDate}T12:00:00Z`) }) : null;
+  const { modules } = useSubscription();
+  // Owner Nov 1: on a focus-routine day an owner FOCUS ROUTINE activity (Programs-matched) is used first.
+  const focusOwner = ownerLoaded && builtIn === "focus_routine" ? ownerCareDrill("hammers_today:focus_routine", { sport, modules, day: new Date(`${planDate}T12:00:00Z`) }) : null;
+  const owner = focusOwner ?? (ownerLoaded && builtIn && builtIn !== "tex_vision" ? ownerMindDrill({ sport, day: new Date(`${planDate}T12:00:00Z`) }) : null);
   const kind = builtIn;
 
   useEffect(() => {
@@ -61,7 +65,7 @@ export function MindItemCard({ planDate, placement }: { planDate: string; placem
   }, [planDate]);
 
   if (!kind || mindPlacement(kind) !== placement) return null;
-  const item = owner ? { title: owner.name, how: [owner.dosage, owner.cue].filter(Boolean).join(" · ") } : COPY[kind];
+  const item = owner ? { title: owner.name, how: [focusOwner ? careDosage(owner) : owner.dosage, owner.cue].filter(Boolean).join(" · ") } : COPY[kind];
 
   const markDone = async () => {
     setSaving(true); setError(null);

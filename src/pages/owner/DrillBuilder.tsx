@@ -28,6 +28,7 @@ import { DrillCmsManager } from '@/components/owner/DrillCmsManager';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ownerConditioningProblems } from '../../../supabase/functions/_shared/wic/conditioning/ownerConditioning';
 import { ConditioningFields } from "@/components/owner/ConditioningFields";
+import { CareFields } from "@/components/owner/CareFields";
 import { PitcherTagFields } from '@/components/owner/PitcherTagFields';
 import { SKILL_AREAS, ROUTINE_ROLES, BAT_SPEED_KINDS, validDrillRoleTags } from '@/lib/prescription/drillRoleTags';
 
@@ -40,6 +41,8 @@ const SLOT_LABEL: Record<PlanSlot, string> = {
   "hammers_today:bunting": "Bunting (exact type and side)",
   "hammers_today:mind": "Daily Mind item",
   "hammers_today:conditioning": "Weekly running minimum (conditioning)",
+  "hammers_today:tissue_care": "Tissue care (Recovery card)",
+  "hammers_today:focus_routine": "Focus routine (Mind item)",
 };
 const BUNT_TYPES = ["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"] as const;
 
@@ -472,6 +475,7 @@ export default function DrillBuilder() {
                 </div>}
                 <PitcherTagFields draft={draft} set={set as any} />
                 {draft.placements.includes('hammers_today:conditioning') && <ConditioningFields draft={draft as any} set={set as any} />}
+                {(draft.placements.includes('hammers_today:tissue_care') || draft.placements.includes('hammers_today:focus_routine')) && !draft.placements.includes('hammers_today:conditioning') && <CareFields draft={draft as any} set={set as any} />}
               </div>
               <div className="space-y-2"><Label htmlFor="drill-library-search">Video library</Label><Input id="drill-library-search" placeholder="Search library videos" value={videoSearch} onChange={e => setVideoSearch(e.target.value)} /><div className="max-h-48 space-y-1 overflow-y-auto">{libraryVideos.filter(video => video.video_url).map(video => <Button key={video.id} type="button" variant={draft.library_video_id === video.id ? 'default' : 'outline'} className="h-auto w-full justify-start whitespace-normal break-words text-left" onClick={() => { setDraft(d => d && ({ ...d, library_video_id: video.id, video_url: video.video_url })); setVideoFile(null); }}>{video.title}</Button>)}</div>{videosLoading && <p role="status" className="text-xs text-muted-foreground">Loading videos…</p>}{moreVideos && <Button type="button" variant="ghost" disabled={videosLoading} onClick={loadMoreVideos}>More videos</Button>}</div>
               <div><Label>Video link</Label><Input value={draft.video_url ?? ""} onChange={(e) => setDraft(d => d && ({ ...d, video_url: e.target.value, library_video_id: null }))} placeholder="Paste your drill video link" />{draft.video_url?.trim() ? <p className={`mt-1 text-xs ${isAcceptedDrillVideoUrl(draft.video_url) ? "text-muted-foreground" : "text-destructive"}`}>{isAcceptedDrillVideoUrl(draft.video_url) ? drillVideoLabel(drillVideoFromUrl(draft.video_url)) : "This link can't be used. Paste the full https link to the video post."}</p> : null}</div>

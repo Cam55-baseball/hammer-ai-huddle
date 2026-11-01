@@ -45,6 +45,8 @@ import { howSureFor } from '@/lib/intelligence/howSure';
 import { useReadinessState } from '@/hooks/useReadinessState';
 import { PerformanceAreaRows } from '@/components/intelligence/PerformanceAreaRows';
 import { LearningLoopList } from '@/components/intelligence/LearningLoopList';
+import { BullpenBeforeStartCard } from '@/components/intelligence/BullpenBeforeStartCard';
+import { useAuth } from '@/hooks/useAuth';
 import { HealthFlagsCard } from '@/components/intelligence/HealthFlagsCard';
 import { WorkoutActuals } from '@/components/hammer/WorkoutActuals';
 import {MasteryIdentityPanel} from '@/components/intelligence/MasteryIdentityPanel';
@@ -106,6 +108,7 @@ export interface GeneralExtras {
 
 export default function ProgressDashboard({ header, today, performance, gameIq, growth }: GeneralExtras = {}) {
   const { modules } = useSubscription();
+  const { user } = useAuth();
   const { isOwner } = useOwnerAccess();
   const { snapshot } = useHIESnapshot();
   const { profile } = useUserProfile();
@@ -147,6 +150,7 @@ Confidence: ${snapshot.development_confidence}%
           <TabsContent value="today" className="space-y-6">
             <MeaningSection title="Today’s Overview" use="Start with your Do-this list, then check how ready you are. Do your morning check-in so this stays accurate." explanation="Your recent check-ins and saved work help explain today. Missing answers are not a good-readiness signal. Follow the existing plan; these summaries do not add work.">
             <LearningLoopList />
+            {user?.id && <BullpenBeforeStartCard athleteId={user.id} sport={selectedSport} who="player" />}
             <ReadinessTodayCard />
             {today}
             </MeaningSection>
