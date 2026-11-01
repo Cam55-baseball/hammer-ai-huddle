@@ -1,6 +1,13 @@
 import { jumpMeasure, timedMobilityMeasure, ownerExerciseMeasure, fieldsForMeasure, declaredCount, displayDistance, storeDistance } from "@/lib/logging/measureType";
 import { useFocusExercise } from "../cards/FocusSession";
 import { SprintRepFeedback } from "./SprintRepFeedback";
+
+/** Owner Nov 1 round 4: only pitcher conditioning carries the 1000-yd cap (saved on the row). */
+function yardCapOf(rx: { why_payload?: unknown }): number | null {
+  const w = (rx.why_payload ?? {}) as { conditioning_yard_cap?: unknown; pitcher_sprint_dose?: { cap_yards?: unknown } };
+  const v = w.conditioning_yard_cap ?? w.pitcher_sprint_dose?.cap_yards;
+  return typeof v === "number" && v > 0 ? v : null;
+}
 import { ExerciseTimer } from "../cards/ExerciseTimer";
 import { ActivityBasics } from "../cards/ActivityBasics";
 import { ExerciseTools } from "../cards/ExerciseTools";
@@ -306,6 +313,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     {!focus.active && basesPerRep && <ConditioningBaseRest basesPerRep={basesPerRep} />}
     {repFeedback && (() => { const row = focus.active ? focus.row : Math.min(rowsNow - 1, Math.max(0, [...Array(rowsNow).keys()].find(i => !feedbackRows.has(i)) ?? rowsNow - 1)); const t = Number(rounds[row]?.time); return <SprintRepFeedback userId={user?.id} prescriptionId={rx.id} planDate={rx.plan_date} row={row}
       kind={rx.slot === "speed" ? "max_sprint" : "repeat_sprint"} repFeet={rx.distance_feet as number} prescribedReps={spec.rows} seconds={t > 0 ? t : null} extraUsed={extraReps}
+      capYards={yardCapOf(rx)}
       onSaved={i => setFeedbackRows(p => p.has(i) ? p : new Set(p).add(i))} onStop={() => { void autosave.flush(); focus.end(); }}
       onAddMore={n => { setExtraReps(e => e + n); persist([...rounds, ...Array.from({ length: n }, () => Object.fromEntries(spec.fields.map(f => [f.key, ""])))]); }} />; })()}
     <div className="grid gap-1.5 px-1 text-[10px] uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>

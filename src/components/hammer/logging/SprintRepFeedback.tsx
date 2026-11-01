@@ -4,15 +4,17 @@ import { Button } from "@/components/ui/button";
 import { useQueryClient } from '@tanstack/react-query';
 import { recordPain } from '@/lib/hammer/injury/recordPain';
 import { REPORT_INJURY_REGIONS, type ReportInjuryRegionKey } from '@/lib/hammer/injury/reportInjury';
-import { judgeReps, conditioningRules, CONDITIONING_RULES_KEY, SESSION_YARD_CAP, type RepFeedback, type Feel } from "../../../../supabase/functions/_shared/wic/conditioning/yards";
+import { judgeReps, conditioningRules, CONDITIONING_RULES_KEY, type RepFeedback, type Feel } from "../../../../supabase/functions/_shared/wic/conditioning/yards";
 
 const db = supabase as any;
 export type RepOutcome = { stopped: string | null; offer: number | null };
 
 /** Owner Oct 31: one-tap feedback after each sprint/conditioning rep, then smart stop or "add 2 more". */
-export function SprintRepFeedback({ userId, prescriptionId, planDate, row, kind, repFeet, prescribedReps, seconds, extraUsed, onSaved, onStop, onAddMore }: {
+export function SprintRepFeedback({ userId, prescriptionId, planDate, row, kind, repFeet, prescribedReps, seconds, extraUsed, capYards = null, onSaved, onStop, onAddMore }: {
   userId?: string; prescriptionId: string; planDate: string; row: number; kind: "max_sprint" | "repeat_sprint"; repFeet: number; prescribedReps: number;
-  seconds: number | null; extraUsed: number; onSaved: (row: number) => void; onStop: (message: string) => void; onAddMore: (reps: number) => void;
+  seconds: number | null; extraUsed: number;
+  /** Owner Nov 1 round 4: 1000-yd cap for pitchers only; null = no yard cap on this card. */
+  capYards?: number | null; onSaved: (row: number) => void; onStop: (message: string) => void; onAddMore: (reps: number) => void;
 }) {
   const queryClient = useQueryClient();
   // Plain effects (no query cache) so the log works wherever it is mounted.
@@ -41,7 +43,7 @@ export function SprintRepFeedback({ userId, prescriptionId, planDate, row, kind,
     if (!userId || pain == null || busy || pain && !area) return;
     setBusy(true); setMsg(null);
     const rep: RepFeedback = { seconds, feel, effort, pain };
-    const verdict = judgeReps([...history, rep], { kind, prescribedReps, repFeet, extraUsed }, rules.data?.stop);
+    const verdict = judgeReps([...history, rep], { kind, prescribedReps, repFeet, extraUsed, capYards }, rules.data?.stop);
     const code = verdict.action === "stop" ? `stop_${verdict.reason}` : verdict.action;
     const r = await db.from("conditioning_rep_feedback").upsert({ user_id: userId, plan_date: planDate, prescription_id: prescriptionId, rep_index: row, seconds: seconds && seconds > 0 ? Math.round(seconds * 100) / 100 : null, feel, effort, pain, verdict: code }, { onConflict: "prescription_id,rep_index" });
     setBusy(false);
@@ -66,7 +68,7 @@ export function SprintRepFeedback({ userId, prescriptionId, planDate, row, kind,
     <p className="text-xs text-muted-foreground">This counts as done, not missed.</p>
   </div>;
   return <div data-rep-feedback className="space-y-2 rounded-md border border-border p-2">
-    <p className="text-xs text-muted-foreground">Today: {prescribedReps + extraUsed} reps × {yd} yd = {total} yd (max {SESSION_YARD_CAP} yd).</p>
+    <p className="text-xs text-muted-foreground">Today: {prescribedReps + extraUsed} reps × {yd} yd = {total} yd{capYards != null ? ` (max ${capYards} yd)` : ""}.</p>
     {!already && <>
       <p className="text-sm font-medium">Rep {row + 1}: how did it go?{seconds ? ` Time ${seconds.toFixed(2)} s.` : ""}</p>
       <div className="flex flex-wrap gap-1" role="group" aria-label="Feel">{(["fast", "same", "slower"] as const).map(f => <Button key={f} size="sm" type="button" variant={feel === f ? "default" : "outline"} aria-pressed={feel === f} onClick={() => setFeel(f)}>{f === "fast" ? "Fast" : f === "same" ? "Same" : "Slower"}</Button>)}</div>
