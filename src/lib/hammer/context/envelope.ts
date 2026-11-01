@@ -86,7 +86,7 @@ export async function fetchAthleteContextEnvelope(
     .select("rest_dow,scope,week_start,created_at,undone_at").eq("user_id", userId).is("undone_at", null).limit(200);
   if (rest.error) throw new Error(rest.error.message);
   const dow = restDowFor(getTodayDate(), rest.data ?? []);
-  return { ...env, weekly_rest_dow: { value: dow, source: "rest_day_choices", confidence: "self_report", missing: false, last_updated: null } } as AthleteContextEnvelope;
+  return { ...env, weekly_rest_dow: { value: dow, source: "rest_day_choices", owner: "canonical", confidence: "self_report", missing: false, last_updated: null } } as unknown as AthleteContextEnvelope;
 }
 
 /** Coach-onboarding hydration — reads the user's coach_context row, if any. */

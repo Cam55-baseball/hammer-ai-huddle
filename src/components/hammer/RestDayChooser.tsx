@@ -22,7 +22,7 @@ export function RestDayChooser({ date, label }: { date: string; label: string })
     setBusy(true);
     try {
       const r = await chooseRestDay({ userId: user.id, today, target: date, scope, source: "calendar" });
-      if (!r.ok) { setMsg({ ok: false, text: r.reason }); return; }
+      if (r.ok === false) { setMsg({ ok: false, text: r.reason }); return; }
       const rebuilt = await announceChange(qc, user.id, `Rest day moved to ${label}`, today);
       setMsg({ ok: true, text: rebuilt?.ok === false ? `Saved. ${rebuilt.message}` : scope === "week" ? `${label} is your rest day this week. Your week was rebuilt.` : `${label} is your rest day from the week of ${r.weekStart} on. Your week was rebuilt.` });
       setOpen(false);
