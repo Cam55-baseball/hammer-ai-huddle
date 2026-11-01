@@ -3432,6 +3432,7 @@ const handler = async (req: Request): Promise<Response> => {
           conditioning_fallback: conditioningSelection.fallback,
           conditioning_dialed_down: conditioningSelection.dialedDown,
           conditioning_restriction_reason: restrictedConditioningWhy,
+          conditioning_yard_cap: pitcherConditioning ? SESSION_YARD_CAP : null,
           conditioning_counts_as_running: !restrictedConditioningWhy && isRunningConditioning([m.slug]),
           ...(m.slug.startsWith('easy_base_jog_') ? {rest_seconds:60,conditioning_easy_running:true} : {}),
           ...(sprintDoseNow ? {pitcher_sprint_dose:{role:pitchRoleForSprint,week:sprintWeek,reps:sprintDoseNow.reps,kind:sprintDoseNow.kind,target_yards:sprintDoseNow.yards,total_yards:Math.round(sprintDoseNow.reps*repFeet/3),cap_yards:SESSION_YARD_CAP}} : {}),
@@ -3499,13 +3500,13 @@ const handler = async (req: Request): Promise<Response> => {
                   if (!dose) throw new Error('Owner conditioning dose is incomplete');
                   const synth = {
                     ...template, slug: `owner_cond_${pick.id}`, name: String(pick.name), cue: String(pick.cue ?? template.cue),
-                    why_prescribed: ownerConditioningLine(String(pick.name), dose), family: null, regression_slug: null, progression_slug: null,
+                    why_prescribed: ownerConditioningLine(String(pick.name), dose, pitcherConditioning), family: null, regression_slug: null, progression_slug: null,
                     default_sets: dose.rounds, default_reps: 1, default_duration_seconds: dose.work_seconds, default_distance_feet: dose.distance_feet,
                     dosage_unit: "feet", substitution_family: null, transfer_group: null,
                     base_route: dose.bases_per_rep ? { sport, bases_per_rep: dose.bases_per_rep, base_distance_feet: dose.base_distance_feet } : null,
                   } as unknown as MovementRow;
                   lib = [...lib, synth];
-                  const ownerWhy = `Weekly running minimum: ${ownerConditioningLine(String(pick.name), dose)}`;
+                  const ownerWhy = `Weekly running minimum: ${ownerConditioningLine(String(pick.name), dose, pitcherConditioning)}`;
                   if (push("conditioning", "conditioning", synth, { sets: dose.rounds, distance_feet: dose.distance_feet, duration_seconds: dose.work_seconds } as any, ownerWhy, {
                     conditioning_why: ownerWhy, conditioning_path: "weekly_floor_owner", conditioning_template_id: "cond.weekly_floor",
                     conditioning_fallback: false, conditioning_dialed_down: low, owner_drill_id: pick.id,
