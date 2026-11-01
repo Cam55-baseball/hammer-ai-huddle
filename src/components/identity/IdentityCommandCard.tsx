@@ -141,7 +141,7 @@ export function IdentityCommandCard({ className }: Props) {
   const { user } = useAuth();
   const { snapshot, label, accent, loading } = useIdentityState();
   const { snapshot: hieSnapshot } = useHIESnapshot();
-  const { dayType } = useDayState();
+  useDayState();
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
   const { execute, running } = useQuickActionExecutor();
   const rotatingAlert = useMemo(() => pickRotatingAlert(allEvents), [allEvents]);
