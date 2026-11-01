@@ -883,6 +883,7 @@ function HammerDailyPlanBody({
           greenlightStarts:planStarts.starts,
           greenlightTargets:planStarts.targets,
           startThrowsPerWeek:planStarts.startThrowsPerWeek,
+          buntStartPerSide:planStarts.historyAreas.includes('bunting')?null:planStarts.levels?.buntRepsPerSide??null,
           masteryFocus:masteryReady?masteryFocus:undefined,
           bunting: !hasSavedSportDay && buntHistory.data && !buntHistory.isError ? { ...buntHistory.data, age:buntAge, phase:resolvedPhase ?? '',userId:bodyUser?.id,traits:{...buntHistory.data.traits,powerGoal:hittingPowerGoal} } : undefined,
           fullRestDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []),

@@ -4048,7 +4048,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (liftStartFromAnswers === "easing_back") {
       const pct = easeBackStartPct(serverStarts?.greenlight.lifting?.level ?? 0);
       if (pct < 100) for (const r of finalRxs) {
-        if (r.slot !== "lift" && r.slot !== "strength") continue;
+        if (r.slot !== "lift") continue;
         const from = (r as any).load_pct ?? null;
         const to = from == null ? pct : Math.min(Number(from), pct);
         (r as any).load_pct = to;
