@@ -14533,6 +14533,60 @@ export type Database = {
         }
         Relationships: []
       }
+      pitcher_return_programs: {
+        Row: {
+          completed_on: string | null
+          created_at: string
+          days_off: number | null
+          first_bullpen_on: string | null
+          history: Json
+          id: string
+          long_layoff: boolean
+          prescribed_dates: string[]
+          source: string
+          sport: string
+          started_on: string
+          step: string
+          step_started_on: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_on?: string | null
+          created_at?: string
+          days_off?: number | null
+          first_bullpen_on?: string | null
+          history?: Json
+          id?: string
+          long_layoff?: boolean
+          prescribed_dates?: string[]
+          source: string
+          sport: string
+          started_on: string
+          step?: string
+          step_started_on: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_on?: string | null
+          created_at?: string
+          days_off?: number | null
+          first_bullpen_on?: string | null
+          history?: Json
+          id?: string
+          long_layoff?: boolean
+          prescribed_dates?: string[]
+          source?: string
+          sport?: string
+          started_on?: string
+          step?: string
+          step_started_on?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pitcher_schedule_settings: {
         Row: {
           created_at: string

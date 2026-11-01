@@ -812,6 +812,12 @@ function HammerDailyPlanBody({
   const hittingPowerGoal = savedGoals?.[sportKey]?.position?.hitting?.some(p=>p.id==='oppo_power') === true ||
     projectedAthlete.categoryGoals?.goals.some(g=>g.category==='hitting'&&g.intent==='power_hitting') === true;
   const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
+  // Owner Nov 1 round 6: active pitcher return (read-only; the server starts and advances it).
+  const pitcherReturn = useQuery({ queryKey: ["pitcher-return", bodyUser?.id, sportKey], enabled: !!bodyUser?.id, staleTime: 5 * 60_000, queryFn: async () => {
+    const r = await (supabase as any).from("pitcher_return_programs").select("*").eq("user_id", bodyUser!.id).eq("sport", sportKey).is("completed_on", null).maybeSingle();
+    if (r.error) throw r.error;
+    return r.data ?? null;
+  } });
   const faultContext = usePlanFaultContext(sportKey);
   // Logged pitching game lines (same source as the Pitching identity card) for first-pitch strike % and two-ball %.
   const pitchingLines = useQuery({ queryKey: ['pitching-lines', sportKey, null, bodyPlanDate], enabled: !!bodyUser?.id, staleTime: 60_000, queryFn: async () => { const r = await supabase.rpc('mastery_pitching_lines' as never, { p_sport: sportKey, p_date: bodyPlanDate, p_athlete: null } as never); if (r.error) throw r.error; return (r.data ?? []) as unknown as PitcherGameRow[]; } });
@@ -874,6 +880,7 @@ function HammerDailyPlanBody({
           positionOverride: planAdjust.positionWorked,
           defenseFullOverride,
           pitcherOutings: pitcherSchedule.facts,
+          pitcherReturn: pitcherReturn.data ?? null,
           pitchCommand,
           practiceRecords: practiceLoadHistory.data,
           subscriptionModules: modules,
@@ -889,7 +896,7 @@ function HammerDailyPlanBody({
           fullRestDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []),
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, pitchCommand, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady,armHistory.data,gearMemory.data,physioMapping.data,testPreferences.data],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, pitcherReturn.data, pitchCommand, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady,armHistory.data,gearMemory.data,physioMapping.data,testPreferences.data],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a

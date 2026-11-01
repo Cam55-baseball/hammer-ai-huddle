@@ -23,6 +23,7 @@ export async function composeSportDay(db: any, input: {
   physio?: PhysioMapping;
   availabilityDays?: number | null;
   restDow?: number | null;
+  pitcherReturn?: unknown;
 }) {
   const { userId: uid, date, sport } = input;
   const day = new Date(`${date}T12:00:00Z`);
@@ -117,7 +118,7 @@ export async function composeSportDay(db: any, input: {
   { const c=await db.from('app_settings').select('setting_value').eq('setting_key',CARE_CONFIG_KEY).maybeSingle(); setTissueCareConfig(careConfigFrom(c.error?null:c.data?.setting_value)); }
   setWarmupStageOverrides(input.warmupStages);
   const evidence=projectBuntingEvidence(sessionRows,abRows,pitchRows.filter((p:any)=>p.perspective==='hitter'&&['bunt_foul','bunt_in_play'].includes(p.result)),complete(tasks),sport);
-  const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
+  const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,pitcherReturn:(input.pitcherReturn??null) as any,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
     alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,physio:input.physio,testPreferences,pitchCommand,
     bunting:access.hasHitting?{gameWeekdays,evidence,catalog:complete(bunts),age,userId:uid,phase:input.phase}:undefined});
   const plan=finalizeDatedPlan(raw,{sport,userId:uid,ownerRows:circulation.rows,now:day,cnsHigh:input.cns>=7,adjustments:adjRows,clips:clipRows,games:gp,principles:complete(principles),rankedFaults:accessiblePlanFaults(faults.rankedFaults,modules,sport,{clips:clipRows,now:day.getTime()}),signalScopes:faults.signalScopes,recurringIssues:accessibleRecurringIssues(issues,modules,sport),ownedEquipment:new Set(planningGear(input.equipment,input.alwaysMissingGear??[])),catalog:mergeCatalog(ELITE_DRILL_CATALOG,circulation.rows),circulation:{servedToUser:circulation.served,usage:circulation.usage}});

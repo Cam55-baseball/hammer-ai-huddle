@@ -7133,6 +7133,69 @@ function selectDefenseDrills(input) {
 init_ownerPlanDrills();
 init_tissueCarePlan();
 
+// supabase/functions/_shared/wic/pitching/pitcherReturn.ts
+var FIRST_BULLPEN_MAX = 25;
+var FIRST_BULLPEN_MIN = 20;
+var weeksPerStep = (p) => p.long_layoff ? 2 : 1;
+function returnBecause(p, sport) {
+  const need = weeksPerStep(p) === 2 ? "2 weeks and a green week" : "a week and a green week";
+  const place = sport === "softball" ? "circle" : "mound";
+  if (p.step === "flat") return `Because: you've been off pitching ${p.days_off ? `${p.days_off} days` : "for 2+ weeks"}, so you start back on flat ground (no ${place}). You move to shortbox after ${need}.`;
+  if (p.step === "shortbox") return `Because: you're coming back from time off. Shortbox (${shortboxFeet(sport)} ft) comes before full ${sport === "softball" ? "circle sessions" : "bullpens"}. You move on after ${need}.`;
+  if (p.step === "bullpen") return `Because: your first ${sport === "softball" ? "circle session" : "bullpen"} back is short \u2014 about ${FIRST_BULLPEN_MIN}\u2013${FIRST_BULLPEN_MAX} pitches.`;
+  return "";
+}
+var MOUND_NAME = /bullpen|mound|circle|side session|shortbox|live/i;
+function isMoundRow(d3) {
+  if (d3.armEvent?.kind !== "pitch") return false;
+  const t = d3.pitchTags?.moundType;
+  if (t) return t !== "flat_ground";
+  return MOUND_NAME.test(d3.name);
+}
+function applyReturnStep(drills, p, sport) {
+  if (!p || p.step === "done") return { drills, because: [] };
+  let changed = false;
+  const out = drills.map((d3) => {
+    if (!isMoundRow(d3)) return d3;
+    changed = true;
+    const count = d3.armEvent.count;
+    if (p.step === "flat") {
+      return {
+        ...d3,
+        name: "Flat-ground pitching (no " + (sport === "softball" ? "circle" : "mound") + ")",
+        dosage: `${count} pitches, easy to medium`,
+        pitchTags: { ...d3.pitchTags ?? {}, moundType: "flat_ground", intensity: "catch_light" },
+        armEvent: { ...d3.armEvent, intent: "low" },
+        returnStep: "flat"
+      };
+    }
+    if (p.step === "shortbox") {
+      const ft = shortboxFeet(sport);
+      return {
+        ...d3,
+        name: `Shortbox (${ft} ft)`,
+        dosage: `${count} pitches, light \u2014 pitches in the zone`,
+        pitchTags: { ...d3.pitchTags ?? {}, moundType: sport === "softball" ? "shortbox_circle" : "shortbox", feet: ft, intensity: "catch_light" },
+        armEvent: { ...d3.armEvent, intent: "low" },
+        returnStep: "shortbox"
+      };
+    }
+    const capped = Math.min(count, FIRST_BULLPEN_MAX);
+    return { ...d3, dosage: `${capped} pitches (first one back \u2014 short)`, armEvent: { ...d3.armEvent, count: capped }, returnStep: "first_bullpen" };
+  });
+  let final = out;
+  if (p.step === "bullpen") {
+    let seen = false;
+    final = out.filter((d3) => {
+      if (!isMoundRow(d3)) return true;
+      if (seen) return false;
+      seen = true;
+      return true;
+    });
+  }
+  return { drills: final, because: changed ? [returnBecause(p, sport)] : [] };
+}
+
 // supabase/functions/_shared/wic/phases/positionThrowTargets.ts
 var THROW_TARGETS = {
   middle_infield: { group: "middle_infield", label: "SS / 2B / 3B", day: [60, 100], heavyDayMax: 150, week: [400, 600], lightReturnShare: 0 },
@@ -9636,6 +9699,11 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       const light = lightPreStart(pitchingDrills);
       pitchingDrills = light.drills;
       command.because = [...command.because, ...light.because];
+    }
+    if (b.status === "ready" && roadmapInputs.pitcherReturn) {
+      const ret = applyReturnStep(pitchingDrills, roadmapInputs.pitcherReturn, sport);
+      pitchingDrills = ret.drills;
+      command.because = [...command.because, ...ret.because];
     }
     const throwingDrills = b.drills.filter((d3) => d3.armCard === "throwing" && !(preStart && d3.armEvent));
     const pitching = { ...b, drills: pitchingDrills, steps: drillsToSteps(pitchingDrills), modality: "pitching", title: `Pitching \u2014 ${sport === "softball" ? "windmill" : "baseball"} \xB7 ${type.replace(/_/g, " ")}`, route: "/practice?module=pitching", ctaLabel: "Open pitching", gamePlanTemplate: null, because: [...b.because ?? [], ...command.because, "Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."] };
