@@ -198,7 +198,7 @@ export function RoadmapExplainerSheet({ open, onOpenChange, roadmap }: Props) {
               <StatChip label="Bat speed / wk" value={String(eliteTarget.batSpeedSessionsPerWeek)} />
             </div>
             {/* Owner Nov 1: the fixed 250/220 number is gone; position players see their own target. */}
-            {throwTarget && <p className="mt-2 text-xs text-foreground/90" data-testid="throw-target-line">{throwTarget.line}</p>}
+            {throwTarget && !throwTarget.hidden && throwTarget.line && <p className="mt-2 text-xs text-foreground/90" data-testid="throw-target-line">{throwTarget.line}</p>}
           </section>
 
           <p className="text-[11px] text-muted-foreground">
