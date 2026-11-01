@@ -4044,6 +4044,17 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
 
+    // Owner Nov 1 round 5: "easing back in" lifting — same sets, about 68% weight, +5% per green week.
+    if (liftStartFromAnswers === "easing_back") {
+      const pct = easeBackStartPct(serverStarts?.greenlight.lifting?.level ?? 0);
+      if (pct < 100) for (const r of finalRxs) {
+        if (r.slot !== "lift" && r.slot !== "strength") continue;
+        const from = (r as any).load_pct ?? null;
+        const to = from == null ? pct : Math.min(Number(from), pct);
+        (r as any).load_pct = to;
+        (r as any).why_payload = { ...((r as any).why_payload ?? {}), starting_point: { area: "lifting", from_pct: from, to_pct: to, sets_kept: r.sets, because: `Because: you're easing back in, so use about ${to}% of your normal weight with the same sets. It goes up about 5% each green week until normal.` } };
+      }
+    }
     // Owner rule (Oct 28/29): a whole rest day is soft recovery only (+ the
     // display-placed Mind item). Keep only explicit gentle identities so no
     // loaded/training row reaches a rest day; if none exist the existing
