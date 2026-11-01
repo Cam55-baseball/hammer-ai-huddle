@@ -12,7 +12,7 @@ export function PitcherRoleQuestions({ compact = false }: { compact?: boolean })
   const s = usePitcherSchedule();
   const settings = s.data?.settings ?? null;
   const focus = (settings?.primary_focus ?? null) as PrimaryFocus | null;
-  const role = effectivePitchingRole(settings) as PitchingRoleAnswer | null;
+  const role = effectivePitchingRole(settings) as "starter" | "bullpen" | "closer" | null;
   const pitches = playerPitches(modules ?? [], focus);
   const busy = s.saveSettings.isPending || s.isLoading;
   if (s.isError) return <p role="alert" className="text-sm text-destructive">Couldn't load your pitching answers. Try again.</p>;
@@ -30,7 +30,7 @@ export function PitcherRoleQuestions({ compact = false }: { compact?: boolean })
           {pick("starter", role === "starter", "Starter", () => s.saveSettings.mutate({ pitching_role: "starter" }))}
           {pick("reliever", settings?.role === "reliever", "Reliever", () => s.saveSettings.mutate({ role: "reliever" }))}
         </div>
-        {settings?.role === "reliever" && <p className="text-xs text-muted-foreground">{role ? `Saved as ${ROLE_LABEL[role]}.` : "Pick Bullpen arm or Closer"} You can change that on your Pitching days card.</p>}
+        {settings?.role === "reliever" && <p className="text-xs text-muted-foreground">{role ? `Saved as ${ROLE_LABEL[role]}.` : "Pick Bullpen arm or Closer."} You can change that on your Pitching days card.</p>}
       </div>
       <label className="flex items-center justify-between gap-3 text-sm">
         <span><span className="font-medium">Limit my pitching</span><span className="block text-xs text-muted-foreground">When your arm budget is tight, pitching throws are cut first.</span></span>
