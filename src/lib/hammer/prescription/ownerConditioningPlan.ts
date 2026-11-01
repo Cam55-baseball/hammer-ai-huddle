@@ -1,7 +1,7 @@
 import type { OwnerDrillRow } from '@/lib/prescription/ownerDrills';
 import { ownerDrillsForSlot } from '@/lib/prescription/ownerPlanDrills';
 import { ownerConditioningDose, ownerConditioningFits, ownerConditioningLine } from '../../../../supabase/functions/_shared/wic/conditioning/ownerConditioning';
-import type { HammerBlock } from './dailyPlan';
+import type { PrescribedBlock } from './dailyPlan';
 
 /** Only explicit built-in non-preparation identities can spend an existing dose.
  * Physical carries live in WIC; do not pretend a core accessory is a carry. */
@@ -9,12 +9,12 @@ const identities: Record<string, 'jump' | 'sled'> = {
   'Short-contact pogos': 'jump', 'Single-leg pogos': 'jump',
   'Resisted starts (sled or band)': 'sled', 'Optional resisted starts': 'sled',
 };
-export function ownerConditioningPlan(blocks: readonly HammerBlock[], ctx: {
-  sport: string; modules: string[]; isPitcher: boolean; role: string | null; day: Date;
+export function ownerConditioningPlan(blocks: readonly PrescribedBlock[], ctx: {
+  sport: string; modules: readonly string[]; isPitcher: boolean; role: string | null; day: Date;
   owned: ReadonlySet<string>; low: boolean; rest: boolean; game: boolean; restricted: boolean;
-}): HammerBlock[] {
+}): PrescribedBlock[] {
   if (ctx.rest || ctx.game || ctx.restricted) return [...blocks];
-  const pool = ownerDrillsForSlot(['hammers_today:conditioning'], ctx).filter(r => ownerConditioningFits(r, { ...ctx, runningOnly: false }));
+  const pool = ownerDrillsForSlot(['hammers_today:conditioning'], ctx).filter(r => ownerConditioningFits(r, { ...ctx, modules: [...ctx.modules], runningOnly: false }));
   const used = new Set<string>();
   return blocks.map(b => {
     if (b.status !== 'ready' || !['speed','strength'].includes(b.modality)) return b;
