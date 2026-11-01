@@ -119,6 +119,8 @@ import {
   type ProgressionState,
 } from "../_shared/wic/progression/progressionState.ts";
 import { golden2wayRoleMissing } from "../_shared/wic/progression/startingPoint.ts";
+import { isTaggedJump } from "../_shared/wic/jumps/taxonomy.ts";
+import { governJumps, athleteJumpLevel, sessionsFrom } from "../_shared/wic/jumps/plan.ts";
 import { readServerStarts, easeBackStartPct, sprintStartYards, capYardsTo, type ServerStarts } from "../_shared/wic/progression/serverStarts.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
 // Phase 8 — Elite Lift Intelligence & Exercise Governance certifier.
@@ -3819,6 +3821,26 @@ const handler = async (req: Request): Promise<Response> => {
       const capped = capYardsTo(sp as any[], target);
       sp.forEach((r, i) => { if ((capped[i] as any).sets !== r.sets) { (r as any).why_payload = { ...((r as any).why_payload ?? {}), starting_point: { area: "speed", target_yards: target, sets_from: r.sets, sets_to: (capped[i] as any).sets, because: `Because: you're starting at about ${target} sprint yards a session and building up when you're ready.` } }; r.sets = (capped[i] as any).sets; } });
     }
+    // Owner Nov 1 round 6: jump classification + competency. Runs after the written tiers/age/Growth/contact
+    // rules chose the day; it only narrows (introduction jumps ~20–25 contacts for beginners; never above the
+    // athlete's landing-competency level). Any read failure leaves the written jumps untouched.
+    try {
+      const catBySlug = new Map<string, any>(((lib ?? []) as any[]).map((m) => [String(m.slug), m]));
+      const jumpIdx = finalRxs.filter((r) => { const c = catBySlug.get(r.movement_slug); return c && isTaggedJump(c); });
+      if (jumpIdx.length) {
+        const since = new Date(new Date(`${planDate}T12:00:00Z`).getTime() - 56 * 86_400_000).toISOString().slice(0, 10);
+        const lr = await admin.from("jump_landing_ratings").select("plan_date, rating").eq("user_id", user.id).gte("plan_date", since).lt("plan_date", planDate).limit(2000);
+        if (!lr.error) {
+          const earned = Math.max(1, ...jumpIdx.map((r) => Number(catBySlug.get(r.movement_slug)?.plyo_tier ?? 1))) as 1 | 2 | 3;
+          const startAnswer = serverStarts && !serverStarts.historyAreas.includes("jumps") ? (serverStarts.levels.jumps ?? null) : null;
+          const comp = athleteJumpLevel(startAnswer, earned, serverStarts?.jumpWeeks ?? [], (lr.data ?? []) as any[], serverStarts?.held !== false);
+          const last = sessionsFrom((lr.data ?? []) as any[]).slice(-1)[0];
+          const gov = governJumps(finalRxs as any[], catBySlug, { level: comp.level, readiness: typeof running?.score === "number" ? running.score : null, sport, roles: isPitcherAthlete ? ["pitcher", "thrower"] : [], qualityDropped: !!last && last.ratings.some((x) => x !== "solid") }, athleteAgeYears ?? null, Math.floor(Date.parse(`${planDate}T12:00:00Z`) / 86_400_000), comp.because);
+          if (gov.changed) finalRxs = assignSequenceOrder(gov.rows as any);
+          else finalRxs = gov.rows as any;
+        }
+      }
+    } catch { /* written jumps stay */ }
     // -------- Step 14 — Spike Governor (TI-2, §5.3), switch-gated --------
     // Off for everyone by default. When `load_spike_protection` does not
     // resolve on for this athlete nothing below runs and the day is byte-for-
