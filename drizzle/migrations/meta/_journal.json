@@ -1219,6 +1219,13 @@
       "when": 1793488338123,
       "tag": "0173_conditioning_types_programs_rep_feedback",
       "breakpoints": true
+    },
+    {
+      "idx": 174,
+      "version": "7",
+      "when": 1793546272328,
+      "tag": "0174_rest_day_choices",
+      "breakpoints": true
     }
   ]
 }

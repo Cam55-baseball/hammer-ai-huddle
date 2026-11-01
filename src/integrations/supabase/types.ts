@@ -15378,6 +15378,39 @@ export type Database = {
         }
         Relationships: []
       }
+      rest_day_choices: {
+        Row: {
+          created_at: string
+          id: string
+          rest_dow: number
+          scope: string
+          source: string
+          undone_at: string | null
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rest_dow: number
+          scope: string
+          source?: string
+          undone_at?: string | null
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rest_dow?: number
+          scope?: string
+          source?: string
+          undone_at?: string | null
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       roadmap_milestones: {
         Row: {
           badge_icon: string | null
