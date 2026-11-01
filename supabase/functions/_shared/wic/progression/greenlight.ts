@@ -195,3 +195,35 @@ export function colorsFor(weeks: readonly AreaWeek[], checkIns: readonly DayChec
   }
   return out;
 }
+
+/**
+ * Share of the written (legal) dose for an area: the starting point stepped up by the
+ * greenlight level, never above the written dose. No starting point = the written dose
+ * (the builder's own floors, caps and safety already decided it).
+ */
+export function greenlightFraction(area: GreenlightArea, start: number | null | undefined, level: number): number {
+  if (start == null || !(start > 0) || start >= 1) return 1;
+  const step = GREENLIGHT_STEP[area];
+  const pct = step.kind === "pct" ? step.pct : 0.1; // rung areas: one rung ≈ one tenth of the written dose
+  return Math.min(1, start * Math.pow(1 + pct, Math.max(0, level)));
+}
+
+/** Whole sets from a written set count at a fraction; at least 1, never above written. */
+export function greenlightSets(writtenSets: number, fraction: number): number {
+  if (!(writtenSets > 0) || fraction >= 1) return writtenSets;
+  return Math.max(1, Math.min(writtenSets, Math.round(writtenSets * fraction)));
+}
+
+/** "S x R…" dosage text with its set count scaled; unparseable text is left unchanged. */
+export function greenlightDosage(dosage: string, fraction: number): string {
+  const m = /^(\d+)\s*(?:x|×)\s*(\d+)/i.exec(dosage);
+  if (!m || fraction >= 1) return dosage;
+  const sets = parseInt(m[1], 10);
+  const next = greenlightSets(sets, fraction);
+  return next === sets ? dosage : dosage.replace(/^(\d+)/, String(next));
+}
+
+export function greenlightStartBecause(area: GreenlightArea, fraction: number): string {
+  const a = AREA_WORDS[area];
+  return `Because: you're building up from where you said you're starting, so today's ${a} is about ${Math.round(fraction * 100)}% of the full amount.`;
+}

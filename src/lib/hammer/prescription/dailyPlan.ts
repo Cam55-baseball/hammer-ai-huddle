@@ -22,6 +22,7 @@ import { ownerConditioningPlan } from './ownerConditioningPlan';
 import { structureSkillSession } from './skillSessionStructure';
 import { restrictedFielding } from './restrictedFielding';
 import { applyPracticePlanContext } from './practicePlanContext';
+import { applyGreenlightPlan, type GreenlightStarts } from './greenlightPlan';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
 import type { OutingFacts } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 /**
@@ -2358,6 +2359,8 @@ export interface RoadmapInputs {
   readonly alwaysMissingGear?: readonly string[];
   readonly armHistory?: PlanningArmHistory;
   readonly greenlight?: Partial<Record<import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightArea, import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightResult>> | null;
+  /** Owner Nov 1 round 4: starting share of the written dose per area (Group 2 answers). */
+  readonly greenlightStarts?: GreenlightStarts | null;
   readonly bunting?: {gameWeekdays?:readonly number[];evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
@@ -2572,7 +2575,8 @@ export function buildHammerDailyPlan(
       roadmapInputs.defenseFullOverride === true,
     ),
   ), practiceLoad);
-  const goalOrdered = secondGoalFirst(practiced.map(b => {
+  const greenlit = applyGreenlightPlan(practiced, roadmapInputs.greenlight, roadmapInputs.greenlightStarts);
+  const goalOrdered = secondGoalFirst(greenlit.map(b => {
     if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== focusProjection.categoryGoals?.goals.find(g => g.rank === 1)?.category)) return b;
     const reason = scheduleSignal.postureToday !== 'normal' || b.status !== 'ready'
       ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
