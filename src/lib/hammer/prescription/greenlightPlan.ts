@@ -89,7 +89,7 @@ export function applyBuntStart(blocks: readonly PrescribedBlock[], perSide: numb
       const next = b.drills[i + 1];
       const m = next ? /^(\d+) swings$/.exec(next.dosage) : null;
       if (next && m && !next.bunt) { out.push({ ...next, dosage: `${parseInt(m[1], 10) + back} swings` }); i++; }
-      else out.push({ name: d.name.replace(/bunt.*$/i, '').trim() || 'Swings', stage: 'drills', dosage: `${back} swings`, cue: 'Your normal swings from today\'s hitting work.' });
+      else out.push({ name: 'Swings', stage: 'drills', dosage: `${back} swings`, cue: 'Your normal swings from today\'s hitting work.' });
     }
     return { ...b, drills: out, because: [...(b.because ?? []), `Because: you're starting at ${perSide} bunts per side, and the rest go back to your swings.`] };
   });
