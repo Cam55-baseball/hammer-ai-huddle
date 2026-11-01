@@ -1,7 +1,6 @@
 import { MindItemCard } from "./MindItemCard";
 import { ControlledActivity } from './SessionControlNote';
 import { UpcomingSessionDecisions } from './UpcomingSessionDecisions';
-import { RunningReadinessLine } from "./RunningReadinessLine";
 import { usePlanningArmHistory } from '@/hooks/usePlanningArmHistory';
 import { rememberedMissingGear } from '../../../supabase/functions/_shared/planSwap/simpleSwap';
 import { InformationalVideos } from '@/components/video-suggestions/InformationalVideos';
@@ -100,7 +99,6 @@ import { MovementGuideSheet } from "@/components/hammer/MovementGuideSheet";
 import { BookOpen } from "lucide-react";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { CoachPrescriptionInbox } from "@/components/hammer/CoachPrescriptionInbox";
-import { WkRestDayBanner } from "@/components/hammer/WkRestDayBanner";
 import { WkSomethingOffRow } from "@/components/hammer/WkSomethingOff";
 import {
   WkProgressionNote,

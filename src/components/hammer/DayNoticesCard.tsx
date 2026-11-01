@@ -5,7 +5,7 @@
  * The same notices also appear on the card they concern. This surface is the
  * athlete's single list; it never changes the plan.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AlertTriangle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,7 +37,7 @@ export function DayNoticesCard({
   planDate: string;
   extraLines?: readonly string[];
   /** Owner Nov 1 A3: readiness line and recovery-day notice live inside this drawer. */
-  extra?: React.ReactNode;
+  extra?: ReactNode;
 }) {
   const [read, setRead] = useState<string[]>([]);
   const { user } = useAuth();
