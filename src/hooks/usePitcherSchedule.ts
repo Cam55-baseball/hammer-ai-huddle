@@ -75,7 +75,7 @@ export function usePitcherSchedule(planDate?: string) {
             : next.role === "reliever" && (cur.pitching_role === "bullpen" || cur.pitching_role === "closer") ? cur.pitching_role
             : next.role === "both" ? (cur.pitching_role ?? null) : null }
         : {};
-      const { error } = await db.from("pitcher_schedule_settings").upsert({ user_id: user?.id, ...cur, ...next, ...roleSync, ...(role ? { role } : {}) }, { onConflict: "user_id" });
+      const { error } = await db.from("pitcher_schedule_settings").upsert({ user_id: user?.id, ...cur, ...next, ...roleSync, ...(role && !next.role ? { role } : {}) }, { onConflict: "user_id" });
       if (error) throw error;
     },
     onSuccess: done,

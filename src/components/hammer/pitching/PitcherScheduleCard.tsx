@@ -119,6 +119,17 @@ export function PitcherScheduleCard() {
               <Button key={r} size="sm" variant={role === r ? "default" : "outline"} onClick={() => s.saveSettings.mutate({ role: r }, { onSuccess: after("Role saved."), onError: fail })}>{ROLE_LABEL[r]}</Button>
             ))}
           </div>
+          {(role === "reliever" || role === "both") && (
+            <div className="mt-2" data-testid="reliever-type">
+              <p className="text-xs text-muted-foreground mb-1">Out of the bullpen, are you a bullpen arm or the closer?</p>
+              <div className="grid grid-cols-2 gap-2">
+                {(["bullpen", "closer"] as const).map((k) => (
+                  <Button key={k} size="sm" variant={rot?.pitching_role === k ? "default" : "outline"} aria-pressed={rot?.pitching_role === k}
+                    onClick={() => s.saveSettings.mutate({ pitching_role: k, role }, { onSuccess: after("Saved."), onError: fail })}>{k === "bullpen" ? "Bullpen arm" : "Closer"}</Button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {(role === "starter" || role === "both" || role === null) && (
