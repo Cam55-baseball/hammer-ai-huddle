@@ -42,6 +42,8 @@ export interface OwnerDrillRow {
   load_lbs?: number | null;
   carry_yards?: number | null;
   conditioning_programs?: string[];
+  /** Owner Nov 1: tissue-care / focus-routine measure — time | rounds | check_off. */
+  care_measure?: string | null;
   /** Owner Oct 31 pitcher tags; the plan engine places mound/circle work from these. */
   pitch_mound_type?: string | null;
   pitch_distance_fraction?: number | null;
@@ -89,6 +91,8 @@ export const OTHER_PLACEMENTS: Array<{ id: Placement; label: string }> = [
   { id: "hammers_today:pitching", label: "Hammers Today — pitching" },
   { id: "hammers_today:conditioning", label: "Hammers Today — conditioning" },
   { id: "hammers_today:mind", label: "Hammers Today — Mind (non-physical)" },
+  { id: "hammers_today:tissue_care", label: "Hammers Today — Tissue care (Recovery card)" },
+  { id: "hammers_today:focus_routine", label: "Hammers Today — Focus routine (Mind item)" },
 ];
 
 export interface OwnerDrill extends EliteDrill {

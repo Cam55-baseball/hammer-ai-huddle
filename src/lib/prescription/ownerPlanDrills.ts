@@ -12,11 +12,13 @@ import type { OwnerDrillRow } from "./ownerDrills";
 import { ownerConditioningProblems } from "../../../supabase/functions/_shared/wic/conditioning/ownerConditioning";
 
 export type PlanSlot = "hammers_today:skill" | "hammers_today:warmup" | "hammers_today:defense" | "defensive_library"
-  | "hammers_today:baserunning" | "hammers_today:bunting" | "hammers_today:mind" | "hammers_today:conditioning";
+  | "hammers_today:baserunning" | "hammers_today:bunting" | "hammers_today:mind" | "hammers_today:conditioning"
+  | "hammers_today:tissue_care" | "hammers_today:focus_routine";
 export type SkillBlock = "hitting" | "throwing";
 
 export const PLAN_SLOTS: PlanSlot[] = ["hammers_today:skill", "hammers_today:warmup", "hammers_today:defense", "defensive_library",
-  "hammers_today:baserunning", "hammers_today:bunting", "hammers_today:mind", "hammers_today:conditioning"];
+  "hammers_today:baserunning", "hammers_today:bunting", "hammers_today:mind", "hammers_today:conditioning",
+  "hammers_today:tissue_care", "hammers_today:focus_routine"];
 
 let rows: OwnerDrillRow[] = [];
 let loading: Promise<void> | null = null;
@@ -75,7 +77,34 @@ export function missingForPlacement(r: Omit<OwnerDrillRow, "created_at" | "id">,
   }
   if (slot === "hammers_today:conditioning") miss.push(...ownerConditioningProblems(r));
   if (slot === "hammers_today:mind" && r.equipment.length > 0) miss.push("no equipment (Mind items are non-physical)");
+  if (slot === "hammers_today:tissue_care" || slot === "hammers_today:focus_routine") miss.push(...careMeasureProblems(r));
+  if (slot === "hammers_today:focus_routine" && r.equipment.length > 0) miss.push("no equipment (focus routines are non-physical)");
   return miss;
+}
+
+export const CARE_MEASURES = [["time", "Time"], ["rounds", "Rounds"], ["check_off", "Check-off"]] as const;
+
+/** Owner Nov 1: tissue-care / focus-routine activities need a measure (time, rounds or check-off). */
+export function careMeasureProblems(r: Pick<OwnerDrillRow, "care_measure" | "work_seconds" | "rounds">): string[] {
+  const m = r.care_measure ?? null;
+  if (m === "time") return (r.work_seconds ?? 0) > 0 ? [] : ["a time (minutes)"];
+  if (m === "rounds") return (r.rounds ?? 0) > 0 ? [] : ["a number of rounds"];
+  if (m === "check_off") return [];
+  return ["a measure (time, rounds or check-off)"];
+}
+
+/** Plain dose line for a tissue-care / focus-routine activity, from its measure. */
+export function careDosage(r: Pick<OwnerDrillRow, "care_measure" | "work_seconds" | "rounds" | "dosage">): string {
+  const base = r.care_measure === "time" ? `${Math.max(1, Math.round((r.work_seconds ?? 0) / 60))} min`
+    : r.care_measure === "rounds" ? `${r.rounds} rounds` : "Check off when done";
+  return [base, (r.dosage ?? "").trim()].filter(Boolean).join(" · ");
+}
+
+/** Owner tissue-care or focus-routine activity for this player (sport, equipment, Programs), rotated by day. */
+export function ownerCareDrill(slot: "hammers_today:tissue_care" | "hammers_today:focus_routine", ctx: { sport: string; modules?: readonly string[] | null; owned?: ReadonlySet<string> | null; day?: Date }): OwnerDrillRow | null {
+  const pool = ownerDrillsForSlot([slot], { sport: ctx.sport, owned: slot === "hammers_today:focus_routine" ? null : ctx.owned ?? null })
+    .filter((r) => { const p = r.conditioning_programs ?? []; return p.length === 0 || p.some((x) => (ctx.modules ?? []).includes(`${ctx.sport}_${x}`)); });
+  return rotate(pool, ctx.day ?? new Date());
 }
 
 /** Builder summary: per filed plan placement, whether it competes or what it still needs. */
