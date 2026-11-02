@@ -384,7 +384,6 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
   const readiness = ctx.get<{ score?: number }>("readiness")?.value ?? null;
   const equipment = proj.equipment;
   const lifecycleBand = proj.lifecycleBand;
-  const availDays = proj.weeklyAvailabilityDays;
   const devPriorities = proj.developmentPriorities;
   const workloadHigh = proj.workloadHigh;
   const anthro = buildAnthroProfile(ctx.get<unknown>("anthropometrics")?.value);
@@ -401,7 +400,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
   const recoverDay = readinessScore !== null && readinessScore < 0.4;
   const youthScale =
     lifecycleBand === "u10" || lifecycleBand === "u12" || lifecycleBand === "u14";
-  const lowAvail = typeof availDays === "number" && availDays <= 2;
+  const lowAvail = false; // Availability never changes prescribed work.
   const bodyweightOnly = equipment !== null && BODYWEIGHT_EQUIPMENT.has(equipment);
   const goal = goalLine(proj);
 
