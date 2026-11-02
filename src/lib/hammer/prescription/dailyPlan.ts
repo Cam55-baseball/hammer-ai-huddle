@@ -1,4 +1,5 @@
 import { sortByWarmupStage } from "./warmupStages";
+import { normalizeProgramModules } from '../../../../supabase/functions/_shared/programAccess';
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "../athleteFeatureAvailability";
 import { mapPhysio, PREHAB_SLUGS, type PhysioMapping } from '../../../../supabase/functions/_shared/health/physioMapping';
 import { cooldownCareDue } from '../../../../supabase/functions/_shared/health/fullGo';
@@ -2426,6 +2427,7 @@ export function buildHammerDailyPlan(
     today,
   );
   const sportRaw = (ctx.get<string>("sport_primary")?.value as string | null) ?? null;
+  if (roadmapInputs.subscriptionModules) roadmapInputs = { ...roadmapInputs, subscriptionModules: normalizeProgramModules(roadmapInputs.subscriptionModules, normalizeSport(sportRaw) === 'softball' ? 'softball' : 'baseball') };
   const positionRaw =
     ctx.get<unknown>("position_primary")?.value ??
     ctx.get<unknown>("position")?.value ??

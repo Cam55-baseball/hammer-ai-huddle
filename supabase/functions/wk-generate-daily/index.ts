@@ -1,4 +1,5 @@
 // supabase/functions/wk-generate-daily/index.ts
+import { normalizeProgramModules } from "../_shared/programAccess.ts";
 import { reliefSets, isLowerBodyLift } from "../_shared/wic/pitching/roleCycle.ts";
 import { pitcherYardTarget, repsForYards, capSessionYards, SESSION_YARD_CAP, conditioningRules, CONDITIONING_RULES_KEY, pitcherYardRuleApplies, yardsLeftToday } from "../_shared/wic/conditioning/yards.ts";
 import { applyLiveTracking } from "../_shared/vault/tracking.ts";
@@ -739,7 +740,7 @@ const handler = async (req: Request): Promise<Response> => {
       ]);
       if (wErr) return json({ error: "week_rule_sweep_unavailable" }, 503);
       const wSport = String((wCtx as any)?.sport_primary ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
-      const mods: string[] = (wSub as any)?.status === "active" ? ((wSub as any).subscribed_modules ?? []) : [];
+      const mods: string[] = normalizeProgramModules((wSub as any)?.status === "active" ? ((wSub as any).subscribed_modules ?? []) : [], wSport);
       const bunting = mods.includes(`${wSport}_5tool`) || mods.includes(`${wSport}_golden2way`) || (["hitting", `${wSport}_hitting`].some((m) => mods.includes(m)) && ["throwing", `${wSport}_throwing`].some((m) => mods.includes(m)));
       const prot = new Set<string>(((wLogs ?? []) as any[]).map((l) => String(l.plan_date)));
       for (const r of (wRows ?? []) as any[]) if (isMarkedRow(r)) prot.add(String(r.plan_date));
@@ -989,7 +990,7 @@ const handler = async (req: Request): Promise<Response> => {
     let serverStarts: ServerStarts | null = null;
     try {
       const { data: spSub } = await admin.from("subscriptions").select("status, subscribed_modules").eq("user_id", user.id).maybeSingle();
-      const spModules: string[] = (spSub as any)?.status === "active" ? ((spSub as any).subscribed_modules ?? []) : [];
+      const spModules: string[] = normalizeProgramModules((spSub as any)?.status === "active" ? ((spSub as any).subscribed_modules ?? []) : [], sport);
       serverStarts = await readServerStarts(admin, user.id, sport, spModules, planDate, athleteAgeYears);
     } catch { serverStarts = null; }
     const liftStartFromAnswers = serverStarts && !serverStarts.historyAreas.includes("lifting") ? serverStarts.levels.lifting : null;
@@ -1146,13 +1147,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
     const {data: schedulingSubscription,error:schedulingSubscriptionError}=await admin.from('subscriptions').select('status,subscribed_modules').eq('user_id',user.id).maybeSingle();
     if(schedulingSubscriptionError)throw schedulingSubscriptionError;
-    const schedulingModules:string[]=schedulingSubscription?.status==='active'?(schedulingSubscription.subscribed_modules??[]):[];
+    const schedulingModules:string[]=normalizeProgramModules(schedulingSubscription?.status==='active'?(schedulingSubscription.subscribed_modules??[]):[],sport);
     // Owner Nov 1 round 5: Golden 2Way builds only after the player picks Pitcher or Position player.
     if(!pitcherScheduleReadFailed && golden2wayRoleMissing(sport, schedulingModules, pitcherPrimaryFocus)){
       return new Response(JSON.stringify({ error: "role_required", message: "Pick Mainly pitcher or Mainly position player first so we can build your plan." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const purchasedPitcher=schedulingModules.some(m=>[`${sport}_pitcher`,`${sport}_golden2way`,`${sport}_pitching`,'pitching'].includes(m));
-    const positionProgram=schedulingModules.includes(`${sport}_5tool`);
+    const positionProgram=schedulingModules.includes(`${sport}_5tool`) && !schedulingModules.includes(`${sport}_golden2way`);
     const isPitcherAthlete = purchasedPitcher && !positionProgram;
     // Owner Nov 1 round 4: pitcher conditioning and the 1000-yd rule are for pitchers only
     // (Complete Pitcher; Golden 2Way whose primary is Pitcher). Golden 2Way marked Position
@@ -3156,7 +3157,7 @@ const handler = async (req: Request): Promise<Response> => {
     // -------- Bat-speed program gate (Round 8 step 6b) --------
     // Hitting programs unchanged; Complete Pitcher = velocity caps/spacing.
     const { data: bsSubRow } = await admin.from("subscriptions").select("status, subscribed_modules").eq("user_id", user.id).maybeSingle();
-    const bsModules: string[] = bsSubRow?.status === "active" ? (bsSubRow.subscribed_modules ?? []) : [];
+    const bsModules: string[] = normalizeProgramModules(bsSubRow?.status === "active" ? (bsSubRow.subscribed_modules ?? []) : [], sport);
     const bsWeekStart = isoShift(planDate, -((new Date(`${planDate}T12:00:00Z`).getUTCDay() + 6) % 7));
     const bsStartOn = (d: string) => scheduledGames.some((g) => g.isStartingPitcher && !g.ignored && g.date === d);
     const bsGate = batSpeedProgramGate({

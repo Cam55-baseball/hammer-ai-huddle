@@ -3,6 +3,7 @@
  * 1000 yards in one session. Canonical distance stays in feet; yards are a view.
  * Pure — shared by the app and wk-generate-daily.
  */
+import { programOf } from "../../programAccess.ts";
 export const SESSION_YARD_CAP = 1000;
 export const BASE_YARDS = { baseball: 30, softball: 20 } as const;
 
@@ -19,10 +20,9 @@ export type PitchRole = "starter" | "bullpen" | "closer";
  */
 export type ConditioningProgram = "pitcher" | "position";
 export function conditioningProgram(sport: string, modules: readonly string[], primaryFocus: string | null | undefined): ConditioningProgram {
-  const has = (m: string) => modules.includes(m);
-  if (has(`${sport}_golden2way`)) return primaryFocus === "position" ? "position" : "pitcher";
-  if (has(`${sport}_5tool`) || has(`${sport}_hitting`) || has("hitting")) return "position";
-  if ([`${sport}_pitcher`, `${sport}_pitching`, "pitching"].some(has)) return "pitcher";
+  const program = programOf(sport, modules);
+  if (program === "golden2way") return primaryFocus === "position" ? "position" : "pitcher";
+  if (program === "pitcher") return "pitcher";
   return "position";
 }
 export const pitcherYardRuleApplies = (sport: string, modules: readonly string[], primaryFocus: string | null | undefined) =>

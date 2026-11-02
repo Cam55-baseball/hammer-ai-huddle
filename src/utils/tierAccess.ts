@@ -10,11 +10,12 @@
  * Check if user has access to a specific feature type based on their subscribed modules.
  * Supports both legacy keys (baseball_hitting) and new tier keys (baseball_5tool).
  */
+import { normalizeProgramModules, programOf } from '../../supabase/functions/_shared/programAccess';
 export function hasFeatureAccess(
   modules: string[],
   feature: 'hitting' | 'pitching' | 'throwing'
 ): boolean {
-  return modules.some((m) => {
+  return normalizeProgramModules(modules, 'baseball').some((m) => {
     switch (feature) {
       case 'hitting':
         return m.includes('hitting') || m.includes('5tool') || m.includes('golden2way');
@@ -36,8 +37,7 @@ export function hasTierForSport(
   tier: string,
   sport: string
 ): boolean {
-  const key = `${sport}_${tier}`;
-  return modules.includes(key);
+  return programOf(sport, modules) === tier;
 }
 
 /**
@@ -55,22 +55,12 @@ export function getActiveTier(
   modules: string[],
   sport: string
 ): 'golden2way' | '5tool' | 'pitcher' | null {
-  if (modules.includes(`${sport}_golden2way`)) return 'golden2way';
-  if (modules.includes(`${sport}_5tool`)) return '5tool';
-  if (modules.includes(`${sport}_pitcher`)) return 'pitcher';
-  // Legacy fallback
-  const hasHitting = modules.includes(`${sport}_hitting`);
-  const hasThrowing = modules.includes(`${sport}_throwing`);
-  const hasPitching = modules.includes(`${sport}_pitching`);
-  if (hasPitching && hasHitting && hasThrowing) return 'golden2way';
-  if (hasHitting || hasThrowing) return '5tool';
-  if (hasPitching) return 'pitcher';
-  return null;
+  return programOf(sport, modules);
 }
 
 /**
  * Check if user has The Unicorn access (Golden 2Way tier).
  */
 export function hasUnicornAccess(modules: string[]): boolean {
-  return modules.some((m) => m.includes('golden2way'));
+  return ['baseball', 'softball'].some(sport => programOf(sport, modules) === 'golden2way');
 }
