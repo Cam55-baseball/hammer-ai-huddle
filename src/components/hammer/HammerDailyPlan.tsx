@@ -8,6 +8,7 @@ import { UpcomingSessionDecisions } from './UpcomingSessionDecisions';
 import { usePlanningArmHistory } from '@/hooks/usePlanningArmHistory';
 import { rememberedMissingGear } from '../../../supabase/functions/_shared/planSwap/simpleSwap';
 import { InformationalVideos } from '@/components/video-suggestions/InformationalVideos';
+import { careVideoExtras } from '@/lib/videoMoments/careTopics';
 import { stillRecurring } from '@/lib/wic/faultLedger/recurringIssues';
 /**
  * HammerDailyPlan — expandable, conversational daily prescription.
@@ -1457,6 +1458,7 @@ function HammerDailyPlanBody({
                           adaptiveNote={adj?.note}
                         />
                         {tissueHere && <ErrorBoundary label="wk-lifts"><WkLiftsCard pocket recovery /></ErrorBoundary>}
+                        {tissueHere && <ErrorBoundary><InformationalVideos placement="tissue_care" sport={sportKey} extras={careVideoExtras([...b.drills, ...wkRx.grouped.lifts.map((r: any) => ({ name: r.name ?? r.exercise_name ?? null }))])} /></ErrorBoundary>}
                       </>
                     )}
                   </PocketCard>

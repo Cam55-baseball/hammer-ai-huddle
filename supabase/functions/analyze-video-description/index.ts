@@ -88,6 +88,9 @@ Deno.serve(async (req) => {
     (taxonomy || []).forEach((t: any) => {
       const tagSport = t.sport ?? 'both';
       if (sportScope && tagSport !== 'both' && tagSport !== sportScope) return;
+      // Owner Nov 2: only suggest tags from the video's own skill areas (no cross-area spill-over).
+      const videoDomains: string[] = (video as any).skill_domains || [];
+      if (videoDomains.length && !videoDomains.includes(t.skill_domain)) return;
       if (vocab[t.layer]) vocab[t.layer].push(t.key);
     });
 
