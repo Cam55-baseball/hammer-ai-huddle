@@ -2693,7 +2693,7 @@ export function buildHammerDailyPlan(
     injuredRegions: physio.activeAreas, lightOnly: (ctx.get<number>('readiness')?.value ?? 1) < 0.4 || physio.illnessActive, restDay: fullRestDay }) as unknown as typeof conditioned;
   const cared = caredRaw.map((b, i) => b === conditioned[i] ? b : { ...b, steps: drillsToSteps(b.drills) });
   // Owner Nov 1 round 6 Part 3: returning hitters — prescribed effort, tee/front toss only for injury/under-13 start or the bridge.
-  const hitReturned = roadmapInputs.hitterReturn ? cared.map(b => { if (b.modality !== 'hitting' || b.status !== 'ready') return b; const r = applyHitterReturn(b.drills as any[], roadmapInputs.hitterReturn ?? null, new Set(proj.equipmentList)); return { ...b, drills: r.drills as typeof b.drills, steps: drillsToSteps(r.drills as typeof b.drills), because: [...(b.because ?? []), ...r.because] }; }) : cared;
+  const hitReturned = roadmapInputs.hitterReturn ? cared.map(b => { if (b.modality !== 'hitting' || b.status !== 'ready') return b; const r = applyHitterReturn(b.drills as any[], roadmapInputs.hitterReturn ?? null, new Set(proj.equipmentList)); return { ...b, drills: r.rows as typeof b.drills, steps: drillsToSteps(r.rows as typeof b.drills), because: [...(b.because ?? []), ...r.because] }; }) : cared;
   const warmed = withWarmupThrows(hitReturned);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
