@@ -12,6 +12,7 @@ import { planningGear } from './planSwap/planningGear.ts';
 import { readPlanningArmHistory } from './wic/pitching/readPlanningArmHistory.ts';
 import type { PhysioMapping } from './health/physioMapping.ts';
 import { readPitchCommand } from './wic/pitching/readPitchCommand.ts';
+import { normalizeProgramModules } from './programAccess.ts';
 
 /** Self JWT reads only; service jobs do not acquire an athlete's identity/health authority. */
 export async function composeSportDay(db: any, input: {
@@ -83,7 +84,7 @@ export async function composeSportDay(db: any, input: {
   const age=ageFromDob(input.birthday,date);
   const extra=['date_of_birth','readiness','age_years'].map(key=>({key,label:key,domain:'identity',value:key==='readiness'?input.readiness:key==='age_years'?age:input.birthday,source:key==='readiness'?'canonical rolling/check-in readiness':'profiles.date_of_birth',confidence:'high',missing:(key==='readiness'?input.readiness:key==='age_years'?age:input.birthday)==null,lastUpdated:null,lineage:{owner:'canonical',source:key,rawConfidence:'derived'}}));
   const context=contextFromEnvelope(envelope,extra);
-  const modules=sub.data?.status==='active'?(sub.data.subscribed_modules??[]):[];
+  const modules=normalizeProgramModules(sub.data?.status==='active'?(sub.data.subscribed_modules??[]):[],sport);
   const access=priorityAccess(modules,sport);
   const practiceRecords=[...sessionRows.filter((r:any)=>r.session_date>=practiceSince&&['solo_work','team_session','lesson','live_abs'].includes(r.session_type)).map((r:any)=>({id:`performance:${r.id}`,date:r.session_date,sport:r.sport,category:r.module,minutes:null,intensity:null})),...logRows.map((r:any)=>({id:`wk:${r.id}`,date:r.plan_date,sport,category:r.metrics?.modality??null,minutes:r.duration_seconds_completed==null?null:r.duration_seconds_completed/60,intensity:r.rpe??null}))];
   const phase= input.phase.startsWith('os_')?'off':input.phase==='preseason'?'pre':input.phase==='in_season'?'in':input.phase==='post_season'?'post':null;

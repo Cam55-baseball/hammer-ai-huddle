@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { normalizeProgramModules } from '../../supabase/functions/_shared/programAccess';
 
 export interface ModuleDetails {
   subscription_id: string;
@@ -194,7 +195,7 @@ export const useSubscription = () => {
       }
 
       if (!error && data) {
-        const newModules = data.modules || [];
+        const newModules = normalizeProgramModules(data.modules || [], data.primary_sport || 'baseball');
         
         setSubscriptionData({
           subscribed: data.subscribed || false,
@@ -231,9 +232,10 @@ export const useSubscription = () => {
 
           if (fallbackData && !fallbackError) {
             const isActive = fallbackData.status === 'active';
+            const { data: context } = await supabase.from('athlete_context').select('sport_primary').eq('user_id', session.user.id).maybeSingle();
             setSubscriptionData({
               subscribed: isActive,
-              modules: fallbackData.subscribed_modules || [],
+              modules: normalizeProgramModules(fallbackData.subscribed_modules || [], context?.sport_primary || 'baseball'),
               module_details: (fallbackData.module_subscription_mapping as unknown as Record<string, ModuleDetails>) || {},
               subscription_end: fallbackData.current_period_end || null,
               loading: false,

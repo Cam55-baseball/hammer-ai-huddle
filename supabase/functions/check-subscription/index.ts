@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { refreshSponsoredAccess } from "../_shared/sponsorship.ts";
+import { normalizeProgramModules } from "../_shared/programAccess.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -92,11 +93,14 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     const isActive = (subscription?.status ?? "inactive") === "active";
+    const { data: context } = await serviceClient.from('athlete_context').select('sport_primary').eq('user_id', user.id).maybeSingle();
+    const primarySport = context?.sport_primary === 'softball' ? 'softball' : 'baseball';
 
     return new Response(
       JSON.stringify({
         subscribed: isActive,
-        modules: subscription?.subscribed_modules ?? [],
+        modules: normalizeProgramModules(subscription?.subscribed_modules ?? [], primarySport),
+        primary_sport: primarySport,
         module_details: subscription?.module_subscription_mapping ?? null,
         subscription_end: subscription?.current_period_end ?? null,
         has_discount: !!subscription?.coupon_code,
