@@ -149,3 +149,15 @@ describe("programming engine on a built day (server post-pass)", () => {
     expect(governJumps([{ slot: "lift", movement_slug: "back_squat", movement_name: "x", sets: 3, reps: 5 }], cat, athlete(), 18).changed).toBe(false);
   });
 });
+
+describe("jump swaps keep the card's required classification (Nov 2 speed_governance_missing)", () => {
+  const cat = new Map(ROWS.map((r) => [r.slug, r as any]));
+  it("a jump in the conditioning card is never swapped to a jump without a conditioning classification", () => {
+    const g = governJumps([{ slot: "conditioning", movement_slug: "sp_drive_bounds_sb", movement_name: "x", sets: 3, reps: 5, why_payload: {} }], cat, athlete({ level: "introduction" }), 16, 3);
+    for (const r of g.rows) expect((cat.get(r.movement_slug) as any).conditioning_category).not.toBeNull();
+  });
+  it("every speed-card swap lands on a row with a speed classification", () => {
+    const g = governJumps([{ slot: "speed", movement_slug: "plyo_depth_jump", movement_name: "x", sets: 3, reps: 4, why_payload: {} }], cat, athlete({ level: "intermediate" }), 17);
+    for (const r of g.rows) expect((cat.get(r.movement_slug) as any).speed_category).toBeTruthy();
+  });
+});
