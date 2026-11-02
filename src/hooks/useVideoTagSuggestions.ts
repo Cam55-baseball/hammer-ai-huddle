@@ -70,12 +70,15 @@ export function useSuggestionActions() {
 
   const approveTag = async (s: TagSuggestion) => {
     // Look up taxonomy id
-    const { data: tax, error: tErr } = await (supabase as any)
-      .from('video_tag_taxonomy')
-      .select('id')
-      .eq('layer', s.layer)
-      .eq('key', s.suggested_key)
-      .maybeSingle();
+    // Owner Nov 2: the same key can exist in several skill areas; pick the video's own area.
+    const [{ data: rows, error: tErr }, { data: vid }] = await Promise.all([
+      (supabase as any).from('video_tag_taxonomy').select('id,skill_domain')
+        .eq('layer', s.layer).eq('key', s.suggested_key).eq('active', true),
+      (supabase as any).from('library_videos').select('skill_domains').eq('id', s.video_id).maybeSingle(),
+    ]);
+    const domains: string[] = vid?.skill_domains ?? [];
+    const own = (rows ?? []).filter((r: any) => domains.includes(r.skill_domain));
+    const tax = own.length === 1 ? own[0] : (rows ?? []).length === 1 ? rows[0] : null;
     if (tErr || !tax) {
       toast.error('Taxonomy entry not found');
       return;
