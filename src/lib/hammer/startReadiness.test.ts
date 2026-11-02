@@ -15,7 +15,7 @@ describe("owner rule: Hammers Today cannot start until every plan detail is save
   it.each([
     ["birthday", { date_of_birth: null }], ["sport", { sport_primary: null }], ["position", { position_primary: "" }],
     ["level", { competition_level: null }], ["ranking", { category_goals: { hitting: ["x"] } }],
-    ["season", { season_status: null }], ["days", { weekly_availability_days: 0 }], ["equipment", { equipment_saved: false }],
+    ["season", { season_status: null }], ["equipment", { equipment_saved: false }],
     ["assessment", { assessment_completed: false }],
     ['bats', { bats_hand: null }], ['throws', { throws_hand: null }], ['height', { height_in: null }],
     ['weight', { weight_lb: null }], ['sleep', { sleep_target_hrs: null }], ['lifting', { lifting_age_years: null }],
@@ -31,6 +31,9 @@ describe("owner rule: Hammers Today cannot start until every plan detail is save
   });
   it('accepts zero years of lifting without inventing history', () => {
     expect(startMissing({ ...full, lifting_age_years: 0 })).toEqual([]);
+  });
+  it.each([null, 0, 1, 5, 6])('availability %s is information, not a start requirement', days => {
+    expect(startMissing({ ...full, weekly_availability_days: days })).toEqual([]);
   });
   it('refuses a numeric string where a canonical numeric nutrition answer is required', () => {
     expect(startMissing({ ...full, nutrition: { ...full.nutrition, calorie_goal: '2400' } }).map(m => m.key)).toEqual(['calorie_goal']);

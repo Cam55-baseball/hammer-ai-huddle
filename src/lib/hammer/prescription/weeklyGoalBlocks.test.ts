@@ -77,7 +77,7 @@ describe('weekly goal blocks — owner replacement, both sports and six cohorts 
     });
   }
   it('phase, availability, injury and pitcher/youth ceilings refuse extra work without reducing baseline', () => {
-    for (const extra of [{ season_phase: 'post' }, { weekly_availability_days: 1 }, { injury_history: ['knee'] }]) {
+    for (const extra of [{ season_phase: 'post' }, { injury_history: ['knee'] }]) {
       const p = projection('baseball', order, extra);
       const baseline = { defense: 2, hitting: 3, throwing: 3, baserunning: 1 };
       expect(weeklyGoalBlocks(resolveWeeklyTemplate(p), baseline, p, 'SS', included).targets).toEqual(baseline);
@@ -92,7 +92,7 @@ describe('weekly goal blocks — owner replacement, both sports and six cohorts 
     expect(weeklyGoalBlocks(template, { hitting: 3 }, p, 'SS', included).template).toBe(template);
     expect(weeklyGoalBlocks(template, { defense: 2 }, projection('baseball', order), 'SS', new Set(['throwing'])).targets.defense).toBe(2);
   });
-  it('counts existing lift and sprint days against weekly availability before adding a skill block', () => {
+  it('informational availability does not remove an existing legal goal slot', () => {
     const p = projection('baseball', order, { weekly_availability_days: 3 });
     const original = resolveWeeklyTemplate(p);
     const template = { ...original, availableDays: [1,2,3] as const, perModality: { ...original.perModality,
@@ -103,8 +103,7 @@ describe('weekly goal blocks — owner replacement, both sports and six cohorts 
     const skillOnly = weeklyGoalBlocks(template, baseline, p, 'SS', new Set(['defense', 'hitting']));
     expect(skillOnly.targets.defense).toBe(3);
     const fullWeek = weeklyGoalBlocks(template, baseline, p, 'SS', new Set(['defense', 'hitting', 'strength', 'speed']));
-    expect(fullWeek.targets).toEqual(baseline);
-    expect(fullWeek.template).toBe(template);
+    expect(fullWeek.targets.defense).toBe(3);
   });
 
   for (const sport of ['baseball', 'softball'] as const) for (const tier of ['pitcher', '5tool', 'golden2way'] as const) {
