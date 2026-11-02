@@ -887,7 +887,7 @@ const handler = async (req: Request): Promise<Response> => {
     ] = await Promise.all([
       admin.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       admin.from("athlete_context").select("*").eq("user_id", user.id).maybeSingle(),
-      admin.from("athlete_mpi_settings").select("season_status,season_status_manual,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
+      admin.from("athlete_mpi_settings").select("season_status,season_status_manual,season_status_manual_at,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
       // Step 28: the daily check-in writes readiness / soreness / fatigue / sleep
       // as asb_events. The old read targeted athlete_daily_log.log_date (no such
@@ -1246,9 +1246,8 @@ const handler = async (req: Request): Promise<Response> => {
         || practiceKinds.includes("showcase"));
 
     // -------- Resolve phase quarter --------
-    // Season data lives on athlete_mpi_settings (season_status + phase date
-    // windows). athlete_context.season_phase is a secondary/legacy field.
-    // Merge both so an in-season athlete never gets Offseason Q1 by default.
+    // The same manual/timeline projection feeds the builder and phase-state
+    // (the season card reads its live answer). Context is only a legacy fallback.
     const mpi: any = mpiSettings ?? {};
     const ctxAny: any = ctx ?? {};
     const { data: seasonTimeline, error: seasonTimelineError } = await admin.from('schedule_timeline_entries')
@@ -1257,13 +1256,12 @@ const handler = async (req: Request): Promise<Response> => {
       .order('created_at', { ascending: false }).limit(1);
     if (seasonTimelineError) throw seasonTimelineError;
     const { seasonWithTimeline } = await import('../_shared/seasonTimeline.ts');
-    const { data: manualStamp } = await admin.from('athlete_mpi_settings').select('season_status_manual_at').eq('user_id', user.id).maybeSingle();
     const seasonSettings = seasonWithTimeline({
       season_status: mpi.season_status ?? ctxAny.season_phase ?? null,
       // The athlete's hand-set phase outranks the date windows, here as well
       // as in the app, so the plan and the profile always say the same thing.
       season_status_manual: mpi.season_status_manual === true,
-      season_status_manual_at: manualStamp?.season_status_manual_at,
+      season_status_manual_at: mpi.season_status_manual_at,
       preseason_start_date: mpi.preseason_start_date ?? null,
       preseason_end_date: mpi.preseason_end_date ?? null,
       in_season_start_date: mpi.in_season_start_date ?? null,
