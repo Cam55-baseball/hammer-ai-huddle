@@ -255,7 +255,7 @@ function NutritionStep({ userId, onSaved }: { userId: string; onSaved: () => Pro
   const suggest = () => {
     const f = facts.data;
     const r = suggestNutritionTargets({ weightLbs: f?.w ?? null, heightInches: f?.h ?? null, age: f?.age ?? null, sex: null, activityLevel: "very_active", goalType: null, dayType: "training" });
-    if (!r.ok) { setNote(r.reason); return; }
+    if (r.ok === false) { setNote((r as { reason: string }).reason); return; }
     setVals({ calorie_goal: r.calories ? String(midpoint(r.calories)) : "", protein_goal: String(midpoint(r.protein)), carbs_goal: String(midpoint(r.carbs)), fats_goal: String(midpoint(r.fats)), hydration_goal: String(midpoint(r.hydration)) });
     setNote(["These are suggestions — change any number before you save.", ...r.notes].join(" "));
   };

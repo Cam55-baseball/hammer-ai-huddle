@@ -26,7 +26,6 @@ import { stillRecurring } from '@/lib/wic/faultLedger/recurringIssues';
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
-import { FinishProfileCard } from "@/components/hammer/FinishProfileCard";
 import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { useFocusState } from "@/components/hammer/cards/FocusSession";
@@ -695,7 +694,6 @@ function StartGate({ beforeStartPortalTarget }: { beforeStartPortalTarget?: HTML
   }
   return (
     <HammersTodayProvider>
-      <FinishProfileCard />
       <SavedMovementSummary />
       <HammerDailyPlanBody beforeStartPortalTarget={beforeStartPortalTarget} />
     </HammersTodayProvider>
