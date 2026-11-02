@@ -1,2437 +1,2641 @@
 [
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": true,
-"jump_class": [
-"force_production",
-"force_absorption"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "advanced",
-"jump_load": "light",
-"jump_mechanics": [
-"eccentric",
-"concentric",
-"ssc"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Accentuated Eccentric Box Jump",
-"plyo_tier": 2,
-"slug": "accentuated_eccentric_box_jump"
-},
-{
-"contact_method": "each_side",
-"contacts_per_rep": "1",
-"eccentric_overload": true,
-"jump_class": [
-"force_production",
-"force_absorption"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "elite",
-"jump_load": "light",
-"jump_mechanics": [
-"eccentric",
-"concentric"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "unilateral",
-"min_age_years": 16,
-"name": "Accentuated Eccentric Single Leg Box Jump",
-"plyo_tier": 2,
-"slug": "accentuated_eccentric_single_leg_box_jump"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production",
-"coordination"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "high",
-"jump_landing_strategy": "rebound",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"concentric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 14,
-"name": "Alternating Split Jump",
-"plyo_tier": 2,
-"slug": "alternating_split_jump"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "0",
-"eccentric_overload": true,
-"jump_class": [
-"force_absorption"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "stick",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"eccentric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_absorption",
-"landing_control"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Altitude Landing",
-"plyo_tier": null,
-"slug": "altitude_landing"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"horizontal",
-"rotational"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_production",
-"multidirectional_power"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Broad Jump \u2192 Swing Complex",
-"plyo_tier": 2,
-"slug": "bs_broad_jump_to_swing"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "continuous",
-"jump_intensity": "high",
-"jump_landing_strategy": "reactive_rebound",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive",
-"repeated_elastic"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Continuous Hurdle Jump",
-"plyo_tier": 2,
-"slug": "continuous_hurdle_jump"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production",
-"maximal_expression"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"concentric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_production",
-"maximal_expression"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Countermovement Jump",
-"plyo_tier": 2,
-"slug": "countermovement_jump"
-},
-{
-"contact_method": "per_rep_x",
-"contacts_per_rep": "1",
-"eccentric_overload": true,
-"jump_class": [
-"reactive",
-"maximal_expression"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "reactive_rebound",
-"jump_intensity": "maximal",
-"jump_landing_strategy": "stick",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"reactive_strength",
-"maximal_expression"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Depth Drop To Broad Jump",
-"plyo_tier": 2,
-"slug": "depth_drop_to_broad_jump"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"lateral",
-"rotational"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"multidirectional_power"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "unilateral",
-"min_age_years": 14,
-"name": "Lateral Bound to Throw",
-"plyo_tier": 2,
-"slug": "dl_lateral_bound_to_throw"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive",
-"coordination"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity",
-"coordination"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 13,
-"name": "Ankle Hop \u2014 Steady Rhythm",
-"plyo_tier": 1,
-"slug": "gap_ankle_hop_metronome"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"coordination",
-"reactive"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "continuous",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "rebound",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"repeated_elastic"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"coordination",
-"elasticity"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 14,
-"name": "Low Bound Series",
-"plyo_tier": 2,
-"slug": "gap_bound_low_amplitude"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production",
-"landing_skill"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"concentric",
-"eccentric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_production",
-"landing_control"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Broad Jump to Stick",
-"plyo_tier": 2,
-"slug": "gap_broad_jump_stick_bw"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_absorption",
-"landing_skill"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "stick",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"eccentric",
-"isometric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_absorption",
-"landing_control"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Depth Drop to Stick (low box)",
-"plyo_tier": 2,
-"slug": "gap_depth_drop_stick_low"
-},
-{
-"contact_method": "per_rep_x",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "reactive_rebound",
-"jump_intensity": "high",
-"jump_landing_strategy": "reactive_rebound",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Depth Jump (low box)",
-"plyo_tier": 2,
-"slug": "gap_depth_jump_low_box"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_absorption"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "stick",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"eccentric",
-"isometric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_absorption"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Drop-Catch Quarter Squat",
-"plyo_tier": 2,
-"slug": "gap_drop_catch_quarter_squat"
-},
-{
-"contact_method": "per_rep_x",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "reactive_rebound",
-"jump_intensity": "high",
-"jump_landing_strategy": "reactive_rebound",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Drop Jump \u2014 Single Response",
-"plyo_tier": 2,
-"slug": "gap_drop_jump_single_response"
-},
-{
-"contact_method": "each_side",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production",
-"landing_skill"
-],
-"jump_direction": [
-"lateral"
-],
-"jump_execution": "single",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric",
-"eccentric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"multidirectional_power",
-"landing_control"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "unilateral",
-"min_age_years": 14,
-"name": "Lateral Bound to Stick",
-"plyo_tier": 2,
-"slug": "gap_lateral_bound_stick"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive",
-"coordination"
-],
-"jump_direction": [
-"lateral"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity",
-"multidirectional_power"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 13,
-"name": "Line Hop \u2014 Side to Side",
-"plyo_tier": 1,
-"slug": "gap_line_hop_side"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive",
-"force_production"
-],
-"jump_direction": [
-"vertical",
-"horizontal"
-],
-"jump_execution": "single",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"concentric"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity",
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 13,
-"name": "Pogo into Broad Jump (pair)",
-"plyo_tier": 1,
-"slug": "gap_pair_pogo_to_broad"
-},
-{
-"contact_method": "each_side",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"isometric",
-"concentric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "unilateral",
-"min_age_years": 14,
-"name": "Split Hold into Bound (pair)",
-"plyo_tier": 2,
-"slug": "gap_pair_split_iso_to_bound"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive",
-"landing_skill"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "stick",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"isometric"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity",
-"landing_control"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 13,
-"name": "Pogo with a Hold",
-"plyo_tier": 1,
-"slug": "gap_pogo_hold_short"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 13,
-"name": "Game-Day Primer \u2014 Elastic Pogos",
-"plyo_tier": 1,
-"slug": "gap_primer_elastic_pogo"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "0",
-"eccentric_overload": false,
-"jump_class": [
-"coordination"
-],
-"jump_direction": [
-"horizontal",
-"lateral"
-],
-"jump_execution": "continuous",
-"jump_intensity": "low",
-"jump_landing_strategy": "controlled",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"coordination"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 13,
-"name": "Game-Day Primer \u2014 Skip Series",
-"plyo_tier": null,
-"slug": "gap_primer_skip_series"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "0",
-"eccentric_overload": false,
-"jump_class": [
-"landing_skill",
-"force_absorption"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "stick",
-"jump_intensity": "low",
-"jump_landing_strategy": "stick",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"eccentric",
-"isometric"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"landing_control",
-"force_absorption"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 13,
-"name": "Snap-Down to Stick",
-"plyo_tier": null,
-"slug": "gap_snap_down_stick"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"concentric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Vertical Jump and Reach",
-"plyo_tier": 2,
-"slug": "gap_vertical_jump_reach_bw"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive",
-"force_production"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "high",
-"jump_landing_strategy": "rebound",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Hurdle Jump",
-"plyo_tier": 2,
-"slug": "hurdle_jump"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive",
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity",
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Hurdle Pogo",
-"plyo_tier": 1,
-"slug": "hurdle_pogo"
-},
-{
-"contact_method": "each_side",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"repeated_elastic"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"elasticity"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "unilateral",
-"min_age_years": 13,
-"name": "Weighted Ankle Pogo",
-"plyo_tier": 1,
-"slug": "kot_ankle_pogo"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive",
-"force_production"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "high",
-"jump_landing_strategy": "rebound",
-"jump_level": "advanced",
-"jump_load": "light",
-"jump_mechanics": [
-"ssc"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"force_production",
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Band-Assisted Vertical Jump",
-"plyo_tier": 2,
-"slug": "lift_band_assisted_vertical_jump"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": true,
-"jump_class": [
-"force_production",
-"force_absorption"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric",
-"eccentric"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"force_production",
-"force_absorption"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Depth Drop \u2192 Box Jump",
-"plyo_tier": 2,
-"slug": "lift_box_jump_depth_drop"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "0",
-"eccentric_overload": false,
-"jump_class": [
-"force_production",
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "high",
-"jump_landing_strategy": "rebound",
-"jump_level": "elite",
-"jump_load": "light",
-"jump_mechanics": [
-"ssc",
-"concentric"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Overspeed Band Squat Jump",
-"plyo_tier": null,
-"slug": "lift_overspeed_band_squat_jump"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production",
-"maximal_expression"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "single",
-"jump_intensity": "maximal",
-"jump_landing_strategy": "stick",
-"jump_level": "elite",
-"jump_load": "loaded",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"force_production",
-"maximal_expression"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Loaded Broad Jump",
-"plyo_tier": 2,
-"slug": "loaded_broad_jump"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "elite",
-"jump_load": "loaded",
-"jump_mechanics": [
-"ssc",
-"concentric"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Loaded Countermovement Jump",
-"plyo_tier": 2,
-"slug": "loaded_countermovement_jump"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Non Countermovement Squat Jump",
-"plyo_tier": 2,
-"slug": "non_countermovement_squat_jump"
-},
-{
-"contact_method": "each_side",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "unilateral",
-"min_age_years": 14,
-"name": "RFESS \u2192 Single-Leg Bound",
-"plyo_tier": 2,
-"slug": "pap_rfess_to_sl_bound"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production",
-"maximal_expression"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "single",
-"jump_intensity": "maximal",
-"jump_landing_strategy": "stick",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"force_production",
-"maximal_expression"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Trap-Bar DL \u2192 Broad Jump Complex",
-"plyo_tier": 2,
-"slug": "pap_trap_dl_to_broad_jump"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": null,
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 0,
-"name": "Pitcher Ankle Pogos",
-"plyo_tier": null,
-"slug": "pc_ankle_pogos_bb"
-},
-{
-"contact_method": "per_rep_x",
-"contacts_per_rep": "1",
-"eccentric_overload": true,
-"jump_class": [
-"reactive",
-"maximal_expression"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "reactive_rebound",
-"jump_intensity": "maximal",
-"jump_landing_strategy": "reactive_rebound",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"reactive_strength",
-"maximal_expression"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Depth Jump",
-"plyo_tier": 2,
-"slug": "plyo_depth_jump"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": true,
-"jump_class": [
-"landing_skill",
-"force_absorption"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "stick",
-"jump_intensity": "low",
-"jump_landing_strategy": "stick",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"eccentric"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"landing_control",
-"force_absorption"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Plyometric Low-Box Landings",
-"plyo_tier": 1,
-"slug": "plyo_low_box"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "0",
-"eccentric_overload": false,
-"jump_class": [
-"coordination"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "continuous",
-"jump_intensity": "low",
-"jump_landing_strategy": "controlled",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"coordination"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 12,
-"name": "Rudimentary Skip",
-"plyo_tier": null,
-"slug": "rudimentary_skip"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Seated Box Jump",
-"plyo_tier": 2,
-"slug": "seated_box_jump"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "single",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Seated Broad Jump",
-"plyo_tier": 2,
-"slug": "seated_broad_jump"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Seated Vertical Jump",
-"plyo_tier": 2,
-"slug": "seated_vertical_jump"
-},
-{
-"contact_method": "each_side",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "high",
-"jump_landing_strategy": "rebound",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "unilateral",
-"min_age_years": 14,
-"name": "Single Leg Mini Hurdle Jump",
-"plyo_tier": 2,
-"slug": "single_leg_mini_hurdle_jump"
-},
-{
-"contact_method": "each_side",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "unilateral",
-"min_age_years": 14,
-"name": "Single Leg Seated Jump",
-"plyo_tier": 2,
-"slug": "single_leg_seated_jump"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"vertical",
-"horizontal"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Box Jump \u2192 Fly 10",
-"plyo_tier": 2,
-"slug": "sp_box_jump_to_sprint"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": null,
-"eccentric_overload": false,
-"jump_class": [
-"coordination",
-"reactive"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "continuous",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "rebound",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"coordination",
-"elasticity"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 0,
-"name": "Windmill Drive-Leg Bounds",
-"plyo_tier": null,
-"slug": "sp_drive_bounds_sb"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical",
-"horizontal"
-],
-"jump_execution": "repeated",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "reactive_rebound",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive",
-"repeated_elastic"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Hurdle Hop Series",
-"plyo_tier": 2,
-"slug": "sp_hurdle_hop_series"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive",
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 13,
-"name": "Double-Leg Pogo",
-"plyo_tier": 1,
-"slug": "sp_pogo_double"
-},
-{
-"contact_method": "each_side",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive",
-"repeated_elastic"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"elasticity"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "unilateral",
-"min_age_years": 13,
-"name": "Single-Leg Pogo",
-"plyo_tier": 1,
-"slug": "sp_pogo_single"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive",
-"maximal_expression"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "continuous",
-"jump_intensity": "high",
-"jump_landing_strategy": "rebound",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"reactive_strength",
-"maximal_expression"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 14,
-"name": "Alt-Leg Bounds for Distance",
-"plyo_tier": 2,
-"slug": "sp_singleleg_bound_alt"
-},
-{
-"contact_method": "each_side",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "continuous",
-"jump_intensity": "high",
-"jump_landing_strategy": "rebound",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "unilateral",
-"min_age_years": 14,
-"name": "Same-Leg Bounds",
-"plyo_tier": 2,
-"slug": "sp_singleleg_bound_same"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive",
-"maximal_expression"
-],
-"jump_direction": [
-"lateral"
-],
-"jump_execution": "repeated",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"multidirectional_power",
-"maximal_expression"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 14,
-"name": "Skater Bounds for Distance",
-"plyo_tier": 2,
-"slug": "sp_skater_bound_dist"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "high",
-"jump_landing_strategy": "rebound",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"concentric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 14,
-"name": "Split Squat Jump",
-"plyo_tier": 2,
-"slug": "split_squat_jump"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "continuous",
-"jump_intensity": "high",
-"jump_landing_strategy": "rebound",
-"jump_level": "advanced",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"repeated_elastic"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"elasticity",
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 14,
-"name": "Straight Leg Bound",
-"plyo_tier": 2,
-"slug": "straight_leg_bound"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "high",
-"jump_landing_strategy": "stick",
-"jump_level": "elite",
-"jump_load": "loaded",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": 0.6,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Weighted Squat Jump",
-"plyo_tier": 2,
-"slug": "weighted_squat_jump"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "0",
-"eccentric_overload": false,
-"jump_class": [
-"coordination"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "continuous",
-"jump_intensity": "low",
-"jump_landing_strategy": "controlled",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"coordination"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 0,
-"name": "A-skip",
-"plyo_tier": null,
-"slug": "wu_a_skip"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "0",
-"eccentric_overload": true,
-"jump_class": [
-"force_absorption"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "stick",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"eccentric"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_absorption"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 16,
-"name": "Altitude drop landing (RSI primer)",
-"plyo_tier": null,
-"slug": "wu_altitude_drop"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "0",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 0,
-"name": "Ankle bounce series (stiff ankles)",
-"plyo_tier": null,
-"slug": "wu_ankle_bounce_series"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "0",
-"eccentric_overload": false,
-"jump_class": [
-"coordination"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "continuous",
-"jump_intensity": "low",
-"jump_landing_strategy": "controlled",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"coordination"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 0,
-"name": "B-skip",
-"plyo_tier": null,
-"slug": "wu_b_skip"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"force_production",
-"landing_skill"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "single",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "stick",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric",
-"eccentric"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"force_production",
-"landing_control"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 14,
-"name": "Broad jump \u2014 60% intent primer",
-"plyo_tier": 2,
-"slug": "wu_broad_jump_prep"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive",
-"coordination"
-],
-"jump_direction": [
-"horizontal"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity",
-"coordination"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 13,
-"name": "Line hops forward-back",
-"plyo_tier": 1,
-"slug": "wu_line_hops_forward_back"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive",
-"coordination"
-],
-"jump_direction": [
-"lateral"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity",
-"multidirectional_power"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 13,
-"name": "Line hops lateral",
-"plyo_tier": 1,
-"slug": "wu_line_hops_lateral"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "introduction",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive",
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity",
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 13,
-"name": "Pogo hops (double-leg)",
-"plyo_tier": 1,
-"slug": "wu_pogo_double"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive",
-"coordination"
-],
-"jump_direction": [
-"lateral"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive",
-"repeated_elastic"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"elasticity",
-"multidirectional_power"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 13,
-"name": "Lateral pogo (skater rhythm)",
-"plyo_tier": 1,
-"slug": "wu_pogo_lateral"
-},
-{
-"contact_method": "each_side",
-"contacts_per_rep": "1",
-"eccentric_overload": false,
-"jump_class": [
-"reactive"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "low",
-"jump_landing_strategy": "rebound",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"ssc",
-"reactive",
-"repeated_elastic"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"elasticity",
-"reactive_strength"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "unilateral",
-"min_age_years": 13,
-"name": "Single-leg pogo (symmetry)",
-"plyo_tier": 1,
-"slug": "wu_pogo_single"
-},
-{
-"contact_method": "per_rep",
-"contacts_per_rep": "0",
-"eccentric_overload": false,
-"jump_class": [
-"force_production"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "single",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "controlled",
-"jump_level": "foundation",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric"
-],
-"jump_min_readiness": null,
-"jump_objectives": [
-"force_production"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "bilateral",
-"min_age_years": 0,
-"name": "Snap jump (rapid concentric)",
-"plyo_tier": null,
-"slug": "wu_snap_jump"
-},
-{
-"contact_method": "per_landing",
-"contacts_per_rep": "0",
-"eccentric_overload": false,
-"jump_class": [
-"force_production",
-"coordination"
-],
-"jump_direction": [
-"vertical"
-],
-"jump_execution": "repeated",
-"jump_intensity": "moderate",
-"jump_landing_strategy": "controlled",
-"jump_level": "intermediate",
-"jump_load": "bodyweight",
-"jump_mechanics": [
-"concentric",
-"ssc"
-],
-"jump_min_readiness": 0.4,
-"jump_objectives": [
-"force_production",
-"coordination"
-],
-"jump_role_tags": [],
-"jump_sport_tags": [
-"baseball",
-"softball",
-"general"
-],
-"jump_stance": "alternating",
-"min_age_years": 0,
-"name": "Split-stance snap-switch jump",
-"plyo_tier": null,
-"slug": "wu_split_snap_jump"
-}
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": true,
+  "jump_class": [
+   "force_production",
+   "force_absorption"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "advanced",
+  "jump_load": "light",
+  "jump_mechanics": [
+   "eccentric",
+   "concentric",
+   "ssc"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Accentuated Eccentric Box Jump",
+  "plyo_tier": 2,
+  "slug": "accentuated_eccentric_box_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "each_side",
+  "contacts_per_rep": "1",
+  "eccentric_overload": true,
+  "jump_class": [
+   "force_production",
+   "force_absorption"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "elite",
+  "jump_load": "light",
+  "jump_mechanics": [
+   "eccentric",
+   "concentric"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "unilateral",
+  "min_age_years": 16,
+  "name": "Accentuated Eccentric Single Leg Box Jump",
+  "plyo_tier": 2,
+  "slug": "accentuated_eccentric_single_leg_box_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production",
+   "coordination"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "concentric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 14,
+  "name": "Alternating Split Jump",
+  "plyo_tier": 2,
+  "slug": "alternating_split_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "0",
+  "eccentric_overload": true,
+  "jump_class": [
+   "force_absorption"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "stick",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "eccentric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_absorption",
+   "landing_control"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Altitude Landing",
+  "plyo_tier": null,
+  "slug": "altitude_landing",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "horizontal",
+   "rotational"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_production",
+   "multidirectional_power"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Broad Jump \u2192 Swing Complex",
+  "plyo_tier": 2,
+  "slug": "bs_broad_jump_to_swing",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": "pap"
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "continuous",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "reactive_rebound",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Continuous Hurdle Jump",
+  "plyo_tier": 2,
+  "slug": "continuous_hurdle_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production",
+   "maximal_expression"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "concentric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_production",
+   "maximal_expression"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Countermovement Jump",
+  "plyo_tier": 2,
+  "slug": "countermovement_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep_x",
+  "contacts_per_rep": "1",
+  "eccentric_overload": true,
+  "jump_class": [
+   "reactive",
+   "maximal_expression"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "reactive_rebound",
+  "jump_intensity": "maximal",
+  "jump_landing_strategy": "stick",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "reactive_strength",
+   "maximal_expression"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Depth Drop To Broad Jump",
+  "plyo_tier": 2,
+  "slug": "depth_drop_to_broad_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "lateral",
+   "rotational"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "multidirectional_power"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "unilateral",
+  "min_age_years": 14,
+  "name": "Lateral Bound to Throw",
+  "plyo_tier": 2,
+  "slug": "dl_lateral_bound_to_throw",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive",
+   "coordination"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity",
+   "coordination"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 13,
+  "name": "Ankle Hop \u2014 Steady Rhythm",
+  "plyo_tier": 1,
+  "slug": "gap_ankle_hop_metronome",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "coordination",
+   "reactive"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "continuous",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "coordination",
+   "elasticity"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 14,
+  "name": "Low Bound Series",
+  "plyo_tier": 2,
+  "slug": "gap_bound_low_amplitude",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production",
+   "landing_skill"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "concentric",
+   "eccentric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_production",
+   "landing_control"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Broad Jump to Stick",
+  "plyo_tier": 2,
+  "slug": "gap_broad_jump_stick_bw",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_absorption",
+   "landing_skill"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "stick",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "eccentric",
+   "isometric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_absorption",
+   "landing_control"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Depth Drop to Stick (low box)",
+  "plyo_tier": 2,
+  "slug": "gap_depth_drop_stick_low",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep_x",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "reactive_rebound",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "reactive_rebound",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Depth Jump (low box)",
+  "plyo_tier": 2,
+  "slug": "gap_depth_jump_low_box",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_absorption"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "stick",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "eccentric",
+   "isometric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_absorption"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Drop-Catch Quarter Squat",
+  "plyo_tier": 2,
+  "slug": "gap_drop_catch_quarter_squat",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep_x",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "reactive_rebound",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "reactive_rebound",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Drop Jump \u2014 Single Response",
+  "plyo_tier": 2,
+  "slug": "gap_drop_jump_single_response",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "each_side",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production",
+   "landing_skill"
+  ],
+  "jump_direction": [
+   "lateral"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric",
+   "eccentric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "multidirectional_power",
+   "landing_control"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "unilateral",
+  "min_age_years": 14,
+  "name": "Lateral Bound to Stick",
+  "plyo_tier": 2,
+  "slug": "gap_lateral_bound_stick",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive",
+   "coordination"
+  ],
+  "jump_direction": [
+   "lateral"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity",
+   "multidirectional_power"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 13,
+  "name": "Line Hop \u2014 Side to Side",
+  "plyo_tier": 1,
+  "slug": "gap_line_hop_side",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive",
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical",
+   "horizontal"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "concentric"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity",
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 13,
+  "name": "Pogo into Broad Jump (pair)",
+  "plyo_tier": 1,
+  "slug": "gap_pair_pogo_to_broad",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "each_side",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "isometric",
+   "concentric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "unilateral",
+  "min_age_years": 14,
+  "name": "Split Hold into Bound (pair)",
+  "plyo_tier": 2,
+  "slug": "gap_pair_split_iso_to_bound",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive",
+   "landing_skill"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "stick",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "isometric"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity",
+   "landing_control"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 13,
+  "name": "Pogo with a Hold",
+  "plyo_tier": 1,
+  "slug": "gap_pogo_hold_short",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 13,
+  "name": "Game-Day Primer \u2014 Elastic Pogos",
+  "plyo_tier": 1,
+  "slug": "gap_primer_elastic_pogo",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "0",
+  "eccentric_overload": false,
+  "jump_class": [
+   "coordination"
+  ],
+  "jump_direction": [
+   "horizontal",
+   "lateral"
+  ],
+  "jump_execution": "continuous",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "controlled",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "coordination"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 13,
+  "name": "Game-Day Primer \u2014 Skip Series",
+  "plyo_tier": null,
+  "slug": "gap_primer_skip_series",
+  "speed_category": "mobility",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "0",
+  "eccentric_overload": false,
+  "jump_class": [
+   "landing_skill",
+   "force_absorption"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "stick",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "stick",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "eccentric",
+   "isometric"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "landing_control",
+   "force_absorption"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 13,
+  "name": "Snap-Down to Stick",
+  "plyo_tier": null,
+  "slug": "gap_snap_down_stick",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "concentric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Vertical Jump and Reach",
+  "plyo_tier": 2,
+  "slug": "gap_vertical_jump_reach_bw",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive",
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Hurdle Jump",
+  "plyo_tier": 2,
+  "slug": "hurdle_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity",
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Hurdle Pogo",
+  "plyo_tier": 1,
+  "slug": "hurdle_pogo",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "each_side",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "elasticity"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "unilateral",
+  "min_age_years": 13,
+  "name": "Weighted Ankle Pogo",
+  "plyo_tier": 1,
+  "slug": "kot_ankle_pogo",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive",
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "advanced",
+  "jump_load": "light",
+  "jump_mechanics": [
+   "ssc"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "force_production",
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Band-Assisted Vertical Jump",
+  "plyo_tier": 2,
+  "slug": "lift_band_assisted_vertical_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": true,
+  "jump_class": [
+   "force_production",
+   "force_absorption"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric",
+   "eccentric"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "force_production",
+   "force_absorption"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Depth Drop \u2192 Box Jump",
+  "plyo_tier": 2,
+  "slug": "lift_box_jump_depth_drop",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "0",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production",
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "elite",
+  "jump_load": "light",
+  "jump_mechanics": [
+   "ssc",
+   "concentric"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Overspeed Band Squat Jump",
+  "plyo_tier": null,
+  "slug": "lift_overspeed_band_squat_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production",
+   "maximal_expression"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "maximal",
+  "jump_landing_strategy": "stick",
+  "jump_level": "elite",
+  "jump_load": "loaded",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "force_production",
+   "maximal_expression"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Loaded Broad Jump",
+  "plyo_tier": 2,
+  "slug": "loaded_broad_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "elite",
+  "jump_load": "loaded",
+  "jump_mechanics": [
+   "ssc",
+   "concentric"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Loaded Countermovement Jump",
+  "plyo_tier": 2,
+  "slug": "loaded_countermovement_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Non Countermovement Squat Jump",
+  "plyo_tier": 2,
+  "slug": "non_countermovement_squat_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "each_side",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "unilateral",
+  "min_age_years": 14,
+  "name": "RFESS \u2192 Single-Leg Bound",
+  "plyo_tier": 2,
+  "slug": "pap_rfess_to_sl_bound",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production",
+   "maximal_expression"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "maximal",
+  "jump_landing_strategy": "stick",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "force_production",
+   "maximal_expression"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Trap-Bar DL \u2192 Broad Jump Complex",
+  "plyo_tier": 2,
+  "slug": "pap_trap_dl_to_broad_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": null,
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 0,
+  "name": "Pitcher Ankle Pogos",
+  "plyo_tier": null,
+  "slug": "pc_ankle_pogos_bb",
+  "speed_category": "plyometric",
+  "conditioning_category": "pitcher_specific",
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep_x",
+  "contacts_per_rep": "1",
+  "eccentric_overload": true,
+  "jump_class": [
+   "reactive",
+   "maximal_expression"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "reactive_rebound",
+  "jump_intensity": "maximal",
+  "jump_landing_strategy": "reactive_rebound",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "reactive_strength",
+   "maximal_expression"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Depth Jump",
+  "plyo_tier": 2,
+  "slug": "plyo_depth_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": true,
+  "jump_class": [
+   "landing_skill",
+   "force_absorption"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "stick",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "stick",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "eccentric"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "landing_control",
+   "force_absorption"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Plyometric Low-Box Landings",
+  "plyo_tier": 1,
+  "slug": "plyo_low_box",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "0",
+  "eccentric_overload": false,
+  "jump_class": [
+   "coordination"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "continuous",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "controlled",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "coordination"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 12,
+  "name": "Rudimentary Skip",
+  "plyo_tier": null,
+  "slug": "rudimentary_skip",
+  "speed_category": "mobility",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Seated Box Jump",
+  "plyo_tier": 2,
+  "slug": "seated_box_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Seated Broad Jump",
+  "plyo_tier": 2,
+  "slug": "seated_broad_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Seated Vertical Jump",
+  "plyo_tier": 2,
+  "slug": "seated_vertical_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "each_side",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "unilateral",
+  "min_age_years": 14,
+  "name": "Single Leg Mini Hurdle Jump",
+  "plyo_tier": 2,
+  "slug": "single_leg_mini_hurdle_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "each_side",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "unilateral",
+  "min_age_years": 14,
+  "name": "Single Leg Seated Jump",
+  "plyo_tier": 2,
+  "slug": "single_leg_seated_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical",
+   "horizontal"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Box Jump \u2192 Fly 10",
+  "plyo_tier": 2,
+  "slug": "sp_box_jump_to_sprint",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": null,
+  "eccentric_overload": false,
+  "jump_class": [
+   "coordination",
+   "reactive"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "continuous",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "coordination",
+   "elasticity"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 0,
+  "name": "Windmill Drive-Leg Bounds",
+  "plyo_tier": null,
+  "slug": "sp_drive_bounds_sb",
+  "speed_category": "plyometric",
+  "conditioning_category": "pitcher_specific",
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical",
+   "horizontal"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "reactive_rebound",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Hurdle Hop Series",
+  "plyo_tier": 2,
+  "slug": "sp_hurdle_hop_series",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 13,
+  "name": "Double-Leg Pogo",
+  "plyo_tier": 1,
+  "slug": "sp_pogo_double",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "each_side",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "elasticity"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "unilateral",
+  "min_age_years": 13,
+  "name": "Single-Leg Pogo",
+  "plyo_tier": 1,
+  "slug": "sp_pogo_single",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive",
+   "maximal_expression"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "continuous",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "reactive_strength",
+   "maximal_expression"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 14,
+  "name": "Alt-Leg Bounds for Distance",
+  "plyo_tier": 2,
+  "slug": "sp_singleleg_bound_alt",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "each_side",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "continuous",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "unilateral",
+  "min_age_years": 14,
+  "name": "Same-Leg Bounds",
+  "plyo_tier": 2,
+  "slug": "sp_singleleg_bound_same",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive",
+   "maximal_expression"
+  ],
+  "jump_direction": [
+   "lateral"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "multidirectional_power",
+   "maximal_expression"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 14,
+  "name": "Skater Bounds for Distance",
+  "plyo_tier": 2,
+  "slug": "sp_skater_bound_dist",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "concentric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 14,
+  "name": "Split Squat Jump",
+  "plyo_tier": 2,
+  "slug": "split_squat_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "continuous",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "advanced",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "elasticity",
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 14,
+  "name": "Straight Leg Bound",
+  "plyo_tier": 2,
+  "slug": "straight_leg_bound",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "high",
+  "jump_landing_strategy": "stick",
+  "jump_level": "elite",
+  "jump_load": "loaded",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": 0.6,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Weighted Squat Jump",
+  "plyo_tier": 2,
+  "slug": "weighted_squat_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "0",
+  "eccentric_overload": false,
+  "jump_class": [
+   "coordination"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "continuous",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "controlled",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "coordination"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 0,
+  "name": "A-skip",
+  "plyo_tier": null,
+  "slug": "wu_a_skip",
+  "speed_category": "mobility",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "0",
+  "eccentric_overload": true,
+  "jump_class": [
+   "force_absorption"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "stick",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "eccentric"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_absorption"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 16,
+  "name": "Altitude drop landing (RSI primer)",
+  "plyo_tier": null,
+  "slug": "wu_altitude_drop",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "0",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 0,
+  "name": "Ankle bounce series (stiff ankles)",
+  "plyo_tier": null,
+  "slug": "wu_ankle_bounce_series",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "0",
+  "eccentric_overload": false,
+  "jump_class": [
+   "coordination"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "continuous",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "controlled",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "coordination"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 0,
+  "name": "B-skip",
+  "plyo_tier": null,
+  "slug": "wu_b_skip",
+  "speed_category": "mobility",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production",
+   "landing_skill"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "stick",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric",
+   "eccentric"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "force_production",
+   "landing_control"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 14,
+  "name": "Broad jump \u2014 60% intent primer",
+  "plyo_tier": 2,
+  "slug": "wu_broad_jump_prep",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive",
+   "coordination"
+  ],
+  "jump_direction": [
+   "horizontal"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity",
+   "coordination"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 13,
+  "name": "Line hops forward-back",
+  "plyo_tier": 1,
+  "slug": "wu_line_hops_forward_back",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive",
+   "coordination"
+  ],
+  "jump_direction": [
+   "lateral"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity",
+   "multidirectional_power"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 13,
+  "name": "Line hops lateral",
+  "plyo_tier": 1,
+  "slug": "wu_line_hops_lateral",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "introduction",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity",
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 13,
+  "name": "Pogo hops (double-leg)",
+  "plyo_tier": 1,
+  "slug": "wu_pogo_double",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive",
+   "coordination"
+  ],
+  "jump_direction": [
+   "lateral"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "elasticity",
+   "multidirectional_power"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 13,
+  "name": "Lateral pogo (skater rhythm)",
+  "plyo_tier": 1,
+  "slug": "wu_pogo_lateral",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "each_side",
+  "contacts_per_rep": "1",
+  "eccentric_overload": false,
+  "jump_class": [
+   "reactive"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "low",
+  "jump_landing_strategy": "rebound",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "ssc",
+   "reactive",
+   "repeated_elastic"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "elasticity",
+   "reactive_strength"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "unilateral",
+  "min_age_years": 13,
+  "name": "Single-leg pogo (symmetry)",
+  "plyo_tier": 1,
+  "slug": "wu_pogo_single",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_rep",
+  "contacts_per_rep": "0",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "single",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "controlled",
+  "jump_level": "foundation",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric"
+  ],
+  "jump_min_readiness": null,
+  "jump_objectives": [
+   "force_production"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "bilateral",
+  "min_age_years": 0,
+  "name": "Snap jump (rapid concentric)",
+  "plyo_tier": null,
+  "slug": "wu_snap_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ },
+ {
+  "contact_method": "per_landing",
+  "contacts_per_rep": "0",
+  "eccentric_overload": false,
+  "jump_class": [
+   "force_production",
+   "coordination"
+  ],
+  "jump_direction": [
+   "vertical"
+  ],
+  "jump_execution": "repeated",
+  "jump_intensity": "moderate",
+  "jump_landing_strategy": "controlled",
+  "jump_level": "intermediate",
+  "jump_load": "bodyweight",
+  "jump_mechanics": [
+   "concentric",
+   "ssc"
+  ],
+  "jump_min_readiness": 0.4,
+  "jump_objectives": [
+   "force_production",
+   "coordination"
+  ],
+  "jump_role_tags": [],
+  "jump_sport_tags": [
+   "baseball",
+   "softball",
+   "general"
+  ],
+  "jump_stance": "alternating",
+  "min_age_years": 0,
+  "name": "Split-stance snap-switch jump",
+  "plyo_tier": null,
+  "slug": "wu_split_snap_jump",
+  "speed_category": "plyometric",
+  "conditioning_category": null,
+  "bat_speed_category": null
+ }
 ]
