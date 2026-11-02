@@ -4583,3 +4583,5 @@ Deploys/additive migrations needed for 2, 3, 13, 18, 20 and server scheduling ce
 - [ ] B. Restore Hammers Today card to Oct 23 state except approved additions; hitter + pitcher before/after screenshots.
 - [ ] C. The General / coach / org: keep only sound correlations ("Need more data"), Hammers Card format, what-it-means on every section; screenshot Today/Performance/Growth.
 - [x] Nov 2 last three: season card agrees (democollege Off-Season); 79 catalog classifications filled + jump swaps keep card classification; demoausl/demo2way inputs complete; 3 TEST weeks 6+1 valid; suite 742/5,932 green. See docs/owner/nov2-last-three-proof.md.
+- [x] Nov 2 owner: jump-swap fitsSlot guard + 79 catalog classifications approved (kept).
+- [x] Nov 2 Video Manager tags: 10 new/expanded skill areas (116 tags), 41 dimension choices, pickers/suggestions/missing finder/preview, Mind + tissue care placements, gated matching; analyze-video-description redeployed. Live per-domain sample videos NOT created (would show to real players); proven by matcher tests.
