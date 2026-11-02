@@ -11,7 +11,7 @@ import { applyBuntingPlan, type BuntCatalogItem } from './buntingPlan';
 import type { BuntingEvidence } from './buntingEvidence';
 import type { BuntingFacts } from '../../../../supabase/functions/_shared/wic/buntingProgram';
 import { isSoftRecovery } from "../../../../supabase/functions/_shared/wic/schedule/softRecovery";
-import { unavailableTrainingDate } from '../../../../supabase/functions/_shared/wic/schedule/availability';
+import { unavailableTrainingDate, availabilityNotice } from '../../../../supabase/functions/_shared/wic/schedule/availability';
 import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
 import { priorityAccess } from '../priorityAccess';
 import { subscriptionSchedule } from './subscriptionSchedule';
@@ -2719,7 +2719,10 @@ export function buildHammerDailyPlan(
     console.debug("[dailyPlan] gp-signal bias →", gpBiasTags);
   }
   return {
-    blocks: enforceSkillStageOrder(placeBreathing(warmed, (d) => drillsToSteps(d))),
+    blocks: enforceSkillStageOrder(placeBreathing(warmed, (d) => drillsToSteps(d))).map((b, i) => {
+      const notice = availabilityNotice(proj.weeklyAvailabilityDays);
+      return i === 0 && notice ? { ...b, because: [...(b.because ?? []), `Days available: ${proj.weeklyAvailabilityDays} per week (information only).`, notice] } : b;
+    }),
     sanity: validatePlanSanity({ restDay: fullRestDay, work: warmed.filter(b => b.status === 'ready').flatMap(b => b.drills.map(d => ({ category: b.modality, slug: d.slug }))) }),
     practiceLoad,
     seasonPhase: proj.seasonPhase,
