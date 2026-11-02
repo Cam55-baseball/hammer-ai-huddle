@@ -1,17 +1,20 @@
 /**
- * WkCardFailureNotice — surfaces the *actual* reason today's plan couldn't
- * publish instead of a bare "Retry" button. Consumed by the four canonical
- * WIC cards (Speed / BatSpeed / Lifts / Conditioning) so the athlete knows
- * exactly what to do next.
+ * WkCardFailureNotice — owner Nov 2: never "Plan couldn't publish", never a
+ * missing-details dead end. Missing details don't block plans any more; if a
+ * build fails for another reason, show ONE plain sentence with the exact fix
+ * and a button that does it.
  */
-import { AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
+import { Info, RefreshCw, Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
+import { useQueryClient } from "@tanstack/react-query";
 import { useWorkoutCatalog } from "@/hooks/useWorkoutCatalog";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAuth } from "@/hooks/useAuth";
 import { humanizeFailures } from "@/lib/hammer/failureCopy";
+import { accountGateKey } from "@/components/auth/AccountGate";
+import { failureAction } from "@/lib/hammer/finishProfile";
 
 export type WkCardFailure = {
   code?: string | null;
@@ -20,25 +23,6 @@ export type WkCardFailure = {
   missingFields?: string[];
   engineFailures?: Record<string, string[] | undefined>;
 } | null;
-
-const FIELD_LABEL: Record<string, string> = {
-  sport: "Sport",
-  primary_position: "Primary position",
-  handedness: "Handedness",
-  hitting_side: "Hitting side",
-  throwing_side: "Throwing side",
-  training_age_years: "Training age",
-  competitive_level: "Competition level",
-  season_phase: "Season phase",
-  equipment: "Equipment",
-  available_time_min: "Time available",
-  height_in: "Height",
-  weight_lb: "Weight",
-};
-
-function humanizeField(f: string): string {
-  return FIELD_LABEL[f] ?? f.replace(/_/g, " ");
-}
 
 export function WkCardFailureNotice({
   engine,
@@ -52,74 +36,35 @@ export function WkCardFailureNotice({
   retrying?: boolean;
 }) {
   const navigate = useNavigate();
-  const { hasCompletedOnboarding } = useAthleteOnboardingState();
+  const qc = useQueryClient();
+  const { user } = useAuth();
   const { isOwner } = useOwnerAccess();
   const { data: catalog } = useWorkoutCatalog();
   const nameOf = useMemo(() => {
     const map = new Map((catalog ?? []).map((m) => [m.slug, m.name]));
     return (slug: string) => map.get(slug) ?? null;
   }, [catalog]);
-
-  const rawReasons = failure?.engineFailures?.[engine] ?? [];
-  // Plain language, real movement names, no duplicate sentences, slugs for
-  // admins only.
-  const engineReasons = useMemo(
-    () => humanizeFailures(rawReasons, nameOf, isOwner),
-    [rawReasons, nameOf, isOwner],
+  const reasons = useMemo(
+    () => humanizeFailures(failure?.engineFailures?.[engine] ?? [], nameOf, isOwner),
+    [failure, engine, nameOf, isOwner],
   );
-  const missing = failure?.missingFields ?? [];
-  // Equipment is the single most common missing answer, and it has its own
-  // step now — send the athlete straight there instead of the review list.
-  const equipmentMissing =
-    missing.includes("equipment") ||
-    engineReasons.some((r) => /equipment|gear/i.test(r));
-  const onboardingTarget = equipmentMissing
-    ? "/onboarding/athlete?edit=equipment"
-    : hasCompletedOnboarding
-      ? "/onboarding/athlete?step=review"
-      : "/signup";
-
-  const primary =
-    engineReasons[0] ??
-    (failure?.detail ? humanizeFailures([failure.detail], nameOf, isOwner)[0] : undefined) ??
-    (missing.length
-      ? `Finish onboarding — we need: ${missing.slice(0, 3).map(humanizeField).join(", ")}${missing.length > 3 ? "…" : ""}`
-      : failure?.title ?? "Couldn't build this block. Tap retry.");
+  const action = failureAction(failure?.code ?? null, reasons, failure?.missingFields ?? []);
+  const run = () => {
+    if (action.kind === "birthday") void qc.invalidateQueries({ queryKey: accountGateKey(user?.id) });
+    else if (action.kind === "equipment") navigate("/onboarding/athlete?edit=equipment");
+    else retry();
+  };
 
   return (
-    <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-xs">
+    <div className="rounded-md border border-border bg-muted/40 p-2 text-xs">
       <div className="flex items-start gap-2">
-        <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-        <div className="flex-1 min-w-0 space-y-1.5">
-          <div className="font-semibold text-amber-800 dark:text-amber-200">
-            Plan couldn't publish
-          </div>
-          <p className="text-amber-900/80 dark:text-amber-100/80">{primary}</p>
-          {engineReasons.length > 1 && (
-            <ul className="mt-1 space-y-0.5 text-amber-900/70 dark:text-amber-100/70 list-disc list-inside">
-              {engineReasons.slice(1, 4).map((r, i) => <li key={i}>{r}</li>)}
-            </ul>
-          )}
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Button size="sm" className="h-7" onClick={retry} disabled={retrying}>
-              {retrying ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}
-              Retry
-            </Button>
-            {(missing.length > 0 || equipmentMissing) && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7"
-                onClick={() => navigate(onboardingTarget)}
-              >
-                {equipmentMissing
-                  ? "Add your equipment"
-                  : hasCompletedOnboarding
-                    ? "Review missing setup"
-                    : "Finish onboarding"}
-              </Button>
-            )}
-          </div>
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <p>{action.sentence}</p>
+          <Button size="sm" className="h-7" onClick={run} disabled={retrying}>
+            {retrying ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : action.kind === "retry" ? <RefreshCw className="mr-1 h-3 w-3" /> : null}
+            {action.button}
+          </Button>
         </div>
       </div>
     </div>
