@@ -121,6 +121,7 @@ import {
 import { golden2wayRoleMissing } from "../_shared/wic/progression/startingPoint.ts";
 import { isTaggedJump } from "../_shared/wic/jumps/taxonomy.ts";
 import { readPitcherReturn, recordReturnDate } from "../_shared/wic/pitching/readPitcherReturn.ts";
+import { readReturningHitter, recordHittingDay } from "../_shared/wic/hitting/readReturningHitter.ts";
 import { governJumps, athleteJumpLevel, sessionsFrom } from "../_shared/wic/jumps/plan.ts";
 import { readServerStarts, easeBackStartPct, sprintStartYards, capYardsTo, type ServerStarts } from "../_shared/wic/progression/serverStarts.ts";
 import { conditioningSlugFor, inningRestartSlug } from "../_shared/wic/engines/conditioning.ts";
@@ -5673,8 +5674,12 @@ const handler = async (req: Request): Promise<Response> => {
       // Owner Nov 1 round 6 Part 2: start/advance the pitcher return program (flat → shortbox → short first bullpen).
       let pitcherReturn: any = null;
       if (purchasedPitcher || schedulingModules.includes(`${sport}_golden2way`)) { try { pitcherReturn = await readPitcherReturn(admin, user.id, sport, planDate, outingFacts?.thrownDates ?? []); } catch { pitcherReturn = null; } }
-      composed=await composeSportDay(userClient,{pitcherReturn,userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold,planRestDow)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,alwaysMissingGear:[...alwaysMissing],injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null,physio,availabilityDays:typeof ctx?.weekly_availability_days==='number'?ctx.weekly_availability_days:null,restDow:planRestDow});
+      // Owner Nov 1 round 6 Part 3: start/advance the returning-hitter program.
+      let hitterReturn: any = null;
+      if (bsModules.some((m: string) => [`${sport}_5tool`, `${sport}_golden2way`, 'hitting', `${sport}_hitting`].includes(m))) { try { hitterReturn = await readReturningHitter(admin, user.id, sport, planDate, athleteAgeYears ?? null, (physio?.activeAreas?.length ?? 0) > 0); } catch { hitterReturn = null; } }
+      composed=await composeSportDay(userClient,{pitcherReturn,hitterReturn,userId:user.id,date:planDate,sport,phase:phaseRes.phase,rest:wholePlanRest(planDate,timelineToday.hold,planRestDow)||availabilityRest,cns:cnsUsed,equipment:declaredEquipment,alwaysMissingGear:[...alwaysMissing],injuries:[...injurySlugs],birthday:p.date_of_birth??null,outingFacts,posture,gameTomorrow:scheduledGames.some(g=>g.date===isoShift(planDate,1)),warmupStages:Object.fromEntries(lib.filter((m:any)=>Number.isInteger(m.stage)).map((m:any)=>[m.slug,{stage:m.stage,order:m.stage_order??null}])),readiness:running?.score??dailyLog?.readiness??null,phaseStartedAt:phaseStart??null,physio,availabilityDays:typeof ctx?.weekly_availability_days==='number'?ctx.weekly_availability_days:null,restDow:planRestDow});
       // Owner Oct 30: 5Tool/Golden 2Way base running + running conditioning are one same-day session.
+      if(hitterReturn){const hb=(composed.payload.blocks as any[]).find((b:any)=>b?.modality==='hitting'&&b?.status==='ready');if(hb){try{await recordHittingDay(admin,hitterReturn,planDate,(hb.drills??[]).length);}catch{/* next build retries */}}}
       if(pitcherReturn&&(composed.payload.blocks as any[]).some((b:any)=>b?.modality==='pitching'&&b?.status==='ready')){try{await recordReturnDate(admin,pitcherReturn,planDate);}catch{/* next build retries */}}
       const brReady=(composed.payload.blocks as any[]).some((b:any)=>b?.modality==='baserunning'&&b?.status==='ready');
       const drop=combinedRunningRowsToDrop(rows as any[],{combined:isCombinedBaseConditioningProgram(schedulingModules,sport),baserunningReady:brReady});

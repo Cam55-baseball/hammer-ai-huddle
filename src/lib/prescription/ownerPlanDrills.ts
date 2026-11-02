@@ -195,6 +195,7 @@ export function mergeOwnerSlotDrills<T extends StepLike>(drills: T[], slots: Pla
     cue: pick.cue ?? "",
     prescriptionOrigin: "owner",
     ownerDrillId: pick.id,
+    ...(pick.pitch_source ? { pitchSource: pick.pitch_source } : {}),
     routineRole: pick.routine_role ?? null,
     skillArea: pick.skill_area ?? null,
     batSpeedKind: pick.bat_speed_kind ?? null,

@@ -1516,6 +1516,7 @@ function mergeOwnerSlotDrills(drills, slots, ctxOrSport, day2 = /* @__PURE__ */ 
     cue: pick2.cue ?? "",
     prescriptionOrigin: "owner",
     ownerDrillId: pick2.id,
+    ...pick2.pitch_source ? { pitchSource: pick2.pitch_source } : {},
     routineRole: pick2.routine_role ?? null,
     skillArea: pick2.skill_area ?? null,
     batSpeedKind: pick2.bat_speed_kind ?? null,
@@ -7196,6 +7197,48 @@ function applyReturnStep(drills, p, sport) {
   return { drills: final, because: changed ? [returnBecause(p, sport)] : [] };
 }
 
+// supabase/functions/_shared/wic/hitting/returningHitter.ts
+var PITCH_SOURCES = ["tee", "front_toss", "machine", "live"];
+var EFFORT_LABEL = { low: "Low", medium: "Medium", full: "Full" };
+function pitchSourceOf(d3) {
+  const tag = d3.pitchSource ?? d3.pitch_source ?? null;
+  if (tag && PITCH_SOURCES.includes(tag)) return tag;
+  const n = d3.name.toLowerCase();
+  if (/\blive\b|\bbp\b|batting practice|at-bats|live abs/.test(n)) return /machine/.test(n) && !/\blive\b/.test(n) ? "machine" : "live";
+  if (/machine/.test(n)) return "machine";
+  if (/front toss|front-toss|soft toss|flips?\b/.test(n)) return "front_toss";
+  if (/\btee\b/.test(n)) return "tee";
+  return null;
+}
+function hitterBecause(p) {
+  if (p.bridge) return "Because: you're on a tee / front-toss bridge until a green week, then back to your normal hitting.";
+  if (p.environment === "low_impact") return p.reason === "injury" ? "Because: you're coming back from an injury, so you start off a tee or front toss and work back to your normal hitting." : "Because: players under 13 start back off a tee or front toss, then move to normal hitting after a green week.";
+  return `Because: you're getting back into hitting, so swing at ${EFFORT_LABEL[p.effort].toLowerCase()} effort today. Effort goes up one step after each green week.`;
+}
+function applyHitterReturn(rows3, p, owned) {
+  if (!p || p.completed_on) return { rows: rows3, because: [] };
+  const lowImpact = p.bridge || p.environment === "low_impact";
+  const swap = owned.has("tee") ? "tee" : "front_toss";
+  const out = rows3.map((r) => {
+    const src = pitchSourceOf(r);
+    const swingRow = src != null || /swing|hit|bat/i.test(r.name);
+    if (!swingRow) return r;
+    if (lowImpact && (src === "machine" || src === "live")) {
+      return {
+        ...r,
+        name: swap === "tee" ? "Tee work (bridge)" : "Front toss (bridge)",
+        pitchSource: swap,
+        swingEffort: p.effort,
+        returnedFrom: r.name,
+        setup: swap === "tee" ? "Tee at the height of the pitch location you're working on." : "Partner tosses underhand from behind a screen, 15\u201320 ft away.",
+        dosage: `${r.dosage ?? ""}${r.dosage ? " \xB7 " : ""}${EFFORT_LABEL[p.effort]} effort`
+      };
+    }
+    return { ...r, swingEffort: p.effort, dosage: `${r.dosage ?? ""}${r.dosage ? " \xB7 " : ""}${EFFORT_LABEL[p.effort]} effort` };
+  });
+  return { rows: out, because: [hitterBecause(p)] };
+}
+
 // supabase/functions/_shared/wic/phases/positionThrowTargets.ts
 var THROW_TARGETS = {
   middle_infield: { group: "middle_infield", label: "SS / 2B / 3B", day: [60, 100], heavyDayMax: 150, week: [400, 600], lightReturnShare: 0 },
@@ -9737,7 +9780,12 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     restDay: fullRestDay
   });
   const cared = caredRaw.map((b, i) => b === conditioned[i] ? b : { ...b, steps: drillsToSteps(b.drills) });
-  const warmed = withWarmupThrows(cared);
+  const hitReturned = roadmapInputs.hitterReturn ? cared.map((b) => {
+    if (b.modality !== "hitting" || b.status !== "ready") return b;
+    const r = applyHitterReturn(b.drills, roadmapInputs.hitterReturn ?? null, new Set(proj.equipmentList));
+    return { ...b, drills: r.rows, steps: drillsToSteps(r.rows), because: [...b.because ?? [], ...r.because] };
+  }) : cared;
+  const warmed = withWarmupThrows(hitReturned);
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));

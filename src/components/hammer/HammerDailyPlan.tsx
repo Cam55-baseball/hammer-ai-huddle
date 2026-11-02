@@ -192,6 +192,7 @@ import type { DrillStep } from "@/lib/hammer/prescription/dailyPlan";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useHammerDailyTasks, makeBlockTaskId } from "@/hooks/useHammerDailyTasks";
 import { LegacyDrillInlineLog } from "@/components/hammer/logging/LegacyDrillInlineLog";
+import { SwingEffortEntry } from "@/components/hammer/logging/SwingEffortEntry";
 import { SavedMovementSummary } from "@/components/assessment/SavedMovementSummary";
 import { HammerCheckInCard } from "@/components/hammer/HammerCheckInCard";
 import { useVaultQuizzesForDate, type VaultQuizType } from "@/hooks/useVaultQuizzesForDate";
@@ -350,6 +351,7 @@ function DrillRowContent({
           completed={checked}
           taskSync={{ planDate, seed }}
         />
+        {modality === "hitting" && <SwingEffortEntry planDate={planDate} taskId={taskId} drillName={d.name} prescribed={(d as { swingEffort?: "low" | "medium" | "full" }).swingEffort ?? null} />}
         <ExerciseInstructions name={d.name} slug={d.slug} videoUrl={d.videoUrl} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={displayDose} changes={"swapReason" in d && typeof d.swapReason === "string" ? [d.swapReason] : undefined} repair={d.speedMix?.length ? undefined : legacyRepair(d.dosage, modality)} expanded />
         {adjustApi && <Button type="button" variant="outline" size="sm" disabled={checked || (swapV2.enabled && !savedLocation)} onClick={() => setAdjustOpen(true)} aria-label={`Swap or skip ${d.name}`}><Repeat className="mr-1 h-3 w-3" />{swapV2.enabled ? "Swap" : "Can't do it"}</Button>}
         {swapV2.enabled && savedLocation && adjustOpen ? <LiveSwapSheet open={adjustOpen} onOpenChange={setAdjustOpen}
@@ -812,6 +814,11 @@ function HammerDailyPlanBody({
   const hittingPowerGoal = savedGoals?.[sportKey]?.position?.hitting?.some(p=>p.id==='oppo_power') === true ||
     projectedAthlete.categoryGoals?.goals.some(g=>g.category==='hitting'&&g.intent==='power_hitting') === true;
   const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
+  const hitterReturn = useQuery({ queryKey: ["hitter-return", bodyUser?.id, sportKey], enabled: !!bodyUser?.id, staleTime: 5 * 60_000, queryFn: async () => {
+    const r = await (supabase as any).from("returning_hitter_programs").select("*").eq("user_id", bodyUser!.id).eq("sport", sportKey).is("completed_on", null).maybeSingle();
+    if (r.error) throw r.error;
+    return r.data ?? null;
+  } });
   // Owner Nov 1 round 6: active pitcher return (read-only; the server starts and advances it).
   const pitcherReturn = useQuery({ queryKey: ["pitcher-return", bodyUser?.id, sportKey], enabled: !!bodyUser?.id, staleTime: 5 * 60_000, queryFn: async () => {
     const r = await (supabase as any).from("pitcher_return_programs").select("*").eq("user_id", bodyUser!.id).eq("sport", sportKey).is("completed_on", null).maybeSingle();
@@ -881,6 +888,7 @@ function HammerDailyPlanBody({
           defenseFullOverride,
           pitcherOutings: pitcherSchedule.facts,
           pitcherReturn: pitcherReturn.data ?? null,
+          hitterReturn: hitterReturn.data ?? null,
           pitchCommand,
           practiceRecords: practiceLoadHistory.data,
           subscriptionModules: modules,
@@ -896,7 +904,7 @@ function HammerDailyPlanBody({
           fullRestDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []),
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, pitcherReturn.data, pitchCommand, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady,armHistory.data,gearMemory.data,physioMapping.data,testPreferences.data],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, pitcherReturn.data, hitterReturn.data, pitchCommand, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError,masteryReady,armHistory.data,gearMemory.data,physioMapping.data,testPreferences.data],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a

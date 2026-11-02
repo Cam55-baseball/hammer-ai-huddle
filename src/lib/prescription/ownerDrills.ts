@@ -50,6 +50,8 @@ export interface OwnerDrillRow {
   care_contexts?: string[];
   care_roles?: string[];
   care_intensity?: string | null;
+  /** Owner Nov 1 round 6: hitting pitch source — tee | front_toss | machine | live. */
+  pitch_source?: string | null;
   /** Owner Oct 31 pitcher tags; the plan engine places mound/circle work from these. */
   pitch_mound_type?: string | null;
   pitch_distance_fraction?: number | null;
