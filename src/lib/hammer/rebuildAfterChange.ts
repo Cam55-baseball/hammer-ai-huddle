@@ -1,7 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { isoShift } from '../../../supabase/functions/_shared/wic/schedule/timeline';
 import {readComposedWeek}from './readComposedWeek';
-import { startingDetailsMissing } from './startingDetailsMissing';
 import { weekRuleBreaks, datesToRebuild, blockedReason } from './weekRuleRepair';
 
 /** Same authenticated day-lock adjustment path as Today. Never replaces marked work. */
@@ -14,10 +13,7 @@ export async function rebuildAfterChange(reason: string, today: string, effectiv
   let boughtBunting=false;
   let missingInputs=false;
   const kept: string[] = [];
-  if (await startingDetailsMissing()) {
-    for (let rest = 0; rest < 7; rest++) failed.push(isoShift(firstDate, rest));
-    return { ok: false, failed, kept, weekIssues: [] as string[], missingInputs: true, message: `${reason} — saved. Your week can't be rebuilt until you finish your missing starting details.` };
-  }
+  // Owner Nov 2: missing details never stop a rebuild; the server decides.
   // Seven changeable dates: a day whose marked work is kept is replaced by the next date, so the week check stays a full seven.
   for (let offset = 0; offset < 7 + kept.length && offset < 14; offset++) {
     const date = isoShift(firstDate, offset);

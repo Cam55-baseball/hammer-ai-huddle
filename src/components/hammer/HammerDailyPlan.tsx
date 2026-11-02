@@ -26,7 +26,6 @@ import { stillRecurring } from '@/lib/wic/faultLedger/recurringIssues';
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
-import { FinishProfileCard } from "@/components/hammer/FinishProfileCard";
 import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { useFocusState } from "@/components/hammer/cards/FocusSession";
@@ -41,6 +40,7 @@ import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
 import { useSwapV2 } from "@/hooks/useSwapV2";
 import { LiveSwapSheet } from "@/components/hammer/LiveSwapSheet";
 import { StartHammersTodayCard } from "@/components/hammer/StartHammersTodayCard";
+import { FinishProfileCard, FinishProfileDialog } from "@/components/hammer/FinishProfileFlow";
 import { GrowthModeCard, HeightReminderCard } from "@/components/hammer/GrowthModeCard";
 import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
 import { WeeklyRoadmapStrip } from "@/components/hammer/WeeklyRoadmapStrip";
@@ -690,7 +690,7 @@ function StartGate({ beforeStartPortalTarget }: { beforeStartPortalTarget?: HTML
     );
   }
   if (start.needsStart) {
-    return <div className="space-y-4"><InitialAssessmentCard sport={localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball"} /><StartHammersTodayCard onStart={start.start} starting={start.starting} error={start.error} locked={!start.assessmentReady} missing={start.missing} missingError={start.missingError} /></div>;
+    return <StartWithGuidedFlow start={start} />;
   }
   return (
     <HammersTodayProvider>
@@ -700,6 +700,26 @@ function StartGate({ beforeStartPortalTarget }: { beforeStartPortalTarget?: HTML
   );
 }
 
+
+/** Owner Nov 2: Start opens the guided flow with progress instead of a dead end. */
+function StartWithGuidedFlow({ start }: { start: ReturnType<typeof useHammersTodayStart> }) {
+  const [flowOpen, setFlowOpen] = useState(false);
+  const needsDetails = start.missing.length > 0;
+  return (
+    <div className="space-y-4">
+      <InitialAssessmentCard sport={localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball"} />
+      <StartHammersTodayCard
+        onStart={needsDetails ? () => setFlowOpen(true) : start.start}
+        starting={start.starting}
+        error={needsDetails ? null : start.error}
+        locked={start.missingError}
+        missing={start.missing}
+        missingError={start.missingError}
+      />
+      <FinishProfileDialog open={flowOpen} onOpenChange={setFlowOpen} started={false} />
+    </div>
+  );
+}
 
 function HammerDailyPlanBody({
   beforeStartPortalTarget,

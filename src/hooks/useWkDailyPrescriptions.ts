@@ -30,7 +30,6 @@ import { usePhaseState } from "@/hooks/usePhaseState";
 import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
 import { partitionCoachRows } from "@/lib/coachRx/planRows";
 import { composedDayRequest } from "@/lib/hammer/composedDayRequest";
-import { startingDetailsMissing } from "@/lib/hammer/startingDetailsMissing";
 import { rebuildWrongSeasonDays, repairSavedWeek } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
 
@@ -431,15 +430,9 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     setGenerating(true);
     setFailed(false);
     setFailureReason(null);
-    // Same server judge as Start: never ask for a plan the server must refuse.
-    if (await startingDetailsMissing()) {
-      console.debug("[wk-generate-daily] skipped — starting details missing");
-      setFailureReason({ code: "initial_inputs_missing", title: null, detail: "Finish your missing starting details first.", missingFields: [], engineFailures: {} });
-      setFailed(true);
-      inFlightRef.current = false;
-      setGenerating(false);
-      return;
-    }
+    // Owner Nov 2: missing profile details never block a started player's
+    // plan; the server uses safe defaults and the Finish-your-profile card
+    // collects the rest.
     const started = Date.now();
     try {
       let lastErr: unknown = null;

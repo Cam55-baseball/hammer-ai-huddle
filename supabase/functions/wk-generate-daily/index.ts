@@ -642,15 +642,16 @@ const handler = async (req: Request): Promise<Response> => {
     };
     const planDate = body.plan_date ?? todayStr();
 
-    // Saved verification is read/trim-only. Every new full build needs the same
-    // canonical saved-answer judge that Start and its linked checklist use.
+    // Saved verification is read/trim-only. The canonical saved-answer judge
+    // (initial_plan_missing) gates Start itself (start_hammers_today). Owner
+    // Nov 2: once started, missing details NEVER block a plan — each missing
+    // input falls back to its conservative default in this builder (unknown
+    // training age, "easing back in" starts, assumed-available gear), and the
+    // plan re-levels when the detail is saved. Birthday stays required below
+    // (age_required) under the owner's no-bypass age rule.
     if ((rawBody as any).verify_saved !== true && !isPrivileged) {
-      const { data: missing, error: readinessError } = await admin.rpc('initial_plan_missing', { p_user: user.id });
-      if (readinessError) return json({ error: 'initial_inputs_unavailable', message: 'Could not check your saved starting details. Try again.' }, 503);
-      if (!Array.isArray(missing)) return json({ error: 'initial_inputs_unavailable' }, 503);
-      if (missing.length) return json({ error: 'initial_inputs_missing', message: 'Finish your missing starting details first.', missing }, 409);
       const { data: started, error: startedError } = await admin.from('profiles').select('hammers_today_started_at').eq('id', user.id).single();
-      if (startedError) return json({ error: 'initial_inputs_unavailable' }, 503);
+      if (startedError) return json({ error: 'initial_inputs_unavailable', message: 'Could not check your account. Try again.' }, 503);
       if (!started.hammers_today_started_at) return json({ error: 'not_started', message: 'Tap Start Hammers Today Plan to begin.' }, 409);
     }
 
