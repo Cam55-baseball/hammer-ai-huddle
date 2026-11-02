@@ -1,0 +1,1 @@
+- Jump-level swaps only choose rows carrying the card's required classification (`fitsSlot` in plan.ts). Why: a swap must never land a row its card's certifier rejects.
