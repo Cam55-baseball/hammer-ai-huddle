@@ -6,11 +6,13 @@
 // pitcher conditioning and is never touched. Non-running safe substitutes
 // (restricted bike/flush) are untouched.
 import { isRunningConditioning } from "./weeklyFloor.ts";
+import { programOf } from "../../programAccess.ts";
 
 export function isCombinedBaseConditioningProgram(modules: readonly string[], sport: string): boolean {
   // 5Tool / Golden 2Way bundles, or the legacy hitting module (5Tool = hitting+throwing,
   // Golden 2Way = hitting+pitching+throwing). Complete Pitcher has no hitting.
-  return [`${sport}_5tool`, `${sport}_golden2way`, `${sport}_hitting`, "hitting"].some((m) => modules.includes(m));
+  const program = programOf(sport, modules);
+  return program === "5tool" || program === "golden2way";
 }
 
 export function combinedRunningRowsToDrop(

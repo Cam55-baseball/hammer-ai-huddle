@@ -5,6 +5,8 @@
  * 2 logged weeks in the last 28 days. The greenlight rule then steps each start up.
  */
 import { GREENLIGHT_AREAS, type GreenlightArea } from "./greenlight.ts";
+import { programOf } from "../../programAccess.ts";
+export { programOf } from "../../programAccess.ts";
 
 export type Sport = "baseball" | "softball";
 export type Program = "pitcher" | "5tool" | "golden2way";
@@ -12,16 +14,9 @@ export type Category = "overall" | "throwing" | "pitching" | "hitting" | "defens
 
 export interface Question { id: string; category: Category; label: string; options: readonly string[] }
 
-export function programOf(sport: Sport, modules: readonly string[]): Program | null {
-  if (modules.includes(`${sport}_golden2way`)) return "golden2way";
-  if (modules.includes(`${sport}_5tool`)) return "5tool";
-  if (modules.includes(`${sport}_pitcher`)) return "pitcher";
-  return null;
-}
-
 /** Owner Nov 1 round 5: Golden 2Way must pick Pitcher or Position player first (no default). */
 export function golden2wayRoleMissing(sport: Sport, modules: readonly string[], primaryFocus: string | null | undefined): boolean {
-  return modules.includes(`${sport}_golden2way`) && primaryFocus !== "pitcher" && primaryFocus !== "position";
+  return programOf(sport, modules) === "golden2way" && primaryFocus !== "pitcher" && primaryFocus !== "position";
 }
 
 export function categoriesFor(program: Program): Category[] {
