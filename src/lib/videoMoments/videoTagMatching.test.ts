@@ -50,3 +50,15 @@ describe('owner Nov 2 video tag matching', () => {
     expect(missingTags({ tags: [dimTag('purpose', 'instruction'), infoPlacementTag('mind')], sport: ['both'], skill_domains: ['mind'], category: 'informational', topicIds: ['x'] })).toEqual([]);
   });
 });
+
+describe('each new skill area matches only its tagged players', () => {
+  for (const domain of ['base_running', 'speed_conditioning', 'lifting', 'jumps', 'bat_speed', 'tissue_care', 'mobility', 'mind', 'vision', 'recovery_education']) {
+    it(domain, () => {
+      const v = { ...base, id: domain, skill_domains: [domain], tags: [infoPlacementTag('education'), dimTag('program', 'golden2way'), dimTag('position', 'catcher')] };
+      const c = { sport: 'softball', allowedDomains: [domain], placement: 'education' as const };
+      expect(matchInfoVideos([v], { ...c, player: { program: ['golden2way'], position: ['catcher', 'hitter'] } })).toHaveLength(1);
+      expect(matchInfoVideos([v], { ...c, player: { program: ['golden2way'], position: ['outfielder'] } })).toEqual([]);
+      expect(matchInfoVideos([v], { ...c, allowedDomains: [], player: { program: ['golden2way'], position: ['catcher'] } })).toEqual([]);
+    });
+  }
+});
