@@ -29,5 +29,7 @@ export function normalizeProgramModules(modules: readonly string[], primarySport
     if (program !== "pitcher") { keys.add(`${sport}_hitting`); keys.add(`${sport}_throwing`); }
     if (program !== "5tool") keys.add(`${sport}_pitching`);
   }
+  // Once scoped, bare aliases must not be reinterpreted for the other sport.
+  for (const key of ['hitting', 'pitching', 'throwing', 'pitcher', '5tool', 'golden2way']) keys.delete(key);
   return [...keys];
 }

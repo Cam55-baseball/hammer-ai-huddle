@@ -36,6 +36,7 @@ describe('owner-approved tier and legacy program recognition', () => {
     expect(programOf('baseball', ['hitting','pitching'], 'softball')).toBeNull();
     expect(normalizeProgramModules(['hitting','pitching'], 'softball')).not.toContain('baseball_golden2way');
     expect(normalizeProgramModules(['hitting','pitching'], 'softball')).toContain('softball_golden2way');
+    expect(programOf('baseball', normalizeProgramModules(['hitting','pitching'], 'softball'))).toBeNull();
   });
   it('another sport and unknown modules grant no program', () => {
     expect(programOf('baseball', ['softball_pitching'])).toBeNull();
