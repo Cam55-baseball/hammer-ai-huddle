@@ -2305,10 +2305,12 @@ init_softRecovery();
 
 // supabase/functions/_shared/wic/schedule/availability.ts
 function availableTrainingDays(days, restDow = 0) {
-  const count = typeof days === "number" && Number.isFinite(days) ? Math.max(1, Math.min(6, Math.floor(days))) : 6;
   const r = Number.isInteger(restDow) && restDow >= 0 && restDow <= 6 ? restDow : 0;
-  const order = [1, 3, 5, 2, 4, 6].map((k) => (r + k) % 7);
-  return order.slice(0, count).sort((a, b) => a - b);
+  return [1, 2, 3, 4, 5, 6].map((k) => (r + k) % 7).sort((a, b) => a - b);
+}
+var AVAILABILITY_NOTICE = "Hammers builds the full 6-day week the game demands. Do what you can; skipped work is tracked in Discipline.";
+function availabilityNotice(days) {
+  return typeof days === "number" && Number.isFinite(days) && days < 6 ? AVAILABILITY_NOTICE : null;
 }
 function unavailableTrainingDate(date, days, restDow = 0) {
   const dow = (/* @__PURE__ */ new Date(`${date}T12:00:00Z`)).getUTCDay();
@@ -2828,32 +2830,6 @@ var OFF_SEASON_5D = {
     baserunning: [5, 6, 3, 1, 4, 2, 0]
   }
 };
-var OFF_SEASON_4D = {
-  id: "off_4d",
-  label: "Off-season \xB7 4-day build",
-  perModality: {
-    warmup: [0, 1, 2, 3, 4, 5, 6],
-    fueling: [0, 1, 2, 3, 4, 5, 6],
-    recovery: [0, 1, 2, 3, 4, 5, 6],
-    game_iq: [0, 1, 2, 3, 4, 5, 6],
-    speed: [2, 5],
-    strength: [1, 5],
-    hitting: [1, 2, 4, 5],
-    throwing: [1, 2, 4, 5],
-    defense: [2, 4],
-    baserunning: [5]
-  },
-  dayLabels: {
-    strength: { 1: "Full-body lift", 5: "Full-body lift" },
-    speed: { 2: "Max velocity", 5: "Acceleration" }
-  },
-  priorityDayOrder: {
-    hitting: [1, 4, 2, 5, 6, 3, 0],
-    throwing: [1, 4, 2, 5, 6, 3, 0],
-    defense: [2, 4, 6, 1, 5, 3, 0],
-    baserunning: [5, 6, 3, 1, 4, 2, 0]
-  }
-};
 var PRE_SEASON_5D = {
   id: "pre_5d",
   label: "Pre-season \xB7 sharpen",
@@ -3032,12 +3008,10 @@ function resolveBaseTemplate(proj) {
   const lowLiftingAge = typeof proj.liftingAgeYears === "number" && proj.liftingAgeYears < 1;
   if (youngBand || lowLiftingAge) return YOUTH;
   const phase = proj.seasonPhase;
-  const days = proj.weeklyAvailabilityDays;
   if (phase === "in") return IN_SEASON;
   if (phase === "post") return POST_SEASON;
   if (phase === "pre") return PRE_SEASON_5D;
   if (phase === "off") {
-    if (typeof days === "number" && days <= 4) return OFF_SEASON_4D;
     return OFF_SEASON_5D;
   }
   return PERMISSIVE_DAILY;
@@ -3217,10 +3191,9 @@ function weeklyGoalBlocks(template, baseline, proj, position, included) {
     const skill = SKILL_MODALITIES.find((s) => s === m);
     return skill ? resolveSkillDays(template, skill, baseline[skill] ?? 0).days : template.perModality[m];
   }));
-  const availability = proj.weeklyAvailabilityDays;
   const extra = template.perModality[modality].find((d3) => !existing.includes(d3) && trainingDays.has(d3));
   const protectedContext = proj.workloadHigh || proj.readinessScore !== null && proj.readinessScore < 0.5 || proj.parentSupremacyActive || proj.injuryRegions.length > 0;
-  const allowed = current < ceiling && extra !== void 0 && !protectedContext && availability !== null && trainingDays.size <= availability && proj.seasonPhase !== "post";
+  const allowed = current < ceiling && extra !== void 0 && !protectedContext && trainingDays.size <= 6 && proj.seasonPhase !== "post";
   if (!allowed) return {
     template,
     targets,
@@ -8100,7 +8073,6 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
   const readiness = ctx.get("readiness")?.value ?? null;
   const equipment = proj.equipment;
   const lifecycleBand = proj.lifecycleBand;
-  const availDays = proj.weeklyAvailabilityDays;
   const devPriorities = proj.developmentPriorities;
   const workloadHigh = proj.workloadHigh;
   const anthro = buildAnthroProfile(ctx.get("anthropometrics")?.value);
@@ -8108,7 +8080,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
   const readinessScore = typeof readiness === "number" ? readiness : typeof readiness?.score === "number" ? readiness.score : null;
   const recoverDay = readinessScore !== null && readinessScore < 0.4;
   const youthScale = lifecycleBand === "u10" || lifecycleBand === "u12" || lifecycleBand === "u14";
-  const lowAvail = typeof availDays === "number" && availDays <= 2;
+  const lowAvail = false;
   const bodyweightOnly = equipment !== null && BODYWEIGHT_EQUIPMENT.has(equipment);
   const goal = goalLine(proj);
   switch (modality) {
@@ -9832,7 +9804,10 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     console.debug("[dailyPlan] gp-signal bias \u2192", gpBiasTags);
   }
   return {
-    blocks: enforceSkillStageOrder(placeBreathing(warmed, (d3) => drillsToSteps(d3))),
+    blocks: enforceSkillStageOrder(placeBreathing(warmed, (d3) => drillsToSteps(d3))).map((b, i) => {
+      const notice = availabilityNotice(proj.weeklyAvailabilityDays);
+      return i === 0 && notice ? { ...b, because: [...b.because ?? [], `Days available: ${proj.weeklyAvailabilityDays} per week (information only).`, notice] } : b;
+    }),
     sanity: validatePlanSanity({ restDay: fullRestDay, work: warmed.filter((b) => b.status === "ready").flatMap((b) => b.drills.map((d3) => ({ category: b.modality, slug: d3.slug }))) }),
     practiceLoad,
     seasonPhase: proj.seasonPhase,

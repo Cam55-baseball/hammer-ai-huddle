@@ -30,12 +30,11 @@ export function weeklyGoalBlocks(
       const skill = SKILL_MODALITIES.find(s => s === m);
       return skill ? resolveSkillDays(template, skill, baseline[skill] ?? 0).days : template.perModality[m];
     }));
-  const availability = proj.weeklyAvailabilityDays;
   const extra = template.perModality[modality].find(d => !existing.includes(d) && trainingDays.has(d));
   const protectedContext = proj.workloadHigh || (proj.readinessScore !== null && proj.readinessScore < 0.5)
     || proj.parentSupremacyActive || proj.injuryRegions.length > 0;
   const allowed = current < ceiling && extra !== undefined && !protectedContext
-    && availability !== null && trainingDays.size <= availability && proj.seasonPhase !== 'post';
+    && trainingDays.size <= 6 && proj.seasonPhase !== 'post';
   if (!allowed) return { template, targets, modality,
     reason: `${label} is your top goal. An extra weekly skill block cannot fit the current phase, rest or day limits; your baseline stays.` };
   targets[modality] = current + 1;

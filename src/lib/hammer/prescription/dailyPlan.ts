@@ -11,7 +11,7 @@ import { applyBuntingPlan, type BuntCatalogItem } from './buntingPlan';
 import type { BuntingEvidence } from './buntingEvidence';
 import type { BuntingFacts } from '../../../../supabase/functions/_shared/wic/buntingProgram';
 import { isSoftRecovery } from "../../../../supabase/functions/_shared/wic/schedule/softRecovery";
-import { unavailableTrainingDate } from '../../../../supabase/functions/_shared/wic/schedule/availability';
+import { unavailableTrainingDate, availabilityNotice } from '../../../../supabase/functions/_shared/wic/schedule/availability';
 import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
 import { priorityAccess } from '../priorityAccess';
 import { subscriptionSchedule } from './subscriptionSchedule';
@@ -384,7 +384,6 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
   const readiness = ctx.get<{ score?: number }>("readiness")?.value ?? null;
   const equipment = proj.equipment;
   const lifecycleBand = proj.lifecycleBand;
-  const availDays = proj.weeklyAvailabilityDays;
   const devPriorities = proj.developmentPriorities;
   const workloadHigh = proj.workloadHigh;
   const anthro = buildAnthroProfile(ctx.get<unknown>("anthropometrics")?.value);
@@ -401,7 +400,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
   const recoverDay = readinessScore !== null && readinessScore < 0.4;
   const youthScale =
     lifecycleBand === "u10" || lifecycleBand === "u12" || lifecycleBand === "u14";
-  const lowAvail = typeof availDays === "number" && availDays <= 2;
+  const lowAvail = false; // Availability never changes prescribed work.
   const bodyweightOnly = equipment !== null && BODYWEIGHT_EQUIPMENT.has(equipment);
   const goal = goalLine(proj);
 
@@ -2720,7 +2719,10 @@ export function buildHammerDailyPlan(
     console.debug("[dailyPlan] gp-signal bias →", gpBiasTags);
   }
   return {
-    blocks: enforceSkillStageOrder(placeBreathing(warmed, (d) => drillsToSteps(d))),
+    blocks: enforceSkillStageOrder(placeBreathing(warmed, (d) => drillsToSteps(d))).map((b, i) => {
+      const notice = availabilityNotice(proj.weeklyAvailabilityDays);
+      return i === 0 && notice ? { ...b, because: [...(b.because ?? []), `Days available: ${proj.weeklyAvailabilityDays} per week (information only).`, notice] } : b;
+    }),
     sanity: validatePlanSanity({ restDay: fullRestDay, work: warmed.filter(b => b.status === 'ready').flatMap(b => b.drills.map(d => ({ category: b.modality, slug: d.slug }))) }),
     practiceLoad,
     seasonPhase: proj.seasonPhase,

@@ -1,12 +1,12 @@
-/** A declared smaller week only removes training dates; it never adds dose. */
+/** Availability is information only; the plan retains six training dates and one rest date. */
 export function availableTrainingDays(days: unknown, restDow: number = 0): number[] {
-  const count = typeof days === 'number' && Number.isFinite(days)
-    ? Math.max(1, Math.min(6, Math.floor(days))) : 6;
-  // Spread shorter weeks, retaining the chosen rest day (default Sunday) in every case.
-  // Offsets from the rest day keep the same spacing as the Sunday-rest order.
   const r = Number.isInteger(restDow) && restDow >= 0 && restDow <= 6 ? restDow : 0;
-  const order = [1, 3, 5, 2, 4, 6].map(k => (r + k) % 7);
-  return order.slice(0, count).sort((a, b) => a - b);
+  return [1, 2, 3, 4, 5, 6].map(k => (r + k) % 7).sort((a, b) => a - b);
+}
+
+export const AVAILABILITY_NOTICE = 'Hammers builds the full 6-day week the game demands. Do what you can; skipped work is tracked in Discipline.';
+export function availabilityNotice(days: unknown): string | null {
+  return typeof days === 'number' && Number.isFinite(days) && days < 6 ? AVAILABILITY_NOTICE : null;
 }
 
 export function unavailableTrainingDate(date: string, days: unknown, restDow: number = 0): boolean {

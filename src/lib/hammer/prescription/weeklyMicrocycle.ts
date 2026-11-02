@@ -354,13 +354,11 @@ function resolveBaseTemplate(proj: AthleteContextProjection): WeeklyTemplate {
   if (youngBand || lowLiftingAge) return YOUTH;
 
   const phase = proj.seasonPhase;
-  const days = proj.weeklyAvailabilityDays;
 
   if (phase === "in") return IN_SEASON;
   if (phase === "post") return POST_SEASON;
   if (phase === "pre") return PRE_SEASON_5D;
   if (phase === "off") {
-    if (typeof days === "number" && days <= 4) return OFF_SEASON_4D;
     return OFF_SEASON_5D;
   }
   return PERMISSIVE_DAILY;

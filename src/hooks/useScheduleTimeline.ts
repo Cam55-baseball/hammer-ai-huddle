@@ -20,6 +20,7 @@ import type { EntryDraft } from "@/lib/hammer/tellHammers/parse";
 import { recordPain } from "@/lib/hammer/injury/recordPain";
 import { FACE_SEVERITY } from "@/lib/hammer/tellHammers/parse";
 import { rebuildAfterChange } from '@/lib/hammer/rebuildAfterChange';
+import { availabilityNotice } from '../../supabase/functions/_shared/wic/schedule/availability';
 import { persistContextAnswer } from '@/lib/hammer/context/acquisition';
 import { rememberChangeConfirmation } from '@/lib/hammer/changeConfirmation';
 
@@ -149,7 +150,8 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
       await (supabase as any).from("schedule_timeline_entries").update({ summary: message }).eq("id", entry.id);
       const affectsPlan = !['NOTE', 'GOAL'].includes(draft.tag) || draft.payload.kind === 'availability';
       const result = await announceChange(qc, user.id, affectsPlan ? describeChange(draft) : null, draft.start_date);
-      return { merged, entry: { ...entry, summary: message }, message: result?.message ?? message };
+      const notice = draft.tag === 'NOTE' && draft.payload.kind === 'availability' ? availabilityNotice(draft.payload.days) : null;
+      return { merged, entry: { ...entry, summary: message }, message: [result?.message ?? message, notice].filter(Boolean).join(' ') };
     },
     [user?.id, entries, today, qc, gameDatesOutsideTimeline],
   );

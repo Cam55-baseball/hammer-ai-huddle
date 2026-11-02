@@ -51,7 +51,6 @@ export function startMissing(i: StartReadinessInput): StartMissingItem[] {
   if (!hasGoals(i)) add('goals', 'Your goals');
   if (!hasRanking(i)) add('ranking', 'Rank your goals');
   if (!['off_season','preseason','in_season','post_season'].includes(i.season_status ?? '')) add('season', 'Your season phase');
-  if (!(typeof i.weekly_availability_days === 'number' && i.weekly_availability_days >= 1 && i.weekly_availability_days <= 7)) add('days', 'Days available each week');
   if (!i.equipment_saved) add('equipment', 'Your equipment (bodyweight is an answer)');
   if (!i.assessment_completed) add('assessment', 'Finish your starting assessment', '/assessment');
   if (!['L','R','S'].includes(i.bats_hand ?? '')) add('bats', 'Which side you bat from');
