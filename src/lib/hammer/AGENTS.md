@@ -21,3 +21,4 @@
 - Week-change confirmations retain the actual server result in visit-only athlete/date-scoped memory before query invalidation; entry remounts restore it. Why: a successful season refresh must not erase its confirmation or persist an authorization copy.
 - Certified combined snapshots use composedPlanReadback and are not overwritten by legacy client snapshot effects; the shared sport builder is bundled from serverBlockBuilder. Why: saved day and authorized coach must see the exact committed work.
 - Both sport switches preflight canonical selected-sport purchased access before saving; the server still rechecks. Why: playing Both never grants another sport's paid skills or leaves an inaccessible active sport after refusal.
+- Client seven-date rebuilds run one at a time through rebuildAfterChange's queue. Why: overlapping rebuilds trip the day-lock with "Day changed".

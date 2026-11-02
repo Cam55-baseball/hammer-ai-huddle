@@ -4,7 +4,15 @@ import {readComposedWeek}from './readComposedWeek';
 import { weekRuleBreaks, datesToRebuild, blockedReason } from './weekRuleRepair';
 
 /** Same authenticated day-lock adjustment path as Today. Never replaces marked work. */
-export async function rebuildAfterChange(reason: string, today: string, effectiveDate?: string) {
+// Rebuilds run one at a time: overlapping 7-day rebuilds make the day-lock report "Day changed".
+let queue: Promise<unknown> = Promise.resolve();
+export function rebuildAfterChange(reason: string, today: string, effectiveDate?: string) {
+  const run = queue.then(() => rebuildOnce(reason, today, effectiveDate));
+  queue = run.catch(() => undefined);
+  return run;
+}
+
+async function rebuildOnce(reason: string, today: string, effectiveDate?: string) {
   const firstDate = effectiveDate && effectiveDate > today ? effectiveDate : today;
   const key = `saved-change:${crypto.randomUUID()}`;
   const failed: string[] = [];
