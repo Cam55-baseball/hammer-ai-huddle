@@ -10,6 +10,8 @@ import { useTexVisionProgress } from "@/hooks/useTexVisionProgress";
 import { useDailyDrillSelection } from "@/hooks/useDailyDrillSelection";
 import { loadOwnerPlanDrills, ownerMindDrill, ownerCareDrill, careDosage } from "@/lib/prescription/ownerPlanDrills";
 import { useSubscription } from "@/hooks/useSubscription";
+import { InformationalVideos } from "@/components/video-suggestions/InformationalVideos";
+import { mindVideoTopics } from "@/lib/videoMoments/mindTopics";
 
 const COPY: Record<MindKind, { title: string; how: string }> = {
   situations: { title: "Game situations", how: "Pick 3 game spots (runner on 2nd, 1 out). Say out loud what you'd do before the pitch." },
@@ -99,6 +101,7 @@ export function MindItemCard({ planDate, placement }: { planDate: string; placem
             )}
           </div>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          <InformationalVideos placement="mind" sport={sport} extras={{ topics: mindVideoTopics(kind) }} />
         </div>
       </CardContent>
     </Card>
