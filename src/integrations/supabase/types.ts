@@ -21104,6 +21104,39 @@ export type Database = {
           },
         ]
       }
+      video_tag_dimension_values: {
+        Row: {
+          active: boolean
+          created_at: string
+          dimension: string
+          id: string
+          key: string
+          label: string
+          sort: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          dimension: string
+          id?: string
+          key: string
+          label: string
+          sort?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          dimension?: string
+          id?: string
+          key?: string
+          label?: string
+          sort?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       video_tag_rules: {
         Row: {
           active: boolean
@@ -25636,6 +25669,15 @@ export type Database = {
         | "throwing"
         | "base_running"
         | "pitching"
+        | "speed_conditioning"
+        | "lifting"
+        | "jumps"
+        | "bat_speed"
+        | "tissue_care"
+        | "mobility"
+        | "mind"
+        | "vision"
+        | "recovery_education"
       sport_type: "baseball" | "softball"
       throwing_hand: "R" | "L" | "B"
       training_data_type: "professional_example" | "common_mistake"
@@ -25844,6 +25886,15 @@ export const Constants = {
         "throwing",
         "base_running",
         "pitching",
+        "speed_conditioning",
+        "lifting",
+        "jumps",
+        "bat_speed",
+        "tissue_care",
+        "mobility",
+        "mind",
+        "vision",
+        "recovery_education",
       ],
       sport_type: ["baseball", "softball"],
       throwing_hand: ["R", "L", "B"],
