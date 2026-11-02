@@ -25,3 +25,13 @@ export function profileFlowItems(missing: readonly MissingItem[], started: boole
 
 /** About 15 seconds per detail, never under 1 minute. */
 export const minutesFor = (n: number) => Math.max(1, Math.round(n * 0.25));
+
+export type FailureAction = { kind: "birthday" | "equipment" | "retry"; sentence: string; button: string };
+
+/** One plain sentence + the button that fixes it. Never a missing-details dead end. */
+export function failureAction(code: string | null, reasons: readonly string[], missingFields: readonly string[]): FailureAction {
+  if (code === "age_required") return { kind: "birthday", sentence: "Add your birthday so we can build a safe plan for your age.", button: "Add birthday" };
+  if (missingFields.includes("equipment") || reasons.some((r) => /equipment|gear/i.test(r))) return { kind: "equipment", sentence: "Tell us what equipment you have so we can pick exercises you can do.", button: "Add equipment" };
+  if (code === "initial_inputs_missing") return { kind: "retry", sentence: "Your plan is being updated. Tap to load it.", button: "Load my plan" };
+  return { kind: "retry", sentence: reasons[0] ? `${reasons[0]} Tap to try again.` : "This part didn't load. Tap to try again.", button: "Try again" };
+}
