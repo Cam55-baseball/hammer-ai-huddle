@@ -1,7 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { isoShift } from '../../../supabase/functions/_shared/wic/schedule/timeline';
 import {readComposedWeek}from './readComposedWeek';
-import { startingDetailsMissing } from './startingDetailsMissing';
 import { weekRuleBreaks, datesToRebuild, blockedReason } from './weekRuleRepair';
 
 /** Same authenticated day-lock adjustment path as Today. Never replaces marked work. */

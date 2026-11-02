@@ -30,7 +30,6 @@ import { usePhaseState } from "@/hooks/usePhaseState";
 import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
 import { partitionCoachRows } from "@/lib/coachRx/planRows";
 import { composedDayRequest } from "@/lib/hammer/composedDayRequest";
-import { startingDetailsMissing } from "@/lib/hammer/startingDetailsMissing";
 import { rebuildWrongSeasonDays, repairSavedWeek } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
 
