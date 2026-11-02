@@ -31,7 +31,9 @@ describe("returning hitter through the real builder", () => {
     expect(low.every(d => d.because.some(b => b.includes("low effort")))).toBe(true);
     expect(low.flatMap(d => d.drills).filter(x => x.swingEffort).length).toBeGreaterThan(0);
     expect(low.flatMap(d => d.drills.map(x => x.name))).toEqual(normal.flatMap(d => d.drills.map(x => x.name))); // normal environment kept
+    expect(normal.flatMap(d => d.drills).some(x => ["machine", "live"].includes(pitchSourceOf(x) ?? ""))).toBe(true);
     const bridge = hittingWeek(sport, prog({ sport, bridge: true }));
+    expect(bridge.flatMap(d => d.drills).some(x => /bridge/.test(x.name))).toBe(true);
     expect(bridge.flatMap(d => d.drills).some(x => ["machine", "live"].includes(pitchSourceOf(x) ?? ""))).toBe(false);
   });
 });
