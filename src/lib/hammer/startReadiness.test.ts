@@ -32,7 +32,7 @@ describe("owner rule: Hammers Today cannot start until every plan detail is save
   it('accepts zero years of lifting without inventing history', () => {
     expect(startMissing({ ...full, lifting_age_years: 0 })).toEqual([]);
   });
-  it.each([null, 0, 1, 5, 6])('availability %s is information, not a start requirement', days => {
+  it.each([undefined, null, 0, 1, 5, 6])('availability %s is information, not a start requirement', days => {
     expect(startMissing({ ...full, weekly_availability_days: days })).toEqual([]);
   });
   it('refuses a numeric string where a canonical numeric nutrition answer is required', () => {
