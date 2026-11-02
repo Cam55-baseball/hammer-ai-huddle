@@ -1865,6 +1865,33 @@ var init_tissueCarePlan = __esm({
 // src/lib/hammer/prescription/dailyPlan.ts
 init_warmupStages();
 
+// supabase/functions/_shared/programAccess.ts
+function programOf(sport, modules, primarySport = sport) {
+  if (sport !== "baseball" && sport !== "softball") return null;
+  const keys = new Set(modules.map((m) => m.trim().toLowerCase()));
+  const has = (key2) => keys.has(`${sport}_${key2}`) || sport === primarySport && keys.has(key2);
+  const hitting = has("hitting") || has("5tool") || has("golden2way");
+  const pitching = has("pitching") || has("pitcher") || has("golden2way");
+  const throwing = has("throwing") || has("5tool") || has("golden2way");
+  if (hitting && pitching) return "golden2way";
+  if (pitching) return "pitcher";
+  return hitting || throwing ? "5tool" : null;
+}
+function normalizeProgramModules(modules, primarySport) {
+  const keys = new Set(modules.map((m) => m.trim().toLowerCase()));
+  for (const sport of ["baseball", "softball"]) {
+    const program = programOf(sport, modules, primarySport);
+    if (!program) continue;
+    keys.add(`${sport}_${program}`);
+    if (program !== "pitcher") {
+      keys.add(`${sport}_hitting`);
+      keys.add(`${sport}_throwing`);
+    }
+    if (program !== "5tool") keys.add(`${sport}_pitching`);
+  }
+  return [...keys];
+}
+
 // src/lib/hammer/athleteFeatureAvailability.ts
 var GAME_IQ_AVAILABLE_TO_ATHLETES = false;
 
@@ -2172,7 +2199,7 @@ function missingGearAnswer(checked, note, known) {
 
 // src/utils/tierAccess.ts
 function hasFeatureAccess(modules, feature) {
-  return modules.some((m) => {
+  return normalizeProgramModules(modules, "baseball").some((m) => {
     switch (feature) {
       case "hitting":
         return m.includes("hitting") || m.includes("5tool") || m.includes("golden2way");
@@ -2197,7 +2224,7 @@ function requiredAnalyses(modules) {
 
 // src/lib/hammer/priorityAccess.ts
 function priorityAccess(modules, sport) {
-  const scoped = modules.flatMap((module) => module.startsWith(`${sport}_`) ? [module] : ["hitting", "pitching", "throwing"].includes(module) ? [`${sport}_${module}`] : []);
+  const scoped = normalizeProgramModules(modules, sport).filter((module) => module.startsWith(`${sport}_`));
   const included = requiredAnalyses(scoped);
   return {
     hasPitching: included.includes("pitching"),
@@ -4043,10 +4070,9 @@ function finalArmGuard(blocks, input) {
 
 // supabase/functions/_shared/wic/conditioning/yards.ts
 function conditioningProgram(sport, modules, primaryFocus) {
-  const has = (m) => modules.includes(m);
-  if (has(`${sport}_golden2way`)) return primaryFocus === "position" ? "position" : "pitcher";
-  if (has(`${sport}_5tool`) || has(`${sport}_hitting`) || has("hitting")) return "position";
-  if ([`${sport}_pitcher`, `${sport}_pitching`, "pitching"].some(has)) return "pitcher";
+  const program = programOf(sport, modules);
+  if (program === "golden2way") return primaryFocus === "position" ? "position" : "pitcher";
+  if (program === "pitcher") return "pitcher";
   return "position";
 }
 var pitcherYardRuleApplies = (sport, modules, primaryFocus) => conditioningProgram(sport, modules, primaryFocus) === "pitcher";
@@ -9509,6 +9535,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     today
   );
   const sportRaw = ctx.get("sport_primary")?.value ?? null;
+  if (roadmapInputs.subscriptionModules) roadmapInputs = { ...roadmapInputs, subscriptionModules: normalizeProgramModules(roadmapInputs.subscriptionModules, normalizeSport(sportRaw) === "softball" ? "softball" : "baseball") };
   const positionRaw = ctx.get("position_primary")?.value ?? ctx.get("position")?.value ?? null;
   const eliteTarget = resolveEliteTarget(sportRaw);
   const ladderBase = prescribeThrowingLadder(rung.descriptor.rung, quarter, positionRaw);
