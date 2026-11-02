@@ -25,9 +25,9 @@ describe('Step 30 D — what each subscription unlocks', () => {
     expect(list([])).toEqual([]);
   });
 
-  it('legacy module subscribers keep what they had', () => {
-    expect(list(['baseball_hitting'])).toEqual(['hitting_analysis', 'complete_hitter', 'vault']);
-    expect(list(['softball_throwing'])).toEqual(['throwing_analysis', 'complete_player', 'vault']);
+  it('legacy module subscribers resolve to the owner-approved replacement program', () => {
+    expect(list(['baseball_hitting'])).toEqual(list(['baseball_5tool']));
+    expect(list(['softball_throwing'])).toEqual(list(['softball_5tool']));
     expect(list(['baseball_pitching'])).toEqual(['pitching_analysis', 'complete_pitcher', 'vault']);
     expect(list(['hitting'])).toContain('complete_hitter'); // bare legacy key
     expect(list(['baseball_hitting', 'baseball_throwing'])).toEqual(

@@ -5,8 +5,7 @@
 // on their own. They are included in 5Tool Player and The Golden 2Way.
 //
 // Legacy per-module subscribers keep everything they had:
-//   *_hitting  → hitting features, including Complete Hitter
-//   *_throwing → throwing features, including Complete Player
+//   *_hitting or *_throwing without pitching → 5Tool Player
 //   *_pitching → pitching features, including Complete Pitcher
 // Resolution goes through hasFeatureAccess, which already treats the legacy
 // keys as equal to the tier that replaced them.
