@@ -64,3 +64,4 @@
 - Primer in Warm-up; Both inbox reuses getActiveTier/Checkout/customer-portal. Why: one save/billing path.
 - Goal shelves resolve self-scoped readable IDs, never fault attribution. Goal editors save picks/order together with readback and shared pickRanking. Why: retain both goals and pass Start without inventing evidence.
 - Owner conditioning drills serve only the weekly running floor, validated by `_shared/wic/conditioning/ownerConditioning.ts` against `runRest.ts`. Why: owner numbers used as entered, no new limit or path.
+- Jump-level swaps (`_shared/wic/jumps/plan.ts`) only choose rows carrying the card's required classification (`fitsSlot`). Why: a swap must never land a row its card's certifier rejects.
