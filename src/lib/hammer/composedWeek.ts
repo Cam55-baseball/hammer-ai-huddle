@@ -11,7 +11,7 @@ export function composedDayCategories(day:ComposedDayEvidence):string[]{
   return [...out];
 }
 /** Counts actual saved dates, not roadmap intentions. Explicit restrictions are reported, never counted as work. */
-export function certifyComposedWeek(days:readonly ComposedDayEvidence[],sport:string, boughtBunting:boolean){
+export function certifyComposedWeek(days:readonly ComposedDayEvidence[],sport:string, boughtBunting:boolean, program: 'pitcher'|'5tool'|'golden2way'|null = null){
   const counts:Record<string,number>={};const issues:string[]=[];
   if(days.length!==7||new Set(days.map(d=>d.date)).size!==7)issues.push('seven_distinct_saved_dates_required');
   for(const day of days){
@@ -21,7 +21,7 @@ export function certifyComposedWeek(days:readonly ComposedDayEvidence[],sport:st
     if(!day.restDay&&!categories.length)issues.push(`${day.date}:thin_day`);
     if(!day.restDay)for(const category of categories)counts[category]=(counts[category]??0)+1;
   }
-  const floors={Hitting:3,Defense:4,Baserunning:1,Conditioning:2,...(boughtBunting?{Bunting:2}:{})};
+  const floors={...(program==='pitcher'?{}:{Hitting:3,Baserunning:1}),Defense:4,Conditioning:2,...(boughtBunting?{Bunting:2}:{})};
   for(const [key,floor]of Object.entries(floors))if((counts[key]??0)<floor)issues.push(`${key}:${counts[key]??0}/${floor}`);
   // Written rule: six training days + one rest day in every saved week.
   if(days.length===7){const rest=days.filter(d=>d.restDay).length;if(rest!==1)issues.push(`rest_days:${rest}/1`);}
