@@ -1889,6 +1889,7 @@ function normalizeProgramModules(modules, primarySport) {
     }
     if (program !== "5tool") keys.add(`${sport}_pitching`);
   }
+  for (const key2 of ["hitting", "pitching", "throwing", "pitcher", "5tool", "golden2way"]) keys.delete(key2);
   return [...keys];
 }
 
