@@ -452,6 +452,27 @@ export type Database = {
         }
         Relationships: []
       }
+      _snapshot_catalog_classification_20261102: {
+        Row: {
+          bat_speed_category: string | null
+          slug: string | null
+          snapped_at: string | null
+          speed_category: string | null
+        }
+        Insert: {
+          bat_speed_category?: string | null
+          slug?: string | null
+          snapped_at?: string | null
+          speed_category?: string | null
+        }
+        Update: {
+          bat_speed_category?: string | null
+          slug?: string | null
+          snapped_at?: string | null
+          speed_category?: string | null
+        }
+        Relationships: []
+      }
       _snapshot_catalog_movcat_20261006: {
         Row: {
           aliases: string[] | null

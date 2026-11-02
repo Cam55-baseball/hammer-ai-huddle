@@ -4582,3 +4582,4 @@ Deploys/additive migrations needed for 2, 3, 13, 18, 20 and server scheduling ce
 - [x] A. Full-body lift titles on Today card/notices/week/load cards; slot names removed from lift card subtitle. Focus mode + coach view not yet screenshot.
 - [ ] B. Restore Hammers Today card to Oct 23 state except approved additions; hitter + pitcher before/after screenshots.
 - [ ] C. The General / coach / org: keep only sound correlations ("Need more data"), Hammers Card format, what-it-means on every section; screenshot Today/Performance/Growth.
+- [x] Nov 2 last three: season card agrees (democollege Off-Season); 79 catalog classifications filled + jump swaps keep card classification; demoausl/demo2way inputs complete; 3 TEST weeks 6+1 valid; suite 742/5,932 green. See docs/owner/nov2-last-three-proof.md.

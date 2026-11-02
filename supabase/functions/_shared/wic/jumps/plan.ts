@@ -22,6 +22,16 @@ function withinWritten(c: CatRow, orig: CatRow, age: number | null): boolean {
   return true;
 }
 
+/** Classification each governed slot's certifier requires; a swap may never land a row without it. */
+const SLOT_FIELD: Record<string, string> = {
+  speed: "speed_category", bat_speed: "bat_speed_category", conditioning: "conditioning_category",
+  cross_sport: "cross_sport_category", lift: "movement_category",
+};
+export function fitsSlot(c: object, slot: string): boolean {
+  const f = SLOT_FIELD[slot];
+  return !f || (c as Record<string, unknown>)[f] != null;
+}
+
 export function governJumps(rows: readonly PlanRow[], catalog: ReadonlyMap<string, CatRow>, a: JumpAthlete, age: number | null, day = 0, because: string | null = null): JumpGovernance {
   const idx = rows.map((r, i) => ({ r, i, c: catalog.get(r.movement_slug) })).filter((x) => x.c && isTaggedJump(x.c));
   if (!idx.length) return { rows: [...rows], changed: false, because: null };
@@ -31,7 +41,7 @@ export function governJumps(rows: readonly PlanRow[], catalog: ReadonlyMap<strin
   if (levelIndex(a.level) <= 0) {
     // Beginner rule: introduction jumps only, ~20–25 contacts as a target.
     const first = idx[0];
-    const candidates = pool.filter((c) => withinWritten(c, first.c!, age));
+    const candidates = pool.filter((c) => withinWritten(c, first.c!, age) && fitsSlot(c, first.r.slot));
     const doses = beginnerSession(candidates, a, day);
     for (const x of idx) out[x.i] = null;
     if (doses.length) {
@@ -52,7 +62,7 @@ export function governJumps(rows: readonly PlanRow[], catalog: ReadonlyMap<strin
         continue;
       }
       const obj = (c.jump_objectives?.[0] ?? null) as JumpObjective | null;
-      const sub = rankJumps(pool.filter((p) => p.slug !== c.slug && withinWritten(p, c, age) && !rows.some((r) => r.movement_slug === p.slug)), a, obj)
+      const sub = rankJumps(pool.filter((p) => p.slug !== c.slug && withinWritten(p, c, age) && fitsSlot(p, x.r.slot) && !rows.some((r) => r.movement_slug === p.slug)), a, obj)
         .find((p) => !obj || p.jump_objectives?.includes(obj));
       changed = true;
       out[x.i] = sub ? { ...x.r, movement_slug: sub.slug, movement_name: sub.name,
