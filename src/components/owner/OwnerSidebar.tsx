@@ -88,6 +88,8 @@ const GROUPS: SidebarGroup[] = [
       { id: "videos" as OwnerSection, label: "Game IQ Library", icon: Brain, href: "/owner/iq-library" },
       { id: "videos" as OwnerSection, label: "Skill drill builder", icon: Dumbbell, href: "/owner/drill-builder" },
       { id: "videos" as OwnerSection, label: "Exercise builder", icon: Dumbbell, href: "/owner/exercise-vault" },
+      { id: "videos" as OwnerSection, label: "Game situations (Mind)", icon: Brain, href: "/owner/mind-content?tab=situations" },
+      { id: "videos" as OwnerSection, label: "Coach's advice", icon: Brain, href: "/owner/mind-content?tab=advice" },
       { id: "videos" as OwnerSection, label: "Landing Demo Video", icon: Film, href: "/owner/landing-demo" },
       { id: "promo-engine", label: "Promo Engine", icon: Film },
     ],
