@@ -24,6 +24,12 @@ import { PitcherRoleQuestions } from "@/components/hammer/pitching/PitcherRoleQu
 import { PhysioHealthIntakeDialog } from "@/components/physio/PhysioHealthIntakeDialog";
 import { CategoryGoalsCard } from "@/components/settings/CategoryGoalsCard";
 import { StartingPointForm } from "@/components/hammer/StartingPointForm";
+import { useSubscription } from '@/hooks/useSubscription';
+import { saveStartingPoint } from '@/hooks/useStartingPoint';
+import { programOf, type Sport } from '../../../supabase/functions/_shared/wic/progression/startingPoint';
+import { REQUIRED_PLAN_QUESTIONS } from '../../../supabase/functions/_shared/startReadiness';
+import { recordPain } from '@/lib/hammer/injury/recordPain';
+import { REPORT_INJURY_REGIONS, type ReportInjuryRegionKey } from '@/lib/hammer/injury/reportInjury';
 import { suggestNutritionTargets, midpoint } from "@/lib/nutrition/targetSuggestions";
 import { rebuildAfterChange } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
@@ -74,13 +80,15 @@ export function FinishProfileDialog({ open, onOpenChange, started, onDone }: { o
   const q = useMissingDetails();
   const qc = useQueryClient();
   const { user } = useAuth();
-  const items = profileFlowItems(q.data ?? [], started);
+  const items = profileFlowItems(q.data ?? [], started).filter(item => started || item.required !== false);
   const [total, setTotal] = useState(0);
   const [skipped, setSkipped] = useState<string[]>([]);
   useEffect(() => { if (open) { setTotal(items.length); setSkipped([]); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   const queue = items.filter((i) => !skipped.includes(i.key));
   const current = queue[0] ?? null;
-  const done = Math.max(0, total - items.length);
+  const needed = items.filter(item => item.required !== false);
+  const neededTotal = Number((q.data?.[0] as MissingItem & { total_needed?: number } | undefined)?.total_needed ?? 9);
+  const done = Math.max(0, neededTotal - (q.data ?? []).filter(item => item.required !== false).length);
 
   const afterSave = async () => {
     await qc.invalidateQueries({ queryKey: missingDetailsKey(user?.id) });
@@ -99,10 +107,10 @@ export function FinishProfileDialog({ open, onOpenChange, started, onDone }: { o
         <DialogHeader>
           <DialogTitle>{current ? current.label : "All set"}</DialogTitle>
           <DialogDescription>
-            {total > 0 ? `${Math.min(done + 1, total)} of ${total}` : ""} · saves as soon as you tap Save
+            {done} of {neededTotal} needed details done
           </DialogDescription>
         </DialogHeader>
-        {total > 0 && <Progress value={(done / total) * 100} className="h-2" />}
+        <Progress value={(done / neededTotal) * 100} className="h-2" />
         {!current && items.length > 0 && (
           <div className="space-y-3">
             <p className="text-sm">You skipped {items.length} for now. You can finish them any time from this card.</p>
@@ -112,8 +120,9 @@ export function FinishProfileDialog({ open, onOpenChange, started, onDone }: { o
         )}
         {current && user && (
           <div className="space-y-4">
+            <p className="text-sm font-medium">{current.required === false ? 'Optional — helps personalize' : 'Needed to build your plan'}</p>
             <StepEditor key={current.key} item={current} userId={user.id} onSaved={afterSave} />
-            <Button variant="ghost" className="w-full" onClick={() => setSkipped((s) => [...s, current.key])}>Skip for now</Button>
+            {current.required === false && <Button variant="ghost" className="w-full" onClick={() => setSkipped((s) => [...s, current.key])}>Skip for now</Button>}
           </div>
         )}
       </DialogContent>
@@ -150,6 +159,10 @@ function StepEditor({ item, userId, onSaved }: { item: MissingItem; userId: stri
   const ctxSave = (key: string, value: unknown) => s.run(() => persistContextAnswer(userId, key, value as never, "finish_profile"));
 
   switch (item.key) {
+    case 'sport':
+      return <div className="space-y-3"><div className="grid grid-cols-2 gap-2">{['baseball','softball'].map(value => <Button key={value} variant={v === value ? 'default' : 'outline'} onClick={() => setV(value)}>{value === 'baseball' ? 'Baseball' : 'Softball'}</Button>)}</div><Err e={s.error} /><SaveButton busy={s.busy} disabled={!v} onClick={() => ctxSave('sport_primary',v)} /></div>;
+    case 'bats_throws':
+      return <div className="space-y-3">{[['Bats',v,setV],['Throws',v2,setV2]].map(([label,value,setter]) => <div key={String(label)}><Label>{String(label)}</Label><div className="grid grid-cols-3 gap-2">{[['R','Right'],['L','Left'],['S','Both']].map(([key,text]) => <Button key={key} variant={value === key ? 'default' : 'outline'} onClick={() => (setter as (value:string)=>void)(key)}>{text}</Button>)}</div></div>)}<Err e={s.error}/><SaveButton busy={s.busy} disabled={!v || !v2} onClick={() => s.run(async () => { await persistContextAnswer(userId,'bats_hand',v,'finish_profile'); await persistContextAnswer(userId,'throws_hand',v2,'finish_profile'); })}/></div>;
     case "position":
       return <div className="space-y-3"><Label htmlFor="fp-position">Main position</Label>
         <select id="fp-position" className="h-11 w-full rounded-md border border-input bg-background px-2" value={v} onChange={(e) => setV(e.target.value)}>
@@ -203,16 +216,31 @@ function StepEditor({ item, userId, onSaved }: { item: MissingItem; userId: stri
     case "pitcher_focus": case "pitching_role":
       return <div className="space-y-3"><PitcherRoleQuestions compact /><Button className="w-full" onClick={() => void onSaved()}>Done</Button></div>;
     case "health":
-      return <HealthStep onSaved={onSaved} />;
+      return <CurrentPainStep userId={userId} onSaved={onSaved} />;
     case "goals": case "ranking":
       return <div className="space-y-3"><CategoryGoalsCard /><Button className="w-full" onClick={() => void onSaved()}>Done</Button></div>;
     case "starting_point":
-      return <StartingPointForm compact rebuild={false} onSaved={() => void onSaved()} />;
+      return <StartingChoiceStep userId={userId} sport={sport} onSaved={onSaved} />;
     default:
       // Full screens (equipment, assessment, sport) open their exact page.
       return <div className="space-y-3"><p className="text-sm text-muted-foreground">This one has its own screen. It opens right where you need it.</p>
         <Button asChild className="h-11 w-full"><Link to={item.key === "equipment" ? "/onboarding/athlete?edit=equipment" : item.key === "sport" ? "/onboarding/athlete?edit=profile" : item.to}>Open</Link></Button></div>;
   }
+}
+
+function StartingChoiceStep({ userId, sport, onSaved }: {userId:string; sport:Sport; onSaved:()=>Promise<void>}) {
+  const {modules}=useSubscription();
+  const s=useSaver(onSaved);
+  const [value,setValue]=useState('');
+  const program=programOf(sport,modules ?? []);
+  return <div className="space-y-3"><p className="text-sm text-muted-foreground">Choose what fits today. You can add details later.</p>{['Right now','1–2 weeks ago','3–6 weeks ago','2–6 months ago','6+ months ago','Never','Easing back in'].map(option => <Button key={option} className="w-full" variant={value===option?'default':'outline'} onClick={()=>setValue(option)}>{option==='Right now'?'Training regularly now':option==='Never'?'New to training':option}</Button>)}<Err e={s.error}/><SaveButton busy={s.busy} disabled={!value || !program} onClick={()=>s.run(async()=>{if(!program)throw new Error('Your program could not be checked. Reload and try again.');const prior=await supabase.from('athlete_starting_points').select('answers').eq('user_id',userId).eq('sport',sport).maybeSingle();if(prior.error)throw prior.error;const error=await saveStartingPoint(userId,sport,program,{...((prior.data?.answers as Record<string,string>)??{}),last_trained:value});if(error)throw new Error(error);})}/></div>;
+}
+
+function CurrentPainStep({userId,onSaved}:{userId:string;onSaved:()=>Promise<void>}) {
+  const s=useSaver(onSaved); const qc=useQueryClient();
+  const [answer,setAnswer]=useState<boolean|null>(null);
+  const [area,setArea]=useState<ReportInjuryRegionKey|null>(null);
+  return <div className="space-y-3"><p className="text-sm text-muted-foreground">Tell us about pain today. This never clears an existing injury or medical restriction.</p><div className="grid grid-cols-2 gap-2">{[false,true].map(value=><Button key={String(value)} variant={answer===value?'default':'outline'} onClick={()=>setAnswer(value)}>{value?'Yes':'No'}</Button>)}</div>{answer===true && <><Label>Where?</Label><div className="flex flex-wrap gap-2">{REPORT_INJURY_REGIONS.map(region=><Button key={region.key} size="sm" variant={area===region.key?'default':'outline'} onClick={()=>setArea(region.key)}>{region.label}</Button>)}</div></>}<Err e={s.error}/><SaveButton busy={s.busy} disabled={answer===null || (answer && !area)} onClick={()=>s.run(async()=>{if(answer && area)await recordPain({userId,region:area,severity:'limiting',origin:'onboarding',date:getTodayDate(),queryClient:qc});const result=await supabase.from('physio_health_profiles').upsert({user_id:userId,current_pain_answer:answer,current_pain_area:answer?area:null,current_pain_reviewed_at:new Date().toISOString()},{onConflict:'user_id'}).select('current_pain_answer').single();if(result.error || result.data.current_pain_answer!==answer)throw new Error('Your answer did not save. Try again.');})}/></div>;
 }
 
 async function saveSeasonDates(userId: string, sport: string, start: string | null, end: string | null) {

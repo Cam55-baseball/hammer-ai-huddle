@@ -41,7 +41,7 @@ export function StartingPointForm({ onSaved, rebuild = true, compact = false }: 
   if (saved.isLoading) return <Loader2 className="h-5 w-5 animate-spin" aria-label="Loading your answers" />;
   if (saved.isError) return <p role="alert" className="text-sm text-destructive">Your answers could not be loaded. Try again.</p>;
 
-  const complete = answersComplete(sport, program, answers) && !roleMissing;
+  const complete = answersComplete(sport, program, answers);
   let lastCat = "";
   const answered = Object.values(answers).some((v) => v != null && v !== "");
   // Owner Nov 2 item 4: every tap saves at once; Save works with any answers and
@@ -61,13 +61,14 @@ export function StartingPointForm({ onSaved, rebuild = true, compact = false }: 
     if (e) { setErr(e); setBusy(false); return; }
     await invalidate(user.id, sport);
     let message = complete ? "Saved. Your starting levels are set." : "Saved. Answer the rest to set your starting levels.";
-    if (rebuild && complete) message = (await rebuildAfterChange("Your starting point", getLocalDateString(new Date()))).message;
+    if (rebuild) message = (await rebuildAfterChange("Your starting point", getLocalDateString(new Date()))).message;
     setBusy(false); setMsg(message); onSaved?.(message);
   };
 
   return <div className="space-y-4" data-testid="starting-point-form">
-    {!compact && <p className="text-sm text-muted-foreground">Pick the answer closest to you right now. Hammer starts you there and steps you up when you're ready.</p>}
-    {program === "golden2way" && <fieldset className="space-y-2"><h4 className="pt-2 text-sm font-semibold">Your main role</h4><PitcherRoleQuestions compact />{roleMissing && <p className="text-xs text-muted-foreground">Pick one so Hammer can build your plan.</p>}</fieldset>}
+    <p className="text-sm font-medium">Optional — helps personalize</p>
+    {!compact && <p className="text-sm text-muted-foreground">Add what you know. Unanswered areas start gently until you fill them in.</p>}
+    {program === "golden2way" && <fieldset className="space-y-2"><h4 className="pt-2 text-sm font-semibold">Your main role</h4><PitcherRoleQuestions compact />{roleMissing && <p className="text-xs text-muted-foreground">Your plan uses position-player work until you choose.</p>}</fieldset>}
     {questions.map((q) => {
       const head = q.category !== lastCat ? TITLES[q.category] : null; lastCat = q.category;
       return <fieldset key={q.id} className="space-y-2">
@@ -118,7 +119,7 @@ export function Golden2WayRolePromptCard() {
   return <Card data-testid="golden2way-role-card">
     <CardHeader className="pb-2"><CardTitle className="text-base">Pitcher or position player?</CardTitle></CardHeader>
     <CardContent className="space-y-3">
-      <p className="text-sm text-muted-foreground">Golden 2Way needs your main role before Hammer can build your plan. You can switch any time.</p>
+      <p className="text-sm text-muted-foreground">Your plan uses position-player work until you choose. You can switch any time.</p>
       <PitcherRoleQuestions compact />
     </CardContent>
   </Card>;

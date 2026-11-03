@@ -63,16 +63,13 @@ export function StartHammersTodayCardView({ onStart, starting, error, locked, mi
           disabled={starting || locked}
           className="h-16 w-full gap-2 rounded-xl text-lg font-bold shadow-lg"
         >
-          {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Play className="h-5 w-5 fill-current" /> Start Hammers Today Plan</>}
+          {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Play className="h-5 w-5 fill-current" />{missing.length ? 'Finish needed details' : 'Start Hammers Today Plan'}</>}
         </Button>
         {missingError && <p role="alert" className="text-sm text-destructive">We couldn't check your details. Check your connection and reload.</p>}
         {missing.length > 0 && (
           <div className="rounded-lg border border-warning/50 bg-warning/5 p-3">
-            <p className="text-sm font-semibold">What's missing before you can start</p>
-            <p className="text-xs text-muted-foreground">Your plan is built from these. Add each one so you get a full plan, not a thin one.</p>
-            <ul className="mt-2 space-y-1">
-              {missing.map((m) => <li key={m.key}><Link to={m.to} className="text-sm font-medium text-primary underline underline-offset-2">{m.label}</Link></li>)}
-            </ul>
+            <p className="text-sm font-semibold">{Math.max(0,Number((missing[0] as {total_needed?:number})?.total_needed ?? 9)-missing.length)} of {Number((missing[0] as {total_needed?:number})?.total_needed ?? 9)} needed details done</p>
+            <p className="text-xs text-muted-foreground">Needed to build your plan. One question at a time; each answer saves.</p>
           </div>
         )}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
