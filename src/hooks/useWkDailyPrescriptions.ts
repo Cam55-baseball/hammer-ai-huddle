@@ -577,14 +577,14 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   }, [user?.id, serverFresh, planDate, qc]);
 
   // Auto-generate exactly once per mount if empty.
-  const tuningRebuild = useRef(false);
+  const tuningRebuild = useRef<string|null>(null);
   const [tuningFailed,setTuningFailed]=useState(false);
   const tuningPending = useQuery({queryKey:['coach-phase-pending',user?.id],enabled:!!user?.id&&serverFresh,staleTime:0,refetchInterval:60_000,queryFn:async()=>{
     const r=await supabase.rpc('coach_phase_pending');if(r.error)throw r.error;return r.data;
   }});
   useEffect(()=>{
-    if(!user?.id||!serverFresh||planDate!==getTodayDate()||!tuningPending.data||tuningRebuild.current)return;
-    tuningRebuild.current=true;setTuningFailed(false);
+    if(!user?.id||!serverFresh||planDate!==getTodayDate()||!tuningPending.data||tuningRebuild.current===`${user.id}:${tuningPending.data}`)return;
+    tuningRebuild.current=`${user.id}:${tuningPending.data}`;setTuningFailed(false);
     const at=tuningPending.data;
     void rebuildAfterChange('Your coach adjusted your training phase',planDate).then(async result=>{
       if(!result.ok){setTuningFailed(true);toast.error(result.message);return;}
@@ -877,7 +877,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     generating,
     failed: failed || tuningFailed,
     failureReason: tuningFailed ? {code:'coach_tuning_rebuild',title:'Your coach adjusted your training phase',detail:'Your saved plan could not update. Tap Retry.',missingFields:[],engineFailures:{}} : failureReason,
-    retry: tuningFailed ? () => { tuningRebuild.current=false;setTuningFailed(false);void tuningPending.refetch(); } : retry,
+    retry: tuningFailed ? () => { tuningRebuild.current=null;setTuningFailed(false);void tuningPending.refetch(); } : retry,
     planChangeNotes,
     effectiveCnsTotal,
     overrideMovement,
