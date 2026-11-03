@@ -2775,8 +2775,8 @@ const handler = async (req: Request): Promise<Response> => {
                 band: resolvedDose.band,
                 envelope: resolvedDose.envelope,
                 notes: resolvedDose.notes,
-                cap_sets: (overrides as any).dose_cap?.sets ?? null,
-                cap_reps: (overrides as any).dose_cap?.reps ?? null,
+                cap_sets: coachTuning?.source !== 'owner' && slot === 'lift' ? Math.min((overrides as any).dose_cap?.sets ?? Infinity,block.compound_max_sets) : (overrides as any).dose_cap?.sets ?? null,
+                cap_reps: coachTuning?.source !== 'owner' && slot === 'lift' ? Math.min((overrides as any).dose_cap?.reps ?? Infinity,block.compound_max_reps) : (overrides as any).dose_cap?.reps ?? null,
                 role,
                 category: s.movement.movement_category ?? s.movement.category ?? null,
               }
