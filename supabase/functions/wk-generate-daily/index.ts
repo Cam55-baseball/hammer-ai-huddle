@@ -613,7 +613,7 @@ const handler = async (req: Request): Promise<Response> => {
         const done: string[] = [], failed: string[] = [], kept: string[] = [];
         let message: string | null = null;
         try {
-          for (let offset = 0; offset < 7 + kept.length && offset < 14; offset++) {
+          for (let offset = 0; offset < 7; offset++) {
             const date = shiftIso(first, offset);
             let r = await call(date);
             if (r.body?.error === "adjust_failed" && r.body?.message === "Day changed; rebuild from fresh saved work" || r.body?.error === "Sport day changed; rebuild from fresh saved work") r = await call(date, ":fresh");
@@ -630,7 +630,8 @@ const handler = async (req: Request): Promise<Response> => {
           finished_at: new Date().toISOString(),
         }).eq("id", job.id);
       })();
-      (globalThis as any).EdgeRuntime?.waitUntil?.(work);
+      const rt = (globalThis as any).EdgeRuntime;
+      if (typeof rt?.waitUntil === "function") rt.waitUntil(work); else await work;
       return json({ ok: true, background: true, job_id: job.id }, 202);
     }
 
