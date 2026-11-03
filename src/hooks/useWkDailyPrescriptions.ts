@@ -876,7 +876,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     generate,
     generating,
     failed: failed || tuningFailed,
-    failureReason: tuningFailed ? 'Your coach’s change could not update your plan. Tap Retry.' : failureReason,
+    failureReason: tuningFailed ? {code:'coach_tuning_rebuild',title:'Your coach adjusted your training phase',detail:'Your saved plan could not update. Tap Retry.',missingFields:[],engineFailures:{}} : failureReason,
     retry: tuningFailed ? () => { tuningRebuild.current=false;setTuningFailed(false);void tuningPending.refetch(); } : retry,
     planChangeNotes,
     effectiveCnsTotal,
