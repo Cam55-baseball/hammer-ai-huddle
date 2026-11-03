@@ -124,6 +124,7 @@ export default function CoachingConsole() {
         <TabsContent value="principles" className="space-y-5">
       <PhilosophyConversation onSaved={()=>{void refresh();void qc.invalidateQueries({queryKey:['active-principle-picks']});}} />
       <details><summary className="cursor-pointer py-3 text-lg font-semibold">Standards & Starting Settings</summary>
+      <PeriodizationTuningLink />
       <MasterySettings />
       <PitchingStandardsSettings />
       <ConditioningSettings />
@@ -253,4 +254,10 @@ export default function CoachingConsole() {
 function BackButton() {
   const navigate = useNavigate();
   return <Button variant="ghost" size="sm" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/dashboard'))}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>;
+}
+
+/** Owner Nov 2 #10: the owner's one place for periodization tuning. */
+function PeriodizationTuningLink() {
+  const navigate = useNavigate();
+  return <div className="space-y-1 py-2"><h3 className="font-semibold">Periodization tuning</h3><p className="text-sm text-muted-foreground">Phase-by-phase sets, reps and speed spacing for every player. Safety limits still win.</p><Button variant="outline" size="sm" onClick={() => navigate('/admin/periodization')}>Open periodization tuning</Button></div>;
 }

@@ -1209,26 +1209,7 @@ function HammerDailyPlanBody({
               <HeartPulse className="mr-1 h-3.5 w-3.5" />
               Report injury
             </Button>
-            {isOwner && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 w-7 p-0"
-                    title="Owner tools"
-                  >
-                    <MoreVertical className="h-3.5 w-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate("/admin/periodization")}>
-                    <Sliders className="mr-2 h-3.5 w-3.5" />
-                    Tuning
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            {/* Owner Nov 2 #10: periodization tuning removed from the player screen (Coaching Console only). */}
           </div>
         </CardTitle>
         {schedMsg && (
