@@ -14,9 +14,13 @@ export type Category = "overall" | "throwing" | "pitching" | "hitting" | "defens
 
 export interface Question { id: string; category: Category; label: string; options: readonly string[] }
 
-/** Owner Nov 1 round 5: Golden 2Way must pick Pitcher or Position player first (no default). */
+/** Unanswered Golden focus remains a reminder, never a generation refusal. */
 export function golden2wayRoleMissing(sport: Sport, modules: readonly string[], primaryFocus: string | null | undefined): boolean {
   return programOf(sport, modules) === "golden2way" && primaryFocus !== "pitcher" && primaryFocus !== "position";
+}
+
+export function planningPrimaryFocus(sport: Sport, modules: readonly string[], focus: string | null | undefined): string | null {
+  return golden2wayRoleMissing(sport, modules, focus) ? 'position' : focus ?? null;
 }
 
 export function categoriesFor(program: Program): Category[] {
@@ -60,6 +64,24 @@ export function questionsFor(sport: Sport, program: Program): Question[] {
 }
 
 export type Answers = Record<string, string>;
+
+/** Planning defaults only; never written as player answers. Each unanswered area stays conservative. */
+export function planningAnswers(sport: Sport, program: Program, answers: Answers | null | undefined): Answers {
+  const defaults: Answers = {
+    last_trained: '2–6 months ago', throw_days: '0', throws_per_day: '0–25',
+    throw_distance: DISTANCE[sport][0], pitch_outings: '0', pitch_last_count: '0–25',
+    pitch_days_since: 'Never', hit_days: '1–2', swings_per_session: '0–25', live_pitching: 'No',
+    defense_days: '1–2', defense_reps: '0–25', defense_throw_share: '0–25%',
+    run_days: '0', sprint_volume: 'None', max_sprints: 'No', lift_days: '0',
+    lift_history: 'Never', jumps: 'Never', bunt_days: '0',
+  };
+  const result = { ...defaults };
+  for (const q of questionsFor(sport, program)) {
+    if (q.options.includes(answers?.[q.id] ?? '')) result[q.id] = answers?.[q.id] ?? defaults[q.id];
+  }
+  // Missing category facts must not inherit an answered overall "Right now".
+  return result;
+}
 
 /** Every shown question answered with one of its options. */
 export function answersComplete(sport: Sport, program: Program, a: Answers | null | undefined): boolean {
@@ -110,6 +132,8 @@ export interface StartingLevels {
 const EASING = "easing back in";
 
 export function startingLevels(sport: Sport, program: Program, a: Answers, positionWeekLow: number | null): StartingLevels {
+  const answered = a;
+  a = planningAnswers(sport, program, a);
   const cats = new Set(categoriesFor(program));
   const f = recencyFactor(a.last_trained);
   const beginner = f === null;
@@ -180,6 +204,9 @@ export function startingLevels(sport: Sport, program: Program, a: Answers, posit
   if (cats.has("bunting")) {
     buntRepsPerSide = a.bunt_days === "0" || beginner ? 5 : a.bunt_days === "1–2" ? 7 : null;
     why.bunting = buntRepsPerSide ? `${buntRepsPerSide} bunts per side` : "your bunting identity rules";
+  }
+  for (const category of cats) {
+    if (questionsFor(sport, program).some(q => q.category === category && !q.options.includes(answered[q.id] ?? ''))) why[category] = 'Easing back in until you add your starting answers.';
   }
   return { throwsPerWeek, defenseThrowsPerWeek, startThrowDistanceFt, swingsPerSession, defenseRepsPerSession, teeFirst: cats.has("hitting") && a.live_pitching === "No", sprintYards, buildUpsFirstWeeks, lifting, jumps, pitching, buntRepsPerSide, why };
 }

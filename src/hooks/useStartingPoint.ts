@@ -16,7 +16,8 @@ export function useStartingPointAnswers(userId: string | undefined, sport: Sport
     queryKey: startingPointKey(userId, sport),
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase.from("athlete_starting_points").select("answers, updated_at, updated_by").eq("user_id", userId!).eq("sport", sport).maybeSingle();
+      if (!userId) return null;
+      const { data, error } = await supabase.from("athlete_starting_points").select("answers, updated_at, updated_by").eq("user_id", userId).eq("sport", sport).maybeSingle();
       if (error) throw error;
       return (data as StartingPointRow | null) ?? null;
     },
@@ -48,8 +49,8 @@ export interface PlanStarts {
 export function planStartsFrom(sport: Sport, modules: readonly string[], answers: Answers | null | undefined, loggedWeeks: Partial<Record<GreenlightArea, number>>, positionWeekLow: number | null): PlanStarts {
   const program = programOf(sport, modules);
   const empty: PlanStarts = { program, levels: null, starts: {}, targets: {}, startThrowsPerWeek: null, historyAreas: [] };
-  if (!program || !answers || !answersComplete(sport, program, answers)) return empty;
-  const levels = startingLevels(sport, program, answers, positionWeekLow);
+  if (!program) return empty;
+  const levels = startingLevels(sport, program, answers ?? {}, positionWeekLow);
   const historyAreas = (Object.keys(loggedWeeks) as GreenlightArea[]).filter((a) => historyWins(loggedWeeks[a] ?? 0));
   const use = (a: GreenlightArea) => !historyAreas.includes(a);
   const starts: GreenlightStarts = {};
