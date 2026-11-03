@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { jumpMeasure, timedMobilityMeasure, ownerExerciseMeasure, fieldsForMeasure, declaredCount, displayDistance, storeDistance } from "@/lib/logging/measureType";
 import { useFocusExercise } from "../cards/FocusSession";
 import { SprintRepFeedback } from "./SprintRepFeedback";
@@ -320,13 +321,13 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     <div className="grid gap-1.5 px-1 text-[10px] uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
       <span>Set</span>{spec.fields.map((f) => <span key={f.key}>{f.label}{f.unit && f.key !== "time" ? ` (${f.unit})` : ""}{f.key === "time" && f.prefill ? ` · target ${formatTime(timeKindFor({ stopwatch, targetSeconds: f.prefill }), f.prefill)}` : ""}</span>)}
     </div>
-    {rounds.map((round, i) => <div key={i} hidden={focus.active && i !== focus.row} data-entry-row={i < spec.rows ? "prescribed" : "added"} className={`${focus.active && i !== focus.row ? "hidden" : "grid"} items-center gap-1.5`} style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
+    {rounds.map((round, i) => <Fragment key={i}><div hidden={focus.active && i !== focus.row} data-entry-row={i < spec.rows ? "prescribed" : "added"} className={`${focus.active && i !== focus.row ? "hidden" : "grid"} items-center gap-1.5`} style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
       <span className="text-center text-[11px] text-muted-foreground">{i + 1}{i >= spec.rows ? "+" : ""}</span>
       {spec.fields.map((f) => f.key === "time"
         ? <TimeField key={f.key} kind={timeKindFor({ stopwatch, targetSeconds: f.prefill })} label={`${f.label} ${i + 1}`} value={round[f.key] ?? ""} target={f.prefill} onChange={(v) => edit(i, f.key, v)} onBlur={() => touch(i)} />
         : f.unit === "ft + in" ? <DistanceField key={f.key} label={`${f.label} ${i + 1}`} value={round[f.key] ?? ""} onChange={v => edit(i, f.key, v)} onBlur={() => touch(i)} />
         : <Input key={f.key} aria-label={`${f.label} ${i + 1}`} inputMode={f.key === "weight" || f.key === "distance" ? "decimal" : "numeric"} value={displayDistance(round[f.key] ?? "", f.unit)} placeholder={f.prefill != null ? displayDistance(String(f.prefill), f.unit) : undefined} onFocus={() => touch(i)} onChange={(e) => edit(i, f.key, storeDistance(e.target.value.replace(/[^\d.]/g, ""), f.unit))} onBlur={() => touch(i)} className="h-9 px-2 text-sm" />)}
-    </div>)}
+    </div>{!focus.active && enteredPrescriptionRounds([round], spec, { requireTouch: true }).length > 0 && <div data-pap-slot={`${rx.id}:${i}`} />}</Fragment>)}
     {(rx.why_payload as { jump?: unknown } | null)?.jump != null && <JumpLandingRating userId={user?.id} prescriptionId={rx.id} planDate={rx.plan_date} slug={rx.movement_slug} sets={rowsNow} onlySet={focus.active ? focus.row : null} />}
     {focus.active && <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} cue={rx.why_payload?.cue} />}
     <div className="flex flex-wrap items-center justify-between gap-2">
