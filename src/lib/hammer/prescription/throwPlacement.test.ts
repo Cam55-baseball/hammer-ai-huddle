@@ -43,7 +43,7 @@ function ctx(values: Record<string, unknown>): HammerAthleteContext {
   const variables = Object.entries(values).map(([key, value]): ContextVariable => ({ key, value, label: key, domain: "identity", source: "test", confidence: "high", missing: false, lastUpdated: null, lineage: { owner: "test", source: "test", rawConfidence: "high" } }));
   return { variables, missing: [], missingCount: 0, isLoading: false, envelope: null, get<T>(key: string) { return variables.find((r) => r.key === key) as ContextVariable<T> | undefined; } };
 }
-const gear = ["field", "glove", "ball", "bands", "partner"];
+const gear = ["field", "glove", "ball", "bands", "partner", "mound", "circle", "catcher", "plate", "net", "bucket"];
 
 describe("actual builder, two weeks per program and sport", () => {
   for (const sport of ["baseball", "softball"] as const) {
