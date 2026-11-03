@@ -2697,7 +2697,7 @@ export function buildHammerDailyPlan(
   // Owner Nov 1 round 6 Part 3: returning hitters — prescribed effort, tee/front toss only for injury/under-13 start or the bridge.
   const hitReturned = roadmapInputs.hitterReturn ? cared.map(b => { if (b.modality !== 'hitting' || b.status !== 'ready') return b; const r = applyHitterReturn(b.drills as any[], roadmapInputs.hitterReturn ?? null, new Set(proj.equipmentList)); return { ...b, drills: r.rows as typeof b.drills, steps: drillsToSteps(r.rows as typeof b.drills), because: [...(b.because ?? []), ...r.because] }; }) : cared;
   // Owner Nov 3 round 2: position players have no Throwing card (warm-up section + Defense); pitchers keep it, ordered.
-  const warmed = placeThrowsByRole(withWarmupThrows(hitReturned) as any[], { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === 'pitcher'), toSteps: (d) => drillsToSteps(d as any) }) as typeof hitReturned;
+  const warmed = !access ? withWarmupThrows(hitReturned) : placeThrowsByRole(withWarmupThrows(hitReturned) as any[], { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === 'pitcher'), toSteps: (d) => drillsToSteps(d as any) }) as typeof hitReturned;
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {

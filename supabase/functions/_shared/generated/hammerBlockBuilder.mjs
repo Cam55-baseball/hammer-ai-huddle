@@ -9849,7 +9849,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const r = applyHitterReturn(b.drills, roadmapInputs.hitterReturn ?? null, new Set(proj.equipmentList));
     return { ...b, drills: r.rows, steps: drillsToSteps(r.rows), because: [...b.because ?? [], ...r.because] };
   }) : cared;
-  const warmed = placeThrowsByRole(withWarmupThrows(hitReturned), { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === "pitcher"), toSteps: (d3) => drillsToSteps(d3) });
+  const warmed = !access ? withWarmupThrows(hitReturned) : placeThrowsByRole(withWarmupThrows(hitReturned), { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === "pitcher"), toSteps: (d3) => drillsToSteps(d3) });
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));
