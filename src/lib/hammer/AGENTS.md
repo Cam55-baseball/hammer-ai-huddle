@@ -22,3 +22,5 @@
 - Certified combined snapshots use composedPlanReadback and are not overwritten by legacy client snapshot effects; the shared sport builder is bundled from serverBlockBuilder. Why: saved day and authorized coach must see the exact committed work.
 - Both sport switches preflight canonical selected-sport purchased access before saving; the server still rechecks. Why: playing Both never grants another sport's paid skills or leaves an inaccessible active sport after refusal.
 - Client seven-date rebuilds run one at a time through rebuildAfterChange's queue. Why: overlapping rebuilds trip the day-lock with "Day changed".
+
+- Server block generation bundles the existing pure daily-plan builder through `scripts/build-hammer-block-bundle.mjs`, rejecting browser/auth dependencies and injecting owner drills/stage tags. Why: block Swap must reuse the same generator rather than accept client snapshots or create a second builder.

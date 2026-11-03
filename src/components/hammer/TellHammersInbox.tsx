@@ -18,12 +18,15 @@ import { StartingPointForm } from './StartingPointForm';
 import { PitcherRoleQuestions } from './pitching/PitcherRoleQuestions';
 import { ActiveInjuryCards } from './injury/FullGo';
 import { usePitcherSchedule } from '@/hooks/usePitcherSchedule';
+import { useSeasonStatus } from '@/hooks/useSeasonStatus';
+import { useGameDayContext } from '@/hooks/useGameDayContext';
+import { seasonWhereLine } from '@/lib/hammer/seasonWhereLine';
 import { parseRoleMessage, describeRoleChange, type RoleChange } from '@/lib/hammer/pitching/pitcherRoleAnswers';
 
 type Flow = "games" | "season" | "cancelled" | "pain" | "break" | "event" | "travel" | "resume" | "ask";
 const BUTTONS = [
   { flow: "games", label: "I have games", icon: CalendarCheck },
-  { flow: "season", label: "Season starts or ends", icon: Flag },
+  { flow: "season", label: "Season & dates", icon: Flag },
   { flow: "cancelled", label: "Games cancelled", icon: CalendarX2 },
   { flow: "pain", label: "Something hurts", icon: HeartPulse },
   { flow: "break", label: "I need a break", icon: PauseCircle },
@@ -42,6 +45,8 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   const { user } = useOptionalAuth();
   const tl = useScheduleTimeline();
   const today = getTodayDate();
+  const seasonStatus = useSeasonStatus();
+  const seasonCtx = useGameDayContext();
   const storageKey = `hammer:tell-open:${user?.id ?? "guest"}`;
   const [open, setOpen] = useState(checkIn);
   const [flow, setFlow] = useState<Flow | null>(null);
@@ -169,7 +174,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       {/* Owner Nov 1 B4: healed / full-go step lives here, only while an injury is active. */}
       {!checkIn && <ActiveInjuryCards />}
       {!checkIn && user && <ActiveSportSwitch userId={user.id} />}
-      {!checkIn && <Button variant="outline" className="w-full" onClick={() => setDatesOpen(true)}>Season dates</Button>}
+      {!checkIn && <p className="text-sm font-medium" data-testid="season-where-line">{seasonStatus.isLoading ? 'Checking your season…' : seasonWhereLine(seasonCtx?.seasonPhase ?? seasonStatus.resolvedPhase, { preseason_start_date: seasonStatus.preseasonStartDate, in_season_start_date: seasonStatus.inSeasonStartDate, in_season_end_date: seasonStatus.inSeasonEndDate, post_season_end_date: seasonStatus.postSeasonEndDate }, today)}</p>}
       {!checkIn && <><Button variant="outline" className="w-full" aria-expanded={startOpen} data-testid="tell-starting-point" onClick={() => setStartOpen(v => !v)}>Where I'm starting from</Button>{startOpen && <StartingPointForm />}</>}
       {!checkIn && <><Button variant="outline" className="w-full" aria-expanded={roleOpen} data-testid="tell-pitcher-role" onClick={() => setRoleOpen(v => !v)}>Pitcher or position player</Button>{roleOpen && <PitcherRoleQuestions />}</>}
       {roleConfirm && <div className="rounded-md border p-3 space-y-2" data-testid="role-confirm"><p>I'll save: <strong>{describeRoleChange(roleConfirm)}</strong>. Is that right?</p><div className="flex gap-2"><Button disabled={pitcher.saveSettings.isPending} onClick={() => pitcher.saveSettings.mutate(roleConfirm, { onSuccess: () => { setRoleConfirm(null); setText(""); } })}>Yes, save</Button><Button variant="outline" onClick={() => setRoleConfirm(null)}>Back</Button></div></div>}
@@ -183,7 +188,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
         <Button variant="outline" className="w-full" data-testid="tell-ask" onClick={() => enter("ask")}>Update Hammer in your words</Button>
       </>}
       {flow === "games" && <><p className="text-sm">Tap your game days, then send.</p>{pickCalendar(true)}{choiceBtn("games-send", "Send these days", () => sendDays("GAME", "games-send"), "h-12 w-full")}</>}
-      {flow === "season" && <>{!which ? <div className="grid grid-cols-2 gap-2">{[{phase:'preseason',label:'Pre-season'},{phase:'in_season',label:'In-season'},{phase:'post_season',label:'Post-season'},{phase:'off_season',label:'Offseason is beginning'}].map(p => <Button key={p.phase} variant="outline" disabled={busy} className="h-auto min-h-11 whitespace-normal" onClick={() => tap(draft('SEASON',today,today,{phase:p.phase}),p.phase)}>{p.label}</Button>)}<Button variant="outline" onClick={() => setWhich("starts")}>Season starts on…</Button><Button variant="outline" onClick={() => setWhich("ends")}>Offseason begins on…</Button></div> : <><p className="text-sm">{which === "ends" ? "Tap the day your offseason begins." : "Tap the day your season starts."}</p>{pickCalendar(false)}{choiceBtn("season-send", "Send this day", () => { if (!picked[0]) return; tap(draft("SEASON", getLocalDateString(picked[0]), getLocalDateString(picked[0]), { which }), "season-send"); }, "h-12 w-full")}</>}</>}
+      {flow === "season" && <>{!which ? <div className="grid grid-cols-2 gap-2">{[{phase:'preseason',label:'Pre-season'},{phase:'in_season',label:'In-season'},{phase:'post_season',label:'Post-season'},{phase:'off_season',label:'Offseason is beginning'}].map(p => <Button key={p.phase} variant="outline" disabled={busy} className="h-auto min-h-11 whitespace-normal" onClick={() => tap(draft('SEASON',today,today,{phase:p.phase}),p.phase)}>{p.label}</Button>)}<Button variant="outline" onClick={() => setWhich("starts")}>Season starts on…</Button><Button variant="outline" onClick={() => setWhich("ends")}>Offseason begins on…</Button><Button variant="outline" className="col-span-2" data-testid="season-exact-dates" onClick={() => setDatesOpen(true)}>Enter all season dates</Button></div> : <><p className="text-sm">{which === "ends" ? "Tap the day your offseason begins." : "Tap the day your season starts."}</p>{pickCalendar(false)}{choiceBtn("season-send", "Send this day", () => { if (!picked[0]) return; tap(draft("SEASON", getLocalDateString(picked[0]), getLocalDateString(picked[0]), { which }), "season-send"); }, "h-12 w-full")}</>}</>}
       {flow === "cancelled" && <><div className="grid grid-cols-2 gap-2">{[1,7,14,28].map((n) => choiceBtn(`cancel-${n}`, n === 1 ? "Today" : n === 7 ? "This week" : n === 14 ? "Next 2 weeks" : "Next 4 weeks", () => tap(draft("CANCELLED", today, isoShift(today, n - 1)), `cancel-${n}`)))}</div><p className="text-sm">Or tap the days:</p>{pickCalendar(true)}{choiceBtn("cancel-send", "Send these days", () => sendDays("CANCELLED", "cancel-send"), "h-12 w-full")}</>}
       {flow === "pain" && <>{!region ? <><p className="text-sm">Where does it hurt?</p><div className="grid grid-cols-3 gap-2">{REPORT_INJURY_REGIONS.map(r => <Button key={r.key} variant="outline" className="h-12 text-xs" data-testid={`pain-${r.key}`} onClick={() => setRegion(r)}>{r.label}</Button>)}</div></> : <><p className="text-sm">How bad is your {region.label.toLowerCase()}?</p><div className="grid grid-cols-3 gap-2">{FACES.map(f => { const on = pending?.payload.face === f.key; return <Button key={f.key} variant={on ? "default" : "outline"} aria-pressed={on} className="h-20 flex-col" data-testid={`face-${f.key}`} onClick={() => setPending(draft("PAIN",today,today,{ region: region.key, regionLabel: region.label, face: f.key, faceLabel: FACE_LABEL[f.key] }))}><span className="text-2xl">{f.emoji}</span>{FACE_LABEL[f.key]}</Button>; })}</div></> }</>}
       {(flow === "break" || flow === "travel") && <><p className="text-sm">{flow === "travel" ? "How long are you away?" : "How long do you need?"}</p><div className="grid grid-cols-2 gap-2">{(flow === "break" ? [1,3,7] : [1,3,7,14]).map(n => choiceBtn(`hold-${n}`, n === 1 ? "Just today" : n === 7 ? "1 week" : `${n} days`, () => tap(draft("HOLD",today,isoShift(today,n-1),{reason: flow === "travel" ? "travel" : "break"}), `hold-${n}`)))}</div></>}

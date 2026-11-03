@@ -1,0 +1,1 @@
+- Standards conversation writes real settings only via owner_confirm_real_settings/owner_undo_real_settings with exact old/new receipts; fields without a real column are refused. Why: reversible, never invented.

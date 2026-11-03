@@ -25126,6 +25126,16 @@ export type Database = {
         Returns: Json
       }
       org_test_ranking: { Args: { _org: string; _test: string }; Returns: Json }
+      owner_confirm_real_settings: {
+        Args: {
+          p_area: string
+          p_body: string
+          p_changes: Json
+          p_sport: string
+          p_thread: string
+        }
+        Returns: Json
+      }
       owner_confirm_test_cue: {
         Args: {
           p_area: string
@@ -25174,6 +25184,10 @@ export type Database = {
           worked: number
         }[]
       }
+      owner_review_real_setting: {
+        Args: { p_field: string; p_id: string; p_target: string }
+        Returns: Json
+      }
       owner_review_test_setting: {
         Args: {
           p_field: string
@@ -25198,6 +25212,7 @@ export type Database = {
         }
         Returns: string
       }
+      owner_undo_real_settings: { Args: { p_version: string }; Returns: Json }
       owner_undo_test_cue: { Args: { p_version: string }; Returns: Json }
       owner_undo_test_settings: { Args: { p_version: string }; Returns: Json }
       owns_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
@@ -25208,6 +25223,16 @@ export type Database = {
           optional_sharing: boolean
           signed_at: string
         }[]
+      }
+      philosophy_real_setting: {
+        Args: {
+          p_field: string
+          p_id: string
+          p_target: string
+          p_value?: Json
+          p_write?: boolean
+        }
+        Returns: Json
       }
       philosophy_test_account: { Args: { p_user: string }; Returns: boolean }
       philosophy_test_setting: {
