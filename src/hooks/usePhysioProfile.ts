@@ -14,6 +14,10 @@ export interface PhysioHealthProfile {
   medical_conditions: string[];
   injury_history: string[];
   supplements: string[];
+  meals_per_day: number | null;
+  current_pain_answer: boolean | null;
+  current_pain_area: string | null;
+  current_pain_reviewed_at: string | null;
   active_illness: string | null;
   illness_started_at: string | null;
   adult_features_enabled: boolean;
@@ -71,7 +75,7 @@ export function usePhysioProfile() {
   const setupCompleted = profile?.setup_completed ?? false;
   const adultFeaturesEnabled = profile?.adult_features_enabled ?? false;
   // Prefer main profile DOB, fall back to physio profile DOB
-  const primaryDob = mainProfile?.date_of_birth ?? profile?.date_of_birth ?? null;
+  const primaryDob = mainProfile?.date_of_birth ?? null;
   const computedAge = calcAge(primaryDob);
 
   const saveProfile = useCallback(async (updates: Partial<PhysioHealthProfile> & { setup_completed?: boolean }) => {
@@ -105,7 +109,7 @@ export function usePhysioProfile() {
     
     // Age gate: prefer main profile DOB, fall back to physio profile
     const age = calcAge(primaryDob);
-    if (age !== null && age < 18) {
+    if (age === null || age < 18) {
       return { success: false, error: 'Age requirement not met' };
     }
 

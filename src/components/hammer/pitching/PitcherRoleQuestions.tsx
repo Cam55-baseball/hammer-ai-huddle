@@ -26,6 +26,7 @@ export function PitcherRoleQuestions({ compact = false }: { compact?: boolean })
   return <div className={compact ? "space-y-3" : "space-y-3 rounded-md border border-border/60 bg-card p-3"} data-testid="pitcher-role-questions">
     <div className="space-y-2">
       <p className="text-sm font-medium">Are you mainly a pitcher or a position player?</p>
+      <p className="text-xs text-muted-foreground">Optional — helps personalize. Until you choose, we plan mainly position-player work.</p>
       <div className="grid grid-cols-2 gap-2">{(Object.keys(FOCUS_LABEL) as PrimaryFocus[]).map(k => pick(k, focus === k, FOCUS_LABEL[k], () => s.saveSettings.mutate({ primary_focus: k })))}</div>
     </div>
     {pitches && <>

@@ -13,6 +13,8 @@ import { getTodayDate } from "@/utils/dateUtils";
  * sprint is ratified.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { seasonWithTimeline } from '../../../../supabase/functions/_shared/seasonTimeline';
+import { resolveSeasonPhase } from '../../../../supabase/functions/_shared/seasonPhase';
 
 export type EnvelopeConfidence =
   | "high"
@@ -81,6 +83,12 @@ export async function fetchAthleteContextEnvelope(
   );
   if (error) throw new Error(error.message);
   const env = (data ?? {}) as AthleteContextEnvelope;
+  const season = await supabase.from('athlete_mpi_settings').select('season_status,season_status_manual,season_status_manual_at,season_history,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date').eq('user_id',userId).maybeSingle();
+  if (season.error) throw season.error;
+  if (season.data) {
+    const result = resolveSeasonPhase(seasonWithTimeline(season.data, [], getTodayDate()),getTodayDate());
+    env.season_phase = {value:result.phase,source:'athlete_mpi_settings',confidence:'derived',missing:false,last_updated:null,owner:'derived'};
+  }
   // Owner Nov 1 B1/B2: the player's chosen rest weekday for today's week (default Sunday).
   const rest = await (supabase as any).from("rest_day_choices")
     .select("rest_dow,scope,week_start,created_at,undone_at").eq("user_id", userId).is("undone_at", null).limit(200);

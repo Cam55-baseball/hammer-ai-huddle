@@ -6,6 +6,16 @@ import { resolvePhaseState } from '../../supabase/functions/_shared/phaseState';
 import type { TimelineEntry } from '../../supabase/functions/_shared/wic/schedule/timeline';
 const entry = (phase: string): TimelineEntry => ({ id: 'season', tag: 'SEASON', start_date: '2026-10-29', end_date: '2026-10-29', dates: null, source: 'inbox', payload: { phase }, summary: '', created_at: '2026-10-29T02:02:00Z', undone_at: null });
 describe('Update Hammer dated season changes', () => {
+  it('the saved season record supplies the same dated answer to every phase reader', () => {
+    const record={season_status:'off_season',season_history:[entry('in_season')]};
+    const saved=seasonWithTimeline(record, [entry('post_season')], '2026-11-03');
+    expect(resolveSeasonPhase(saved,'2026-11-03').phase).toBe('in_season');
+    expect(resolveWkPhase(saved,new Date('2026-11-03T12:00:00Z'),'2026-11-03').phase).toBe('in_season');
+    expect(resolvePhaseState({settings:saved,date:'2026-11-03',heights:[]}).season).toBe('in_season');
+  });
+  it('an empty canonical history does not revive a stale second season answer', () => {
+    expect(seasonWithTimeline({season_status:'off_season',season_history:[]},[entry('in_season')],'2026-11-03').season_status).toBe('off_season');
+  });
   it('manual off-season beats the newer Oct30 timeline across Nov2–8 for builder and season card', () => {
     const settings = { season_status: 'off_season', season_status_manual: true, season_status_manual_at: '2026-10-29T02:03:00Z', in_season_start_date: '2026-10-30', in_season_end_date: '2026-11-20' };
     const timeline = [{ ...entry('in_season'), start_date: '2026-10-30', created_at: '2026-10-30T03:28:27.334127Z' }];

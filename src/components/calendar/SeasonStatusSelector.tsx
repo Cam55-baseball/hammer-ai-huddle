@@ -9,6 +9,7 @@ import { useSeasonStatus, SeasonStatus } from '@/hooks/useSeasonStatus';
 import { cn } from '@/lib/utils';
 
 const SEASON_OPTIONS: { value: SeasonStatus; label: string }[] = [
+  { value: 'off_season', label: 'Off-Season' },
   { value: 'preseason', label: 'Pre-Season' },
   { value: 'in_season', label: 'In-Season' },
   { value: 'post_season', label: 'Post-Season' },
@@ -62,7 +63,7 @@ export function SeasonStatusSelector() {
 
         <div className="flex rounded-lg border border-border overflow-hidden">
           {SEASON_OPTIONS.map(opt => (
-            <button
+            <Button
               key={opt.value}
               type="button"
               onClick={() => updateSeasonStatus({ season_status: opt.value })}
@@ -74,7 +75,7 @@ export function SeasonStatusSelector() {
               )}
             >
               {opt.label}
-            </button>
+            </Button>
           ))}
         </div>
 

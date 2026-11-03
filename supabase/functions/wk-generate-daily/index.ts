@@ -704,7 +704,7 @@ const handler = async (req: Request): Promise<Response> => {
       const [{ data: sRows, error: sErr }, { data: sLogs }, { data: sMpi }, { data: sCtx }, { data: sTl }] = await Promise.all([
         admin.from("wk_prescriptions").select("plan_date, phase, status").eq("user_id", user.id).gt("plan_date", planDate).lte("plan_date", to).limit(5000),
         admin.from("wk_session_logs").select("plan_date").eq("user_id", user.id).gt("plan_date", planDate).lte("plan_date", to).limit(2000),
-        admin.from("athlete_mpi_settings").select("season_status, season_status_manual, season_status_manual_at, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date").eq("user_id", user.id).maybeSingle(),
+        admin.from("athlete_mpi_settings").select("season_status, season_status_manual, season_status_manual_at, season_history, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date").eq("user_id", user.id).maybeSingle(),
         admin.from("athlete_context").select("season_phase").eq("user_id", user.id).maybeSingle(),
         admin.from("schedule_timeline_entries").select("id,tag,start_date,end_date,dates,source,payload,summary,created_at,undone_at")
           .eq("user_id", user.id).eq("tag", "SEASON").is("undone_at", null).lte("start_date", to).order("created_at", { ascending: false }).limit(50),
@@ -716,7 +716,7 @@ const handler = async (req: Request): Promise<Response> => {
       const expected = (date: string) => {
         const tl = ((sTl ?? []) as any[]).filter((e) => String(e.start_date) <= date).slice(0, 1) as TimelineEntry[];
         const settings = seasonWithTimeline({
-          season_status: m.season_status ?? (sCtx as any)?.season_phase ?? null,
+          season_status: m.season_status ?? null, season_history: m.season_history,
           season_status_manual: m.season_status_manual === true, season_status_manual_at: m.season_status_manual_at,
           preseason_start_date: m.preseason_start_date ?? null, preseason_end_date: m.preseason_end_date ?? null,
           in_season_start_date: m.in_season_start_date ?? null, in_season_end_date: m.in_season_end_date ?? null,
@@ -889,7 +889,7 @@ const handler = async (req: Request): Promise<Response> => {
     ] = await Promise.all([
       admin.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       admin.from("athlete_context").select("*").eq("user_id", user.id).maybeSingle(),
-      admin.from("athlete_mpi_settings").select("season_status,season_status_manual,season_status_manual_at,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
+      admin.from("athlete_mpi_settings").select("season_status,season_status_manual,season_status_manual_at,season_history,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date").eq("user_id", user.id).maybeSingle(),
       admin.from("user_injury_progress").select("injury_slug, status").eq("user_id", user.id).in("status", ["acute", "active"]),
       // Step 28: the daily check-in writes readiness / soreness / fatigue / sleep
       // as asb_events. The old read targeted athlete_daily_log.log_date (no such
@@ -1262,7 +1262,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (seasonTimelineError) throw seasonTimelineError;
     const { seasonWithTimeline } = await import('../_shared/seasonTimeline.ts');
     const seasonSettings = seasonWithTimeline({
-      season_status: mpi.season_status ?? ctxAny.season_phase ?? null,
+      season_status: mpi.season_status ?? null, season_history: mpi.season_history,
       // The athlete's hand-set phase outranks the date windows, here as well
       // as in the app, so the plan and the profile always say the same thing.
       season_status_manual: mpi.season_status_manual === true,

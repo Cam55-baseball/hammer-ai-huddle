@@ -37,7 +37,7 @@ export function AssessmentProfileReview({ profile, onChange, registerFlush, deta
     <p className="text-sm font-medium">Optional — helps personalize</p>
     {!detailsOnly && (["full_name", "position"] as const).map(key => <div key={key} className="space-y-2">
       <Label htmlFor={`assessment-${key}`}>{key === "full_name" ? "Your name" : "Position"}</Label>
-      <Input id={`assessment-${key}`} value={profile[key]} onChange={e => onChange({ ...profile, [key]: e.target.value })} />
+      <p id={`assessment-${key}`} className="text-sm">{profile[key] || 'Not saved yet'}</p>
     </div>)}
     <div className="divide-y divide-border border-y border-border">
       {([["body", "Body measurements"], ["equipment", "Equipment"], ["goals", "Your goals"], ["planning", "Training, nutrition & health"], ["starting", "Where are you starting from?"]] as const).map(([key, label]) => <Button key={key} variant="ghost" className="h-14 w-full justify-between rounded-none" onClick={() => setSection(key)}>{label}<ChevronRight className="h-4 w-4" /></Button>)}

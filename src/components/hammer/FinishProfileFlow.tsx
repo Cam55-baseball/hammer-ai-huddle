@@ -201,9 +201,7 @@ function StepEditor({ item, userId, onSaved }: { item: MissingItem; userId: stri
       return <div className="space-y-3"><div className="grid grid-cols-2 gap-2">{[["off_season", "Off-season"], ["preseason", "Pre-season"], ["in_season", "In-season"], ["post_season", "Post-season"]].map(([k, l]) =>
         <Button key={k} variant={v === k ? "default" : "outline"} onClick={() => setV(k)}>{l}</Button>)}</div><Err e={s.error} />
         <SaveButton busy={s.busy} disabled={!v} onClick={() => s.run(async () => {
-          const r = await supabase.from("athlete_mpi_settings").upsert({ user_id: userId, sport, season_status: v, season_status_manual: true, season_status_manual_at: new Date().toISOString() } as never, { onConflict: "user_id" }).select("season_status").single();
-          if (r.error || (r.data as any)?.season_status !== v) throw new Error("Season didn't save. Try again.");
-          await persistContextAnswer(userId, "season_phase", ({ off_season: "off", preseason: "pre", in_season: "in", post_season: "post" } as Record<string, string>)[v], "finish_profile");
+          await persistContextAnswer(userId, 'season_phase', v, 'finish_profile');
         })} /></div>;
     case "season_dates":
       return <div className="space-y-3">

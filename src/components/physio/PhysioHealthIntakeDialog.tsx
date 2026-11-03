@@ -1,563 +1,87 @@
-import { FullGoPrompt, useInjuryHistory } from '@/components/hammer/injury/FullGo';
-import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
+import { usePhysioProfile } from '@/hooks/usePhysioProfile';
+import { useAthleteGoals } from '@/hooks/useAthleteGoals';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BirthDatePicker } from '@/components/ui/BirthDatePicker';
-import { cn } from '@/lib/utils';
-import { usePhysioProfile } from '@/hooks/usePhysioProfile';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { Heart, Shield, Users, ChevronRight, Check, CalendarIcon, Info } from 'lucide-react';
-import { normalizeInjuryHistory } from '@/lib/hammer/context/normalizers';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { suggestNutritionTargets, midpoint } from '@/lib/nutrition/targetSuggestions';
+import { enteredTargets, healthNutritionGoals, safeNutritionGoal } from '@/lib/nutrition/healthSetup';
+import { recordPain } from '@/lib/hammer/injury/recordPain';
+import { REPORT_INJURY_REGIONS, type ReportInjuryRegionKey } from '@/lib/hammer/injury/reportInjury';
+import { getTodayDate } from '@/utils/dateUtils';
 
-interface PhysioHealthIntakeDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  isEditMode?: boolean;
-}
-
-const DIETARY_STYLES = ['Omnivore', 'Vegetarian', 'Vegan', 'Pescatarian', 'Keto', 'Paleo', 'Gluten-Free', 'Dairy-Free'];
-const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
-const COMMON_CONDITIONS = ['Asthma', 'Diabetes', 'Hypertension', 'ADHD', 'Anxiety', 'Depression', 'Scoliosis', 'None'];
-const CONTRACEPTIVE_TYPES = ['Pill', 'IUD', 'Implant', 'Patch', 'Ring', 'Injection', 'Barrier', 'Other'];
-
-function calcAge(dob: Date | undefined): number | null {
-  if (!dob) return null;
-  const today = new Date();
-  return today.getFullYear() - dob.getFullYear() -
-    (today < new Date(today.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0);
-}
-
-function getAgeNote(age: number | null, sex: string): string {
-  if (!age) return '';
-  if (sex === 'male') {
-    if (age < 18) return 'Your reports will prioritise growth plate recovery, sleep as the primary adaptation signal, and development-safe load management.';
-    if (age <= 25) return 'Your reports will be calibrated for peak hormonal output, CNS development, and testosterone-linked recovery rhythms.';
-    if (age <= 35) return 'Your reports will focus on CNS efficiency, smart durability investment, and maintaining peak performance windows.';
-    return 'Your reports will weight recovery investment heavily, with emphasis on load management, durability, and long-term output sustainability.';
-  }
-  if (sex === 'female') {
-    if (age < 18) return 'Your reports will emphasise growth plate recovery, hormonal development, and sleep as the primary adaptation signal.';
-    if (age <= 25) return 'Your reports will factor in cycle phase sensitivity, iron and fuel needs, and hormonal load for peak performance.';
-    if (age <= 35) return 'Your reports will account for cycle phase awareness, hormonal load sensitivity, and nutritional considerations for sustained performance.';
-    return 'Your reports will emphasise recovery investment, hormonal context, and energy management tailored to your physiology.';
-  }
-  if (age < 18) return 'Your reports will prioritise growth plate recovery, sleep quality, and development-appropriate load management.';
-  return 'Your reports will be personalised based on your profile data to support your recovery and performance.';
-}
-
-function ChipSelector({ options, selected, onToggle, multiSelect = true }: {
-  options: string[];
-  selected: string[];
-  onToggle: (val: string) => void;
-  multiSelect?: boolean;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {options.map(opt => {
-        const isSelected = selected.includes(opt);
-        return (
-          <button
-            key={opt}
-            type="button"
-            onClick={() => onToggle(opt)}
-            className={cn(
-              'px-3 py-1.5 rounded-full text-sm font-medium border transition-all',
-              isSelected
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-background border-border text-muted-foreground hover:border-primary/50'
-            )}
-          >
-            {isSelected && <Check className="inline h-3 w-3 mr-1" />}
-            {opt}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function SexCard({ value, label, emoji, selected, onSelect }: {
-  value: string; label: string; emoji: string; selected: boolean; onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        'flex-1 flex flex-col items-center gap-1.5 py-4 px-2 rounded-xl border-2 transition-all',
-        selected
-          ? 'bg-primary/10 border-primary text-primary'
-          : 'bg-background border-border text-muted-foreground hover:border-primary/40'
-      )}
-    >
-      <span className="text-2xl">{emoji}</span>
-      <span className="text-xs font-semibold">{label}</span>
-      {selected && <Check className="h-3 w-3" />}
-    </button>
-  );
-}
-
-export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = false }: PhysioHealthIntakeDialogProps) {
-  const { profile, saveProfile, enableAdultFeatures } = usePhysioProfile();
-  const { user } = useAuth();
-  const [step, setStep] = useState(1);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [profileDob, setProfileDob] = useState<Date | undefined>(undefined);
-  const [profileSex, setProfileSex] = useState<string | null>(null);
-
-  // Step 1
-  const [bloodType, setBloodType] = useState('');
-  const [dietaryStyle, setDietaryStyle] = useState<string[]>([]);
-  const [allergiesText, setAllergiesText] = useState('');
-  const [intolerancesText, setIntolerancesText] = useState('');
-
-  // Step 2
-  const [medicationsText, setMedicationsText] = useState('');
-  const [conditions, setConditions] = useState<string[]>([]);
-  const [injuryText, setInjuryText] = useState('');
-  const inj=useInjuryHistory();
-  const [injuryArea,setInjuryArea]=useState('');
-  const [injuryStatus,setInjuryStatus]=useState<'healed'|'active'>('healed');
-  const [supplementsText, setSupplementsText] = useState('');
-
-  // Step 3
-  const [dobDate, setDobDate] = useState<Date | undefined>(undefined);
-  const [biologicalSex, setBiologicalSex] = useState('');
-  const [enableAdult, setEnableAdult] = useState(false);
-  const [contraceptiveUse, setContraceptiveUse] = useState(false);
-  const [contraceptiveType, setContraceptiveType] = useState('');
-
-  // Fetch DOB and sex from main profiles table
-  useEffect(() => {
-    if (!open || !user) return;
-    (async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('date_of_birth, sex')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (data?.date_of_birth) {
-        const d = new Date(data.date_of_birth + 'T00:00:00');
-        setProfileDob(d);
-        setDobDate(d);
-      }
-      if (data?.sex) {
-        setProfileSex(data.sex);
-        if (!isEditMode && !profile?.biological_sex) {
-          setBiologicalSex(data.sex);
-        }
-      }
-    })();
-  }, [open, user]);
-
-  // Pre-populate state from existing profile when in edit mode
-  useEffect(() => {
-    if (open && isEditMode && profile) {
-      // Step 1
-      setBloodType(profile.blood_type ?? '');
-      setDietaryStyle(profile.dietary_style ? [profile.dietary_style] : []);
-      setAllergiesText((profile.allergies ?? []).join(', '));
-      setIntolerancesText((profile.food_intolerances ?? []).join(', '));
-      // Step 2
-      setMedicationsText((profile.medications ?? []).join(', '));
-      setConditions(profile.medical_conditions ?? []);
-      setInjuryText(normalizeInjuryHistory(profile.injury_history).map(n => n.note).join(', '));
-      setSupplementsText((profile.supplements ?? []).join(', '));
-      // Step 3
-      setBiologicalSex(profile.biological_sex ?? '');
-      setEnableAdult(profile.adult_features_enabled ?? false);
-      setContraceptiveUse(profile.contraceptive_use ?? false);
-      setContraceptiveType(profile.contraceptive_type ?? '');
-      // DOB is read-only in edit mode — just set it for display
-      if (profile.date_of_birth) {
-        setDobDate(new Date(profile.date_of_birth));
-      }
-    }
-  }, [open, isEditMode, profile]);
-
-  const computedAge = calcAge(dobDate);
-  const isAdultEligible = computedAge !== null && computedAge >= 18;
-
-  const toggleItem = (list: string[], item: string, setter: (v: string[]) => void, multi = true) => {
-    if (!multi) {
-      setter([item]);
-    } else {
-      setter(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
-    }
+const TARGETS = [['calorie_goal','Calories (kcal)'],['protein_goal','Protein (g)'],['carbs_goal','Carbs (g)'],['fats_goal','Fat (g)'],['hydration_goal','Water (oz)']] as const;
+const split = (s:string) => s.split(',').map(v=>v.trim()).filter(Boolean);
+/** One shared health setup, with optional suggestions rather than recalled targets. */
+export function PhysioHealthIntakeDialog({open,onOpenChange,isEditMode=false}:{open:boolean;onOpenChange:(v:boolean)=>void;isEditMode?:boolean}) {
+  const {user}=useAuth(); const qc=useQueryClient();
+  const {profile,computedAge,saveProfile,isLoading}=usePhysioProfile();
+  const {activeGoal,createGoal,updateGoal,loading:goalLoading}=useAthleteGoals();
+  const [step,setStep]=useState(0); const [busy,setBusy]=useState(false); const [error,setError]=useState<string|null>(null);
+  const [goal,setGoal]=useState(''); const [foods,setFoods]=useState(''); const [allergies,setAllergies]=useState(''); const [meals,setMeals]=useState('');
+  const [meds,setMeds]=useState(''); const [pastArea,setPastArea]=useState(''); const [pastNote,setPastNote]=useState('');
+  const [pain,setPain]=useState<boolean|null>(null); const [area,setArea]=useState<ReportInjuryRegionKey|null>(null); const [painDirty,setPainDirty]=useState(false);
+  const [targets,setTargets]=useState<Record<string,string>>({}); const [suggested,setSuggested]=useState(false); const [note,setNote]=useState('');
+  const facts=useQuery({queryKey:['health-setup-facts',user?.id],enabled:open&&!!user,queryFn:async()=>{
+    if(!user)throw new Error('Sign in first');
+    const [c,p,n,e]=await Promise.all([
+      supabase.from('athlete_context').select('anthropometrics').eq('user_id',user.id).maybeSingle(),
+      supabase.from('profiles').select('sex,activity_level').eq('id',user.id).maybeSingle(),
+      supabase.from('vault_nutrition_goals').select('*').eq('user_id',user.id).maybeSingle(),
+      supabase.from('athlete_events').select('event_type').eq('user_id',user.id).eq('event_date',getTodayDate()).limit(1).maybeSingle(),
+    ]);
+    for(const r of [c,p,n,e])if(r.error)throw r.error;
+    return {body:c.data?.anthropometrics as Record<string,unknown>|null,profile:p.data,nutrition:n.data,day:e.data?.event_type};
+  }});
+  useEffect(()=>{if(!open)return;setStep(0);setError(null);setSuggested(false);setPainDirty(false);setPastArea('');setPastNote('');},[open]);
+  useEffect(()=>{if(!open||isLoading||goalLoading)return;
+    setGoal(safeNutritionGoal(activeGoal?.goalType??null,computedAge)??'');
+    setFoods((profile?.food_intolerances??[]).join(', '));setAllergies((profile?.allergies??[]).join(', '));setMeals(profile?.meals_per_day?String(profile.meals_per_day):'');
+    setMeds((profile?.medications??[]).join(', '));setPain(profile?.current_pain_answer??null);setArea((profile?.current_pain_area??null) as ReportInjuryRegionKey|null);
+  },[open,isLoading,goalLoading,profile,activeGoal?.id,computedAge]);
+  const suggest=()=>{
+    const f=facts.data; const b=f?.body;
+    const r=suggestNutritionTargets({weightLbs:typeof b?.weight_lb==='number'?b.weight_lb:null,heightInches:typeof b?.height_in==='number'?b.height_in:null,age:computedAge,sex:f?.profile?.sex==='male'||f?.profile?.sex==='female'?f.profile.sex:null,activityLevel:f?.profile?.activity_level as any,goalType:safeNutritionGoal(goal,computedAge),dayType:f?.day as any});
+    if(r.ok === false){setNote(r.reason);return;}
+    setTargets({...(r.calories?{calorie_goal:String(midpoint(r.calories))}:{}),protein_goal:String(midpoint(r.protein)),carbs_goal:String(midpoint(r.carbs)),fats_goal:String(midpoint(r.fats)),hydration_goal:String(midpoint(r.hydration))});setSuggested(true);
+    setNote(computedAge===null||computedAge<18?'Eat enough to grow and train. Check these optional amounts with a parent or dietitian.':'These are optional suggestions. Change any amount before saving.');
   };
-
-  const handleSaveAndClose = async () => {
-    setSaving(true);
-    setSaveError(null);
-    try {
-      const isFemaleAdult = biologicalSex === 'female' && enableAdult && isAdultEligible;
-
-      const profileData: Record<string, any> = {
-        blood_type: bloodType || null,
-        dietary_style: dietaryStyle[0] || null,
-        allergies: allergiesText ? allergiesText.split(',').map(s => s.trim()).filter(Boolean) : [],
-        food_intolerances: intolerancesText ? intolerancesText.split(',').map(s => s.trim()).filter(Boolean) : [],
-        medications: medicationsText ? medicationsText.split(',').map(s => s.trim()).filter(Boolean) : [],
-        medical_conditions: conditions.filter(c => c !== 'None'),
-        injury_history: injuryText ? injuryText.split(',').map(s => s.trim()).filter(Boolean) : [],
-        supplements: supplementsText ? supplementsText.split(',').map(s => s.trim()).filter(Boolean) : [],
-        biological_sex: biologicalSex || null,
-        contraceptive_use: isFemaleAdult ? contraceptiveUse : null,
-        contraceptive_type: isFemaleAdult && contraceptiveUse ? (contraceptiveType || null) : null,
-      };
-
-      // Only include DOB and setup_completed on initial setup (not edit mode)
-      if (!isEditMode) {
-        const dobString = dobDate ? format(dobDate, 'yyyy-MM-dd') : null;
-        profileData.date_of_birth = dobString;
-        profileData.setup_completed = true;
+  const save=async()=>{
+    if(!user||busy||!facts.isSuccess||isLoading||goalLoading)return;
+    setBusy(true);setError(null);
+    try{
+      if(pain===null || (pain&&!area))throw new Error('Answer whether anything hurts, and choose an area if yes.');
+      if(meals && (!Number.isInteger(Number(meals))||Number(meals)<1))throw new Error('Enter a whole number of meals, or choose Not sure.');
+      if(pain && area && painDirty)await recordPain({userId:user.id,region:area,severity:'limiting',origin:'onboarding',date:getTodayDate(),queryClient:qc});
+      const saved=await saveProfile({allergies:split(allergies),food_intolerances:split(foods),medications:split(meds),meals_per_day:meals?Number(meals):null,setup_completed:true,...(painDirty||profile?.current_pain_answer==null?{current_pain_answer:pain,current_pain_area:pain?area:null,current_pain_reviewed_at:new Date().toISOString()}:{}),...(pastArea||pastNote?{injury_history:[...(profile?.injury_history??[]),[pastArea,pastNote].filter(Boolean).join(': ')]}: {})});
+      if(!saved.success)throw new Error(saved.error??'Health answers did not save.');
+      const chosen=safeNutritionGoal(goal,computedAge);
+      if(chosen&&chosen!==activeGoal?.goalType){
+        const ok=activeGoal?await updateGoal(activeGoal.id,{goalType:chosen}):await createGoal({goalType:chosen});
+        if(!ok)throw new Error('Health saved, but your food goal did not. Try again.');
       }
-
-      const saved = await saveProfile(profileData);
-      if (!saved.success) {
-        setSaveError("Couldn't save your health profile. Your answers are still here. Try again.");
-        return;
-      }
-      if (injuryArea && user && !(injuryStatus==='healed' && inj.areas.includes(injuryArea))) {
-        const current=await supabase.from('athlete_context').select('injury_history').eq('user_id',user.id).maybeSingle();
-        if(current.error)throw current.error;
-        const previous=Array.isArray(current.data?.injury_history)?current.data.injury_history:[];
-        const entry={region:injuryArea,recovery_status:injuryStatus,note:`Player reported ${injuryStatus} ${injuryArea} history`,reported_at:new Date().toISOString()};
-        const history=[...previous,entry];
-        const result=await supabase.from('athlete_context').upsert({user_id:user.id,injury_history:history},{onConflict:'user_id'}).select('injury_history').single();
-        // The database stores JSON with its own key order, so compare values, not raw text.
-        const stable=(v:unknown):string=>Array.isArray(v)?`[${v.map(stable).join(',')}]`:v&&typeof v==='object'?`{${Object.keys(v as Record<string,unknown>).sort().map(k=>`${JSON.stringify(k)}:${stable((v as Record<string,unknown>)[k])}`).join(',')}}`:JSON.stringify(v);
-        if(result.error||stable(result.data?.injury_history)!==stable(history))throw new Error('Could not confirm injury status.');
-        setInjuryArea('');
-      }
-      if (enableAdult && isAdultEligible) {
-        const enabled = await enableAdultFeatures();
-        if (!enabled.success) {
-          setSaveError("Your health profile was saved, but the optional tracking setting wasn't. Try again.");
-          return;
-        }
-      }
-
-      // Sync biological_sex to profiles.sex if not already set
-      if (!isEditMode && biologicalSex && user && !profileSex) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ sex: biologicalSex })
-          .eq('id', user.id);
-        if (error) {
-          setSaveError("Your health profile was saved, but your main profile couldn't be updated. Try again.");
-          return;
-        }
-      }
-
+      if(suggested){const payload=enteredTargets(targets);if(Object.keys(payload).length){
+        const r=await supabase.from('vault_nutrition_goals').upsert({user_id:user.id,...payload,updated_at:new Date().toISOString()},{onConflict:'user_id'}).select('*').single();
+        if(r.error||!r.data||Object.entries(payload).some(([k,v])=>(r.data as any)[k]!==v))throw new Error('Health saved, but the suggested amounts did not. Try again.');
+      }}
+      for(const key of ['start-readiness','assessment-plan-inputs','nutritionGoals','vault-nutrition-goals','health-setup-facts','onboarding-answer-status'])await qc.invalidateQueries({queryKey:[key]});
       onOpenChange(false);
-    } catch {
-      setSaveError("Couldn't save your health profile. Your answers are still here. Try again.");
-    } finally {
-      setSaving(false);
-    }
+    }catch(e){setError(e instanceof Error?e.message:'Your answers did not save. Try again.');}finally{setBusy(false);}
   };
-
-  const steps = [
-    { icon: <Heart className="h-5 w-5" />, label: 'Basic Health' },
-    { icon: <Shield className="h-5 w-5" />, label: 'Medical History' },
-    { icon: <Users className="h-5 w-5" />, label: 'Preferences' },
-  ];
-
-  const ageNote = getAgeNote(computedAge, biologicalSex);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Heart className="h-5 w-5 text-primary" />
-            {isEditMode ? 'Edit Health Profile' : 'Physio Health Setup'}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditMode
-              ? 'Update your health information. Your date of birth cannot be changed.'
-              : 'This helps us personalize your Physio Regulation reports. All data is private and encrypted.'}
-          </DialogDescription>
-        </DialogHeader>
-
-        {/* Step indicators */}
-        <div className="flex items-center gap-2 my-2">
-          {steps.map((s, i) => (
-            <div key={i} className="flex items-center gap-1 flex-1">
-              <div className={cn(
-                'flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-bold transition-all',
-                step > i + 1 ? 'bg-primary border-primary text-primary-foreground' :
-                step === i + 1 ? 'border-primary text-primary' :
-                'border-border text-muted-foreground'
-              )}>
-                {step > i + 1 ? <Check className="h-4 w-4" /> : i + 1}
-              </div>
-              <span className={cn(
-                'text-xs font-medium hidden sm:block',
-                step === i + 1 ? 'text-foreground' : 'text-muted-foreground'
-              )}>{s.label}</span>
-              {i < 2 && <div className="flex-1 h-px bg-border mx-1" />}
-            </div>
-          ))}
-        </div>
-
-        {/* Step 1: Basic Health */}
-        {step === 1 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Blood Type (Optional)</Label>
-              <ChipSelector
-                options={BLOOD_TYPES}
-                selected={bloodType ? [bloodType] : []}
-                onToggle={(val) => setBloodType(val === bloodType ? '' : val)}
-                multiSelect={false}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Dietary Style</Label>
-              <ChipSelector
-                options={DIETARY_STYLES}
-                selected={dietaryStyle}
-                onToggle={(val) => toggleItem(dietaryStyle, val, setDietaryStyle, false)}
-                multiSelect={false}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Food Allergies (comma-separated)</Label>
-              <Input
-                value={allergiesText}
-                onChange={e => setAllergiesText(e.target.value)}
-                placeholder="e.g. peanuts, shellfish, tree nuts"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Food Intolerances (comma-separated)</Label>
-              <Input
-                value={intolerancesText}
-                onChange={e => setIntolerancesText(e.target.value)}
-                placeholder="e.g. lactose, gluten"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Medical History */}
-        {step === 2 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Current Medications (comma-separated)</Label>
-              <Input
-                value={medicationsText}
-                onChange={e => setMedicationsText(e.target.value)}
-                placeholder="e.g. albuterol inhaler, cetirizine, ibuprofen"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Medical Conditions</Label>
-              <ChipSelector
-                options={COMMON_CONDITIONS}
-                selected={conditions}
-                onToggle={(val) => toggleItem(conditions, val, setConditions)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Injury History (comma-separated)</Label>
-              <Input
-                value={injuryText}
-                onChange={e => setInjuryText(e.target.value)}
-                placeholder="e.g. ACL tear 2022, rotator cuff 2021"
-              />
-              <p className="text-xs text-muted-foreground">Notes stay in your history. They are never treated as a diagnosis.</p>
-              <Label htmlFor="health-injury-area">Injury area (optional)</Label>
-              <Select value={injuryArea} onValueChange={setInjuryArea}><SelectTrigger id="health-injury-area"><SelectValue placeholder="Choose an area" /></SelectTrigger><SelectContent>{['shoulder','elbow','wrist','hip','knee','ankle','back'].map(area=><SelectItem key={area} value={area}>{area[0].toUpperCase()+area.slice(1)}</SelectItem>)}</SelectContent></Select>
-              <Label htmlFor="health-injury-status">Current status</Label>
-              <Select value={injuryStatus} onValueChange={v=>setInjuryStatus(v==='active'?'active':'healed')}><SelectTrigger id="health-injury-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="healed">Healed past injury — history only</SelectItem><SelectItem value="active">Active injury or pain</SelectItem></SelectContent></Select>
-              {injuryArea && injuryStatus==='healed' && inj.areas.includes(injuryArea)
-                ? <div className="space-y-1 rounded-md border border-border/60 bg-card p-2"><p className="text-xs">Your {injuryArea} is an active injury. To mark it healed, confirm here — your existing {injuryArea} entry is updated, not copied.</p><FullGoPrompt area={injuryArea} history={inj.data?.history ?? []} minor={inj.data?.minor ?? true} /></div>
-                : <p className="text-xs text-muted-foreground">A healed history entry never clears a separate active injury or return-to-play restriction.</p>}
-            </div>
-            <div className="space-y-2">
-              <Label>Regular Supplements (comma-separated)</Label>
-              <Input
-                value={supplementsText}
-                onChange={e => setSupplementsText(e.target.value)}
-                placeholder="e.g. creatine, omega-3, protein powder"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Preferences */}
-        {step === 3 && (
-          <div className="space-y-5">
-
-            {/* DOB Picker */}
-            <div className="space-y-2">
-              <Label>Date of Birth</Label>
-              {isEditMode || profileDob ? (
-                /* Read-only display when DOB already set in profile or in edit mode */
-                <BirthDatePicker value={dobDate} onChange={() => {}} readOnly />
-              ) : (
-                <BirthDatePicker
-                  value={dobDate}
-                  onChange={setDobDate}
-                  placeholder="Select your date of birth"
-                />
-              )}
-              {profileDob && !isEditMode && (
-                <p className="text-xs text-muted-foreground pl-1">
-                  Pre-filled from your profile.
-                </p>
-              )}
-              {computedAge !== null && (
-                <p className="text-xs text-muted-foreground pl-1">
-                  Age: <span className="font-semibold text-foreground">{computedAge}</span>
-                  {!isAdultEligible && (
-                    <span className="ml-2 text-amber-500/80">Adult tracking available at 18+</span>
-                  )}
-                </p>
-              )}
-            </div>
-
-            {/* Biological Sex */}
-            <div className="space-y-2">
-              <Label>Biological Sex</Label>
-              <div className="flex gap-2">
-                <SexCard value="male" label="Male" emoji="♂" selected={biologicalSex === 'male'} onSelect={() => setBiologicalSex('male')} />
-                <SexCard value="female" label="Female" emoji="♀" selected={biologicalSex === 'female'} onSelect={() => setBiologicalSex('female')} />
-                <SexCard value="prefer_not_to_say" label="Prefer not to say" emoji="○" selected={biologicalSex === 'prefer_not_to_say'} onSelect={() => setBiologicalSex('prefer_not_to_say')} />
-              </div>
-            </div>
-
-            {/* Age + sex tailored insight note */}
-            {biologicalSex && computedAge !== null && (
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-primary/5 border border-primary/20">
-                <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-muted-foreground">{ageNote}</p>
-              </div>
-            )}
-
-            {/* Adult Tracking */}
-            {biologicalSex && (
-              <div className="p-4 rounded-xl border border-border space-y-3">
-                <div className="flex items-start gap-2">
-                  <Users className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold">Adult Wellness Tracking (18+)</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {biologicalSex === 'female'
-                        ? 'Optional cycle phase, hormone awareness, and wellness tracking for more personalised recovery insights. Completely private.'
-                        : 'Optional wellness consistency tracking for personalised recovery insights. Completely private.'}
-                    </p>
-                  </div>
-                </div>
-
-                {isAdultEligible ? (
-                  <Button
-                    type="button"
-                    variant={enableAdult ? 'destructive' : 'outline'}
-                    size="sm"
-                    onClick={() => { setEnableAdult(!enableAdult); setContraceptiveUse(false); setContraceptiveType(''); }}
-                    className="w-full"
-                  >
-                    {enableAdult ? 'Cancel Adult Tracking' : 'Enable Adult Tracking'}
-                  </Button>
-                ) : (
-                  computedAge !== null && (
-                    <p className="text-xs text-center text-muted-foreground py-1">
-                      Adult tracking is available at 18+
-                    </p>
-                  )
-                )}
-
-                {/* Contraceptive section — female, adult enabled, 18+ */}
-                {biologicalSex === 'female' && enableAdult && isAdultEligible && (
-                  <div className="space-y-3 pt-1 border-t border-border/50">
-                    <button
-                      type="button"
-                      onClick={() => { setContraceptiveUse(!contraceptiveUse); setContraceptiveType(''); }}
-                      className={cn(
-                        'w-full py-2 rounded-lg text-sm font-medium border transition-all',
-                        contraceptiveUse
-                          ? 'bg-primary/10 border-primary text-primary'
-                          : 'bg-background border-border text-muted-foreground hover:border-primary/50'
-                      )}
-                    >
-                      {contraceptiveUse
-                        ? <><Check className="inline h-3 w-3 mr-1" /> Currently using a contraceptive</>
-                        : 'I am currently using a contraceptive'}
-                    </button>
-
-                    {contraceptiveUse && (
-                      <div className="space-y-2">
-                        <Label className="text-xs">Contraceptive Type (optional)</Label>
-                        <ChipSelector
-                          options={CONTRACEPTIVE_TYPES}
-                          selected={contraceptiveType ? [contraceptiveType] : []}
-                          onToggle={(val) => setContraceptiveType(val === contraceptiveType ? '' : val)}
-                          multiSelect={false}
-                        />
-                      </div>
-                    )}
-
-                    <div className="flex items-start gap-2 p-2 bg-muted/20 rounded-lg">
-                      <Info className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-muted-foreground">
-                        This helps us factor hormonal influences on your recovery and energy patterns. Educational purposes only — not medical advice.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Summary confirmation if no sex selected */}
-            {!biologicalSex && (
-              <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                <p className="text-sm text-muted-foreground">
-                  {isEditMode
-                    ? 'Update your biological sex below to personalise your Physio Regulation reports, nutrition suggestions, and recovery recommendations.'
-                    : "You're almost set! Select your date of birth and biological sex above to personalise your Physio Regulation reports, nutrition suggestions, and recovery recommendations."}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Navigation */}
-        {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
-        <div className="flex gap-2 mt-4">
-          {step > 1 && (
-            <Button variant="outline" onClick={() => setStep(step - 1)} className="flex-1">
-              Back
-            </Button>
-          )}
-          {step < 3 ? (
-            <Button onClick={() => setStep(step + 1)} className="flex-1">
-              Next <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          ) : (
-            <Button
-              onClick={handleSaveAndClose}
-              disabled={saving}
-              className="flex-1"
-            >
-              {saving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Complete Setup'}
-            </Button>
-          )}
-        </div>
-
-        <p className="text-xs text-center text-muted-foreground mt-2">
-          You can update this information anytime in your profile settings.
-        </p>
-      </DialogContent>
-    </Dialog>
-  );
+  const titles=['Your food goal','Foods to avoid','Meals each day','Optional food & water suggestions','Anything hurt right now?','Past injuries','Medicines you take'];
+  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto"><DialogHeader><DialogTitle>{titles[step]}</DialogTitle><DialogDescription>{step===4?'Needed to build your plan':'Optional — helps personalize'} · {step+1} of {titles.length}</DialogDescription></DialogHeader>
+    {isLoading||goalLoading||facts.isPending?<p role="status">Loading your saved answers…</p>:facts.isError?<p role="alert">Could not load your answers. Close and try again.</p>:<>
+    {step===0&&<div className="space-y-3"><p className="text-sm text-muted-foreground">{computedAge===null||computedAge<18?'Fuel your growth and your training. No weight-loss goals here.':'Choose what you want your food to support.'}</p>{healthNutritionGoals(computedAge).map(g=><Button className="w-full" variant={goal===g.value?'default':'outline'} key={g.value} onClick={()=>setGoal(g.value)}>{g.label}</Button>)}<Button variant="ghost" onClick={()=>setGoal('')}>Not sure</Button></div>}
+    {step===1&&<div className="space-y-3"><p className="text-sm text-muted-foreground">Leave blank if you have none or aren't sure.</p><Label htmlFor="health-foods">Foods you avoid</Label><Input id="health-foods" value={foods} onChange={e=>setFoods(e.target.value)} placeholder="Dairy, gluten, meat…"/><Label htmlFor="health-allergies">Food allergies</Label><Input id="health-allergies" value={allergies} onChange={e=>setAllergies(e.target.value)} placeholder="Peanuts, shellfish…"/><Button variant="ghost" onClick={()=>{setFoods('');setAllergies('');}}>Not sure</Button></div>}
+    {step===2&&<div className="space-y-3"><p className="text-sm text-muted-foreground">About how many meals do you usually eat? No tracking needed.</p><Input aria-label="Meals per day" inputMode="numeric" type="number" min="1" value={meals} onChange={e=>setMeals(e.target.value)}/><Button variant="ghost" onClick={()=>setMeals('')}>Not sure</Button></div>}
+    {step===3&&<div className="space-y-3"><p className="text-sm text-muted-foreground">You don't need to know any numbers. Suggestions use your saved weight, food goal and training.</p><Button variant="outline" onClick={suggest}>Get suggestions</Button>{note&&<p className="text-sm text-muted-foreground">{note}</p>}{suggested&&TARGETS.filter(([k])=>targets[k]!==undefined).map(([k,l])=><div key={k}><Label htmlFor={`health-${k}`}>{l} · optional</Label><Input id={`health-${k}`} type="number" min="0" value={targets[k]} onChange={e=>setTargets(v=>({...v,[k]:e.target.value}))}/></div>)}<Button variant="ghost" onClick={()=>{setSuggested(false);setTargets({});}}>Not now</Button></div>}
+    {step===4&&<div className="space-y-3"><p className="text-sm text-muted-foreground">This never clears an existing injury or medical restriction.</p>{profile?.current_pain_answer!==null&&profile?.current_pain_answer!==undefined&&!painDirty?<><p>Saved answer: {pain?`Yes — ${area??'area not saved'}`:'No'}</p><Button variant="outline" onClick={()=>setPainDirty(true)}>Change</Button></>:<><div className="grid grid-cols-2 gap-2">{[false,true].map(v=><Button key={String(v)} variant={pain===v?'default':'outline'} onClick={()=>{setPain(v);setPainDirty(true);}}>{v?'Yes':'No'}</Button>)}</div>{pain&&<div className="flex flex-wrap gap-2">{REPORT_INJURY_REGIONS.map(r=><Button size="sm" key={r.key} variant={area===r.key?'default':'outline'} onClick={()=>setArea(r.key)}>{r.label}</Button>)}</div>}<p className="text-sm text-muted-foreground">Not sure? Tell a parent or coach. If you feel pain, choose Yes.</p></>}</div>}
+    {step===5&&<div className="space-y-3"><p className="text-sm text-muted-foreground">Past injuries stay in your history. They never clear current pain.</p>{profile?.injury_history?.length>0&&<p className="text-sm">Saved: {profile.injury_history.join(' · ')}</p>}<Label htmlFor="health-past-area">Area · optional</Label><select id="health-past-area" className="h-11 w-full rounded-md border border-input bg-background" value={pastArea} onChange={e=>setPastArea(e.target.value)}><option value="">Not sure / none</option>{REPORT_INJURY_REGIONS.map(r=><option value={r.key} key={r.key}>{r.label}</option>)}</select><Input aria-label="Past injury note" value={pastNote} onChange={e=>setPastNote(e.target.value)} placeholder="For example, an ankle sprain last year"/></div>}
+    {step===6&&<div className="space-y-3"><p className="text-sm text-muted-foreground">Optional. Write the name if you know it; don't change medicine based on this app.</p><Label htmlFor="health-meds">Medicines</Label><Input id="health-meds" value={meds} onChange={e=>setMeds(e.target.value)} placeholder="Albuterol inhaler, cetirizine, ibuprofen…"/><Button variant="ghost" onClick={()=>setMeds('')}>Not sure</Button></div>}
+    {error&&<p role="alert" className="text-sm text-destructive">{error}</p>}<div className="flex gap-2">{step>0&&<Button variant="outline" disabled={busy} onClick={()=>setStep(v=>v-1)}>Back</Button>}{step<6?<Button className="flex-1" disabled={step===4&&(pain===null||(pain&&!area))} onClick={()=>setStep(v=>v+1)}>Next</Button>:<Button className="flex-1" disabled={busy} onClick={save}>{busy?'Saving…':isEditMode?'Save changes':'Save health setup'}</Button>}</div></>}
+  </DialogContent></Dialog>;
 }
