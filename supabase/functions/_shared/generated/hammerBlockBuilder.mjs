@@ -701,11 +701,11 @@ function equipmentNoteFor(drill) {
 function fullBodyTemplate(context) {
   const base2 = [...TEMPLATES[context] ?? TEMPLATES.default];
   if (context === "recovery_day") return base2;
-  const ORDER2 = ["tissue_prep", "cars", "fascial_rotation", "mobility_joint", "activation"];
-  for (let i = ORDER2.length - 1; i >= 0; i--) {
-    const role = ORDER2[i];
+  const ORDER3 = ["tissue_prep", "cars", "fascial_rotation", "mobility_joint", "activation"];
+  for (let i = ORDER3.length - 1; i >= 0; i--) {
+    const role = ORDER3[i];
     if (base2.includes(role)) continue;
-    const before = ORDER2.slice(0, i).map((r) => base2.lastIndexOf(r)).filter((n) => n >= 0);
+    const before = ORDER3.slice(0, i).map((r) => base2.lastIndexOf(r)).filter((n) => n >= 0);
     base2.splice(before.length ? Math.max(...before) + 1 : 0, 0, role);
   }
   if (!base2.includes("movement_bridge")) {
@@ -1862,6 +1862,79 @@ var init_tissueCarePlan = __esm({
   }
 });
 
+// src/lib/hammer/prescription/throwPlacement.ts
+var ARM_CARE = /band|cuff|scap|activation|neural prep|wrist|forearm|cooldown|cool-down|arm care|arm-care|sleeper|arm prep|arm circles/i;
+var WARMUP_THROW = /warm-up throw|warm-up toss|whip throw|tennis-ball|tennis ball/i;
+var LONG_TOSS = /long[- ]toss/i;
+var CATCH_PLAY = /catch play|extension toss|catch|partner toss|flat-ground toss/i;
+var THROW = /throw|toss|catch play|long[- ]toss/i;
+function throwKind(d3) {
+  const n = d3.name;
+  if (LONG_TOSS.test(n)) return "long_toss";
+  if (WARMUP_THROW.test(n)) return "warmup";
+  if (CATCH_PLAY.test(n)) return "catch_play";
+  if (ARM_CARE.test(n) && !/throws?\b/i.test(d3.dosage ?? "")) return "arm_care";
+  return THROW.test(n) || d3.armEvent ? "position" : "arm_care";
+}
+var ORDER = { arm_care: 0, warmup: 1, catch_play: 2, long_toss: 3, position: 4 };
+function withThrowCount(d3) {
+  if (throwKind(d3) === "arm_care") return d3;
+  const dose = d3.dosage ?? "";
+  if (/\bthrows?\b/i.test(dose)) return d3;
+  const n = d3.armEvent?.count ?? (() => {
+    const m = dose.match(/(\d+)\s*[x×]\s*(\d+)/i);
+    if (m) return Number(m[1]) * Number(m[2]);
+    const one = dose.match(/~?\s*(\d+)\s*(reps|each)?/i);
+    return one ? Number(one[1]) : null;
+  })();
+  if (!n) return d3;
+  return { ...d3, dosage: dose ? `${dose} \xB7 ${n} throws` : `${n} throws` };
+}
+var LOG_CARD = /Log these on your (Throwing|arm) card\./g;
+function placeThrowsByRole(blocks, opts) {
+  const out = blocks.map((b) => ({ ...b }));
+  const ti = out.findIndex((b) => b.modality === "throwing");
+  if (opts.pitcher) {
+    return out.map((b) => {
+      if (b.modality !== "throwing" || b.status !== "ready") return b;
+      const drills = [...b.drills].map((d3, i) => ({ d: withThrowCount(d3), i })).sort((x, y) => ORDER[throwKind(x.d)] - ORDER[throwKind(y.d)] || x.i - y.i).map((x) => x.d);
+      const title = drills.some((d3) => throwKind(d3) === "position") ? "Throwing \u2014 arm care, catch play and position throws" : "Throwing \u2014 arm care, warm-up throws, catch play, long toss";
+      return { ...b, title, drills, steps: opts.toSteps(drills) };
+    });
+  }
+  const throwing = ti >= 0 ? out[ti] : null;
+  const rows3 = throwing && throwing.status === "ready" ? [...throwing.drills] : [];
+  const wi = out.findIndex((b) => b.modality === "warmup" && b.status === "ready");
+  const di = out.findIndex((b) => b.modality === "defense" && b.status === "ready");
+  const section = [];
+  const position = [];
+  const ri = out.findIndex((b) => b.modality === "recovery" && b.status === "ready");
+  const cooldown = [];
+  for (const d3 of rows3) {
+    if (ri >= 0 && /cooldown|cool-down/i.test(d3.name)) cooldown.push(d3);
+    else (throwKind(d3) === "position" ? position : section).push(withThrowCount(d3));
+  }
+  if (cooldown.length) {
+    const r = out[ri];
+    const drills = [...r.drills, ...cooldown];
+    out[ri] = { ...r, drills, steps: opts.toSteps(drills) };
+  }
+  if (wi >= 0) {
+    const w = out[wi];
+    const moved = w.drills.filter((d3) => /^(Arm prep|Warm-up throws) — /.test(d3.name) && /Throwing card|arm card/.test(d3.cue ?? ""));
+    const keep = w.drills.filter((d3) => !moved.includes(d3));
+    const all = [...moved.map((d3) => ({ ...d3, cue: (d3.cue ?? "").replace(LOG_CARD, "Log them right here.").trim() })), ...section].map((d3, i) => ({ d: d3, i })).sort((x, y) => ORDER[throwKind(x.d)] - ORDER[throwKind(y.d)] || x.i - y.i).map(({ d: d3 }) => ({ ...withThrowCount(d3), throwSection: true, ...LONG_TOSS.test(d3.name) ? { name: d3.name.startsWith("Long toss") ? d3.name : `Long toss (inside catch play) \u2014 ${d3.name}` } : {} }));
+    const drills = [...keep, ...all];
+    out[wi] = { ...w, drills, steps: opts.toSteps(drills) };
+  }
+  if (di >= 0) {
+    const def = out[di];
+    const drills = [...def.drills.map(withThrowCount), ...position];
+    out[di] = { ...def, drills, steps: opts.toSteps(drills) };
+  }
+  return ti >= 0 ? out.filter((_, i) => i !== ti) : out;
+}
+
 // src/lib/hammer/prescription/dailyPlan.ts
 init_warmupStages();
 
@@ -1967,11 +2040,11 @@ function validatePlanSanity(input) {
 }
 
 // src/lib/hammer/prescription/planSanity.ts
-var ORDER = { prep: 0, drills: 1, full_go: 2, log: 3 };
+var ORDER2 = { prep: 0, drills: 1, full_go: 2, log: 3 };
 function enforceSkillStageOrder(blocks) {
   return blocks.map((block) => {
     if (block.status !== "ready" || !["hitting", "pitching", "throwing", "defense", "baserunning"].includes(block.modality) || block.drills.some((drill) => !drill.stage || drill.ownerDrillId || drill.prescriptionOrigin === "owner")) return block;
-    const drills = [...block.drills].sort((a, b) => (a.stage ? ORDER[a.stage] : 0) - (b.stage ? ORDER[b.stage] : 0));
+    const drills = [...block.drills].sort((a, b) => (a.stage ? ORDER2[a.stage] : 0) - (b.stage ? ORDER2[b.stage] : 0));
     if (drills.every((drill, index) => drill === block.drills[index])) return block;
     return { ...block, drills, steps: drills.map((d3) => d3.setup ? `${d3.name} \u2014 ${d3.dosage} (${d3.setup})` : `${d3.name} \u2014 ${d3.dosage}`) };
   });
@@ -3990,7 +4063,7 @@ function pitchingDay(date, sport, quarter, facts, restDow = 0) {
 
 // src/lib/hammer/prescription/finalArmGuard.ts
 var WARMUP_TOSS = /warm-up toss|warm-up throws/i;
-function throwKind(d3, blockModality) {
+function throwKind2(d3, blockModality) {
   if (d3.stage !== "full_go" && WARMUP_TOSS.test(d3.name ?? "")) return "warmup";
   if (d3.armCard === "pitching" || d3.armCard !== "throwing" && blockModality === "pitching") return "pitching";
   return "position";
@@ -4006,7 +4079,7 @@ function finalArmGuard(blocks, input) {
   blocks.forEach((b, bi) => {
     if (b.status !== "ready") return;
     b.drills.forEach((d3, di) => {
-      if (d3.armEvent) rows3.push({ bi, di, kind: throwKind(d3, b.modality), cost: throwUnits([d3.armEvent]) });
+      if (d3.armEvent) rows3.push({ bi, di, kind: throwKind2(d3, b.modality), cost: throwUnits([d3.armEvent]) });
     });
   });
   const kept = /* @__PURE__ */ new Set();
@@ -9751,7 +9824,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const throwingDrills = b.drills.filter((d3) => d3.armCard === "throwing" && !(preStart && d3.armEvent));
     const pitching = { ...b, drills: pitchingDrills, steps: drillsToSteps(pitchingDrills), modality: "pitching", title: `Pitching \u2014 ${sport === "softball" ? "windmill" : "baseball"} \xB7 ${type.replace(/_/g, " ")}`, route: "/practice?module=pitching", ctaLabel: "Open pitching", gamePlanTemplate: null, because: [...b.because ?? [], ...command.because, "Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."] };
     const defenseToday = prehabbed.some((x) => x.modality === "defense" && x.status === "ready");
-    return [pitching, ...throwingDrills.length && (!access.pitcherOnly || defenseToday) ? [{ ...b, drills: throwingDrills, steps: drillsToSteps(throwingDrills), title: "Throwing \u2014 position work within your shared arm budget", gamePlanTemplate: null }] : []];
+    return [pitching, ...throwingDrills.length && (!access.pitcherOnly || defenseToday) ? [{ ...b, drills: throwingDrills, steps: drillsToSteps(throwingDrills), title: "Throwing \u2014 position work", gamePlanTemplate: null }] : []];
   });
   const blocks = access?.hasPitching ? finalArmGuard(unguardedBlocks, { sport, role: access.pitcherOnly ? "pitcher" : "two_way", age: ctx.get("age_years")?.value ?? null, date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`, history: roadmapInputs.armHistory, limitPitching: roadmapInputs.pitcherOutings?.limitPitching === true, primaryFocus: roadmapInputs.pitcherOutings?.primaryFocus ?? null }).map((b) => ({ ...b, steps: drillsToSteps(b.drills) })) : unguardedBlocks;
   const commandChecked = blocks.map((b) => b.modality === "pitching" && (b.because ?? []).some((x) => x.startsWith("Extra light")) && !b.drills.some((d3) => d3.commandDay) ? { ...b, because: (b.because ?? []).filter((x) => !x.startsWith("Extra light")).concat(b.status === "ready" ? ["No extra command work today because your arm limits are full."] : []) } : b);
@@ -9785,7 +9858,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const r = applyHitterReturn(b.drills, roadmapInputs.hitterReturn ?? null, new Set(proj.equipmentList));
     return { ...b, drills: r.rows, steps: drillsToSteps(r.rows), because: [...b.because ?? [], ...r.because] };
   }) : cared;
-  const warmed = withWarmupThrows(hitReturned);
+  const warmed = placeThrowsByRole(withWarmupThrows(hitReturned), { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === "pitcher"), toSteps: (d3) => drillsToSteps(d3) });
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));
