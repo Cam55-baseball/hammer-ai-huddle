@@ -123,13 +123,13 @@ export function ArmThrowsPanel({ source, planDate, fixture }: { source: EntrySou
         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           {source === "pitching" ? "Warm-up and catch play" : "Throws today"}
         </div>
-        <div className={`text-[11px] ${view.today.overDaily || view.overWeekly ? "text-destructive font-medium" : "text-muted-foreground"}`} data-testid="arm-budget-line">
-          {view.line}
+        <div className="text-[11px] text-muted-foreground" data-testid="arm-throws-total">
+          {view.throwsToday} throws today
         </div>
       </div>
       {source === "pitching" && (
         <p className="text-[11px] text-muted-foreground" data-testid="arm-pitch-only-line">
-          Pitches today: {view.pitchesToday} (Pitch Smart counts pitches only). Warm-up and catch play add on to the arm total above.
+          Pitches today: {view.pitchesToday} (Pitch Smart counts pitches only). Warm-up and catch play count toward your arm care too.
         </p>
       )}
       <ul className="space-y-2">
@@ -169,13 +169,13 @@ export function ArmThrowsPanel({ source, planDate, fixture }: { source: EntrySou
       </ul>
       {over && (
         <p role="alert" data-testid="arm-safety-warning" className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs font-medium text-destructive">
-          Safety warning: {view.today.overDaily ? `today's throws are over your daily arm limit (${view.usedToday} of ${view.budget.daily} arm units)` : `this week's throws are over your weekly arm limit (${view.usedWeek} of ${view.budget.weekly})`}. Everything you entered is saved as you really did it. Stop throwing for today — your coming days will be adjusted.
+          Safety warning: {view.today.overDaily ? "today's throws are over your safe daily amount" : "this week's throws are over your safe weekly amount"}. Everything you entered is saved as you really did it. Stop throwing for today — your coming days will be adjusted.
         </p>
       )}
       <SavedIndicator state={autosave.state} />
       {(view.today.overDaily || view.overWeekly) && (
         <p className="text-xs font-medium text-destructive" data-testid="arm-budget-stop">
-          {view.today.overDaily ? "Today's arm budget is used up — no more throwing today." : "This week's arm budget is used up — keep today to catch play only."}
+          {view.today.overDaily ? "You've thrown enough today — no more throwing today." : "You've thrown enough this week — keep today to catch play only."}
         </p>
       )}
       {view.today.warnings.length > 0 && (
