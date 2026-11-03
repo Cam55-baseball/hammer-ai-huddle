@@ -12,6 +12,8 @@ import { loadOwnerPlanDrills, ownerMindDrill, ownerCareDrill, careDosage } from 
 import { useSubscription } from "@/hooks/useSubscription";
 import { InformationalVideos } from "@/components/video-suggestions/InformationalVideos";
 import { mindVideoTopics } from "@/lib/videoMoments/mindTopics";
+import { pickSituation } from "@/lib/hammer/mindContent";
+import { useMindContentRows, usePlayerTags } from "@/hooks/useMindContent";
 
 const COPY: Record<MindKind, { title: string; how: string }> = {
   situations: { title: "Game situations", how: "Pick 3 game spots (runner on 2nd, 1 out). Say out loud what you'd do before the pitch." },
@@ -53,6 +55,8 @@ export function MindItemCard({ planDate, placement }: { planDate: string; placem
   const focusOwner = ownerLoaded && builtIn === "focus_routine" ? ownerCareDrill("hammers_today:focus_routine", { sport, modules, day: new Date(`${planDate}T12:00:00Z`) }) : null;
   const owner = focusOwner ?? (ownerLoaded && builtIn && builtIn !== "tex_vision" ? ownerMindDrill({ sport, day: new Date(`${planDate}T12:00:00Z`) }) : null);
   const kind = builtIn;
+  const { data: mindRows } = useMindContentRows();
+  const playerTags = usePlayerTags();
 
   useEffect(() => {
     let live = true;
@@ -67,7 +71,9 @@ export function MindItemCard({ planDate, placement }: { planDate: string; placem
   }, [planDate]);
 
   if (!kind || mindPlacement(kind) !== placement) return null;
-  const item = owner ? { title: owner.name, how: [focusOwner ? careDosage(owner) : owner.dosage, owner.cue].filter(Boolean).join(" · ") } : COPY[kind];
+  const item = owner ? { title: owner.name, how: [focusOwner ? careDosage(owner) : owner.dosage, owner.cue].filter(Boolean).join(" · ") }
+    : kind === "situations" ? (() => { const s = pickSituation(mindRows ?? [], playerTags, new Date(`${planDate}T12:00:00Z`)); return { title: s.title, how: s.body }; })()
+    : COPY[kind];
 
   const markDone = async () => {
     setSaving(true); setError(null);
