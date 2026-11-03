@@ -22,7 +22,7 @@ export const BYS_ITEMS = [
   { id: "royal_timing", label: "Royal timing study reminder", when: "Hitting day and the timing study is due" },
   { id: "timing_study", label: "Timing study moments", when: "You hit, run bases or pitch today" },
   { id: "analysis_prompts", label: "Record-an-analysis reminder", when: "A hitting/pitching/throwing day and a new clip is due" },
-  { id: "non_physical", label: "Fuel plan / Game IQ cards", when: "Fueling (and Game IQ when released) is on today" },
+  { id: "non_physical", label: "Fuel plan / Game IQ cards", when: "Fuel plan every day (rest-day version on rest days); Game IQ only when released" },
   { id: "season_card", label: "Your training block & season", when: "Every day" },
 ] as const;
 export type BysItemId = (typeof BYS_ITEMS)[number]["id"];
