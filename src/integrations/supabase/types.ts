@@ -14791,6 +14791,63 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_mind_content: {
+        Row: {
+          active: boolean
+          body: string
+          builtin_key: string | null
+          category: string | null
+          created_at: string
+          id: string
+          kind: string
+          levels: string[]
+          positions: string[]
+          programs: string[]
+          season_phases: string[]
+          situation_type: string | null
+          sports: string[]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          builtin_key?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          levels?: string[]
+          positions?: string[]
+          programs?: string[]
+          season_phases?: string[]
+          situation_type?: string | null
+          sports?: string[]
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          builtin_key?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          levels?: string[]
+          positions?: string[]
+          programs?: string[]
+          season_phases?: string[]
+          situation_type?: string | null
+          sports?: string[]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       plan_rebuild_jobs: {
         Row: {
           created_at: string
