@@ -3,18 +3,23 @@ import { Switch } from "@/components/ui/switch";
 import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
 import { effectivePitchingRole } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useOptionalAuth } from "@/hooks/useAuth";
+import { ownerPositionOnly } from "../../../../supabase/functions/_shared/owner/ownerPositionException";
 import { FOCUS_LABEL, ROLE_LABEL, playerPitches, type PrimaryFocus } from "@/lib/hammer/pitching/pitcherRoleAnswers";
 
 /** Owner Oct 31: pitcher/position focus, pitching role, Limit my pitching.
  *  Every tap saves and rebuilds the next 7 days through the shared pitching-schedule save. */
 export function PitcherRoleQuestions({ compact = false }: { compact?: boolean }) {
   const { modules } = useSubscription();
+  const { user } = useOptionalAuth();
   const s = usePitcherSchedule();
   const settings = s.data?.settings ?? null;
   const focus = (settings?.primary_focus ?? null) as PrimaryFocus | null;
   const role = effectivePitchingRole(settings) as "starter" | "bullpen" | "closer" | null;
   const pitches = playerPitches(modules ?? [], focus);
   const busy = s.saveSettings.isPending || s.isLoading;
+  // Owner Nov 2 #6: the owner account is never asked the pitcher questions.
+  if (ownerPositionOnly(user?.id)) return null;
   if (s.isError) return <p role="alert" className="text-sm text-destructive">Couldn't load your pitching answers. Try again.</p>;
   const pick = (key: string, on: boolean, label: string, onClick: () => void) =>
     <Button key={key} type="button" size="sm" variant={on ? "default" : "outline"} aria-pressed={on} disabled={busy} className="h-11 whitespace-normal" onClick={onClick}>{label}</Button>;

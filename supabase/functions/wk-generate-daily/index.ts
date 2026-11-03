@@ -1,4 +1,5 @@
 // supabase/functions/wk-generate-daily/index.ts
+import { ownerPositionOnly } from "../_shared/owner/ownerPositionException.ts";
 import { normalizeProgramModules } from "../_shared/programAccess.ts";
 import { reliefSets, isLowerBodyLift } from "../_shared/wic/pitching/roleCycle.ts";
 import { pitcherYardTarget, repsForYards, capSessionYards, SESSION_YARD_CAP, conditioningRules, CONDITIONING_RULES_KEY, pitcherYardRuleApplies, yardsLeftToday } from "../_shared/wic/conditioning/yards.ts";
@@ -1158,7 +1159,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
     const purchasedPitcher=schedulingModules.some(m=>[`${sport}_pitcher`,`${sport}_golden2way`,`${sport}_pitching`,'pitching'].includes(m));
     const positionProgram=schedulingModules.includes(`${sport}_5tool`) && !schedulingModules.includes(`${sport}_golden2way`);
-    const isPitcherAthlete = purchasedPitcher && !positionProgram;
+    // Owner Nov 2 #6: exactly one account (the owner) gets a position-player schedule.
+    if (ownerPositionOnly(user.id)) pitcherPrimaryFocus = "position";
+    const isPitcherAthlete = purchasedPitcher && !positionProgram && !ownerPositionOnly(user.id);
     // Owner Nov 1 round 4: pitcher conditioning and the 1000-yd rule are for pitchers only
     // (Complete Pitcher; Golden 2Way whose primary is Pitcher). Golden 2Way marked Position
     // player takes position conditioning (base routes, base-count rest, no yard cap).
