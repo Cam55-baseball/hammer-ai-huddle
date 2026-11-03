@@ -225,7 +225,7 @@ function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | 
   if (p.startsWith("off")) return "off";
   return null;
 }
-import { BeforeYouStartSection } from "@/components/hammer/BeforeYouStartSection";
+import { BeforeYouStartSection, Bys } from "@/components/hammer/BeforeYouStartSection";
 import { TimingStudyMoments } from "@/components/hammer/TimingStudyMoments";
 import { InitialAssessmentCard } from "@/components/assessment/InitialAssessmentCard";
 import { doseBullets } from "@/lib/hammer/prescription/doseBullets";
@@ -1096,38 +1096,38 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
-        <FinishProfileCard />
-        <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
-        <ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary>
-        <ErrorBoundary><InformationalVideos placement="before_you_start" sport={sportKey} /></ErrorBoundary>
-        <ErrorBoundary><InformationalVideos placement="recurring" sport={sportKey} faultKeys={faultContext.data?.recurringIssues.filter(issue => stillRecurring(issue)).map(issue => issue.fault_key) ?? []} /></ErrorBoundary>
-        {splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}
+        <Bys id="finish_profile"><FinishProfileCard /></Bys>
+        <Bys id="competition_level"><CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} /></Bys>
+        <Bys id="mind_item"><ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary></Bys>
+        <Bys id="info_videos"><ErrorBoundary><InformationalVideos placement="before_you_start" sport={sportKey} /></ErrorBoundary></Bys>
+        <Bys id="recurring_videos"><ErrorBoundary><InformationalVideos placement="recurring" sport={sportKey} faultKeys={faultContext.data?.recurringIssues.filter(issue => stillRecurring(issue)).map(issue => issue.fault_key) ?? []} /></ErrorBoundary></Bys>
+        <Bys id="baserunning_study">{splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}</Bys>
         {/* Owner order 2026-10-05: aim (with breath primer) → defensive video → coach advice → why the plan changed.
             Performance context moved to The General; Recall & Clarity moved to the identity drawer. */}
-        <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
-        <ErrorBoundary>
+        <Bys id="daily_intent"><DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} /></Bys>
+        <Bys id="defensive_prep_video"><ErrorBoundary>
           <DefensivePrepVideo />
-        </ErrorBoundary>
-        <TodaysWisdomCard />
-        <ErrorBoundary>
+        </ErrorBoundary></Bys>
+        <Bys id="coach_advice"><TodaysWisdomCard /></Bys>
+        <Bys id="day_notices"><ErrorBoundary>
           <DayNoticesDrawerItem />
-        </ErrorBoundary>
-        <ErrorBoundary><TestingDayNotice /></ErrorBoundary>
-        {faultContext.isError && <p role="alert" className="text-sm text-destructive">Couldn't check your analysis history. No analysis drill changes were applied.</p>}
+        </ErrorBoundary></Bys>
+        <Bys id="testing_day"><ErrorBoundary><TestingDayNotice /></ErrorBoundary></Bys>
+        <Bys id="check_errors">{faultContext.isError && <p role="alert" className="text-sm text-destructive">Couldn't check your analysis history. No analysis drill changes were applied.</p>}
         {drillCirculation.error && <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. No analysis drill changes were applied.</p>}
-        {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}
-        <RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} />
-        <TimingStudyMoments sport={sportKey} position={ctx.get<string>('position_primary')?.value ?? null}
+        {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}</Bys>
+        <Bys id="royal_timing"><RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} /></Bys>
+        <Bys id="timing_study"><TimingStudyMoments sport={sportKey} position={ctx.get<string>('position_primary')?.value ?? null}
           savedGoals={ctx.get<unknown>('category_goals')?.value}
           flags={faultContext.data?.rankedFaults.flatMap(f => f.signals.map(s => s.fault_key)) ?? []}
-          roles={plan.blocks.filter(prescribedToday).flatMap(b => b.modality === 'hitting' ? ['hitter' as const] : b.modality === 'baserunning' ? ['baserunner' as const] : new URL(b.route, window.location.origin).searchParams.get('module') === 'pitching' ? ['pitcher' as const] : [])} />
-        <AnalysisRecordingPrompts goalOrder={analysisGoalOrder(ctx.get<unknown>('category_goals')?.value, sportKey)} prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
+          roles={plan.blocks.filter(prescribedToday).flatMap(b => b.modality === 'hitting' ? ['hitter' as const] : b.modality === 'baserunning' ? ['baserunner' as const] : new URL(b.route, window.location.origin).searchParams.get('module') === 'pitching' ? ['pitcher' as const] : [])} /></Bys>
+        <Bys id="analysis_prompts"><AnalysisRecordingPrompts goalOrder={analysisGoalOrder(ctx.get<unknown>('category_goals')?.value, sportKey)} prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
           // Exact module route only: arm care/throwing must not invent a pitching session.
           const module = new URL(b.route, window.location.origin).searchParams.get("module");
           return module === "hitting" || module === "pitching" || module === "throwing" ? [module] : [];
-        })} />
+        })} /></Bys>
         {/* 6. Non-physical prescribed blocks: mental / vision work + eating plan */}
-        {plan.blocks
+        <Bys id="non_physical">{plan.blocks
           .filter((b) => prescribedToday(b) && PRE_START_MODALITIES.has(b.modality) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES))
           .map((b) => {
             const adj = adaptive.find((a) => a.modality === b.modality);
@@ -1140,8 +1140,8 @@ function HammerDailyPlanBody({
                 adaptiveNote={adj?.note}
               />
             );
-          })}
-        <UpdatingBadge />
+          })}</Bys>
+        <Bys id="season_card"><UpdatingBadge />
         {/* Quarter / phase + weekly rhythm context */}
         <WeeklyRoadmapStrip plan={plan}
           sport={sportKey}
@@ -1152,7 +1152,7 @@ function HammerDailyPlanBody({
             ...wkRx.grouped.batSpeedCard.length ? ["Bat speed"] : [],
             ...wkRx.grouped.conditioningCard.length ? [combinedBaseRunning ? "Base running & conditioning" : "Conditioning"] : [],
             ...wkRx.grouped.lifts.length ? [liftIsTissueCare ? "Tissue care" : "Lift / tissue care"] : [],
-          ])]} />
+          ])]} /></Bys>
       </BeforeYouStartSection>
     <Card id="hammer-plan" className="scroll-mt-24">
       <CardHeader className="pb-2" data-tour="today-plan-heading" data-tour-context>
@@ -1996,6 +1996,12 @@ function BlockCard({
             </div>
           </div>
 
+          {block.modality === "warmup" && block.drills.some((d) => (d as { throwSection?: boolean }).throwSection) && (
+            <div className="space-y-1" data-testid="warmup-throw-log">
+              <p className="text-xs font-semibold">Log throwing practice</p>
+              <ArmThrowsPanel source="position" planDate={planDate} />
+            </div>
+          )}
           {chatOpen && <InlineBlockChat block={block} />}
         </CollapsibleContent>
       </Collapsible>

@@ -588,51 +588,80 @@ const handler = async (req: Request): Promise<Response> => {
     // Owner Nov 3 item 1: the answer is already saved; the seven-day rebuild runs here
     // in the background (survives the player leaving the app) through the exact same
     // per-day compose path, one day at a time (the day-lock forbids overlapping days).
-    if (!isServiceCaller && rawBody.rebuild_week_background === true) {
-      const reason = typeof rawBody.change_text === "string" ? rawBody.change_text.slice(0, 200) : "";
-      const first = typeof rawBody.first_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawBody.first_date) ? rawBody.first_date : "";
-      if (!reason || !first) return json({ error: "invalid_request" }, 400);
-      const { data: job, error: jobErr } = await admin.from("plan_rebuild_jobs")
-        .insert({ user_id: user.id, reason, first_date: first }).select("id").single();
-      if (jobErr || !job) return json({ error: "job_unavailable" }, 500);
-      const key = `saved-change:${job.id}`;
+    // Nov 3 round 2: a worker is cut off after ~150 s, which stranded jobs at
+    // "running" after 6 of 7 days. Each run now works inside a time budget and
+    // hands the leftover days to a fresh copy of itself (rebuild_week_continue),
+    // writing heartbeat_at after every day so the app can spot a stalled job.
+    if (!isServiceCaller && (rawBody.rebuild_week_background === true || typeof rawBody.rebuild_week_continue === "string")) {
+      const BUDGET_MS = 90_000;
+      const runStart = Date.now();
+      let job: { id: string; reason: string; first_date: string; dates_done: string[]; dates_failed: string[]; dates_kept: string[]; hops: number } | null = null;
+      if (typeof rawBody.rebuild_week_continue === "string") {
+        const { data } = await admin.from("plan_rebuild_jobs")
+          .select("id,reason,first_date,status,dates_done,dates_failed,dates_kept").eq("id", rawBody.rebuild_week_continue).eq("user_id", user.id).maybeSingle();
+        if (!data || (data as any).status !== "running") return json({ ok: true, skipped: true }, 200);
+        job = { ...(data as any), hops: Math.min(Number(rawBody.hops ?? 0) || 0, 6) };
+      } else {
+        const reason = typeof rawBody.change_text === "string" ? rawBody.change_text.slice(0, 200) : "";
+        const first = typeof rawBody.first_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawBody.first_date) ? rawBody.first_date : "";
+        if (!reason || !first) return json({ error: "invalid_request" }, 400);
+        const { data, error: jobErr } = await admin.from("plan_rebuild_jobs")
+          .insert({ user_id: user.id, reason, first_date: first }).select("id,reason,first_date").single();
+        if (jobErr || !data) return json({ error: "job_unavailable" }, 500);
+        job = { ...(data as any), dates_done: [], dates_failed: [], dates_kept: [], hops: 0 };
+      }
+      const j = job!;
+      const reason = j.reason;
+      const key = `saved-change:${j.id}`;
+      const self = (body: Record<string, unknown>) => fetch(`${SUPABASE_URL}/functions/v1/wk-generate-daily`, {
+        method: "POST",
+        headers: { Authorization: authHeader, apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
       const call = async (date: string, suffix = "") => {
         for (let attempt = 0; attempt < 2; attempt++) {
-          const r = await fetch(`${SUPABASE_URL}/functions/v1/wk-generate-daily`, {
-            method: "POST",
-            headers: { Authorization: authHeader, apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
-            body: JSON.stringify({ plan_date: date, compose_sport_day: true, change_reason: "player_request", change_text: reason, change_key: `${key}:${date}${suffix}` }),
-          });
+          const r = await self({ plan_date: date, compose_sport_day: true, change_reason: "player_request", change_text: reason, change_key: `${key}:${date}${suffix}` });
           const b = await r.json().catch(() => null) as any;
-          if (r.status === 429 && attempt === 0) { await new Promise((ok) => setTimeout(ok, 60_000)); continue; }
+          if (r.status === 429 && attempt === 0) { await new Promise((ok) => setTimeout(ok, 20_000)); continue; }
           return { status: r.status, body: b };
         }
         return { status: 429, body: null };
       };
       const work = (async () => {
-        const done: string[] = [], failed: string[] = [], kept: string[] = [];
+        const done = [...(j.dates_done ?? [])], failed = [...(j.dates_failed ?? [])], kept = [...(j.dates_kept ?? [])];
+        const handled = new Set([...done, ...failed, ...kept]);
         let message: string | null = null;
+        let handedOff = false;
         try {
           for (let offset = 0; offset < 7; offset++) {
-            const date = shiftIso(first, offset);
+            const date = shiftIso(j.first_date, offset);
+            if (handled.has(date)) continue;
+            if (Date.now() - runStart > BUDGET_MS && j.hops < 6) {
+              await admin.from("plan_rebuild_jobs").update({ heartbeat_at: new Date().toISOString() }).eq("id", j.id);
+              const next = self({ rebuild_week_continue: j.id, hops: j.hops + 1 }).then((r) => r.text()).catch(() => null);
+              await Promise.race([next, new Promise((ok) => setTimeout(ok, 2_000))]);
+              handedOff = true;
+              return;
+            }
             let r = await call(date);
             if (r.body?.error === "adjust_failed" && r.body?.message === "Day changed; rebuild from fresh saved work" || r.body?.error === "Sport day changed; rebuild from fresh saved work") r = await call(date, ":fresh");
             if (r.body?.error === "adjust_failed" && /protected/i.test(String(r.body?.message ?? ""))) kept.push(date);
             else if (r.body?.error === "not_started") { message = `${reason} — saved. Your plan builds when you tap Start.`; break; }
             else if (r.body?.ok === true && r.body?.composed === true && r.body?.degraded !== true) done.push(date);
             else failed.push(date);
-            await admin.from("plan_rebuild_jobs").update({ dates_done: done, dates_failed: failed, dates_kept: kept }).eq("id", job.id);
+            await admin.from("plan_rebuild_jobs").update({ dates_done: done, dates_failed: failed, dates_kept: kept, heartbeat_at: new Date().toISOString() }).eq("id", j.id);
           }
-        } catch { if (!failed.length) failed.push(first); }
+        } catch { if (!failed.length) failed.push(j.first_date); }
+        if (handedOff) return;
         await admin.from("plan_rebuild_jobs").update({
           status: failed.length ? "failed" : "done", dates_done: done, dates_failed: failed, dates_kept: kept,
           message: message ?? (failed.length ? `${failed.length} day${failed.length === 1 ? "" : "s"} couldn't update. Tap Try again.` : "Your plan is updated."),
-          finished_at: new Date().toISOString(),
-        }).eq("id", job.id);
+          finished_at: new Date().toISOString(), heartbeat_at: new Date().toISOString(),
+        }).eq("id", j.id);
       })();
       const rt = (globalThis as any).EdgeRuntime;
       if (typeof rt?.waitUntil === "function") rt.waitUntil(work); else await work;
-      return json({ ok: true, background: true, job_id: job.id }, 202);
+      return json({ ok: true, background: true, job_id: j.id }, 202);
     }
 
     // Oct 29 outage guard: TEST/demo identities (hammersmodality+…@gmail.com)

@@ -1352,6 +1352,13 @@
       "when": 1793723184691,
       "tag": "0192_plan_mind_content",
       "breakpoints": true
+    },
+    {
+      "idx": 193,
+      "version": "7",
+      "when": 1793731245357,
+      "tag": "0193_plan_rebuild_jobs_heartbeat",
+      "breakpoints": true
     }
   ]
 }

@@ -9,7 +9,9 @@
  * the Hammers Today plan itself is the immediate focus. Open state is
  * remembered per day only (localStorage), never server state.
  */
-import { useEffect, useState, type ReactNode } from "react";
+import { Children, isValidElement, useEffect, useState, type ReactNode } from "react";
+import { bysLevel, type BysLevel } from "@/lib/hammer/beforeYouStartImportance";
+import { useBysImportance } from "@/hooks/useBysImportance";
 import { createPortal } from "react-dom";
 
 import { ChevronDown, ChevronUp, ListChecks } from "lucide-react";
@@ -20,6 +22,27 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+
+/** Marks one "Before you start" item for the importance map. Renders its children unchanged. */
+export function Bys({ children }: { id: string; children?: ReactNode }) {
+  return <>{children}</>;
+}
+
+const LEVEL_STYLE: Record<BysLevel, string> = {
+  1: "border-[hsl(var(--bys-level-1))] shadow-[0_0_14px_hsl(var(--bys-level-1)/0.45)]",
+  2: "border-[hsl(var(--bys-level-2))] shadow-[0_0_14px_hsl(var(--bys-level-2)/0.45)]",
+  3: "border-[hsl(var(--bys-level-3))] shadow-[0_0_14px_hsl(var(--bys-level-3)/0.45)]",
+};
+
+/** Groups marked items into Level 1 → 2 → 3 (owner map; unassigned → Level 2). Pure; tested. */
+export function groupByLevel(children: ReactNode, saved: Record<string, unknown> | null | undefined) {
+  const groups: Record<BysLevel, ReactNode[]> = { 1: [], 2: [], 3: [] };
+  Children.toArray(children).forEach((c) => {
+    const id = isValidElement(c) && c.type === Bys ? String((c.props as { id: string }).id) : "";
+    groups[bysLevel(id, saved)].push(c);
+  });
+  return groups;
+}
 
 const dayKey = () =>
   `hammer.today.beforeYouStart.open.${new Date().toISOString().slice(0, 10)}`;
@@ -47,6 +70,8 @@ export function BeforeYouStartSection({
     }
   }, [open]);
 
+  const importance = useBysImportance();
+  const groups = groupByLevel(children, importance.data);
   const card = (
     <Card className="border-border/70 bg-muted/20">
       <Collapsible open={open} onOpenChange={setOpen}>
@@ -74,7 +99,16 @@ export function BeforeYouStartSection({
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
-          <div className="space-y-2 border-t border-border/60 p-2 sm:p-3">{children}</div>
+          <div className="space-y-3 border-t border-border/60 p-2 sm:p-3">
+            {([1, 2, 3] as const).map((lv) => groups[lv].length ? (
+              // A drawer whose items all decide not to show today hides itself.
+              <section key={lv} data-bys-level={lv} aria-label={`Level ${lv}`}
+                className={`space-y-2 rounded-lg border-2 p-2 [&:not(:has(>div>*))]:hidden ${LEVEL_STYLE[lv]}`}>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Level {lv}</div>
+                <div className="space-y-2">{groups[lv]}</div>
+              </section>
+            ) : null)}
+          </div>
         </CollapsibleContent>
       </Collapsible>
     </Card>

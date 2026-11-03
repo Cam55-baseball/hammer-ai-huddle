@@ -8,6 +8,7 @@
 import { describe, expect, it, beforeAll } from "vitest";
 import { buildHammerDailyPlan } from "./dailyPlan";
 import { NORMAL_SIGNAL } from "./scheduleContext";
+import { throwKind } from "./throwPlacement";
 import { setOwnerPlanDrills } from "@/lib/prescription/ownerPlanDrills";
 import { resolveOutingFacts, type PitcherOutingRow, type PitcherSettingsRow } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 import { sprintDose, reliefSets } from "../../../../supabase/functions/_shared/wic/pitching/roleCycle";
@@ -55,7 +56,7 @@ function run(sport: "baseball" | "softball", role: Role, tier = "pitcher", focus
       const t = plan.blocks.find(b => b.modality === "throwing" && b.status === "ready");
       const s = plan.blocks.find(b => b.modality === "strength" && b.status === "ready");
       const count = (ds: readonly any[] | undefined) => (ds ?? []).reduce((n, x) => n + (x.armEvent && x.name && !/warm-up/i.test(x.name) ? x.armEvent.count : 0), 0);
-      week.push({ date: day, dow: date.getDay(), outing: role === "starter" ? date.getDay() === 5 : date.getDay() === 5 || date.getDay() === 6, command: (p?.drills ?? []).some((x: any) => x.commandDay), title: p?.status === "ready" ? p.title : p ? `${p.title} (${p.status})` : "no pitching card", pitchNames: (p?.drills ?? []).map((x: any) => x.name), strength: (s?.drills ?? []).map((x: any) => `${x.name} ${x.dosage}`), pitches: count(p?.status === "ready" ? p.drills : []), position: count(t?.drills), because: [...(p?.because ?? []), ...(s?.because ?? [])] });
+      week.push({ date: day, dow: date.getDay(), outing: role === "starter" ? date.getDay() === 5 : date.getDay() === 5 || date.getDay() === 6, command: (p?.drills ?? []).some((x: any) => x.commandDay), title: p?.status === "ready" ? p.title : p ? `${p.title} (${p.status})` : "no pitching card", pitchNames: (p?.drills ?? []).map((x: any) => x.name), strength: (s?.drills ?? []).map((x: any) => `${x.name} ${x.dosage}`), pitches: count(p?.status === "ready" ? p.drills : []) + count((t?.drills ?? []).filter((x: any) => throwKind(x) !== "position")), position: count((t?.drills ?? []).filter((x: any) => throwKind(x) === "position")), because: [...(p?.because ?? []), ...(s?.because ?? [])] });
     }
     weeks.push(week);
   }

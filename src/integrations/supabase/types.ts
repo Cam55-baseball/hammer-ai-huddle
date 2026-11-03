@@ -14856,6 +14856,7 @@ export type Database = {
           dates_kept: string[]
           finished_at: string | null
           first_date: string
+          heartbeat_at: string
           id: string
           message: string | null
           reason: string
@@ -14869,6 +14870,7 @@ export type Database = {
           dates_kept?: string[]
           finished_at?: string | null
           first_date: string
+          heartbeat_at?: string
           id?: string
           message?: string | null
           reason: string
@@ -14882,6 +14884,7 @@ export type Database = {
           dates_kept?: string[]
           finished_at?: string | null
           first_date?: string
+          heartbeat_at?: string
           id?: string
           message?: string | null
           reason?: string
