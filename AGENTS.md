@@ -47,7 +47,6 @@
 - Built-in drill equipment corrections use the same Vault audit and approval lifecycle, with review links to Drill Builder. Why: static review badges cannot track a later owner approval or reopen after another correction.
 - Catalog alternative gear uses complete groups in equipment_alternatives; all mandatory gear plus one complete group must be available. Why: dumbbell-or-kettlebell must not require both or silently accept neither.
 - Sport drill-library equipment is adapted through `sportDrillGear` to the shared saved-plan gear judge. Why: mandatory and complete alternative groups must have identical availability semantics across libraries and Swap.
-- Server block generation bundles the existing pure daily-plan builder through `scripts/build-hammer-block-bundle.mjs`, rejecting browser/auth dependencies and injecting owner drills/stage tags. Why: block Swap must reuse the same generator rather than accept client snapshots or create a second builder.
 - Envelopes use hook-free `contextProjection`, re-exported by `athleteContext`. Why: client/server builders share lineage and missingness without browser imports.
 
 - TEST-only catalog rows (`visible_to`) are filtered by `src/lib/catalog/testOnlyVisibility.ts` in non-owner client lists and builder/Swap server queries. Why: real players never see TEST items.
