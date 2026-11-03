@@ -17,6 +17,7 @@ import { previousPlanDates, savedTrainingHistory, savedPlanReasons, type SavedCo
 import { sixWeekPlanDates } from '@/lib/coach/sixWeekPlanSummary';
 import { CoachSixWeekSummary } from './CoachSixWeekSummary';
 import { CoachPlanActuals } from './CoachPlanActuals';
+import { CoachPeriodizationAdvanced } from './CoachPeriodizationAdvanced';
 import { isoShift } from '../../../supabase/functions/_shared/wic/schedule/timeline';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -160,6 +161,7 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
         <SavedWork blocks={blocks} />
       )}
       {ahead === 0 && <CoachPlanActuals athleteId={athleteId} planDate={today} />}
+      <CoachPeriodizationAdvanced />
       <div className="border-t border-border pt-3 space-y-3">
         <Button variant="ghost" size="sm" aria-expanded={historyOpen} onClick={() => setHistoryFor(historyOpen ? null : historyKey)}>
           {historyOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}Saved work — last 7 days
