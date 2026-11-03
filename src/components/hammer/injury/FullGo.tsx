@@ -49,9 +49,11 @@ export function FullGoPrompt({ area, history, minor }: { area: string; history: 
   const [result, setResult] = useState<string | null>(null);
   if (pendingFullGoRequest(history, area)) return <p className="text-xs text-muted-foreground">Waiting for your parent to confirm your {area} is healed.</p>;
   const run = async () => {
-    setBusy(true);
+    // Owner Nov 2 #9: close right away; the save and rebuild finish in the background with a toast.
+    setStep(0); setBusy(true);
+    toast.message('Saving. Your plan updates in the background.');
     try { const r = await requestFullGo(area, qc); setResult(r.message); if (r.kind === 'failed') toast.error(r.message); else toast.success(r.message); }
-    finally { setBusy(false); setStep(0); }
+    finally { setBusy(false); }
   };
   return <div className="space-y-1">
     <Button size="sm" variant="outline" disabled={busy} onClick={() => setStep(1)}>{busy ? 'Saving…' : `My ${area} is healed and full go`}</Button>
