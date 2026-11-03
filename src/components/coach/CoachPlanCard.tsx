@@ -136,7 +136,7 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
         <h3 className="text-sm font-semibold">Hammers' plan for this player</h3>
         {dayToggle}
         {seasonLine}
-        <p className="text-sm text-muted-foreground">{ahead === 0 ? "No plan saved for today yet. It appears here after the player opens today's plan." : 'No plan saved for tomorrow yet.'}</p>
+        <p className="text-sm text-muted-foreground">{ahead === 0 ? "No plan saved for today yet. It appears here after the player opens today's plan." : 'No plan saved for tomorrow yet.'}</p><CoachPeriodizationAdvanced athleteId={athleteId} />
       </section>
     );
   }
@@ -161,7 +161,7 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
         <SavedWork blocks={blocks} />
       )}
       {ahead === 0 && <CoachPlanActuals athleteId={athleteId} planDate={today} />}
-      <CoachPeriodizationAdvanced />
+      <CoachPeriodizationAdvanced athleteId={athleteId} />
       <div className="border-t border-border pt-3 space-y-3">
         <Button variant="ghost" size="sm" aria-expanded={historyOpen} onClick={() => setHistoryFor(historyOpen ? null : historyKey)}>
           {historyOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}Saved work — last 7 days

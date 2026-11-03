@@ -1331,6 +1331,13 @@
       "when": 1793681768827,
       "tag": "0189_onboarding_single_health_season",
       "breakpoints": true
+    },
+    {
+      "idx": 190,
+      "version": "7",
+      "when": 1793683602117,
+      "tag": "0190_connected_coach_periodization",
+      "breakpoints": true
     }
   ]
 }

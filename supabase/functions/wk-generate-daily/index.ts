@@ -20,6 +20,7 @@ import { isPlanGameDay } from "../_shared/schedule/isGameDay.ts";
 // Idempotent for (user_id, plan_date, sequence_field).
 import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
 import { masteryContext } from "../_shared/masteryContext.ts";
+import { safeTuningBlock } from '../_shared/wic/coachPeriodization.ts';
 import { composeSportDay } from '../_shared/composeSportDay.ts';
 import { gamePitchLoads } from '../_shared/wic/pitching/gamePitchLoad.ts';
 import { optionalCompoundAvailable, removeDuplicateCompounds } from '../_shared/wic/lift/optionalSlot.ts';
@@ -1359,7 +1360,11 @@ const handler = async (req: Request): Promise<Response> => {
     // a missing row, a null or a malformed value can never turn a dose change on.
     const liftingV2Enabled = (liftingFlagRow as any)?.setting_value === true
       || String((liftingFlagRow as any)?.setting_value ?? "") === "true";
-    const block = blocks!;
+    if (!blocks) throw new Error('Phase settings unavailable');
+    const coachTuningRead = await admin.rpc('coach_phase_effective', {p:user.id,ph:phaseRes.phase});
+    if (coachTuningRead.error) throw coachTuningRead.error;
+    const coachTuning = coachTuningRead.data as {settings:BlockRow;source:string;revision:string} | null;
+    const block = coachTuning?.source !== 'owner' && coachTuning?.settings ? safeTuningBlock(blocks, coachTuning.settings) : blocks;
     // ---- Unknown equipment is NOT "owns nothing" -------------------------
     // An athlete who has never declared their gear must not silently lose the
     // whole gear-requiring catalog. We record that the answer is UNKNOWN,
@@ -2635,8 +2640,8 @@ const handler = async (req: Request): Promise<Response> => {
             trainingAgeYears,
             weekInBlock: null, // re-resolved with the real block week in the post-pass
             cnsClamped: clamped,
-            capSets: doseCap?.sets ?? null,
-            capReps: doseCap?.reps ?? null,
+            capSets: coachTuning?.source !== 'owner' && slot === 'lift' ? Math.min(doseCap?.sets ?? Infinity,block.compound_max_sets) : doseCap?.sets ?? null,
+            capReps: coachTuning?.source !== 'owner' && slot === 'lift' ? Math.min(doseCap?.reps ?? Infinity,block.compound_max_reps) : doseCap?.reps ?? null,
             method: arcMethod,
             methodContext,
 
@@ -2770,8 +2775,8 @@ const handler = async (req: Request): Promise<Response> => {
                 band: resolvedDose.band,
                 envelope: resolvedDose.envelope,
                 notes: resolvedDose.notes,
-                cap_sets: (overrides as any).dose_cap?.sets ?? null,
-                cap_reps: (overrides as any).dose_cap?.reps ?? null,
+                cap_sets: coachTuning?.source !== 'owner' && slot === 'lift' ? Math.min((overrides as any).dose_cap?.sets ?? Infinity,block.compound_max_sets) : (overrides as any).dose_cap?.sets ?? null,
+                cap_reps: coachTuning?.source !== 'owner' && slot === 'lift' ? Math.min((overrides as any).dose_cap?.reps ?? Infinity,block.compound_max_reps) : (overrides as any).dose_cap?.reps ?? null,
                 role,
                 category: s.movement.movement_category ?? s.movement.category ?? null,
               }

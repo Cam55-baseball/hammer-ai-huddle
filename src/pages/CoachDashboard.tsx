@@ -1,6 +1,7 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { SendAthleteRequest } from "@/components/connections/SendAthleteRequest";
+import { CoachPeriodizationEditor } from '@/components/coach/CoachPeriodizationEditor';
 import { CoachProgramCard } from "@/components/coach/CoachProgramCard";
 import { CoachCardGuide } from "@/components/coach/CoachCardGuide";
 import { TeamDisciplineSummary } from "@/components/coach/TeamDisciplineSummary";
@@ -288,7 +289,7 @@ export default function CoachDashboard() {
           </TabsList>
         </Tabs>
         <Button asChild className="gap-2"><Link to="/my-custom-activities"><Send className="h-4 w-4"/>Send workouts</Link></Button>
-        <CoachCardGuide />
+        <CoachCardGuide /><details className="border-y border-border py-3"><summary className="min-h-11 cursor-pointer font-medium">Periodization tuning · all my players</summary><CoachPeriodizationEditor/></details>
 
         <Card>
           <CardHeader>

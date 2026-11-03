@@ -15,7 +15,7 @@ if (originalFetch) {
 }
 
 // Mock window.matchMedia
-Object.defineProperty(window, "matchMedia", {
+if (typeof window !== 'undefined') Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: (query: string) => ({
     matches: false,
@@ -46,7 +46,7 @@ class MockIntersectionObserver {
 (globalThis as any).IntersectionObserver = MockIntersectionObserver;
 
 // Mock crypto.randomUUID for Dnd-kit and other libraries
-Object.defineProperty(globalThis, 'crypto', {
+if (typeof window !== 'undefined') Object.defineProperty(globalThis, 'crypto', {
   value: {
     randomUUID: () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
   },
