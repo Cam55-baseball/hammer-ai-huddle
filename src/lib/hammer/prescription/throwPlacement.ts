@@ -64,7 +64,13 @@ export function placeThrowsByRole<B extends Block>(blocks: readonly B[], opts: {
   const di = out.findIndex((b) => b.modality === "defense" && b.status === "ready");
   const section: Drill[] = [];
   const position: Drill[] = [];
-  for (const d of rows) (throwKind(d) === "position" ? position : section).push(withThrowCount(d));
+  const ri = out.findIndex((b) => b.modality === "recovery" && b.status === "ready");
+  const cooldown: Drill[] = [];
+  for (const d of rows) {
+    if (ri >= 0 && /cooldown|cool-down/i.test(d.name)) cooldown.push(d);
+    else (throwKind(d) === "position" ? position : section).push(withThrowCount(d));
+  }
+  if (cooldown.length) { const r = out[ri]; const drills = [...r.drills, ...cooldown]; out[ri] = { ...r, drills, steps: opts.toSteps(drills) }; }
   // Warm-up throws already moved into the warm-up: keep them together at the very end.
   if (wi >= 0) {
     const w = out[wi];

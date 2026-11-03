@@ -1,3 +1,4 @@
+import { placeThrowsByRole } from "./throwPlacement";
 import { sortByWarmupStage } from "./warmupStages";
 import { normalizeProgramModules } from '../../../../supabase/functions/_shared/programAccess';
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "../athleteFeatureAvailability";
@@ -2674,7 +2675,7 @@ export function buildHammerDailyPlan(
     const throwingDrills=b.drills.filter(d=>d.armCard==='throwing'&&!(preStart&&d.armEvent));
     const pitching={...b,drills:pitchingDrills,steps:drillsToSteps(pitchingDrills),modality:'pitching' as const,title:`Pitching — ${sport==='softball'?'windmill':'baseball'} · ${type.replace(/_/g,' ')}`,route:'/practice?module=pitching',ctaLabel:'Open pitching',gamePlanTemplate:null,because:[...(b.because??[]),...command.because,"Pitching and all other throws share your existing arm limits. No extra pitches are added for this card."]};
     const defenseToday=prehabbed.some(x=>x.modality==='defense'&&x.status==='ready');
-    return [pitching,...(throwingDrills.length&&(!access.pitcherOnly||defenseToday)?[{...b,drills:throwingDrills,steps:drillsToSteps(throwingDrills),title:'Throwing — position work within your shared arm budget',gamePlanTemplate:null}]:[])];
+    return [pitching,...(throwingDrills.length&&(!access.pitcherOnly||defenseToday)?[{...b,drills:throwingDrills,steps:drillsToSteps(throwingDrills),title:'Throwing — position work',gamePlanTemplate:null}]:[])];
   });
   const blocks=access?.hasPitching?finalArmGuard(unguardedBlocks,{sport,role:access.pitcherOnly?'pitcher':'two_way',age:ctx.get<number>('age_years')?.value??null,date:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,history:roadmapInputs.armHistory,limitPitching:roadmapInputs.pitcherOutings?.limitPitching===true,primaryFocus:roadmapInputs.pitcherOutings?.primaryFocus??null}).map(b=>({...b,steps:drillsToSteps(b.drills)})):unguardedBlocks;
   // A command drill the arm limits removed gets an honest reason instead of a promise.
@@ -2695,7 +2696,8 @@ export function buildHammerDailyPlan(
   const cared = caredRaw.map((b, i) => b === conditioned[i] ? b : { ...b, steps: drillsToSteps(b.drills) });
   // Owner Nov 1 round 6 Part 3: returning hitters — prescribed effort, tee/front toss only for injury/under-13 start or the bridge.
   const hitReturned = roadmapInputs.hitterReturn ? cared.map(b => { if (b.modality !== 'hitting' || b.status !== 'ready') return b; const r = applyHitterReturn(b.drills as any[], roadmapInputs.hitterReturn ?? null, new Set(proj.equipmentList)); return { ...b, drills: r.rows as typeof b.drills, steps: drillsToSteps(r.rows as typeof b.drills), because: [...(b.because ?? []), ...r.because] }; }) : cared;
-  const warmed = withWarmupThrows(hitReturned);
+  // Owner Nov 3 round 2: position players have no Throwing card (warm-up section + Defense); pitchers keep it, ordered.
+  const warmed = placeThrowsByRole(withWarmupThrows(hitReturned) as any[], { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === 'pitcher'), toSteps: (d) => drillsToSteps(d as any) }) as typeof hitReturned;
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
