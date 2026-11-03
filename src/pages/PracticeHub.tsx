@@ -36,7 +36,7 @@ import { useSessionDefaults } from '@/hooks/useSessionDefaults';
 import { useSwitchHitterProfile } from '@/hooks/useSwitchHitterProfile';
 import { useLiveRepBroadcast } from '@/hooks/useLiveRepBroadcast';
 import { PartnerRepsFeed } from '@/components/practice/PartnerRepsFeed';
-import { PRACTICE_WINDOW_SAVED, PRACTICE_MODULES, PRACTICE_TYPES } from '@/lib/hammer/practiceWindow';
+import { PRACTICE_WINDOW_SAVED, PRACTICE_MODULES, PRACTICE_TYPES, practiceModuleFor } from '@/lib/hammer/practiceWindow';
 import { recordedBuntOutcomes } from '../../supabase/functions/_shared/wic/buntingOutcomes';
 
 const modules = [
