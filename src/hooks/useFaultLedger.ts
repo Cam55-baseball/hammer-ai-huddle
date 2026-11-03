@@ -9,6 +9,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { freshAccessToken } from "@/lib/auth/freshAccessToken";
 import { rankFaults, type FaultSignal, type RankedFault } from "@/lib/wic/faultLedger/ranking";
 import type { ClipEvidence } from "@/lib/wic/faultLedger/cleanClipFade";
 
@@ -19,7 +20,12 @@ import type { ClipEvidence } from "@/lib/wic/faultLedger/cleanClipFade";
  */
 async function readClipEvidence(): Promise<ClipEvidence[]> {
   try {
-    const { data, error } = await supabase.functions.invoke("fault-clip-evidence", { body: {} });
+    const token = await freshAccessToken();
+    if (!token) return [];
+    const { data, error } = await supabase.functions.invoke("fault-clip-evidence", {
+      body: {},
+      headers: { Authorization: `Bearer ${token}` },
+    });
     if (error || !Array.isArray((data as any)?.clips)) return [];
     return (data as any).clips as ClipEvidence[];
   } catch {
