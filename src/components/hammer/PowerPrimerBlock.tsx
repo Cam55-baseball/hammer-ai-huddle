@@ -207,7 +207,7 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
       </> : <><p data-primer-rating={r.rating} className="text-[11px]">Rated {r.rating}/5 — {QUALITY.find((q) => q.value === r.rating)?.label}{r.value != null ? ` · ${r.value} ${UNIT[pp.target]}` : ""}</p>{!focus.active && pp.stop.kind === "sprint" && <RestTimer label="Rest after this run set" seconds={sprintRestSeconds(sprintFeet)} />}</>}
       {pp.stop.kind === "sprint" && <p className="text-xs text-muted-foreground">{sprintRestWhy(sprintFeet) ?? "Run distance not entered — rest time is not yet set."}</p>}
     </li>);
-    if (inline && target) { const el = portals.pop()!; portals.push(<ol key={`p${i}`} className="my-1 list-none">{createPortal(el, target)}</ol>); }
+    if (inline && target) { const el = portals.pop()!; portals.push(createPortal(<ol className="my-1 list-none">{el}</ol>, target, `p${i}`)); }
   }
 
   const entries = <section hidden={!focus.visible} data-power-primer-entries className="space-y-2">
@@ -215,6 +215,7 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
     {locked ? (
       <p className="flex items-center gap-1 text-xs text-muted-foreground"><Lock className="h-3 w-3" /> All-out throws unlock after your throwing warm-up (in the drop-down below). Your lift sets go ahead now.</p>
     ) : <ol className="space-y-1">{rows}</ol>}
+    {!locked && portals}
     {inline && !locked && portals.length === 0 && !stopReason && <p className="text-xs text-muted-foreground">Log lift set 1 — your first all-out set pops up right under it.</p>}
     {stopReason && !locked && <p data-pap-stopped className="text-xs font-medium">{stopReason}</p>}
     {savedRounds.error && <p role="alert" className="text-xs text-destructive">Couldn't load your saved primer rounds. Your lift stays available.</p>}
