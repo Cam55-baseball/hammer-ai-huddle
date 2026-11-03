@@ -3,6 +3,7 @@
  * Shows phase, why-this-lift, training-age reasoning, CNS load, reductions,
  * injury substitutions, and a complete/skip control.
  */
+import { playerCardNote } from "@/lib/hammer/playerCardNotes";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { PocketCard, usePocketDetails, usePocketLogHost } from "./cards/PocketCard";
@@ -228,10 +229,10 @@ function WkPrescriptionContent({
     ? `Updating your plan to match ${phaseDisplay ?? "your current phase"}…`
     : phaseMismatch
     ? `This movement was generated under an older season setting. Hammer is rebuilding today's plan so it matches ${phaseDisplay ?? "your current phase"}.`
-    : swappedIn ? null : cleanAthleteCopy(rx.why_v2?.why_exercise ?? why?.why ?? null);
+    : swappedIn ? null : playerCardNote(cleanAthleteCopy(rx.why_v2?.why_exercise ?? why?.why ?? null));
   const todayLine = phaseMismatch || (generating && rawMismatch)
     ? null
-    : cleanAthleteCopy(rx.why_v2?.why_today ?? null);
+    : playerCardNote(cleanAthleteCopy(rx.why_v2?.why_today ?? null));
   const mastery = masteryPlanGuidance({guidance:(rx.why_payload as any)?.mastery_focus});
   // Step 21D4 — "Why reduced today" belongs to real trims only. A scheduling
   // statement ("You're rested — heavy day is on", "Next heavy day: Monday")
