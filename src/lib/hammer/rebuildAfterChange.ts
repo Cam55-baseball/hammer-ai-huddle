@@ -44,6 +44,8 @@ async function rebuildOnce(reason: string, today: string, effectiveDate?: string
         const body = await (error as { context?: Response }).context?.clone?.().json?.().catch(() => null);
         // Server refused to replace work the player already chose or marked: kept by design, not a failure to retry.
         if (body?.error === 'adjust_failed' && /protected/i.test(String(body?.message ?? ''))) { kept.push(date); continue; }
+        // Before Start there is no plan to rebuild; the Start gate stays on the server. The answer is saved.
+        if (body?.error === 'not_started') return { ok: true, notStarted: true, failed: [], kept: [], weekIssues: [], missingInputs: false, message: `${reason} — saved. Your plan builds when you tap Start.` };
         if (body?.error === 'initial_inputs_missing') { missingInputs = true; for (let rest = offset; rest < 7; rest++) failed.push(isoShift(firstDate, rest)); break; }
       }
       if (error || data?.ok !== true || data?.composed !== true || data?.degraded === true) failed.push(date);
