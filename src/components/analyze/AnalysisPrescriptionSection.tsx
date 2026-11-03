@@ -148,6 +148,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
 
   const { catalog, historyCatalog, circulation, log, userId, ready, error: circulationError,
     matches: goalMatches, isPending: goalsPending, goalError } = useAnalysisGoalDrills(module, sport);
+  usePlanCheckFailureLog('drill_choice', circulationError);
   const frozenKey = historyKey ? `rx.frozen.v2:${userId ?? "anon"}:${historyKey}` : null;
   const checkMatches = useMemo(
     () => practiceCheckDrills(practiceChecks ?? [], { catalog, circulation, module, sport, includePendingReview }),
