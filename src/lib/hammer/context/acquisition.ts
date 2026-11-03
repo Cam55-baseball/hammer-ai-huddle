@@ -13,6 +13,7 @@
  * preserved, never imputed.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeSeasonStatus } from '../../../../supabase/functions/_shared/seasonPhase';
 
 export const MINIMUM_CONTEXT_SET = [
   "sport_primary",
@@ -166,6 +167,17 @@ export async function persistContextAnswer(
   const column = COLUMN_BY_KEY[key];
   if (!column) throw new Error(`Unknown context key: ${key}`);
   await ensureFreshSession(userId);
+
+  // Legacy questions route to the one season record, never the retired context field.
+  if (key === 'season_phase') {
+    const phase = normalizeSeasonStatus(value);
+    if (!phase || !['off_season','preseason','in_season','post_season'].includes(phase)) throw new Error('Choose your season phase.');
+    const context = await supabase.from('athlete_context').select('sport_primary').eq('user_id',userId).maybeSingle();
+    if (context.error || !context.data?.sport_primary) throw new Error('Choose your sport first.');
+    const result = await supabase.from('athlete_mpi_settings').upsert({user_id:userId,sport:context.data.sport_primary,season_status:phase,season_status_manual:true,season_status_manual_at:new Date().toISOString()},{onConflict:'user_id'}).select('season_status').single();
+    if (result.error || result.data?.season_status !== phase) throw new Error('Season save was not confirmed.');
+    return;
+  }
 
   const { data: existing } = await (supabase.from("athlete_context") as unknown as {
     select: (c: string) => {
