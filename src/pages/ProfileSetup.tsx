@@ -35,7 +35,8 @@ const ProfileSetup = () => {
   if (rawRole === 'player') selectedRole = 'Player';
   else if (rawRole === 'scout') selectedRole = 'Scout/Coach';
   
-  const selectedSport = locationState?.sport || localStorage.getItem('selectedSport');
+  const [savedSport,setSavedSport]=useState<string|null>(null);
+  const selectedSport = savedSport || locationState?.sport || localStorage.getItem('selectedSport');
   const selectedModule = locationState?.module || localStorage.getItem('selectedModule');
 
   // Bio form state
@@ -65,6 +66,8 @@ const ProfileSetup = () => {
   const [independentLeague, setIndependentLeague] = useState("");
   const [isForeignPlayer, setIsForeignPlayer] = useState(false);
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
+  const [birthdayKnown,setBirthdayKnown]=useState(false);
+  const [identityReady,setIdentityReady]=useState(false);
   const [currentlyInHighSchool, setCurrentlyInHighSchool] = useState(false);
   const [satScore, setSatScore] = useState("");
   const [actScore, setActScore] = useState("");
@@ -107,6 +110,20 @@ const ProfileSetup = () => {
       setLastName(nameParts.slice(1).join(' ') || "");
     }
   }, [user, loading, navigate, selectedRole]);
+
+  useEffect(()=>{if(!user)return;let live=true;
+    void (async()=>{const [p,c]=await Promise.all([
+      supabase.from('profiles').select('date_of_birth').eq('id',user.id).maybeSingle(),
+      supabase.from('athlete_context').select('sport_primary,position_primary,competition_level,bats_hand,throws_hand').eq('user_id',user.id).maybeSingle(),
+    ]);if(!live)return;if(p.error||c.error){toast({title:'Could not load your saved details',variant:'destructive'});return;}
+    if(p.data?.date_of_birth){setDateOfBirth(new Date(p.data.date_of_birth+'T00:00:00'));setBirthdayKnown(true);}
+    if(c.data?.sport_primary)setSavedSport(c.data.sport_primary);
+    if(c.data?.position_primary)setPosition(c.data.position_primary);
+    if(c.data?.competition_level)setExperienceLevel(c.data.competition_level);
+    if(c.data?.bats_hand)setBattingSide(c.data.bats_hand==='S'?'B':c.data.bats_hand);
+    if(c.data?.throws_hand)setThrowingHand(c.data.throws_hand==='S'?'B':c.data.throws_hand);
+    setIdentityReady(true);
+    })();return()=>{live=false;};},[user?.id]);
 
   const sv = (n: number) => (isPlayer && pStep !== n ? "hidden" : "");
   const draftKey = user ? `hm.profileSetupDraft.${user.id}` : null;
@@ -269,7 +286,7 @@ const ProfileSetup = () => {
         last_name: lastName,
         bio: bio || null,
         credentials: credentials.filter(c => c.trim() !== ''),
-        date_of_birth: dateOfBirth ? format(dateOfBirth, 'yyyy-MM-dd') : null,
+        ...(!birthdayKnown ? {date_of_birth: dateOfBirth ? format(dateOfBirth, 'yyyy-MM-dd') : null} : {}),
       };
       
       if (avatarUrl) {
@@ -429,7 +446,7 @@ const ProfileSetup = () => {
               </div>
               <div>
                 <p className="text-muted-foreground">{t('profileSetup.sport')}</p>
-                <p className="font-semibold capitalize">{selectedSport}</p>
+                <p className="font-semibold capitalize">{selectedSport}</p><Button variant="link" onClick={()=>navigate("/profile")}>Change</Button>
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-3 text-center">
@@ -464,7 +481,7 @@ const ProfileSetup = () => {
             </div>
             </div>
 
-            <div className={sv(2)}>
+            <div className={`${sv(2)} ${birthdayKnown ? "hidden" : ""}`}>
             <div>
               <Label>Date of Birth *</Label>
               <BirthDatePicker
@@ -940,12 +957,12 @@ const ProfileSetup = () => {
               {pStep > 0 && (
                 <Button variant="outline" size="lg" className="flex-1" onClick={goBackStep}>Back</Button>
               )}
-              <Button size="lg" className="flex-1" onClick={goNextStep}>Next</Button>
+              <Button size="lg" className="flex-1" disabled={!identityReady} onClick={goNextStep}>Next</Button>
             </div>
           ) : (
             <div className="flex gap-3 sticky bottom-0 bg-card pt-3 pb-[var(--safe-bottom)]">
               {isPlayer && (
-                <Button variant="outline" size="lg" className="flex-1" onClick={goBackStep} disabled={isSubmitting}>Back</Button>
+                <Button variant="outline" size="lg" className="flex-1" onClick={goBackStep} disabled={isSubmitting || !identityReady}>Back</Button>
               )}
               <Button
                 onClick={() => {
@@ -954,7 +971,7 @@ const ProfileSetup = () => {
                 }}
                 className="flex-1"
                 size="lg"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !identityReady}
               >
                 {isSubmitting ? t('profileSetup.creatingProfile') : isPlayer ? "Finish" : "Complete Profile & Continue"}
               </Button>

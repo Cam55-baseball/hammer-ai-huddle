@@ -18,7 +18,7 @@ import { topicLabel, shortenEventId } from "@/lib/asb/topicLabels";
 import { emitOnboardingBootstrap } from "@/lib/runtime/relational/onboardingBootstrap";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
-import { InjuryIntakeStep } from "@/components/onboarding/steps/InjuryIntakeStep";
+
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
 import { AnthropometricsStep } from "@/components/onboarding/steps/AnthropometricsStep";
 import { EquipmentStep } from "@/components/onboarding/steps/EquipmentStep";
@@ -78,7 +78,7 @@ const EDIT_TARGETS: Record<ReviewEditKey | "constitution", number> = {
   mental: STEP_MENTAL,
   connections: STEP_CONNECTIONS,
   schedule: STEP_SCHEDULE,
-  injury: STEP_INJURY,
+  injury: STEP_FUEL,
   notifications: STEP_NOTIFICATIONS,
 };
 
@@ -234,7 +234,7 @@ export default function AthleteOnboarding() {
 
   // A resumed draft never lands on the retired up-front equipment step.
   useEffect(() => {
-    if (swapV2.enabled && step === STEP_EQUIPMENT && editReturnTo === null) setStep(STEP_INJURY);
+    if (swapV2.enabled && step === STEP_EQUIPMENT && editReturnTo === null) setStep(STEP_FUEL);
   }, [step, editReturnTo, swapV2.enabled]);
 
   // Continuously persist step + dayType so refresh/close never loses progress.
@@ -286,7 +286,7 @@ export default function AthleteOnboarding() {
       return;
     }
     // Owner Oct 21: no up-front equipment question; Swap asks on the card.
-    setStep((s) => { const n = Math.min(s + 1, STEPS.length - 1); return swapV2.enabled && n === STEP_EQUIPMENT ? STEP_EQUIPMENT + 1 : n; });
+    setStep((s) => { const n = Math.min(s + 1, STEPS.length - 1); return n === STEP_INJURY || (swapV2.enabled && n === STEP_EQUIPMENT) ? STEP_FUEL : n; });
   };
   const goBack = () => {
     if (editReturnTo !== null) {
@@ -296,7 +296,7 @@ export default function AthleteOnboarding() {
       setStep(target);
       return;
     }
-    setStep((s) => { const n = Math.max(s - 1, 0); return swapV2.enabled && n === STEP_EQUIPMENT ? STEP_EQUIPMENT - 1 : n; });
+    setStep((s) => { const n = Math.max(s - 1, 0); return n === STEP_INJURY ? (swapV2.enabled ? STEP_ANTHRO : STEP_EQUIPMENT) : swapV2.enabled && n === STEP_EQUIPMENT ? STEP_EQUIPMENT - 1 : n; });
   };
 
   /** Review → Edit jump. Adds a return marker so save bounces back here. */
@@ -406,7 +406,7 @@ export default function AthleteOnboarding() {
     <AthleteOnboardingShell
       stepIndex={step}
       steps={STEPS}
-      hiddenSteps={swapV2.enabled ? [STEP_EQUIPMENT] : undefined}
+      hiddenSteps={[STEP_INJURY, ...(swapV2.enabled ? [STEP_EQUIPMENT] : [])]}
       onBack={step > 0 ? goBack : undefined}
       onJumpToStep={(i) => setStep(i)}
       stepStatus={answerStatus.loading ? undefined : stepStatus}
@@ -518,14 +518,14 @@ export default function AthleteOnboarding() {
           </div>
 
           <div className="rounded-md border border-border bg-card/40 p-3">
-            <ThrowingHandSelector
+            {throwingHand ? <p className="text-sm">Throws: {throwingHand === 'S' ? 'Both' : throwingHand === 'R' ? 'Right' : 'Left'} · <Button variant="link" onClick={()=>navigate('/profile')}>Change</Button></p> : <ThrowingHandSelector
               value={throwingHand}
               onValueChange={(v) => {
                 setThrowingHand(v);
                 if (user?.id) writeDraftSlot(user.id, "profile-answers", { throwingHand: v });
               }}
               label="Which hand do you throw with?"
-            />
+            />}
             <p className="mt-2 text-[11px] text-muted-foreground">
               Pick <span className="font-medium">Both</span> if you throw ambidextrously — we'll
               track sides separately so drills stay relevant to each arm.
@@ -536,7 +536,7 @@ export default function AthleteOnboarding() {
             <Button variant="ghost" onClick={goBack}>
               Back
             </Button>
-            <Button onClick={handleSaveProfile} disabled={savingProfile}>
+            <Button onClick={throwingHand ? goNext : handleSaveProfile} disabled={savingProfile}>
               {savingProfile ? "Saving…" : "Continue"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -674,7 +674,7 @@ export default function AthleteOnboarding() {
       )}
 
       {step === STEP_INJURY && (
-        <InjuryIntakeStep onContinue={goNext} onBack={goBack} />
+        <FuelRecoveryStep onContinue={()=>setStep(STEP_GOALS)} onBack={goBack} />
       )}
 
       {step === STEP_NOTIFICATIONS && (
