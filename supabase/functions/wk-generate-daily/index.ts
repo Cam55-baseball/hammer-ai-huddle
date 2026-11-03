@@ -54,6 +54,7 @@ import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_s
 import { wholePlanRest, savedWholePlanRest } from "../_shared/wic/schedule/planDayScope.ts";
 import { unavailableTrainingDate } from '../_shared/wic/schedule/availability.ts';
 import { restDowFor, type RestChoice } from '../_shared/wic/schedule/restDay.ts';
+import { isoShift as shiftIso } from '../_shared/wic/schedule/timeline.ts';
 import { validatePlanSanity, validateWeekStructure } from "../_shared/wic/planSanity.ts";
 // Step 20 C2 — every row resolves an intensity class, stored or derived from
 // the documented mapping, so the ceiling always compares like with like.
@@ -613,7 +614,7 @@ const handler = async (req: Request): Promise<Response> => {
         let message: string | null = null;
         try {
           for (let offset = 0; offset < 7 + kept.length && offset < 14; offset++) {
-            const date = isoShift(first, offset);
+            const date = shiftIso(first, offset);
             let r = await call(date);
             if (r.body?.error === "adjust_failed" && r.body?.message === "Day changed; rebuild from fresh saved work" || r.body?.error === "Sport day changed; rebuild from fresh saved work") r = await call(date, ":fresh");
             if (r.body?.error === "adjust_failed" && /protected/i.test(String(r.body?.message ?? ""))) kept.push(date);
