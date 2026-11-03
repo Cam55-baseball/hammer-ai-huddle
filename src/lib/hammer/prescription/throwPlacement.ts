@@ -79,7 +79,9 @@ export function placeThrowsByRole<B extends Block>(blocks: readonly B[], opts: {
   }
   if (di >= 0) {
     const def = out[di];
-    const drills = [...def.drills.map(withThrowCount), ...position];
+    // A gear-restricted (dry/shadow) Defense card never receives live throws.
+    const dry = def.drills.length > 0 && def.drills.every((d) => /dry|shadow|footwork|read/i.test(d.name));
+    const drills = [...def.drills.map(withThrowCount), ...(dry ? [] : position)];
     out[di] = { ...def, drills, steps: opts.toSteps(drills) };
   }
   return ti >= 0 ? out.filter((_, i) => i !== ti) : out;
