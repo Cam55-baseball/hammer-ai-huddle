@@ -65,6 +65,7 @@ export function validate(input: ValidatorInput): ValidatorReport {
 
   const seenSlug = new Set<string>();
   const seenName = new Set<string>();
+  const seenFullName = new Set<string>();
   const seenSetsReps = new Set<string>();
 
   for (const rx of input.prescriptions) {
@@ -75,10 +76,17 @@ export function validate(input: ValidatorInput): ValidatorReport {
     }
     seenSlug.add(rx.movement_slug);
 
+    // Fatal only when the FULL name repeats. Series drills share a prefix
+    // ("Game-Day Primer — Skip Series" / "— Elastic Pogo") and are different
+    // movements; a shared prefix alone is only a warning.
+    const fullKey = normalizeFullName(rx.movement_name);
     const nameKey = normalizeName(rx.movement_name);
-    if (seenName.has(nameKey)) {
+    if (seenFullName.has(fullKey)) {
       issues.push({ code: "duplicate_name", severity: "fatal", message: `Duplicate movement name: ${rx.movement_name}`, slug: rx.movement_slug });
+    } else if (seenName.has(nameKey)) {
+      issues.push({ code: "similar_name", severity: "warn", message: `Similar movement name: ${rx.movement_name}`, slug: rx.movement_slug });
     }
+    seenFullName.add(fullKey);
     seenName.add(nameKey);
 
     if (rx.slot === "lift" && rx.sets != null && rx.reps != null) {
@@ -242,6 +250,10 @@ export function validate(input: ValidatorInput): ValidatorReport {
  * "Half-Kneeling", "J-Band") is part of the name. Parentheses are kept for the
  * same reason: "Weighted Pull-Up (Full ROM)" is not "Weighted Pull-Up".
  */
+export function normalizeFullName(n: string): string {
+  return n.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
 export function normalizeName(n: string): string {
   return n
     .toLowerCase()
