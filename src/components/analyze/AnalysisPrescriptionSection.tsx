@@ -23,6 +23,7 @@ import type { EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import { useAnalysisGoalDrills } from '@/hooks/useAnalysisGoalDrills';
 import { practiceCheckDrills, type AnalysisPracticeCheck } from '@/lib/prescription/practiceCheckDrills';
 import { AddAnalysisDrill } from './AddAnalysisDrill';
+import { usePlanCheckFailureLog } from '@/lib/hammer/planCheckFailures';
 
 interface Props {
   module?: string | null;

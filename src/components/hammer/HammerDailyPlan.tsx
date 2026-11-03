@@ -234,6 +234,7 @@ import { DayNoticesDrawerItem } from "@/components/hammer/DayNoticesDrawerItem";
 import { DefensivePrepVideo } from "@/components/hammer/DefensivePrepVideo";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
+import { usePlanCheckFailureLog } from "@/lib/hammer/planCheckFailures";
 import { isPapStrengthRow } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
 
 
@@ -877,6 +878,9 @@ function HammerDailyPlanBody({
   const hasBaseStealer = has5Tool || (hasG2W && !g2wPitchingDay);
   const planAdjust = usePlanAdjustments(bodyPlanDate);
   const drillCirculation = useDrillCirculation();
+  usePlanCheckFailureLog('analysis_findings', faultContext.error);
+  usePlanCheckFailureLog('drill_choice', drillCirculation.error);
+  usePlanCheckFailureLog('practice_history', practiceLoadHistory.error);
   const influencedLoggedServe = useRef<string | null>(null);
   // Game-day defense override — athlete-owned, one tap, resets each day.
   const defenseOverrideKey = `hammer.defenseFull.${bodyPlanDate}`;
