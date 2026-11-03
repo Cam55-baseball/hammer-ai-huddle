@@ -1,3 +1,4 @@
+import { cardPracticeRoute } from "@/lib/hammer/practiceWindow";
 import { useGreenlight } from '@/hooks/useGreenlight';
 import { playerCardNote, playerCardNotes } from "@/lib/hammer/playerCardNotes";
 import { StartingPointPromptCard, Golden2WayRolePromptCard } from './StartingPointForm';
@@ -1132,7 +1133,7 @@ function HammerDailyPlanBody({
               <BlockCard
                 key={`pre-${b.modality}-${b.side ?? "x"}`}
                 block={b}
-                onNavigate={(r) => navigate(r)}
+                onNavigate={(r) => navigate(cardPracticeRoute(r, undefined, getTodayDate()))}
                 onEngagementChanged={bumpEngagement}
                 adaptiveNote={adj?.note}
               />
@@ -1297,7 +1298,7 @@ function HammerDailyPlanBody({
                     {() => (<>
                       <BlockCard
                         block={b}
-                        onNavigate={(r) => navigate(r)}
+                        onNavigate={(r) => navigate(cardPracticeRoute(r, undefined, getTodayDate()))}
                         onEngagementChanged={bumpEngagement}
                         adaptiveNote={adj?.note}
                       />
@@ -1376,7 +1377,7 @@ function HammerDailyPlanBody({
                 if (b.status === 'awaiting-input') return <BlockCard
                   key={`${b.modality}-${b.side ?? 'x'}`}
                   block={b}
-                  onNavigate={r => navigate(r)}
+                  onNavigate={r => navigate(cardPracticeRoute(r, undefined, getTodayDate()))}
                 />;
                 return (
                   <PocketCard
@@ -1395,7 +1396,7 @@ function HammerDailyPlanBody({
                     {() => (
                       <BlockCard
                         block={b}
-                        onNavigate={(r) => navigate(r)}
+                        onNavigate={(r) => navigate(cardPracticeRoute(r, undefined, getTodayDate()))}
                         onEngagementChanged={bumpEngagement}
                         adaptiveNote={adj?.note}
                       />
@@ -1441,7 +1442,7 @@ function HammerDailyPlanBody({
                       <>
                         <BlockCard
                           block={b}
-                          onNavigate={(r) => navigate(r)}
+                          onNavigate={(r) => navigate(cardPracticeRoute(r, undefined, getTodayDate()))}
                           onEngagementChanged={bumpEngagement}
                           adaptiveNote={adj?.note}
                         />
@@ -1813,7 +1814,7 @@ function BlockCard({
                     });
                     return;
                   }
-                  onNavigate(block.route);
+                  onNavigate(cardPracticeRoute(block.route, { modality: block.modality, activity: block.title }, getTodayDate()));
                 }}
                 className="text-xs"
               >

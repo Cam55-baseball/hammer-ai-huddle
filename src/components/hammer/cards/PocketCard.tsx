@@ -238,7 +238,7 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
                 <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
                   {link.steps.map((s) => <li key={s}>{s}</li>)}
                 </ol>
-                <Button className="mt-3 w-full" onClick={() => { close(true); onNavigate?.(link.route); }}>
+                <Button className="mt-3 w-full" onClick={() => { close(true); onNavigate?.(cardPracticeRoute(link.route, { activity: link.label }, getTodayDate())); }}>
                   <ExternalLink className="mr-1.5 h-4 w-4" />Open {link.label}
                 </Button>
               </div>
