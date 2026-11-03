@@ -55,7 +55,8 @@ export function placeThrowsByRole<B extends Block>(blocks: readonly B[], opts: {
       if (b.modality !== "throwing" || b.status !== "ready") return b;
       const drills = [...b.drills].map((d, i) => ({ d: withThrowCount(d), i }))
         .sort((x, y) => ORDER[throwKind(x.d)] - ORDER[throwKind(y.d)] || x.i - y.i).map((x) => x.d);
-      return { ...b, title: "Throwing — arm care, warm-up throws, catch play, long toss", drills, steps: opts.toSteps(drills) };
+      const title = drills.some((d) => throwKind(d) === "position") ? "Throwing — arm care, catch play and position throws" : "Throwing — arm care, warm-up throws, catch play, long toss";
+      return { ...b, title, drills, steps: opts.toSteps(drills) };
     });
   }
   const throwing = ti >= 0 ? out[ti] : null;
