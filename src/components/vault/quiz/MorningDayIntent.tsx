@@ -35,7 +35,7 @@ export function MorningDayIntent() {
           const choices = await readRestChoices(user.id);
           if (!restUsedThisWeek(today, choices)) {
             const r = await chooseRestDay({ userId: user.id, today, target: today, scope: 'week', source: 'check_in' });
-            if (r.ok) { await announceChange(qc, user.id, 'Today is your rest day this week', today); toast.success('Today is now this week’s rest day. Your week was rebuilt.'); }
+            if (r.ok) { await announceChange(qc, user.id, 'Today is your rest day this week', today); toast.success('Today is now this week’s rest day. Updating your plan… you can keep using the app.'); }
           }
         } catch { toast.error('Your rest day for this week could not be moved. Your check-in is still saved.'); }
       }

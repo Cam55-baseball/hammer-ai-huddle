@@ -19,7 +19,7 @@ import { isSwitchOnFor } from "../../supabase/functions/_shared/wic/flags/featur
 import type { EntryDraft } from "@/lib/hammer/tellHammers/parse";
 import { recordPain } from "@/lib/hammer/injury/recordPain";
 import { FACE_SEVERITY } from "@/lib/hammer/tellHammers/parse";
-import { rebuildAfterChange } from '@/lib/hammer/rebuildAfterChange';
+import { rebuildAfterChange, startBackgroundRebuild, PLAN_UPDATING_MESSAGE } from '@/lib/hammer/rebuildAfterChange';
 import { availabilityNotice } from '../../supabase/functions/_shared/wic/schedule/availability';
 import { persistContextAnswer } from '@/lib/hammer/context/acquisition';
 import { rememberChangeConfirmation } from '@/lib/hammer/changeConfirmation';
@@ -178,7 +178,11 @@ function describeChange(draft: EntryDraft) {
 }
 
 export async function announceChange(qc: ReturnType<typeof useQueryClient>, userId: string, reason: string | null, effectiveDate?: string) {
-  const result = reason === null ? null : await rebuildAfterChange(reason, getTodayDate(), effectiveDate);
+  const background = reason === null ? null : await startBackgroundRebuild(reason, getTodayDate(), effectiveDate);
+  const result = reason === null ? null : background
+    ? { ok: true, background: true, jobId: background.jobId, failed: [] as string[], kept: [] as string[], weekIssues: [] as string[], missingInputs: false, message: PLAN_UPDATING_MESSAGE }
+    : await rebuildAfterChange(reason, getTodayDate(), effectiveDate);
+  if (background) qc.invalidateQueries({ queryKey: ["plan-rebuild-job", userId] });
   // Cache the actual server result before invalidation can remount the entry surface.
   if (result) rememberChangeConfirmation(userId, getTodayDate(), result.message);
   qc.invalidateQueries({ queryKey: [TIMELINE_QUERY_KEY, userId] });

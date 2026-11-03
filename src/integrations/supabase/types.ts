@@ -14791,6 +14791,48 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_rebuild_jobs: {
+        Row: {
+          created_at: string
+          dates_done: string[]
+          dates_failed: string[]
+          dates_kept: string[]
+          finished_at: string | null
+          first_date: string
+          id: string
+          message: string | null
+          reason: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dates_done?: string[]
+          dates_failed?: string[]
+          dates_kept?: string[]
+          finished_at?: string | null
+          first_date: string
+          id?: string
+          message?: string | null
+          reason: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dates_done?: string[]
+          dates_failed?: string[]
+          dates_kept?: string[]
+          finished_at?: string | null
+          first_date?: string
+          id?: string
+          message?: string | null
+          reason?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plan_swap_log: {
         Row: {
           after_row: Json

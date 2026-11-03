@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { SeasonDatesDialog } from "@/components/hammer/SeasonDatesDialog";
 import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
 import { RestDayChooser, ChangeRestDayButton } from "@/components/hammer/RestDayChooser";
+import { PlanUpdatingNote, UpdatingBadge } from "@/components/hammer/PlanUpdatingNote";
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 
 import { Calendar, Target } from "lucide-react";
@@ -99,7 +100,8 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
         <div className="flex items-center gap-2 min-w-0">
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <div className="min-w-0">
-            <div className="text-sm font-bold text-foreground">Your training block &amp; season</div>
+            <div className="text-sm font-bold text-foreground">Your training block &amp; season <UpdatingBadge /></div>
+            <PlanUpdatingNote />
              <div className="text-xs text-muted-foreground">Your training steps: {roadmap.rung.label}</div>
             {!roadmap.quarter.quarterKnown ? (
               <div className="text-[11px] text-muted-foreground leading-tight">

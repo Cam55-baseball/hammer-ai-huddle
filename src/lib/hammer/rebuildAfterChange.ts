@@ -113,3 +113,21 @@ export async function repairSavedWeek(today: string): Promise<{ checked: boolean
   try { after = weekRuleBreaks((await read()).issues); } catch { return { checked: true, rebuilt, failed, blocked: null }; }
   return { checked: true, rebuilt, failed, blocked: after.length ? blockedReason(after) : null };
 }
+
+export const PLAN_UPDATING_MESSAGE = "Saved. Updating your plan… you can keep using the app.";
+
+/**
+ * Owner Nov 3 item 1: the answer is already saved; ask the server to rebuild the
+ * seven days in the background so the player is never held. Returns null when the
+ * background path is unavailable, so callers fall back to the existing queue.
+ */
+export async function startBackgroundRebuild(reason: string, today: string, effectiveDate?: string): Promise<{ jobId: string } | null> {
+  const firstDate = effectiveDate && effectiveDate > today ? effectiveDate : today;
+  try {
+    const { data, error } = await supabase.functions.invoke('wk-generate-daily', {
+      body: { rebuild_week_background: true, change_text: reason, first_date: firstDate },
+    });
+    if (error || data?.background !== true || typeof data?.job_id !== 'string') return null;
+    return { jobId: data.job_id };
+  } catch { return null; }
+}
