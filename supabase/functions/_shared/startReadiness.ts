@@ -24,9 +24,31 @@ export interface StartReadinessInput {
   season_dates_reviewed?: boolean;
   nutrition?: Record<string, unknown> | null;
   health_setup_completed?: boolean;
+  current_pain_answered?: boolean;
+  current_pain?: boolean | null;
+  pain_area?: string | null;
+  starting_point_answered?: boolean;
+  is_pitcher?: boolean;
+  pitching_role?: string | null;
 }
 
-export interface StartMissingItem { key: string; label: string; to: string }
+export interface StartMissingItem { key: string; label: string; to: string; required?: boolean }
+
+export const REQUIRED_PLAN_QUESTIONS = [
+  { key: 'birthday', label: 'Your birthday' },
+  { key: 'sport', label: 'Your sport' },
+  { key: 'position', label: 'Main position' },
+  { key: 'bats_throws', label: 'Which side you bat and throw from' },
+  { key: 'level', label: 'Playing level' },
+  { key: 'season', label: 'Season status' },
+  { key: 'goals', label: 'Top goals' },
+  { key: 'health', label: 'Anything hurt right now?' },
+  { key: 'starting_point', label: 'Where are you starting from?' },
+  { key: 'pitching_role', label: 'Pitching role' },
+] as const;
+
+export const requiredPlanQuestionCount = (pitcher: boolean) => pitcher ? 10 : 9;
+export const isRequiredPlanQuestion = (key: string) => REQUIRED_PLAN_QUESTIONS.some(q => q.key === key);
 
 const text = (v: unknown) => typeof v === "string" && v.trim().length > 0;
 
@@ -36,35 +58,18 @@ function hasGoals(i: StartReadinessInput): boolean {
   return JSON.stringify(cg) !== "{}" && JSON.stringify(cg) !== "[]";
 }
 
-function hasRanking(i: StartReadinessInput): boolean {
-  const order = (i.category_goals as { categoryOrder?: unknown } | null)?.categoryOrder;
-  return Array.isArray(order) && order.length > 0;
-}
-
 export function startMissing(i: StartReadinessInput): StartMissingItem[] {
   const out: StartMissingItem[] = [];
-  const add = (key: string, label: string, to = '/assessment?review=profile') => out.push({ key, label, to });
+  const add = (key: string, label: string, to = '/hammers-today') => out.push({ key, label, to, required: true });
   if (!text(i.date_of_birth)) add('birthday', 'Your birthday', '/signup');
   if (i.sport_primary !== 'baseball' && i.sport_primary !== 'softball') add('sport', 'Your sport', '/signup');
   if (!text(i.position_primary)) add('position', 'Your position');
   if (!text(i.competition_level)) add('level', 'Your level of play');
   if (!hasGoals(i)) add('goals', 'Your goals');
-  if (!hasRanking(i)) add('ranking', 'Rank your goals');
   if (!['off_season','preseason','in_season','post_season'].includes(i.season_status ?? '')) add('season', 'Your season phase');
-  if (!i.equipment_saved) add('equipment', 'Your equipment (bodyweight is an answer)');
-  if (!i.assessment_completed) add('assessment', 'Finish your starting assessment', '/assessment');
-  if (!['L','R','S'].includes(i.bats_hand ?? '')) add('bats', 'Which side you bat from');
-  if (!['L','R','S'].includes(i.throws_hand ?? '')) add('throws', 'Which hand you throw with');
-  const positive = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v > 0;
-  if (!positive(i.height_in)) add('height', 'Your height');
-  if (!positive(i.weight_lb)) add('weight', 'Your weight');
-  if (!positive(i.sleep_target_hrs)) add('sleep', 'Usual sleep (hours a night)');
-  const nonnegative = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v >= 0;
-  if (!nonnegative(i.lifting_age_years)) add('lifting', 'Years of lifting (0 if never)');
-  if (!i.season_dates_reviewed) add('season_dates', 'Review your season dates (or say not known yet)');
-  for (const [key,label] of [['calorie_goal','Daily calories (kcal)'],['protein_goal','Protein (g)'],['carbs_goal','Carbohydrates (g)'],['fats_goal','Fat (g)'],['hydration_goal','Water (oz)']]) {
-    if (!nonnegative(i.nutrition?.[key])) add(key,label);
-  }
-  if (!i.health_setup_completed) add('health', 'Your health & physio setup');
-  return out;
+  if (!['L','R','S','B'].includes(i.bats_hand ?? '') || !['L','R','S','B'].includes(i.throws_hand ?? '')) add('bats_throws', 'Which side you bat and throw from');
+  if (!i.current_pain_answered || (i.current_pain === true && !text(i.pain_area))) add('health', 'Anything hurt right now?');
+  if (!i.starting_point_answered) add('starting_point', 'Where are you starting from?');
+  if (i.is_pitcher && !['starter','bullpen','closer'].includes(i.pitching_role ?? '')) add('pitching_role', 'Pitching role');
+  return REQUIRED_PLAN_QUESTIONS.flatMap(q => out.filter(item => item.key === q.key));
 }

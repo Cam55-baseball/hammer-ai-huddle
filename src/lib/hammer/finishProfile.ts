@@ -1,4 +1,5 @@
-export type MissingItem = { key: string; label: string; to: string };
+import { isRequiredPlanQuestion } from '../../../supabase/functions/_shared/startReadiness';
+export type MissingItem = { key: string; label: string; to: string; required?: boolean };
 
 const NUTRITION = ["calorie_goal", "protein_goal", "carbs_goal", "fats_goal", "hydration_goal"];
 const PITCHER = ["pitcher_focus", "pitching_role"];
@@ -9,12 +10,12 @@ const PITCHER = ["pitcher_focus", "pitching_role"];
  * the starting point only matters before Start. The five nutrition goals
  * share one screen, as do the two pitcher questions and goals + ranking.
  */
-export function profileFlowItems(missing: readonly MissingItem[], started: boolean): MissingItem[] {
+export function profileFlowItems(missing: readonly MissingItem[], _started: boolean): MissingItem[] {
   const out: MissingItem[] = [];
   const seen = new Set<string>();
   for (const m of missing) {
     if (m.key === "birthday") continue;
-    if (started && m.key === "starting_point") continue;
+    if (!isRequiredPlanQuestion(m.key) && m.key !== 'pitcher_focus') continue;
     const group = NUTRITION.includes(m.key) ? "nutrition" : PITCHER.includes(m.key) ? "pitcher" : m.key === "ranking" ? "goals" : m.key;
     if (seen.has(group)) continue;
     seen.add(group);

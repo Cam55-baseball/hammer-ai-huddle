@@ -708,12 +708,11 @@ function StartWithGuidedFlow({ start }: { start: ReturnType<typeof useHammersTod
   const needsDetails = start.missing.length > 0;
   return (
     <div className="space-y-4">
-      <InitialAssessmentCard sport={localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball"} />
       <StartHammersTodayCard
         onStart={needsDetails ? () => setFlowOpen(true) : start.start}
         starting={start.starting}
         error={needsDetails ? null : start.error}
-        locked={start.missingError}
+        locked={start.missingError || start.missingLoading}
         missing={start.missing}
         missingError={start.missingError}
       />
@@ -1095,8 +1094,6 @@ function HammerDailyPlanBody({
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
         <FinishProfileCard />
-        <ErrorBoundary><Golden2WayRolePromptCard /></ErrorBoundary>
-        <ErrorBoundary><StartingPointPromptCard /></ErrorBoundary>
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
         <ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary>
         <ErrorBoundary><InformationalVideos placement="before_you_start" sport={sportKey} /></ErrorBoundary>

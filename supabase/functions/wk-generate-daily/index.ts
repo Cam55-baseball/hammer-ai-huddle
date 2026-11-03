@@ -120,7 +120,7 @@ import {
   metricLabel,
   type ProgressionState,
 } from "../_shared/wic/progression/progressionState.ts";
-import { golden2wayRoleMissing } from "../_shared/wic/progression/startingPoint.ts";
+import { planningPrimaryFocus } from "../_shared/wic/progression/startingPoint.ts";
 import { isTaggedJump } from "../_shared/wic/jumps/taxonomy.ts";
 import { readPitcherReturn, recordReturnDate } from "../_shared/wic/pitching/readPitcherReturn.ts";
 import { readReturningHitter, recordHittingDay } from "../_shared/wic/hitting/readReturningHitter.ts";
@@ -1154,9 +1154,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Owner Nov 2 follow-up: a started player's plan must still build. Until they pick, build the
     // lower-arm-load Position split (no pitcher cycle, no extra mound days); the guided
     // "Finish your details" card keeps asking for the pick. All arm/Pitch Smart rules still apply.
-    if(!pitcherScheduleReadFailed && golden2wayRoleMissing(sport, schedulingModules, pitcherPrimaryFocus)){
-      pitcherPrimaryFocus = "position";
-    }
+    if (!pitcherScheduleReadFailed) pitcherPrimaryFocus = planningPrimaryFocus(sport, schedulingModules, pitcherPrimaryFocus) as typeof pitcherPrimaryFocus;
     const purchasedPitcher=schedulingModules.some(m=>[`${sport}_pitcher`,`${sport}_golden2way`,`${sport}_pitching`,'pitching'].includes(m));
     const positionProgram=schedulingModules.includes(`${sport}_5tool`) && !schedulingModules.includes(`${sport}_golden2way`);
     // Owner Nov 2 #6: exactly one account (the owner) gets a position-player schedule.

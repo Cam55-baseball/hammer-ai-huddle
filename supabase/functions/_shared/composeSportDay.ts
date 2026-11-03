@@ -13,6 +13,9 @@ import { readPlanningArmHistory } from './wic/pitching/readPlanningArmHistory.ts
 import type { PhysioMapping } from './health/physioMapping.ts';
 import { readPitchCommand } from './wic/pitching/readPitchCommand.ts';
 import { normalizeProgramModules } from './programAccess.ts';
+import { readServerStarts } from './wic/progression/serverStarts.ts';
+import { EASING_BACK_LIFT_SHARE } from './wic/progression/startingPoint.ts';
+import { throwGroup, THROW_TARGETS } from './wic/phases/positionThrowTargets.ts';
 
 /** Self JWT reads only; service jobs do not acquire an athlete's identity/health authority. */
 export async function composeSportDay(db: any, input: {
@@ -86,6 +89,10 @@ export async function composeSportDay(db: any, input: {
   const context=contextFromEnvelope(envelope,extra);
   const modules=normalizeProgramModules(sub.data?.status==='active'?(sub.data.subscribed_modules??[]):[],sport);
   const access=priorityAccess(modules,sport);
+  const starts=await readServerStarts(db,uid,sport,modules,date,age);
+  const group=throwGroup(envelope.position_primary?.value);
+  const historyHas=(area:string)=>starts?.historyAreas.includes(area as any)===true;
+  const startThrows=starts && !historyHas('throwing') ? starts.levels.throwsPerWeek ?? (group ? Math.round(THROW_TARGETS[group].week[0]/2) : null) : null;
   const practiceRecords=[...sessionRows.filter((r:any)=>r.session_date>=practiceSince&&['solo_work','team_session','lesson','live_abs'].includes(r.session_type)).map((r:any)=>({id:`performance:${r.id}`,date:r.session_date,sport:r.sport,category:r.module,minutes:null,intensity:null})),...logRows.map((r:any)=>({id:`wk:${r.id}`,date:r.plan_date,sport,category:r.metrics?.modality??null,minutes:r.duration_seconds_completed==null?null:r.duration_seconds_completed/60,intensity:r.rpe??null}))];
   const phase= input.phase.startsWith('os_')?'off':input.phase==='preseason'?'pre':input.phase==='in_season'?'in':input.phase==='post_season'?'post':null;
   const recentIds=new Set(gameRows.filter((g:any)=>g.game_date>=practiceSince).map((g:any)=>g.id));
@@ -122,6 +129,9 @@ export async function composeSportDay(db: any, input: {
   const evidence=projectBuntingEvidence(sessionRows,abRows,pitchRows.filter((p:any)=>p.perspective==='hitter'&&['bunt_foul','bunt_in_play'].includes(p.result)),complete(tasks),sport);
   const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,pitcherReturn:(input.pitcherReturn??null) as any,hitterReturn:(input.hitterReturn??null) as any,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
     alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,physio:input.physio,testPreferences,pitchCommand,
+    greenlight:starts?.greenlight,greenlightStarts:starts && !historyHas('lifting') && starts.levels.lifting==='easing_back'?{lifting:EASING_BACK_LIFT_SHARE}:{},
+    greenlightTargets:{hitting:!historyHas('hitting')?starts?.levels.swingsPerSession:null,defense:!historyHas('defense')?starts?.levels.defenseRepsPerSession:null,speed:!historyHas('speed')?starts?.levels.sprintYards:null},
+    startThrowsPerWeek:startThrows,startBuntReps:starts?.levels.buntRepsPerSide,
     bunting:access.hasHitting?{gameWeekdays,evidence,catalog:complete(bunts),age,userId:uid,phase:input.phase}:undefined});
   const plan=finalizeDatedPlan(raw,{sport,userId:uid,ownerRows:circulation.rows,now:day,cnsHigh:input.cns>=7,adjustments:adjRows,clips:clipRows,games:gp,principles:complete(principles),rankedFaults:accessiblePlanFaults(faults.rankedFaults,modules,sport,{clips:clipRows,now:day.getTime()}),signalScopes:faults.signalScopes,recurringIssues:accessibleRecurringIssues(issues,modules,sport),ownedEquipment:new Set(planningGear(input.equipment,input.alwaysMissingGear??[])),catalog:mergeCatalog(ELITE_DRILL_CATALOG,circulation.rows),circulation:{servedToUser:circulation.served,usage:circulation.usage}});
   if(plan.sanity?.ok===false&&!input.rest)throw new Error(`Sport day failed structural validation: ${(plan.sanity.issues ?? []).join(',')}`);

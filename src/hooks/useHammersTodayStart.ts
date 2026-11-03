@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { isSwitchOnFor } from "../../supabase/functions/_shared/wic/flags/featureSwitches";
 import { useQuery } from "@tanstack/react-query";
-import { assessmentStartAllowed } from "@/lib/assessment/startGate";
 import { type StartMissingItem } from "../../supabase/functions/_shared/startReadiness";
 import { rebuildAfterChange } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
@@ -44,8 +43,8 @@ export function useHammersTodayStart() {
       return data as unknown as StartMissingItem[];
     },
   });
-  const missing = details.data ?? [];
-  const assessmentReady = assessmentStartAllowed(startedAt, assessment.data ?? null) && details.isSuccess && missing.length === 0;
+  const missing = (details.data ?? []).filter(item => item.required !== false);
+  const assessmentReady = details.isSuccess && missing.length === 0;
 
   useEffect(() => {
     let alive = true;

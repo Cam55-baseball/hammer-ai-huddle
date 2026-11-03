@@ -64,7 +64,6 @@ export async function readServerStarts(db: any, userId: string, sport: Sport, mo
   ]);
   if (sp.error || rx.error || logs.error || quiz.error || setting.error) return null;
   const answers = sp.data?.answers;
-  if (!answers || !answersComplete(sport, program, answers)) return null;
   if ((rx.data ?? []).length >= 3000 || (logs.data ?? []).length >= 3000) return null;
   const logged = new Set(((logs.data ?? []) as any[]).map((l) => l.prescription_id).filter(Boolean));
   const byDay = new Map<string, DayCheckIn>();
@@ -84,5 +83,5 @@ export async function readServerStarts(db: any, userId: string, sport: Sport, mo
   const after = shift(mondayOf(today), 7);
   const recent = areaWeeks(after, rows.filter((r) => r.plan_date >= since), logged);
   const historyAreas = (Object.keys(recent) as GreenlightArea[]).filter((a) => historyWins(recent[a].filter((w) => w.completed > 0).length));
-  return { levels: startingLevels(sport, program, answers, null), historyAreas, greenlight, jumpWeeks, held: readyAt == null };
+  return { levels: startingLevels(sport, program, answers ?? {}, null), historyAreas, greenlight, jumpWeeks, held: readyAt == null };
 }

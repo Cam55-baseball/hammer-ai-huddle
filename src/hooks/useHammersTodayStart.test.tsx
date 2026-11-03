@@ -10,7 +10,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: {
     mocks.calls.push(name);
     if(name==='start_hammers_today') return {data:'2026-10-30T10:41:00Z',error:null};
     if (name !== 'initial_plan_missing') throw new Error(`Unexpected RPC: ${name}`);
-    return { data: mocks.completed ? [] : [{ key: 'assessment', label: 'Complete initial assessment', href: '/initial-assessment' }], error: null };
+    return { data: mocks.completed ? [] : [{ key: 'health', label: 'Anything hurt right now?', to: '/dashboard', required: true }], error: null };
   }),
   from: (table: string) => {
   const data = table === 'initial_assessments' ? { completed_at: mocks.completed ? '2026-10-27T23:19:00Z' : null }
@@ -27,11 +27,11 @@ it('rechecks missing details when canonical assessment completion resolves', asy
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
   const { result } = renderHook(useHammersTodayStart, { wrapper });
-  await waitFor(() => expect(result.current.missing.some(item => item.key === 'assessment')).toBe(true));
+  await waitFor(() => expect(result.current.missing.some(item => item.key === 'health')).toBe(true));
   expect(result.current.assessmentReady).toBe(false);
   mocks.completed = true;
-  await qc.invalidateQueries({ queryKey: ['assessment-start', 'player'] });
-  await waitFor(() => expect(result.current.missing.some(item => item.key === 'assessment')).toBe(false));
+  await qc.invalidateQueries({ queryKey: ['start-readiness', 'player'] });
+  await waitFor(() => expect(result.current.missing.some(item => item.key === 'health')).toBe(false));
   await waitFor(() => expect(result.current.assessmentReady).toBe(true));
 });
 it('first Start commits identity before requesting seven combined saved dates',async()=>{
@@ -47,3 +47,4 @@ it('first Start commits identity before requesting seven combined saved dates',a
  expect(mocks.rebuild).toHaveBeenCalledWith('Your first week',expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/));
  expect(result.current.startedAt).toBe('2026-10-30T10:41:00Z');
 });
+it('assessment completion is optional once canonical needed details are done',async()=>{mocks.completed=true;const qc=new QueryClient({defaultOptions:{queries:{retry:false}}});const wrapper=({children}:{children:ReactNode})=><QueryClientProvider client={qc}>{children}</QueryClientProvider>;const {result}=renderHook(useHammersTodayStart,{wrapper});await waitFor(()=>expect(result.current.assessmentReady).toBe(true));});

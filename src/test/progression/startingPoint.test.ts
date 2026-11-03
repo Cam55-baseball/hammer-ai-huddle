@@ -83,9 +83,9 @@ describe("history wins after 2 logged weeks in 28 days", () => {
     expect(p.targets.defense).toBe(38);
     expect(p.historyAreas).toEqual(["hitting"]);
   });
-  it("incomplete answers set nothing", () => {
+  it("incomplete answers use conservative starts", () => {
     expect(answersComplete("baseball", "5tool", { last_trained: "Right now" })).toBe(false);
-    expect(planStartsFrom("baseball", ["baseball_5tool"], { last_trained: "Right now" }, {}, 300).levels).toBeNull();
+    expect(planStartsFrom("baseball", ["baseball_5tool"], { last_trained: "Right now" }, {}, 300).levels?.sprintYards).toBe(40);
   });
   it("every program in both sports accepts a full answer set", () => {
     for (const s of sports) for (const p of ["pitcher", "5tool", "golden2way"] as const) {
