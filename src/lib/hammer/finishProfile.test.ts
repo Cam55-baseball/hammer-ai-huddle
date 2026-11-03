@@ -5,14 +5,14 @@ const m = (key: string) => ({ key, label: key, to: "/x" });
 
 describe("Finish your profile flow", () => {
   it("never makes birthday a skippable step (it has its own required sheet)", () => {
-    expect(profileFlowItems([m("birthday"), m("sleep")], true).map((i) => i.key)).toEqual(["sleep"]);
+    expect(profileFlowItems([m("birthday"), m("sleep")], true).map((i) => i.key)).toEqual([]);
   });
   it("groups the 5 nutrition goals into one screen", () => {
     const items = profileFlowItems(["calorie_goal", "protein_goal", "carbs_goal", "fats_goal", "hydration_goal"].map(m), true);
-    expect(items).toHaveLength(1);
+    expect(items).toHaveLength(0);
   });
-  it("drops starting point after Start but keeps it before", () => {
-    expect(profileFlowItems([m("starting_point")], true)).toHaveLength(0);
+  it("keeps the required starting point after Start too", () => {
+    expect(profileFlowItems([m("starting_point")], true)).toHaveLength(1);
     expect(profileFlowItems([m("starting_point")], false)).toHaveLength(1);
   });
   it("shows at least 1 minute", () => { expect(minutesFor(1)).toBe(1); expect(minutesFor(12)).toBe(3); });
