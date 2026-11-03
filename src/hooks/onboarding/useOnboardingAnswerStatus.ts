@@ -71,23 +71,25 @@ export function useOnboardingAnswerStatus(): OnboardingAnswerStatus {
     enabled: !!uid,
     staleTime: 10_000,
     queryFn: async () => {
-      const [profile, ctx, equip] = await Promise.all([
+      if (!uid) throw new Error('Sign in first');
+      const [profile, ctx, equip, health] = await Promise.all([
         supabase
           .from("profiles")
           .select("date_of_birth, throwing_hand")
-          .eq("id", uid!)
+          .eq("id", uid)
           .maybeSingle(),
         supabase
           .from("athlete_context")
-          .select("anthropometrics, onboarding_draft")
-          .eq("user_id", uid!)
+          .select("anthropometrics, onboarding_draft, throws_hand")
+          .eq("user_id", uid)
           .maybeSingle(),
         supabase
           .from("athlete_equipment_context")
           .select("equipment")
-          .eq("user_id", uid!)
+          .eq("user_id", uid)
           .eq("scope", "persistent")
           .maybeSingle(),
+        supabase.from('physio_health_profiles').select('setup_completed,current_pain_answer').eq('user_id',uid).maybeSingle(),
       ]);
       const p = (profile.data ?? null) as
         | { date_of_birth?: string | null; throwing_hand?: string | null }
@@ -97,7 +99,9 @@ export function useOnboardingAnswerStatus(): OnboardingAnswerStatus {
         | null;
       return {
         dob: p?.date_of_birth ?? null,
-        throwingHand: p?.throwing_hand ?? null,
+        throwingHand: ctx.data?.throws_hand ?? p?.throwing_hand ?? null,
+        healthSetup: health.data?.setup_completed === true,
+        painAnswered: health.data?.current_pain_answer !== null && health.data?.current_pain_answer !== undefined,
         anthropometrics: c?.anthropometrics ?? null,
         remoteDraft: (c?.onboarding_draft ?? {}) as Partial<Record<DraftSlot, unknown>>,
         equipment: ((equip.data as { equipment?: string[] } | null)?.equipment ?? []) as string[],
@@ -123,11 +127,11 @@ export function useOnboardingAnswerStatus(): OnboardingAnswerStatus {
 
   byKey.equipment = (q.data?.equipment?.length ?? 0) > 0 ? "answered" : "open";
   byKey.goals = hasCategoryGoals ? "answered" : "open";
-  byKey.fuel = hasAnyValue(slot("fuel-recovery")) ? "answered" : "open";
+  byKey.fuel = q.data?.healthSetup ? "answered" : "open";
   byKey.mental = hasAnyValue(slot("mental-career")) ? "answered" : "open";
   byKey.connections = hasAnyValue(slot("connections")) ? "answered" : "open";
   byKey.schedule = hasScheduleEvent ? "answered" : "open";
-  byKey.injury = hasAnyValue(slot("injury-intake")) ? "answered" : "open";
+  byKey.injury = q.data?.painAnswered ? "answered" : "open";
   byKey.notifications = hasNotificationsPref ? "answered" : "open";
 
   // Equipment is no longer asked up front (Swap asks on the card); it stays

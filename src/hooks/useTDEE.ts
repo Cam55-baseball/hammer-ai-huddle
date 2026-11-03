@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { safeNutritionGoal } from '@/lib/nutrition/healthSetup';
 import {
   calculateFullNutritionTargets,
   calculateAge,
@@ -137,7 +138,7 @@ export function useTDEE() {
     }
 
     const age = calculateAge(biometrics.dateOfBirth);
-    const goalType = activeGoal?.goalType || 'maintain';
+    const goalType = safeNutritionGoal(activeGoal?.goalType ?? null, age) || 'maintain';
     const dayType = todayEvent?.eventType || 'training';
 
     return calculateFullNutritionTargets(
