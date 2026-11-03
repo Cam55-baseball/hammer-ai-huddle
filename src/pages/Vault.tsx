@@ -761,13 +761,15 @@ export default function Vault() {
                     </Card>
                   )}
 
-                  {/* Saved Drills & Tips */}
+                  {/* Saved Drills & Tips — anchor for ?openSection=saved-items (owner Nov 2 A1) */}
+                  <div ref={savedItemsRef}>
                   <VaultSavedItemsCard
                     drills={savedDrills}
                     tips={savedTips}
                     onDeleteDrill={deleteSavedDrill}
                     onDeleteTip={deleteSavedTip}
                   />
+                  </div>
 
                   {/* 6-Week Tracking Section */}
                   <div ref={sixWeekCheckinRef} className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 sm:p-6 space-y-4">
