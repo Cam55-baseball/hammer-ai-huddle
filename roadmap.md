@@ -4588,3 +4588,10 @@ Deploys/additive migrations needed for 2, 3, 13, 18, 20 and server scheduling ce
 - [x] Nov 2 last three: season card agrees (democollege Off-Season); 79 catalog classifications filled + jump swaps keep card classification; demoausl/demo2way inputs complete; 3 TEST weeks 6+1 valid; suite 742/5,932 green. See docs/owner/nov2-last-three-proof.md.
 - [x] Nov 2 owner: jump-swap fitsSlot guard + 79 catalog classifications approved (kept).
 - [x] Nov 2 Video Manager tags: 10 new/expanded skill areas (116 tags), 41 dimension choices, pickers/suggestions/missing finder/preview, Mind + tissue care placements, gated matching; analyze-video-description redeployed. Live per-domain sample videos NOT created (would show to real players); proven by matcher tests.
+
+## Nov 3 owner verification findings
+- [x] 1 Update Hammer / rest-day changes save at once; 7-day rebuild runs on the server in the background with a small status note.
+- [x] 2 Change rest day: rebuild stopped after 3 days (slow, held by the screen); now finishes on the server.
+- [x] 3 Every Today practice-log button opens the right log for today.
+- [ ] 4 Owner editors for game-situation Mind items and Today's coach advice — waiting on owner answers.
+- [ ] 5 Greenlight step-ups (A3): passed owner check — monitor.
