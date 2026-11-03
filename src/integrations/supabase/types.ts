@@ -3575,6 +3575,7 @@ export type Database = {
           primary_position: string | null
           primary_throwing_hand: string | null
           ranking_eligible: boolean | null
+          season_history: Json | null
           season_status: string
           season_status_manual: boolean
           season_status_manual_at: string | null
@@ -3616,6 +3617,7 @@ export type Database = {
           primary_position?: string | null
           primary_throwing_hand?: string | null
           ranking_eligible?: boolean | null
+          season_history?: Json | null
           season_status?: string
           season_status_manual?: boolean
           season_status_manual_at?: string | null
@@ -3657,6 +3659,7 @@ export type Database = {
           primary_position?: string | null
           primary_throwing_hand?: string | null
           ranking_eligible?: boolean | null
+          season_history?: Json | null
           season_status?: string
           season_status_manual?: boolean
           season_status_manual_at?: string | null
@@ -14471,6 +14474,7 @@ export type Database = {
           id: string
           illness_started_at: string | null
           injury_history: string[] | null
+          meals_per_day: number | null
           medical_conditions: string[] | null
           medications: string[] | null
           setup_completed: boolean
@@ -14496,6 +14500,7 @@ export type Database = {
           id?: string
           illness_started_at?: string | null
           injury_history?: string[] | null
+          meals_per_day?: number | null
           medical_conditions?: string[] | null
           medications?: string[] | null
           setup_completed?: boolean
@@ -14521,6 +14526,7 @@ export type Database = {
           id?: string
           illness_started_at?: string | null
           injury_history?: string[] | null
+          meals_per_day?: number | null
           medical_conditions?: string[] | null
           medications?: string[] | null
           setup_completed?: boolean
