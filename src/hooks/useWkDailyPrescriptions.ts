@@ -30,7 +30,7 @@ import { usePhaseState } from "@/hooks/usePhaseState";
 import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
 import { partitionCoachRows } from "@/lib/coachRx/planRows";
 import { composedDayRequest } from "@/lib/hammer/composedDayRequest";
-import { rebuildWrongSeasonDays, repairSavedWeek } from "@/lib/hammer/rebuildAfterChange";
+import { rebuildAfterChange, rebuildWrongSeasonDays, repairSavedWeek } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
 
 // Must equal the version the generator stamps on every row. A mismatch made
@@ -577,6 +577,23 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   }, [user?.id, serverFresh, planDate, qc]);
 
   // Auto-generate exactly once per mount if empty.
+  const tuningRebuild = useRef(false);
+  const [tuningFailed,setTuningFailed]=useState(false);
+  const tuningPending = useQuery({queryKey:['coach-phase-pending',user?.id],enabled:!!user?.id&&serverFresh,staleTime:0,refetchInterval:60_000,queryFn:async()=>{
+    const r=await supabase.rpc('coach_phase_pending');if(r.error)throw r.error;return r.data;
+  }});
+  useEffect(()=>{
+    if(!user?.id||!serverFresh||planDate!==getTodayDate()||!tuningPending.data||tuningRebuild.current)return;
+    tuningRebuild.current=true;setTuningFailed(false);
+    const at=tuningPending.data;
+    void rebuildAfterChange('Your coach adjusted your training phase',planDate).then(async result=>{
+      if(!result.ok){setTuningFailed(true);toast.error(result.message);return;}
+      const ack=await supabase.rpc('coach_phase_ack',{at_time:at});
+      if(ack.error){setTuningFailed(true);return;}
+      await qc.invalidateQueries({queryKey:['coach-phase-pending']});await qc.invalidateQueries({queryKey:['wk-rx']});await qc.invalidateQueries({queryKey:['wk-plan-changes']});
+    }).catch(()=>{setTuningFailed(true);toast.error('Your coach’s change could not update your plan. Try again.');});
+  },[user?.id,serverFresh,planDate,tuningPending.data,qc]);
+
   useEffect(() => {
     const first = query.data?.[0];
     const isGameDayForPlan = gameDayQuery.data ?? false;
