@@ -18,6 +18,9 @@ import { StartingPointForm } from './StartingPointForm';
 import { PitcherRoleQuestions } from './pitching/PitcherRoleQuestions';
 import { ActiveInjuryCards } from './injury/FullGo';
 import { usePitcherSchedule } from '@/hooks/usePitcherSchedule';
+import { useSeasonStatus } from '@/hooks/useSeasonStatus';
+import { useGameDayContext } from '@/hooks/useGameDayContext';
+import { seasonWhereLine } from '@/lib/hammer/seasonWhereLine';
 import { parseRoleMessage, describeRoleChange, type RoleChange } from '@/lib/hammer/pitching/pitcherRoleAnswers';
 
 type Flow = "games" | "season" | "cancelled" | "pain" | "break" | "event" | "travel" | "resume" | "ask";
@@ -42,6 +45,8 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   const { user } = useOptionalAuth();
   const tl = useScheduleTimeline();
   const today = getTodayDate();
+  const seasonStatus = useSeasonStatus();
+  const seasonCtx = useGameDayContext();
   const storageKey = `hammer:tell-open:${user?.id ?? "guest"}`;
   const [open, setOpen] = useState(checkIn);
   const [flow, setFlow] = useState<Flow | null>(null);
