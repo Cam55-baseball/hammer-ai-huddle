@@ -30,6 +30,7 @@ import { programOf, type Sport } from '../../../supabase/functions/_shared/wic/p
 import { REQUIRED_PLAN_QUESTIONS } from '../../../supabase/functions/_shared/startReadiness';
 import { recordPain } from '@/lib/hammer/injury/recordPain';
 import { REPORT_INJURY_REGIONS, type ReportInjuryRegionKey } from '@/lib/hammer/injury/reportInjury';
+import { usePitcherSchedule } from '@/hooks/usePitcherSchedule';
 import { suggestNutritionTargets, midpoint } from "@/lib/nutrition/targetSuggestions";
 import { rebuildAfterChange } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
@@ -213,7 +214,9 @@ function StepEditor({ item, userId, onSaved }: { item: MissingItem; userId: stri
         <Button variant="outline" className="w-full" disabled={s.busy} onClick={() => s.run(() => saveSeasonDates(userId, sport, null, null))}>Not known yet</Button></div>;
     case "calorie_goal": case "protein_goal": case "carbs_goal": case "fats_goal": case "hydration_goal":
       return <NutritionStep userId={userId} onSaved={onSaved} />;
-    case "pitcher_focus": case "pitching_role":
+    case "pitching_role":
+      return <PitchingRoleStep onSaved={onSaved}/>;
+    case "pitcher_focus":
       return <div className="space-y-3"><PitcherRoleQuestions compact /><Button className="w-full" onClick={() => void onSaved()}>Done</Button></div>;
     case "health":
       return <CurrentPainStep userId={userId} onSaved={onSaved} />;
@@ -226,6 +229,12 @@ function StepEditor({ item, userId, onSaved }: { item: MissingItem; userId: stri
       return <div className="space-y-3"><p className="text-sm text-muted-foreground">This one has its own screen. It opens right where you need it.</p>
         <Button asChild className="h-11 w-full"><Link to={item.key === "equipment" ? "/onboarding/athlete?edit=equipment" : item.key === "sport" ? "/onboarding/athlete?edit=profile" : item.to}>Open</Link></Button></div>;
   }
+}
+
+function PitchingRoleStep({onSaved}:{onSaved:()=>Promise<void>}) {
+  const schedule=usePitcherSchedule();
+  const s=useSaver(onSaved);
+  return <div className="space-y-3"><p className="text-sm text-muted-foreground">Choose your usual pitching role. You can change it later.</p>{[['starter','Starter'],['bullpen','Bullpen arm'],['closer','Closer']].map(([role,label])=><Button key={role} className="w-full" disabled={s.busy||schedule.isLoading} variant="outline" onClick={()=>s.run(async()=>{await schedule.saveSettings.mutateAsync({pitching_role:role as 'starter'|'bullpen'|'closer'});})}>{label}</Button>)}<Err e={s.error}/></div>;
 }
 
 function StartingChoiceStep({ userId, sport, onSaved }: {userId:string; sport:Sport; onSaved:()=>Promise<void>}) {

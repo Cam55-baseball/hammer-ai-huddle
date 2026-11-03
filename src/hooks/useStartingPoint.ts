@@ -70,10 +70,11 @@ export function useLoggedWeeks28(userId: string | undefined, today: string) {
     enabled: !!userId,
     staleTime: 5 * 60_000,
     queryFn: async () => {
+      if (!userId) return null;
       const from = new Date(new Date(`${today}T12:00:00Z`).getTime() - 27 * 86_400_000).toISOString().slice(0, 10);
       const [rx, logs] = await Promise.all([
-        supabase.from("wk_prescriptions").select("id, plan_date, slot").eq("user_id", userId!).gte("plan_date", from).lte("plan_date", today).limit(3000),
-        supabase.from("wk_session_logs").select("prescription_id").eq("user_id", userId!).gte("plan_date", from).lte("plan_date", today).limit(3000),
+        supabase.from("wk_prescriptions").select("id, plan_date, slot").eq("user_id", userId).gte("plan_date", from).lte("plan_date", today).limit(3000),
+        supabase.from("wk_session_logs").select("prescription_id").eq("user_id", userId).gte("plan_date", from).lte("plan_date", today).limit(3000),
       ]);
       if (rx.error || logs.error) return null;
       const logged = new Set(((logs.data ?? []) as any[]).map((l) => l.prescription_id).filter(Boolean));
