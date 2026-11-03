@@ -1996,6 +1996,12 @@ function BlockCard({
             </div>
           </div>
 
+          {block.modality === "warmup" && block.drills.some((d) => (d as { throwSection?: boolean }).throwSection) && (
+            <div className="space-y-1" data-testid="warmup-throw-log">
+              <p className="text-xs font-semibold">Log throwing practice</p>
+              <ArmThrowsPanel source="position" planDate={planDate} />
+            </div>
+          )}
           {chatOpen && <InlineBlockChat block={block} />}
         </CollapsibleContent>
       </Collapsible>
