@@ -51,7 +51,7 @@ describe("actual builder, two weeks per program and sport", () => {
       it(`${sport} ${tier}: throwing card ${expectCard ? "kept" : "never shown"}; no budget text anywhere`, () => {
         let throwDays = 0;
         for (let d = 0; d < 14; d++) {
-          const plan = buildHammerDailyPlan(ctx({ sport_primary: sport, position_primary: pos, season_phase: "off", age_years: 17, weekly_availability_days: 6, injury_history: [], equipment_effective: gear }), NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 1 + d),
+          const plan = buildHammerDailyPlan(ctx({ sport_primary: sport, position_primary: pos, season_phase: "off", age_years: 20, lifecycle_band: "college", lifting_age_years: 2, development_priorities: ["throwing"], weekly_availability_days: 6, injury_history: [], equipment_effective: gear }), NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 1 + d),
             { subscriptionModules: [`${sport}_${tier}`], ...(focus ? { pitcherOutings: { primaryFocus: focus } as never } : {}) });
           const text = JSON.stringify(plan.blocks.map((b) => [b.title, b.steps, b.drills.map((x) => [x.name, x.dosage])]));
           expect(text).not.toMatch(/arm units|arm budget/i);
