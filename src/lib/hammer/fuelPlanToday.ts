@@ -10,8 +10,8 @@
 import type { GoalType } from "@/utils/tdeeCalculations";
 import { safeNutritionGoal } from "@/lib/nutrition/healthSetup";
 
-type Drill = { name: string; dosage?: string; cue?: string; [k: string]: unknown };
-type Block = { modality: string; status: string; title: string; why: string; drills: readonly Drill[]; steps: readonly string[]; [k: string]: unknown };
+type Drill = { name: string; dosage?: string; cue?: string };
+type Block = { modality: string; status: string; title: string; why: string; drills: readonly Drill[]; steps: readonly string[]; roadmapReason?: unknown; gamePlanTemplate?: unknown };
 export type SavedTargets = { calorie_goal?: number | null; protein_goal?: number | null; carbs_goal?: number | null; fats_goal?: number | null; hydration_goal?: number | null } | null;
 
 const GOAL_LINE: Record<GoalType, string> = {
