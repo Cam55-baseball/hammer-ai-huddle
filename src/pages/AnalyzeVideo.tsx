@@ -1274,7 +1274,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
         {!videoPreview && !analysis && (
           <div className="space-y-4">
             {assessment && <HighFpsCapture module={assessment.module} sport={assessment.sport} onAnalysis={(report, videoId) => { const normalized = normalizeAnalysisResponse(report); setCurrentVideoId(videoId); setAnalysis(normalized); setAnalysisError(null); assessment.onSaved?.(normalized); }} />}
-            <PitchingFilmingGuide />
+            <div className="mx-auto w-full max-w-xl">
+              <div data-tour="analysis-report"><UploadAnalysisReport /></div>
+            </div>
             <Card data-tour="upload" className="mx-auto max-w-xl p-6 sm:p-8 text-center border-dashed border-2">
               <div className="flex flex-col items-center space-y-3">
                 <div className="p-3 sm:p-4 rounded-full bg-primary/10">
@@ -1318,9 +1320,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
                 </p>}
               </div>
             </Card>
-            <div className="mx-auto w-full max-w-xl">
-              <div data-tour="analysis-report"><UploadAnalysisReport /></div>
-            </div>
+            {/* Owner Nov 2 A1: Analysis Report first, Filming tips last. */}
+            <PitchingFilmingGuide />
           </div>
         )}
 

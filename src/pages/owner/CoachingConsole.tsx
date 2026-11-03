@@ -4,7 +4,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { OwnerAgreement } from '@/components/intelligence/OwnerAgreement';
 import { PhilosophyConversation } from '@/components/intelligence/PhilosophyConversation';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -114,6 +115,7 @@ export default function CoachingConsole() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-4 pt-16">
+      <BackButton />
       <h1 className="text-2xl font-bold">Coaching Console</h1>
       <p className="text-sm text-muted-foreground">Teach Hammers what you believe. Edits make a new version; old versions are kept.</p>
       <Tabs defaultValue="principles">
@@ -245,4 +247,10 @@ export default function CoachingConsole() {
       </Tabs>
     </div>
   );
+}
+
+/** Owner Nov 2 #12: every screen has a way out. */
+function BackButton() {
+  const navigate = useNavigate();
+  return <Button variant="ghost" size="sm" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/dashboard'))}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>;
 }
