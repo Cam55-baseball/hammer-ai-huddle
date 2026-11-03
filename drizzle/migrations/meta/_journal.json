@@ -1317,6 +1317,13 @@
       "when": 1793670864919,
       "tag": "0187_wk_periodization_owner_write",
       "breakpoints": true
+    },
+    {
+      "idx": 188,
+      "version": "7",
+      "when": 1793679453248,
+      "tag": "0188_unified_required_plan_details",
+      "breakpoints": true
     }
   ]
 }

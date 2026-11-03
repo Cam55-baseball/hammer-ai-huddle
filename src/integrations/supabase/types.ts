@@ -14462,6 +14462,9 @@ export type Database = {
           contraceptive_type: string | null
           contraceptive_use: boolean | null
           created_at: string
+          current_pain_answer: boolean | null
+          current_pain_area: string | null
+          current_pain_reviewed_at: string | null
           date_of_birth: string | null
           dietary_style: string | null
           food_intolerances: string[] | null
@@ -14484,6 +14487,9 @@ export type Database = {
           contraceptive_type?: string | null
           contraceptive_use?: boolean | null
           created_at?: string
+          current_pain_answer?: boolean | null
+          current_pain_area?: string | null
+          current_pain_reviewed_at?: string | null
           date_of_birth?: string | null
           dietary_style?: string | null
           food_intolerances?: string[] | null
@@ -14506,6 +14512,9 @@ export type Database = {
           contraceptive_type?: string | null
           contraceptive_use?: boolean | null
           created_at?: string
+          current_pain_answer?: boolean | null
+          current_pain_area?: string | null
+          current_pain_reviewed_at?: string | null
           date_of_birth?: string | null
           dietary_style?: string | null
           food_intolerances?: string[] | null
