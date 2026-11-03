@@ -45,6 +45,22 @@ function ctx(values: Record<string, unknown>): HammerAthleteContext {
 }
 const gear = ["field", "glove", "ball", "bands", "partner", "mound", "circle", "catcher", "plate", "net", "bucket"];
 
+describe("pitcher split", () => {
+  it("arm care, warm-up throws, catch play and long toss move to a Throwing card before Pitching", () => {
+    const blocks = [
+      { modality: "warmup", status: "ready", title: "Warm-up", steps: [], drills: [{ name: "Tissue prep" }] },
+      { modality: "pitching", status: "ready", title: "Pitching — side", steps: [], drills: [
+        { name: "Arm-care cooldown", dosage: "2 min" }, { name: "Long-toss extension", dosage: "~15 throws" },
+        { name: "Band series — ER / IR", dosage: "ER 1x12" }, { name: "Flat-ground pitching", dosage: "20 pitches", stage: "full_go" },
+      ] },
+    ];
+    const out = placeThrowsByRole(blocks, { pitcher: true, toSteps });
+    expect(out.map((b) => b.modality)).toEqual(["warmup", "throwing", "pitching"]);
+    expect(out[1].drills.map((d) => d.name)).toEqual(["Arm-care cooldown", "Band series — ER / IR", "Long-toss extension"]);
+    expect(out[2].drills.map((d) => d.name)).toEqual(["Flat-ground pitching"]);
+  });
+});
+
 describe("actual builder, two weeks per program and sport", () => {
   for (const sport of ["baseball", "softball"] as const) {
     for (const [tier, pos, focus, expectCard] of [["5tool", "SS", null, false], ["golden2way", "SS", "position", false], ["pitcher", "P", null, true]] as const) {
@@ -69,7 +85,7 @@ describe("actual builder, two weeks per program and sport", () => {
             expect(order).toEqual([...order].sort((a, b) => a - b));
           }
         }
-        expect(throwDays).toBeGreaterThan(0);
+        if (!expectCard) expect(throwDays).toBeGreaterThan(0);
       });
     }
   }

@@ -1895,6 +1895,19 @@ function placeThrowsByRole(blocks, opts) {
   const out = blocks.map((b) => ({ ...b }));
   const ti = out.findIndex((b) => b.modality === "throwing");
   if (opts.pitcher) {
+    const pi = out.findIndex((b) => b.modality === "pitching" && b.status === "ready");
+    if (pi >= 0) {
+      const p = out[pi];
+      const isThrowWork = (d3) => d3.stage !== "full_go" && d3.armEvent?.kind !== "pitch" && throwKind(d3) !== "position" && !/pitch/i.test(d3.name);
+      const moving = p.drills.filter(isThrowWork);
+      const staying = p.drills.filter((d3) => !isThrowWork(d3));
+      if (moving.length && staying.length) {
+        out[pi] = { ...p, drills: staying, steps: opts.toSteps(staying) };
+        const ti2 = out.findIndex((b) => b.modality === "throwing" && b.status === "ready");
+        if (ti2 >= 0) out[ti2] = { ...out[ti2], drills: [...moving, ...out[ti2].drills] };
+        else out.splice(pi, 0, { ...p, modality: "throwing", drills: moving, steps: opts.toSteps(moving), route: "/practice?module=throwing", ctaLabel: "Open throwing", gamePlanTemplate: null, because: [] });
+      }
+    }
     return out.map((b) => {
       if (b.modality !== "throwing" || b.status !== "ready") return b;
       const drills = [...b.drills].map((d3, i) => ({ d: withThrowCount(d3), i })).sort((x, y) => ORDER[throwKind(x.d)] - ORDER[throwKind(y.d)] || x.i - y.i).map((x) => x.d);
