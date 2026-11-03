@@ -10,6 +10,8 @@ vi.mock("@/hooks/useScheduleTimeline", () => ({
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn(), message: vi.fn() }) }));
 vi.mock("@/hooks/usePitcherSchedule", () => ({ usePitcherSchedule: () => ({ data: null, facts: null, today: null, unconfirmed: [], upcoming: [], saveSettings: vi.fn(), planStart: vi.fn(), resolveOuting: vi.fn(), threwToday: vi.fn(), setAvailable: vi.fn() }) }));
 vi.mock("@/components/hammer/injury/FullGo", () => ({ ActiveInjuryCards: () => null }));
+vi.mock("@/hooks/useSeasonStatus", () => ({ useSeasonStatus: () => ({ isLoading: false, resolvedPhase: null, preseasonStartDate: null, inSeasonStartDate: null, inSeasonEndDate: null, postSeasonEndDate: null }) }));
+vi.mock("@/hooks/useGameDayContext", () => ({ useGameDayContext: () => null }));
 
 import { TellHammersInbox } from "@/components/hammer/TellHammersInbox";
 
