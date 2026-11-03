@@ -21,3 +21,31 @@ export function practiceWindowRoute(route: string, token: string) {
   url.searchParams.set("today_window", token);
   return `${url.pathname}${url.search}`;
 }
+/** Card categories → the practice log that owns them (Defense cards log as Fielding; bat speed logs as hitting). */
+const MODULE_ALIASES: Record<string, (typeof PRACTICE_MODULES)[number]> = {
+  hitting: "hitting", bat_speed: "hitting", "bat-speed": "hitting", "practice-hub": "hitting", "tex-vision": "hitting",
+  bunting: "bunting", pitching: "pitching", throwing: "throwing",
+  defense: "fielding", fielding: "fielding", catching: "fielding",
+  baserunning: "baserunning", "speed-lab": "baserunning",
+};
+
+export function practiceModuleFor(value: string | null | undefined) {
+  return value ? MODULE_ALIASES[value] ?? null : null;
+}
+
+/**
+ * Every Today-card practice button opens the right log, ready to fill in for today:
+ * the card's category, a solo session type, the card's activity and today's date.
+ * Non-practice routes pass through unchanged.
+ */
+export function cardPracticeRoute(route: string, card?: { modality?: string | null; activity?: string | null }, today?: string) {
+  const url = new URL(route, "https://hammersmodality.org");
+  if (url.pathname !== "/practice") return route;
+  const fromCard = card?.modality === "bunting" || card?.modality === "bat_speed" ? practiceModuleFor(card.modality) : null;
+  const module = fromCard ?? practiceModuleFor(url.searchParams.get("module")) ?? practiceModuleFor(card?.modality) ?? "hitting";
+  url.searchParams.set("module", module);
+  if (!url.searchParams.get("type")) url.searchParams.set("type", "solo_work");
+  if (card?.activity && !url.searchParams.get("drill_type")) url.searchParams.set("drill_type", card.activity);
+  if (today) url.searchParams.set("date", today);
+  return `${url.pathname}${url.search}`;
+}
