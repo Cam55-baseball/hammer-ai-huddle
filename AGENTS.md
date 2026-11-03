@@ -64,3 +64,5 @@
 - Primer in Warm-up; Both inbox reuses getActiveTier/Checkout/customer-portal. Why: one save/billing path.
 - Goal shelves resolve self-scoped readable IDs, never fault attribution. Goal editors save picks/order together with readback and shared pickRanking. Why: retain both goals and pass Start without inventing evidence.
 - Owner conditioning drills serve only the weekly running floor, validated by `_shared/wic/conditioning/ownerConditioning.ts` against `runRest.ts`. Why: owner numbers used as entered, no new limit or path.
+- The owner-only position-player exception is one literal account ID in `_shared/owner/ownerPositionException.ts`, mirrored in `initial_plan_missing`. Why: no other account, including other owners, may drift into it.
+- Coaching Console Standards write real settings only through `owner_confirm_real_settings`/`owner_undo_real_settings` with exact old/new receipts; fields without a real column are refused. Why: owner changes must be reversible and never invent a setting.
