@@ -5215,6 +5215,63 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_phase_readbacks: {
+        Row: {
+          acknowledged_at: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coach_phase_tunings: {
+        Row: {
+          athlete_id: string | null
+          before_values: Json
+          changed_at: string
+          coach_id: string
+          confirmed_at: string | null
+          id: string
+          phase: string
+          prepared_at: string
+          settings: Json
+          targets: string[]
+          undone_at: string | null
+        }
+        Insert: {
+          athlete_id?: string | null
+          before_values: Json
+          changed_at?: string
+          coach_id: string
+          confirmed_at?: string | null
+          id?: string
+          phase: string
+          prepared_at?: string
+          settings: Json
+          targets?: string[]
+          undone_at?: string | null
+        }
+        Update: {
+          athlete_id?: string | null
+          before_values?: Json
+          changed_at?: string
+          coach_id?: string
+          confirmed_at?: string | null
+          id?: string
+          phase?: string
+          prepared_at?: string
+          settings?: Json
+          targets?: string[]
+          undone_at?: string | null
+        }
+        Relationships: []
+      }
       coach_prescriptions: {
         Row: {
           cancelled_at: string | null
@@ -24564,6 +24621,22 @@ export type Database = {
         }
         Returns: Json
       }
+      coach_phase_ack: { Args: { at_time: string }; Returns: undefined }
+      coach_phase_confirm: {
+        Args: { first_confirm: boolean; rid: string; second_confirm: boolean }
+        Returns: Json
+      }
+      coach_phase_connected: {
+        Args: { c: string; p: string }
+        Returns: boolean
+      }
+      coach_phase_effective: { Args: { p: string; ph: string }; Returns: Json }
+      coach_phase_pending: { Args: never; Returns: string }
+      coach_phase_prepare: {
+        Args: { p: string; ph: string; v: Json }
+        Returns: Json
+      }
+      coach_phase_undo: { Args: { rid: string }; Returns: Json }
       coach_program_summaries: {
         Args: { _ids: string[] }
         Returns: {
