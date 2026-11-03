@@ -20,7 +20,7 @@ const GEN = readFileSync("supabase/functions/wk-generate-daily/index.ts", "utf8"
 const pushBody = (() => {
   const start = GEN.indexOf("const push = (");
   expect(start).toBeGreaterThan(0);
-  return GEN.slice(start, start + 12000);
+  return GEN.slice(start, start + 20000);
 })();
 
 describe("cue comes from the movement row", () => {
