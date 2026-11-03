@@ -47,5 +47,9 @@ export function fuelPlanToday<B extends Block>(block: B, o: { goalType: string |
   const why = [minor ? GROWTH : null, goalLine && goalLine !== GROWTH ? goalLine : null,
     o.restDay ? "Rest day — eat normally so your body recovers." : "Carbs before you train. Protein and water after."].filter(Boolean).join(" ");
   const title = o.restDay ? "Fuel plan — rest day" : minor ? "Fuel plan — grow and train" : "Fuel plan";
-  return { ...block, status: "ready", title, why, drills, steps: drills.map((d) => `${d.name}${d.dosage ? ` — ${d.dosage}` : ""}`) };
+  const steps = drills.map((d) => `${d.name}${d.dosage ? ` — ${d.dosage}` : ""}`);
+  const tpl = block.gamePlanTemplate as Record<string, unknown> | null | undefined;
+  return { ...block, status: "ready", title, why, drills, steps,
+    ...(typeof block.roadmapReason === "string" ? { roadmapReason: minor || o.restDay ? (o.restDay ? "Rest day fuel plan." : "Growth-safe fuel plan.") : block.roadmapReason } : {}),
+    ...(tpl ? { gamePlanTemplate: { ...tpl, checklist: steps } } : {}) };
 }
