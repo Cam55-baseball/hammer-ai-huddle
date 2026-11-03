@@ -584,6 +584,55 @@ const handler = async (req: Request): Promise<Response> => {
       user = authUser;
     }
 
+    // Owner Nov 3 item 1: the answer is already saved; the seven-day rebuild runs here
+    // in the background (survives the player leaving the app) through the exact same
+    // per-day compose path, one day at a time (the day-lock forbids overlapping days).
+    if (!isServiceCaller && rawBody.rebuild_week_background === true) {
+      const reason = typeof rawBody.change_text === "string" ? rawBody.change_text.slice(0, 200) : "";
+      const first = typeof rawBody.first_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawBody.first_date) ? rawBody.first_date : "";
+      if (!reason || !first) return json({ error: "invalid_request" }, 400);
+      const { data: job, error: jobErr } = await admin.from("plan_rebuild_jobs")
+        .insert({ user_id: user.id, reason, first_date: first }).select("id").single();
+      if (jobErr || !job) return json({ error: "job_unavailable" }, 500);
+      const key = `saved-change:${job.id}`;
+      const call = async (date: string, suffix = "") => {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const r = await fetch(`${SUPABASE_URL}/functions/v1/wk-generate-daily`, {
+            method: "POST",
+            headers: { Authorization: authHeader, apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({ plan_date: date, compose_sport_day: true, change_reason: "player_request", change_text: reason, change_key: `${key}:${date}${suffix}` }),
+          });
+          const b = await r.json().catch(() => null) as any;
+          if (r.status === 429 && attempt === 0) { await new Promise((ok) => setTimeout(ok, 60_000)); continue; }
+          return { status: r.status, body: b };
+        }
+        return { status: 429, body: null };
+      };
+      const work = (async () => {
+        const done: string[] = [], failed: string[] = [], kept: string[] = [];
+        let message: string | null = null;
+        try {
+          for (let offset = 0; offset < 7 + kept.length && offset < 14; offset++) {
+            const date = isoShift(first, offset);
+            let r = await call(date);
+            if (r.body?.error === "adjust_failed" && r.body?.message === "Day changed; rebuild from fresh saved work" || r.body?.error === "Sport day changed; rebuild from fresh saved work") r = await call(date, ":fresh");
+            if (r.body?.error === "adjust_failed" && /protected/i.test(String(r.body?.message ?? ""))) kept.push(date);
+            else if (r.body?.error === "not_started") { message = `${reason} — saved. Your plan builds when you tap Start.`; break; }
+            else if (r.body?.ok === true && r.body?.composed === true && r.body?.degraded !== true) done.push(date);
+            else failed.push(date);
+            await admin.from("plan_rebuild_jobs").update({ dates_done: done, dates_failed: failed, dates_kept: kept }).eq("id", job.id);
+          }
+        } catch { if (!failed.length) failed.push(first); }
+        await admin.from("plan_rebuild_jobs").update({
+          status: failed.length ? "failed" : "done", dates_done: done, dates_failed: failed, dates_kept: kept,
+          message: message ?? (failed.length ? `${failed.length} day${failed.length === 1 ? "" : "s"} couldn't update. Tap Try again.` : "Your plan is updated."),
+          finished_at: new Date().toISOString(),
+        }).eq("id", job.id);
+      })();
+      (globalThis as any).EdgeRuntime?.waitUntil?.(work);
+      return json({ ok: true, background: true, job_id: job.id }, 202);
+    }
+
     // Oct 29 outage guard: TEST/demo identities (hammersmodality+…@gmail.com)
     // build one plan at a time and at most TEST_BUILD_CAP per 10 minutes per
     // instance; extra calls get 429 + Retry-After instead of hitting the disk.
