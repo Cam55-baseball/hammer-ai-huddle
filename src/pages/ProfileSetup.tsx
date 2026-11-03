@@ -148,14 +148,10 @@ const ProfileSetup = () => {
   /** Per-step check so a mistake is caught on the screen where it was made. */
   const stepError = (n: number): string | null => {
     if (n === 0 && (!firstName.trim() || !lastName.trim())) return "Enter your first and last name.";
-    if (n === 1 && (!position.trim() || !experienceLevel)) return "Add your position and experience level.";
+    if (n === 1 && (!position.trim() || !experienceLevel || !throwingHand || !battingSide)) return "Add your position, playing level, bats and throws.";
     if (n === 2) {
-      if (!/^\d+'\d+"$/.test(height)) return "Add your height in feet and inches.";
-      if (!weight.trim()) return "Add your weight.";
-      if (!graduationYear.trim()) return "Add your graduation year.";
       if (!dateOfBirth) return "Pick your date of birth.";
     }
-    if (n === 3 && (!playerState.trim() || !teamAffiliation.trim())) return "Add your state and team.";
     return null;
   };
   const goNextStep = () => {
@@ -211,7 +207,7 @@ const ProfileSetup = () => {
     }
     
     // Validate player-specific required fields
-    if (isPlayer && (!height || !weight || !playerState || !graduationYear || !position || !experienceLevel || !teamAffiliation)) {
+    if (isPlayer && (!position || !experienceLevel || !throwingHand || !battingSide)) {
       toast({
         title: t('profileSetup.missingInformation'),
         description: t('profileSetup.fillRequiredFieldsPlayer'),
@@ -286,7 +282,7 @@ const ProfileSetup = () => {
         profileData.height = height;
         profileData.weight = weight;
         profileData.state = playerState;
-        profileData.high_school_grad_year = parseInt(graduationYear);
+        profileData.high_school_grad_year = graduationYear ? parseInt(graduationYear) : null;
         profileData.team_affiliation = teamAffiliation;
         profileData.throwing_hand = throwingHand || null;
         profileData.batting_side = battingSide || null;
@@ -317,6 +313,10 @@ const ProfileSetup = () => {
       if (profileError) throw profileError;
       if (isPlayer && (selectedSport === 'baseball' || selectedSport === 'softball')) {
         await persistContextAnswer(user.id, 'sport_primary', selectedSport, 'profile_setup');
+        await persistContextAnswer(user.id, 'position_primary', position, 'profile_setup');
+        await persistContextAnswer(user.id, 'competition_level', experienceLevel, 'profile_setup');
+        await persistContextAnswer(user.id, 'bats_hand', battingSide === 'B' ? 'S' : battingSide, 'profile_setup');
+        await persistContextAnswer(user.id, 'throws_hand', throwingHand === 'B' ? 'S' : throwingHand, 'profile_setup');
       }
 
       // 2. Insert role. Admin/owner can never be self-assigned. Coach, scout and
@@ -502,11 +502,11 @@ const ProfileSetup = () => {
             <div className={sv(2)}>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="height">{t('profileSetup.height')} *</Label>
-                    <HeightFeetInchesInput id="height" value={height} onChange={setHeight} required />
+                    <Label htmlFor="height">{t('profileSetup.height')} · Optional — helps personalize</Label>
+                    <HeightFeetInchesInput id="height" value={height} onChange={setHeight} />
                   </div>
                   <div>
-                    <Label htmlFor="weight">{t('profileSetup.weight')} *</Label>
+                    <Label htmlFor="weight">{t('profileSetup.weight')} · Optional — helps personalize</Label>
                     <Input
                       id="weight"
                       type="text"
@@ -514,7 +514,6 @@ const ProfileSetup = () => {
                       value={weight}
                       onChange={(e) => setWeight(e.target.value)}
                       placeholder={t('profileSetup.placeholders.weight')}
-                      required
                     />
                   </div>
                 </div>
@@ -523,19 +522,18 @@ const ProfileSetup = () => {
                 <div className="grid grid-cols-1 gap-3">
             <div className={sv(3)}>
                   <div>
-                    <Label htmlFor="playerState">{t('profileSetup.state')} *</Label>
+                    <Label htmlFor="playerState">{t('profileSetup.state')} · Optional — helps personalize</Label>
                     <Input
                       id="playerState"
                       value={playerState}
                       onChange={(e) => setPlayerState(e.target.value)}
                       placeholder={t('profileSetup.placeholders.state')}
-                      required
                     />
                   </div>
             </div>
             <div className={sv(2)}>
                   <div>
-                    <Label htmlFor="graduationYear">{t('profileSetup.graduationYear')} *</Label>
+                    <Label htmlFor="graduationYear">{t('profileSetup.graduationYear')} · Optional — helps personalize</Label>
                     <Input
                       id="graduationYear"
                       type="number"
@@ -544,7 +542,6 @@ const ProfileSetup = () => {
                       value={graduationYear}
                       onChange={(e) => setGraduationYear(e.target.value)}
                       placeholder={t('profileSetup.placeholders.gradYear')}
-                      required
                     />
                   </div>
             </div>
@@ -582,13 +579,13 @@ const ProfileSetup = () => {
 
             <div className={sv(3)}>
                 <div>
-                  <Label htmlFor="teamAffiliation">{t('profileSetup.teamAffiliation')} *</Label>
+                  <Label htmlFor="teamAffiliation">Team · Optional — helps personalize</Label>
+                  <div className="my-2 flex flex-wrap gap-2">{['Free agent','No team right now / training on my own','Between teams'].map(option=><Button key={option} type="button" size="sm" variant={teamAffiliation===option?'default':'outline'} onClick={()=>setTeamAffiliation(option)}>{option}</Button>)}</div>
                   <Input
                     id="teamAffiliation"
                     value={teamAffiliation}
                     onChange={(e) => setTeamAffiliation(e.target.value)}
                     placeholder={t('profileSetup.placeholders.teamAffiliation')}
-                    required
                   />
                 </div>
             </div>

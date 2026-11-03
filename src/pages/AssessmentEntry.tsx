@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { InitialAssessmentCard } from "@/components/assessment/InitialAssessmentCard";
 import { assessmentEntryAllowed, assessmentEntrySport } from "@/lib/assessment/entryRules";
 import { AssessmentProfileReview } from '@/components/assessment/AssessmentProfileReview';
+import { Button } from '@/components/ui/button';
 
 export default function AssessmentEntry() {
   const { user } = useAuth();
@@ -39,5 +40,5 @@ export default function AssessmentEntry() {
   </div>;
   if (!admitted) return null;
   if (!sport) return null;
-  return <InitialAssessmentCard sport={sport} autoOpen onClose={() => navigate("/dashboard", { replace: true })} />;
+  return <div className="mx-auto max-w-3xl space-y-4 p-5"><h1 className="text-2xl font-semibold">Improve your plan</h1><p className="text-sm text-muted-foreground">Optional — helps personalize</p><Button className="w-full" onClick={()=>navigate('/dashboard')}>Skip for now — go to my plan</Button><InitialAssessmentCard sport={sport} onClose={() => navigate("/dashboard", { replace: true })} /></div>;
 }
