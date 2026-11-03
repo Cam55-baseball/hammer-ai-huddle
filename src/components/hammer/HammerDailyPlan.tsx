@@ -834,6 +834,13 @@ function HammerDailyPlanBody({
   const planDateForAge = new Date(`${bodyPlanDate}T12:00:00Z`);
   const buntAge = ageDate && Number.isFinite(ageDate.getTime()) && ageDate <= planDateForAge
     ? planDateForAge.getUTCFullYear()-ageDate.getUTCFullYear()-(planDateForAge.getUTCMonth()<ageDate.getUTCMonth() || planDateForAge.getUTCMonth()===ageDate.getUTCMonth() && planDateForAge.getUTCDate()<ageDate.getUTCDate()?1:0) : null;
+  const fuelFacts = useQuery({ queryKey: ['fuel-plan-facts', bodyUser?.id], enabled: !!bodyUser, queryFn: async () => {
+    const [g, n] = await Promise.all([
+      supabase.from('athlete_body_goals').select('goal_type').eq('user_id', bodyUser!.id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('vault_nutrition_goals').select('calorie_goal,protein_goal,carbs_goal,fats_goal,hydration_goal').eq('user_id', bodyUser!.id).maybeSingle(),
+    ]);
+    return { goalType: (g.data?.goal_type as string | null) ?? null, saved: (n.data as SavedTargets) ?? null };
+  } });
   const savedGoals = getV2(ctx.get('category_goals')?.value);
   const hittingPowerGoal = savedGoals?.[sportKey]?.position?.hitting?.some(p=>p.id==='oppo_power') === true ||
     projectedAthlete.categoryGoals?.goals.some(g=>g.category==='hitting'&&g.intent==='power_hitting') === true;
@@ -1128,7 +1135,8 @@ function HammerDailyPlanBody({
         })} /></Bys>
         {/* 6. Non-physical prescribed blocks: mental / vision work + eating plan */}
         <Bys id="non_physical">{plan.blocks
-          .filter((b) => prescribedToday(b) && PRE_START_MODALITIES.has(b.modality) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES))
+          .filter((b) => PRE_START_MODALITIES.has(b.modality) && (b.modality === 'fueling' || prescribedToday(b)) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES))
+          .map((b) => b.modality === 'fueling' ? fuelPlanToday(b, { goalType: fuelFacts.data?.goalType ?? null, age: buntAge, restDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []), saved: fuelFacts.data?.saved ?? null }) : b)
           .map((b) => {
             const adj = adaptive.find((a) => a.modality === b.modality);
             return (
