@@ -20,12 +20,12 @@ describe("throwing structure (owner Nov 3 round 2)", () => {
   it("position player: warm-up ends with throwing warm-up → catch play → long toss", () => {
     const w = placeThrowsByRole(day(), { pitcher: false, toSteps }).find((b) => b.modality === "warmup")!;
     expect(w.drills.map((d) => d.name)).toEqual(["Tissue prep 1", "Band series — ER / IR", "Warm-up throws — easy to building", "Regulation extension toss", "Long toss (inside catch play) — Long-toss extension (5oz)"]);
-    expect(w.drills[2].cue).toBe("Log them right here.");
+    expect((w.drills[2] as any).cue).toBe("Log them right here.");
   });
   it("position player: position throws only on the Defense card, with counts", () => {
     const d = placeThrowsByRole(day(), { pitcher: false, toSteps }).find((b) => b.modality === "defense")!;
     expect(d.drills.map((x) => x.name)).toEqual(["Deep-hole throw", "Routine ground-ball throw"]);
-    expect(d.drills[0].dosage).toBe("5 reps · 5 throws");
+    expect((d.drills[0] as any).dosage).toBe("5 reps · 5 throws");
   });
   it("pitcher: Throwing card kept in order arm care → warm-up → catch play → long toss, no budget title", () => {
     const b = day(); b[1].drills = b[1].drills.filter((d) => !/ground-ball/.test(d.name));
@@ -81,7 +81,7 @@ describe("actual builder, two weeks per program and sport", () => {
             if (sec.length || def?.drills.some((x) => /throws/.test(x.dosage ?? ""))) throwDays++;
           } else if (t) {
             throwDays++;
-            const order = t.drills.map((x) => ({ arm_care: 0, warmup: 1, catch_play: 2, long_toss: 3, position: 4 })[throwKind(x)]);
+            const order = t.drills.map((x) => ({ arm_care: 0, warmup: 1, catch_play: 2, long_toss: 3, position: 4 })[throwKind(x as any)]);
             expect(order).toEqual([...order].sort((a, b) => a - b));
           }
         }
