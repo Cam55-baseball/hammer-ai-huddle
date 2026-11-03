@@ -14791,6 +14791,30 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_check_failures: {
+        Row: {
+          check_key: string
+          created_at: string
+          error: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          check_key: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          check_key?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plan_mind_content: {
         Row: {
           active: boolean
