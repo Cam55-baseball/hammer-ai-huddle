@@ -51,6 +51,22 @@ export function placeThrowsByRole<B extends Block>(blocks: readonly B[], opts: {
   const out = blocks.map((b) => ({ ...b }));
   const ti = out.findIndex((b) => b.modality === "throwing");
   if (opts.pitcher) {
+    // Arm care, warm-up throws, catch play and long toss move from the Pitching card to the
+    // Throwing card (placed just before Pitching). Pitches and full-go work stay on Pitching;
+    // a day whose Pitching card would be left empty is not split.
+    const pi = out.findIndex((b) => b.modality === "pitching" && b.status === "ready");
+    if (pi >= 0) {
+      const p = out[pi];
+      const isThrowWork = (d: Drill) => d.stage !== "full_go" && (d.armEvent as { kind?: string } | null | undefined)?.kind !== "pitch" && throwKind(d) !== "position" && !/pitch/i.test(d.name);
+      const moving = p.drills.filter(isThrowWork);
+      const staying = p.drills.filter((d) => !isThrowWork(d));
+      if (moving.length && staying.length) {
+        out[pi] = { ...p, drills: staying, steps: opts.toSteps(staying) };
+        const ti2 = out.findIndex((b) => b.modality === "throwing" && b.status === "ready");
+        if (ti2 >= 0) out[ti2] = { ...out[ti2], drills: [...moving, ...out[ti2].drills] };
+        else out.splice(pi, 0, { ...p, modality: "throwing", drills: moving, steps: opts.toSteps(moving), route: "/practice?module=throwing", ctaLabel: "Open throwing", gamePlanTemplate: null, because: [] } as B);
+      }
+    }
     return out.map((b) => {
       if (b.modality !== "throwing" || b.status !== "ready") return b;
       const drills = [...b.drills].map((d, i) => ({ d: withThrowCount(d), i }))

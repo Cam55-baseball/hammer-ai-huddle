@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { placeThrowsByRole } from "./throwPlacement";
+import { placeThrowsByRole, throwKind } from "./throwPlacement";
 
 const toSteps = (d: readonly { name: string }[]) => d.map((x) => x.name);
 const day = () => [
@@ -60,8 +60,14 @@ describe("actual builder, two weeks per program and sport", () => {
             expect(t).toBeUndefined();
             const w = plan.blocks.find((b) => b.modality === "warmup" && b.status === "ready");
             const sec = (w?.drills ?? []).map((x, i) => [x, i] as const).filter(([x]) => (x as { throwSection?: boolean }).throwSection);
-            if (sec.length) { throwDays++; expect(sec[sec.length - 1][1]).toBe(w!.drills.length - 1); }
-          } else if (t) throwDays++;
+            if (sec.length) expect(sec[sec.length - 1][1]).toBe(w!.drills.length - 1);
+            const def = plan.blocks.find((b) => b.modality === "defense" && b.status === "ready");
+            if (sec.length || def?.drills.some((x) => /throws/.test(x.dosage ?? ""))) throwDays++;
+          } else if (t) {
+            throwDays++;
+            const order = t.drills.map((x) => ({ arm_care: 0, warmup: 1, catch_play: 2, long_toss: 3, position: 4 })[throwKind(x)]);
+            expect(order).toEqual([...order].sort((a, b) => a - b));
+          }
         }
         expect(throwDays).toBeGreaterThan(0);
       });
