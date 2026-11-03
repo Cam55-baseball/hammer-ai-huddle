@@ -138,7 +138,9 @@ describe("every card renders for every day type and context state", () => {
     for (const [dayName, signal, day] of DAY_TYPES) {
       it(`${dayName} / ${ctxName}`, () => {
         const plan = buildHammerDailyPlan(context, signal, null, null, undefined, day);
-        for (const modality of ALL) {
+        // Owner Nov 3 round 2: position players have no Throwing card (warm-up section + Defense).
+        expect(plan.blocks.some((b) => b.modality === "throwing"), "no throwing card for position players").toBe(false);
+        for (const modality of ALL.filter((m) => m !== "throwing")) {
           const found = plan.blocks.filter((b) => b.modality === modality);
           expect(found.length, `${modality} missing on ${dayName}`).toBeGreaterThan(0);
           for (const b of found) {

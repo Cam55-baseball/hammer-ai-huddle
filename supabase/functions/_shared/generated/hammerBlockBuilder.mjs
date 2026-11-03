@@ -1908,17 +1908,7 @@ function placeThrowsByRole(blocks, opts) {
   const di = out.findIndex((b) => b.modality === "defense" && b.status === "ready");
   const section = [];
   const position = [];
-  const ri = out.findIndex((b) => b.modality === "recovery" && b.status === "ready");
-  const cooldown = [];
-  for (const d3 of rows3) {
-    if (ri >= 0 && /cooldown|cool-down/i.test(d3.name)) cooldown.push(d3);
-    else (throwKind(d3) === "position" ? position : section).push(withThrowCount(d3));
-  }
-  if (cooldown.length) {
-    const r = out[ri];
-    const drills = [...r.drills, ...cooldown];
-    out[ri] = { ...r, drills, steps: opts.toSteps(drills) };
-  }
+  for (const d3 of rows3) (throwKind(d3) === "position" ? position : section).push(withThrowCount(d3));
   if (wi >= 0) {
     const w = out[wi];
     const moved = w.drills.filter((d3) => /^(Arm prep|Warm-up throws) — /.test(d3.name) && /Throwing card|arm card/.test(d3.cue ?? ""));
@@ -1929,7 +1919,8 @@ function placeThrowsByRole(blocks, opts) {
   }
   if (di >= 0) {
     const def = out[di];
-    const drills = [...def.drills.map(withThrowCount), ...position];
+    const dry = def.drills.length > 0 && def.drills.every((d3) => /dry|shadow|footwork|read/i.test(d3.name));
+    const drills = [...def.drills.map(withThrowCount), ...dry ? [] : position];
     out[di] = { ...def, drills, steps: opts.toSteps(drills) };
   }
   return ti >= 0 ? out.filter((_, i) => i !== ti) : out;
