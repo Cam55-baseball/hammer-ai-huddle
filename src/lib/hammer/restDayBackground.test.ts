@@ -32,3 +32,18 @@ describe("saved changes rebuild in the background", () => {
     expect(await startBackgroundRebuild("x", "2026-11-03")).toBeNull();
   });
 });
+
+describe("updating never spins forever", async () => {
+  const { planRebuildView } = await import("@/hooks/usePlanRebuildJob");
+  const base = { id: "j", reason: "Rest day moved to Fri", first_date: "2026-11-03", message: null, finished_at: null, created_at: "2026-11-03T15:51:41Z" };
+  const t = (iso: string) => new Date(iso).getTime();
+  it("a job that reported in the last 2 minutes shows Updating", () => {
+    expect(planRebuildView({ ...base, status: "running", heartbeat_at: "2026-11-03T15:53:00Z" }, t("2026-11-03T15:54:30Z"))).toBe("running");
+  });
+  it("no report for over 2 minutes shows the retry line", () => {
+    expect(planRebuildView({ ...base, status: "running", heartbeat_at: "2026-11-03T15:53:00Z" }, t("2026-11-03T15:55:30Z"))).toBe("stalled");
+  });
+  it("a finished job says updated", () => {
+    expect(planRebuildView({ ...base, status: "done", finished_at: "2026-11-03T15:53:00Z" }, t("2026-11-03T15:54:00Z"))).toBe("done");
+  });
+});
