@@ -65,11 +65,11 @@ export default function PracticeHub() {
 
   // Prescribed drill pre-fill from URL params
   const prescribedDrillType = searchParams.get('drill_type');
-  const prescribedModule = searchParams.get('module');
+  const prescribedModule = practiceModuleFor(searchParams.get('module')) ?? searchParams.get('module');
   const prescribedConstraints = searchParams.get('constraints');
   const todayWindow = useRef(searchParams.get('today_window'));
 
-  const [activeModule, setActiveModule] = useState(prescribedModule || searchParams.get('module') || 'hitting');
+  const [activeModule, setActiveModule] = useState(prescribedModule || 'hitting');
   const [prescribedBanner, setPrescribedBanner] = useState<string | null>(null);
 
   // Reset module selection when sport *changes* (not on initial mount, and
@@ -236,7 +236,7 @@ export default function PracticeHub() {
   // Deep-link: auto-start from URL params
   useEffect(() => {
     const urlType = searchParams.get('type');
-    const urlModule = searchParams.get('module');
+    const urlModule = practiceModuleFor(searchParams.get('module'));
     if (urlModule && urlType && PRACTICE_MODULES.some(module => module === urlModule) && PRACTICE_TYPES.some(type => type === urlType) && step === 'select_type') {
       setActiveModule(urlModule);
       handleSelectType(urlType);
