@@ -18,7 +18,6 @@ export const BYS_ITEMS = [
   { id: "coach_advice", label: "Today's coach's advice", when: "Every day (tagged advice only for matching players)" },
   { id: "day_notices", label: "Why today's plan changed / load notes / rest day / running readiness / coach notes", when: "Today has a reduction, change note, coach change, rest day or readiness line" },
   { id: "testing_day", label: "Testing day notice", when: "A coach or org scheduled a testing day" },
-  { id: "check_errors", label: "Couldn't-check warnings", when: "Analysis, drill-choice or practice-history check failed" },
   { id: "royal_timing", label: "Royal timing study reminder", when: "Hitting day and the timing study is due" },
   { id: "timing_study", label: "Timing study moments", when: "You hit, run bases or pitch today" },
   { id: "analysis_prompts", label: "Record-an-analysis reminder", when: "A hitting/pitching/throwing day and a new clip is due" },
@@ -30,7 +29,7 @@ export type BysItemId = (typeof BYS_ITEMS)[number]["id"];
 /** Starting map so nothing is lost; the owner sets the final levels. */
 export const BYS_DEFAULT_LEVELS: Partial<Record<BysItemId, BysLevel>> = {
   daily_intent: 1, coach_advice: 1, mind_item: 1, non_physical: 1,
-  finish_profile: 3, day_notices: 3, testing_day: 3, check_errors: 3,
+  finish_profile: 3, day_notices: 3, testing_day: 3,
 };
 
 /** Saved owner map wins, then the default; anything unassigned shows in Level 2. */

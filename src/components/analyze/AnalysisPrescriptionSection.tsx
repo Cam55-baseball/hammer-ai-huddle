@@ -286,7 +286,8 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     </>
   );
 
-  if (circulationError) return <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. Try again later.</p>;
+  // Owner Nov 3: failure is logged for the owner, never shown to the player.
+  if (circulationError) return null;
   if (!ready) return <p role="status" className="text-sm text-muted-foreground">Checking your drill choices…</p>;
   if (embedded) return body;
 

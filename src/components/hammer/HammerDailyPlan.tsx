@@ -1121,9 +1121,6 @@ function HammerDailyPlanBody({
           <DayNoticesDrawerItem />
         </ErrorBoundary></Bys>
         <Bys id="testing_day"><ErrorBoundary><TestingDayNotice /></ErrorBoundary></Bys>
-        <Bys id="check_errors">{faultContext.isError && <p role="alert" className="text-sm text-destructive">Couldn't check your analysis history. No analysis drill changes were applied.</p>}
-        {drillCirculation.error && <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. No analysis drill changes were applied.</p>}
-        {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}</Bys>
         <Bys id="royal_timing"><RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} /></Bys>
         <Bys id="timing_study"><TimingStudyMoments sport={sportKey} position={ctx.get<string>('position_primary')?.value ?? null}
           savedGoals={ctx.get<unknown>('category_goals')?.value}
