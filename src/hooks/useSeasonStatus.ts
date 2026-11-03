@@ -58,7 +58,7 @@ export function useSeasonStatus() {
       if (!user) throw new Error('Not authenticated');
       const { data, error } = await supabase
         .from('athlete_mpi_settings')
-        .select('season_status, season_status_manual, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date')
+        .select('season_status, season_status_manual, season_status_manual_at, season_history, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date')
         .eq('user_id', user.id)
         .maybeSingle();
       if (error) throw error;
