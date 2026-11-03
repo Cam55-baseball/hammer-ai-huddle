@@ -43,14 +43,25 @@ export function StartingPointForm({ onSaved, rebuild = true, compact = false }: 
 
   const complete = answersComplete(sport, program, answers) && !roleMissing;
   let lastCat = "";
+  const answered = Object.values(answers).some((v) => v != null && v !== "");
+  // Owner Nov 2 item 4: every tap saves at once; Save works with any answers and
+  // rebuilds the plan only once every question is answered.
+  const pick = async (id: string, value: string) => {
+    const next = { ...answers, [id]: value };
+    setAnswers(next); setErr(null);
+    if (!user?.id) return;
+    const e = await saveStartingPoint(user.id, sport, program, next);
+    if (e) { setErr(e); return; }
+    await invalidate(user.id, sport);
+  };
   const save = async () => {
-    if (!user?.id || !complete) return;
+    if (!user?.id || !answered) return;
     setBusy(true); setErr(null); setMsg(null);
     const e = await saveStartingPoint(user.id, sport, program, answers);
     if (e) { setErr(e); setBusy(false); return; }
     await invalidate(user.id, sport);
-    let message = "Saved. Your starting levels are set.";
-    if (rebuild) message = (await rebuildAfterChange("Your starting point", getLocalDateString(new Date()))).message;
+    let message = complete ? "Saved. Your starting levels are set." : "Saved. Answer the rest to set your starting levels.";
+    if (rebuild && complete) message = (await rebuildAfterChange("Your starting point", getLocalDateString(new Date()))).message;
     setBusy(false); setMsg(message); onSaved?.(message);
   };
 
@@ -64,14 +75,14 @@ export function StartingPointForm({ onSaved, rebuild = true, compact = false }: 
         <legend className="text-sm">{q.label}</legend>
         <div className="flex flex-wrap gap-2">{q.options.map((o) => {
           const on = answers[q.id] === o;
-          return <Button key={o} type="button" size="sm" variant={on ? "default" : "outline"} aria-pressed={on} data-testid={`sp-${q.id}-${o}`} onClick={() => setAnswers((a) => ({ ...a, [q.id]: o }))}>{o}</Button>;
+          return <Button key={o} type="button" size="sm" variant={on ? "default" : "outline"} aria-pressed={on} data-testid={`sp-${q.id}-${o}`} onClick={() => void pick(q.id, o)}>{o}</Button>;
         })}</div>
       </fieldset>;
     })}
     {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
     {msg && <p role="status" className="rounded-md border border-primary/30 bg-primary/10 p-2 text-sm">{msg}</p>}
-    <Button className="w-full" disabled={!complete || busy} onClick={() => void save()} data-testid="sp-save">
-      {busy && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}{complete ? "Save my starting point" : "Answer every question to save"}
+    <Button className="w-full" disabled={!answered || busy} onClick={() => void save()} data-testid="sp-save">
+      {busy && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}Save my starting point
     </Button>
   </div>;
 }
