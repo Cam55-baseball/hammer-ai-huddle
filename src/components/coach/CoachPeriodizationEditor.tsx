@@ -1,0 +1,40 @@
+import {useEffect,useState} from 'react';
+import {useQuery,useQueryClient} from '@tanstack/react-query';
+import {useAuth} from '@/hooks/useAuth';
+import {supabase} from '@/integrations/supabase/client';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Checkbox} from '@/components/ui/checkbox';
+import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription} from '@/components/ui/dialog';
+import {Undo2} from 'lucide-react';
+import {TUNING_FIELDS} from '../../../supabase/functions/_shared/wic/coachPeriodization';
+const labels:Record<string,string>={compound_min_sets:'Main lift sets — low',compound_max_sets:'Main lift sets — high',compound_min_reps:'Reps — low',compound_max_reps:'Reps — high',speed_cadence_hours:'Speed spacing (hours)',cns_unit_cap:'Workload cap (units)'};
+const db=supabase as any;
+type Receipt={id:string;phase:string;settings:Record<string,number>;before_values:Record<string,{settings:Record<string,unknown>;coach_name?:string;changed_at?:string;source:string}>;confirmed_at:string|null;undone_at:string|null;targets:string[]};
+export function CoachPeriodizationEditor({athleteId}:{athleteId?:string}) {
+ const {user}=useAuth();const qc=useQueryClient();const [phase,setPhase]=useState('');const [values,setValues]=useState<Record<string,string>>({});
+ const [review,setReview]=useState<Receipt|null>(null);const [first,setFirst]=useState(false);const [receipt,setReceipt]=useState<Receipt|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState<string|null>(null);
+ const q=useQuery({queryKey:['coach-phase-settings',user?.id,athleteId],enabled:!!user,queryFn:async()=>{
+   const global=await db.from('wk_periodization_blocks').select('*');if(global.error)throw global.error;
+   const rows=[];for(const g of global.data??[]){if(athleteId){const r=await db.rpc('coach_phase_effective',{p:athleteId,ph:g.phase});if(r.error)throw r.error;rows.push({...r.data,phase:g.phase});}else rows.push({settings:g,phase:g.phase,source:'owner'});}return rows;
+ }});
+ const history=useQuery({queryKey:['coach-phase-receipts',user?.id,athleteId],enabled:!!user,queryFn:async()=>{let r=db.from('coach_phase_tunings').select('*').eq('coach_id',user?.id).not('confirmed_at','is',null).order('confirmed_at',{ascending:false}).limit(8);r=athleteId?r.eq('athlete_id',athleteId):r.is('athlete_id',null);const result=await r;if(result.error)throw result.error;return result.data as Receipt[];}});
+ const current=q.data?.find((r:any)=>r.phase===phase);
+ useEffect(()=>{if(!phase&&q.data?.[0])setPhase(q.data[0].phase);},[q.data,phase]);
+ useEffect(()=>{setValues(Object.fromEntries(TUNING_FIELDS.map(k=>[k,current?.settings?.[k]==null?'':String(current.settings[k])])));},[current]);
+ const refresh=async()=>{await qc.invalidateQueries({queryKey:['coach-phase-settings']});await qc.invalidateQueries({queryKey:['coach-phase-receipts']});await qc.invalidateQueries({queryKey:['coach-athlete-plan']});};
+ const run=async(fn:()=>Promise<void>)=>{setBusy(true);setError(null);try{await fn();}catch(e){setError(e instanceof Error?e.message:'Could not save the tuning. Try again.');}finally{setBusy(false);}};
+ const prepare=()=>run(async()=>{const patch=Object.fromEntries(TUNING_FIELDS.filter(k=>values[k]!==String(current?.settings?.[k]??'')).map(k=>[k,Number(values[k])]));const r=await db.rpc('coach_phase_prepare',{p:athleteId??null,ph:phase,v:patch});if(r.error)throw r.error;setReview(r.data);setFirst(false);});
+ const confirm=()=>run(async()=>{if(!review||!first)return;const r=await db.rpc('coach_phase_confirm',{rid:review.id,first_confirm:first,second_confirm:true});if(r.error)throw r.error;setReceipt(r.data);setReview(null);await refresh();});
+ const undo=(id:string)=>run(async()=>{const r=await db.rpc('coach_phase_undo',{rid:id});if(r.error)throw r.error;setReceipt(r.data);await refresh();});
+ const renderReceipt=(r:Receipt)=><div key={r.id} className="space-y-2 border-t border-border py-3"><p className="text-sm font-medium">{r.undone_at?'Change undone':'Change receipt'} · {r.phase}</p><p className="text-xs text-muted-foreground">{r.targets.length} connected player{r.targets.length===1?'':'s'} · {new Date(r.confirmed_at??'').toLocaleString()}</p>{!r.undone_at&&<Button variant="outline" size="sm" disabled={busy} onClick={()=>undo(r.id)}><Undo2 className="mr-2 h-4 w-4"/>Undo</Button>}</div>;
+ return <div className="space-y-3 py-3"><p className="text-sm text-muted-foreground">{athleteId?'This player only.':'All your connected players.'} Safety limits always win. The player’s saved work stays protected; their plan updates through the normal path when they open it.</p>
+ {q.isLoading?<p>Loading phase settings…</p>:q.isError?<p role="alert" className="text-destructive">Active coaching connection required, or phase settings could not load.</p>:<><Label htmlFor={`coach-phase-${athleteId??'roster'}`}>Training phase</Label><select id={`coach-phase-${athleteId??'roster'}`} className="h-11 w-full rounded-md border border-input bg-background" value={phase} onChange={e=>setPhase(e.target.value)}>{q.data?.map((r:any)=><option value={r.phase} key={r.phase}>{r.settings?.display_name??r.phase}</option>)}</select>
+ {current?.coach_name&&<p className="text-xs text-muted-foreground">Last changed by {current.coach_name} · {new Date(current.changed_at).toLocaleString()} · {current.source==='player'?'Player setting':'Roster setting'}</p>}
+ <div className="grid grid-cols-2 gap-3">{TUNING_FIELDS.map(k=><div key={k}><Label htmlFor={`phase-${athleteId??'roster'}-${k}`}>{labels[k]}</Label><Input id={`phase-${athleteId??'roster'}-${k}`} type="number" min="1" step="1" value={values[k]??''} onChange={e=>setValues(v=>({...v,[k]:e.target.value}))}/></div>)}</div><Button disabled={busy||!current} onClick={prepare}>Review exact changes</Button></>}
+ {error&&<p role="alert" className="text-sm text-destructive">{error}</p>}{receipt&&renderReceipt(receipt)}{history.data?.filter(r=>r.id!==receipt?.id).map(renderReceipt)}
+ <Dialog open={!!review} onOpenChange={o=>{if(!o&&!busy)setReview(null);}}><DialogContent className="max-h-[90dvh] overflow-y-auto"><DialogHeader><DialogTitle>Confirm phase tuning</DialogTitle><DialogDescription>{review?.targets.length} connected players. Player-specific settings take priority over roster settings.</DialogDescription></DialogHeader>
+ {review&&Object.entries(review.before_values).map(([id,before],i)=><div key={id} className="space-y-1 border-t border-border py-2"><p className="text-sm font-medium">{athleteId?'This player':`Player ${i+1}`}{before.coach_name?` · last editor ${before.coach_name}`:''}</p>{Object.entries(review.settings).map(([k,v])=><p key={k} className="text-sm">{labels[k]}: {String(before.settings?.[k]??'not set')} → {v}</p>)}</div>)}
+ <label className="flex items-center gap-2 text-sm"><Checkbox checked={first} onCheckedChange={v=>setFirst(v===true)}/>I confirm these exact old → new values.</label><Button disabled={!first||busy} onClick={confirm}>Confirm again & save</Button>{error&&<p role="alert" className="text-destructive">{error}</p>}</DialogContent></Dialog></div>;
+}
