@@ -39,6 +39,7 @@ import { DayCommandCenter, PrescribedOrderLine, TodayRhythmProvider } from "@/co
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { fuelPlanToday, type SavedTargets } from "@/lib/hammer/fuelPlanToday";
 import { refreshWarmupStageOverrides } from "@/lib/hammer/prescription/warmupStages";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
 import { useSwapV2 } from "@/hooks/useSwapV2";
