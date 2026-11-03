@@ -1,4 +1,5 @@
 import { useGreenlight } from '@/hooks/useGreenlight';
+import { playerCardNote, playerCardNotes } from "@/lib/hammer/playerCardNotes";
 import { StartingPointPromptCard, Golden2WayRolePromptCard } from './StartingPointForm';
 import { useStartingPointAnswers, useLoggedWeeks28, planStartsFrom } from '@/hooks/useStartingPoint';
 import { throwGroup, THROW_TARGETS } from '../../../supabase/functions/_shared/wic/phases/positionThrowTargets';
@@ -1193,18 +1194,7 @@ function HammerDailyPlanBody({
               </Badge>
             )}
             {/* CNS-heavy clamp badge intentionally hidden from athlete UI — clamp logic still runs silently. */}
-            {(plan.sideBias?.hit || plan.sideBias?.throw) && (
-              <Badge
-                variant="default"
-                className="text-[10px]"
-                title={[plan.sideBias?.hit?.note, plan.sideBias?.throw?.note].filter(Boolean).join(" ")}
-              >
-                Weaker side focus:{" "}
-                {plan.sideBias?.hit
-                  ? `Bat ${plan.sideBias.hit.weakerSide}`
-                  : `Throw ${plan.sideBias!.throw!.weakerSide}`}
-              </Badge>
-            )}
+            {/* Weaker-side focus badge removed from player view (owner Nov 2); side bias still shapes the plan. */}
             {/* Header side pickers removed — switch/ambi athletes see L/R via
                 duplicated hitting / bat-speed / throwing cards below. */}
 
@@ -1788,7 +1778,7 @@ function BlockCard({
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">{block.why}</p>
+            {playerCardNote(block.why) && <p className="text-xs text-muted-foreground mt-0.5">{playerCardNote(block.why)}</p>}
             {block.assumption && (
               <p className="text-[11px] mt-1 rounded-md border border-sky-500/30 bg-sky-500/5 px-2 py-1 text-sky-800 dark:text-sky-200">
                 {block.assumption}
@@ -1800,14 +1790,14 @@ function BlockCard({
                 <p className="text-[11px] text-foreground">{block.cleanClipNote}</p>
               </div>
             )}
-            {block.because && block.because.length > 0 && (
+            {playerCardNotes(block.because).length > 0 && (
               <div className="mt-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-1" data-testid="because-lines">
-                {block.because.map((line) => (
+                {playerCardNotes(block.because).map((line) => (
                   <p key={line} className="text-[11px] text-foreground">{line}</p>
                 ))}
               </div>
             )}
-            {block.roadmapReason && !block.why.includes(block.roadmapReason) && (
+            {playerCardNote(block.roadmapReason) && !block.why.includes(block.roadmapReason) && (
               <p className="text-[11px] text-muted-foreground/80 mt-0.5 italic">
                 {block.roadmapReason}
               </p>
