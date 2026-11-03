@@ -77,7 +77,7 @@ export function LearningLoopList() {
           howSure="hunch" samples={1}
           doThis={`${r.drill?.title ?? r.do_this}${r.drill?.reps_sets ? ` · ${r.drill.reps_sets}` : ""}`}
           checkBack={`After your next ${String(r.area).toLowerCase()} clip.`}>
-          <DoThisDrill text={r.do_this} drill={r.drill} />
+          <DoThisDrill text={r.do_this} drill={r.drill} area={r.area} />
           <AddDoThisButton drill={r.drill} text={r.do_this} area={r.area} videoId={r.source_video_id ?? null} />
           {staff && r.coaching_principle_versions && (
             <Link className="text-xs text-primary underline" to={`/owner/coaching-console?principle=${r.coaching_principle_versions.principle_id}`}>
@@ -100,8 +100,11 @@ export function LearningLoopList() {
 }
 
 /** Drill instructions in a drop-down, same as drills elsewhere. */
-function DoThisDrill({ text, drill }: { text: string; drill?: { title?: string | null; reps_sets?: string | null; purpose?: string | null; steps?: string[]; cue?: string | null } | null }) {
+function DoThisDrill({ text, drill, area }: { text: string; area?: string; drill?: { title?: string | null; reps_sets?: string | null; purpose?: string | null; steps?: string[]; cue?: string | null } | null }) {
   const hasHow = !!(drill && (drill.purpose || drill.steps?.length || drill.cue));
+  // Owner Nov 2 A8: fall back to the library drill's real steps, never a placeholder.
+  const sport = typeof localStorage !== "undefined" && localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball";
+  const lib = !hasHow && area ? matchCatalogDrill(drill ?? { title: text }, area, sport) : null;
   return (
     <details className="rounded-md border border-border p-2" data-do-this-drill>
       <summary className="cursor-pointer font-medium">How to do it</summary>
@@ -109,7 +112,13 @@ function DoThisDrill({ text, drill }: { text: string; drill?: { title?: string |
         {drill?.purpose && <p><span className="font-medium">Why: </span>{drill.purpose}</p>}
         {!!drill?.steps?.length && <ol className="list-decimal space-y-0.5 pl-5">{drill.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>}
         {drill?.cue && <p><span className="font-medium">Cue: </span>{drill.cue}</p>}
-        {!hasHow && <p className="text-muted-foreground">How-to steps show here for advice from your next analysis.</p>}
+        {!hasHow && lib && (<>
+          {lib.fixes && <p><span className="font-medium">Why: </span>{lib.fixes}</p>}
+          {lib.setup && <p><span className="font-medium">Setup: </span>{lib.setup}</p>}
+          {!!lib.steps?.length && <ol className="list-decimal space-y-0.5 pl-5">{lib.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>}
+          {!!lib.cues?.length && <p><span className="font-medium">Cue: </span>{lib.cues[0]}</p>}
+        </>)}
+        {!hasHow && !lib && <p>{text}</p>}
       </div>
     </details>
   );
