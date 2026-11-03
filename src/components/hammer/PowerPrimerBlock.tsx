@@ -164,15 +164,37 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
     })(); saves.current.set(i, pending); void pending.catch(() => {});
   }
 
+  // Owner Nov 2 item 2: on the card, each all-out set sits BETWEEN the lift's
+  // sets — it appears in the spot right after lift set N is logged.
+  const [slotEls, setSlotEls] = useState<Map<number, Element>>(() => new Map());
+  useEffect(() => {
+    if (!prescriptionId || typeof document === "undefined") return;
+    const scan = () => {
+      const next = new Map<number, Element>();
+      document.querySelectorAll(`[data-pap-slot^="${prescriptionId}:"]`).forEach(el => {
+        const n = Number(el.getAttribute("data-pap-slot")?.split(":").pop());
+        if (Number.isInteger(n)) next.set(n, el);
+      });
+      setSlotEls(prior => prior.size === next.size && [...next].every(([k, v]) => prior.get(k) === v) ? prior : next);
+    };
+    scan();
+    const obs = new MutationObserver(scan);
+    obs.observe(document.body, { childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, [prescriptionId]);
+  const inline = !!prescriptionId && !focus.active;
+  const portals: JSX.Element[] = [];
   const ratedCount = st.done;
   const rows: JSX.Element[] = [];
   for (let i = 0; i < sets; i++) {
     if (focus.active && i !== focus.row) continue;
-    if (!focus.active) rows.push(<li key={`l${i}`} data-primer-lift-set={i + 1} data-primer-exercise={slots[i].exercise} className="text-xs"><span className="font-medium">{slots[i].exercise} — set {slots[i].set} of {slots[i].ofSets}</span> (log it in its row)</li>);
+    if (!focus.active && !inline) rows.push(<li key={`l${i}`} data-primer-lift-set={i + 1} data-primer-exercise={slots[i].exercise} className="text-xs"><span className="font-medium">{slots[i].exercise} — set {slots[i].set} of {slots[i].ofSets}</span> (log it in its row)</li>);
     const showExplosive = i < rounds.length && (focus.active || !(stopReason && i >= ratedCount)) && i < rules.max_sets;
     if (!showExplosive) continue;
     const r = rounds[i];
-    rows.push(<li key={`e${i}`} data-primer-explosive={i + 1} className="space-y-1 rounded-md border border-primary/40 bg-primary/5 p-2">
+    const target = inline ? slotEls.get(i) : undefined;
+    if (inline && !target) continue; // waits until lift set i+1 is logged
+    (inline ? portals : rows).push(<li key={`e${i}`} data-primer-explosive={i + 1} className="space-y-1 rounded-md border border-primary/40 bg-primary/5 p-2">
       <p className="text-xs font-semibold"><Zap className="mr-1 inline h-3 w-3 text-primary" />{pp.action.name} — {pp.action.reps[1]} rep{pp.action.reps[1] === 1 ? "" : "s"}</p>
       <p data-primer-measured className="text-[11px] font-semibold text-primary">All-out effort — this is what we measure</p>
       {r.rating == null ? <>
@@ -185,6 +207,7 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
       </> : <><p data-primer-rating={r.rating} className="text-[11px]">Rated {r.rating}/5 — {QUALITY.find((q) => q.value === r.rating)?.label}{r.value != null ? ` · ${r.value} ${UNIT[pp.target]}` : ""}</p>{!focus.active && pp.stop.kind === "sprint" && <RestTimer label="Rest after this run set" seconds={sprintRestSeconds(sprintFeet)} />}</>}
       {pp.stop.kind === "sprint" && <p className="text-xs text-muted-foreground">{sprintRestWhy(sprintFeet) ?? "Run distance not entered — rest time is not yet set."}</p>}
     </li>);
+    if (inline && target) { const el = portals.pop()!; portals.push(createPortal(<ol className="my-1 list-none">{el}</ol>, target, `p${i}`)); }
   }
 
   const entries = <section hidden={!focus.visible} data-power-primer-entries className="space-y-2">
@@ -192,6 +215,8 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
     {locked ? (
       <p className="flex items-center gap-1 text-xs text-muted-foreground"><Lock className="h-3 w-3" /> All-out throws unlock after your throwing warm-up (in the drop-down below). Your lift sets go ahead now.</p>
     ) : <ol className="space-y-1">{rows}</ol>}
+    {!locked && portals}
+    {inline && !locked && portals.length === 0 && !stopReason && <p className="text-xs text-muted-foreground">Log lift set 1 — your first all-out set pops up right under it.</p>}
     {stopReason && !locked && <p data-pap-stopped className="text-xs font-medium">{stopReason}</p>}
     {savedRounds.error && <p role="alert" className="text-xs text-destructive">Couldn't load your saved primer rounds. Your lift stays available.</p>}
     {saveFailed && <p role="alert" className="text-xs text-destructive">Couldn't save your rating. Rate this set again to retry.</p>}
