@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { useBysImportance } from "@/hooks/useBysImportance";
 import { Button } from "@/components/ui/button";
 import { BYS_ITEMS, BYS_SETTING_KEY, bysLevel, type BysLevel } from "@/lib/hammer/beforeYouStartImportance";
 
 /** Owner map: which "Before you start" drawer (Level 1 / 2 / 3) each item sits in. */
 export function BeforeYouStartImportanceSettings() {
-  const { user } = useAuth();
   const qc = useQueryClient();
   const saved = useBysImportance();
   const [draft, setDraft] = useState<Record<string, BysLevel>>({});
@@ -18,8 +16,10 @@ export function BeforeYouStartImportanceSettings() {
   }, [saved.isSuccess, saved.data]);
 
   const save = async () => {
-    if (!user) return;
     setState("saving");
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    if (!user) { setState("error"); return; }
     const { data: existing, error: readErr } = await supabase.from("app_settings").select("id").eq("setting_key", BYS_SETTING_KEY).maybeSingle();
     const row = { setting_key: BYS_SETTING_KEY, setting_value: draft, updated_by: user.id, updated_at: new Date().toISOString() };
     const { error } = readErr ? { error: readErr } : existing
