@@ -1,19 +1,20 @@
 /**
- * TodaysWisdomCard — lean standalone card that renders the Neijing / Su Wen
- * inspired seasonal tip for today. Extracted out of HumanPerformanceCard so
- * it can sit at the top of the Hammers Today plan above HPI.
- *
- * Interpretive-only; never authors organism truth.
+ * TodaysWisdomCard — Today's coach advice. Same categories and pick-by-season
+ * rule as always; owner edits/additions (optionally tagged) come from the
+ * Coach's advice editor. Interpretive-only; never authors organism truth.
  */
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
-import { pickTodaysTip } from "@/lib/hpi/seasonalTips";
+import { pickAdvice } from "@/lib/hammer/mindContent";
+import { useMindContentRows, usePlayerTags } from "@/hooks/useMindContent";
 
 export function TodaysWisdomCard() {
   const { resolvedPhase } = useSeasonStatus();
-  const tip = useMemo(() => pickTodaysTip(resolvedPhase), [resolvedPhase]);
+  const { data: rows } = useMindContentRows();
+  const player = usePlayerTags();
+  const tip = useMemo(() => pickAdvice(rows ?? [], resolvedPhase, player), [rows, resolvedPhase, player.sport, player.position, player.level, player.modules]);
 
   return (
     <Card className="border-border/60">

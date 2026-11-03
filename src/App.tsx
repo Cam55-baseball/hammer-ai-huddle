@@ -245,6 +245,7 @@ const IqAlignmentAudit = lazyWithRetry(() => import("./pages/owner/IqAlignmentAu
 const IqSituationsAuthoring = lazyWithRetry(() => import("./pages/owner/IqSituationsAuthoring"));
 const WorkoutLibraryViewer = lazyWithRetry(() => import("./pages/owner/WorkoutLibraryViewer"));
 const ExerciseVault = lazyWithRetry(() => import("./pages/owner/ExerciseVault"));
+const MindContentBuilder = lazyWithRetry(() => import("./pages/owner/MindContentBuilder"));
 const LandingDemoManager = lazyWithRetry(() => import("./pages/owner/LandingDemoManager"));
 const ModerationQueue = lazyWithRetry(() => import("./pages/owner/ModerationQueue"));
 const ProblemReports = lazyWithRetry(() => import("./pages/owner/ProblemReports"));
@@ -528,6 +529,7 @@ const App = () => {
               <Route path="/owner/iq/situations" element={<IqSituationsAuthoring />} />
               <Route path="/owner/workouts/library" element={<StaffOnlyRoute><WorkoutLibraryViewer /></StaffOnlyRoute>} />
               <Route path="/owner/exercise-vault" element={<StaffOnlyRoute><ExerciseVault /></StaffOnlyRoute>} />
+              <Route path="/owner/mind-content" element={<StaffOnlyRoute><MindContentBuilder /></StaffOnlyRoute>} />
               <Route path="/owner/landing-demo" element={<LandingDemoManager />} />
               <Route path="/owner/presentation" element={<StaffOnlyRoute><PresentationDemo /></StaffOnlyRoute>} />
               <Route path="/owner/moderation" element={<StaffOnlyRoute><ModerationQueue /></StaffOnlyRoute>} />
