@@ -9,7 +9,7 @@ import {localIso}from '@/hooks/usePitcherSchedule';
 import { Button } from "@/components/ui/button";
 import { SeasonDatesDialog } from "@/components/hammer/SeasonDatesDialog";
 import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
-import { RestDayChooser } from "@/components/hammer/RestDayChooser";
+import { RestDayChooser, ChangeRestDayButton } from "@/components/hammer/RestDayChooser";
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 
 import { Calendar, Target } from "lucide-react";
@@ -115,6 +115,8 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
 
           </div>
         </div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+        <ChangeRestDayButton days={weeklyRoadmap.map((d) => ({ date: dateOf(d), label: d.short, isRest: !!restOf(d) }))} />
         <Button
           type="button"
           variant="outline"
@@ -125,6 +127,7 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
           <Target className="h-3 w-3" />
           Training steps
         </Button>
+        </div>
       </header>
       <RoadmapExplainerSheet
         open={explainerOpen}
