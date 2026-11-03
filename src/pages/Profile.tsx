@@ -374,11 +374,6 @@ export default function Profile() {
 
       if (error) throw error;
 
-      if (userRole === 'player') {
-        for (const [key,value] of [['position_primary',editForm.position],['competition_level',editForm.experience_level],['bats_hand',editForm.batting_side === 'B' ? 'S' : editForm.batting_side],['throws_hand',editForm.throwing_hand === 'B' ? 'S' : editForm.throwing_hand]]) {
-          await persistContextAnswer(user.id,key,value,'profile_edit');
-        }
-      }
       toast({
         title: t('toast.followRequestSent'),
         description: t('profile.followRequestSentTo', { name: profile?.first_name || t('profile.thePlayer') }),
@@ -513,6 +508,11 @@ export default function Profile() {
         description: t('toast.profileSaved'),
       });
 
+      if (userRole === 'player') {
+        for (const [key,value] of [['position_primary',editForm.position],['competition_level',editForm.experience_level],['bats_hand',editForm.batting_side === 'B' ? 'S' : editForm.batting_side],['throws_hand',editForm.throwing_hand === 'B' ? 'S' : editForm.throwing_hand]]) {
+          await persistContextAnswer(user.id,key,value,'profile_edit');
+        }
+      }
       setEditDialogOpen(false);
       fetchProfile(viewingUserId || undefined);
     } catch (error) {
