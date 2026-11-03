@@ -46,7 +46,7 @@ export function PhysioHealthIntakeDialog({open,onOpenChange,isEditMode=false}:{o
   const suggest=()=>{
     const f=facts.data; const b=f?.body;
     const r=suggestNutritionTargets({weightLbs:typeof b?.weight_lb==='number'?b.weight_lb:null,heightInches:typeof b?.height_in==='number'?b.height_in:null,age:computedAge,sex:f?.profile?.sex==='male'||f?.profile?.sex==='female'?f.profile.sex:null,activityLevel:f?.profile?.activity_level as any,goalType:safeNutritionGoal(goal,computedAge),dayType:f?.day as any});
-    if(!r.ok){setNote(r.reason);return;}
+    if(r.ok === false){setNote(r.reason);return;}
     setTargets({...(r.calories?{calorie_goal:String(midpoint(r.calories))}:{}),protein_goal:String(midpoint(r.protein)),carbs_goal:String(midpoint(r.carbs)),fats_goal:String(midpoint(r.fats)),hydration_goal:String(midpoint(r.hydration))});setSuggested(true);
     setNote(computedAge===null||computedAge<18?'Eat enough to grow and train. Check these optional amounts with a parent or dietitian.':'These are optional suggestions. Change any amount before saving.');
   };

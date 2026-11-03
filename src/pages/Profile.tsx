@@ -37,6 +37,7 @@ import { DeleteAccountSection } from "@/components/account/DeleteAccountSection"
 import { ParentControls } from "@/components/parent/ParentControls";
 import { TrainingDataToggle } from "@/components/account/TrainingDataToggle";
 import { supabase } from "@/integrations/supabase/client";
+import { persistContextAnswer } from '@/lib/hammer/context/acquisition';
 import { useToast } from "@/hooks/use-toast";
 
 import { ContractStatusCard } from "@/components/professional/ContractStatusCard";
@@ -263,6 +264,18 @@ export default function Profile() {
         .single();
 
       if (error) throw error;
+      // Self profile uses the same identity answers as Assessment and the plan.
+      // Other-athlete reads keep their existing scope; never widen health/context access.
+      if (userId === user.id) {
+        const saved = await supabase.from('athlete_context').select('sport_primary,position_primary,competition_level,bats_hand,throws_hand').eq('user_id',userId).maybeSingle();
+        if (saved.error) throw saved.error;
+        if (saved.data) {
+          data.position = saved.data.position_primary ?? data.position;
+          data.experience_level = saved.data.competition_level ?? data.experience_level;
+          data.batting_side = (saved.data.bats_hand === 'S' ? 'B' : saved.data.bats_hand ?? data.batting_side) as typeof data.batting_side;
+          data.throwing_hand = (saved.data.throws_hand === 'S' ? 'B' : saved.data.throws_hand ?? data.throwing_hand) as typeof data.throwing_hand;
+        }
+      }
       setProfile(data);
       
       // Fetch user role for the target user
@@ -361,6 +374,11 @@ export default function Profile() {
 
       if (error) throw error;
 
+      if (userRole === 'player') {
+        for (const [key,value] of [['position_primary',editForm.position],['competition_level',editForm.experience_level],['bats_hand',editForm.batting_side === 'B' ? 'S' : editForm.batting_side],['throws_hand',editForm.throwing_hand === 'B' ? 'S' : editForm.throwing_hand]]) {
+          await persistContextAnswer(user.id,key,value,'profile_edit');
+        }
+      }
       toast({
         title: t('toast.followRequestSent'),
         description: t('profile.followRequestSentTo', { name: profile?.first_name || t('profile.thePlayer') }),
