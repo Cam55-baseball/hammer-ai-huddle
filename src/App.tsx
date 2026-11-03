@@ -245,6 +245,7 @@ const IqAlignmentAudit = lazyWithRetry(() => import("./pages/owner/IqAlignmentAu
 const IqSituationsAuthoring = lazyWithRetry(() => import("./pages/owner/IqSituationsAuthoring"));
 const WorkoutLibraryViewer = lazyWithRetry(() => import("./pages/owner/WorkoutLibraryViewer"));
 const ExerciseVault = lazyWithRetry(() => import("./pages/owner/ExerciseVault"));
+const MindContentBuilder = lazyWithRetry(() => import("./pages/owner/MindContentBuilder"));
 const LandingDemoManager = lazyWithRetry(() => import("./pages/owner/LandingDemoManager"));
 const ModerationQueue = lazyWithRetry(() => import("./pages/owner/ModerationQueue"));
 const ProblemReports = lazyWithRetry(() => import("./pages/owner/ProblemReports"));
