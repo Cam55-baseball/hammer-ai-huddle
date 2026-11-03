@@ -1338,6 +1338,13 @@
       "when": 1793683602117,
       "tag": "0190_connected_coach_periodization",
       "breakpoints": true
+    },
+    {
+      "idx": 191,
+      "version": "7",
+      "when": 1793717239389,
+      "tag": "0191_plan_rebuild_jobs",
+      "breakpoints": true
     }
   ]
 }
