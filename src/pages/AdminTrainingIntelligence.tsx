@@ -1,3 +1,4 @@
+import { PlanCheckFailuresCard } from "@/components/owner/PlanCheckFailuresCard";
 import { ownerHealth } from "@/lib/intelligence/ownerHealth";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -524,6 +525,7 @@ export default function AdminTrainingIntelligence() {
 
           {/* ── HEALTH ─────────────────────────────────────────────────── */}
           <TabsContent value="health" className="space-y-3 pt-3">
+            <PlanCheckFailuresCard />
             {autoOff && (
               <Card className="border-destructive/40">
                 <CardContent className="p-3 text-sm">

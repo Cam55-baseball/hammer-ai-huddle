@@ -23,6 +23,7 @@ import type { EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import { useAnalysisGoalDrills } from '@/hooks/useAnalysisGoalDrills';
 import { practiceCheckDrills, type AnalysisPracticeCheck } from '@/lib/prescription/practiceCheckDrills';
 import { AddAnalysisDrill } from './AddAnalysisDrill';
+import { usePlanCheckFailureLog } from '@/lib/hammer/planCheckFailures';
 
 interface Props {
   module?: string | null;
@@ -147,6 +148,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
 
   const { catalog, historyCatalog, circulation, log, userId, ready, error: circulationError,
     matches: goalMatches, isPending: goalsPending, goalError } = useAnalysisGoalDrills(module, sport);
+  usePlanCheckFailureLog('drill_choice', circulationError);
   const frozenKey = historyKey ? `rx.frozen.v2:${userId ?? "anon"}:${historyKey}` : null;
   const checkMatches = useMemo(
     () => practiceCheckDrills(practiceChecks ?? [], { catalog, circulation, module, sport, includePendingReview }),
@@ -286,7 +288,8 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     </>
   );
 
-  if (circulationError) return <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. Try again later.</p>;
+  // Owner Nov 3: failure is logged for the owner, never shown to the player.
+  if (circulationError) return null;
   if (!ready) return <p role="status" className="text-sm text-muted-foreground">Checking your drill choices…</p>;
   if (embedded) return body;
 
