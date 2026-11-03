@@ -1,3 +1,4 @@
+import { UpdatingBadge } from "@/components/hammer/PlanUpdatingNote";
 import { getTodayDate } from "@/utils/dateUtils";
 import { cardPracticeRoute } from "@/lib/hammer/practiceWindow";
 import { useGreenlight } from '@/hooks/useGreenlight';
@@ -1140,6 +1141,7 @@ function HammerDailyPlanBody({
               />
             );
           })}
+        <UpdatingBadge />
         {/* Quarter / phase + weekly rhythm context */}
         <WeeklyRoadmapStrip plan={plan}
           sport={sportKey}
