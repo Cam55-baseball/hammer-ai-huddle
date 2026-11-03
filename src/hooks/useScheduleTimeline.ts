@@ -19,7 +19,7 @@ import { isSwitchOnFor } from "../../supabase/functions/_shared/wic/flags/featur
 import type { EntryDraft } from "@/lib/hammer/tellHammers/parse";
 import { recordPain } from "@/lib/hammer/injury/recordPain";
 import { FACE_SEVERITY } from "@/lib/hammer/tellHammers/parse";
-import { rebuildAfterChange } from '@/lib/hammer/rebuildAfterChange';
+import { rebuildAfterChange, startBackgroundRebuild, PLAN_UPDATING_MESSAGE } from '@/lib/hammer/rebuildAfterChange';
 import { availabilityNotice } from '../../supabase/functions/_shared/wic/schedule/availability';
 import { persistContextAnswer } from '@/lib/hammer/context/acquisition';
 import { rememberChangeConfirmation } from '@/lib/hammer/changeConfirmation';
