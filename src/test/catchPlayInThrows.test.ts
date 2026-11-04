@@ -167,7 +167,7 @@ describe("8-week simulations (position players and pitchers, both sports, youth/
           const day = catchPlayDay({ date, sport, position: pos, age, phase, isPitcher: pos === "P", pitcherRole: "starter", pitcherDay: d === 1 ? "bullpen" : d === 3 ? "long_toss" : d === 4 ? "start_in_2" : "other", restDay: d === 6, gameToday: false, gameYesterday: false, gameTomorrow: false, heavyYesterday: false, lowReadiness: false, trainingDayIndex: d, earn, progress: { greenWeeks: Math.max(0, wk - 1) } });
           for (const r of day.rows) expect(r.dosage).toMatch(/\d+ throws/);
           if (age < 13) {
-            expect(Math.max(0, ...day.rows.map((r) => r.distanceFt))).toBeLessThanOrEqual(150);
+            // Owner Nov 4: no under-13 stretch-out distance cap; throw counts stay capped.
             expect(total(day.rows.filter((r) => r.part === "pull_down"))).toBeLessThanOrEqual(5);
           }
           if (day.kind === "arm_strength") { asWeek++; expect(date >= FLAG && date < add(FLAG, 14)).toBe(false); }
@@ -176,7 +176,7 @@ describe("8-week simulations (position players and pitchers, both sports, youth/
           if (d === 6) expect(day.kind).toBe("none");
           if (day.rows.length) sessions.push({ date, maxDistanceFt: Math.max(...day.rows.map((r) => r.distanceFt)), painFree: !flag.length, armFeelGood: !flag.length });
         }
-        expect(asWeek).toBeLessThanOrEqual(phase === "in" ? 1 : 2);
+        expect(asWeek).toBeLessThanOrEqual(age < 13 || phase === "in" ? 1 : 2);
         if (pos !== "P") expect(asWeek + ltWeek).toBeLessThanOrEqual(S.longTossPerWeek[phase]);
       }
     });
