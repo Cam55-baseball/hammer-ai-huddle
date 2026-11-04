@@ -194,6 +194,10 @@ Deno.serve(async (req) => {
     const mode = prescriptionMode(body.mode);
     if (!mode) return json({ error: "Unknown action" }, 400);
     const today = new Date().toISOString().slice(0, 10);
+    // Earliest calendar date that is still "today" somewhere (UTC-12). Coaches in
+    // the Americas are still on yesterday's UTC date in the evening, so date
+    // validation must not reject their local today.
+    const earliestToday = new Date(Date.now() - 12 * 3600_000).toISOString().slice(0, 10);
     const acknowledgement = body.warning_acknowledgement;
     const overrideReason = typeof body.override_reason === "string" ? body.override_reason.trim() : "";
     const testInbox = !(req.headers.get("origin") ?? "").includes("hammersmodality.org");
@@ -231,7 +235,7 @@ Deno.serve(async (req) => {
     if (mode === "edit_day") {
       const pid = typeof body.athlete_id === 'string' ? body.athlete_id : '';
       const date = typeof body.plan_date === 'string' ? body.plan_date : '';
-      if (!z.string().uuid().safeParse(pid).success || !isCoachPrescriptionDate(date) || date < today) return json({error:'Choose a player and a date today or later.'},400);
+      if (!z.string().uuid().safeParse(pid).success || !isCoachPrescriptionDate(date) || date < earliestToday) return json({error:'Choose a player and a date today or later.'},400);
       const linked = await admin.rpc('coach_connected_to',{_me:me,_athlete:pid});
       if (linked.error || linked.data !== true) return json({error:'Training sharing is not available for this player.'},403);
       const gate = await recruitingGate(admin,me,[pid],'metrics');
@@ -290,7 +294,7 @@ Deno.serve(async (req) => {
       const parsed = SendRows.safeParse(body.rows);
       if (!parsed.success) return json({ error: "Review the players, dates and workout details before sending." }, 400);
       const sends = parsed.data;
-      if (sends.some(r => !isCoachPrescriptionDate(r.plan_date) || r.plan_date < today || (r.recur_end !== null && !isCoachPrescriptionDate(r.recur_end)))) return json({ error: "Pick valid dates today or later." }, 400);
+      if (sends.some(r => !isCoachPrescriptionDate(r.plan_date) || r.plan_date < earliestToday || (r.recur_end !== null && !isCoachPrescriptionDate(r.recur_end)))) return json({ error: "Pick valid dates today or later." }, 400);
       const ids = [...new Set(sends.map(r => r.recipient_id))];
       if (ids.length > 60) return json({ error: "Send to no more than 60 players at once." }, 400);
       const linked = await Promise.all(ids.map(async id => { const r = await admin.rpc("coach_connected_to", { _me: me, _athlete: id }); return !r.error && r.data === true ? id : null; }));
@@ -330,7 +334,7 @@ Deno.serve(async (req) => {
       const intensity = prescriptionIntensity(body.intensity);
       const throwing = body.throwing === true;
       if (!ids.length || !category || !isCoachPrescriptionDate(date)) return json({ error: "Pick players, a category and a date" }, 400);
-      if (date < today) return json({ error: "Pick today or a future date" }, 400);
+      if (date < earliestToday) return json({ error: "Pick today or a future date" }, 400);
 
       // Coaches AND org admins (for their assigned athletes) may send —
       // coach_connected_to covers both paths server-side.
@@ -425,11 +429,11 @@ Deno.serve(async (req) => {
       if (action === "reschedule" || action === "cancel") {
         if (!rxId) return json({ error: "Pick a prescription" }, 400);
         if (action === "reschedule" && !isCoachPrescriptionDate(newDate)) return json({ error: "Pick a valid date" }, 400);
-        if (action === "reschedule" && newDate < today) return json({ error: "Pick today or a future date" }, 400);
+        if (action === "reschedule" && newDate < earliestToday) return json({ error: "Pick today or a future date" }, 400);
         const { data: rx } = await admin.from("coach_prescriptions").select("*").eq("id", rxId).maybeSingle();
         if (!rx || (rx as any).sender_id !== me) return json({ error: "Not your send" }, 403);
         if ((rx as any).status !== "pending") return json({ error: "The player already answered — it can't be changed" }, 409);
-        if ((rx as any).plan_date < today) return json({ error: "Past dates can't be changed" }, 409);
+        if ((rx as any).plan_date < earliestToday) return json({ error: "Past dates can't be changed" }, 409);
         if ((rx as any).cancelled_at) return json({ error: "Already cancelled" }, 409);
         const { data: connected, error: connectionError } = await admin.rpc("coach_connected_to", { _me: me, _athlete: rx.recipient_id });
         const gate = await recruitingGate(admin, me, connectionError || connected !== true ? [] : [rx.recipient_id], "metrics");
@@ -481,7 +485,7 @@ Deno.serve(async (req) => {
       }
 
       if (action === "resend") {
-        if (!rxId || !isCoachPrescriptionDate(newDate) || newDate < today) return json({ error: "Pick a prescription and a future date" }, 400);
+        if (!rxId || !isCoachPrescriptionDate(newDate) || newDate < earliestToday) return json({ error: "Pick a prescription and a future date" }, 400);
         const { data: rx } = await admin.from("coach_prescriptions").select("*").eq("id", rxId).maybeSingle();
         if (!rx || (rx as any).sender_id !== me) return json({ error: "Not your send" }, 403);
         const { data: connected, error: connectionError } = await admin.rpc("coach_connected_to", { _me: me, _athlete: rx.recipient_id });
