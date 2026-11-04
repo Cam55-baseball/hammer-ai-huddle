@@ -1,6 +1,6 @@
 import {supabase}from '@/integrations/supabase/client';
 import {certifyComposedWeek,type ComposedDayEvidence}from './composedWeek';
-import { programOf } from '../../../supabase/functions/_shared/programAccess';
+import { programOf, planningProgramModules } from '../../../supabase/functions/_shared/programAccess';
 export async function readComposedWeek(userId:string,firstDate:string,lastDate:string,sport:'baseball'|'softball',bunting:boolean){
   const [snapshots,physical,subscriptions]=await Promise.all([
     supabase.from('athlete_plan_snapshots').select('plan_date,sport,payload').eq('user_id',userId).eq('sport',sport).gte('plan_date',firstDate).lte('plan_date',lastDate),
@@ -15,6 +15,6 @@ export async function readComposedWeek(userId:string,firstDate:string,lastDate:s
     if(p.composition_version!=='sport_physical_v1'||!Array.isArray(p.blocks)||typeof p.physicalPhase!=='string'||typeof p.restDay!=='boolean')return [];
     return [{date:row.plan_date,sport:row.sport,phase:p.physicalPhase,restDay:p.restDay,blocks:p.blocks as ComposedDayEvidence['blocks'],physical:physical.data.filter(r=>r.plan_date===row.plan_date).map(r=>({slot:r.slot,phase:r.phase,slug:r.movement_slug}))}];
   });
-  const program=programOf(sport,(subscriptions.data??[]).flatMap(s=>s.subscribed_modules??[]));
+  const program=programOf(sport,planningProgramModules(userId,(subscriptions.data??[]).flatMap(s=>s.subscribed_modules??[]),sport));
   return {days,...certifyComposedWeek(days,sport,bunting,program)};
 }
