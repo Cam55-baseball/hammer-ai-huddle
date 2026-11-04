@@ -156,29 +156,28 @@ describe("8-week simulations (position players and pitchers, both sports, youth/
   for (const sport of ["baseball", "softball"] as CPSport[]) for (const [lvl, age] of levels) for (const pos of ["IF", "OF", "P"] as CPPosition[]) {
     it(`${sport} ${lvl} ${pos}: caps, frequency, counts and auto-regress hold for 8 weeks`, () => {
       const sessions: CatchSession[] = [];
-      let regressUntil = "";
+      const FLAG = add("2026-01-05", 29);
       for (let wk = 0; wk < 8; wk++) {
         const phase: CPPhase = wk < 3 ? "off" : wk < 6 ? "pre" : "in";
         let asWeek = 0; let ltWeek = 0;
         for (let d = 0; d < 7; d++) {
           const date = add("2026-01-05", wk * 7 + d);
-          const flag = wk === 4 && d === 1 ? [date] : []; // one arm flag in week 5
-          if (flag.length) regressUntil = add(date, 7);
-          const earn = earnStatus({ today: date, age, armFlagDates: wk === 4 && d >= 1 ? [add("2026-01-05", 29)] : [], redCheckinDates: [], armFeelGood: true, lastThrowingAnalysis: { date: add(date, -5), faultKeys: [] }, armRiskFindingDates: [], sessions, positionDistanceFt: positionDistance(sport, pos, age) });
+          const flag = date === FLAG ? [date] : []; // one arm flag in week 5
+          const earn = earnStatus({ today: date, age, armFlagDates: date >= FLAG ? [FLAG] : [], redCheckinDates: [], armFeelGood: true, lastThrowingAnalysis: { date: add(date, -5), faultKeys: [] }, armRiskFindingDates: [], sessions, positionDistanceFt: positionDistance(sport, pos, age) });
           const day = catchPlayDay({ date, sport, position: pos, age, phase, isPitcher: pos === "P", pitcherRole: "starter", pitcherDay: d === 1 ? "bullpen" : d === 3 ? "long_toss" : d === 4 ? "start_in_2" : "other", restDay: d === 6, gameToday: false, gameYesterday: false, gameTomorrow: false, heavyYesterday: false, lowReadiness: false, trainingDayIndex: d, earn, progress: { greenWeeks: Math.max(0, wk - 1) } });
           for (const r of day.rows) expect(r.dosage).toMatch(/\d+ throws/);
           if (age < 13) {
             expect(Math.max(0, ...day.rows.map((r) => r.distanceFt))).toBeLessThanOrEqual(150);
             expect(total(day.rows.filter((r) => r.part === "pull_down"))).toBeLessThanOrEqual(5);
           }
-          if (day.kind === "arm_strength") { asWeek++; expect(date >= regressUntil || regressUntil === "").toBe(true); }
+          if (day.kind === "arm_strength") { asWeek++; expect(date >= FLAG && date < add(FLAG, 14)).toBe(false); }
+          if (date >= FLAG && date < add(FLAG, 7)) expect(["arm_strength", "long_toss"]).not.toContain(day.kind);
           if (day.kind === "long_toss") ltWeek++;
           if (d === 6) expect(day.kind).toBe("none");
           if (day.rows.length) sessions.push({ date, maxDistanceFt: Math.max(...day.rows.map((r) => r.distanceFt)), painFree: !flag.length, armFeelGood: !flag.length });
         }
         expect(asWeek).toBeLessThanOrEqual(phase === "in" ? 1 : 2);
         if (pos !== "P") expect(asWeek + ltWeek).toBeLessThanOrEqual(S.longTossPerWeek[phase]);
-        if (wk === 4) expect(asWeek).toBe(0);
       }
     });
   }
