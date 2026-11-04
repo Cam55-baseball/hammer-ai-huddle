@@ -823,7 +823,7 @@ const handler = async (req: Request): Promise<Response> => {
       ]);
       if (wErr) return json({ error: "week_rule_sweep_unavailable" }, 503);
       const wSport = String((wCtx as any)?.sport_primary ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
-      const mods: string[] = normalizeProgramModules((wSub as any)?.status === "active" ? ((wSub as any).subscribed_modules ?? []) : [], wSport);
+      const mods: string[] = planningProgramModules(user.id, (wSub as any)?.status === "active" ? ((wSub as any).subscribed_modules ?? []) : [], wSport);
       const bunting = mods.includes(`${wSport}_5tool`) || mods.includes(`${wSport}_golden2way`) || (["hitting", `${wSport}_hitting`].some((m) => mods.includes(m)) && ["throwing", `${wSport}_throwing`].some((m) => mods.includes(m)));
       const prot = new Set<string>(((wLogs ?? []) as any[]).map((l) => String(l.plan_date)));
       for (const r of (wRows ?? []) as any[]) if (isMarkedRow(r)) prot.add(String(r.plan_date));
@@ -1073,7 +1073,7 @@ const handler = async (req: Request): Promise<Response> => {
     let serverStarts: ServerStarts | null = null;
     try {
       const { data: spSub } = await admin.from("subscriptions").select("status, subscribed_modules").eq("user_id", user.id).maybeSingle();
-      const spModules: string[] = normalizeProgramModules((spSub as any)?.status === "active" ? ((spSub as any).subscribed_modules ?? []) : [], sport);
+      const spModules: string[] = planningProgramModules(user.id, (spSub as any)?.status === "active" ? ((spSub as any).subscribed_modules ?? []) : [], sport);
       serverStarts = await readServerStarts(admin, user.id, sport, spModules, planDate, athleteAgeYears);
     } catch { serverStarts = null; }
     const liftStartFromAnswers = serverStarts && !serverStarts.historyAreas.includes("lifting") ? serverStarts.levels.lifting : null;
@@ -1230,7 +1230,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
     const {data: schedulingSubscription,error:schedulingSubscriptionError}=await admin.from('subscriptions').select('status,subscribed_modules').eq('user_id',user.id).maybeSingle();
     if(schedulingSubscriptionError)throw schedulingSubscriptionError;
-    const schedulingModules:string[]=normalizeProgramModules(schedulingSubscription?.status==='active'?(schedulingSubscription.subscribed_modules??[]):[],sport);
+    const schedulingModules:string[]=planningProgramModules(user.id, schedulingSubscription?.status==='active'?(schedulingSubscription.subscribed_modules??[]):[],sport);
     // Owner Nov 1 round 5: Golden 2Way players must pick Pitcher or Position player.
     // Owner Nov 2 follow-up: a started player's plan must still build. Until they pick, build the
     // lower-arm-load Position split (no pitcher cycle, no extra mound days); the guided
@@ -3245,7 +3245,7 @@ const handler = async (req: Request): Promise<Response> => {
     // -------- Bat-speed program gate (Round 8 step 6b) --------
     // Hitting programs unchanged; Complete Pitcher = velocity caps/spacing.
     const { data: bsSubRow } = await admin.from("subscriptions").select("status, subscribed_modules").eq("user_id", user.id).maybeSingle();
-    const bsModules: string[] = normalizeProgramModules(bsSubRow?.status === "active" ? (bsSubRow.subscribed_modules ?? []) : [], sport);
+    const bsModules: string[] = planningProgramModules(user.id, bsSubRow?.status === "active" ? (bsSubRow.subscribed_modules ?? []) : [], sport);
     const bsWeekStart = isoShift(planDate, -((new Date(`${planDate}T12:00:00Z`).getUTCDay() + 6) % 7));
     const bsStartOn = (d: string) => scheduledGames.some((g) => g.isStartingPitcher && !g.ignored && g.date === d);
     const bsGate = batSpeedProgramGate({
@@ -5622,7 +5622,7 @@ const handler = async (req: Request): Promise<Response> => {
         const pain = painAreasFromInjuries(injurySlugs) as any;
         const res = applyProgramContent(rows as any[], {
           planDate, phase: String(phaseRes.phase), sport,
-          modules: (pcSub?.status === "active" ? (pcSub.subscribed_modules ?? []) : []).map(String),
+          modules: planningProgramModules(user.id, (pcSub?.status === "active" ? (pcSub.subscribed_modules ?? []) : []).map(String), sport),
           isPitcher: isPitcherAthlete, age: athleteAgeYears, growthMode: growthState.active, pain,
           equipment: assumedEquipment,
           gameToday: gameOn(planDate), gameTomorrow: gameOn(isoShift(planDate, 1)),

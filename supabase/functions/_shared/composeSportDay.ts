@@ -87,7 +87,7 @@ export async function composeSportDay(db: any, input: {
   const age=ageFromDob(input.birthday,date);
   const extra=['date_of_birth','readiness','age_years'].map(key=>({key,label:key,domain:'identity',value:key==='readiness'?input.readiness:key==='age_years'?age:input.birthday,source:key==='readiness'?'canonical rolling/check-in readiness':'profiles.date_of_birth',confidence:'high',missing:(key==='readiness'?input.readiness:key==='age_years'?age:input.birthday)==null,lastUpdated:null,lineage:{owner:'canonical',source:key,rawConfidence:'derived'}}));
   const context=contextFromEnvelope(envelope,extra);
-  const modules=normalizeProgramModules(sub.data?.status==='active'?(sub.data.subscribed_modules??[]):[],sport);
+  const modules=planningProgramModules(uid,sub.data?.status==='active'?(sub.data.subscribed_modules??[]):[],sport);
   const access=priorityAccess(modules,sport);
   const starts=await readServerStarts(db,uid,sport,modules,date,age);
   const group=throwGroup(envelope.position_primary?.value);
