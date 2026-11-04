@@ -4596,7 +4596,7 @@ Deploys/additive migrations needed for 2, 3, 13, 18, 20 and server scheduling ce
 - [ ] 4 Owner editors for game-situation Mind items and Today's coach advice — waiting on owner answers.
 - [ ] 5 Greenlight step-ups (A3): passed owner check — monitor.
 
-- [ ] Nov 4 r3 Part B: catch play in throws — BLOCKED on owner answers (6 questions)
+- [ ] Nov 4 r3 Part B: catch play in throws — rules, builder, Coaching Console done; server earning feeds + redeploy + pitcher interval wiring + on-screen Defense unlock remain
 - [x] Nov 4 r3 Part C: Baserunning IQ course (/baserunning-iq/course)
 - [ ] Nov 4 r3 Part D: warm-up level/age tags
 - [ ] Nov 4 r3 Part E: close-out
