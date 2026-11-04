@@ -4,6 +4,8 @@
  * Usage counts are "used / repeated", never "effective".
  */
 import { useEffect, useMemo, useState } from "react";
+import { WarmupFitPicker, WarmupFitReadOnly } from "@/components/owner/WarmupFitPicker";
+import { cleanFit, defaultFitForNewItem } from "@/lib/hammer/prescription/warmupFit";
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -206,8 +208,16 @@ export default function DrillBuilder() {
       if (uploadError) throw uploadError;
       videoUrl = supabase.storage.from("videos").getPublicUrl(path).data.publicUrl;
     }
+    const warmFit = body.placements.includes("hammers_today:warmup")
+      ? (cleanFit(body.fit_levels, body.fit_age_bands) ?? defaultFitForNewItem(null)) : null;
+    if (body.placements.includes("hammers_today:warmup") && ((body.fit_levels && body.fit_levels.length === 0 && body.fit_age_bands && body.fit_age_bands.length > 0) || (body.fit_age_bands && body.fit_age_bands.length === 0 && body.fit_levels && body.fit_levels.length > 0))) {
+      toast.error("Tick at least one level and one age band for this warm-up.");
+      setSaving(false);
+      return;
+    }
     const payload = {
       ...body,
+      ...(warmFit ? { fit_levels: [...warmFit.levels], fit_age_bands: [...warmFit.ageBands] } : {}),
       steps: body.steps.map((s) => s.trim()).filter(Boolean),
       equipment: body.equipment.map((s) => s.trim()).filter(Boolean),
       level: body.level || null,
@@ -423,6 +433,15 @@ export default function DrillBuilder() {
                 )}
               </div>
               <div><Label htmlFor="drill-name">Name</Label><Input id="drill-name" value={draft.name} onChange={(e) => set("name", e.target.value)} /></div>
+              {draft.placements.includes("hammers_today:warmup") && (() => {
+                const fit = cleanFit(draft.fit_levels, draft.fit_age_bands) ?? defaultFitForNewItem(null);
+                return (
+                  <div className="space-y-1">
+                    <WarmupFitPicker value={fit} onChange={(n) => setDraft((d) => d && ({ ...d, fit_levels: n.levels, fit_age_bands: n.ageBands }))} />
+                    {(draft.video_url || draft.library_video_id) && <WarmupFitReadOnly value={fit} />}
+                  </div>
+                );
+              })()}
               <div>
                 <Label>Faults it fixes</Label>
                 <div className="mt-1 grid max-h-40 gap-1 overflow-y-auto rounded border p-2 sm:grid-cols-2">
