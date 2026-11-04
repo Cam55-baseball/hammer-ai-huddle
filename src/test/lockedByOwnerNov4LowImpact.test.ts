@@ -124,10 +124,10 @@ describe("locked by owner Nov 4: 8-week simulations", () => {
   it("late-season pro: on only through the tough stretch", () => {
     const tough = (i: number) => i >= 21 && i <= 27;
     const on = simulate({ fit: resolvePlayerFit({ competitionLevel: "pro", ageYears: 27 }), lifecycle: lifecycleFor(null, 8),
-      facts: (n) => base(day(n), { seasonPhase: "in", checkins: Array.from({ length: n + 1 }, (_, i) => (tough(i) ? red(day(i)) : green(day(i)))), loadSpike: n >= 40 && n <= 41 }) });
+      facts: (n) => base(day(n), { seasonPhase: "in", checkins: Array.from({ length: n + 1 }, (_, i) => (tough(i) ? red(day(i)) : green(day(i)))), loadSpike: n >= 39 && n <= 40 }) });
     expect(on.slice(0, 21).some(Boolean)).toBe(false);
     expect(on[25]).toBe(true);
-    expect(on[40] && on[41]).toBe(true);
+    expect(on[39] && on[40]).toBe(true);
     expect(on.slice(42).some(Boolean)).toBe(false);
   });
   it("returning from injury: on four weeks after healing, then off", () => {
