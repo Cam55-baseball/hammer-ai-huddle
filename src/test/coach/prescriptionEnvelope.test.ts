@@ -78,9 +78,9 @@ describe("coach calls existing WIC and Swap judges", () => {
     i.catalog.set("warmup", { ...movement, category: "bat_speed", dosage_unit: "reps" });
     expect(judgeCoachEnvelope(i).reasons).toContain("warmup has no bat_speed_category (explosive_v1 required).");
   });
-  it("runs the existing recovery certifier for mobility", () => {
-    const i = input(); i.rows = [{ ...row, slot: "mobility" }]; i.resultingDay = i.rows;
-    expect(judgeCoachEnvelope(i).reasons).toContain("warmup missing recovery_category");
+  it("runs the existing recovery certifier for mobility (uncatalogued items still refused)", () => {
+    const i = input(); i.rows = [{ ...row, slot: "mobility", movement_slug: "nope" }]; i.resultingDay = i.rows;
+    expect(judgeCoachEnvelope(i).reasons).toContain("nope missing from catalog");
   });
   it("refuses a saved day's unknown movement instead of omitting it from exposure", () => {
     const i = input(); i.resultingDay = [row, { ...row, movement_slug: "unknown", movement_name: "Unmapped work" }];
@@ -106,5 +106,34 @@ describe("coach calls existing WIC and Swap judges", () => {
     expect(judgeCoachEnvelope(i).allowed).toBe(false);
     i.catalog.set("plyo", { ...movement, slug: "plyo", exposure_channel: "ub_plyo", contacts_per_rep: 2 } as any);
     expect(judgeCoachEnvelope(i).allowed).toBe(true);
+  });
+});
+describe("Nov 4 r2 #1 — no 'missing recovery category' on coach sends", () => {
+  const uiRow = (slot: string, slug = "warmup") => ({ movement_slug: slug, movement_name: "Warmup", slot, sets: 1, duration_seconds: 30, dosage_unit: "seconds", status: "pending" });
+  it("accepts the exact mobility/recovery payload shape the coach UI builds with an uncategorized Vault item", () => {
+    for (const slot of ["mobility", "recovery"]) {
+      const i = input(); i.rows = [uiRow(slot)]; i.resultingDay = i.rows;
+      i.catalog.set("warmup", { ...movement, category: "unilateral_lower" } as any);
+      const r = judgeCoachEnvelope(i);
+      expect(r.reasons.join(" ")).not.toMatch(/recovery_category/);
+      expect(r.allowed).toBe(true);
+    }
+  });
+  it("still keeps arm-load items out of mobility cards", () => {
+    const i = input(); i.rows = [uiRow("mobility")]; i.resultingDay = i.rows;
+    i.catalog.set("warmup", { ...movement, category: "throwing_plyo" } as any);
+    expect(judgeCoachEnvelope(i).allowed).toBe(false);
+  });
+  it("sends a simple item for every coach category without a code failure", () => {
+    const cats: Record<string, any> = {
+      warmup: { slot: "warmup" }, mobility: { slot: "mobility" }, recovery: { slot: "recovery" },
+      fielding: { slot: "fielding" }, baserunning: { slot: "baserunning" }, vision: { slot: "vision" },
+    };
+    for (const [cat, { slot }] of Object.entries(cats)) {
+      const i = input(); i.rows = [uiRow(slot)]; i.resultingDay = i.rows;
+      i.catalog.set("warmup", { ...movement, category: cat } as any);
+      const r = judgeCoachEnvelope(i);
+      expect({ cat, reasons: r.reasons }).toEqual({ cat, reasons: [] });
+    }
   });
 });

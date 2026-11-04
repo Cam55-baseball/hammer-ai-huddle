@@ -1,3 +1,4 @@
+import { ownerPositionOnly } from "./owner/ownerPositionException.ts";
 /** One program judge for tier keys and historical skill subscriptions.
  * Unprefixed historical keys belong only to the saved primary sport. This is
  * a read-time projection, never a subscription write or cross-sport grant.
@@ -32,4 +33,14 @@ export function normalizeProgramModules(modules: readonly string[], primarySport
   // Once scoped, bare aliases must not be reinterpreted for the other sport.
   for (const key of ['hitting', 'pitching', 'throwing', 'pitcher', '5tool', 'golden2way']) keys.delete(key);
   return [...keys];
+}
+/** Owner Nov 4 r2 #3: the single owner-account planning rule. Cam Williams keeps every
+ * purchased module for ACCESS (check-subscription is untouched), but his Hammers Today
+ * plan is built exactly like a 5Tool Player (position player) in the plan's sport.
+ * Exactly one literal ID; no other account (including other owner-role accounts). */
+export function planningProgramModules(userId: string | null | undefined, modules: readonly string[], primarySport: string): string[] {
+  if (ownerPositionOnly(userId) && (primarySport === "baseball" || primarySport === "softball")) {
+    return normalizeProgramModules([`${primarySport}_5tool`], primarySport);
+  }
+  return normalizeProgramModules(modules, primarySport);
 }

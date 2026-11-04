@@ -1,3 +1,4 @@
+import { planningProgramModules } from '../../../supabase/functions/_shared/programAccess';
 import { UpdatingBadge } from "@/components/hammer/PlanUpdatingNote";
 import { getTodayDate } from "@/utils/dateUtils";
 import { cardPracticeRoute } from "@/lib/hammer/practiceWindow";
@@ -784,7 +785,9 @@ function HammerDailyPlanBody({
       : null;
   const sportIsBaseball = (ctx.get<unknown>("sport_primary")?.value ?? "baseball") !== "softball";
   const { user: bodyUser } = useAuth();
-  const { modules } = useSubscription();
+  const { modules: accessModules } = useSubscription();
+  // Owner Nov 4 r2 #3: the same owner-only planning rule as the server builder.
+  const modules = planningProgramModules(bodyUser?.id, accessModules, sportIsBaseball ? 'baseball' : 'softball');
   const showPitching = (modules.includes(`${sportIsBaseball?'baseball':'softball'}_pitcher`) || modules.includes(`${sportIsBaseball?'baseball':'softball'}_golden2way`)) && shouldShowPitchingCard(
     readPitcherProfile(bodyUser?.id),
     ctx.get<unknown>("position_primary")?.value ?? null,

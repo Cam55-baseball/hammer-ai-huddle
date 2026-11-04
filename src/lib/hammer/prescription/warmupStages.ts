@@ -37,6 +37,8 @@ export const STAGE_BY_ROLE: Record<WarmupRole, number> = {
   activation: 4,
   stability: 4,
   arm_care: 4,
+  arm_prep: 4,
+  hitting_prep: 6,
   weightless_coordination: 5,
   neural_priming: 6,
   ladder_quickness: 6,

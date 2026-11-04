@@ -74,6 +74,8 @@ var init_warmupStages = __esm({
       activation: 4,
       stability: 4,
       arm_care: 4,
+      arm_prep: 4,
+      hitting_prep: 6,
       weightless_coordination: 5,
       neural_priming: 6,
       ladder_quickness: 6,
@@ -712,6 +714,15 @@ function fullBodyTemplate(context) {
     const armIdx = base2.indexOf("arm_care");
     base2.splice(armIdx >= 0 ? armIdx : base2.length, 0, "movement_bridge");
   }
+  const want = { arm_prep: WARMUP_MIN_ARM_PREP + (context === "throwing_day" ? 1 : 0), hitting_prep: WARMUP_MIN_HITTING_PREP + (context === "hitting_day" ? 1 : 0) };
+  for (const role of ["arm_prep", "hitting_prep"]) {
+    let have = base2.filter((r) => r === role).length;
+    while (have < want[role]) {
+      const at = base2.indexOf("movement_bridge");
+      base2.splice(at >= 0 ? at : base2.length, 0, role);
+      have++;
+    }
+  }
   return base2;
 }
 function templateFor(context, lifecycle) {
@@ -952,7 +963,7 @@ function lifecycleFor(band, liftingAgeYears) {
   if (liftingAgeYears >= 1) return "beginner";
   return "youth";
 }
-var WARMUP_LIBRARY, EQUIPMENT_OVERRIDES, BASELINE_EQUIPMENT, VENUE_EXPANSIONS, EQUIPMENT_SYNONYMS, TEMPLATES, TWITCH_ROLES, SINGLE_LEG_MIN_SHARE, LIFECYCLE_RANK;
+var WARMUP_LIBRARY, EQUIPMENT_OVERRIDES, BASELINE_EQUIPMENT, VENUE_EXPANSIONS, EQUIPMENT_SYNONYMS, TEMPLATES, TWITCH_ROLES, SINGLE_LEG_MIN_SHARE, WARMUP_MIN_ARM_PREP, WARMUP_MIN_HITTING_PREP, LIFECYCLE_RANK;
 var init_warmupLibrary = __esm({
   "src/lib/hammer/prescription/warmupLibrary.ts"() {
     init_movementGuide();
@@ -1088,6 +1099,19 @@ var init_warmupLibrary = __esm({
       { slug: "wu_shuffle_change_direction", name: "Shuffle \u2192 change of direction", role: "movement_bridge", cue: "athletic stance, react like a defender", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 sec each way" },
       { slug: "wu_crossover_run", name: "Crossover run (open the hip)", role: "movement_bridge", cue: "cross over long, don't hop", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 15 yds each way" },
       // Arm care
+      // Owner Nov 4 r2 #5 — arm prep (preparing to throw). Region-tagged picks have region-free safe versions.
+      { slug: "wu_ap_arm_circles", name: "Arm circles \u2014 small to big", role: "arm_prep", cue: "slow and smooth, stay pain-free", stopIf: "shoulder pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "10 forward + 10 back", regions: ["shoulder"] },
+      { slug: "wu_ap_band_pull_apart", name: "Band pull-aparts", role: "arm_prep", cue: "squeeze shoulder blades, arms straight", stopIf: "shoulder pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 12", equipment: ["jband"], fallbackSlug: "wu_ap_scap_squeeze", regions: ["shoulder"] },
+      { slug: "wu_ap_throw_rehearsal", name: "Dry throw rehearsal (half speed)", role: "arm_prep", cue: "pattern first \u2014 easy arm swing, no ball", stopIf: "arm pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 each side", regions: ["shoulder", "elbow"] },
+      { slug: "wu_ap_scap_squeeze", name: "Shoulder-blade squeezes (arms by sides)", role: "arm_prep", cue: "pull blades back and down, hold 2 seconds", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10" },
+      { slug: "wu_ap_wrist_forearm", name: "Wrist circles + finger flicks", role: "arm_prep", cue: "loosen hands, wrists and forearms", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "20 each" },
+      { slug: "wu_ap_elbow_flex_ext", name: "Elbow bend-and-straighten (arm at side)", role: "arm_prep", cue: "easy range, no pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "15 each arm" },
+      // Owner Nov 4 r2 #5 — hitting readiness (rotation + hip-shoulder separation).
+      { slug: "wu_hp_medball_rot_scoop", name: "Med-ball rotational scoop toss", role: "hitting_prep", setup: "4-6 lb ball vs wall, hitting stance", cue: "hips turn first, then shoulders \u2014 easy intent", stopIf: "back pain", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 5 each side", equipment: ["med_ball"], fallbackSlug: "wu_hp_rot_step_through", regions: ["back", "shoulder"] },
+      { slug: "wu_hp_hip_shoulder_sep", name: "Hip-shoulder separation drill (hands on chest)", role: "hitting_prep", cue: "turn hips, keep shoulders back, then let them catch up", stopIf: "back pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 6 each side", regions: ["back"] },
+      { slug: "wu_hp_rot_step_through", name: "Rotational step-through (no ball)", role: "hitting_prep", cue: "load back hip, step and rotate like a swing", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 5 each side", regions: ["back"] },
+      { slug: "wu_hp_split_stance_rotation", name: "Split-stance T-spine rotation", role: "hitting_prep", cue: "hips square, rotate the upper back", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 each side" },
+      { slug: "wu_hp_seated_rotation", name: "Seated trunk rotation (hips locked)", role: "hitting_prep", cue: "sit tall, turn the ribs, not the hips", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 each side" },
       { slug: "wu_jband_full", name: "Arm-care band chart", role: "arm_care", setup: "arm-care band anchored at chest height", cue: "control the eccentric \u2014 every rep", stopIf: "shoulder sharp pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "full chart @ 1 x 10 each" },
       { slug: "wu_crossover_symmetry_full", name: "Band activation chart", role: "arm_care", cue: "smooth reps, exhale on pull", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "full chart @ 1 x 10 each" },
       { slug: "wu_prone_tyw", name: "Prone T / Y / W", role: "arm_care", cue: "thumbs up, squeeze the shoulder blades", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8 each letter" },
@@ -1324,6 +1348,8 @@ var init_warmupLibrary = __esm({
       "fast_twitch"
     ];
     SINGLE_LEG_MIN_SHARE = 0.6;
+    WARMUP_MIN_ARM_PREP = 2;
+    WARMUP_MIN_HITTING_PREP = 2;
     LIFECYCLE_RANK = {
       youth: 0,
       beginner: 1,

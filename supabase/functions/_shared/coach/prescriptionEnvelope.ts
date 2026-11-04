@@ -71,7 +71,15 @@ export function judgeCoachEnvelope(input: {
   if (affected.has("hitting")) addIssues(certifyBatSpeed({ ...sessionInput,
     prescriptions: input.resultingDay.map(row => ({ ...row, slot: row.slot === "hitting" ? "bat_speed" : row.slot })) as any,
   }).fatal);
-  if (affected.has("recovery") || affected.has("mobility")) addIssues(certifyRecovery(sessionInput).fatal);
+  if (affected.has("recovery") || affected.has("mobility")) {
+    // Owner Nov 4 r2 #1: a coach-picked Vault item without a recovery type took the
+    // card's type instead of failing "missing recovery_category". Arm-load items never do.
+    const recoveryCatalog = coachRecoveryCatalog(input.resultingDay, input.catalog);
+    for (const issue of certifyRecovery({ ...sessionInput, catalog: recoveryCatalog as any }).fatal) {
+      if (issue.code === "rec_unresolved_template") warnings.push({ code: "plan_rule", date, rule: `Recovery: ${issue.message}` });
+      else addIssues([issue]);
+    }
+  }
   for (const dropped of final.swaps) {
     if (ADVISORY_PLAN_RULES.has(dropped.rule)) warnings.push({ code: dropped.rule, date: input.final.planDate, rule: `${dropped.slot ?? "Work"}: ${dropped.detail} (${dropped.rule}).` });
     else warnings.push({ code: /u13|age/i.test(dropped.rule) ? "age_gate" : "plan_rule", date, medical: /u13|age/i.test(dropped.rule) || undefined, rule: `${dropped.slot ?? "Work"}: ${dropped.detail} (${dropped.rule}).` });
@@ -114,4 +122,17 @@ export function judgeCoachEnvelope(input: {
     }
   }
   return { allowed: reasons.length === 0, reasons: [...new Set(reasons)], warnings, safeOption: reasons.length ? "Safe option: save this workout for later and ask your coach to review the listed items." : null };
+}
+
+const ARM_CATEGORY = /throw|pitch|plyo/i;
+/** Coach send only: fills a missing recovery type from the card the coach chose. */
+export function coachRecoveryCatalog(day: Row[], catalog: Map<string, Row>): Row[] {
+  const out = new Map(catalog);
+  for (const row of day) {
+    if (row.slot !== "mobility" && row.slot !== "recovery") continue;
+    const m = catalog.get(row.movement_slug);
+    if (!m || m.recovery_category || ARM_CATEGORY.test(String(m.category ?? ""))) continue;
+    out.set(row.movement_slug, { ...m, recovery_category: row.slot === "recovery" ? "regeneration" : "mobility" });
+  }
+  return [...out.values()];
 }
