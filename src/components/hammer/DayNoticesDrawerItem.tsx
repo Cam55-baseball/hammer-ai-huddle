@@ -10,10 +10,11 @@ import { RunningReadinessLine } from "@/components/hammer/RunningReadinessLine";
 import { useRunningReadiness } from "@/hooks/useRunningReadiness";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-export function DayNoticesDrawerItem() {
+/** Owner Nov 4: `planLines` carries the low-impact warm-up "Because" line from today's plan. */
+export function DayNoticesDrawerItem({ planLines = [] }: { planLines?: ReadonlyArray<string | null | undefined> } = {}) {
   const { reductions, data, planDate, replanReason, planChangeNotes } = useHammersToday();
   const notices = [...(reductions ?? []), ...(data ?? []).flatMap(row => row.why_payload?.reductions ?? [])].filter((r) => !isDayStatementNotAReduction(r?.detail));
-  const extraLines = [replanReason, ...(planChangeNotes ?? []).map(note => note.text), ...(data ?? []).map(row => row.substitution_reason)].filter((line): line is string => typeof line === "string" && line.trim().length > 0);
+  const extraLines = [...planLines, replanReason, ...(planChangeNotes ?? []).map(note => note.text), ...(data ?? []).map(row => row.substitution_reason)].filter((line): line is string => typeof line === "string" && line.trim().length > 0);
   const readiness = useRunningReadiness();
   const restDay = (data ?? []).some(row => Boolean((row.why_payload as Record<string, unknown> | null | undefined)?.rest_day));
   const hasReadiness = !readiness.isError && readiness.data !== undefined;
