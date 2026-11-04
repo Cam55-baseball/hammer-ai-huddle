@@ -1102,6 +1102,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
 
       return {
         modality,
+        ...(eass.catchPlay ? { catchPlayGate: { defenseThrows: eass.catchPlay.defenseThrows, because: eass.catchPlay.because[0] ?? null } } : {}),
         title: eass.title,
         why: eass.why + (outingReason ? ` ${outingReason}` : "") + (goal ? ` ${goal}` : ""),
         roadmapReason: eass.roadmapReason + (thrOut.rationale ? ` ${thrOut.rationale}` : ""),
