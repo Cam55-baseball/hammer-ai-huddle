@@ -30,6 +30,7 @@
  */
 
 import { firstPositionToken } from "@/lib/hammer/positions/positionNormalizer";
+import { catchPlayDay, cpPosition, defenseThrowsAllowed, type CatchPlayDay as CatchPlayDayResult, type CatchPlayStandards, type EarnResult as CatchPlayEarn } from "../../../../supabase/functions/_shared/wic/throwing/catchPlay";
 
 export type EassSport = "baseball" | "softball";
 export type EassPosition =
@@ -361,6 +362,34 @@ export interface EassContext {
   isThrowingDay: boolean;       // false = band prep + tennis-ball only
   isRecoveryDay: boolean;
   readinessScore: number | null; // 0-1
+  /** Owner Nov 4 r3 Part B: catch-play-in-throws inputs. Missing facts → conservative defaults
+   *  (standard ladder; long toss / arm strength not earned). */
+  catchPlay?: {
+    rawPosition?: string | null;
+    gameYesterday?: boolean;
+    gameTomorrow?: boolean;
+    heavyYesterday?: boolean;
+    trainingDayIndex?: number;
+    earn?: CatchPlayEarn;
+    progress?: { greenWeeks: number };
+    buildUp?: { active: boolean; distanceFt: number } | null;
+    standards?: CatchPlayStandards;
+  };
+}
+
+/** Facts not yet on file are never treated as earned. */
+const CATCH_PLAY_NOT_EARNED: CatchPlayEarn = { longToss: false, armStrength: false, regressed: false, reasons: ["We don't have your recent arm check-ins and a throwing clip yet."], unlockMessage: "Record one throwing clip to unlock arm-strength days." };
+
+function catchPlayDrills(day: CatchPlayDayResult): EassDrill[] {
+  return day.rows.map((r) => ({
+    name: r.name,
+    category: r.part === "stretch_out" || r.part === "pull_down" ? "long_toss" : "regulation",
+    intensity: r.intent,
+    overloadClass: "regulation",
+    dosage: r.dosage,
+    cue: r.part === "pull_down" ? "On a line, working back in. Same smooth arm — never a max effort grunt." : r.part === "stretch_out" ? "Let it arc. Back up only while the arm feels easy." : "Smooth and easy. Hit your partner's chest.",
+    stopIf: "any pain, pinch or tightness in the arm — stop throwing today and log it",
+  }));
 }
 
 export interface EassPrescription {
@@ -373,6 +402,8 @@ export interface EassPrescription {
   stopRules: string[];
   durationMin: number;
   overloadUsed: boolean;
+  /** Owner Nov 4 r3 Part B: today's catch-play kind and the plain Defense reason when throws are held back. */
+  catchPlay?: { kind: string; totalThrows: number; defenseThrows: boolean; because: string[] };
   softballWindmill: boolean;
 }
 
@@ -538,15 +569,30 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
   const underloadCount = isPositionPlayer || !plyoOk ? 0 : (offSeason ? 3 : 1);
   const regulationTrimmed = isPositionPlayer ? regulation.slice(0, 2) : regulation;
 
+  // Owner Nov 4 r3 Part B: position players' catch play is a THROW-COUNT ladder, never time.
+  const cp = ctx.catchPlay;
+  const cpDay = isPositionPlayer ? catchPlayDay({
+    date: "", sport: isSoftball ? "softball" : "baseball",
+    position: cpPosition(cp?.rawPosition ?? (ctx.position === "outfield" ? "OF" : ctx.position === "catcher" ? "C" : "IF")),
+    age: ctx.ageYears, phase: (ctx.seasonPhase ?? "off"), isPitcher: false, restDay: false, gameToday: false,
+    gameYesterday: !!cp?.gameYesterday, gameTomorrow: !!cp?.gameTomorrow, heavyYesterday: !!cp?.heavyYesterday,
+    lowReadiness: (ctx.readinessScore ?? 1) < 0.55, trainingDayIndex: cp?.trainingDayIndex ?? -1,
+    earn: cp?.earn ?? CATCH_PLAY_NOT_EARNED, progress: cp?.progress ?? { greenWeeks: 0 }, buildUp: cp?.buildUp ?? null, standards: cp?.standards,
+  }) : null;
+  const defenseGate = cpDay ? defenseThrowsAllowed(cpDay, null) : { allowed: true, because: null };
   const drills: EassDrill[] = [
     ...scaledPrep,
     ...tennisBall.slice(0, 1),
     ...underload.slice(0, underloadCount),
-    ...regulationTrimmed,
+    ...(cpDay ? catchPlayDrills(cpDay) : regulationTrimmed),
   ];
+  // Readiness gate: no full catch play to the position distance → no position throws today.
+  if (cpDay && !defenseGate.allowed) {
+    positionSkill.splice(0, positionSkill.length, ...positionSkill.filter((d) => !/throw|toss/i.test(`${d.name} ${d.dosage}`)));
+  }
 
-  // Long-toss on off/pre only, always regulation weight — pitchers + OF only.
-  if ((offSeason || preSeason) && (isPitcher || ctx.position === "outfield")) {
+  // Long-toss on off/pre only, always regulation weight — pitchers only (position players use the ladder above).
+  if ((offSeason || preSeason) && isPitcher) {
     drills.push(...(isSoftball ? longTossSoftball() : longTossBaseball(ctx.position === "outfield")));
   }
 
@@ -581,11 +627,12 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
     mode,
     title: `EASS Throwing — ${seasonLabel} ${posLabel}${isSoftball && isPitcher ? " (windmill)" : ""}`,
     why: isPositionPlayer
-      ? `Position-player arm care: band prep → fast-object → short regulation catch → position skill → cooldown. No pitcher-load work.`
+      ? `Position-player arm care: band prep → fast-object → catch play counted in throws → position skill → cooldown. No pitcher-load work.`
       : `Whole-body elastic ${isSoftball && isPitcher ? "windmill" : "throwing"} stack: band prep → fast-object → underload → regulation${offSeason || preSeason ? " → long-toss" : ""}${intentOk ? " → intent" : ""}${overloadOk ? " → overload" : ""} → position skill → cooldown.`,
     roadmapReason: `${seasonLabel.charAt(0).toUpperCase() + seasonLabel.slice(1)} — ${offSeason ? "build the elastic base now so you can spend it in season." : inSeason ? "maintain freshness; save max throws for competition." : preSeason ? "ramp intent week over week without overspend." : "protect the joint while staying connected."}`,
     drills, cues, stopRules: UNIVERSAL_STOP, durationMin,
     overloadUsed: overloadOk,
+    ...(cpDay ? { catchPlay: { kind: cpDay.kind, totalThrows: cpDay.totalThrows, defenseThrows: defenseGate.allowed, because: [...(defenseGate.because ? [defenseGate.because] : []), ...cpDay.because.filter((b) => b !== defenseGate.because)] } } : {}),
     softballWindmill: isSoftball && isPitcher,
   };
 }

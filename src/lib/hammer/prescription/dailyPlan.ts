@@ -200,6 +200,8 @@ export interface PrescribedBlock {
   readonly cleanClipNote?: string;
   /** Plain "Because" lines naming the real signal that changed this card (link e). Never invented. */
   readonly because?: ReadonlyArray<string>;
+  /** Owner Nov 4 r3 Part B: whether today's catch play lets Defense include position throws. */
+  readonly catchPlayGate?: { readonly defenseThrows: boolean; readonly because: string | null };
   /** Trace of actual same-category practice inputs; doseChanged is true only when the drill floor rule really cut sets. */
   readonly practiceContext?: {
     readonly category: string;
@@ -1022,6 +1024,13 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           ? false : pitchingType ? ['bullpen','side','long_toss'].includes(pitchingType) : sched.isThrowingDay ?? !sched.isGameDay,
         isRecoveryDay: !!sched.isRecoveryDay || recoverDay || !!pitcherOutings?.pitchedYesterday || pitchingType === 'flush' || pitchingType === 'rest',
         readinessScore,
+        // Owner Nov 4 r3 Part B: catch play in throws. Earning facts not on file stay "not earned".
+        catchPlay: {
+          rawPosition: typeof pos === "string" ? pos : null,
+          gameTomorrow: !!gameTomorrow,
+          gameYesterday: !!pitcherOutings?.pitchedYesterday,
+          trainingDayIndex: planDate ? (new Date(`${planDate}T12:00:00Z`).getUTCDay() + 6) % 7 : -1,
+        },
       };
 
       const eass = buildEassPrescription(eassCtx);
@@ -1095,6 +1104,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
 
       return {
         modality,
+        ...(eass.catchPlay ? { catchPlayGate: { defenseThrows: eass.catchPlay.defenseThrows, because: eass.catchPlay.because[0] ?? null } } : {}),
         title: eass.title,
         why: eass.why + (outingReason ? ` ${outingReason}` : "") + (goal ? ` ${goal}` : ""),
         roadmapReason: eass.roadmapReason + (thrOut.rationale ? ` ${thrOut.rationale}` : ""),

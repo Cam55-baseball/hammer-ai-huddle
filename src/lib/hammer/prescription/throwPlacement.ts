@@ -97,8 +97,13 @@ export function placeThrowsByRole<B extends Block>(blocks: readonly B[], opts: {
     const def = out[di];
     // A gear-restricted (dry/shadow) Defense card never receives live throws.
     const dry = def.drills.length > 0 && def.drills.every((d) => /dry|shadow|footwork|read/i.test(d.name));
-    const drills = [...def.drills.map(withThrowCount), ...(dry ? [] : position)];
-    out[di] = { ...def, drills, steps: opts.toSteps(drills) };
+    // Owner Nov 4 r3 Part B readiness gate: no full catch play to the position distance → no position throws.
+    const gate = (throwing as { catchPlayGate?: { defenseThrows: boolean; because: string | null } } | null)?.catchPlayGate;
+    const held = gate && !gate.defenseThrows;
+    const kept = held ? def.drills.filter((d) => !(/throw|toss/i.test(`${d.name} ${d.dosage ?? ""}`) || d.armEvent)) : def.drills;
+    const drills = [...kept.map(withThrowCount), ...(dry || held ? [] : position)];
+    const because = held && gate!.because ? [...((def as { because?: string[] }).because ?? []), gate!.because] : (def as { because?: string[] }).because;
+    out[di] = { ...def, drills, steps: opts.toSteps(drills), ...(because ? { because } : {}) };
   }
   return ti >= 0 ? out.filter((_, i) => i !== ti) : out;
 }
