@@ -54,9 +54,9 @@ export interface CatchPlayStandards {
   armRiskFaults: string[];
 }
 
-/** Owner Nov 4 default arm-risk list (owner may change it in the Coaching Console; saved list wins). */
+/** Owner's final Nov 4 arm-risk picks (owner may change it in the Coaching Console; saved list wins). */
 export const PROPOSED_ARM_RISK_FAULTS = [
-  "th_low_elbow_slot", "arm_lag", "th_late_glove_break", "th_across_body", "th_no_crow_hop",
+  "th_low_elbow_slot", "arm_lag", "th_trunk_rotation_early", "th_front_side_flyout", "th_across_body",
   "bb_arm_path_late", "bb_trunk_rotation_early", "bb_front_side_flyout", "bb_poor_deceleration",
   "sb_whip_arm_early", "sb_shoulders_open_early",
 ];
@@ -73,6 +73,8 @@ export const THROWING_FAULT_KEYS: ReadonlyArray<{ key: string; label: string; gr
   { key: "th_low_elbow_slot", label: "Low elbow slot", group: "throwing" },
   { key: "th_no_crow_hop", label: "No crow hop", group: "throwing" },
   { key: "th_slow_transfer", label: "Slow glove-to-hand transfer", group: "throwing" },
+  { key: "th_trunk_rotation_early", label: "Trunk rotates early", group: "throwing" },
+  { key: "th_front_side_flyout", label: "Front side flies open", group: "throwing" },
   { key: "bb_arm_path_late", label: "Arm late to release", group: "baseball_pitching" },
   { key: "bb_front_leg_collapse", label: "Front leg collapses", group: "baseball_pitching" },
   { key: "bb_front_side_flyout", label: "Front side flies open", group: "baseball_pitching" },

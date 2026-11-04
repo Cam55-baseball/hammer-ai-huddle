@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { catchPlayDay, earnStatus, catchPlayStandardsFrom, DEFAULT_CATCH_PLAY_STANDARDS as S, PROPOSED_ARM_RISK_FAULTS, THROWING_FAULT_KEYS, type CatchSession } from "../../supabase/functions/_shared/wic/throwing/catchPlay";
 import { armStrengthUnlockPrompt, ARM_STRENGTH_UNLOCK_TEXT } from "@/lib/hammer/armStrengthUnlock";
+import { analysisFeedbackToTaxonomy } from "@/lib/analysisFeedbackToTaxonomy";
 import { BYS_ITEMS, bysLevel } from "@/lib/hammer/beforeYouStartImportance";
 
 const TODAY = "2026-11-10";
@@ -10,9 +11,22 @@ const base = { today: TODAY, age: 25, armFlagDates: [] as string[], redCheckinDa
 const clip = (faultKeys: string[]) => ({ date: add(-10), faultKeys });
 
 describe("owner Nov 4 arm-strength decisions", () => {
+  it("each final pick blocks arm-strength days; each unchecked fault doesn't", () => {
+    for (const k of PROPOSED_ARM_RISK_FAULTS) expect(earnStatus({ ...base, lastThrowingAnalysis: clip([k]) }, S).armStrength).toBe(false);
+    for (const k of THROWING_FAULT_KEYS.map((x) => x.key).filter((k) => !PROPOSED_ARM_RISK_FAULTS.includes(k))) expect(earnStatus({ ...base, lastThrowingAnalysis: clip([k]) }, S).armStrength).toBe(true);
+    for (const k of ["th_late_glove_break", "th_no_crow_hop", "short_arm", "th_long_arm_action", "th_feet_misaligned", "th_slow_transfer"]) expect(PROPOSED_ARM_RISK_FAULTS).not.toContain(k);
+  });
+  it("the two new throwing tags can be assigned to a throwing analysis, with fix-it mapping", () => {
+    for (const k of ["th_trunk_rotation_early", "th_front_side_flyout"]) {
+      expect(THROWING_FAULT_KEYS.find((x) => x.key === k)?.group).toBe("throwing");
+      const sig = analysisFeedbackToTaxonomy({ scorecard: { regressions: [{ area: k }] } }, "throwing", "baseball");
+      expect(sig.movementPatterns).toContain(k);
+      expect(sig.correctionTags).toContain("th_stay_online_finish");
+    }
+  });
   it("default arm-risk selection is the owner's list", () => {
-    expect([...PROPOSED_ARM_RISK_FAULTS].sort()).toEqual(["arm_lag", "bb_arm_path_late", "bb_front_side_flyout", "bb_poor_deceleration", "bb_trunk_rotation_early", "sb_shoulders_open_early", "sb_whip_arm_early", "th_across_body", "th_late_glove_break", "th_low_elbow_slot", "th_no_crow_hop"]);
-    expect(THROWING_FAULT_KEYS.length).toBe(27);
+    expect([...PROPOSED_ARM_RISK_FAULTS].sort()).toEqual(["arm_lag", "bb_arm_path_late", "bb_front_side_flyout", "bb_poor_deceleration", "bb_trunk_rotation_early", "sb_shoulders_open_early", "sb_whip_arm_early", "th_across_body", "th_front_side_flyout", "th_low_elbow_slot", "th_trunk_rotation_early"]);
+    expect(THROWING_FAULT_KEYS.length).toBe(29);
     expect(THROWING_FAULT_KEYS.some((k) => k.key === "short_arm")).toBe(true);
   });
   it("a marked fault in a recent clip blocks arm-strength days; an unmarked one doesn't", () => {

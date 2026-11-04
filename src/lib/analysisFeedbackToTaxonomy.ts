@@ -147,6 +147,8 @@ const MOVEMENT_TO_CORRECTION: Record<string, string> = {
   short_arm: 'clean_arm_path',
   th_low_elbow_slot: 'clean_arm_path',
   th_late_glove_break: 'th_four_seam_exchange',
+  th_trunk_rotation_early: 'th_stay_online_finish',
+  th_front_side_flyout: 'th_stay_online_finish',
   // pitching (baseball)
   bb_trunk_rotation_early: 'bb_delay_trunk_rotation',
   bb_front_side_flyout: 'bb_stay_closed_longer',
@@ -208,6 +210,8 @@ const MOVEMENT_TO_RESULT: Record<string, string[]> = {
   th_low_elbow_slot: ['th_sailed_high'],
   short_arm: ['th_sailed_high'],
   th_late_glove_break: ['th_slow_pop_time'],
+  th_trunk_rotation_early: ['th_offline_arm_side'],
+  th_front_side_flyout: ['th_offline_arm_side'],
   // pitching (baseball)
   bb_trunk_rotation_early: ['bb_arm_side_miss', 'bb_flat_fastball_plane'],
   bb_front_side_flyout: ['bb_arm_side_miss'],

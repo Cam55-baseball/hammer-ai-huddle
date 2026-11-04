@@ -1759,9 +1759,9 @@ var init_catchPlay = __esm({
     PROPOSED_ARM_RISK_FAULTS = [
       "th_low_elbow_slot",
       "arm_lag",
-      "th_late_glove_break",
+      "th_trunk_rotation_early",
+      "th_front_side_flyout",
       "th_across_body",
-      "th_no_crow_hop",
       "bb_arm_path_late",
       "bb_trunk_rotation_early",
       "bb_front_side_flyout",
@@ -13722,7 +13722,10 @@ var HIE_AREA_TO_MOVEMENT = {
   "weight_leak": "weight_leak_forward",
   "first_step": "slow_first_step",
   "glove_drift": "glove_drift",
-  "arm_lag": "arm_lag"
+  "arm_lag": "arm_lag",
+  // Owner Nov 4: throwing-only arm-risk tags (pitching keeps bb_*/sb_*).
+  "th_trunk_rotation_early": "th_trunk_rotation_early",
+  "th_front_side_flyout": "th_front_side_flyout"
 };
 function mapHIEAreaToMovement(area) {
   const k = area.toLowerCase().replace(/[\s-]/g, "_");
