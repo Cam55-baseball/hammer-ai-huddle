@@ -15,7 +15,7 @@ type NumField = { label: string; get: (s: CatchPlayStandards) => number; set: (s
 const f = (label: string, path: string[]): NumField => ({
   label,
   get: (s) => path.reduce((o: any, k) => o[k], s),
-  set: (s, v) => { const c = structuredClone(s) as any; let o = c; path.slice(0, -1).forEach((k) => (o = o[k])); o[path.at(-1)!] = v; return c; },
+  set: (s, v) => { const c = structuredClone(s) as any; let o = c; path.slice(0, -1).forEach((k) => (o = o[k])); o[path[path.length - 1]] = v; return c; },
 });
 const FIELDS: { group: string; fields: NumField[] }[] = [
   { group: "Position distance (ft) — baseball", fields: (["1B", "IF", "C", "OF"] as const).map((p) => f(p, ["positionDistanceFt", "baseball", p])) },

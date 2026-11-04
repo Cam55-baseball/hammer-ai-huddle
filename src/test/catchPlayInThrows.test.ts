@@ -192,7 +192,7 @@ describe("8-week simulations (position players and pitchers, both sports, youth/
       sessions.push({ date, maxDistanceFt: ft, painFree: true, armFeelGood: true });
     }
     expect(steps[0]).toBe(45);
-    expect(steps.at(-1)).toBe(180);
+    expect(steps[steps.length - 1]).toBe(180);
     for (let i = 1; i < steps.length; i++) expect(steps[i] >= steps[i - 1]).toBe(true);
   });
 });
