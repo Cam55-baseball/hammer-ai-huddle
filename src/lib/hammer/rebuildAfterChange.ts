@@ -131,3 +131,13 @@ export async function startBackgroundRebuild(reason: string, today: string, effe
     return { jobId: data.job_id };
   } catch { return null; }
 }
+
+/** Owner Nov 4 r4: ask the server to rebuild, in the background, every saved day (today and later)
+ *  made under older plan rules or before the newest analyzed throwing/pitching clip. */
+export async function startRulesVersionSweep(today: string): Promise<{ stale: string[] } | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke('wk-generate-daily', { body: { rules_version_sweep: true, plan_date: today } });
+    if (error || data?.ok !== true) return null;
+    return { stale: Array.isArray(data.stale) ? data.stale : [] };
+  } catch { return null; }
+}
