@@ -1,3 +1,4 @@
+import { BASERUNNING_IQ_COURSE_ROUTE } from "@/lib/baserunning/courseSteps";
 import type { PrescribedBlock } from "@/lib/hammer/prescription/dailyPlan";
 
 export function prescribedToday(block: PrescribedBlock): boolean {
