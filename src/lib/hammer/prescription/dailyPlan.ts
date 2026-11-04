@@ -200,6 +200,8 @@ export interface PrescribedBlock {
   readonly cleanClipNote?: string;
   /** Plain "Because" lines naming the real signal that changed this card (link e). Never invented. */
   readonly because?: ReadonlyArray<string>;
+  /** Owner Nov 4 r3 Part B: whether today's catch play lets Defense include position throws. */
+  readonly catchPlayGate?: { readonly defenseThrows: boolean; readonly because: string | null };
   /** Trace of actual same-category practice inputs; doseChanged is true only when the drill floor rule really cut sets. */
   readonly practiceContext?: {
     readonly category: string;
