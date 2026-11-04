@@ -78,9 +78,9 @@ describe("coach calls existing WIC and Swap judges", () => {
     i.catalog.set("warmup", { ...movement, category: "bat_speed", dosage_unit: "reps" });
     expect(judgeCoachEnvelope(i).reasons).toContain("warmup has no bat_speed_category (explosive_v1 required).");
   });
-  it("runs the existing recovery certifier for mobility", () => {
-    const i = input(); i.rows = [{ ...row, slot: "mobility" }]; i.resultingDay = i.rows;
-    expect(judgeCoachEnvelope(i).reasons).toContain("warmup missing recovery_category");
+  it("runs the existing recovery certifier for mobility (uncatalogued items still refused)", () => {
+    const i = input(); i.rows = [{ ...row, slot: "mobility", movement_slug: "nope" }]; i.resultingDay = i.rows;
+    expect(judgeCoachEnvelope(i).reasons).toContain("nope missing from catalog");
   });
   it("refuses a saved day's unknown movement instead of omitting it from exposure", () => {
     const i = input(); i.resultingDay = [row, { ...row, movement_slug: "unknown", movement_name: "Unmapped work" }];
