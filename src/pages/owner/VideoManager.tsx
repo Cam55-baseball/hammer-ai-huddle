@@ -19,6 +19,9 @@ import { useVideoTagVocabulary, SKILL_AREA_LABEL } from '@/hooks/useVideoTagVoca
 import { DimensionPickers, TopicPickers, VideoSuggestions, saveTopicAssignments } from '@/components/owner/videoManager/VideoTagPanel';
 import { PlacementPreview } from '@/components/owner/videoManager/PlacementPreview';
 import type { SkillDomain } from '@/lib/videoRecommendationEngine';
+import { WarmupFitReadOnly } from '@/components/owner/WarmupFitPicker';
+import { cleanFit, backfillFitTags, defaultFitForNewItem, type WarmupFitTags } from '@/lib/hammer/prescription/warmupFit';
+import { WARMUP_LIBRARY } from '@/lib/hammer/prescription/warmupLibrary';
 
 type Row = InfoVideo & { video_class?: string | null; topicIds: string[] };
 type Draft = { id?: string; informational: boolean; title: string; url: string; sport: string; domains: string[]; placements: InfoPlacement[]; faults: string[]; tags: string[]; topicIds: string[]; active: boolean };
@@ -56,6 +59,24 @@ export default function VideoManager() {
       const mine = (assign.data ?? []).filter((a: any) => a.video_id === v.id) as any[];
       return { ...v, topicIds: mine.map(a => a.tag_id), topics: mine.filter(a => a.video_tag_taxonomy).map(a => topicKey(a.video_tag_taxonomy.skill_domain, a.video_tag_taxonomy.layer, a.video_tag_taxonomy.key)) };
     }) as Row[];
+  } });
+  // Owner Part D: a video attached to a warm-up item shows that item's tags (read-only; tagged in one place).
+  const { data: warmupFitByVideo = new Map<string, { item: string; fit: WarmupFitTags }>() } = useQuery({ queryKey: ['owner-warmup-video-fit'], queryFn: async () => {
+    const out = new Map<string, { item: string; fit: WarmupFitTags }>();
+    const drills = await (supabase as any).from('owner_drills').select('name,library_video_id,video_url,placements,fit_levels,fit_age_bands').contains('placements', ['hammers_today:warmup']);
+    for (const d of (drills.data ?? []) as any[]) {
+      const fit = cleanFit(d.fit_levels, d.fit_age_bands) ?? defaultFitForNewItem(null);
+      for (const k of [d.library_video_id, d.video_url]) if (k) out.set(k, { item: d.name, fit });
+    }
+    const vault = await (supabase as any).from('exercise_vault_versions').select('slug,version,payload').is('undone_at', null).order('version', { ascending: true }).limit(2000);
+    for (const v of (vault.data ?? []) as any[]) {
+      const p = v.payload ?? {};
+      if (p.card_type !== 'warmup' || !p.video_url) continue;
+      const lib = WARMUP_LIBRARY.find(x => x.slug === v.slug);
+      const fit = cleanFit(p.fit_levels, p.fit_age_bands) ?? (lib ? backfillFitTags(lib.minLifecycle, lib.role) : defaultFitForNewItem(null));
+      out.set(p.video_url, { item: String(p.name ?? v.slug), fit });
+    }
+    return out;
   } });
   const faultDomains = draft ? draft.domains.filter(d => FAULT_DOMAINS.includes(d)) : [];
   const sports = draft ? (draft.sport === 'both' ? ['baseball', 'softball'] as const : [draft.sport as 'baseball' | 'softball']) : [];
@@ -122,6 +143,7 @@ export default function VideoManager() {
       <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="break-words font-semibold">{video.title}</h2><Button variant="outline" size="sm" onClick={() => openVideo(video)}>{video.category === 'informational' ? 'Edit' : 'Edit tags'}</Button></div>
       <p className="text-xs text-muted-foreground">{video.distribution_tier === 'blocked' ? 'Off' : 'On'} · {(video.skill_domains ?? []).map(d => SKILL_AREA_LABEL[d] ?? d).join(', ')}{video.category === 'informational' ? ' · ' + video.tags.filter(tag => tag.startsWith('info:place:')).map(tag => INFO_PLACEMENTS[tag.slice(11) as InfoPlacement]).filter(Boolean).join(' · ') : ''}</p>
       {missing.length > 0 && <p className="text-xs text-destructive">Missing: {missing.join(', ')}</p>}
+      {(() => { const w = warmupFitByVideo.get(video.id) ?? (video.video_url ? warmupFitByVideo.get(video.video_url) : undefined); return w ? <div><p className="text-xs">Warm-up item: {w.item}</p><WarmupFitReadOnly value={w.fit} /></div> : null; })()}
     </div>; })}
     <Dialog open={Boolean(draft)} onOpenChange={open => { if (!open && !saving) setDraft(null); }}><DialogContent className="max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{draft?.id ? (draft.informational ? 'Edit informational video' : 'Edit video tags') : 'New informational video'}</DialogTitle></DialogHeader>
       {draft && <div className="space-y-4">
