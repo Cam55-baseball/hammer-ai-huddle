@@ -463,7 +463,7 @@ export function defenseThrowsAllowed(day: CatchPlayDay, budgetThrowsLeft: number
 /** Saved facts the server reads per player (existing tables, read-only). */
 export interface CatchPlayFacts {
   /** Daily check-ins; null = could not be read (treated as unknown, never as healthy). */
-  checkins: ReadonlyArray<{ date: string; readiness: number | null; armFlag: boolean }> | null;
+  checkins: ReadonlyArray<{ date: string; readiness: number | null; armFlag: boolean; painAreas?: ReadonlyArray<string> }> | null;
   /** Throwing/pitching clip analyses with their recorded fault keys. */
   clips: ReadonlyArray<{ date: string; faultKeys: readonly string[] }>;
   /** Logged catch-play checks. */
@@ -471,6 +471,8 @@ export interface CatchPlayFacts {
   /** "Where are you starting from?" throwing answers. */
   startingDistanceFt: number | null;
   startingThrowDays: number | null;
+  /** "Where are you starting from?" last-trained answer (low-impact mode trigger a). */
+  lastTrained?: string | null;
 }
 
 export interface CatchPlayPlanInputs {

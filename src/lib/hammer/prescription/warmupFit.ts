@@ -40,7 +40,12 @@ export interface PlayerFit {
 
 type Lifecycle = "youth" | "beginner" | "intermediate" | "advanced" | "elite";
 
-/** Roles under-13s may get at beginner level (owner: mobility, activation, tissue prep). */
+/**
+ * Low-impact roles (tissue prep, mobility, joint circles, rotation, activation,
+ * breathing). Owner Nov 4: this is NOT an age gate — it only describes which
+ * roles stay in the need-based low-impact warm-up. CARs and fascial rotation
+ * are standard fascial-building work for every player.
+ */
 export const LOW_IMPACT_ROLES: ReadonlySet<string> = new Set([
   "tissue_prep", "mobility_joint", "cars", "fascial_rotation", "activation", "breathwork",
 ]);
@@ -48,15 +53,15 @@ export const LOW_IMPACT_ROLES: ReadonlySet<string> = new Set([
 const ALL_LEVELS: WarmupLevel[] = ["youth", "high_school", "college", "pro"];
 const ALL_BANDS: WarmupAgeBand[] = ["u13", "13_17", "18_plus"];
 
-/** Owner backfill rule from the existing minLifecycle. */
-export function backfillFitTags(minLifecycle: Lifecycle, role: string): WarmupFitTags {
+/**
+ * Owner backfill rule from the existing minLifecycle (Nov 4: need-based, not
+ * age-based — youth and beginner items fit every level and age band).
+ */
+export function backfillFitTags(minLifecycle: Lifecycle, _role = ""): WarmupFitTags {
   switch (minLifecycle) {
     case "youth":
-      return { levels: ALL_LEVELS, ageBands: ALL_BANDS };
     case "beginner":
-      return LOW_IMPACT_ROLES.has(role)
-        ? { levels: ALL_LEVELS, ageBands: ALL_BANDS }
-        : { levels: ["high_school", "college", "pro"], ageBands: ["13_17", "18_plus"] };
+      return { levels: ALL_LEVELS, ageBands: ALL_BANDS };
     case "intermediate":
       return { levels: ["high_school", "college", "pro"], ageBands: ["13_17", "18_plus"] };
     default:

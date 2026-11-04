@@ -74,12 +74,11 @@ var init_competitionLevel = __esm({
 });
 
 // src/lib/hammer/prescription/warmupFit.ts
-function backfillFitTags(minLifecycle, role) {
+function backfillFitTags(minLifecycle, _role = "") {
   switch (minLifecycle) {
     case "youth":
-      return { levels: ALL_LEVELS, ageBands: ALL_BANDS };
     case "beginner":
-      return LOW_IMPACT_ROLES.has(role) ? { levels: ALL_LEVELS, ageBands: ALL_BANDS } : { levels: ["high_school", "college", "pro"], ageBands: ["13_17", "18_plus"] };
+      return { levels: ALL_LEVELS, ageBands: ALL_BANDS };
     case "intermediate":
       return { levels: ["high_school", "college", "pro"], ageBands: ["13_17", "18_plus"] };
     default:
@@ -133,18 +132,10 @@ function resolvePlayerFit(input) {
   const ageBand2 = age != null ? ageBandFor(age) : level === "youth" ? "u13" : level === "high_school" ? "13_17" : "18_plus";
   return { level, ageBand: ageBand2 };
 }
-var LOW_IMPACT_ROLES, ALL_LEVELS, ALL_BANDS, isLevel, isBand, overrides;
+var ALL_LEVELS, ALL_BANDS, isLevel, isBand, overrides;
 var init_warmupFit = __esm({
   "src/lib/hammer/prescription/warmupFit.ts"() {
     init_competitionLevel();
-    LOW_IMPACT_ROLES = /* @__PURE__ */ new Set([
-      "tissue_prep",
-      "mobility_joint",
-      "cars",
-      "fascial_rotation",
-      "activation",
-      "breathwork"
-    ]);
     ALL_LEVELS = ["youth", "high_school", "college", "pro"];
     ALL_BANDS = ["u13", "13_17", "18_plus"];
     isLevel = (x) => typeof x === "string" && ALL_LEVELS.includes(x);
@@ -1203,11 +1194,15 @@ function templateFor(context, lifecycle) {
   }
   return out;
 }
+function isLowImpactItem(d3) {
+  return LIFECYCLE_RANK[d3.minLifecycle] <= 1 && !LOW_IMPACT_EXCLUDED.test(`${d3.slug} ${d3.name}`);
+}
 function isEligible(d3, f) {
   if (LIFECYCLE_RANK[f.lifecycle] < LIFECYCLE_RANK[d3.minLifecycle]) return false;
   if (f.gameDay && !d3.gameDayLegal) return false;
   if (f.axis && (d3.axis ?? "bilateral") !== f.axis) return false;
   if (f.fit && !fits(fitTagsFor(d3), f.fit)) return false;
+  if (f.gentle && !isLowImpactItem(d3)) return false;
   if (d3.regions && f.injuryRegions.length > 0) {
     if (d3.regions.some((r) => f.injuryRegions.includes(r))) return false;
   }
@@ -1225,7 +1220,19 @@ function resolveEquipmentSafe(d3, f) {
 function poolForRole(role, f) {
   return WARMUP_LIBRARY.filter((d3) => d3.role === role && isEligible(d3, f));
 }
-function pickForRole(role, f, seed, seen, diagnostics) {
+function pickForRole(role, f, seed, seen, diagnostics, gentleInner = false) {
+  if (f.gentle && !gentleInner) {
+    const soft = pickForRole(role, f, seed, seen, diagnostics, true);
+    if (soft) return soft;
+    const pool2 = poolForRole(role, { ...f, gentle: false, fit: void 0 }).filter((d3) => !LOW_IMPACT_EXCLUDED.test(`${d3.slug} ${d3.name}`)).sort((a, b) => LIFECYCLE_RANK[a.minLifecycle] - LIFECYCLE_RANK[b.minLifecycle]);
+    for (const candidate of pool2) {
+      const resolved = resolveEquipmentSafe(candidate, { ...f, gentle: false, fit: void 0 });
+      if (!resolved || seen.has(resolved.drill.slug)) continue;
+      diagnostics?.push({ code: "level_fallback", role, to: resolved.drill.slug, detail: `Low-impact mode: no gentle ${role.replace(/_/g, " ")} item \u2014 used the easiest non-plyo item, ${resolved.drill.name}.` });
+      return resolved.drill;
+    }
+    return null;
+  }
   const fitted = scanRole(role, f, seed, seen, diagnostics);
   if (fitted || !f.fit) return fitted;
   const easier = { ...f, fit: void 0 };
@@ -1346,14 +1353,19 @@ function buildWarmup(input) {
       diagnostics: [{ code: "twitch_suppressed", detail: "Full rest day \u2014 gentle recovery only; training warm-up withheld." }]
     };
   }
-  const injuryRegions = (input.injuryRegions ?? []).map((r) => r.toLowerCase());
+  const lowImpact = input.lowImpact ?? null;
+  const injuryRegions = [...new Set([...input.injuryRegions ?? [], ...lowImpact?.areas ?? []].map((r) => r.toLowerCase()))];
   const filtersBase = {
     lifecycle: input.lifecycle,
     gameDay: input.gameDay,
     available: expandEquipment(input.equipment, input.venue),
     injuryRegions,
-    fit: input.fit
+    fit: input.fit,
+    gentle: !!lowImpact
   };
+  if (lowImpact) {
+    diagnostics.push({ code: "low_impact_mode", detail: `Low-impact warm-up: gentler versions, no snap or plyo-style items${lowImpact.areas.length ? `; extra care for ${lowImpact.areas.join(", ")}` : ""}.` });
+  }
   if (injuryRegions.length > 0) {
     diagnostics.push({
       code: "injury_veto",
@@ -1361,15 +1373,21 @@ function buildWarmup(input) {
     });
   }
   const fullTemplate = templateFor(input.context, input.lifecycle);
+  const suppressTwitch = input.suppressTwitch || !!lowImpact;
   const roles = fullTemplate.filter((r) => {
     if (input.suppressArmCare && r === "arm_care") return false;
-    if (input.suppressTwitch && TWITCH_ROLES.includes(r)) return false;
+    if (suppressTwitch && TWITCH_ROLES.includes(r)) return false;
+    if (lowImpact && r === "neural_priming") return false;
     return true;
   });
-  if (input.suppressTwitch && fullTemplate.some((r) => TWITCH_ROLES.includes(r))) {
+  if (lowImpact && lowImpact.areas.length > 0) {
+    const at = roles.indexOf("cars");
+    roles.splice(at >= 0 ? at + 1 : 1, 0, "cars");
+  }
+  if (suppressTwitch && fullTemplate.some((r) => TWITCH_ROLES.includes(r))) {
     diagnostics.push({
       code: "twitch_suppressed",
-      detail: "Fast-twitch layer withheld today \u2014 recovery, travel or low readiness. Prep only, no CNS spend."
+      detail: "Fast-twitch layer withheld today \u2014 recovery, travel, low readiness or low-impact mode. Prep only, no CNS spend."
     });
   }
   const seedBase = input.daySeed ?? 0;
@@ -1450,7 +1468,7 @@ function lifecycleFor(band, liftingAgeYears) {
   if (liftingAgeYears >= 1) return "beginner";
   return "youth";
 }
-var WARMUP_LIBRARY, EQUIPMENT_OVERRIDES, BASELINE_EQUIPMENT, VENUE_EXPANSIONS, EQUIPMENT_SYNONYMS, TEMPLATES, TWITCH_ROLES, SINGLE_LEG_MIN_SHARE, WARMUP_MIN_ARM_PREP, WARMUP_MIN_HITTING_PREP, LIFECYCLE_RANK;
+var WARMUP_LIBRARY, EQUIPMENT_OVERRIDES, BASELINE_EQUIPMENT, VENUE_EXPANSIONS, EQUIPMENT_SYNONYMS, TEMPLATES, TWITCH_ROLES, SINGLE_LEG_MIN_SHARE, WARMUP_MIN_ARM_PREP, WARMUP_MIN_HITTING_PREP, LIFECYCLE_RANK, LOW_IMPACT_EXCLUDED;
 var init_warmupLibrary = __esm({
   "src/lib/hammer/prescription/warmupLibrary.ts"() {
     init_movementGuide();
@@ -1845,6 +1863,7 @@ var init_warmupLibrary = __esm({
       advanced: 3,
       elite: 4
     };
+    LOW_IMPACT_EXCLUDED = /snap|plyo|pogo|bound|hop|jump|depth|drop|altitude|explosive|max[- ]?intent|sprint/i;
     registerWarmupRoles(WARMUP_LIBRARY);
   }
 });
@@ -8705,7 +8724,7 @@ function drillsToSteps(drills) {
 function drillsToChecklist(drills) {
   return drills.map((d3) => `${d3.name} \u2014 ${d3.dosage}`);
 }
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, catchPlayFacts, planDate, armRole, positionThrowing, gameTomorrow, skillExecutionAllowed = true }) {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, catchPlayFacts, lowImpact, planDate, armRole, positionThrowing, gameTomorrow, skillExecutionAllowed = true }) {
   const declaredPos = firstPositionToken(ctx.get("position_primary")?.value) ?? firstPositionToken(ctx.get("position")?.value) ?? null;
   const pos = firstPositionToken(positionOverride) ?? declaredPos;
   const liftingAge = proj.liftingAgeYears;
@@ -8768,7 +8787,9 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         sport: normalizeSport(ctx.get("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball",
         isThrower: pos === "P" || pos === "C",
         // Owner Part D: warm-up items must fit the player's level and age band.
-        fit: warmupPlayerFit
+        fit: warmupPlayerFit,
+        // Owner Nov 4: need-based low-impact mode changes only the warm-up picks.
+        lowImpact: lowImpact?.active ? { areas: lowImpact.areas } : null
       };
       let built = buildWarmup(warmupArgs);
       if (biasedContext !== unbiasedContext && built.drills.length < MIN_WARMUP_DRILLS) {
@@ -8778,7 +8799,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           built = fallback;
         }
       }
-      const drills = mergeOwnerSlotDrills(built.drills.map((d3) => ({
+      const mapped = built.drills.map((d3) => ({
         name: d3.name,
         slug: d3.slug,
         setup: d3.setup,
@@ -8787,7 +8808,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         stopIf: d3.stopIf,
         equipmentNote: d3.equipmentNote,
         guide: d3.guide
-      })), ["hammers_today:warmup"], { fit: warmupPlayerFit, sport: normalizeSport(ctx.get("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set(proj.equipmentList ?? []) });
+      }));
+      const drills = lowImpact?.active ? mapped : mergeOwnerSlotDrills(mapped, ["hammers_today:warmup"], { fit: warmupPlayerFit, sport: normalizeSport(ctx.get("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set(proj.equipmentList ?? []) });
       {
         const roleBySlug = new Map(built.drills.map((d3) => [d3.slug, d3.role]));
         const sorted = sortByWarmupStage(drills, (d3) => d3.slug ?? "", (d3) => roleBySlug.get(d3.slug ?? "") ?? null);
@@ -8841,6 +8863,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         title: titleByContext[contextKey] ?? titleByContext.default,
         why: [whyByContext[contextKey] ?? whyByContext.default, twitchNote, hpi.qiDirective].filter(Boolean).join(" "),
         roadmapReason: `${roadmapByContext[contextKey] ?? roadmapByContext.default} (${hpi.element} phase \u2014 ${hpi.yinYangEmphasis})`,
+        ...lowImpact?.active && lowImpact.because ? { lowImpactBecause: lowImpact.because } : {},
         phase: isGameDay || isRecoveryDay ? "maintain" : "build",
         steps: drillsToSteps(drills),
         drills,
@@ -10236,6 +10259,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       positionThrowing: !!access && !access.hasPitching,
       armHistory: roadmapInputs.armHistory,
       catchPlayFacts: roadmapInputs.catchPlayFacts ?? null,
+      lowImpact: roadmapInputs.lowImpact ?? null,
       planDate: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`,
       skillExecutionAllowed: scheduleSignal.postureToday === "normal" && !(m === "defense" && access?.pitcherOnly)
     })

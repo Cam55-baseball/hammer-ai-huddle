@@ -204,6 +204,8 @@ export interface PrescribedBlock {
   readonly because?: ReadonlyArray<string>;
   /** Owner Nov 4 r3 Part B: whether today's catch play lets Defense include position throws. */
   readonly catchPlayGate?: { readonly defenseThrows: boolean; readonly because: string | null };
+  /** Owner Nov 4: the one plain line shown in "Why today's plan changed" when the low-impact warm-up is on. */
+  readonly lowImpactBecause?: string;
   /** Trace of actual same-category practice inputs; doseChanged is true only when the drill floor rule really cut sets. */
   readonly practiceContext?: {
     readonly category: string;
@@ -273,6 +275,8 @@ interface BuilderArgs {
   readonly armHistory?: PlanningArmHistory;
   /** Owner Nov 4: real catch-play facts (server reads); absent → conservative defaults. */
   readonly catchPlayFacts?: import('../../../../supabase/functions/_shared/wic/throwing/catchPlay').CatchPlayFacts | null;
+  /** Owner Nov 4: need-based low-impact warm-up mode (server-detected); absent → off. */
+  readonly lowImpact?: import('../../../../supabase/functions/_shared/wic/warmup/lowImpactMode').LowImpactMode | null;
   /** Owner Nov 1 round 4: greenlight results per area (missing = hold). */
   readonly greenlight?: Partial<Record<import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightArea, import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightResult>> | null;
   readonly planDate?: string;
@@ -378,7 +382,7 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, catchPlayFacts, planDate, armRole, positionThrowing, gameTomorrow, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, catchPlayFacts, lowImpact, planDate, armRole, positionThrowing, gameTomorrow, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
   const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
@@ -472,6 +476,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         isThrower: pos === "P" || pos === "C",
         // Owner Part D: warm-up items must fit the player's level and age band.
         fit: warmupPlayerFit,
+        // Owner Nov 4: need-based low-impact mode changes only the warm-up picks.
+        lowImpact: lowImpact?.active ? { areas: lowImpact.areas } : null,
       };
       let built = buildWarmup(warmupArgs);
       if (
@@ -485,7 +491,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         }
       }
       // Owner-approved narrow addition: swap one slot for an eligible owner drill.
-      const drills: DrillStep[] = mergeOwnerSlotDrills(built.drills.map((d) => ({
+      const mapped: DrillStep[] = built.drills.map((d) => ({
         name: d.name,
         slug: d.slug,
         setup: d.setup,
@@ -494,7 +500,9 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         stopIf: d.stopIf,
         equipmentNote: d.equipmentNote,
         guide: d.guide,
-      })), ["hammers_today:warmup"], { fit: warmupPlayerFit, sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []) });
+      }));
+      // Low-impact mode keeps only the gentle picks (an owner slot drill could be plyo-style).
+      const drills: DrillStep[] = lowImpact?.active ? mapped : mergeOwnerSlotDrills(mapped, ["hammers_today:warmup"], { fit: warmupPlayerFit, sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []) });
 
       // Su Wen / Neijing micro-dose: on low-readiness / recovery days, lead the
       // warm-up with a 60-second season-aware breath primer so we downshift
@@ -568,6 +576,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           .filter(Boolean)
           .join(" "),
         roadmapReason: `${roadmapByContext[contextKey] ?? roadmapByContext.default} (${hpi.element} phase — ${hpi.yinYangEmphasis})`,
+        ...(lowImpact?.active && lowImpact.because ? { lowImpactBecause: lowImpact.because } : {}),
 
         phase: isGameDay || isRecoveryDay ? "maintain" : "build",
         steps: drillsToSteps(drills),
@@ -2389,6 +2398,8 @@ export interface RoadmapInputs {
   readonly armHistory?: PlanningArmHistory;
   /** Owner Nov 4: real catch-play facts (server reads); absent → conservative defaults. */
   readonly catchPlayFacts?: import('../../../../supabase/functions/_shared/wic/throwing/catchPlay').CatchPlayFacts | null;
+  /** Owner Nov 4: need-based low-impact warm-up mode (server-detected); absent → off. */
+  readonly lowImpact?: import('../../../../supabase/functions/_shared/wic/warmup/lowImpactMode').LowImpactMode | null;
   readonly greenlight?: Partial<Record<import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightArea, import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightResult>> | null;
   /** Owner Nov 1 round 4: starting share of the written dose per area (Group 2 answers). */
   readonly greenlightStarts?: GreenlightStarts | null;
@@ -2521,7 +2532,7 @@ export function buildHammerDailyPlan(
     builder({ modality: m, ctx, proj, speed, gameTomorrow:scheduleSignal.isGameTomorrow, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
       pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings,proj.weeklyRestDow ?? SIX_DAY_REST_DOW) : undefined,
       pitchingPhase:quarter.phase==='off'?`os_q${quarter.quarter}`:quarter.phase==='pre'?'preseason':quarter.phase==='in'?'in_season':'post_season',
-      armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,positionThrowing:!!access&&!access.hasPitching,armHistory:roadmapInputs.armHistory,catchPlayFacts:roadmapInputs.catchPlayFacts??null,
+      armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,positionThrowing:!!access&&!access.hasPitching,armHistory:roadmapInputs.armHistory,catchPlayFacts:roadmapInputs.catchPlayFacts??null,lowImpact:roadmapInputs.lowImpact??null,
       planDate:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,skillExecutionAllowed: scheduleSignal.postureToday === 'normal' && !(m==='defense'&&access?.pitcherOnly) }),
   );
   const goalAccess = roadmapInputs.subscriptionModules === undefined ? null

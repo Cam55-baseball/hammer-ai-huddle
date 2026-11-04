@@ -1138,7 +1138,7 @@ function HammerDailyPlanBody({
         </ErrorBoundary></Bys>
         <Bys id="coach_advice"><TodaysWisdomCard /></Bys>
         <Bys id="day_notices"><ErrorBoundary>
-          <DayNoticesDrawerItem />
+          <DayNoticesDrawerItem planLines={plan.blocks.filter(b => b.modality === 'warmup').map(b => b.lowImpactBecause)} />
         </ErrorBoundary></Bys>
         <Bys id="testing_day"><ErrorBoundary><TestingDayNotice /></ErrorBoundary></Bys>
         <Bys id="royal_timing"><RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} /></Bys>
