@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { catchPlayDay, earnStatus, catchPlayStandardsFrom, DEFAULT_CATCH_PLAY_STANDARDS as S, PROPOSED_ARM_RISK_FAULTS, THROWING_FAULT_KEYS, type CatchSession } from "../../supabase/functions/_shared/wic/throwing/catchPlay";
 import { armStrengthUnlockPrompt, ARM_STRENGTH_UNLOCK_TEXT } from "@/lib/hammer/armStrengthUnlock";
-import { BEFORE_YOU_START_ITEMS } from "@/lib/hammer/beforeYouStartImportance";
+import { BYS_ITEMS, bysLevel } from "@/lib/hammer/beforeYouStartImportance";
 
 const TODAY = "2026-11-10";
 const add = (n: number) => new Date(Date.parse(`${TODAY}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
@@ -33,6 +33,7 @@ describe("owner Nov 4 arm-strength decisions", () => {
     expect(armStrengthUnlockPrompt({ throwingToday: true, lastThrowingClipIso: `${add(-61)}T10:00:00Z`, today: TODAY, freshDays: 60 })).toBe(ARM_STRENGTH_UNLOCK_TEXT);
     expect(armStrengthUnlockPrompt({ throwingToday: true, lastThrowingClipIso: `${add(-5)}T10:00:00Z`, today: TODAY, freshDays: 60 })).toBeNull();
     expect(armStrengthUnlockPrompt({ throwingToday: false, lastThrowingClipIso: null, today: TODAY, freshDays: 60 })).toBeNull();
-    expect(BEFORE_YOU_START_ITEMS.some((i) => i.id === "analysis_prompts")).toBe(true);
+    expect(BYS_ITEMS.some((i) => i.id === "analysis_prompts")).toBe(true);
+    expect(bysLevel("analysis_prompts", {})).toBe(2);
   });
 });

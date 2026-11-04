@@ -1663,7 +1663,7 @@ function pitcherIntervalWarmup(sport) {
 }
 function maxDistance(sport, pos, age, p, s = DEFAULT_CATCH_PLAY_STANDARDS) {
   const band = ageBand(age);
-  const cap = band === "youth" ? (age ?? 12) < 11 ? s.youthMaxDistanceFt.under11 : s.youthMaxDistanceFt.age11to12 : s.maxDistanceCapFt[sport][pos === "OF" ? "OF" : "IF"];
+  const cap = band === "youth" ? Number.POSITIVE_INFINITY : s.maxDistanceCapFt[sport][pos === "OF" ? "OF" : "IF"];
   const pd = positionDistance(sport, pos, age, s);
   const steps = Math.ceil(Math.max(0, p.greenWeeks) / 2);
   return Math.min(cap, pd + 30 + steps * 15);
@@ -1756,7 +1756,19 @@ function defenseThrowsAllowed(day2, budgetThrowsLeft) {
 var PROPOSED_ARM_RISK_FAULTS, DEFAULT_CATCH_PLAY_STANDARDS, activeStandards, row, LADDER, LT_SLOTS;
 var init_catchPlay = __esm({
   "supabase/functions/_shared/wic/throwing/catchPlay.ts"() {
-    PROPOSED_ARM_RISK_FAULTS = ["arm_lag", "th_across_body", "bb_trunk_rotation_early", "bb_poor_deceleration", "bb_arm_path_late", "sb_whip_arm_early"];
+    PROPOSED_ARM_RISK_FAULTS = [
+      "th_low_elbow_slot",
+      "arm_lag",
+      "th_late_glove_break",
+      "th_across_body",
+      "th_no_crow_hop",
+      "bb_arm_path_late",
+      "bb_trunk_rotation_early",
+      "bb_front_side_flyout",
+      "bb_poor_deceleration",
+      "sb_whip_arm_early",
+      "sb_shoulders_open_early"
+    ];
     DEFAULT_CATCH_PLAY_STANDARDS = {
       version: 1,
       positionDistanceFt: { baseball: { "1B": 120, IF: 120, C: 120, OF: 180 }, softball: { "1B": 90, IF: 120, C: 120, OF: 150 } },
