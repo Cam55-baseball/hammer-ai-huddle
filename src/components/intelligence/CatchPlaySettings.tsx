@@ -11,6 +11,7 @@ import {
 } from "../../../supabase/functions/_shared/wic/throwing/catchPlay";
 
 const db = supabase as any;
+const GROUPS = [{ id: "throwing", label: "Throwing" }, { id: "baseball_pitching", label: "Baseball pitching" }, { id: "softball_windmill", label: "Softball windmill" }] as const;
 type NumField = { label: string; get: (s: CatchPlayStandards) => number; set: (s: CatchPlayStandards, v: number) => CatchPlayStandards };
 const f = (label: string, path: string[]): NumField => ({
   label,
@@ -20,7 +21,7 @@ const f = (label: string, path: string[]): NumField => ({
 const FIELDS: { group: string; fields: NumField[] }[] = [
   { group: "Position distance (ft) — baseball", fields: (["1B", "IF", "C", "OF"] as const).map((p) => f(p, ["positionDistanceFt", "baseball", p])) },
   { group: "Position distance (ft) — softball", fields: (["1B", "IF", "C", "OF"] as const).map((p) => f(p, ["positionDistanceFt", "softball", p])) },
-  { group: "Max long-toss distance cap (ft)", fields: [f("Baseball IF/C", ["maxDistanceCapFt", "baseball", "IF"]), f("Baseball OF", ["maxDistanceCapFt", "baseball", "OF"]), f("Softball IF/C", ["maxDistanceCapFt", "softball", "IF"]), f("Softball OF", ["maxDistanceCapFt", "softball", "OF"]), f("Under 11", ["youthMaxDistanceFt", "under11"]), f("Age 11–12", ["youthMaxDistanceFt", "age11to12"])] },
+  { group: "Max long-toss distance cap (ft)", fields: [f("Baseball IF/C", ["maxDistanceCapFt", "baseball", "IF"]), f("Baseball OF", ["maxDistanceCapFt", "baseball", "OF"]), f("Softball IF/C", ["maxDistanceCapFt", "softball", "IF"]), f("Softball OF", ["maxDistanceCapFt", "softball", "OF"])] },
   { group: "Long-toss days a week", fields: (["off", "pre", "in", "post"] as const).map((p) => f(`${p}-season`, ["longTossPerWeek", p])) },
   { group: "Arm-strength days a week", fields: (["off", "pre", "in", "post"] as const).map((p) => f(`${p}-season`, ["armStrengthPerWeek", p])) },
   { group: "Pull-downs", fields: [f("Adult start", ["pullDowns", "adultStart"]), f("Adult max", ["pullDowns", "adultMax"]), f("13–18 start", ["pullDowns", "teenStart"]), f("13–18 max", ["pullDowns", "teenMax"]), f("Under 13 min", ["pullDowns", "youthMin"]), f("Under 13 max", ["pullDowns", "youthMax"]), f("Added per green step", ["pullDowns", "stepPerGreenWeek"])] },
@@ -67,12 +68,16 @@ export function CatchPlaySettings() {
       <fieldset className="space-y-2">
         <legend className="text-sm font-semibold">Arm-risk mechanics (block long toss and arm-strength days)</legend>
         {!q.data?.reviewed && <Badge variant="outline">Proposed default — for your review</Badge>}
-        <div className="grid gap-2 sm:grid-cols-2">
-          {THROWING_FAULT_KEYS.map((k) => <label key={k.key} className="flex items-center gap-2 text-sm">
-            <Checkbox checked={draft.armRiskFaults.includes(k.key)} onCheckedChange={() => toggle(k.key)} aria-label={k.label} />
-            {k.label}{PROPOSED_ARM_RISK_FAULTS.includes(k.key) && <span className="text-xs text-muted-foreground">(proposed)</span>}
-          </label>)}
-        </div>
+        <p className="text-xs text-muted-foreground">A checked fault in a throwing or pitching clip from the last {draft.analysisFreshDays} days holds arm-strength days. Saved to setting "{CATCH_PLAY_SETTING_KEY}" → armRiskFaults.</p>
+        {GROUPS.map((g) => <div key={g.id} className="space-y-1">
+          <p className="text-sm font-medium">{g.label}</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {THROWING_FAULT_KEYS.filter((k) => k.group === g.id).map((k) => <label key={k.key} className="flex items-center gap-2 text-sm">
+              <Checkbox checked={draft.armRiskFaults.includes(k.key)} onCheckedChange={() => toggle(k.key)} aria-label={k.label} />
+              {k.label} <span className="text-xs text-muted-foreground">{k.key}{PROPOSED_ARM_RISK_FAULTS.includes(k.key) ? " · default" : ""}</span>
+            </label>)}
+          </div>
+        </div>)}
       </fieldset>
       <Button onClick={() => void save()} disabled={q.isPending}>Save catch-play standards</Button>
     </>}

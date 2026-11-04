@@ -44,13 +44,13 @@ describe("catch play counted in throws (Part B)", () => {
     const t = total(armStrengthDay("baseball", "IF", 25, { greenWeeks: 10 }));
     expect(t).toBeGreaterThanOrEqual(55); expect(t).toBeLessThanOrEqual(75);
   });
-  it("under-13: pull-downs allowed but 3–5 at sub-max, stretch-out capped at the age distance", () => {
+  it("under-13: pull-downs allowed but 3–5 at sub-max; no stretch-out distance cap (owner Nov 4)", () => {
     const r = armStrengthDay("baseball", "OF", 11, { greenWeeks: 30 });
     const pulls = r.filter((x) => x.part === "pull_down");
     expect(total(pulls)).toBeGreaterThanOrEqual(3); expect(total(pulls)).toBeLessThanOrEqual(5);
     expect(pulls.every((x) => /sub-max/.test(x.dosage))).toBe(true);
-    expect(Math.max(...r.map((x) => x.distanceFt))).toBeLessThanOrEqual(150);
-    expect(Math.max(...armStrengthDay("baseball", "OF", 9, { greenWeeks: 30 }).map((x) => x.distanceFt))).toBeLessThanOrEqual(120);
+    expect(maxDistance("baseball", "OF", 11, { greenWeeks: 30 })).toBeGreaterThan(150);
+    expect(maxDistance("baseball", "OF", 9, { greenWeeks: 30 })).toBeGreaterThan(120);
   });
   it("owner settings merge over defaults and keep the owner's ceilings", () => {
     const s = catchPlayStandardsFrom({ longTossPerWeek: { in: 3 }, armStrengthPerWeek: { in: 2 }, pullDowns: { adultMax: 40 }, armRiskFaults: ["arm_lag"] });
@@ -65,7 +65,7 @@ describe("earning (healthy check-ins + green rule + lower-risk mechanics)", () =
   it("eligible adult earns long toss and arm strength", () => { const e = earnStatus(base); expect(e.longToss && e.armStrength).toBe(true); });
   it("no throwing clip → locked with the unlock line", () => {
     const e = earnStatus({ ...base, lastThrowingAnalysis: null });
-    expect(e.armStrength).toBe(false); expect(e.longToss).toBe(false);
+    expect(e.armStrength).toBe(false); expect(e.longToss).toBe(true);
     expect(e.unlockMessage).toBe("Record one throwing clip to unlock arm-strength days.");
   });
   it("pain flag in the last 14 days → not earned; unknown check-ins → not earned", () => {
@@ -167,7 +167,7 @@ describe("8-week simulations (position players and pitchers, both sports, youth/
           const day = catchPlayDay({ date, sport, position: pos, age, phase, isPitcher: pos === "P", pitcherRole: "starter", pitcherDay: d === 1 ? "bullpen" : d === 3 ? "long_toss" : d === 4 ? "start_in_2" : "other", restDay: d === 6, gameToday: false, gameYesterday: false, gameTomorrow: false, heavyYesterday: false, lowReadiness: false, trainingDayIndex: d, earn, progress: { greenWeeks: Math.max(0, wk - 1) } });
           for (const r of day.rows) expect(r.dosage).toMatch(/\d+ throws/);
           if (age < 13) {
-            expect(Math.max(0, ...day.rows.map((r) => r.distanceFt))).toBeLessThanOrEqual(150);
+            // Owner Nov 4: no under-13 stretch-out distance cap; throw counts stay capped.
             expect(total(day.rows.filter((r) => r.part === "pull_down"))).toBeLessThanOrEqual(5);
           }
           if (day.kind === "arm_strength") { asWeek++; expect(date >= FLAG && date < add(FLAG, 14)).toBe(false); }
@@ -176,7 +176,7 @@ describe("8-week simulations (position players and pitchers, both sports, youth/
           if (d === 6) expect(day.kind).toBe("none");
           if (day.rows.length) sessions.push({ date, maxDistanceFt: Math.max(...day.rows.map((r) => r.distanceFt)), painFree: !flag.length, armFeelGood: !flag.length });
         }
-        expect(asWeek).toBeLessThanOrEqual(phase === "in" ? 1 : 2);
+        expect(asWeek).toBeLessThanOrEqual(age < 13 || phase === "in" ? 1 : 2);
         if (pos !== "P") expect(asWeek + ltWeek).toBeLessThanOrEqual(S.longTossPerWeek[phase]);
       }
     });
