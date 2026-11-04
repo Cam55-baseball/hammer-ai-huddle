@@ -457,3 +457,92 @@ export function defenseThrowsAllowed(day: CatchPlayDay, budgetThrowsLeft: number
   if (budgetThrowsLeft != null && budgetThrowsLeft < day.totalThrows) return { allowed: false, because: "Full catch play doesn't fit today's throw limit, so Defense is reads, hands and footwork only." };
   return { allowed: true, because: null };
 }
+
+// ------------------------------------------------------------------ REAL-PLAYER FACTS → PLAN INPUTS
+
+/** Saved facts the server reads per player (existing tables, read-only). */
+export interface CatchPlayFacts {
+  /** Daily check-ins; null = could not be read (treated as unknown, never as healthy). */
+  checkins: ReadonlyArray<{ date: string; readiness: number | null; armFlag: boolean }> | null;
+  /** Throwing/pitching clip analyses with their recorded fault keys. */
+  clips: ReadonlyArray<{ date: string; faultKeys: readonly string[] }>;
+  /** Logged catch-play checks. */
+  sessions: readonly CatchSession[];
+  /** "Where are you starting from?" throwing answers. */
+  startingDistanceFt: number | null;
+  startingThrowDays: number | null;
+}
+
+export interface CatchPlayPlanInputs {
+  earn: EarnResult;
+  progress: Progress;
+  buildUp: { active: boolean; distanceFt: number } | null;
+  throwReady: { ready: boolean; via: "logs" | "starting_answers" | null; because: string };
+}
+
+const RED_READINESS = 0.4;
+const ARM_AREA = /shoulder|elbow|ucl|forearm|bicep|tricep|rotator|lat\b|arm/i;
+export const isArmArea = (s: string) => ARM_AREA.test(s);
+
+/** Owner Nov 4: turn a player's saved facts into earning, progress, build-up and throw readiness. */
+export function catchPlayPlanInputs(f: CatchPlayFacts, p: { today: string; sport: CPSport; position: CPPosition; age: number | null }, s = activeCatchPlayStandards()): CatchPlayPlanInputs {
+  const pd = positionDistance(p.sport, p.position, p.age, s);
+  const back = (d: string) => dayDiff(p.today, d);
+  const past = (d: string) => d < p.today || d === p.today;
+  const recentSessions = f.sessions.filter((x) => x.date < p.today && back(x.date) <= 28);
+  const checkins = f.checkins?.filter((c) => past(c.date) && back(c.date) <= 28) ?? null;
+  const latest = checkins ? [...checkins].sort((a, b) => b.date.localeCompare(a.date))[0] : undefined;
+  const armFeelGood = latest && back(latest.date) <= 3 ? !latest.armFlag && (latest.readiness == null || latest.readiness >= RED_READINESS) : null;
+  const clips = f.clips.filter((c) => past(c.date)).sort((a, b) => b.date.localeCompare(a.date));
+  const earn = earnStatus({
+    today: p.today, age: p.age,
+    armFlagDates: checkins ? checkins.filter((c) => c.armFlag).map((c) => c.date) : undefined,
+    redCheckinDates: checkins ? checkins.filter((c) => c.readiness != null && c.readiness < RED_READINESS).map((c) => c.date) : [],
+    armFeelGood,
+    lastThrowingAnalysis: clips[0] ?? null,
+    armRiskFindingDates: clips.filter((c) => c.faultKeys.some((k) => s.armRiskFaults.includes(k))).map((c) => c.date),
+    sessions: recentSessions, positionDistanceFt: pd,
+  }, s);
+  // Green weeks: distinct weeks (last 8) with a pain-free session at the position distance.
+  const weeks = new Set(f.sessions.filter((x) => back(x.date) <= 56 && x.date < p.today && x.painFree && x.maxDistanceFt >= pd).map((x) => Math.floor(back(x.date) / 7)));
+  const progress = { greenWeeks: weeks.size };
+  const flagged14 = (checkins ?? []).some((c) => c.armFlag && back(c.date) < 14);
+  let throwReady: CatchPlayPlanInputs["throwReady"];
+  if (recentSessions.length > 0) {
+    const ok = greenStreakAt(recentSessions, pd) >= greenNeeded(p.age, s);
+    throwReady = ok ? { ready: true, via: "logs", because: `You finished full catch play to ${pd} ft pain-free in your recent sessions.` }
+      : { ready: false, via: null, because: `Finish full catch play to ${pd} ft pain-free ${greenNeeded(p.age, s)} sessions in a row to earn position throws.` };
+  } else if (f.sessions.length === 0 && (f.startingThrowDays ?? 0) > 0 && (f.startingDistanceFt ?? 0) >= pd && !flagged14) {
+    throwReady = { ready: true, via: "starting_answers", because: `Your starting answers say you already throw ${f.startingDistanceFt} ft with no pain.` };
+  } else {
+    throwReady = { ready: false, via: null, because: f.sessions.length ? "You're coming back after a break — build your catch play back up first." : `New to throwing here — build catch play up to ${pd} ft first.` };
+  }
+  let buildUp: CatchPlayPlanInputs["buildUp"] = null;
+  if (!throwReady.ready) {
+    const steps = BUILD_UP_STEPS[p.sport][p.position === "OF" ? "OF" : "IF"].filter((ft) => ft <= Math.max(pd, 45));
+    const fromLogs = buildUpDistance(p.sport, p.position, p.age, recentSessions, isoBack(p.today, 28), s);
+    const fromStart = recentSessions.length === 0 && !flagged14 && (f.startingThrowDays ?? 0) > 0 ? Math.max(steps[0], ...steps.filter((ft) => ft <= (f.startingDistanceFt ?? 0))) : steps[0];
+    buildUp = { active: true, distanceFt: Math.max(fromLogs, fromStart) };
+  }
+  return { earn, progress, buildUp, throwReady };
+}
+
+const isoBack = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) - n * 86_400_000).toISOString().slice(0, 10);
+
+// ------------------------------------------------------------------ IN-SESSION CHECK
+
+export interface CatchPlayCheck { outcome: "full" | "cut_short" | "painful" | "short_distance"; maxDistanceFt: number; positionDistanceFt: number }
+
+/** Owner Nov 4: today's logged catch play decides whether Defense keeps its throws. */
+export function inSessionDefenseGate(c: CatchPlayCheck | null | undefined): { allowed: boolean; because: string | null } {
+  if (!c) return { allowed: true, because: null };
+  if (c.outcome === "painful") return { allowed: false, because: "Your arm hurt during catch play, so Defense today is reads, hands and footwork only — no throws." };
+  if (c.outcome === "cut_short") return { allowed: false, because: "Catch play was cut short, so Defense today is reads, hands and footwork only — no throws." };
+  if (c.outcome === "short_distance" || c.maxDistanceFt < c.positionDistanceFt) return { allowed: false, because: `Catch play didn't reach ${c.positionDistanceFt} ft, so Defense today is reads, hands and footwork only — no throws.` };
+  return { allowed: true, because: null };
+}
+
+/** A saved check as a catch-play session for the green rule. */
+export function checkToSession(date: string, c: CatchPlayCheck): CatchSession {
+  return { date, maxDistanceFt: c.outcome === "full" ? Math.max(c.maxDistanceFt, c.positionDistanceFt) : c.maxDistanceFt, painFree: c.outcome !== "painful", armFeelGood: c.outcome !== "painful" };
+}
