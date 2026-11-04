@@ -21,6 +21,7 @@ import { hexToRgba } from '@/hooks/useUserColors';
 import { CoachExerciseAuthoring } from './CoachExerciseAuthoring';
 import { Input } from '@/components/ui/input';
 import type { Exercise } from '@/types/customActivity';
+import { sendChecklist, sendButtonHint } from '@/lib/coachRx/sendChecklist';
 
 /** Coach prescription categories (owner request Oct 24) — every category a plan can contain. */
 const RX_CATEGORIES = [
@@ -125,6 +126,14 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
     schedType === 'date' ||
     (schedType === 'dates') ||
     (schedType === 'recurring' && (monthly ? true : weekdays.length > 0) && (endMode === 'count' ? recurCount > 0 : !!recurEnd));
+
+  const todayLocal = new Date().toLocaleDateString('en-CA');
+  const missingInputs = [
+    ...sendChecklist({ title, category: rxCategory, players: selectedPlayers.length,
+      dateValid: !!rxDate && rxDate >= todayLocal, exercises }),
+    ...(scheduleValid ? [] : ['Required: finish the repeat schedule (pick weekdays and an end)']),
+  ];
+  const sendHint = sendButtonHint(missingInputs);
 
   const handlePlayerToggle = (playerId: string) => {
     setSelectedPlayers(prev => 
@@ -286,7 +295,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="rx-category" className="text-xs">Category</Label>
+                  <Label htmlFor="rx-category" className="text-xs">Required: category</Label>
                   <select
                     id="rx-category"
                     value={rxCategory}
@@ -299,7 +308,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="rx-date" className="text-xs">{schedType === 'recurring' ? 'Starts on/after' : schedType === 'any_day' ? 'Sent on' : 'Day'}</Label>
+                  <Label htmlFor="rx-date" className="text-xs">Required: {schedType === 'recurring' ? 'Starts on/after' : schedType === 'any_day' ? 'Sent on' : 'Day'}</Label>
                   <input
                     id="rx-date"
                     type="date"
@@ -499,13 +508,18 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
           </div>}
         </ScrollArea>
 
+        {missingInputs.length > 0 && <div role="status" aria-label="What's left before sending" className="mx-6 mt-3 rounded-md border border-border bg-muted p-3 text-sm">
+          <p className="font-medium">{sendHint}</p>
+          <ul className="mt-1 list-disc pl-5 text-muted-foreground">{missingInputs.map(m => <li key={m}>{m}</li>)}</ul>
+        </div>}
         <div className="flex items-center justify-end gap-3 p-6 pt-4 border-t">
           <Button variant="outline" disabled={loading} onClick={() => preview ? setPreview(false) : onOpenChange(false)}>
             {preview ? 'Back to edit' : t('common.cancel')}
           </Button>
           <Button
             onClick={() => preview ? void handleSend() : setPreview(true)}
-            disabled={loading || !title.trim() || selectedPlayers.length === 0 || !scheduleValid || !exercises.length || exercises.some(e => !e.name.trim() || !e.dosage_unit)}
+            disabled={loading || missingInputs.length > 0}
+            title={sendHint ?? undefined}
             className="gap-2"
           >
             {loading ? (
