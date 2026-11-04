@@ -4595,3 +4595,9 @@ Deploys/additive migrations needed for 2, 3, 13, 18, 20 and server scheduling ce
 - [x] 3 Every Today practice-log button opens the right log for today.
 - [ ] 4 Owner editors for game-situation Mind items and Today's coach advice — waiting on owner answers.
 - [ ] 5 Greenlight step-ups (A3): passed owner check — monitor.
+
+- [ ] Nov 4 r3 Part B: catch play in throws (ladder, readiness gate, build-up ladder, logging)
+- [ ] Nov 4 r3 Part C: Baserunning IQ course
+- [ ] Nov 4 r3 Part D: warm-up level/age tags
+- [ ] Nov 4 r3 Part E: close-out
+- [x] Nov 4 r3 Part A: lock-in tests (src/test/lockedByOwnerNov4.test.ts)
