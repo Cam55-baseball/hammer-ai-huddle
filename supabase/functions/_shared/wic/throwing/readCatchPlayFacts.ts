@@ -1,7 +1,7 @@
 /** Owner Nov 4: read a player's catch-play facts from existing tables (self JWT, read-only). */
 import { isArmArea, type CatchPlayFacts, type CatchPlayCheck, checkToSession } from './catchPlay.ts';
 
-const firstNumber = (s: unknown) => { const m = String(s ?? '').match(/\d+/); return m ? Number(m[0]) : null; };
+const firstNumber = (s: unknown) => { if (/^under/i.test(String(s ?? ''))) return 0; const m = String(s ?? '').match(/\d+/); return m ? Number(m[0]) : null; };
 const throwDays = (s: unknown) => { const t = String(s ?? ''); if (!t) return null; if (t === '0') return 0; return firstNumber(t); };
 const shift = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
 const normReadiness = (r: unknown) => { const n = Number(r); if (r == null || !Number.isFinite(n)) return null; return n <= 5 ? Math.max(0, (n - 1) / 4) : Math.min(1, n / 10); };
