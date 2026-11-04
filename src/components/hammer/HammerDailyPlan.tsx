@@ -1,3 +1,4 @@
+import { setWarmupFitOverrides } from "@/lib/hammer/prescription/warmupFit";
 import { planningProgramModules } from '../../../supabase/functions/_shared/programAccess';
 import { UpdatingBadge } from "@/components/hammer/PlanUpdatingNote";
 import { getTodayDate } from "@/utils/dateUtils";
@@ -612,6 +613,11 @@ export function HammerDailyPlan({
     void refreshWarmupStageOverrides(async () => {
       const { data, error } = await supabase.rpc("get_warmup_stage_overrides");
       return error ? null : (data as Array<{ slug: string; stage: number; stage_order: number | null }>);
+    });
+    // Owner Part D: Exercise-builder warm-up level/age tags for the next build.
+    void supabase.rpc("get_warmup_fit_overrides").then(({ data, error }) => {
+      if (error) return;
+      setWarmupFitOverrides(Object.fromEntries(((data ?? []) as Array<{ slug: string; levels: string[]; age_bands: string[] }>).map((r) => [r.slug, { levels: r.levels, ageBands: r.age_bands }])));
     });
   }, [planUser?.id]);
   useEffect(() => {
