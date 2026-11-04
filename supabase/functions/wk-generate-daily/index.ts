@@ -602,7 +602,7 @@ const handler = async (req: Request): Promise<Response> => {
       ]);
       if (snaps.error || rx.error || logs.error) return json({ error: "rules_sweep_unavailable" }, 503);
       const prot = new Set<string>(((logs.data ?? []) as any[]).map((l) => String(l.plan_date)));
-      for (const r of (rx.data ?? []) as any[]) if (isMarkedRow(r)) prot.add(String(r.plan_date));
+      for (const r of (rx.data ?? []) as any[]) if (r.status && r.status !== "planned" && r.status !== "pending") prot.add(String(r.plan_date));
       const stale = staleSavedDates((snaps.data ?? []) as any[], { today, protectedDates: prot, latestClipAt: (clip.data as any)?.created_at ?? null });
       if (!stale.length) return json({ ok: true, rules_version: PLAN_RULES_VERSION, stale: [], kept: [...prot].sort() }, 200);
       const reason = "Hammer updated your plan to the newest training rules.";
