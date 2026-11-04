@@ -2485,6 +2485,7 @@ function placeThrowsByRole(blocks, opts) {
   return ti >= 0 ? out.filter((_, i) => i !== ti) : out;
 }
 var COOLDOWN_ROW = /cooldown|cool-down|cool down/i;
+var COOLDOWN_MINUTES = 6;
 function withCooldownInRecovery(blocks, opts) {
   const out = blocks.map((b) => ({ ...b }));
   const moved = [];
@@ -2503,12 +2504,19 @@ function withCooldownInRecovery(blocks, opts) {
     const r = out[ri];
     const drills = [...r.drills, ...moved];
     const dm = r.durationMin;
-    out[ri] = { ...r, drills, steps: opts.toSteps(drills), ...typeof dm === "number" ? { durationMin: dm + 6 } : {} };
+    const gt = r.gamePlanTemplate;
+    out[ri] = {
+      ...r,
+      drills,
+      steps: opts.toSteps(drills),
+      ...typeof dm === "number" ? { durationMin: dm + COOLDOWN_MINUTES } : {},
+      ...gt && typeof gt.durationMinutes === "number" ? { gamePlanTemplate: { ...gt, durationMinutes: gt.durationMinutes + COOLDOWN_MINUTES } } : {}
+    };
     return out;
   }
   const src = out.find((b) => b.modality === "warmup") ?? out[0];
   if (!src) return out;
-  out.push({ ...src, modality: "recovery", title: "Recovery \u2014 arm cool-down", why: "Cool down your arm after today's throws.", drills: moved, steps: opts.toSteps(moved), route: "/bounce-back-bay", ctaLabel: "Open recovery", durationMin: 6, gamePlanTemplate: null, because: [] });
+  out.push({ ...src, modality: "recovery", title: "Recovery \u2014 arm cool-down", why: "Cool down your arm after today's throws.", drills: moved, steps: opts.toSteps(moved), route: "/bounce-back-bay", ctaLabel: "Open recovery", durationMin: COOLDOWN_MINUTES, gamePlanTemplate: null, because: [] });
   return out;
 }
 

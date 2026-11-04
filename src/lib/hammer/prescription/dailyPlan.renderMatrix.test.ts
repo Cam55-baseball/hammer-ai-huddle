@@ -128,10 +128,12 @@ describe("every card renders for every day type and context state", () => {
   for (const [phase, minutes] of [['off', 15], ['in', 25]] as const) {
     it(`${phase} recovery duration matches only the two prescribed timed activities`, () => {
       const block = findDayWith(ctx({ ...BASE, season_phase: phase, equipment_effective: OWNER_EQUIPMENT }), 'recovery');
-      expect(block.durationMin).toBe(minutes);
-      expect(block.gamePlanTemplate?.durationMinutes).toBe(minutes);
-      expect(block.drills).toHaveLength(2);
-      expect(block.drills?.map(d => d.dosage)).toEqual(phase === 'off' ? ['10 min focus areas', '5 min'] : ['15 min full body', '10 min']);
+      // Owner Nov 4 r4: on throwing days the arm cool-down moves here with its own 6 timed minutes.
+      const cool = block.drills.filter(d => /cooldown|cool-down/i.test(d.name)).length;
+      expect(block.durationMin).toBe(minutes + 6 * cool);
+      expect(block.gamePlanTemplate?.durationMinutes).toBe(minutes + 6 * cool);
+      expect(block.drills.filter(d => !/cooldown|cool-down/i.test(d.name))).toHaveLength(2);
+      expect(block.drills?.filter(d => !/cooldown|cool-down/i.test(d.name)).map(d => d.dosage)).toEqual(phase === 'off' ? ['10 min focus areas', '5 min'] : ['15 min full body', '10 min']);
     });
   }
   for (const [ctxName, context] of CONTEXTS) {
