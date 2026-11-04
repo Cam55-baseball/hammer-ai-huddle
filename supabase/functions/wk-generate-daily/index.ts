@@ -1,6 +1,6 @@
 // supabase/functions/wk-generate-daily/index.ts
 import { ownerPositionOnly } from "../_shared/owner/ownerPositionException.ts";
-import { normalizeProgramModules } from "../_shared/programAccess.ts";
+import { normalizeProgramModules, planningProgramModules } from "../_shared/programAccess.ts";
 import { reliefSets, isLowerBodyLift } from "../_shared/wic/pitching/roleCycle.ts";
 import { pitcherYardTarget, repsForYards, capSessionYards, SESSION_YARD_CAP, conditioningRules, CONDITIONING_RULES_KEY, pitcherYardRuleApplies, yardsLeftToday } from "../_shared/wic/conditioning/yards.ts";
 import { applyLiveTracking } from "../_shared/vault/tracking.ts";

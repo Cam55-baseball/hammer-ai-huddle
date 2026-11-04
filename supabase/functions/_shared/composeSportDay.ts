@@ -12,7 +12,7 @@ import { planningGear } from './planSwap/planningGear.ts';
 import { readPlanningArmHistory } from './wic/pitching/readPlanningArmHistory.ts';
 import type { PhysioMapping } from './health/physioMapping.ts';
 import { readPitchCommand } from './wic/pitching/readPitchCommand.ts';
-import { normalizeProgramModules } from './programAccess.ts';
+import { normalizeProgramModules, planningProgramModules } from './programAccess.ts';
 import { readServerStarts } from './wic/progression/serverStarts.ts';
 import { EASING_BACK_LIFT_SHARE } from './wic/progression/startingPoint.ts';
 import { throwGroup, THROW_TARGETS } from './wic/phases/positionThrowTargets.ts';
