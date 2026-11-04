@@ -94,7 +94,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
       setCustomLocks([]);
       setMessage('');
       setExercises(template?.exercises ?? []);
-      setRxCategory(template ? ((template as CustomActivityTemplate & {coach_card_category?:string}).coach_card_category ?? defaultRxCategory(template.activity_type)) : 'lift');
+      { const cc = (template as (CustomActivityTemplate & {coach_card_category?:string|null}) | null)?.coach_card_category; setRxCategory(!template ? 'lift' : cc === null ? '' : (cc ?? defaultRxCategory(template.activity_type))); }
       setRxDate(new Date().toLocaleDateString('en-CA'));
       setSchedType('date');
       setExtraDates([]);
@@ -302,6 +302,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
                     onChange={(e) => setRxCategory(e.target.value)}
                     className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
                   >
+                    <option value="" disabled>Pick a category…</option>
                     {RX_CATEGORIES.map(c => (
                       <option key={c.value} value={c.value}>{c.label}</option>
                     ))}
