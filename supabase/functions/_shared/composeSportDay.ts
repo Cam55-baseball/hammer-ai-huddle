@@ -2,7 +2,7 @@ import {
   buildHammerDailyPlan, contextFromEnvelope, setOwnerPlanDrills, setTissueCareConfig, setWarmupStageOverrides,
   finalizeDatedPlan, projectBuntingEvidence, planFaultContext, accessiblePlanFaults,
   accessibleRecurringIssues, mergeCatalog, ELITE_DRILL_CATALOG, readDrillCirculation,
-  priorityAccess, ENGINE_CONTRACT,
+  priorityAccess, ENGINE_CONTRACT, setActiveCatchPlayStandards,
   PHILOSOPHY_TEST_USERS, testSettingsFor,
 } from './generated/hammerBlockBuilder.mjs';
 import { isoShift, dayEffect } from './wic/schedule/timeline.ts';
@@ -12,6 +12,7 @@ import { planningGear } from './planSwap/planningGear.ts';
 import { readPlanningArmHistory } from './wic/pitching/readPlanningArmHistory.ts';
 import type { PhysioMapping } from './health/physioMapping.ts';
 import { readPitchCommand } from './wic/pitching/readPitchCommand.ts';
+import { readCatchPlayFacts } from './wic/throwing/readCatchPlayFacts.ts';
 import { normalizeProgramModules, planningProgramModules } from './programAccess.ts';
 import { readServerStarts } from './wic/progression/serverStarts.ts';
 import { EASING_BACK_LIFT_SHARE } from './wic/progression/startingPoint.ts';
@@ -60,7 +61,9 @@ export async function composeSportDay(db: any, input: {
   if(!env.data)throw new Error('Dated athlete context unavailable');
   const sessionRows=complete(sessions), logRows=complete(logs), gameRows=complete(games);
   const clipRows=complete(clips,501).filter((c:any)=>Date.parse(c.created_at)<=day.getTime()).map((c:any)=>({video_id:c.id,user_id:c.user_id,sport:c.sport,module:c.module,created_at:c.created_at,violations:c.violations}));
-  const faults=planFaultContext(complete(signals,501),complete(findings,501),clipRows,uid,sport,day.getTime());
+  const findingRows=complete(findings,501);
+  const catchPlayFacts=await readCatchPlayFacts(db,uid,sport,date,findingRows.filter((f:any)=>Date.parse(f.created_at)<=day.getTime()));
+  const faults=planFaultContext(complete(signals,501),findingRows,clipRows,uid,sport,day.getTime());
   const issues=complete(recurring,200).filter((r:any)=>Date.parse(r.last_seen)<=day.getTime());
   const ids=gameRows.map((g:any)=>g.id);
   const [abs,pitches,defense]=ids.length?await Promise.all([
@@ -126,9 +129,10 @@ export async function composeSportDay(db: any, input: {
   setOwnerPlanDrills(circulation.rows);
   { const c=await db.from('app_settings').select('setting_value').eq('setting_key',CARE_CONFIG_KEY).maybeSingle(); setTissueCareConfig(careConfigFrom(c.error?null:c.data?.setting_value)); }
   setWarmupStageOverrides(input.warmupStages);
+  { const c=await db.from('app_settings').select('setting_value').eq('setting_key','catch_play_standards').maybeSingle(); setActiveCatchPlayStandards(c.error?null:c.data?.setting_value??null); }
   const evidence=projectBuntingEvidence(sessionRows,abRows,pitchRows.filter((p:any)=>p.perspective==='hitter'&&['bunt_foul','bunt_in_play'].includes(p.result)),complete(tasks),sport);
   const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,pitcherReturn:(input.pitcherReturn??null) as any,hitterReturn:(input.hitterReturn??null) as any,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
-    alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,physio:input.physio,testPreferences,pitchCommand,
+    alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,catchPlayFacts,physio:input.physio,testPreferences,pitchCommand,
     greenlight:starts?.greenlight,greenlightStarts:starts && !historyHas('lifting') && starts.levels.lifting==='easing_back'?{lifting:EASING_BACK_LIFT_SHARE}:{},
     greenlightTargets:{hitting:!historyHas('hitting')?starts?.levels.swingsPerSession:null,defense:!historyHas('defense')?starts?.levels.defenseRepsPerSession:null,speed:!historyHas('speed')?starts?.levels.sprintYards:null},
     startThrowsPerWeek:startThrows,startBuntReps:starts?.levels.buntRepsPerSide,
