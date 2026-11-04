@@ -53,7 +53,7 @@ describe("catch play counted in throws (Part B)", () => {
     expect(Math.max(...armStrengthDay("baseball", "OF", 9, { greenWeeks: 30 }).map((x) => x.distanceFt))).toBeLessThanOrEqual(120);
   });
   it("owner settings merge over defaults and keep the owner's ceilings", () => {
-    const s = catchPlayStandardsFrom({ longTossPerWeek: { in: 5 }, armStrengthPerWeek: { in: 2 }, pullDowns: { adultMax: 40 }, armRiskFaults: ["arm_lag"] });
+    const s = catchPlayStandardsFrom({ longTossPerWeek: { in: 3 }, armStrengthPerWeek: { in: 2 }, pullDowns: { adultMax: 40 }, armRiskFaults: ["arm_lag"] });
     expect(s.longTossPerWeek.in).toBe(2); expect(s.armStrengthPerWeek.in).toBe(1); expect(s.pullDowns.adultMax).toBe(15);
     expect(s.armRiskFaults).toEqual(["arm_lag"]);
     expect(catchPlayStandardsFrom(null)).toEqual(S);
