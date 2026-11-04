@@ -1,3 +1,4 @@
+import { PLAN_RULES_VERSION } from './planRulesVersion.ts';
 import {
   buildHammerDailyPlan, contextFromEnvelope, setOwnerPlanDrills, setTissueCareConfig, setWarmupStageOverrides,
   finalizeDatedPlan, projectBuntingEvidence, planFaultContext, accessiblePlanFaults,
@@ -150,5 +151,5 @@ export async function composeSportDay(db: any, input: {
     bunting:access.hasHitting?{gameWeekdays,evidence,catalog:complete(bunts),age,userId:uid,phase:input.phase}:undefined});
   const plan=finalizeDatedPlan(raw,{sport,userId:uid,ownerRows:circulation.rows,now:day,cnsHigh:input.cns>=7,adjustments:adjRows,clips:clipRows,games:gp,principles:complete(principles),rankedFaults:accessiblePlanFaults(faults.rankedFaults,modules,sport,{clips:clipRows,now:day.getTime()}),signalScopes:faults.signalScopes,recurringIssues:accessibleRecurringIssues(issues,modules,sport),ownedEquipment:new Set(planningGear(input.equipment,input.alwaysMissingGear??[])),catalog:mergeCatalog(ELITE_DRILL_CATALOG,circulation.rows),circulation:{servedToUser:circulation.served,usage:circulation.usage}});
   if(plan.sanity?.ok===false&&!input.rest)throw new Error(`Sport day failed structural validation: ${(plan.sanity.issues ?? []).join(',')}`);
-  return {payload:{composition_version:'sport_physical_v1',sport,plan_date:date,engine_version:ENGINE_CONTRACT.version,seasonPhase:plan.seasonPhase,physicalPhase:input.phase,restDay:input.rest,weeklyRoadmap:plan.weeklyRoadmap,weeklyTemplate:plan.weeklyTemplate,microcycle:plan.microcycle,roadmap:plan.roadmap,blocks:plan.blocks},expectedSnapshot:snapshot.data?.updated_at??null,engine:ENGINE_CONTRACT.version};
+  return {payload:{composition_version:'sport_physical_v1',rules_version:PLAN_RULES_VERSION,sport,plan_date:date,engine_version:ENGINE_CONTRACT.version,seasonPhase:plan.seasonPhase,physicalPhase:input.phase,restDay:input.rest,weeklyRoadmap:plan.weeklyRoadmap,weeklyTemplate:plan.weeklyTemplate,microcycle:plan.microcycle,roadmap:plan.roadmap,blocks:plan.blocks},expectedSnapshot:snapshot.data?.updated_at??null,engine:ENGINE_CONTRACT.version};
 }
