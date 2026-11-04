@@ -126,7 +126,7 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
 
   if (query.isLoading) return null;
   if (query.error) {
-    return <p role="alert" className="text-sm text-destructive">Couldn't load Hammers' plan for this player.</p>;
+    return <div className="space-y-2"><p role="alert" className="text-sm text-destructive">Couldn't load Hammers' plan for this player.</p><CoachPeriodizationAdvanced athleteId={athleteId} /></div>;
   }
   const plan = query.data;
   if (!plan || plan.state === "denied") return null; // no accepted coaching connection — show nothing
