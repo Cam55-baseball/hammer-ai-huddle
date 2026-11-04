@@ -123,3 +123,16 @@ export function judgeCoachEnvelope(input: {
   }
   return { allowed: reasons.length === 0, reasons: [...new Set(reasons)], warnings, safeOption: reasons.length ? "Safe option: save this workout for later and ask your coach to review the listed items." : null };
 }
+
+const ARM_CATEGORY = /throw|pitch|plyo/i;
+/** Coach send only: fills a missing recovery type from the card the coach chose. */
+export function coachRecoveryCatalog(day: Row[], catalog: Map<string, Row>): Row[] {
+  const out = new Map(catalog);
+  for (const row of day) {
+    if (row.slot !== "mobility" && row.slot !== "recovery") continue;
+    const m = catalog.get(row.movement_slug);
+    if (!m || m.recovery_category || ARM_CATEGORY.test(String(m.category ?? ""))) continue;
+    out.set(row.movement_slug, { ...m, recovery_category: row.slot === "recovery" ? "regeneration" : "mobility" });
+  }
+  return [...out.values()];
+}
