@@ -32,10 +32,10 @@ export function restDowFor(date: string, choices: ReadonlyArray<RestChoice> | nu
   const ws = mondayOf(date);
   const live = (choices ?? []).filter(c => !c.undone_at && validDow(c.rest_dow));
   const byNewest = [...live].sort((a, b) => b.created_at.localeCompare(a.created_at));
-  const week = byNewest.find(c => c.scope === 'week' && c.week_start === ws);
-  if (week) return week.rest_dow;
-  const ind = byNewest.find(c => c.scope === 'indefinite' && c.week_start <= ws);
-  return ind ? ind.rest_dow : DEFAULT_REST_DOW;
+  // Newest applicable choice wins (owner Nov 4 #5): a later "Indefinitely" pick
+  // replaces an earlier "Only this week" pick for the same week.
+  const hit = byNewest.find(c => (c.scope === 'week' && c.week_start === ws) || (c.scope === 'indefinite' && c.week_start <= ws));
+  return hit ? hit.rest_dow : DEFAULT_REST_DOW;
 }
 
 export function restDateFor(date: string, choices: ReadonlyArray<RestChoice> | null | undefined): string {

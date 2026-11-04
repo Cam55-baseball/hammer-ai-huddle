@@ -44,6 +44,27 @@ export function groupByLevel(children: ReactNode, saved: Record<string, unknown>
   return groups;
 }
 
+/** One Level drawer: closed by default, tap to open. Hides itself when every item inside renders nothing. */
+export function LevelDrawer({ lv, open, onOpenChange, children }: { lv: BysLevel; open: boolean; onOpenChange: (o: boolean) => void; children: ReactNode }) {
+  return (
+    <Collapsible open={open} onOpenChange={onOpenChange} asChild>
+      <section data-bys-level={lv} aria-label={`Level ${lv}`}
+        className={`rounded-lg border-2 p-2 [&:not(:has(>div>div>*))]:hidden ${LEVEL_STYLE[lv]}`}>
+        <CollapsibleTrigger asChild>
+          <button type="button" aria-expanded={open} className="flex w-full items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span>Level {lv}</span>
+            <span className="flex items-center gap-1 normal-case tracking-normal">{open ? "Hide" : "Show"}{open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</span>
+          </button>
+        </CollapsibleTrigger>
+        {/* forceMount keeps items mounted (so empty drawers still hide); closed drawers are visually hidden. */}
+        <CollapsibleContent forceMount className="data-[state=closed]:hidden">
+          <div className="mt-2 space-y-2">{children}</div>
+        </CollapsibleContent>
+      </section>
+    </Collapsible>
+  );
+}
+
 const dayKey = () =>
   `hammer.today.beforeYouStart.open.${new Date().toISOString().slice(0, 10)}`;
 
@@ -70,6 +91,8 @@ export function BeforeYouStartSection({
     }
   }, [open]);
 
+  // Owner Nov 4 #6: each Level drawer starts closed; open state lives only while the page is open.
+  const [levelOpen, setLevelOpen] = useState<Partial<Record<BysLevel, boolean>>>({});
   const importance = useBysImportance();
   const groups = groupByLevel(children, importance.data);
   const card = (
@@ -102,11 +125,7 @@ export function BeforeYouStartSection({
           <div className="space-y-3 border-t border-border/60 p-2 sm:p-3">
             {([1, 2, 3] as const).map((lv) => groups[lv].length ? (
               // A drawer whose items all decide not to show today hides itself.
-              <section key={lv} data-bys-level={lv} aria-label={`Level ${lv}`}
-                className={`space-y-2 rounded-lg border-2 p-2 [&:not(:has(>div>*))]:hidden ${LEVEL_STYLE[lv]}`}>
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Level {lv}</div>
-                <div className="space-y-2">{groups[lv]}</div>
-              </section>
+              <LevelDrawer key={lv} lv={lv} open={!!levelOpen[lv]} onOpenChange={(o) => setLevelOpen((s) => ({ ...s, [lv]: o }))}>{groups[lv]}</LevelDrawer>
             ) : null)}
           </div>
         </CollapsibleContent>
