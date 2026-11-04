@@ -4117,6 +4117,33 @@ export type Database = {
         }
         Relationships: []
       }
+      baserunning_course_progress: {
+        Row: {
+          completed_at: string
+          score: number
+          sport: string
+          step_key: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          score?: number
+          sport: string
+          step_key: string
+          total?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          score?: number
+          sport?: string
+          step_key?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       baserunning_daily_attempts: {
         Row: {
           correct: boolean

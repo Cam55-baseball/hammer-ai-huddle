@@ -1,3 +1,4 @@
+import { BASERUNNING_IQ_COURSE_ROUTE } from "@/lib/baserunning/courseSteps";
 import type { PrescribedBlock } from "@/lib/hammer/prescription/dailyPlan";
 
 export function prescribedToday(block: PrescribedBlock): boolean {
@@ -37,7 +38,7 @@ export function splitBaserunning(blocks: readonly PrescribedBlock[]) {
     const physicalDrills = block.drills.filter(d => !mentalDrills.includes(d));
     // A split must not retain a combined checklist or let a partial card mark
     // the whole original modality done. Individual drill task IDs stay intact.
-    if (mentalDrills.length) mental.push({ ...block, title: "Baserunning reads — mental work only", route: "/practice?module=baserunning", ctaLabel: "Open practice log", drills: mentalDrills, steps: mentalDrills.map(d => `${d.name}: ${d.dosage}`), gamePlanTemplate: null });
+    if (mentalDrills.length) mental.push({ ...block, title: "Baserunning reads — mental work only", route: BASERUNNING_IQ_COURSE_ROUTE, ctaLabel: "Open Baserunning IQ", drills: mentalDrills, steps: mentalDrills.map(d => `${d.name}: ${d.dosage}`), gamePlanTemplate: null });
     if (physicalDrills.length) physical.push({ ...block, drills: physicalDrills, steps: physicalDrills.map(d => `${d.name}: ${d.dosage}`), gamePlanTemplate: null });
   }
   return { mental, physical };

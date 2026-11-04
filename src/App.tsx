@@ -215,6 +215,7 @@ const BaseStealingTrainer = lazyWithRetry(() => import("./pages/BaseStealingTrai
 const SoftballStealingTrainer = lazyWithRetry(() => import("./pages/SoftballStealingTrainer"));
 const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
 const BaserunningIQ = lazyWithRetry(() => import("./pages/BaserunningIQ"));
+const BaserunningCourse = lazyWithRetry(() => import("./pages/BaserunningCourse"));
 const GameIq = lazyWithRetry(() => import("./pages/GameIq"));
 const GameIqSituation = lazyWithRetry(() => import("./pages/GameIqSituation"));
 const GameIqReview = lazyWithRetry(() => import("./pages/GameIqReview"));
@@ -598,6 +599,7 @@ const App = () => {
               <Route path="/softball-stealing" element={<SoftballStealingTrainer />} />
               <Route path="/pickoff-trainer" element={<SoftballLock feature="pickoff_trainer"><PickoffTrainer /></SoftballLock>} />
               <Route path="/baserunning-iq" element={<BaserunningIQ />} />
+              <Route path="/baserunning-iq/course" element={<BaserunningCourse />} />
               <Route path="/iq" element={<GameIqLock><GameIq /></GameIqLock>} />
               <Route path="/iq/review" element={<GameIqLock><GameIqReview /></GameIqLock>} />
               <Route path="/iq/:slug" element={<GameIqLock><GameIqSituation /></GameIqLock>} />

@@ -22,7 +22,7 @@ for(const sport of ['baseball','softball']) for(const tier of ['pitcher','5tool'
         expect(block.drills.some(d=>/reads?/.test(d.name.toLowerCase()))).toBe(true);
         expect(block.drills.some(d=>/footwork/.test(d.name.toLowerCase()))).toBe(true);
         expect(block.drills.some(d=>d.executionKind==='baserunning_scenarios')).toBe(true);
-        expect(splitBaserunning([block]).mental.every(b=>b.route==='/practice?module=baserunning')).toBe(true);
+        expect(splitBaserunning([block]).mental.every(b=>b.route==='/baserunning-iq/course')).toBe(true);
       }
       weeks.push(count);if(tier==='pitcher') expect(count).toBe(0);else expect(count).toBeGreaterThanOrEqual(1);
     }
