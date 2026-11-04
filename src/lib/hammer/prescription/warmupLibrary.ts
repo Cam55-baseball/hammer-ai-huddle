@@ -591,6 +591,14 @@ interface PickFilters {
   readonly axis?: WarmupAxis;
   /** Owner Part D: only items tagged for this player's level and age band. */
   readonly fit?: PlayerFit;
+  /** Owner Nov 4 need-based low-impact mode: gentler versions only (youth/beginner, no snap or plyo-style). */
+  readonly gentle?: boolean;
+}
+
+/** Snap / plyo-style items are never picked in low-impact mode. */
+export const LOW_IMPACT_EXCLUDED = /snap|plyo|pogo|bound|hop|jump|depth|drop|altitude|explosive|max[- ]?intent|sprint/i;
+export function isLowImpactItem(d: { slug: string; name: string; minLifecycle: LifecycleClass }): boolean {
+  return LIFECYCLE_RANK[d.minLifecycle] <= 1 && !LOW_IMPACT_EXCLUDED.test(`${d.slug} ${d.name}`);
 }
 
 function isEligible(d: WarmupDrill, f: PickFilters): boolean {
@@ -598,6 +606,7 @@ function isEligible(d: WarmupDrill, f: PickFilters): boolean {
   if (f.gameDay && !d.gameDayLegal) return false;
   if (f.axis && (d.axis ?? "bilateral") !== f.axis) return false;
   if (f.fit && !fits(fitTagsFor(d), f.fit)) return false;
+  if (f.gentle && !isLowImpactItem(d)) return false;
   if (d.regions && f.injuryRegions.length > 0) {
     if (d.regions.some((r) => f.injuryRegions.includes(r))) return false;
   }
@@ -613,7 +622,8 @@ export interface WarmupDiagnostic {
     | "single_leg_short"
     | "twitch_suppressed"
     | "injury_veto"
-    | "level_fallback";
+    | "level_fallback"
+    | "low_impact_mode";
   readonly role?: WarmupRole;
   readonly from?: string;
   readonly to?: string;
@@ -648,7 +658,23 @@ function pickForRole(
   seed: number,
   seen: Set<string>,
   diagnostics?: WarmupDiagnostic[],
+  gentleInner = false,
 ): WarmupDrill | null {
+  if (f.gentle && !gentleInner) {
+    const soft = pickForRole(role, f, seed, seen, diagnostics, true);
+    if (soft) return soft;
+    // No gentle version of this slot: keep coverage with the easiest legal item that is not snap/plyo-style.
+    const pool = poolForRole(role, { ...f, gentle: false, fit: undefined })
+      .filter((d) => !LOW_IMPACT_EXCLUDED.test(`${d.slug} ${d.name}`))
+      .sort((a, b) => LIFECYCLE_RANK[a.minLifecycle] - LIFECYCLE_RANK[b.minLifecycle]);
+    for (const candidate of pool) {
+      const resolved = resolveEquipmentSafe(candidate, { ...f, gentle: false, fit: undefined });
+      if (!resolved || seen.has(resolved.drill.slug)) continue;
+      diagnostics?.push({ code: "level_fallback", role, to: resolved.drill.slug, detail: `Low-impact mode: no gentle ${role.replace(/_/g, " ")} item — used the easiest non-plyo item, ${resolved.drill.name}.` });
+      return resolved.drill;
+    }
+    return null;
+  }
   const fitted = scanRole(role, f, seed, seen, diagnostics);
   if (fitted || !f.fit) return fitted;
   // Owner Part D: nothing tagged for this player fits the slot — take the
@@ -721,6 +747,11 @@ export interface BuildWarmupInput {
   readonly orderByStage?: boolean;
   /** Owner Part D: player's level + age band; omitted = no tag filter (legacy callers). */
   readonly fit?: PlayerFit;
+  /**
+   * Owner Nov 4 need-based low-impact mode: gentler versions in every role,
+   * no snap/plyo-style items, full-body rule kept; areas get extra care.
+   */
+  readonly lowImpact?: { readonly areas: ReadonlyArray<string> } | null;
 }
 
 export interface BuiltWarmupDrill {
@@ -834,14 +865,19 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
     return { context: input.context, drills: ordered, estMinutes: drills.length ? 5 : 0, singleLegShare: null,
       diagnostics: [{ code: "twitch_suppressed", detail: "Full rest day — gentle recovery only; training warm-up withheld." }] };
   }
-  const injuryRegions = (input.injuryRegions ?? []).map((r) => r.toLowerCase());
+  const lowImpact = input.lowImpact ?? null;
+  const injuryRegions = [...new Set([...(input.injuryRegions ?? []), ...(lowImpact?.areas ?? [])].map((r) => r.toLowerCase()))];
   const filtersBase: PickFilters = {
     lifecycle: input.lifecycle,
     gameDay: input.gameDay,
     available: expandEquipment(input.equipment, input.venue),
     injuryRegions,
     fit: input.fit,
+    gentle: !!lowImpact,
   };
+  if (lowImpact) {
+    diagnostics.push({ code: "low_impact_mode", detail: `Low-impact warm-up: gentler versions, no snap or plyo-style items${lowImpact.areas.length ? `; extra care for ${lowImpact.areas.join(", ")}` : ""}.` });
+  }
   if (injuryRegions.length > 0) {
     diagnostics.push({
       code: "injury_veto",
@@ -849,15 +885,22 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
     });
   }
   const fullTemplate = templateFor(input.context, input.lifecycle);
+  const suppressTwitch = input.suppressTwitch || !!lowImpact;
   const roles = fullTemplate.filter((r) => {
     if (input.suppressArmCare && r === "arm_care") return false;
-    if (input.suppressTwitch && TWITCH_ROLES.includes(r)) return false;
+    if (suppressTwitch && TWITCH_ROLES.includes(r)) return false;
+    if (lowImpact && r === "neural_priming") return false;
     return true;
   });
-  if (input.suppressTwitch && fullTemplate.some((r) => TWITCH_ROLES.includes(r))) {
+  // Extra care for a returning area: one more slow joint-circle (CARs) slot.
+  if (lowImpact && lowImpact.areas.length > 0) {
+    const at = roles.indexOf("cars");
+    roles.splice(at >= 0 ? at + 1 : 1, 0, "cars");
+  }
+  if (suppressTwitch && fullTemplate.some((r) => TWITCH_ROLES.includes(r))) {
     diagnostics.push({
       code: "twitch_suppressed",
-      detail: "Fast-twitch layer withheld today — recovery, travel or low readiness. Prep only, no CNS spend.",
+      detail: "Fast-twitch layer withheld today — recovery, travel, low readiness or low-impact mode. Prep only, no CNS spend.",
     });
   }
   const seedBase = input.daySeed ?? 0;

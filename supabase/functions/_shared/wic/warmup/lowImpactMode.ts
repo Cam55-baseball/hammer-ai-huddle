@@ -103,10 +103,10 @@ export function lowImpactMode(f: LowImpactFacts): LowImpactMode {
   return { active: true, triggers, areas, because: becauseLine(triggers[0], backDays, painInOldArea) };
 }
 
-function becauseLine(t: LowImpactTrigger, backDays: number | null, pain: boolean): string {
+function becauseLine(t: LowImpactTrigger, backDays: number | null, _pain: boolean): string {
   switch (t) {
     case "returning_injury":
-      if (backDays == null || pain && backDays == null) return "Easier warm-up today — you flagged pain where you were hurt before.";
+      if (backDays == null) return "Easier warm-up today — you flagged pain where you were hurt before.";
       if (backDays < 7) return "Easier warm-up today — you're less than a week back from injury.";
       { const w = Math.floor(backDays / 7); return `Easier warm-up today — you're ${w} week${w === 1 ? "" : "s"} back from injury.`; }
     case "red_checkin": return "Easier warm-up today — today's check-in.";
