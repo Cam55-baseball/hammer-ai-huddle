@@ -44,6 +44,13 @@ const clamp = (x: number) => Math.max(0, Math.min(1, x));
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
 
 export const LOW_BELOW = 0.4;
+/** The existing load-spike rule: rolling load ratio at or above this is a spike. */
+export function loadSpikeAt(seasonPhase: string | null | undefined): number {
+  return seasonPhase === "in" || seasonPhase === "in_season" ? 1.3 : 1.5;
+}
+export function isLoadSpike(ratio: number | null | undefined, seasonPhase: string | null | undefined): boolean {
+  return typeof ratio === "number" && Number.isFinite(ratio) && ratio >= loadSpikeAt(seasonPhase);
+}
 export const HIGH_FROM = 0.7;
 /** Minimum weight of available signals (check-ins alone, or two other trends). */
 export const MIN_EVIDENCE = 0.3;
@@ -104,7 +111,7 @@ export function runningReadiness(input: ReadinessInput): RunningReadiness {
   // Rolling load.
   const ratio = loadRatio(input.today, input.workUnitsByDate);
   if (ratio != null) {
-    const spikeAt = input.seasonPhase === "in" || input.seasonPhase === "in_season" ? 1.3 : 1.5;
+    const spikeAt = loadSpikeAt(input.seasonPhase);
     parts.push({ w: 0.2, v: clamp(1 - (ratio - 1.1) / (spikeAt - 1.1)) });
     if (ratio >= spikeAt) reasons.push("your training load jumped this week");
     else if (ratio > 1.1) reasons.push("your training load is climbing");

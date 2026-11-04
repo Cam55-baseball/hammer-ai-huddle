@@ -13,6 +13,7 @@ import { readPlanningArmHistory } from './wic/pitching/readPlanningArmHistory.ts
 import type { PhysioMapping } from './health/physioMapping.ts';
 import { readPitchCommand } from './wic/pitching/readPitchCommand.ts';
 import { readCatchPlayFacts } from './wic/throwing/readCatchPlayFacts.ts';
+import { lowImpactMode } from './wic/warmup/lowImpactMode.ts';
 import { normalizeProgramModules, planningProgramModules } from './programAccess.ts';
 import { readServerStarts } from './wic/progression/serverStarts.ts';
 import { EASING_BACK_LIFT_SHARE } from './wic/progression/startingPoint.ts';
@@ -30,6 +31,8 @@ export async function composeSportDay(db: any, input: {
   restDow?: number | null;
   pitcherReturn?: unknown;
   hitterReturn?: unknown;
+  /** Owner Nov 4 low-impact trigger (b): existing running-readiness load-spike rule. */
+  loadSpike?: boolean;
 }) {
   const { userId: uid, date, sport } = input;
   const day = new Date(`${date}T12:00:00Z`);
@@ -86,6 +89,7 @@ export async function composeSportDay(db: any, input: {
   if (input.availabilityDays != null) envelope.weekly_availability_days=entry(input.availabilityDays,'athlete_context.weekly_availability_days');
   if (input.restDow != null) envelope.weekly_rest_dow=entry(input.restDow,'rest_day_choices');
   const existingInjuries=envelope.injury_history?.value;
+  const injuryRows=(Array.isArray(existingInjuries)?existingInjuries:[]).filter((r:any)=>r&&typeof r==='object'&&typeof r.region==='string');
   envelope.injury_history=entry([...(Array.isArray(existingInjuries)?existingInjuries:existingInjuries?[existingInjuries]:[]),...input.injuries].filter(Boolean),'canonical active injury/context');
   const age=ageFromDob(input.birthday,date);
   const extra=['date_of_birth','readiness','age_years'].map(key=>({key,label:key,domain:'identity',value:key==='readiness'?input.readiness:key==='age_years'?age:input.birthday,source:key==='readiness'?'canonical rolling/check-in readiness':'profiles.date_of_birth',confidence:'high',missing:(key==='readiness'?input.readiness:key==='age_years'?age:input.birthday)==null,lastUpdated:null,lineage:{owner:'canonical',source:key,rawConfidence:'derived'}}));
@@ -132,9 +136,14 @@ export async function composeSportDay(db: any, input: {
   // Owner Part D: Exercise-builder warm-up level/age tags (backfill when unreadable).
   { const f=await db.rpc('get_warmup_fit_overrides'); setWarmupFitOverrides(f.error?null:Object.fromEntries(((f.data??[]) as any[]).map((r:any)=>[r.slug,{levels:r.levels,ageBands:r.age_bands}]))); }
   { const c=await db.from('app_settings').select('setting_value').eq('setting_key','catch_play_standards').maybeSingle(); setActiveCatchPlayStandards(c.error?null:c.data?.setting_value??null); }
+  // Owner Nov 4: need-based low-impact warm-up (warm-up only; switches off when the trigger clears).
+  const activeAreas=new Set(input.injuries.map((r)=>String(r).toLowerCase()));
+  const lowImpact=input.rest?null:lowImpactMode({today:date,lastTrained:catchPlayFacts.lastTrained??null,hasTrainingHistory:(starts?.historyAreas?.length??0)>0,
+    checkins:catchPlayFacts.checkins,seasonPhase:phase as any,loadSpike:input.loadSpike===true,
+    injuries:injuryRows.map((r:any)=>({region:r.region,healedAt:r.recovery_status==='healed'?(r.healed_at??null):null,active:r.recovery_status!=='healed'||activeAreas.has(String(r.region).toLowerCase())}))});
   const evidence=projectBuntingEvidence(sessionRows,abRows,pitchRows.filter((p:any)=>p.perspective==='hitter'&&['bunt_foul','bunt_in_play'].includes(p.result)),complete(tasks),sport);
   const raw=buildHammerDailyPlan(context,schedule,null,gp,{isSwitchHitter:envelope.bats_hand?.value==='S',isAmbidextrousThrower:envelope.throws_hand?.value==='S'},day,{resolvedSeasonPhase:phase,seasonPhaseSource:'stored',phaseStartedAt:input.phaseStartedAt,subscriptionModules:modules,fullRestDay:input.rest,pitcherOutings:input.outingFacts,pitcherReturn:(input.pitcherReturn??null) as any,hitterReturn:(input.hitterReturn??null) as any,practiceRecords,positionOverride:adjRows.find((r:any)=>r.action==='position_worked'&&r.plan_date===date)?.position_code??null,
-    alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,catchPlayFacts,physio:input.physio,testPreferences,pitchCommand,
+    alwaysMissingGear:input.alwaysMissingGear??[],armHistory:arm,catchPlayFacts,lowImpact,physio:input.physio,testPreferences,pitchCommand,
     greenlight:starts?.greenlight,greenlightStarts:starts && !historyHas('lifting') && starts.levels.lifting==='easing_back'?{lifting:EASING_BACK_LIFT_SHARE}:{},
     greenlightTargets:{hitting:!historyHas('hitting')?starts?.levels.swingsPerSession:null,defense:!historyHas('defense')?starts?.levels.defenseRepsPerSession:null,speed:!historyHas('speed')?starts?.levels.sprintYards:null},
     startThrowsPerWeek:startThrows,startBuntReps:starts?.levels.buntRepsPerSide,

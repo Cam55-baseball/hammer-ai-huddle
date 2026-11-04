@@ -7,13 +7,14 @@ const shift = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) + 
 const normReadiness = (r: unknown) => { const n = Number(r); if (r == null || !Number.isFinite(n)) return null; return n <= 5 ? Math.max(0, (n - 1) / 4) : Math.min(1, n / 10); };
 
 export function factsFromRows(rows: { quizzes: any[] | null; findings: any[]; checks: any[]; answers: any }, sport: string): CatchPlayFacts {
-  const byDay = new Map<string, { date: string; readiness: number | null; armFlag: boolean }>();
+  const byDay = new Map<string, { date: string; readiness: number | null; armFlag: boolean; painAreas: string[] }>();
   for (const q of rows.quizzes ?? []) {
     const areas = [...(q.pain_location ?? []), ...(q.soreness_locations ?? []), ...(q.stiffness_locations ?? [])].map(String);
     const flag = areas.some(isArmArea);
     const r = normReadiness(q.physical_readiness);
     const prev = byDay.get(q.entry_date);
-    byDay.set(q.entry_date, { date: q.entry_date, readiness: prev?.readiness != null && r != null ? Math.min(prev.readiness, r) : r ?? prev?.readiness ?? null, armFlag: flag || !!prev?.armFlag });
+    const pain = (q.pain_location ?? []).map(String).filter(Boolean);
+    byDay.set(q.entry_date, { date: q.entry_date, readiness: prev?.readiness != null && r != null ? Math.min(prev.readiness, r) : r ?? prev?.readiness ?? null, armFlag: flag || !!prev?.armFlag, painAreas: [...new Set([...(prev?.painAreas ?? []), ...pain])] });
   }
   const clipMap = new Map<string, { date: string; faultKeys: string[] }>();
   for (const f of rows.findings) {
@@ -25,7 +26,7 @@ export function factsFromRows(rows: { quizzes: any[] | null; findings: any[]; ch
   }
   const sessions = rows.checks.filter((r) => r.payload?.outcome).map((r) => checkToSession(r.plan_date, r.payload as CatchPlayCheck));
   const a = rows.answers ?? {};
-  return { checkins: rows.quizzes == null ? null : [...byDay.values()], clips: [...clipMap.values()], sessions, startingDistanceFt: firstNumber(a.throw_distance), startingThrowDays: throwDays(a.throw_days) };
+  return { checkins: rows.quizzes == null ? null : [...byDay.values()], clips: [...clipMap.values()], sessions, startingDistanceFt: firstNumber(a.throw_distance), startingThrowDays: throwDays(a.throw_days), lastTrained: typeof a.last_trained === 'string' ? a.last_trained : null };
 }
 
 export async function readCatchPlayFacts(db: any, uid: string, sport: string, date: string, findings: any[]): Promise<CatchPlayFacts> {
