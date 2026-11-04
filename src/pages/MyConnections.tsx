@@ -220,9 +220,9 @@ export default function MyConnections() {
           <h1 className="flex items-center gap-2 text-2xl font-bold">
             <Users className="h-6 w-6 text-primary" /> My Connections
           </h1>
-          <Button size="sm" variant="outline" onClick={() => setShowSearch(!showSearch)}>
+{!isCoach && !roleLoading && (<Button size="sm" variant="outline" onClick={() => setShowSearch(!showSearch)}>
             <UserPlus className="mr-1 h-4 w-4" /> Find Coach
-          </Button>
+          </Button>)}
         </div>
 
         {showSearch && (
