@@ -37,6 +37,7 @@ export interface CatchPlayStandards {
   positionDistanceFt: Record<CPSport, Record<Exclude<CPPosition, "P">, number>>;
   /** "Comfortable max" caps until a longer pain-free distance is logged (owner default, editable). */
   maxDistanceCapFt: Record<CPSport, { IF: number; OF: number }>;
+  /** DEPRECATED (owner Nov 4): no longer read — under-13s have no stretch-out distance cap. */
   youthMaxDistanceFt: { under11: number; age11to12: number };
   longTossPerWeek: Record<CPPhase, number>;
   armStrengthPerWeek: Record<CPPhase, number>;
@@ -53,28 +54,43 @@ export interface CatchPlayStandards {
   armRiskFaults: string[];
 }
 
-/** Proposed default arm-risk list — for the owner's review in the Coaching Console.
- *  Arm slot / elbow height are deliberately NOT listed (owner Elite filter: never flag them). */
-export const PROPOSED_ARM_RISK_FAULTS = ["arm_lag", "th_across_body", "bb_trunk_rotation_early", "bb_poor_deceleration", "bb_arm_path_late", "sb_whip_arm_early"];
+/** Owner Nov 4 default arm-risk list (owner may change it in the Coaching Console; saved list wins). */
+export const PROPOSED_ARM_RISK_FAULTS = [
+  "th_low_elbow_slot", "arm_lag", "th_late_glove_break", "th_across_body", "th_no_crow_hop",
+  "bb_arm_path_late", "bb_trunk_rotation_early", "bb_front_side_flyout", "bb_poor_deceleration",
+  "sb_whip_arm_early", "sb_shoulders_open_early",
+];
 
-/** Every throwing / pitching mechanics finding the analysis can record (from the existing taxonomy). */
-export const THROWING_FAULT_KEYS: ReadonlyArray<{ key: string; label: string }> = [
-  { key: "arm_lag", label: "Arm lags behind the body" },
-  { key: "th_across_body", label: "Throw pulled across the body" },
-  { key: "th_feet_misaligned", label: "Feet not lined up to the target" },
-  { key: "th_long_arm_action", label: "Long arm action" },
-  { key: "th_slow_transfer", label: "Slow glove-to-hand transfer" },
-  { key: "th_no_crow_hop", label: "No crow hop" },
-  { key: "short_arm", label: "Short-arming the throw" },
-  { key: "th_late_glove_break", label: "Late glove break" },
-  { key: "th_low_elbow_slot", label: "Low elbow (not flagged by the Elite filter)" },
-  { key: "bb_trunk_rotation_early", label: "Pitching: trunk rotates early" },
-  { key: "bb_front_side_flyout", label: "Pitching: front side flies open" },
-  { key: "bb_poor_deceleration", label: "Pitching: poor arm slow-down after release" },
-  { key: "bb_arm_path_late", label: "Pitching: arm late to release" },
-  { key: "bb_front_leg_collapse", label: "Pitching: front leg collapses" },
-  { key: "sb_whip_arm_early", label: "Windmill: whip arm early" },
-  { key: "sb_shoulders_open_early", label: "Windmill: shoulders open early" },
+export type ArmRiskGroup = "throwing" | "baseball_pitching" | "softball_windmill";
+/** Every throwing and pitching movement-pattern fault in video_tag_taxonomy (fielding-only keys excluded). */
+export const THROWING_FAULT_KEYS: ReadonlyArray<{ key: string; label: string; group: ArmRiskGroup }> = [
+  { key: "arm_lag", label: "Arm lags behind the body (shared)", group: "throwing" },
+  { key: "short_arm", label: "Short-arming the throw (shared)", group: "throwing" },
+  { key: "th_across_body", label: "Throw pulled across the body", group: "throwing" },
+  { key: "th_feet_misaligned", label: "Feet not lined up to the target", group: "throwing" },
+  { key: "th_late_glove_break", label: "Late glove break", group: "throwing" },
+  { key: "th_long_arm_action", label: "Long arm action", group: "throwing" },
+  { key: "th_low_elbow_slot", label: "Low elbow slot", group: "throwing" },
+  { key: "th_no_crow_hop", label: "No crow hop", group: "throwing" },
+  { key: "th_slow_transfer", label: "Slow glove-to-hand transfer", group: "throwing" },
+  { key: "bb_arm_path_late", label: "Arm late to release", group: "baseball_pitching" },
+  { key: "bb_front_leg_collapse", label: "Front leg collapses", group: "baseball_pitching" },
+  { key: "bb_front_side_flyout", label: "Front side flies open", group: "baseball_pitching" },
+  { key: "bb_hip_shoulder_sep_loss", label: "Hip-shoulder separation lost", group: "baseball_pitching" },
+  { key: "bb_leg_lift_unbalanced", label: "Leg lift off balance", group: "baseball_pitching" },
+  { key: "bb_poor_deceleration", label: "Poor arm slow-down after release", group: "baseball_pitching" },
+  { key: "bb_release_point_drift", label: "Release point drifts", group: "baseball_pitching" },
+  { key: "bb_stride_direction_off", label: "Stride direction off", group: "baseball_pitching" },
+  { key: "bb_trunk_rotation_early", label: "Trunk rotates early", group: "baseball_pitching" },
+  { key: "sb_brush_contact_missed", label: "Brush contact missed", group: "softball_windmill" },
+  { key: "sb_k_position_late", label: "K position late", group: "softball_windmill" },
+  { key: "sb_plant_leg_collapse", label: "Plant leg collapses", group: "softball_windmill" },
+  { key: "sb_replant_drift", label: "Replant drifts", group: "softball_windmill" },
+  { key: "sb_short_stride", label: "Short stride", group: "softball_windmill" },
+  { key: "sb_shoulders_open_early", label: "Shoulders open early", group: "softball_windmill" },
+  { key: "sb_snap_late", label: "Snap late", group: "softball_windmill" },
+  { key: "sb_weak_drive_push", label: "Weak drive push", group: "softball_windmill" },
+  { key: "sb_whip_arm_early", label: "Whip arm early", group: "softball_windmill" },
 ];
 
 export const CATCH_PLAY_SETTING_KEY = "catch_play_standards";
@@ -196,10 +212,11 @@ export function pitcherIntervalWarmup(sport: CPSport): CatchPlayRow[] {
 
 export interface Progress { greenWeeks: number }
 
-/** Max stretch-out distance: grows by the green rule, never past the cap / youth age distance. */
+/** Max stretch-out distance: grows by the green rule, never past the cap (no distance cap under 13). */
 export function maxDistance(sport: CPSport, pos: CPPosition, age: number | null, p: Progress, s = DEFAULT_CATCH_PLAY_STANDARDS): number {
   const band = ageBand(age);
-  const cap = band === "youth" ? ((age ?? 12) < 11 ? s.youthMaxDistanceFt.under11 : s.youthMaxDistanceFt.age11to12) : s.maxDistanceCapFt[sport][pos === "OF" ? "OF" : "IF"];
+  // Owner Nov 4: no stretch-out distance cap for under-13s; age throw caps stay the hard ceiling.
+  const cap = band === "youth" ? Number.POSITIVE_INFINITY : s.maxDistanceCapFt[sport][pos === "OF" ? "OF" : "IF"];
   const pd = positionDistance(sport, pos, age, s);
   // Never raise distance and volume together: distance steps on odd green weeks only.
   const steps = Math.ceil(Math.max(0, p.greenWeeks) / 2);
