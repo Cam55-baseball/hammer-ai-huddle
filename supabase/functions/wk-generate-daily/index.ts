@@ -407,7 +407,7 @@ interface Prescription {
 import { OS_ONLY_ECCENTRIC_SLUGS, IN_SEASON_BLOCKED_SLUGS } from "../_shared/wic/season.ts";
 import { isolationAllowed, robustnessAreas, robustnessPool, ROBUSTNESS_IN_SEASON_SETS, IN_SEASON_SESSION_SET_CAP, AREA_LABEL } from "../_shared/wic/lift/blueprint.ts";
 import { oppositeLowerPool } from "../_shared/wic/lift/areaMap.ts";
-import { runningReadiness, type ReadinessCheckin, type RunningReadiness } from "../_shared/readiness/runningReadiness.ts";
+import { runningReadiness, isLoadSpike, type ReadinessCheckin, type RunningReadiness } from "../_shared/readiness/runningReadiness.ts";
 import { readPhysioMapping } from '../_shared/health/readPhysioMapping.ts';
 import { injuryCheckPainByDate } from '../_shared/health/fullGo.ts';
 import { conditioningFloorDue, isRunningConditioning, floorConditioningSlugs } from "../_shared/wic/conditioning/weeklyFloor.ts";
