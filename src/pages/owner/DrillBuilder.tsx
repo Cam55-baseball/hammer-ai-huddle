@@ -209,9 +209,9 @@ export default function DrillBuilder() {
       videoUrl = supabase.storage.from("videos").getPublicUrl(path).data.publicUrl;
     }
     const warmFit = body.placements.includes("hammers_today:warmup")
-      ? (cleanFit(body.fit_levels, body.fit_age_bands) ?? defaultFitForNewItem(null)) : null;
-    if (body.placements.includes("hammers_today:warmup") && ((body.fit_levels && body.fit_levels.length === 0 && body.fit_age_bands && body.fit_age_bands.length > 0) || (body.fit_age_bands && body.fit_age_bands.length === 0 && body.fit_levels && body.fit_levels.length > 0))) {
-      toast.error("Tick at least one level and one age band for this warm-up.");
+      ? (cleanFit(body.fit_levels, body.fit_age_bands) ?? (!(body.fit_levels?.length) && !(body.fit_age_bands?.length) ? defaultFitForNewItem(null) : null)) : undefined;
+    if (warmFit === null) {
+      toast({ title: "Tick at least one level and one age band for this warm-up." });
       setSaving(false);
       return;
     }
@@ -434,7 +434,9 @@ export default function DrillBuilder() {
               </div>
               <div><Label htmlFor="drill-name">Name</Label><Input id="drill-name" value={draft.name} onChange={(e) => set("name", e.target.value)} /></div>
               {draft.placements.includes("hammers_today:warmup") && (() => {
-                const fit = cleanFit(draft.fit_levels, draft.fit_age_bands) ?? defaultFitForNewItem(null);
+                const def = defaultFitForNewItem(null);
+                const fit = { levels: (draft.fit_levels?.length || draft.fit_age_bands?.length ? draft.fit_levels ?? [] : def.levels) as typeof def.levels,
+                  ageBands: (draft.fit_levels?.length || draft.fit_age_bands?.length ? draft.fit_age_bands ?? [] : def.ageBands) as typeof def.ageBands };
                 return (
                   <div className="space-y-1">
                     <WarmupFitPicker value={fit} onChange={(n) => setDraft((d) => d && ({ ...d, fit_levels: n.levels, fit_age_bands: n.ageBands }))} />
