@@ -33,7 +33,11 @@ export type WarmupRole =
   | "fast_twitch"
   | "weightless_coordination"
   | "movement_bridge"
-  | "arm_care";
+  | "arm_care"
+  /** Owner Nov 4 r2 #5: light dynamic preparation to throw (not the arm-care chart). */
+  | "arm_prep"
+  /** Owner Nov 4 r2 #5: rotation and hip-shoulder separation, ready to hit. */
+  | "hitting_prep";
 
 export type WarmupContext =
   | "game_day"
@@ -224,6 +228,19 @@ export const WARMUP_LIBRARY: WarmupDrill[] = [
   { slug: "wu_crossover_run", name: "Crossover run (open the hip)", role: "movement_bridge", cue: "cross over long, don't hop", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 15 yds each way" },
 
   // Arm care
+  // Owner Nov 4 r2 #5 — arm prep (preparing to throw). Region-tagged picks have region-free safe versions.
+  { slug: "wu_ap_arm_circles", name: "Arm circles — small to big", role: "arm_prep", cue: "slow and smooth, stay pain-free", stopIf: "shoulder pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "10 forward + 10 back", regions: ["shoulder"] },
+  { slug: "wu_ap_band_pull_apart", name: "Band pull-aparts", role: "arm_prep", cue: "squeeze shoulder blades, arms straight", stopIf: "shoulder pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 12", equipment: ["jband"], fallbackSlug: "wu_ap_scap_squeeze", regions: ["shoulder"] },
+  { slug: "wu_ap_throw_rehearsal", name: "Dry throw rehearsal (half speed)", role: "arm_prep", cue: "pattern first — easy arm swing, no ball", stopIf: "arm pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 each side", regions: ["shoulder", "elbow"] },
+  { slug: "wu_ap_scap_squeeze", name: "Shoulder-blade squeezes (arms by sides)", role: "arm_prep", cue: "pull blades back and down, hold 2 seconds", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 10" },
+  { slug: "wu_ap_wrist_forearm", name: "Wrist circles + finger flicks", role: "arm_prep", cue: "loosen hands, wrists and forearms", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "20 each" },
+  { slug: "wu_ap_elbow_flex_ext", name: "Elbow bend-and-straighten (arm at side)", role: "arm_prep", cue: "easy range, no pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "15 each arm" },
+  // Owner Nov 4 r2 #5 — hitting readiness (rotation + hip-shoulder separation).
+  { slug: "wu_hp_medball_rot_scoop", name: "Med-ball rotational scoop toss", role: "hitting_prep", setup: "4-6 lb ball vs wall, hitting stance", cue: "hips turn first, then shoulders — easy intent", stopIf: "back pain", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 5 each side", equipment: ["med_ball"], fallbackSlug: "wu_hp_rot_step_through", regions: ["lower_back", "shoulder"] },
+  { slug: "wu_hp_hip_shoulder_sep", name: "Hip-shoulder separation drill (hands on chest)", role: "hitting_prep", cue: "turn hips, keep shoulders back, then let them catch up", stopIf: "back pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 6 each side", regions: ["lower_back"] },
+  { slug: "wu_hp_rot_step_through", name: "Rotational step-through (no ball)", role: "hitting_prep", cue: "load back hip, step and rotate like a swing", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 5 each side", regions: ["lower_back"] },
+  { slug: "wu_hp_split_stance_rotation", name: "Split-stance T-spine rotation", role: "hitting_prep", cue: "hips square, rotate the upper back", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 each side" },
+  { slug: "wu_hp_seated_rotation", name: "Seated trunk rotation (hips locked)", role: "hitting_prep", cue: "sit tall, turn the ribs, not the hips", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 each side" },
   { slug: "wu_jband_full", name: "Arm-care band chart", role: "arm_care", setup: "arm-care band anchored at chest height", cue: "control the eccentric — every rep", stopIf: "shoulder sharp pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "full chart @ 1 x 10 each" },
   { slug: "wu_crossover_symmetry_full", name: "Band activation chart", role: "arm_care", cue: "smooth reps, exhale on pull", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "full chart @ 1 x 10 each" },
   { slug: "wu_prone_tyw", name: "Prone T / Y / W", role: "arm_care", cue: "thumbs up, squeeze the shoulder blades", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 8 each letter" },
@@ -514,7 +531,36 @@ export function fullBodyTemplate(context: WarmupContext): WarmupRole[] {
     const armIdx = base.indexOf("arm_care");
     base.splice(armIdx >= 0 ? armIdx : base.length, 0, "movement_bridge");
   }
+  // Owner Nov 4 r2 #5: dominant full-body warm-up — at least 2 arm-prep and 2
+  // hitting-readiness every training day, plus emphasis for the day.
+  const want = { arm_prep: WARMUP_MIN_ARM_PREP + (context === "throwing_day" ? 1 : 0), hitting_prep: WARMUP_MIN_HITTING_PREP + (context === "hitting_day" ? 1 : 0) } as const;
+  for (const role of ["arm_prep", "hitting_prep"] as const) {
+    let have = base.filter((r) => r === role).length;
+    while (have < want[role]) {
+      const at = base.indexOf("movement_bridge");
+      base.splice(at >= 0 ? at : base.length, 0, role);
+      have++;
+    }
+  }
   return base;
+}
+
+export const WARMUP_MIN_ARM_PREP = 2;
+export const WARMUP_MIN_HITTING_PREP = 2;
+const LOWER_ROLES: ReadonlySet<WarmupRole> = new Set(["cars", "mobility_joint", "ladder_quickness", "single_leg_twitch", "ground_force", "fast_twitch", "movement_bridge", "neural_priming"]);
+const HIP_CORE_ROLES: ReadonlySet<WarmupRole> = new Set(["activation", "stability", "hitting_prep"]);
+const UPPER_ROLES: ReadonlySet<WarmupRole> = new Set(["fascial_rotation", "arm_prep", "arm_care"]);
+/** Validator rule (owner Nov 4 r2 #5): every training-day warm-up covers the whole body. */
+export function warmupCoverageIssues(drills: ReadonlyArray<{ role: WarmupRole }>): string[] {
+  const n = (role: WarmupRole) => drills.filter((d) => d.role === role).length;
+  const out: string[] = [];
+  if (n("arm_prep") < WARMUP_MIN_ARM_PREP) out.push(`warmup_arm_prep_short:${n("arm_prep")}`);
+  if (n("hitting_prep") < WARMUP_MIN_HITTING_PREP) out.push(`warmup_hitting_prep_short:${n("hitting_prep")}`);
+  if (!drills.some((d) => d.role === "tissue_prep")) out.push("warmup_no_tissue_prep");
+  if (!drills.some((d) => LOWER_ROLES.has(d.role))) out.push("warmup_no_lower");
+  if (!drills.some((d) => HIP_CORE_ROLES.has(d.role))) out.push("warmup_no_hip_core");
+  if (!drills.some((d) => UPPER_ROLES.has(d.role))) out.push("warmup_no_upper");
+  return out;
 }
 
 function templateFor(context: WarmupContext, lifecycle: LifecycleClass): WarmupRole[] {
