@@ -6,7 +6,7 @@ const throwDays = (s: unknown) => { const t = String(s ?? ''); if (!t) return nu
 const shift = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
 const normReadiness = (r: unknown) => { const n = Number(r); if (r == null || !Number.isFinite(n)) return null; return n <= 5 ? Math.max(0, (n - 1) / 4) : Math.min(1, n / 10); };
 
-export function factsFromRows(rows: { quizzes: any[] | null; findings: any[]; checks: any[]; answers: any }, sport: string): CatchPlayFacts {
+export function factsFromRows(rows: { quizzes: any[] | null; findings: any[]; checks: any[]; answers: any; videos?: any[] }, sport: string): CatchPlayFacts {
   const byDay = new Map<string, { date: string; readiness: number | null; armFlag: boolean; painAreas: string[] }>();
   for (const q of rows.quizzes ?? []) {
     const areas = [...(q.pain_location ?? []), ...(q.soreness_locations ?? []), ...(q.stiffness_locations ?? [])].map(String);
@@ -24,16 +24,23 @@ export function factsFromRows(rows: { quizzes: any[] | null; findings: any[]; ch
     for (const k of [f.fault_key, f.movement_key, f.root_pattern_key]) if (k && !c.faultKeys.includes(k)) c.faultKeys.push(k);
     clipMap.set(id, c);
   }
+  // Owner Nov 4 r4: a completed throwing/pitching analysis with no findings is still a recent clip
+  // (clean), so the arm-strength gate and the unlock prompt read the same evidence.
+  for (const v of rows.videos ?? []) {
+    if (!['throwing', 'pitching'].includes(v.module) || (v.sport && v.sport !== sport) || !v.id || clipMap.has(v.id)) continue;
+    clipMap.set(v.id, { date: String(v.created_at).slice(0, 10), faultKeys: [] });
+  }
   const sessions = rows.checks.filter((r) => r.payload?.outcome).map((r) => checkToSession(r.plan_date, r.payload as CatchPlayCheck));
   const a = rows.answers ?? {};
   return { checkins: rows.quizzes == null ? null : [...byDay.values()], clips: [...clipMap.values()], sessions, startingDistanceFt: firstNumber(a.throw_distance), startingThrowDays: throwDays(a.throw_days), lastTrained: typeof a.last_trained === 'string' ? a.last_trained : null };
 }
 
 export async function readCatchPlayFacts(db: any, uid: string, sport: string, date: string, findings: any[]): Promise<CatchPlayFacts> {
-  const [q, checks, sp] = await Promise.all([
+  const [q, checks, sp, vids] = await Promise.all([
     db.from('vault_focus_quizzes').select('entry_date,physical_readiness,pain_location,soreness_locations,stiffness_locations').eq('user_id', uid).gte('entry_date', shift(date, -28)).lte('entry_date', date).limit(400),
     db.from('hammer_daily_task_completions').select('plan_date,payload').eq('user_id', uid).eq('source', 'catch_play_check').gte('plan_date', shift(date, -56)).lt('plan_date', date).limit(200),
     db.from('athlete_starting_points').select('answers').eq('user_id', uid).eq('sport', sport).maybeSingle(),
+    db.from('videos').select('id,created_at,module,sport').eq('user_id', uid).eq('sport', sport).in('module', ['throwing', 'pitching']).not('analysis_public', 'is', null).gte('created_at', `${shift(date, -60)}T00:00:00Z`).lte('created_at', `${date}T23:59:59Z`).limit(50),
   ]);
-  return factsFromRows({ quizzes: q.error ? null : q.data ?? [], findings, checks: checks.error ? [] : checks.data ?? [], answers: sp.error ? null : sp.data?.answers }, sport);
+  return factsFromRows({ quizzes: q.error ? null : q.data ?? [], findings, checks: checks.error ? [] : checks.data ?? [], answers: sp.error ? null : sp.data?.answers, videos: vids?.error ? [] : vids?.data ?? [] }, sport);
 }

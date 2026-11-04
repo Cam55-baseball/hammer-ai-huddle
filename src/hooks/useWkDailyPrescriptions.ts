@@ -30,7 +30,7 @@ import { usePhaseState } from "@/hooks/usePhaseState";
 import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
 import { partitionCoachRows } from "@/lib/coachRx/planRows";
 import { composedDayRequest } from "@/lib/hammer/composedDayRequest";
-import { rebuildAfterChange, rebuildWrongSeasonDays, repairSavedWeek } from "@/lib/hammer/rebuildAfterChange";
+import { rebuildAfterChange, rebuildWrongSeasonDays, repairSavedWeek, startRulesVersionSweep } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
 
 // Must equal the version the generator stamps on every row. A mismatch made
@@ -573,6 +573,10 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       if (w.blocked) toast(w.blocked);
       if (!r.checked || r.failed.length || !w.checked || w.failed.length) { try { sessionStorage.removeItem(k); } catch { /* retry next visit */ } }
       console.debug("[season-fix]", r, w);
+      // Owner Nov 4 r4: saved days from older rules (or before a new throwing clip) rebuild in the background.
+      const sw = await startRulesVersionSweep(planDate);
+      if (sw?.stale.length) setTimeout(() => { void qc.invalidateQueries({ queryKey: ["wk-rx"] }); void qc.invalidateQueries({ queryKey: ["composed-plan-week"] }); }, 60_000);
+      console.debug("[rules-sweep]", sw);
     });
   }, [user?.id, serverFresh, planDate, qc]);
 

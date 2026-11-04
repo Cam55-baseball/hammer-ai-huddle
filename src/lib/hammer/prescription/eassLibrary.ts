@@ -30,7 +30,7 @@
  */
 
 import { firstPositionToken } from "@/lib/hammer/positions/positionNormalizer";
-import { catchPlayDay, cpPosition, defenseThrowsAllowed, type CatchPlayDay as CatchPlayDayResult, type CatchPlayStandards, type EarnResult as CatchPlayEarn } from "../../../../supabase/functions/_shared/wic/throwing/catchPlay";
+import { catchPlayDay, lightCatch, cpPosition, defenseThrowsAllowed, type CatchPlayDay as CatchPlayDayResult, type CatchPlayStandards, type EarnResult as CatchPlayEarn } from "../../../../supabase/functions/_shared/wic/throwing/catchPlay";
 
 export type EassSport = "baseball" | "softball";
 export type EassPosition =
@@ -472,10 +472,11 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
       ...(isSoftball ? BAND_PREP_SOFTBALL_WINDMILL : BAND_PREP_BASEBALL).map((d) => ({
         ...d, dosage: d.dosage.replace(/2x/g, "1x"), cue: `${d.cue} — recovery pace today`,
       })),
-      { name: "Sub-max catch play", category: "regulation", intensity: "low", overloadClass: "regulation",
-        dosage: "10 min, never past comfortable distance, never past 70% intent",
-        cue: "every throw is a check-in — does it feel the same as the last one?",
-        stopIf: "any sharp pain, twinge, pinch, or velo cliff — stop now and message Hammer" },
+      // Owner Nov 4 r4: never a timed catch play — arm-protected days use the counted light-catch ladder (30–60 ft only).
+      ...lightCatch(isSoftball ? "softball" : "baseball", ctx.ageYears).slice(0, 3).map((r): EassDrill => ({
+        name: r.name, category: "regulation", intensity: "low", overloadClass: "regulation", dosage: r.dosage,
+        cue: "every throw is a check-in — does it feel the same as the last one? Never past 70% intent.",
+        stopIf: "any sharp pain, twinge, pinch, or velo cliff — stop now and message Hammer" })),
       ...COOLDOWN_UNIVERSAL,
     ];
     return {

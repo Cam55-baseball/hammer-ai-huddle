@@ -585,6 +585,52 @@ const handler = async (req: Request): Promise<Response> => {
       user = authUser;
     }
 
+    // Owner Nov 4 r4: NO DRIFT AFTER RULE CHANGES. Saved days (today and later) built under an
+    // older PLAN_RULES_VERSION — or saved before the player's newest analyzed throwing/pitching
+    // clip — are rebuilt in the background through the same per-day compose path. One day at a
+    // time, a pause plus an in-flight load check between days; logged/marked days are kept.
+    if (!isServiceCaller && rawBody.rules_version_sweep === true) {
+      const today = typeof rawBody.plan_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawBody.plan_date) ? rawBody.plan_date : todayStr();
+      const { data: st } = await admin.from("profiles").select("hammers_today_started_at").eq("id", user.id).maybeSingle();
+      if (!(st as any)?.hammers_today_started_at) return json({ ok: true, skipped: "not_started", stale: [] }, 200);
+      const { staleSavedDates, PLAN_RULES_VERSION } = await import("../_shared/planRulesVersion.ts");
+      const [snaps, rx, logs, clip] = await Promise.all([
+        admin.from("athlete_plan_snapshots").select("plan_date, payload, updated_at").eq("user_id", user.id).gte("plan_date", today).limit(400),
+        admin.from("wk_prescriptions").select("plan_date, status").eq("user_id", user.id).gte("plan_date", today).limit(5000),
+        admin.from("wk_session_logs").select("plan_date").eq("user_id", user.id).gte("plan_date", today).limit(2000),
+        admin.from("videos").select("created_at").eq("user_id", user.id).in("module", ["throwing", "pitching"]).not("analysis_public", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      ]);
+      if (snaps.error || rx.error || logs.error) return json({ error: "rules_sweep_unavailable" }, 503);
+      const prot = new Set<string>(((logs.data ?? []) as any[]).map((l) => String(l.plan_date)));
+      for (const r of (rx.data ?? []) as any[]) if (r.status && r.status !== "planned" && r.status !== "pending") prot.add(String(r.plan_date));
+      const stale = staleSavedDates((snaps.data ?? []) as any[], { today, protectedDates: prot, latestClipAt: (clip.data as any)?.created_at ?? null });
+      if (!stale.length) return json({ ok: true, rules_version: PLAN_RULES_VERSION, stale: [], kept: [...prot].sort() }, 200);
+      const reason = "Hammer updated your plan to the newest training rules.";
+      const selfCall = (b: Record<string, unknown>) => fetch(`${SUPABASE_URL}/functions/v1/wk-generate-daily`, {
+        method: "POST", headers: { Authorization: authHeader, apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" }, body: JSON.stringify(b),
+      }).then(async (r) => ({ status: r.status, body: await r.json().catch(() => null) as any })).catch(() => ({ status: 0, body: null as any }));
+      const result = { rebuilt: [] as string[], kept: [] as string[], failed: [] as string[] };
+      const work = (async () => {
+        for (const date of stale) {
+          // Load check between days: wait while this instance is busy (max ~30 s), then a short pause.
+          for (let w = 0; w < 15 && inFlight > 2; w++) await new Promise((ok) => setTimeout(ok, 2_000));
+          await new Promise((ok) => setTimeout(ok, 1_000));
+          const key = `rules-v${PLAN_RULES_VERSION}:${date}`;
+          let r = await selfCall({ plan_date: date, compose_sport_day: true, change_reason: "player_request", change_text: reason, change_key: key });
+          if (r.status === 429) { await new Promise((ok) => setTimeout(ok, 20_000)); r = await selfCall({ plan_date: date, compose_sport_day: true, change_reason: "player_request", change_text: reason, change_key: `${key}:retry` }); }
+          if (r.body?.error === "adjust_failed" && /changed/i.test(String(r.body?.message ?? "")) || /changed; rebuild/i.test(String(r.body?.error ?? ""))) r = await selfCall({ plan_date: date, compose_sport_day: true, change_reason: "player_request", change_text: reason, change_key: `${key}:fresh` });
+          if (r.body?.error === "adjust_failed" && /protected/i.test(String(r.body?.message ?? ""))) result.kept.push(date);
+          else if (r.body?.ok === true) result.rebuilt.push(date);
+          else result.failed.push(date);
+        }
+        try { await admin.from("wk_daily_plan_runs").insert({ user_id: user.id, plan_date: today, mode: "rules_sweep", outcome: result.failed.length ? "failed" : "built", error_text: result.failed.length ? `failed: ${result.failed.join(",")}` : `rebuilt ${result.rebuilt.length}, kept ${result.kept.length}`, duration_ms: 0 }); } catch { /* log only */ }
+      })();
+      const rt = (globalThis as any).EdgeRuntime;
+      if (typeof rt?.waitUntil === "function") { rt.waitUntil(work); return json({ ok: true, background: true, rules_version: PLAN_RULES_VERSION, stale }, 202); }
+      await work;
+      return json({ ok: true, rules_version: PLAN_RULES_VERSION, stale, ...result }, 200);
+    }
+
     // Owner Nov 3 item 1: the answer is already saved; the seven-day rebuild runs here
     // in the background (survives the player leaving the app) through the exact same
     // per-day compose path, one day at a time (the day-lock forbids overlapping days).
