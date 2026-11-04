@@ -16,6 +16,8 @@ import { CoachSearchConnect } from '@/components/connections/CoachSearchConnect'
 import { FolderPermissionMatrix } from '@/components/connections/FolderPermissionMatrix';
 import { BlockUserDialog } from '@/components/safety/BlockUserDialog';
 import { describeRequest } from '@/pages/Requests';
+import { useScoutAccess } from '@/hooks/useScoutAccess';
+import { CoachConnectionsView } from '@/components/connections/CoachConnectionsView';
 
 type Req = {
   id: string; kind: string; incoming: boolean; can_answer: boolean; other_name: string;
@@ -53,6 +55,7 @@ function Avatar({ name, url }: { name: string; url?: string | null }) {
 export default function MyConnections() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const { isCoach, loading: roleLoading } = useScoutAccess();
   const [showSearch, setShowSearch] = useState(false);
   const [blockTarget, setBlockTarget] = useState<{ id: string; name: string } | null>(null);
   const navigate = useNavigate();
@@ -226,6 +229,9 @@ export default function MyConnections() {
           <CoachSearchConnect onRequestSent={() => { refresh(); setShowSearch(false); }} />
         )}
 
+        {roleLoading ? null : isCoach ? (
+          <CoachConnectionsView requests={list as any} answering={answer.isPending} onAnswer={(id, accept) => answer.mutate({ id, accept })} />
+        ) : (
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="requests">Requests{waiting.length > 0 ? ` (${waiting.length})` : ''}</TabsTrigger>
@@ -400,6 +406,7 @@ export default function MyConnections() {
             </Button>
           </TabsContent>
         </Tabs>
+        )}
 
         {blockTarget && (
           <BlockUserDialog
