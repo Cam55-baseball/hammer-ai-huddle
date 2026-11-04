@@ -34,6 +34,10 @@ export interface VaultExercise {
   warmup_stage?: number | null;
   /** Optional fine-tuning order inside the stage (1 = first). */
   warmup_stage_order?: number | null;
+  /** Owner Part D: warm-up level tags (youth, high_school, college, pro). */
+  fit_levels?: string[];
+  /** Owner Part D: warm-up age-band tags (u13, 13_17, 18_plus). */
+  fit_age_bands?: string[];
   /** Existing same-category catalog slug whose Swap family this item joins (owner-confirmed). */
   swap_like?: string | null;
   /** Video-analysis issue tags this item addresses. */
@@ -121,6 +125,8 @@ export function validateExercise(e: VaultExercise, opts?: { isNew?: boolean }): 
     if (!(typeof st === "number" && Number.isInteger(st) && st >= 0 && st <= 9)) out.push("Pick a warm-up stage (every warm-up movement needs one).");
     const o = e.warmup_stage_order;
     if (o != null && !(Number.isInteger(o) && o >= 1)) out.push("Order within stage must be a whole number from 1.");
+    if (Array.isArray(e.fit_levels) && e.fit_levels.length === 0) out.push("Tick at least one level this warm-up fits.");
+    if (Array.isArray(e.fit_age_bands) && e.fit_age_bands.length === 0) out.push("Tick at least one age band this warm-up fits.");
   }
   if (!e.sports.length) out.push("Pick at least one sport.");
   if (!e.season_phases.length) out.push("Pick at least one season phase.");
