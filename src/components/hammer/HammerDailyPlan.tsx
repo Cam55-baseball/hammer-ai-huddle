@@ -42,6 +42,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CatchPlayCheckPanel, useCatchPlayCheck } from '@/components/hammer/CatchPlayCheckPanel';
 import { applyCatchPlayCheck, positionDistanceFromWarmup } from '@/lib/hammer/catchPlayCheck';
+import { drillsToSteps } from '@/lib/hammer/prescription/dailyPlan';
 import { ArmStrengthUnlockPrompt } from '@/components/hammer/ArmStrengthUnlockPrompt';
 import { fuelPlanToday, type SavedTargets } from "@/lib/hammer/fuelPlanToday";
 import { refreshWarmupStageOverrides } from "@/lib/hammer/prescription/warmupStages";

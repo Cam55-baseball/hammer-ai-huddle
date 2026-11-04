@@ -367,7 +367,7 @@ function goalLine(proj: AthleteContextProjection): string | null {
     : `Goal: ${proj.goalSummary}.`;
 }
 
-function drillsToSteps(drills: ReadonlyArray<DrillStep>): string[] {
+export function drillsToSteps(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) =>
     d.setup ? `${d.name} — ${d.dosage} (${d.setup})` : `${d.name} — ${d.dosage}`,
   );
