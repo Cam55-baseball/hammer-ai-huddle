@@ -97,6 +97,11 @@ export const DEFAULT_CATCH_PLAY_STANDARDS: CatchPlayStandards = {
   armRiskFaults: PROPOSED_ARM_RISK_FAULTS,
 };
 
+let activeStandards: CatchPlayStandards | null = null;
+/** The owner's saved standards, once loaded (defaults until then). */
+export function setActiveCatchPlayStandards(raw: unknown) { activeStandards = catchPlayStandardsFrom(raw); }
+export function activeCatchPlayStandards(): CatchPlayStandards { return activeStandards ?? DEFAULT_CATCH_PLAY_STANDARDS; }
+
 const num = (v: unknown, d: number, lo = 0, hi = 1000) => (typeof v === "number" && Number.isFinite(v) && v >= lo && v <= hi ? v : d);
 
 /** Merge a saved owner setting over the defaults; any bad value keeps the default. */
@@ -388,7 +393,7 @@ function done(kind: CPDayKind, rows: CatchPlayRow[], pd: number, because: string
 }
 
 export function catchPlayDay(i: CatchPlayDayInput): CatchPlayDay {
-  const s = i.standards ?? DEFAULT_CATCH_PLAY_STANDARDS;
+  const s = i.standards ?? activeCatchPlayStandards();
   const pd = positionDistance(i.sport, i.position, i.age, s);
   if (i.restDay) return done("none", [], pd, ["Rest day — no throwing."]);
   if (i.gameToday) return done("light", lightCatch(i.sport, i.age).slice(0, 3), pd, ["Game today — save the real throws for the game."]);
