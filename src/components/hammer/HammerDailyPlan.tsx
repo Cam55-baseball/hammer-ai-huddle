@@ -40,6 +40,7 @@ import { DayCommandCenter, PrescribedOrderLine, TodayRhythmProvider } from "@/co
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ArmStrengthUnlockPrompt } from '@/components/hammer/ArmStrengthUnlockPrompt';
 import { fuelPlanToday, type SavedTargets } from "@/lib/hammer/fuelPlanToday";
 import { refreshWarmupStageOverrides } from "@/lib/hammer/prescription/warmupStages";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
@@ -1137,7 +1138,7 @@ function HammerDailyPlanBody({
           // Exact module route only: arm care/throwing must not invent a pitching session.
           const module = new URL(b.route, window.location.origin).searchParams.get("module");
           return module === "hitting" || module === "pitching" || module === "throwing" ? [module] : [];
-        })} /></Bys>
+        })} /><ArmStrengthUnlockPrompt throwingToday={plan.blocks.some(b => prescribedToday(b) && /throw|catch play|long toss/i.test(`${b.title ?? ''} ${b.route ?? ''}`))} /></Bys>
         {/* 6. Non-physical prescribed blocks: mental / vision work + eating plan */}
         <Bys id="non_physical">{plan.blocks
           .filter((b) => PRE_START_MODALITIES.has(b.modality) && (b.modality === 'fueling' || prescribedToday(b)) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES))

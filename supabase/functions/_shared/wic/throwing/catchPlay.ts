@@ -356,14 +356,17 @@ export function earnStatus(i: ArmEarnInput, s = DEFAULT_CATCH_PLAY_STANDARDS): E
   if ((i.redCheckinDates ?? []).some((d) => within(d, s.regressDays))) reasons.push("You had a red check-in this week.");
   const a = i.lastThrowingAnalysis;
   let unlockMessage: string | null = null;
-  if (!a) { unlockMessage = "Record one throwing clip to unlock arm-strength days."; reasons.push("No throwing clip on file."); }
-  else if (!within(a.date, s.analysisFreshDays)) { unlockMessage = "Record a new throwing clip to unlock arm-strength days."; reasons.push(`Your last throwing clip is older than ${s.analysisFreshDays} days.`); }
+  // Owner Nov 4: a missing/stale clip only holds arm-strength days; long toss stays earnable.
+  let clipReady = true;
+  if (!a) { unlockMessage = "Record one throwing clip to unlock arm-strength days."; clipReady = false; }
+  else if (!within(a.date, s.analysisFreshDays)) { unlockMessage = "Record one throwing clip to unlock arm-strength days."; clipReady = false; }
   else if (a.faultKeys.some((k) => s.armRiskFaults.includes(k))) reasons.push("Your last throwing clip showed an arm-risk mechanics finding. Clean it up first.");
   const healthyAndClean = reasons.length === 0 && !regressed;
   const green = (i.sessions ?? []).length > 0 && greenStreakAt(i.sessions ?? [], i.positionDistanceFt) >= greenNeeded(i.age, s);
+  if (healthyAndClean && !clipReady) reasons.push(a ? `Your last throwing clip is older than ${s.analysisFreshDays} days.` : "No throwing clip on file yet.");
   if (healthyAndClean && !green) reasons.push("Finish full catch play to your position distance pain-free two sessions in a row.");
   if (regressed) reasons.unshift("Back to standard catch play for at least 1 week, then earn it again.");
-  return { longToss: healthyAndClean, armStrength: healthyAndClean && green, regressed, reasons, unlockMessage };
+  return { longToss: healthyAndClean, armStrength: healthyAndClean && green && clipReady, regressed, reasons, unlockMessage };
 }
 
 // ------------------------------------------------------------------ THE DAY
