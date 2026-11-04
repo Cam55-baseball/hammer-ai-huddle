@@ -1022,6 +1022,13 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           ? false : pitchingType ? ['bullpen','side','long_toss'].includes(pitchingType) : sched.isThrowingDay ?? !sched.isGameDay,
         isRecoveryDay: !!sched.isRecoveryDay || recoverDay || !!pitcherOutings?.pitchedYesterday || pitchingType === 'flush' || pitchingType === 'rest',
         readinessScore,
+        // Owner Nov 4 r3 Part B: catch play in throws. Earning facts not on file stay "not earned".
+        catchPlay: {
+          rawPosition: typeof pos === "string" ? pos : null,
+          gameTomorrow: !!gameTomorrow,
+          gameYesterday: !!pitcherOutings?.pitchedYesterday,
+          trainingDayIndex: planDate ? (new Date(`${planDate}T12:00:00Z`).getUTCDay() + 6) % 7 : -1,
+        },
       };
 
       const eass = buildEassPrescription(eassCtx);
