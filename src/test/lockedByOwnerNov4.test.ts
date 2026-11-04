@@ -35,7 +35,7 @@ describe("locked by owner Nov 4 — (1) owner-only 5Tool planning rule", () => {
 
 const toSteps = (d: readonly { name: string }[]) => d.map((x) => x.name);
 const posDay = () => [
-  { modality: "warmup", status: "ready", title: "Warm-up", steps: [], drills: [{ name: "Tissue prep 1" }, { name: "Warm-up throws — easy to building", cue: "Log these on your Throwing card." }] },
+  { modality: "warmup", status: "ready", title: "Warm-up", steps: [], drills: [{ name: "Tissue prep 1" }, { name: "Warm-up throws — easy to building", dosage: "10 throws", cue: "Log these on your Throwing card." }] },
   { modality: "throwing", status: "ready", title: "Throwing — position work within your shared arm budget", steps: [], drills: [
     { name: "Long-toss extension", dosage: "~15 throws" },
     { name: "Regulation extension toss", dosage: "to 90ft x 12 throws" },
