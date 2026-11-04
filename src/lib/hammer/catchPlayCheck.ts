@@ -1,7 +1,7 @@
 import { inSessionDefenseGate, type CatchPlayCheck } from "../../../supabase/functions/_shared/wic/throwing/catchPlay";
 
 type DrillLike = { name: string; dosage?: string | null; armEvent?: unknown; throwSection?: boolean };
-type BlockLike = { modality: string; drills: readonly DrillLike[]; because: readonly string[]; steps?: unknown };
+type BlockLike = { modality: string; drills: readonly DrillLike[]; because?: readonly string[]; steps?: unknown };
 
 /** Position distance today = farthest regular catch-play row in the warm-up throw section. */
 export function positionDistanceFromWarmup(drills: readonly DrillLike[]): number | null {
@@ -17,6 +17,6 @@ export function applyCatchPlayCheck<B extends BlockLike>(blocks: readonly B[], c
   return blocks.map((b) => {
     if (b.modality !== "defense") return b;
     const drills = b.drills.filter((d) => !(/throw|toss/i.test(`${d.name} ${d.dosage ?? ""}`) || d.armEvent));
-    return { ...b, drills: drills as B["drills"], ...(toSteps ? { steps: toSteps(drills) } : {}), because: b.because.includes(gate.because!) ? b.because : [...b.because, gate.because!] } as B;
+    return { ...b, drills: drills as B["drills"], ...(toSteps ? { steps: toSteps(drills) } : {}), because: (b.because ?? []).includes(gate.because!) ? b.because : [...(b.because ?? []), gate.because!] } as B;
   });
 }
