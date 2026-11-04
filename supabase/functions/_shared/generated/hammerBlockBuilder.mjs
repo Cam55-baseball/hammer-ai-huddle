@@ -3,6 +3,321 @@ var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
 
+// supabase/functions/_shared/wic/throwing/catchPlay.ts
+function setActiveCatchPlayStandards(raw) {
+  activeStandards = catchPlayStandardsFrom(raw);
+}
+function activeCatchPlayStandards() {
+  return activeStandards ?? DEFAULT_CATCH_PLAY_STANDARDS;
+}
+function catchPlayStandardsFrom(raw) {
+  const d3 = DEFAULT_CATCH_PLAY_STANDARDS;
+  const r = raw && typeof raw === "object" ? raw : {};
+  const pos = (s) => Object.fromEntries(["1B", "IF", "C", "OF"].map((p) => [p, num(r.positionDistanceFt?.[s]?.[p], d3.positionDistanceFt[s][p], 30, 400)]));
+  const cap = (s) => ({ IF: num(r.maxDistanceCapFt?.[s]?.IF, d3.maxDistanceCapFt[s].IF, 60, 400), OF: num(r.maxDistanceCapFt?.[s]?.OF, d3.maxDistanceCapFt[s].OF, 60, 400) });
+  const phase = (k, hi) => Object.fromEntries(["off", "pre", "in", "post"].map((p) => [p, num(r[k]?.[p], d3[k][p], 0, hi)]));
+  const pd = Object.fromEntries(Object.entries(d3.pullDowns).map(([k, v]) => [k, num(r.pullDowns?.[k], v, 0, 30)]));
+  return {
+    version: 1,
+    positionDistanceFt: { baseball: pos("baseball"), softball: pos("softball") },
+    maxDistanceCapFt: { baseball: cap("baseball"), softball: cap("softball") },
+    youthMaxDistanceFt: { under11: num(r.youthMaxDistanceFt?.under11, d3.youthMaxDistanceFt.under11, 60, 200), age11to12: num(r.youthMaxDistanceFt?.age11to12, d3.youthMaxDistanceFt.age11to12, 60, 200) },
+    // Owner rule ceilings: long toss pre ≤3, in ≤2; arm strength off/pre ≤2, in ≤1.
+    longTossPerWeek: (() => {
+      const p = phase("longTossPerWeek", 3);
+      return { ...p, in: Math.min(p.in, 2) };
+    })(),
+    armStrengthPerWeek: (() => {
+      const p = phase("armStrengthPerWeek", 2);
+      return { ...p, in: Math.min(p.in, 1) };
+    })(),
+    pullDowns: { ...pd, adultMax: Math.min(pd.adultMax, 15), youthMax: Math.min(pd.youthMax, 5) },
+    greenSessions: num(r.greenSessions, d3.greenSessions, 1, 10),
+    youthGreenMultiplier: num(r.youthGreenMultiplier, d3.youthGreenMultiplier, 1, 5),
+    buildUpLayoffDays: num(r.buildUpLayoffDays, d3.buildUpLayoffDays, 3, 120),
+    buildUpHealedWithinDays: num(r.buildUpHealedWithinDays, d3.buildUpHealedWithinDays, 0, 180),
+    healthyCheckinDays: num(r.healthyCheckinDays, d3.healthyCheckinDays, 7, 60),
+    analysisFreshDays: num(r.analysisFreshDays, d3.analysisFreshDays, 14, 365),
+    regressDays: Math.max(7, num(r.regressDays, d3.regressDays, 7, 60)),
+    armRiskFaults: Array.isArray(r.armRiskFaults) ? r.armRiskFaults.filter((x) => typeof x === "string") : d3.armRiskFaults
+  };
+}
+function ageBand(age) {
+  if (age == null) return "adult";
+  return age < 13 ? "youth" : age <= 18 ? "teen" : "adult";
+}
+function cpPosition(raw) {
+  const p = (raw ?? "").toUpperCase();
+  if (/^(P|SP|RP|PITCHER)$/.test(p)) return "P";
+  if (/^(1B|FIRST)/.test(p)) return "1B";
+  if (/^C$|CATCH/.test(p)) return "C";
+  if (/^(LF|CF|RF|OF)$|OUTFIELD/.test(p)) return "OF";
+  return "IF";
+}
+function positionDistance(sport, pos, age, s = DEFAULT_CATCH_PLAY_STANDARDS) {
+  const base2 = s.positionDistanceFt[sport][pos === "P" ? "IF" : pos];
+  if (ageBand(age) !== "youth") return base2;
+  return Math.min(base2, (age ?? 12) < 11 ? 90 : 120);
+}
+function standardLadder(sport, pos, age, s = DEFAULT_CATCH_PLAY_STANDARDS) {
+  const youth = ageBand(age) === "youth";
+  const pd = positionDistance(sport, pos, age, s);
+  const L = LADDER[sport];
+  const out = [row(`Catch play \u2014 feel (${sport === "baseball" ? "30\u201345" : "30"} ft)`, L.feel, youth ? 5 : 10, "feel")];
+  const build = L.build.filter((ft) => ft < pd);
+  const perBuild = youth ? 5 : sport === "softball" ? 5 : 10;
+  for (const ft of build) out.push(row(`Catch play \u2014 build to ${ft} ft`, ft, perBuild, "build"));
+  out.push(row(`Catch play \u2014 your position distance (${pd} ft)`, pd, youth ? 6 : 9, "position", "moderate"));
+  out.push(row(`Catch play \u2014 come back in (${L.comeIn} ft)`, L.comeIn, youth ? 4 : 5, "come_in"));
+  return out;
+}
+function lightCatch(sport, age) {
+  const ft = sport === "baseball" ? [30, 45, 60, 75, 90] : [30, 45, 60, 60, 75];
+  const n = [5, 5, 10, 5, 10];
+  const youth = ageBand(age) === "youth";
+  return ft.map((d3, i) => row(`Light catch \u2014 ${d3} ft`, d3, youth ? Math.ceil(n[i] / 2) : n[i], "build", "low", "catch-light"));
+}
+function pitcherIntervalWarmup(sport) {
+  if (sport === "softball") return [30, 45, 60, 75, 90].map((d3, i) => row(`Interval warm-up catch \u2014 ${d3} ft (overhand)`, d3, i < 2 ? 5 : 10, "interval"));
+  return [
+    row("Interval warm-up catch \u2014 30 ft", 30, 5, "interval"),
+    row("Interval warm-up catch \u2014 45 ft", 45, 5, "interval"),
+    row("Interval warm-up catch \u2014 60 ft", 60, 10, "interval"),
+    row("Interval warm-up catch \u2014 75 ft", 75, 10, "interval"),
+    row("Interval warm-up catch \u2014 90 ft", 90, 10, "interval"),
+    row("Interval warm-up catch \u2014 120 ft", 120, 10, "interval", "moderate"),
+    row("Interval warm-up catch \u2014 90-ft pull-downs", 90, 5, "pull_down", "high"),
+    row("Interval warm-up catch \u2014 60-ft flat ground", 60, 10, "interval", "moderate")
+  ];
+}
+function maxDistance(sport, pos, age, p, s = DEFAULT_CATCH_PLAY_STANDARDS) {
+  const band = ageBand(age);
+  const cap = band === "youth" ? Number.POSITIVE_INFINITY : s.maxDistanceCapFt[sport][pos === "OF" ? "OF" : "IF"];
+  const pd = positionDistance(sport, pos, age, s);
+  const steps = Math.ceil(Math.max(0, p.greenWeeks) / 2);
+  return Math.min(cap, pd + 30 + steps * 15);
+}
+function pullDownCount(age, p, s = DEFAULT_CATCH_PLAY_STANDARDS) {
+  const band = ageBand(age);
+  const steps = Math.floor(Math.max(0, p.greenWeeks) / 2);
+  if (band === "youth") return Math.min(s.pullDowns.youthMax, s.pullDowns.youthMin + steps);
+  if (band === "teen") return Math.min(s.pullDowns.teenMax, s.pullDowns.teenStart + steps * s.pullDowns.stepPerGreenWeek);
+  return Math.min(s.pullDowns.adultMax, s.pullDowns.adultStart + steps * s.pullDowns.stepPerGreenWeek);
+}
+function pullDowns(from, to, total, youth) {
+  const out = [];
+  let left = total;
+  for (let ft = from; ft >= to && left > 0; ft -= 15) {
+    const n = Math.min(left, youth ? 3 : 5);
+    out.push(row(`Long toss pull-downs on a line \u2014 ${ft} ft`, ft, n, "pull_down", youth ? "moderate" : "high", youth ? "sub-max" : ""));
+    left -= n;
+  }
+  return out;
+}
+function longTossDay(sport, pos, age, p, s = DEFAULT_CATCH_PLAY_STANDARDS) {
+  const youth = ageBand(age) === "youth";
+  const max = maxDistance(sport, pos, age, p, s);
+  const pd = positionDistance(sport, pos, age, s);
+  const base2 = standardLadder(sport, pos, age, s).filter((r) => r.part !== "come_in");
+  const stretch = row(`Long toss \u2014 stretch out with arc to ${max} ft`, max, youth ? 6 : 9, "stretch_out", "moderate");
+  const pulls = pullDowns(max - 15, pd, youth ? Math.min(5, pullDownCount(age, p, s)) : 12, youth);
+  return [...base2, stretch, ...pulls, row(`Catch play \u2014 come back in (${LADDER[sport].comeIn} ft easy)`, LADDER[sport].comeIn, 5, "come_in")];
+}
+function armStrengthDay(sport, pos, age, p, s = DEFAULT_CATCH_PLAY_STANDARDS) {
+  const band = ageBand(age);
+  const max = maxDistance(sport, pos, age, p, s);
+  const pd = positionDistance(sport, pos, age, s);
+  const base2 = standardLadder(sport, pos, age, s).filter((r) => r.part !== "come_in");
+  const stretch = row(`Long toss (arm strength) \u2014 stretch out with arc to ${max} ft`, max, band === "youth" ? 8 : band === "teen" ? 10 : 12, "stretch_out", "moderate");
+  const pulls = pullDowns(max - 15, Math.min(pd, 60), pullDownCount(age, p, s), band === "youth");
+  return [...base2, stretch, ...pulls, row(`Catch play \u2014 come back in (${LADDER[sport].comeIn} ft easy)`, LADDER[sport].comeIn, 5, "come_in")];
+}
+function greenNeeded(age, s = DEFAULT_CATCH_PLAY_STANDARDS) {
+  return ageBand(age) === "adult" ? s.greenSessions : s.greenSessions * s.youthGreenMultiplier;
+}
+function greenStreakAt(sessions, ft) {
+  let n = 0;
+  for (const x of [...sessions].sort((a, b) => b.date.localeCompare(a.date))) {
+    if (x.painFree && x.armFeelGood && x.maxDistanceFt >= ft) n++;
+    else break;
+  }
+  return n;
+}
+function buildUpDistance(sport, pos, age, sessions, since, s = DEFAULT_CATCH_PLAY_STANDARDS) {
+  const steps = BUILD_UP_STEPS[sport][pos === "OF" ? "OF" : "IF"].filter((ft) => ft <= Math.max(positionDistance(sport, pos, age, s), 45));
+  const recent = sessions.filter((x) => x.date >= since);
+  const need = greenNeeded(age, s);
+  let i = 0;
+  while (i < steps.length - 1 && greenStreakAt(recent, steps[i]) >= need) i++;
+  return steps[i];
+}
+function buildUpRows(sport, distanceFt, age) {
+  const youth = ageBand(age) === "youth";
+  const L = LADDER[sport];
+  const out = [row(`Build-up catch \u2014 feel (${L.feel} ft)`, Math.min(L.feel, distanceFt), youth ? 5 : 10, "feel")];
+  for (const ft of [...L.build].filter((f) => f < distanceFt)) out.push(row(`Build-up catch \u2014 ${ft} ft`, ft, 5, "build"));
+  if (distanceFt > L.feel) out.push(row(`Build-up catch \u2014 today's top step (${distanceFt} ft)`, distanceFt, youth ? 5 : 8, "position", "low", "easy, pain-free"));
+  return out;
+}
+function earnStatus(i, s = DEFAULT_CATCH_PLAY_STANDARDS) {
+  const reasons = [];
+  const within = (d3, days) => d3 <= i.today && dayDiff(i.today, d3) < days;
+  const regressed = [...i.armFlagDates ?? [], ...i.redCheckinDates ?? [], ...i.armRiskFindingDates ?? []].some((d3) => within(d3, s.regressDays));
+  if (i.armFlagDates == null || i.armFeelGood == null) reasons.push("We don't have your recent arm check-ins yet.");
+  else if (i.armFlagDates.some((d3) => within(d3, s.healthyCheckinDays))) reasons.push(`You flagged arm pain or tightness in the last ${s.healthyCheckinDays} days.`);
+  else if (!i.armFeelGood) reasons.push("Your arm feel isn't good today.");
+  if ((i.redCheckinDates ?? []).some((d3) => within(d3, s.regressDays))) reasons.push("You had a red check-in this week.");
+  const a = i.lastThrowingAnalysis;
+  let unlockMessage = null;
+  let clipReady = true;
+  if (!a) {
+    unlockMessage = "Record one throwing clip to unlock arm-strength days.";
+    clipReady = false;
+  } else if (!within(a.date, s.analysisFreshDays)) {
+    unlockMessage = "Record one throwing clip to unlock arm-strength days.";
+    clipReady = false;
+  } else if (a.faultKeys.some((k) => s.armRiskFaults.includes(k))) reasons.push("Your last throwing clip showed an arm-risk mechanics finding. Clean it up first.");
+  const healthyAndClean = reasons.length === 0 && !regressed;
+  const green = (i.sessions ?? []).length > 0 && greenStreakAt(i.sessions ?? [], i.positionDistanceFt) >= greenNeeded(i.age, s);
+  if (healthyAndClean && !clipReady) reasons.push(a ? `Your last throwing clip is older than ${s.analysisFreshDays} days.` : "No throwing clip on file yet.");
+  if (healthyAndClean && !green) reasons.push("Finish full catch play to your position distance pain-free two sessions in a row.");
+  if (regressed) reasons.unshift("Back to standard catch play for at least 1 week, then earn it again.");
+  return { longToss: healthyAndClean, armStrength: healthyAndClean && green && clipReady, regressed, reasons, unlockMessage };
+}
+function done(kind, rows3, pd, because = []) {
+  return { kind, rows: rows3, totalThrows: rows3.reduce((n, r) => n + r.throws, 0), reachesPositionDistance: rows3.some((r) => r.distanceFt >= pd && r.part !== "pull_down"), because };
+}
+function catchPlayDay(i) {
+  const s = i.standards ?? activeCatchPlayStandards();
+  const pd = positionDistance(i.sport, i.position, i.age, s);
+  if (i.restDay) return done("none", [], pd, ["Rest day \u2014 no throwing."]);
+  if (i.gameToday) return done("light", lightCatch(i.sport, i.age).slice(0, 3), pd, ["Game today \u2014 save the real throws for the game."]);
+  if (i.buildUp?.active) {
+    const rows3 = buildUpRows(i.sport, i.buildUp.distanceFt, i.age);
+    const b = rows3.some((r) => r.distanceFt >= pd) ? [] : [`You're building your arm back up (today's top step is ${i.buildUp.distanceFt} ft). Defense stays dry until catch play reaches ${pd} ft two sessions in a row.`];
+    return done("build_up", rows3, pd, b);
+  }
+  if (i.lowReadiness || i.gameYesterday || i.heavyYesterday) {
+    return done("light", lightCatch(i.sport, i.age), pd, [i.lowReadiness ? "Low readiness today \u2014 light catch only." : "Day after a game or heavy day \u2014 light catch only."]);
+  }
+  if (i.isPitcher) {
+    if (i.pitcherDay === "bullpen") return done("pitcher_interval", pitcherIntervalWarmup(i.sport), pd);
+    const starterLT = i.pitcherRole === "starter" && i.pitcherDay === "long_toss";
+    const pen = i.pitcherRole !== "starter" && i.phase === "off" && i.trainingDayIndex === 2;
+    const blocked = i.pitcherDay === "start_tomorrow" || i.pitcherDay === "start_in_2" || i.highIntentAdjacent;
+    if ((starterLT || pen) && !blocked && i.earn.armStrength && s.armStrengthPerWeek[i.phase] > 0) return done("arm_strength", armStrengthDay(i.sport, i.position, i.age, i.progress, s), pd);
+    if (starterLT && i.earn.longToss) return done("long_toss", longTossDay(i.sport, i.position, i.age, i.progress, s), pd);
+    return done("standard", standardLadder(i.sport, i.position, i.age, s), pd, i.earn.unlockMessage ? [i.earn.unlockMessage] : []);
+  }
+  const slots = LT_SLOTS[Math.min(3, s.longTossPerWeek[i.phase])] ?? [];
+  const isSlot = slots.includes(i.trainingDayIndex);
+  const adjacentGame = i.gameTomorrow || i.gameYesterday;
+  if (isSlot && !adjacentGame && !i.highIntentAdjacent) {
+    const asSlots = slots.slice(0, Math.min(s.armStrengthPerWeek[i.phase], ageBand(i.age) === "youth" ? 1 : 2));
+    if (asSlots.includes(i.trainingDayIndex) && i.earn.armStrength) return done("arm_strength", armStrengthDay(i.sport, i.position, i.age, i.progress, s), pd);
+    if (i.earn.longToss) return done("long_toss", longTossDay(i.sport, i.position, i.age, i.progress, s), pd);
+    return done("standard", standardLadder(i.sport, i.position, i.age, s), pd, i.earn.reasons.slice(0, 1).concat(i.earn.unlockMessage ? [i.earn.unlockMessage] : []).filter((x, k, a) => a.indexOf(x) === k));
+  }
+  return done("standard", standardLadder(i.sport, i.position, i.age, s), pd);
+}
+function defenseThrowsAllowed(day2, budgetThrowsLeft) {
+  if (day2.kind === "none") return { allowed: false, because: "Rest day \u2014 no throwing." };
+  if (!day2.reachesPositionDistance) return { allowed: false, because: day2.because[0] ?? "Today's catch play doesn't reach your position distance, so Defense is reads, hands and footwork only." };
+  if (budgetThrowsLeft != null && budgetThrowsLeft < day2.totalThrows) return { allowed: false, because: "Full catch play doesn't fit today's throw limit, so Defense is reads, hands and footwork only." };
+  return { allowed: true, because: null };
+}
+function catchPlayPlanInputs(f, p, s = activeCatchPlayStandards()) {
+  const pd = positionDistance(p.sport, p.position, p.age, s);
+  const back = (d3) => dayDiff(p.today, d3);
+  const past = (d3) => d3 < p.today || d3 === p.today;
+  const recentSessions = f.sessions.filter((x) => x.date < p.today && back(x.date) <= 28);
+  const checkins = f.checkins?.filter((c) => past(c.date) && back(c.date) <= 28) ?? null;
+  const latest = checkins ? [...checkins].sort((a, b) => b.date.localeCompare(a.date))[0] : void 0;
+  const armFeelGood = latest && back(latest.date) <= 3 ? !latest.armFlag && (latest.readiness == null || latest.readiness >= RED_READINESS) : null;
+  const clips = f.clips.filter((c) => past(c.date)).sort((a, b) => b.date.localeCompare(a.date));
+  const earn = earnStatus({
+    today: p.today,
+    age: p.age,
+    armFlagDates: checkins ? checkins.filter((c) => c.armFlag).map((c) => c.date) : void 0,
+    redCheckinDates: checkins ? checkins.filter((c) => c.readiness != null && c.readiness < RED_READINESS).map((c) => c.date) : [],
+    armFeelGood,
+    lastThrowingAnalysis: clips[0] ?? null,
+    armRiskFindingDates: clips.filter((c) => c.faultKeys.some((k) => s.armRiskFaults.includes(k))).map((c) => c.date),
+    sessions: recentSessions,
+    positionDistanceFt: pd
+  }, s);
+  const weeks = new Set(f.sessions.filter((x) => back(x.date) <= 56 && x.date < p.today && x.painFree && x.maxDistanceFt >= pd).map((x) => Math.floor(back(x.date) / 7)));
+  const progress = { greenWeeks: weeks.size };
+  const flagged14 = (checkins ?? []).some((c) => c.armFlag && back(c.date) < 14);
+  let throwReady;
+  if (recentSessions.length > 0) {
+    const ok = greenStreakAt(recentSessions, pd) >= greenNeeded(p.age, s);
+    throwReady = ok ? { ready: true, via: "logs", because: `You finished full catch play to ${pd} ft pain-free in your recent sessions.` } : { ready: false, via: null, because: `Finish full catch play to ${pd} ft pain-free ${greenNeeded(p.age, s)} sessions in a row to earn position throws.` };
+  } else if (f.sessions.length === 0 && (f.startingThrowDays ?? 0) > 0 && (f.startingDistanceFt ?? 0) >= pd && !flagged14) {
+    throwReady = { ready: true, via: "starting_answers", because: `Your starting answers say you already throw ${f.startingDistanceFt} ft with no pain.` };
+  } else {
+    throwReady = { ready: false, via: null, because: f.sessions.length ? "You're coming back after a break \u2014 build your catch play back up first." : `New to throwing here \u2014 build catch play up to ${pd} ft first.` };
+  }
+  let buildUp = null;
+  if (!throwReady.ready) {
+    const steps = BUILD_UP_STEPS[p.sport][p.position === "OF" ? "OF" : "IF"].filter((ft) => ft <= Math.max(pd, 45));
+    const fromLogs = buildUpDistance(p.sport, p.position, p.age, recentSessions, isoBack(p.today, 28), s);
+    const fromStart = recentSessions.length === 0 && !flagged14 && (f.startingThrowDays ?? 0) > 0 ? Math.max(steps[0], ...steps.filter((ft) => ft <= (f.startingDistanceFt ?? 0))) : steps[0];
+    buildUp = { active: true, distanceFt: Math.max(fromLogs, fromStart) };
+  }
+  return { earn, progress, buildUp, throwReady };
+}
+var PROPOSED_ARM_RISK_FAULTS, DEFAULT_CATCH_PLAY_STANDARDS, activeStandards, num, row, LADDER, BUILD_UP_STEPS, dayDiff, LT_SLOTS, RED_READINESS, isoBack;
+var init_catchPlay = __esm({
+  "supabase/functions/_shared/wic/throwing/catchPlay.ts"() {
+    PROPOSED_ARM_RISK_FAULTS = [
+      "th_low_elbow_slot",
+      "arm_lag",
+      "th_trunk_rotation_early",
+      "th_front_side_flyout",
+      "th_across_body",
+      "bb_arm_path_late",
+      "bb_trunk_rotation_early",
+      "bb_front_side_flyout",
+      "bb_poor_deceleration",
+      "sb_whip_arm_early",
+      "sb_shoulders_open_early"
+    ];
+    DEFAULT_CATCH_PLAY_STANDARDS = {
+      version: 1,
+      positionDistanceFt: { baseball: { "1B": 120, IF: 120, C: 120, OF: 180 }, softball: { "1B": 90, IF: 120, C: 120, OF: 150 } },
+      maxDistanceCapFt: { baseball: { IF: 180, OF: 250 }, softball: { IF: 150, OF: 200 } },
+      youthMaxDistanceFt: { under11: 120, age11to12: 150 },
+      longTossPerWeek: { off: 2, pre: 3, in: 1, post: 0 },
+      armStrengthPerWeek: { off: 1, pre: 1, in: 1, post: 0 },
+      pullDowns: { adultStart: 5, adultMax: 15, teenStart: 4, teenMax: 10, youthMin: 3, youthMax: 5, stepPerGreenWeek: 2 },
+      greenSessions: 2,
+      youthGreenMultiplier: 3,
+      buildUpLayoffDays: 14,
+      buildUpHealedWithinDays: 28,
+      healthyCheckinDays: 14,
+      analysisFreshDays: 60,
+      regressDays: 7,
+      armRiskFaults: PROPOSED_ARM_RISK_FAULTS
+    };
+    activeStandards = null;
+    num = (v, d3, lo = 0, hi = 1e3) => typeof v === "number" && Number.isFinite(v) && v >= lo && v <= hi ? v : d3;
+    row = (name, distanceFt, throws, part, intent = "low", note = "") => ({ name, distanceFt, throws, part, intent, dosage: `${distanceFt}ft x ${throws} throws${note ? ` \xB7 ${note}` : ""}` });
+    LADDER = {
+      baseball: { feel: 45, build: [60, 90], comeIn: 60 },
+      softball: { feel: 30, build: [45, 60, 75, 90], comeIn: 45 }
+    };
+    BUILD_UP_STEPS = {
+      baseball: { IF: [45, 60, 90, 120], OF: [45, 60, 90, 120, 150, 180] },
+      softball: { IF: [30, 45, 60, 75, 90, 120], OF: [30, 45, 60, 75, 90, 120, 150] }
+    };
+    dayDiff = (a, b) => Math.round((Date.parse(`${a}T12:00:00Z`) - Date.parse(`${b}T12:00:00Z`)) / 864e5);
+    LT_SLOTS = { 0: [], 1: [2], 2: [1, 4], 3: [0, 2, 4] };
+    RED_READINESS = 0.4;
+    isoBack = (d3, n) => new Date(Date.parse(`${d3}T12:00:00Z`) - n * 864e5).toISOString().slice(0, 10);
+  }
+});
+
 // src/lib/hammer/prescription/warmupStages.ts
 function loadOverrides() {
   if (overrides) return overrides;
@@ -1609,193 +1924,6 @@ var init_ownerPlanDrills = __esm({
   }
 });
 
-// supabase/functions/_shared/wic/throwing/catchPlay.ts
-function activeCatchPlayStandards() {
-  return activeStandards ?? DEFAULT_CATCH_PLAY_STANDARDS;
-}
-function ageBand(age) {
-  if (age == null) return "adult";
-  return age < 13 ? "youth" : age <= 18 ? "teen" : "adult";
-}
-function cpPosition(raw) {
-  const p = (raw ?? "").toUpperCase();
-  if (/^(P|SP|RP|PITCHER)$/.test(p)) return "P";
-  if (/^(1B|FIRST)/.test(p)) return "1B";
-  if (/^C$|CATCH/.test(p)) return "C";
-  if (/^(LF|CF|RF|OF)$|OUTFIELD/.test(p)) return "OF";
-  return "IF";
-}
-function positionDistance(sport, pos, age, s = DEFAULT_CATCH_PLAY_STANDARDS) {
-  const base2 = s.positionDistanceFt[sport][pos === "P" ? "IF" : pos];
-  if (ageBand(age) !== "youth") return base2;
-  return Math.min(base2, (age ?? 12) < 11 ? 90 : 120);
-}
-function standardLadder(sport, pos, age, s = DEFAULT_CATCH_PLAY_STANDARDS) {
-  const youth = ageBand(age) === "youth";
-  const pd = positionDistance(sport, pos, age, s);
-  const L = LADDER[sport];
-  const out = [row(`Catch play \u2014 feel (${sport === "baseball" ? "30\u201345" : "30"} ft)`, L.feel, youth ? 5 : 10, "feel")];
-  const build = L.build.filter((ft) => ft < pd);
-  const perBuild = youth ? 5 : sport === "softball" ? 5 : 10;
-  for (const ft of build) out.push(row(`Catch play \u2014 build to ${ft} ft`, ft, perBuild, "build"));
-  out.push(row(`Catch play \u2014 your position distance (${pd} ft)`, pd, youth ? 6 : 9, "position", "moderate"));
-  out.push(row(`Catch play \u2014 come back in (${L.comeIn} ft)`, L.comeIn, youth ? 4 : 5, "come_in"));
-  return out;
-}
-function lightCatch(sport, age) {
-  const ft = sport === "baseball" ? [30, 45, 60, 75, 90] : [30, 45, 60, 60, 75];
-  const n = [5, 5, 10, 5, 10];
-  const youth = ageBand(age) === "youth";
-  return ft.map((d3, i) => row(`Light catch \u2014 ${d3} ft`, d3, youth ? Math.ceil(n[i] / 2) : n[i], "build", "low", "catch-light"));
-}
-function pitcherIntervalWarmup(sport) {
-  if (sport === "softball") return [30, 45, 60, 75, 90].map((d3, i) => row(`Interval warm-up catch \u2014 ${d3} ft (overhand)`, d3, i < 2 ? 5 : 10, "interval"));
-  return [
-    row("Interval warm-up catch \u2014 30 ft", 30, 5, "interval"),
-    row("Interval warm-up catch \u2014 45 ft", 45, 5, "interval"),
-    row("Interval warm-up catch \u2014 60 ft", 60, 10, "interval"),
-    row("Interval warm-up catch \u2014 75 ft", 75, 10, "interval"),
-    row("Interval warm-up catch \u2014 90 ft", 90, 10, "interval"),
-    row("Interval warm-up catch \u2014 120 ft", 120, 10, "interval", "moderate"),
-    row("Interval warm-up catch \u2014 90-ft pull-downs", 90, 5, "pull_down", "high"),
-    row("Interval warm-up catch \u2014 60-ft flat ground", 60, 10, "interval", "moderate")
-  ];
-}
-function maxDistance(sport, pos, age, p, s = DEFAULT_CATCH_PLAY_STANDARDS) {
-  const band = ageBand(age);
-  const cap = band === "youth" ? Number.POSITIVE_INFINITY : s.maxDistanceCapFt[sport][pos === "OF" ? "OF" : "IF"];
-  const pd = positionDistance(sport, pos, age, s);
-  const steps = Math.ceil(Math.max(0, p.greenWeeks) / 2);
-  return Math.min(cap, pd + 30 + steps * 15);
-}
-function pullDownCount(age, p, s = DEFAULT_CATCH_PLAY_STANDARDS) {
-  const band = ageBand(age);
-  const steps = Math.floor(Math.max(0, p.greenWeeks) / 2);
-  if (band === "youth") return Math.min(s.pullDowns.youthMax, s.pullDowns.youthMin + steps);
-  if (band === "teen") return Math.min(s.pullDowns.teenMax, s.pullDowns.teenStart + steps * s.pullDowns.stepPerGreenWeek);
-  return Math.min(s.pullDowns.adultMax, s.pullDowns.adultStart + steps * s.pullDowns.stepPerGreenWeek);
-}
-function pullDowns(from, to, total, youth) {
-  const out = [];
-  let left = total;
-  for (let ft = from; ft >= to && left > 0; ft -= 15) {
-    const n = Math.min(left, youth ? 3 : 5);
-    out.push(row(`Long toss pull-downs on a line \u2014 ${ft} ft`, ft, n, "pull_down", youth ? "moderate" : "high", youth ? "sub-max" : ""));
-    left -= n;
-  }
-  return out;
-}
-function longTossDay(sport, pos, age, p, s = DEFAULT_CATCH_PLAY_STANDARDS) {
-  const youth = ageBand(age) === "youth";
-  const max = maxDistance(sport, pos, age, p, s);
-  const pd = positionDistance(sport, pos, age, s);
-  const base2 = standardLadder(sport, pos, age, s).filter((r) => r.part !== "come_in");
-  const stretch = row(`Long toss \u2014 stretch out with arc to ${max} ft`, max, youth ? 6 : 9, "stretch_out", "moderate");
-  const pulls = pullDowns(max - 15, pd, youth ? Math.min(5, pullDownCount(age, p, s)) : 12, youth);
-  return [...base2, stretch, ...pulls, row(`Catch play \u2014 come back in (${LADDER[sport].comeIn} ft easy)`, LADDER[sport].comeIn, 5, "come_in")];
-}
-function armStrengthDay(sport, pos, age, p, s = DEFAULT_CATCH_PLAY_STANDARDS) {
-  const band = ageBand(age);
-  const max = maxDistance(sport, pos, age, p, s);
-  const pd = positionDistance(sport, pos, age, s);
-  const base2 = standardLadder(sport, pos, age, s).filter((r) => r.part !== "come_in");
-  const stretch = row(`Long toss (arm strength) \u2014 stretch out with arc to ${max} ft`, max, band === "youth" ? 8 : band === "teen" ? 10 : 12, "stretch_out", "moderate");
-  const pulls = pullDowns(max - 15, Math.min(pd, 60), pullDownCount(age, p, s), band === "youth");
-  return [...base2, stretch, ...pulls, row(`Catch play \u2014 come back in (${LADDER[sport].comeIn} ft easy)`, LADDER[sport].comeIn, 5, "come_in")];
-}
-function buildUpRows(sport, distanceFt, age) {
-  const youth = ageBand(age) === "youth";
-  const L = LADDER[sport];
-  const out = [row(`Build-up catch \u2014 feel (${L.feel} ft)`, Math.min(L.feel, distanceFt), youth ? 5 : 10, "feel")];
-  for (const ft of [...L.build].filter((f) => f < distanceFt)) out.push(row(`Build-up catch \u2014 ${ft} ft`, ft, 5, "build"));
-  if (distanceFt > L.feel) out.push(row(`Build-up catch \u2014 today's top step (${distanceFt} ft)`, distanceFt, youth ? 5 : 8, "position", "low", "easy, pain-free"));
-  return out;
-}
-function done(kind, rows3, pd, because = []) {
-  return { kind, rows: rows3, totalThrows: rows3.reduce((n, r) => n + r.throws, 0), reachesPositionDistance: rows3.some((r) => r.distanceFt >= pd && r.part !== "pull_down"), because };
-}
-function catchPlayDay(i) {
-  const s = i.standards ?? activeCatchPlayStandards();
-  const pd = positionDistance(i.sport, i.position, i.age, s);
-  if (i.restDay) return done("none", [], pd, ["Rest day \u2014 no throwing."]);
-  if (i.gameToday) return done("light", lightCatch(i.sport, i.age).slice(0, 3), pd, ["Game today \u2014 save the real throws for the game."]);
-  if (i.buildUp?.active) {
-    const rows3 = buildUpRows(i.sport, i.buildUp.distanceFt, i.age);
-    const b = rows3.some((r) => r.distanceFt >= pd) ? [] : [`You're building your arm back up (today's top step is ${i.buildUp.distanceFt} ft). Defense stays dry until catch play reaches ${pd} ft two sessions in a row.`];
-    return done("build_up", rows3, pd, b);
-  }
-  if (i.lowReadiness || i.gameYesterday || i.heavyYesterday) {
-    return done("light", lightCatch(i.sport, i.age), pd, [i.lowReadiness ? "Low readiness today \u2014 light catch only." : "Day after a game or heavy day \u2014 light catch only."]);
-  }
-  if (i.isPitcher) {
-    if (i.pitcherDay === "bullpen") return done("pitcher_interval", pitcherIntervalWarmup(i.sport), pd);
-    const starterLT = i.pitcherRole === "starter" && i.pitcherDay === "long_toss";
-    const pen = i.pitcherRole !== "starter" && i.phase === "off" && i.trainingDayIndex === 2;
-    const blocked = i.pitcherDay === "start_tomorrow" || i.pitcherDay === "start_in_2" || i.highIntentAdjacent;
-    if ((starterLT || pen) && !blocked && i.earn.armStrength && s.armStrengthPerWeek[i.phase] > 0) return done("arm_strength", armStrengthDay(i.sport, i.position, i.age, i.progress, s), pd);
-    if (starterLT && i.earn.longToss) return done("long_toss", longTossDay(i.sport, i.position, i.age, i.progress, s), pd);
-    return done("standard", standardLadder(i.sport, i.position, i.age, s), pd, i.earn.unlockMessage ? [i.earn.unlockMessage] : []);
-  }
-  const slots = LT_SLOTS[Math.min(3, s.longTossPerWeek[i.phase])] ?? [];
-  const isSlot = slots.includes(i.trainingDayIndex);
-  const adjacentGame = i.gameTomorrow || i.gameYesterday;
-  if (isSlot && !adjacentGame && !i.highIntentAdjacent) {
-    const asSlots = slots.slice(0, Math.min(s.armStrengthPerWeek[i.phase], ageBand(i.age) === "youth" ? 1 : 2));
-    if (asSlots.includes(i.trainingDayIndex) && i.earn.armStrength) return done("arm_strength", armStrengthDay(i.sport, i.position, i.age, i.progress, s), pd);
-    if (i.earn.longToss) return done("long_toss", longTossDay(i.sport, i.position, i.age, i.progress, s), pd);
-    return done("standard", standardLadder(i.sport, i.position, i.age, s), pd, i.earn.reasons.slice(0, 1).concat(i.earn.unlockMessage ? [i.earn.unlockMessage] : []).filter((x, k, a) => a.indexOf(x) === k));
-  }
-  return done("standard", standardLadder(i.sport, i.position, i.age, s), pd);
-}
-function defenseThrowsAllowed(day2, budgetThrowsLeft) {
-  if (day2.kind === "none") return { allowed: false, because: "Rest day \u2014 no throwing." };
-  if (!day2.reachesPositionDistance) return { allowed: false, because: day2.because[0] ?? "Today's catch play doesn't reach your position distance, so Defense is reads, hands and footwork only." };
-  if (budgetThrowsLeft != null && budgetThrowsLeft < day2.totalThrows) return { allowed: false, because: "Full catch play doesn't fit today's throw limit, so Defense is reads, hands and footwork only." };
-  return { allowed: true, because: null };
-}
-var PROPOSED_ARM_RISK_FAULTS, DEFAULT_CATCH_PLAY_STANDARDS, activeStandards, row, LADDER, LT_SLOTS;
-var init_catchPlay = __esm({
-  "supabase/functions/_shared/wic/throwing/catchPlay.ts"() {
-    PROPOSED_ARM_RISK_FAULTS = [
-      "th_low_elbow_slot",
-      "arm_lag",
-      "th_trunk_rotation_early",
-      "th_front_side_flyout",
-      "th_across_body",
-      "bb_arm_path_late",
-      "bb_trunk_rotation_early",
-      "bb_front_side_flyout",
-      "bb_poor_deceleration",
-      "sb_whip_arm_early",
-      "sb_shoulders_open_early"
-    ];
-    DEFAULT_CATCH_PLAY_STANDARDS = {
-      version: 1,
-      positionDistanceFt: { baseball: { "1B": 120, IF: 120, C: 120, OF: 180 }, softball: { "1B": 90, IF: 120, C: 120, OF: 150 } },
-      maxDistanceCapFt: { baseball: { IF: 180, OF: 250 }, softball: { IF: 150, OF: 200 } },
-      youthMaxDistanceFt: { under11: 120, age11to12: 150 },
-      longTossPerWeek: { off: 2, pre: 3, in: 1, post: 0 },
-      armStrengthPerWeek: { off: 1, pre: 1, in: 1, post: 0 },
-      pullDowns: { adultStart: 5, adultMax: 15, teenStart: 4, teenMax: 10, youthMin: 3, youthMax: 5, stepPerGreenWeek: 2 },
-      greenSessions: 2,
-      youthGreenMultiplier: 3,
-      buildUpLayoffDays: 14,
-      buildUpHealedWithinDays: 28,
-      healthyCheckinDays: 14,
-      analysisFreshDays: 60,
-      regressDays: 7,
-      armRiskFaults: PROPOSED_ARM_RISK_FAULTS
-    };
-    activeStandards = null;
-    row = (name, distanceFt, throws, part, intent = "low", note = "") => ({ name, distanceFt, throws, part, intent, dosage: `${distanceFt}ft x ${throws} throws${note ? ` \xB7 ${note}` : ""}` });
-    LADDER = {
-      baseball: { feel: 45, build: [60, 90], comeIn: 60 },
-      softball: { feel: 30, build: [45, 60, 75, 90], comeIn: 45 }
-    };
-    LT_SLOTS = { 0: [], 1: [2], 2: [1, 4], 3: [0, 2, 4] };
-  }
-});
-
 // supabase/functions/_shared/tissueCare/matching.ts
 function areRelated(a, b, cfg) {
   if (a === b) return false;
@@ -2074,6 +2202,9 @@ var init_tissueCarePlan = __esm({
     pick = (xs, allowed) => [...new Set((xs ?? []).filter((x) => allowed.includes(x)))];
   }
 });
+
+// src/lib/hammer/prescription/dailyPlan.ts
+init_catchPlay();
 
 // src/lib/hammer/prescription/throwPlacement.ts
 var ARM_CARE = /band|cuff|scap|activation|neural prep|wrist|forearm|cooldown|cool-down|arm care|arm-care|sleeper|arm prep|arm circles/i;
@@ -4923,7 +5054,7 @@ var EMPTY = {
     "foot_length_in"
   ]
 };
-function num(v) {
+function num2(v) {
   if (v == null || v === "") return null;
   const n = typeof v === "number" ? v : Number(v);
   return Number.isFinite(n) && n > 0 ? n : null;
@@ -4931,14 +5062,14 @@ function num(v) {
 function buildAnthroProfile(raw) {
   if (!raw || typeof raw !== "object") return EMPTY;
   const a = raw;
-  const height = num(a.height_in);
-  const wingspan = num(a.wingspan_in);
-  const femur = num(a.femur_in);
-  const tibia = num(a.tibia_in);
-  const forearm = num(a.forearm_in);
-  const armTotal = num(a.arm_total_in);
-  const torso = num(a.torso_in);
-  const foot = num(a.foot_length_in);
+  const height = num2(a.height_in);
+  const wingspan = num2(a.wingspan_in);
+  const femur = num2(a.femur_in);
+  const tibia = num2(a.tibia_in);
+  const forearm = num2(a.forearm_in);
+  const armTotal = num2(a.arm_total_in);
+  const torso = num2(a.torso_in);
+  const foot = num2(a.foot_length_in);
   const missing2 = [];
   if (height == null) missing2.push("height_in");
   if (wingspan == null) missing2.push("wingspan_in");
@@ -8395,7 +8526,7 @@ function drillsToSteps(drills) {
 function drillsToChecklist(drills) {
   return drills.map((d3) => `${d3.name} \u2014 ${d3.dosage}`);
 }
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, planDate, armRole, positionThrowing, gameTomorrow, skillExecutionAllowed = true }) {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, catchPlayFacts, planDate, armRole, positionThrowing, gameTomorrow, skillExecutionAllowed = true }) {
   const declaredPos = firstPositionToken(ctx.get("position_primary")?.value) ?? firstPositionToken(ctx.get("position")?.value) ?? null;
   const pos = firstPositionToken(positionOverride) ?? declaredPos;
   const liftingAge = proj.liftingAgeYears;
@@ -8889,7 +9020,11 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           rawPosition: typeof pos === "string" ? pos : null,
           gameTomorrow: !!gameTomorrow,
           gameYesterday: !!pitcherOutings?.pitchedYesterday,
-          trainingDayIndex: planDate ? ((/* @__PURE__ */ new Date(`${planDate}T12:00:00Z`)).getUTCDay() + 6) % 7 : -1
+          trainingDayIndex: planDate ? ((/* @__PURE__ */ new Date(`${planDate}T12:00:00Z`)).getUTCDay() + 6) % 7 : -1,
+          ...catchPlayFacts && planDate ? (() => {
+            const r = catchPlayPlanInputs(catchPlayFacts, { today: planDate, sport: normalizeSport(sportRaw) === "softball" ? "softball" : "baseball", position: cpPosition(typeof pos === "string" ? pos : null), age: ageYears });
+            return { earn: r.earn, progress: r.progress, buildUp: r.buildUp };
+          })() : {}
         }
       };
       const eass = buildEassPrescription(eassCtx);
@@ -9915,6 +10050,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       armRole: access?.hasPitching ? access.pitcherOnly ? "pitcher" : "two_way" : void 0,
       positionThrowing: !!access && !access.hasPitching,
       armHistory: roadmapInputs.armHistory,
+      catchPlayFacts: roadmapInputs.catchPlayFacts ?? null,
       planDate: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`,
       skillExecutionAllowed: scheduleSignal.postureToday === "normal" && !(m === "defense" && access?.pitcherOnly)
     })
@@ -14787,6 +14923,9 @@ var ENGINE_CONTRACT = {
     receiving_quality: { poor: -3, average: 0, elite: 5 }
   }
 };
+
+// src/lib/hammer/prescription/serverBlockBuilder.ts
+init_catchPlay();
 export {
   ELITE_DRILL_CATALOG,
   ENGINE_CONTRACT,
@@ -14803,6 +14942,7 @@ export {
   projectBuntingEvidence,
   projectMasterySources,
   readDrillCirculation,
+  setActiveCatchPlayStandards,
   setOwnerPlanDrills,
   setTissueCareConfig,
   setWarmupStageOverrides,

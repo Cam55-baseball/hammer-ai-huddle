@@ -40,6 +40,9 @@ import { DayCommandCenter, PrescribedOrderLine, TodayRhythmProvider } from "@/co
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { CatchPlayCheckPanel, useCatchPlayCheck } from '@/components/hammer/CatchPlayCheckPanel';
+import { applyCatchPlayCheck, positionDistanceFromWarmup } from '@/lib/hammer/catchPlayCheck';
+import { drillsToSteps } from '@/lib/hammer/prescription/dailyPlan';
 import { ArmStrengthUnlockPrompt } from '@/components/hammer/ArmStrengthUnlockPrompt';
 import { fuelPlanToday, type SavedTargets } from "@/lib/hammer/fuelPlanToday";
 import { refreshWarmupStageOverrides } from "@/lib/hammer/prescription/warmupStages";
@@ -1023,7 +1026,10 @@ function HammerDailyPlanBody({
       if (saved?.replacedByCoachRx) return { ...block, drills: [], steps: [], status: "suppressed" as const, why: "Replaced by coach workout — not missed", roadmapReason: "Replaced by coach workout — not missed" };
       return saved && block.status === "ready" ? { ...block, drills: saved.drills,because:saved.because??block.because } : block;
     }) } : computedPlan;
-  const plan=composedPlanReadback(masteryPlanReadback(reconciledPlan,savedPayload,sportKey,bodyPlanDate),savedPayload,sportKey,bodyPlanDate);
+  const catchCheck = useCatchPlayCheck(bodyPlanDate);
+  const readbackPlan=composedPlanReadback(masteryPlanReadback(reconciledPlan,savedPayload,sportKey,bodyPlanDate),savedPayload,sportKey,bodyPlanDate);
+  // Owner Nov 4: today's logged catch play can switch Defense throws to dry work.
+  const plan={...readbackPlan,blocks:applyCatchPlayCheck(readbackPlan.blocks,catchCheck.data,(d)=>drillsToSteps(d as never))};
   const persistedFocus=masteryFocus??masteryPlanGuidance({guidance:(savedPayload as unknown as {masteryFocus?:unknown})?.masteryFocus});
 
   const influencedDrillIds = useMemo(
@@ -2014,6 +2020,7 @@ function BlockCard({
             <div className="space-y-1" data-testid="warmup-throw-log">
               <p className="text-xs font-semibold">Log throwing practice</p>
               <ArmThrowsPanel source="position" planDate={planDate} />
+              {(() => { const pd = positionDistanceFromWarmup(block.drills as never); return pd ? <CatchPlayCheckPanel planDate={planDate} positionDistanceFt={pd} /> : null; })()}
             </div>
           )}
           {chatOpen && <InlineBlockChat block={block} />}
