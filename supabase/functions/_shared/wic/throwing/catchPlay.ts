@@ -180,12 +180,12 @@ export function lightCatch(sport: CPSport, age: number | null): CatchPlayRow[] {
 
 /** 4. Pitchers' pre-bullpen interval warm-up (published interval-program shape). */
 export function pitcherIntervalWarmup(sport: CPSport): CatchPlayRow[] {
-  if (sport === "softball") return [30, 45, 60, 75, 90].map((d, i) => row(`Interval warm-up — ${d} ft (overhand)`, d, i < 2 ? 5 : 10, "interval"));
+  if (sport === "softball") return [30, 45, 60, 75, 90].map((d, i) => row(`Interval warm-up catch — ${d} ft (overhand)`, d, i < 2 ? 5 : 10, "interval"));
   return [
-    row("Interval warm-up — 30 ft", 30, 5, "interval"), row("Interval warm-up — 45 ft", 45, 5, "interval"),
-    row("Interval warm-up — 60 ft", 60, 10, "interval"), row("Interval warm-up — 75 ft", 75, 10, "interval"),
-    row("Interval warm-up — 90 ft", 90, 10, "interval"), row("Interval warm-up — 120 ft", 120, 10, "interval", "moderate"),
-    row("Interval warm-up — 90-ft pull-downs", 90, 5, "pull_down", "high"), row("Interval warm-up — 60-ft flat ground", 60, 10, "interval", "moderate"),
+    row("Interval warm-up catch — 30 ft", 30, 5, "interval"), row("Interval warm-up catch — 45 ft", 45, 5, "interval"),
+    row("Interval warm-up catch — 60 ft", 60, 10, "interval"), row("Interval warm-up catch — 75 ft", 75, 10, "interval"),
+    row("Interval warm-up catch — 90 ft", 90, 10, "interval"), row("Interval warm-up catch — 120 ft", 120, 10, "interval", "moderate"),
+    row("Interval warm-up catch — 90-ft pull-downs", 90, 5, "pull_down", "high"), row("Interval warm-up catch — 60-ft flat ground", 60, 10, "interval", "moderate"),
   ];
 }
 
@@ -216,7 +216,7 @@ function pullDowns(from: number, to: number, total: number, youth: boolean): Cat
   let left = total;
   for (let ft = from; ft >= to && left > 0; ft -= 15) {
     const n = Math.min(left, youth ? 3 : 5);
-    out.push(row(`Pull-downs on a line — ${ft} ft`, ft, n, "pull_down", youth ? "moderate" : "high", youth ? "sub-max" : ""));
+    out.push(row(`Long toss pull-downs on a line — ${ft} ft`, ft, n, "pull_down", youth ? "moderate" : "high", youth ? "sub-max" : ""));
     left -= n;
   }
   return out;
@@ -230,7 +230,7 @@ export function longTossDay(sport: CPSport, pos: CPPosition, age: number | null,
   const base = standardLadder(sport, pos, age, s).filter((r) => r.part !== "come_in");
   const stretch = row(`Long toss — stretch out with arc to ${max} ft`, max, youth ? 6 : 9, "stretch_out", "moderate");
   const pulls = pullDowns(max - 15, pd, youth ? Math.min(5, pullDownCount(age, p, s)) : 12, youth);
-  return [...base, stretch, ...pulls, row(`Come back in — ${LADDER[sport].comeIn} ft easy`, LADDER[sport].comeIn, 5, "come_in")];
+  return [...base, stretch, ...pulls, row(`Catch play — come back in (${LADDER[sport].comeIn} ft easy)`, LADDER[sport].comeIn, 5, "come_in")];
 }
 
 /** Arm-strength day: ladder → stretch-out to max × 8–12 → pull-downs (progressed) → 60 × 5 easy. */
@@ -239,9 +239,9 @@ export function armStrengthDay(sport: CPSport, pos: CPPosition, age: number | nu
   const max = maxDistance(sport, pos, age, p, s);
   const pd = positionDistance(sport, pos, age, s);
   const base = standardLadder(sport, pos, age, s).filter((r) => r.part !== "come_in");
-  const stretch = row(`Arm strength — stretch out with arc to ${max} ft`, max, band === "youth" ? 8 : band === "teen" ? 10 : 12, "stretch_out", "moderate");
+  const stretch = row(`Long toss (arm strength) — stretch out with arc to ${max} ft`, max, band === "youth" ? 8 : band === "teen" ? 10 : 12, "stretch_out", "moderate");
   const pulls = pullDowns(max - 15, Math.min(pd, 60), pullDownCount(age, p, s), band === "youth");
-  return [...base, stretch, ...pulls, row(`Come back in — ${LADDER[sport].comeIn} ft easy`, LADDER[sport].comeIn, 5, "come_in")];
+  return [...base, stretch, ...pulls, row(`Catch play — come back in (${LADDER[sport].comeIn} ft easy)`, LADDER[sport].comeIn, 5, "come_in")];
 }
 
 // ------------------------------------------------------------------ BUILD-UP LADDER
