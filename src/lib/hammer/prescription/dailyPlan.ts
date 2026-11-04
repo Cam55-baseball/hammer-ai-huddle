@@ -1,3 +1,4 @@
+import { catchPlayPlanInputs, cpPosition } from '../../../../supabase/functions/_shared/wic/throwing/catchPlay';
 import { placeThrowsByRole } from "./throwPlacement";
 import { sortByWarmupStage } from "./warmupStages";
 import { normalizeProgramModules } from '../../../../supabase/functions/_shared/programAccess';
@@ -269,6 +270,8 @@ interface BuilderArgs {
   readonly gameTomorrow?: boolean;
   readonly pitchingType?: ReturnType<typeof pitchingDay>;
   readonly armHistory?: PlanningArmHistory;
+  /** Owner Nov 4: real catch-play facts (server reads); absent → conservative defaults. */
+  readonly catchPlayFacts?: import('../../../../supabase/functions/_shared/wic/throwing/catchPlay').CatchPlayFacts | null;
   /** Owner Nov 1 round 4: greenlight results per area (missing = hold). */
   readonly greenlight?: Partial<Record<import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightArea, import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightResult>> | null;
   readonly planDate?: string;
@@ -374,7 +377,7 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, planDate, armRole, positionThrowing, gameTomorrow, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, pitchingType, pitchingPhase, armHistory, catchPlayFacts, planDate, armRole, positionThrowing, gameTomorrow, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
   const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
@@ -1030,6 +1033,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           gameTomorrow: !!gameTomorrow,
           gameYesterday: !!pitcherOutings?.pitchedYesterday,
           trainingDayIndex: planDate ? (new Date(`${planDate}T12:00:00Z`).getUTCDay() + 6) % 7 : -1,
+          ...(catchPlayFacts && planDate ? (() => { const r = catchPlayPlanInputs(catchPlayFacts, { today: planDate, sport: normalizeSport(sportRaw) === 'softball' ? 'softball' : 'baseball', position: cpPosition(typeof pos === 'string' ? pos : null), age: ageYears }); return { earn: r.earn, progress: r.progress, buildUp: r.buildUp }; })() : {}),
         },
       };
 
@@ -2376,6 +2380,8 @@ export interface RoadmapInputs {
   readonly subscriptionModules?: readonly string[];
   readonly alwaysMissingGear?: readonly string[];
   readonly armHistory?: PlanningArmHistory;
+  /** Owner Nov 4: real catch-play facts (server reads); absent → conservative defaults. */
+  readonly catchPlayFacts?: import('../../../../supabase/functions/_shared/wic/throwing/catchPlay').CatchPlayFacts | null;
   readonly greenlight?: Partial<Record<import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightArea, import('../../../../supabase/functions/_shared/wic/progression/greenlight').GreenlightResult>> | null;
   /** Owner Nov 1 round 4: starting share of the written dose per area (Group 2 answers). */
   readonly greenlightStarts?: GreenlightStarts | null;
@@ -2508,7 +2514,7 @@ export function buildHammerDailyPlan(
     builder({ modality: m, ctx, proj, speed, gameTomorrow:scheduleSignal.isGameTomorrow, positionOverride: (m === 'throwing' && access?.hasPitching || m === 'defense' && access?.pitcherOnly) ? 'P' : positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings,
       pitchingType: access?.hasPitching ? pitchingDay(today,sport,quarter,roadmapInputs.pitcherOutings,proj.weeklyRestDow ?? SIX_DAY_REST_DOW) : undefined,
       pitchingPhase:quarter.phase==='off'?`os_q${quarter.quarter}`:quarter.phase==='pre'?'preseason':quarter.phase==='in'?'in_season':'post_season',
-      armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,positionThrowing:!!access&&!access.hasPitching,armHistory:roadmapInputs.armHistory,
+      armRole:access?.hasPitching?(access.pitcherOnly?'pitcher':'two_way'):undefined,positionThrowing:!!access&&!access.hasPitching,armHistory:roadmapInputs.armHistory,catchPlayFacts:roadmapInputs.catchPlayFacts??null,
       planDate:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,skillExecutionAllowed: scheduleSignal.postureToday === 'normal' && !(m==='defense'&&access?.pitcherOnly) }),
   );
   const goalAccess = roadmapInputs.subscriptionModules === undefined ? null
