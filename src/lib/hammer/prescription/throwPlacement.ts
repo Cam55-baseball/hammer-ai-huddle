@@ -107,3 +107,34 @@ export function placeThrowsByRole<B extends Block>(blocks: readonly B[], opts: {
   }
   return ti >= 0 ? out.filter((_, i) => i !== ti) : out;
 }
+
+/** Owner Nov 4 r4: arm (and any) cool-down rows never sit in the warm-up or on a throwing card —
+ *  they move, unchanged, to the Recovery card. Placement only: no row is added or re-dosed. */
+export const COOLDOWN_ROW = /cooldown|cool-down|cool down/i;
+export function withCooldownInRecovery<B extends Block>(blocks: readonly B[], opts: { toSteps: (d: readonly Drill[]) => string[] }): B[] {
+  const out = blocks.map((b) => ({ ...b }));
+  const moved: Drill[] = [];
+  out.forEach((b, i) => {
+    if (b.modality === "recovery" || b.status !== "ready") return;
+    if (!["warmup", "throwing", "pitching", "defense"].includes(b.modality)) return;
+    const cool = b.drills.filter((d) => COOLDOWN_ROW.test(d.name));
+    if (!cool.length) return;
+    const keep = b.drills.filter((d) => !COOLDOWN_ROW.test(d.name));
+    for (const d of cool) if (!moved.some((m) => m.name === d.name)) moved.push({ ...d, throwSection: undefined, stage: "prep" });
+    out[i] = { ...b, drills: keep, steps: opts.toSteps(keep) };
+  });
+  if (!moved.length) return out;
+  const ri = out.findIndex((b) => b.modality === "recovery" && b.status === "ready");
+  if (ri >= 0) {
+    const r = out[ri];
+    const drills = [...r.drills, ...moved];
+    const dm = (r as { durationMin?: number }).durationMin;
+    out[ri] = { ...r, drills, steps: opts.toSteps(drills), ...(typeof dm === "number" ? { durationMin: dm + 6 } : {}) };
+    return out;
+  }
+  // No Recovery card today: open one for the cool-down (never leave it in the warm-up).
+  const src = out.find((b) => b.modality === "warmup") ?? out[0];
+  if (!src) return out;
+  out.push({ ...src, modality: "recovery", title: "Recovery — arm cool-down", why: "Cool down your arm after today's throws.", drills: moved, steps: opts.toSteps(moved), route: "/bounce-back-bay", ctaLabel: "Open recovery", durationMin: 6, gamePlanTemplate: null, because: [] } as B);
+  return out;
+}
