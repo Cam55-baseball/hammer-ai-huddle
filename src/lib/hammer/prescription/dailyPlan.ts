@@ -1,3 +1,4 @@
+import { resolvePlayerFit } from "./warmupFit";
 import { catchPlayPlanInputs, cpPosition } from '../../../../supabase/functions/_shared/wic/throwing/catchPlay';
 import { placeThrowsByRole } from "./throwPlacement";
 import { sortByWarmupStage } from "./warmupStages";
@@ -453,6 +454,10 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         equipmentList?: ReadonlyArray<string>;
         equipmentVenue?: string | null;
       };
+      const warmupPlayerFit = resolvePlayerFit({
+        competitionLevel: (ctx.get<string>("competition_level")?.value as string | null) ?? null,
+        ageYears: (ctx.get<number>("age_years")?.value as number | null) ?? null,
+      });
       const warmupArgs = {
         context,
         lifecycle,
@@ -465,6 +470,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         suppressTwitch: isRecoveryDay || recoverDay || isTravelDay,
         sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" as const : "baseball" as const,
         isThrower: pos === "P" || pos === "C",
+        // Owner Part D: warm-up items must fit the player's level and age band.
+        fit: warmupPlayerFit,
       };
       let built = buildWarmup(warmupArgs);
       if (
@@ -487,7 +494,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         stopIf: d.stopIf,
         equipmentNote: d.equipmentNote,
         guide: d.guide,
-      })), ["hammers_today:warmup"], { sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []) });
+      })), ["hammers_today:warmup"], { fit: warmupPlayerFit, sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []) });
 
       // Su Wen / Neijing micro-dose: on low-readiness / recovery days, lead the
       // warm-up with a 60-second season-aware breath primer so we downshift
