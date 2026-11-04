@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { catchPlayDay, earnStatus, catchPlayStandardsFrom, DEFAULT_CATCH_PLAY_STANDARDS as S, PROPOSED_ARM_RISK_FAULTS, THROWING_FAULT_KEYS, type CatchSession } from "../../supabase/functions/_shared/wic/throwing/catchPlay";
 import { armStrengthUnlockPrompt, ARM_STRENGTH_UNLOCK_TEXT } from "@/lib/hammer/armStrengthUnlock";
-import { correctionsForMovement } from "@/lib/analysisFeedbackToTaxonomy";
+import { analysisFeedbackToTaxonomy } from "@/lib/analysisFeedbackToTaxonomy";
 import { BYS_ITEMS, bysLevel } from "@/lib/hammer/beforeYouStartImportance";
 
 const TODAY = "2026-11-10";
@@ -16,10 +16,12 @@ describe("owner Nov 4 arm-strength decisions", () => {
     for (const k of THROWING_FAULT_KEYS.map((x) => x.key).filter((k) => !PROPOSED_ARM_RISK_FAULTS.includes(k))) expect(earnStatus({ ...base, lastThrowingAnalysis: clip([k]) }, S).armStrength).toBe(true);
     for (const k of ["th_late_glove_break", "th_no_crow_hop", "short_arm", "th_long_arm_action", "th_feet_misaligned", "th_slow_transfer"]) expect(PROPOSED_ARM_RISK_FAULTS).not.toContain(k);
   });
-  it("new throwing tags are in the throwing vocabulary with fix-it and result mapping", () => {
+  it("the two new throwing tags can be assigned to a throwing analysis, with fix-it mapping", () => {
     for (const k of ["th_trunk_rotation_early", "th_front_side_flyout"]) {
       expect(THROWING_FAULT_KEYS.find((x) => x.key === k)?.group).toBe("throwing");
-      expect(correctionsForMovement(k)).toContain("th_stay_online_finish");
+      const sig = analysisFeedbackToTaxonomy({ scorecard: { regressions: [{ area: k }] } }, "throwing", "baseball");
+      expect(sig.movementPatterns).toContain(k);
+      expect(sig.correctionTags).toContain("th_stay_online_finish");
     }
   });
   it("default arm-risk selection is the owner's list", () => {

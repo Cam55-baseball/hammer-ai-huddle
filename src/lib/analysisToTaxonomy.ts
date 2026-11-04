@@ -19,6 +19,9 @@ const HIE_AREA_TO_MOVEMENT: Record<string, string> = {
   'first_step': 'slow_first_step',
   'glove_drift': 'glove_drift',
   'arm_lag': 'arm_lag',
+  // Owner Nov 4: throwing-only arm-risk tags (pitching keeps bb_*/sb_*).
+  'th_trunk_rotation_early': 'th_trunk_rotation_early',
+  'th_front_side_flyout': 'th_front_side_flyout',
 };
 
 export function mapHIEAreaToMovement(area: string): string | null {
