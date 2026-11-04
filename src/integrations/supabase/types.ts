@@ -13839,6 +13839,8 @@ export type Database = {
           fault_keys: string[]
           feel: string | null
           feel_wrong: string | null
+          fit_age_bands: string[]
+          fit_levels: string[]
           id: string
           level: string | null
           library_video_id: string | null
@@ -13897,6 +13899,8 @@ export type Database = {
           fault_keys?: string[]
           feel?: string | null
           feel_wrong?: string | null
+          fit_age_bands?: string[]
+          fit_levels?: string[]
           id?: string
           level?: string | null
           library_video_id?: string | null
@@ -13955,6 +13959,8 @@ export type Database = {
           fault_keys?: string[]
           feel?: string | null
           feel_wrong?: string | null
+          fit_age_bands?: string[]
+          fit_levels?: string[]
           id?: string
           level?: string | null
           library_video_id?: string | null
@@ -25115,6 +25121,14 @@ export type Database = {
           ai_analysis: Json
           efficiency_score: number
           id: string
+        }[]
+      }
+      get_warmup_fit_overrides: {
+        Args: never
+        Returns: {
+          age_bands: string[]
+          levels: string[]
+          slug: string
         }[]
       }
       get_warmup_stage_overrides: {
