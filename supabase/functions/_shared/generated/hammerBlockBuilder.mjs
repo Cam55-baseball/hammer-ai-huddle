@@ -2484,6 +2484,33 @@ function placeThrowsByRole(blocks, opts) {
   }
   return ti >= 0 ? out.filter((_, i) => i !== ti) : out;
 }
+var COOLDOWN_ROW = /cooldown|cool-down|cool down/i;
+function withCooldownInRecovery(blocks, opts) {
+  const out = blocks.map((b) => ({ ...b }));
+  const moved = [];
+  out.forEach((b, i) => {
+    if (b.modality === "recovery" || b.status !== "ready") return;
+    if (!["warmup", "throwing", "pitching", "defense"].includes(b.modality)) return;
+    const cool = b.drills.filter((d3) => COOLDOWN_ROW.test(d3.name));
+    if (!cool.length) return;
+    const keep = b.drills.filter((d3) => !COOLDOWN_ROW.test(d3.name));
+    for (const d3 of cool) if (!moved.some((m) => m.name === d3.name)) moved.push({ ...d3, throwSection: void 0, stage: "prep" });
+    out[i] = { ...b, drills: keep, steps: opts.toSteps(keep) };
+  });
+  if (!moved.length) return out;
+  const ri = out.findIndex((b) => b.modality === "recovery" && b.status === "ready");
+  if (ri >= 0) {
+    const r = out[ri];
+    const drills = [...r.drills, ...moved];
+    const dm = r.durationMin;
+    out[ri] = { ...r, drills, steps: opts.toSteps(drills), ...typeof dm === "number" ? { durationMin: dm + 6 } : {} };
+    return out;
+  }
+  const src = out.find((b) => b.modality === "warmup") ?? out[0];
+  if (!src) return out;
+  out.push({ ...src, modality: "recovery", title: "Recovery \u2014 arm cool-down", why: "Cool down your arm after today's throws.", drills: moved, steps: opts.toSteps(moved), route: "/bounce-back-bay", ctaLabel: "Open recovery", durationMin: 6, gamePlanTemplate: null, because: [] });
+  return out;
+}
 
 // src/lib/hammer/prescription/dailyPlan.ts
 init_warmupStages();
@@ -6091,15 +6118,16 @@ function buildEassPrescription(ctx) {
         dosage: d3.dosage.replace(/2x/g, "1x"),
         cue: `${d3.cue} \u2014 recovery pace today`
       })),
-      {
-        name: "Sub-max catch play",
+      // Owner Nov 4 r4: never a timed catch play — arm-protected days use the counted light-catch ladder (30–60 ft only).
+      ...lightCatch(isSoftball ? "softball" : "baseball", ctx.ageYears).slice(0, 3).map((r) => ({
+        name: r.name,
         category: "regulation",
         intensity: "low",
         overloadClass: "regulation",
-        dosage: "10 min, never past comfortable distance, never past 70% intent",
-        cue: "every throw is a check-in \u2014 does it feel the same as the last one?",
+        dosage: r.dosage,
+        cue: "every throw is a check-in \u2014 does it feel the same as the last one? Never past 70% intent.",
         stopIf: "any sharp pain, twinge, pinch, or velo cliff \u2014 stop now and message Hammer"
-      },
+      })),
       ...COOLDOWN_UNIVERSAL
     ];
     return {
@@ -10470,7 +10498,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const r = applyHitterReturn(b.drills, roadmapInputs.hitterReturn ?? null, new Set(proj.equipmentList));
     return { ...b, drills: r.rows, steps: drillsToSteps(r.rows), because: [...b.because ?? [], ...r.because] };
   }) : cared;
-  const warmed = !access ? withWarmupThrows(hitReturned) : placeThrowsByRole(withWarmupThrows(hitReturned), { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === "pitcher"), toSteps: (d3) => drillsToSteps(d3) });
+  const warmed = withCooldownInRecovery(!access ? withWarmupThrows(hitReturned) : placeThrowsByRole(withWarmupThrows(hitReturned), { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === "pitcher"), toSteps: (d3) => drillsToSteps(d3) }), { toSteps: (d3) => drillsToSteps(d3) });
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));
