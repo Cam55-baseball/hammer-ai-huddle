@@ -10,7 +10,7 @@ import { NORMAL_SIGNAL } from "@/lib/hammer/prescription/scheduleContext";
 import type { ContextVariable, HammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { PLAN_RULES_VERSION, staleSavedDates } from "../../supabase/functions/_shared/planRulesVersion";
 import { factsFromRows } from "../../supabase/functions/_shared/wic/throwing/readCatchPlayFacts";
-import { catchPlayPlanInputs, earnStatus, DEFAULT_CATCH_PLAY_STANDARDS } from "../../supabase/functions/_shared/wic/throwing/catchPlay";
+import { catchPlayPlanInputs, DEFAULT_CATCH_PLAY_STANDARDS } from "../../supabase/functions/_shared/wic/throwing/catchPlay";
 import { armStrengthUnlockPrompt } from "@/lib/hammer/armStrengthUnlock";
 
 function ctx(values: Record<string, unknown>): HammerAthleteContext {
@@ -92,26 +92,21 @@ describe("locked by owner Nov 4 r4 — (4) clip → prompt → arm-strength gate
   const green = Array.from({ length: 14 }, (_, i) => ({ entry_date: `2026-10-${String(22 + Math.min(i, 9)).padStart(2, "0")}`, physical_readiness: 5, pain_location: [], soreness_locations: [], stiffness_locations: [] }));
   const checks = [1, 2].map((n) => ({ plan_date: `2026-11-0${n}`, payload: { outcome: "full", maxDistanceFt: 120, positionDistanceFt: 120 } }));
   const video = { id: "v1", created_at: "2026-11-03T18:00:00Z", module: "throwing", sport: "baseball" };
-  const gate = (findings: any[], videos: any[]) => {
-    const f = factsFromRows({ quizzes: green, findings, checks, answers: {}, videos }, "baseball");
-    return earnStatus(catchPlayPlanInputs(f, { today, sport: "baseball", position: "IF", age: 20 }).earn as any ?? ({} as any), DEFAULT_CATCH_PLAY_STANDARDS);
-  };
+  const S = { ...DEFAULT_CATCH_PLAY_STANDARDS, armRiskFaults: ["th_low_elbow_slot", "arm_lag", "th_trunk_rotation_early", "th_front_side_flyout", "th_across_body"] };
+  const inputs = (findings: any[]) => catchPlayPlanInputs(factsFromRows({ quizzes: green, findings, checks, answers: {}, videos: [video] }, "baseball"), { today, sport: "baseball", position: "IF", age: 20 }, S);
+  const finding = (fault_key: string) => ({ video_id: "v1", skill_domain: "throwing", sport: "baseball", created_at: video.created_at, fault_key });
   it("locked by owner Nov 4 r4: a completed clean throwing clip hides the prompt and counts as the gate's clip", () => {
     expect(armStrengthUnlockPrompt({ throwingToday: true, lastThrowingClipIso: null, today, freshDays: 60 })).not.toBeNull();
     expect(armStrengthUnlockPrompt({ throwingToday: true, lastThrowingClipIso: video.created_at, today, freshDays: 60 })).toBeNull();
     const f = factsFromRows({ quizzes: green, findings: [], checks, answers: {}, videos: [video] }, "baseball");
     expect(f.clips).toEqual([{ date: "2026-11-03", faultKeys: [] }]);
-    const p = catchPlayPlanInputs(f, { today, sport: "baseball", position: "IF", age: 20 });
-    expect(p.earn.unlockMessage).toBeNull();
+    expect(inputs([]).earn.unlockMessage).toBeNull();
   });
   it("locked by owner Nov 4 r4: the gate reads that clip's faults against armRiskFaults", () => {
-    const risky = factsFromRows({ quizzes: green, findings: [{ video_id: "v1", skill_domain: "throwing", sport: "baseball", created_at: video.created_at, fault_key: "th_across_body" }], checks, answers: {}, videos: [video] }, "baseball");
-    expect(risky.clips).toEqual([{ date: "2026-11-03", faultKeys: ["th_across_body"] }]);
-    const p = catchPlayPlanInputs(risky, { today, sport: "baseball", position: "IF", age: 20 });
-    expect(p.earn.armStrength).toBe(false);
-    const unmarked = factsFromRows({ quizzes: green, findings: [{ video_id: "v1", skill_domain: "throwing", sport: "baseball", created_at: video.created_at, fault_key: "th_no_crow_hop" }], checks, answers: {}, videos: [video] }, "baseball");
-    expect(catchPlayPlanInputs(unmarked, { today, sport: "baseball", position: "IF", age: 20 }).earn.unlockMessage).toBeNull();
-    void gate;
+    const clean = inputs([]);
+    expect(clean.earn.armStrength).toBe(true);
+    expect(inputs([finding("th_across_body")]).earn.armStrength).toBe(false);
+    expect(inputs([finding("th_no_crow_hop")]).earn.armStrength).toBe(clean.earn.armStrength);
   });
   it("locked by owner Nov 4 r4: the saved day before the clip is rebuilt so the plan uses it", () => {
     expect(staleSavedDates([{ plan_date: "2026-11-05", payload: { rules_version: PLAN_RULES_VERSION }, updated_at: "2026-11-03T10:00:00Z" }], { today, protectedDates: new Set(), latestClipAt: video.created_at })).toEqual(["2026-11-05"]);
