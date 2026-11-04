@@ -35,6 +35,8 @@ import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import ProgressDashboard from "@/pages/ProgressDashboard";
+import { useOrganization } from "@/hooks/useOrganization";
+import { OrganizationGeneral } from "@/components/organization/OrganizationGeneral";
 import { RecordsShowCard } from "@/components/progress/RecordsShowCard";
 import { MySixWeekRecapCard } from "@/components/progress/MySixWeekRecapCard";
 import { YourProgressCard } from "@/components/progress/YourProgressCard";
@@ -126,7 +128,14 @@ const TOPIC_DEFS: Record<ProgressTopicId, TopicDef> = {
   },
 };
 
+/** Owner Nov 4 #4: organization accounts get the organization-wide General. */
 export default function ProgressLanding() {
+  const { myOrgs } = useOrganization();
+  if (myOrgs.isLoading) return null;
+  return myOrgs.data?.length ? <OrganizationGeneral /> : <PlayerProgressLanding />;
+}
+
+function PlayerProgressLanding() {
   const { allowed: gameIqOk } = useGameIqAccess();
   const ctx = useHammerAthleteContext();
   const schedule = useScheduleWindow();
