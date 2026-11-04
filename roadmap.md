@@ -4598,6 +4598,6 @@ Deploys/additive migrations needed for 2, 3, 13, 18, 20 and server scheduling ce
 
 - [ ] Nov 4 r3 Part B: catch play in throws — rules, builder, Coaching Console done; server earning feeds + redeploy + pitcher interval wiring + on-screen Defense unlock remain
 - [x] Nov 4 r3 Part C: Baserunning IQ course (/baserunning-iq/course)
-- [ ] Nov 4 r3 Part D: warm-up level/age tags
-- [ ] Nov 4 r3 Part E: close-out
+- [x] Nov 4 r3 Part D: warm-up level/age tags (owner answers Nov 4; redeployed 4 builder functions)
+- [x] Nov 4 r3 Part E: close-out (776 files / 6,238 tests)
 - [x] Nov 4 r3 Part A: lock-in tests (src/test/lockedByOwnerNov4.test.ts)

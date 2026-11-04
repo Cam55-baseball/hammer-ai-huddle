@@ -20,6 +20,9 @@ import { ownerGear, ownerIdentity, OWNER_DEFAULTS } from "../../../supabase/func
 import { Checkbox } from "@/components/ui/checkbox";
 import { catalogMeasure } from "@/lib/vault/catalogMeasure";
 import { useVideoLibrary } from "@/hooks/useVideoLibrary";
+import { WarmupFitPicker, WarmupFitReadOnly } from "@/components/owner/WarmupFitPicker";
+import { WARMUP_LIBRARY } from "@/lib/hammer/prescription/warmupLibrary";
+import { backfillFitTags, defaultFitForNewItem } from "@/lib/hammer/prescription/warmupFit";
 
 const CARD_TYPES = ["lift", "primer", "conditioning", "recovery", "speed", "warmup", "bat_speed", "hitting", "throwing", "pitching", "windmill", "defense", "baserunning", "cross_sport", "mobility", "arm_care"];
 const SPORTS = ["baseball", "softball"];
@@ -94,6 +97,12 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
       .then(({ data }) => setSameCategory(((data ?? []) as { slug: string; name: string }[]).filter(r => r.slug !== baseSlug)));
   }, [e.catalog_category, base.category, baseSlug]);
   const mappedGear = useMemo(() => ownerGear(e.equipment), [e.equipment]);
+  // Owner Part D: built-in warm-ups default to their backfilled tags; new items fit everyone until ticked.
+  const fitValue = useMemo(() => {
+    const lib = WARMUP_LIBRARY.find((d) => d.slug === baseSlug);
+    const def = lib ? backfillFitTags(lib.minLifecycle, lib.role) : defaultFitForNewItem(null);
+    return { levels: (e.fit_levels ?? def.levels) as typeof def.levels, ageBands: (e.fit_age_bands ?? def.ageBands) as typeof def.ageBands };
+  }, [baseSlug, e.fit_levels, e.fit_age_bands]);
 
   const { data: history } = useQuery({
     queryKey: ["vault-history", slug],
@@ -186,6 +195,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
             <Field label="Order within stage (optional, 1 = first)">
               <Input inputMode="numeric" data-vault-warmup-order value={e.warmup_stage_order ?? ""} onChange={(ev) => set("warmup_stage_order", num(ev.target.value))} />
             </Field>
+            <WarmupFitPicker value={fitValue} onChange={(n) => setE((p) => ({ ...p, fit_levels: n.levels, fit_age_bands: n.ageBands }))} />
           </>
         )}
         <Field label='How to do one rep'><Textarea rows={3} value={e.how_to_one_rep} onChange={(ev) => set("how_to_one_rep", ev.target.value)} /></Field>
@@ -285,7 +295,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
         <h3 className="text-sm font-semibold mb-1">Phone preview</h3>
         <div className="w-[360px] max-w-full rounded-xl border border-border bg-card p-3" data-vault-preview>
           <p className="font-semibold">{e.name || "…"}</p>
-          {e.video_url && <div className="mt-2"><ExerciseVideo url={e.video_url} /></div>}
+          {e.video_url && <div className="mt-2"><ExerciseVideo url={e.video_url} />{e.card_type === "warmup" && <WarmupFitReadOnly value={fitValue} />}</div>}
           <p className="text-sm text-muted-foreground mt-1">How to do one rep: {e.how_to_one_rep || "…"}</p>
           {e.setup && <p className="text-sm text-muted-foreground mt-1">Setup: {e.setup}</p>}
           {e.cue && <p className="text-sm mt-1">Cue: {e.cue}</p>}

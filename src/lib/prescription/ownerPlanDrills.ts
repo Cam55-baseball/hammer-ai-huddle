@@ -9,6 +9,7 @@
  * newly switched-on drill is served within (pool size) days.
  */
 import type { OwnerDrillRow } from "./ownerDrills";
+import { cleanFit, fits, type PlayerFit } from "../hammer/prescription/warmupFit";
 import { ownerConditioningProblems } from "../../../supabase/functions/_shared/wic/conditioning/ownerConditioning";
 
 export type PlanSlot = "hammers_today:skill" | "hammers_today:warmup" | "hammers_today:defense" | "defensive_library"
@@ -127,6 +128,8 @@ export interface MergeContext {
   /** Required for the skill slot: which skill block is being built. */
   skill?: SkillBlock;
   day?: Date;
+  /** Owner Part D: warm-up items must fit this player's level and age band. */
+  fit?: PlayerFit;
 }
 
 const norm = (s: string) => s.trim().toLowerCase();
@@ -160,6 +163,11 @@ export function eligibleFor(r: OwnerDrillRow, slots: PlanSlot[], ctx: MergeConte
   if (!slot) return false;
   if (missingForPlacement(r, slot).length > 0) return false;
   if (!r.sports.includes(ctx.sport)) return false;
+  if (slot === "hammers_today:warmup" && ctx.fit) {
+    // Untagged legacy rows keep fitting everyone, exactly as before.
+    const tags = cleanFit(r.fit_levels, r.fit_age_bands);
+    if (tags && !fits(tags, ctx.fit)) return false;
+  }
   if (slot === "hammers_today:skill" && (!ctx.skill || !skillBlocksOf(r).includes(ctx.skill))) return false;
   const need = r.equipment.map(norm).filter(Boolean);
   if (need.length > 0) {

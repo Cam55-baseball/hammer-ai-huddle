@@ -3,6 +3,156 @@ var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
 
+// supabase/functions/_shared/wic/competitionLevel.ts
+function competitionRank(level) {
+  if (level == null) return null;
+  const key2 = String(level).trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (key2 === "") return null;
+  return RANKS[key2] ?? null;
+}
+var RANKS;
+var init_competitionLevel = __esm({
+  "supabase/functions/_shared/wic/competitionLevel.ts"() {
+    RANKS = {
+      // Youth
+      youth: 1,
+      "8u": 1,
+      youth_8u: 1,
+      "10u": 2,
+      youth_10u: 2,
+      "12u": 3,
+      youth_12u: 3,
+      little_league: 3,
+      // Middle school
+      middle_school: 4,
+      "13u": 4,
+      "14u": 4,
+      youth_14u: 4,
+      junior_high: 4,
+      // High school
+      hs_jv: 5,
+      jv: 5,
+      high_school_jv: 5,
+      freshman: 5,
+      hs_varsity: 6,
+      varsity: 6,
+      high_school: 6,
+      high_school_varsity: 6,
+      travel_elite: 6,
+      showcase: 6,
+      "16u": 6,
+      "18u": 6,
+      // College
+      juco: 7,
+      njcaa: 7,
+      ncaa_d3: 7,
+      d3: 7,
+      naia: 7,
+      ncaa_d2: 8,
+      d2: 8,
+      college: 8,
+      summer_collegiate: 8,
+      collegiate: 8,
+      ncaa_d1: 9,
+      d1: 9,
+      // Professional
+      indy: 9,
+      independent: 9,
+      milb: 10,
+      minor_league: 10,
+      minors: 10,
+      affiliated: 10,
+      pro: 11,
+      professional: 11,
+      npf: 11,
+      ausl: 11,
+      mlb: 12,
+      major_league: 12,
+      majors: 12
+    };
+  }
+});
+
+// src/lib/hammer/prescription/warmupFit.ts
+function backfillFitTags(minLifecycle, role) {
+  switch (minLifecycle) {
+    case "youth":
+      return { levels: ALL_LEVELS, ageBands: ALL_BANDS };
+    case "beginner":
+      return LOW_IMPACT_ROLES.has(role) ? { levels: ALL_LEVELS, ageBands: ALL_BANDS } : { levels: ["high_school", "college", "pro"], ageBands: ["13_17", "18_plus"] };
+    case "intermediate":
+      return { levels: ["high_school", "college", "pro"], ageBands: ["13_17", "18_plus"] };
+    default:
+      return { levels: ["college", "pro"], ageBands: ["18_plus"] };
+  }
+}
+function cleanFit(levels, ageBands) {
+  const l = Array.isArray(levels) ? levels.filter(isLevel) : [];
+  const a = Array.isArray(ageBands) ? ageBands.filter(isBand) : [];
+  if (l.length === 0 || a.length === 0) return null;
+  return { levels: [...new Set(l)], ageBands: [...new Set(a)] };
+}
+function setWarmupFitOverrides(map) {
+  const next = /* @__PURE__ */ new Map();
+  for (const [slug, v] of Object.entries(map ?? {})) {
+    const fit = cleanFit(v?.levels, v?.ageBands ?? v?.age_bands);
+    if (fit) next.set(slug, fit);
+  }
+  overrides = next;
+}
+function fitTagsFor(d3) {
+  return overrides.get(d3.slug) ?? backfillFitTags(d3.minLifecycle, d3.role);
+}
+function fits(tags, player) {
+  return tags.levels.includes(player.level) && tags.ageBands.includes(player.ageBand);
+}
+function ageBandFor(ageYears) {
+  return ageYears < 13 ? "u13" : ageYears < 18 ? "13_17" : "18_plus";
+}
+function levelFromSaved(level) {
+  if (!level || !String(level).trim()) return null;
+  const key2 = String(level).trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (key2 === "indy" || key2 === "independent") return "pro";
+  const rank = competitionRank(level);
+  if (rank == null) {
+    if (/pro|mlb|milb|minor/.test(key2)) return "pro";
+    if (/college|juco|ncaa|naia|d1|d2|d3/.test(key2)) return "college";
+    if (/high|hs|varsity|jv/.test(key2)) return "high_school";
+    if (/youth|little|middle|\d+u/.test(key2)) return "youth";
+    return null;
+  }
+  if (rank <= 4) return "youth";
+  if (rank <= 6) return "high_school";
+  if (rank <= 9) return "college";
+  return "pro";
+}
+function resolvePlayerFit(input) {
+  const age = typeof input.ageYears === "number" && Number.isFinite(input.ageYears) ? input.ageYears : null;
+  const saved = levelFromSaved(input.competitionLevel ?? null);
+  const level = saved ?? (age == null ? "high_school" : age < 13 ? "youth" : age < 18 ? "high_school" : "college");
+  const ageBand2 = age != null ? ageBandFor(age) : level === "youth" ? "u13" : level === "high_school" ? "13_17" : "18_plus";
+  return { level, ageBand: ageBand2 };
+}
+var LOW_IMPACT_ROLES, ALL_LEVELS, ALL_BANDS, isLevel, isBand, overrides;
+var init_warmupFit = __esm({
+  "src/lib/hammer/prescription/warmupFit.ts"() {
+    init_competitionLevel();
+    LOW_IMPACT_ROLES = /* @__PURE__ */ new Set([
+      "tissue_prep",
+      "mobility_joint",
+      "cars",
+      "fascial_rotation",
+      "activation",
+      "breathwork"
+    ]);
+    ALL_LEVELS = ["youth", "high_school", "college", "pro"];
+    ALL_BANDS = ["u13", "13_17", "18_plus"];
+    isLevel = (x) => typeof x === "string" && ALL_LEVELS.includes(x);
+    isBand = (x) => typeof x === "string" && ALL_BANDS.includes(x);
+    overrides = /* @__PURE__ */ new Map();
+  }
+});
+
 // supabase/functions/_shared/wic/throwing/catchPlay.ts
 function setActiveCatchPlayStandards(raw) {
   activeStandards = catchPlayStandardsFrom(raw);
@@ -320,17 +470,17 @@ var init_catchPlay = __esm({
 
 // src/lib/hammer/prescription/warmupStages.ts
 function loadOverrides() {
-  if (overrides) return overrides;
-  overrides = /* @__PURE__ */ new Map();
+  if (overrides2) return overrides2;
+  overrides2 = /* @__PURE__ */ new Map();
   try {
     const raw = false ? (void 0).getItem(LS_KEY) : null;
-    if (raw) for (const [k, v] of Object.entries(JSON.parse(raw))) overrides.set(k, v);
+    if (raw) for (const [k, v] of Object.entries(JSON.parse(raw))) overrides2.set(k, v);
   } catch {
   }
-  return overrides;
+  return overrides2;
 }
 function setWarmupStageOverrides(map) {
-  overrides = new Map(Object.entries(map ?? {}));
+  overrides2 = new Map(Object.entries(map ?? {}));
 }
 function registerWarmupRoles(entries) {
   for (const e of entries) ROLE_BY_SLUG.set(e.slug, e.role);
@@ -362,7 +512,7 @@ function sortByWarmupStage(items, slugOf, roleOf) {
   keyed.sort((a, b) => a.stage - b.stage || (a.ord ?? Number.POSITIVE_INFINITY) - (b.ord ?? Number.POSITIVE_INFINITY) || a.i - b.i);
   return keyed.map((k) => k.it);
 }
-var WARMUP_STAGES, MAX_STAGE, BUILD_UP_STAGE, HIGH_INTENT_ROLES, STAGE_BY_ROLE, FIXED_ORDER, FIXED_STAGE, overrides, clamp, ROLE_BY_SLUG;
+var WARMUP_STAGES, MAX_STAGE, BUILD_UP_STAGE, HIGH_INTENT_ROLES, STAGE_BY_ROLE, FIXED_ORDER, FIXED_STAGE, overrides2, clamp, ROLE_BY_SLUG;
 var init_warmupStages = __esm({
   "src/lib/hammer/prescription/warmupStages.ts"() {
     WARMUP_STAGES = [
@@ -405,7 +555,7 @@ var init_warmupStages = __esm({
       "hpi-breath-primer": 0
     };
     FIXED_STAGE = { "hpi-breath-primer": 1 };
-    overrides = null;
+    overrides2 = null;
     clamp = (n) => Math.max(0, Math.min(MAX_STAGE, Math.round(n)));
     ROLE_BY_SLUG = /* @__PURE__ */ new Map();
   }
@@ -1057,6 +1207,7 @@ function isEligible(d3, f) {
   if (LIFECYCLE_RANK[f.lifecycle] < LIFECYCLE_RANK[d3.minLifecycle]) return false;
   if (f.gameDay && !d3.gameDayLegal) return false;
   if (f.axis && (d3.axis ?? "bilateral") !== f.axis) return false;
+  if (f.fit && !fits(fitTagsFor(d3), f.fit)) return false;
   if (d3.regions && f.injuryRegions.length > 0) {
     if (d3.regions.some((r) => f.injuryRegions.includes(r))) return false;
   }
@@ -1075,6 +1226,24 @@ function poolForRole(role, f) {
   return WARMUP_LIBRARY.filter((d3) => d3.role === role && isEligible(d3, f));
 }
 function pickForRole(role, f, seed, seen, diagnostics) {
+  const fitted = scanRole(role, f, seed, seen, diagnostics);
+  if (fitted || !f.fit) return fitted;
+  const easier = { ...f, fit: void 0 };
+  const pool = poolForRole(role, easier).sort((a, b) => LIFECYCLE_RANK[a.minLifecycle] - LIFECYCLE_RANK[b.minLifecycle]);
+  for (const candidate of pool) {
+    const resolved = resolveEquipmentSafe(candidate, easier);
+    if (!resolved || seen.has(resolved.drill.slug)) continue;
+    diagnostics?.push({
+      code: "level_fallback",
+      role,
+      to: resolved.drill.slug,
+      detail: `No ${role.replace(/_/g, " ")} item is tagged for this player's level and age \u2014 used the nearest easier item, ${resolved.drill.name}.`
+    });
+    return resolved.drill;
+  }
+  return null;
+}
+function scanRole(role, f, seed, seen, diagnostics) {
   const pool = poolForRole(role, f);
   if (pool.length === 0) return null;
   const start = Math.abs(seed) % pool.length;
@@ -1165,7 +1334,9 @@ function buildWarmup(input) {
   const diagnostics = [];
   if (input.context === "recovery_day") {
     const available = expandEquipment(input.equipment, input.venue);
-    const drills2 = WARMUP_LIBRARY.filter((d3) => isSoftRecovery(d3.slug) && equipmentFor(d3).every((e) => available.has(e)) && !(d3.regions ?? []).some((r) => (input.injuryRegions ?? []).includes(r))).slice(0, 3).map((d3) => toBuilt(d3, input.lifecycle));
+    const soft = WARMUP_LIBRARY.filter((d3) => isSoftRecovery(d3.slug) && equipmentFor(d3).every((e) => available.has(e)) && !(d3.regions ?? []).some((r) => (input.injuryRegions ?? []).includes(r)));
+    const fitted = input.fit ? soft.filter((d3) => fits(fitTagsFor(d3), input.fit)) : soft;
+    const drills2 = (fitted.length >= Math.min(3, soft.length) ? fitted : soft).slice(0, 3).map((d3) => toBuilt(d3, input.lifecycle));
     const ordered2 = input.orderByStage === false ? drills2 : sortByWarmupStage(drills2, (d3) => d3.slug, (d3) => d3.role);
     return {
       context: input.context,
@@ -1180,7 +1351,8 @@ function buildWarmup(input) {
     lifecycle: input.lifecycle,
     gameDay: input.gameDay,
     available: expandEquipment(input.equipment, input.venue),
-    injuryRegions
+    injuryRegions,
+    fit: input.fit
   };
   if (injuryRegions.length > 0) {
     diagnostics.push({
@@ -1284,6 +1456,7 @@ var init_warmupLibrary = __esm({
     init_movementGuide();
     init_warmupStages();
     init_softRecovery();
+    init_warmupFit();
     WARMUP_LIBRARY = [
       // Breathwork
       { slug: "wu_crocodile_breathing", name: "Crocodile breathing (prone diaphragm reset)", role: "breathwork", setup: "prone, forehead on hands", cue: "expand ribs 360\xB0, exhale twice as long", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 slow breaths" },
@@ -1825,6 +1998,10 @@ function eligibleFor(r, slots, ctx) {
   if (!slot) return false;
   if (missingForPlacement(r, slot).length > 0) return false;
   if (!r.sports.includes(ctx.sport)) return false;
+  if (slot === "hammers_today:warmup" && ctx.fit) {
+    const tags = cleanFit(r.fit_levels, r.fit_age_bands);
+    if (tags && !fits(tags, ctx.fit)) return false;
+  }
   if (slot === "hammers_today:skill" && (!ctx.skill || !skillBlocksOf(r).includes(ctx.skill))) return false;
   const need = r.equipment.map(norm2).filter(Boolean);
   if (need.length > 0) {
@@ -1881,6 +2058,7 @@ function ownerPitchDrill(ctx) {
 var PLAN_SLOTS, rows, clean, norm2, TAG_SLOT, rotate, PITCH_DAY_TAGS;
 var init_ownerPlanDrills = __esm({
   "src/lib/prescription/ownerPlanDrills.ts"() {
+    init_warmupFit();
     init_ownerConditioning();
     PLAN_SLOTS = [
       "hammers_today:skill",
@@ -2204,6 +2382,7 @@ var init_tissueCarePlan = __esm({
 });
 
 // src/lib/hammer/prescription/dailyPlan.ts
+init_warmupFit();
 init_catchPlay();
 
 // src/lib/hammer/prescription/throwPlacement.ts
@@ -3687,7 +3866,7 @@ var sbBase = [
   { key: "sb_per_game", dir: "max", value: 0.3 },
   { key: "pfp_clean_pct", dir: "min", value: 0.98 }
 ];
-function startingStandards(sport, level, overrides2 = {}) {
+function startingStandards(sport, level, overrides3 = {}) {
   let list3;
   if (sport === "baseball") {
     const [k, bb] = bbKB[level];
@@ -3697,7 +3876,7 @@ function startingStandards(sport, level, overrides2 = {}) {
     list3 = [{ key: "k_per_7", dir: "min", value: hs ? 12 : 10 }, { key: "bb_per_7", dir: "max", value: hs ? 1.2 : 1.5 }, ...sbBase];
   }
   return list3.map((s) => {
-    const o = overrides2[`${sport}_${level}_${s.key}`];
+    const o = overrides3[`${sport}_${level}_${s.key}`];
     return typeof o === "number" && Number.isFinite(o) ? { ...s, value: o } : s;
   });
 }
@@ -8572,6 +8751,10 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const MIN_WARMUP_DRILLS = 4;
       let context = biasedContext;
       const projAny = proj;
+      const warmupPlayerFit = resolvePlayerFit({
+        competitionLevel: ctx.get("competition_level")?.value ?? null,
+        ageYears: ctx.get("age_years")?.value ?? null
+      });
       const warmupArgs = {
         context,
         lifecycle,
@@ -8583,7 +8766,9 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         injuryRegions: injuryRegions ?? [],
         suppressTwitch: isRecoveryDay || recoverDay || isTravelDay,
         sport: normalizeSport(ctx.get("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball",
-        isThrower: pos === "P" || pos === "C"
+        isThrower: pos === "P" || pos === "C",
+        // Owner Part D: warm-up items must fit the player's level and age band.
+        fit: warmupPlayerFit
       };
       let built = buildWarmup(warmupArgs);
       if (biasedContext !== unbiasedContext && built.drills.length < MIN_WARMUP_DRILLS) {
@@ -8602,7 +8787,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         stopIf: d3.stopIf,
         equipmentNote: d3.equipmentNote,
         guide: d3.guide
-      })), ["hammers_today:warmup"], { sport: normalizeSport(ctx.get("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set(proj.equipmentList ?? []) });
+      })), ["hammers_today:warmup"], { fit: warmupPlayerFit, sport: normalizeSport(ctx.get("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set(proj.equipmentList ?? []) });
       {
         const roleBySlug = new Map(built.drills.map((d3) => [d3.slug, d3.role]));
         const sorted = sortByWarmupStage(drills, (d3) => d3.slug ?? "", (d3) => roleBySlug.get(d3.slug ?? "") ?? null);
@@ -10375,6 +10560,7 @@ function withWarmupThrows(blocks) {
 init_ownerPlanDrills();
 init_tissueCarePlan();
 init_warmupStages();
+init_warmupFit();
 
 // src/lib/hammer/context/contextProjection.ts
 function normalizeConfidence(raw) {
@@ -14945,6 +15131,7 @@ export {
   setActiveCatchPlayStandards,
   setOwnerPlanDrills,
   setTissueCareConfig,
+  setWarmupFitOverrides,
   setWarmupStageOverrides,
   testSettingsFor
 };

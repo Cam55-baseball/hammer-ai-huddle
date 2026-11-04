@@ -67,6 +67,9 @@ export interface OwnerDrillRow {
   distance_feet?: number | null;
   bases_per_rep?: number | null;
   base_distance_feet?: number | null;
+  /** Owner Part D: warm-up level / age-band tags (empty = fits everyone). */
+  fit_levels?: string[];
+  fit_age_bands?: string[];
   active: boolean;
   pinned: boolean;
   created_at: string;

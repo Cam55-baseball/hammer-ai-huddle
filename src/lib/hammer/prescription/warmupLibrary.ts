@@ -17,6 +17,7 @@
 import { guideFor, type MovementGuide } from "@/lib/hammer/prescription/movementGuide";
 import { sortByWarmupStage, registerWarmupRoles } from "./warmupStages";
 import { isSoftRecovery } from "../../../../supabase/functions/_shared/wic/schedule/softRecovery";
+import { fitTagsFor, fits, type PlayerFit } from "./warmupFit";
 
 export type WarmupRole =
   | "breathwork"
@@ -588,12 +589,15 @@ interface PickFilters {
   readonly injuryRegions: ReadonlyArray<string>;
   /** When set, only drills on this axis are eligible. */
   readonly axis?: WarmupAxis;
+  /** Owner Part D: only items tagged for this player's level and age band. */
+  readonly fit?: PlayerFit;
 }
 
 function isEligible(d: WarmupDrill, f: PickFilters): boolean {
   if (LIFECYCLE_RANK[f.lifecycle] < LIFECYCLE_RANK[d.minLifecycle]) return false;
   if (f.gameDay && !d.gameDayLegal) return false;
   if (f.axis && (d.axis ?? "bilateral") !== f.axis) return false;
+  if (f.fit && !fits(fitTagsFor(d), f.fit)) return false;
   if (d.regions && f.injuryRegions.length > 0) {
     if (d.regions.some((r) => f.injuryRegions.includes(r))) return false;
   }
@@ -608,7 +612,8 @@ export interface WarmupDiagnostic {
     | "single_leg_swap"
     | "single_leg_short"
     | "twitch_suppressed"
-    | "injury_veto";
+    | "injury_veto"
+    | "level_fallback";
   readonly role?: WarmupRole;
   readonly from?: string;
   readonly to?: string;
@@ -638,6 +643,33 @@ function poolForRole(role: WarmupRole, f: PickFilters): WarmupDrill[] {
 }
 
 function pickForRole(
+  role: WarmupRole,
+  f: PickFilters,
+  seed: number,
+  seen: Set<string>,
+  diagnostics?: WarmupDiagnostic[],
+): WarmupDrill | null {
+  const fitted = scanRole(role, f, seed, seen, diagnostics);
+  if (fitted || !f.fit) return fitted;
+  // Owner Part D: nothing tagged for this player fits the slot — take the
+  // nearest easier item (lowest difficulty first) so coverage is never lost.
+  const easier = { ...f, fit: undefined };
+  const pool = poolForRole(role, easier).sort((a, b) => LIFECYCLE_RANK[a.minLifecycle] - LIFECYCLE_RANK[b.minLifecycle]);
+  for (const candidate of pool) {
+    const resolved = resolveEquipmentSafe(candidate, easier);
+    if (!resolved || seen.has(resolved.drill.slug)) continue;
+    diagnostics?.push({
+      code: "level_fallback",
+      role,
+      to: resolved.drill.slug,
+      detail: `No ${role.replace(/_/g, " ")} item is tagged for this player's level and age — used the nearest easier item, ${resolved.drill.name}.`,
+    });
+    return resolved.drill;
+  }
+  return null;
+}
+
+function scanRole(
   role: WarmupRole,
   f: PickFilters,
   seed: number,
@@ -687,6 +719,8 @@ export interface BuildWarmupInput {
   readonly isThrower?: boolean;
   /** Sort the chosen movements by warm-up stage (default true). False = the old order, for proofs only. */
   readonly orderByStage?: boolean;
+  /** Owner Part D: player's level + age band; omitted = no tag filter (legacy callers). */
+  readonly fit?: PlayerFit;
 }
 
 export interface BuiltWarmupDrill {
@@ -790,9 +824,11 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
   const diagnostics: WarmupDiagnostic[] = [];
   if (input.context === "recovery_day") {
     const available = expandEquipment(input.equipment, input.venue);
-    const drills = WARMUP_LIBRARY.filter(d => isSoftRecovery(d.slug) &&
+    const soft = WARMUP_LIBRARY.filter(d => isSoftRecovery(d.slug) &&
       equipmentFor(d).every(e => available.has(e)) &&
-      !(d.regions ?? []).some(r => (input.injuryRegions ?? []).includes(r)))
+      !(d.regions ?? []).some(r => (input.injuryRegions ?? []).includes(r)));
+    const fitted = input.fit ? soft.filter(d => fits(fitTagsFor(d), input.fit!)) : soft;
+    const drills = (fitted.length >= Math.min(3, soft.length) ? fitted : soft)
       .slice(0, 3).map(d => toBuilt(d, input.lifecycle));
     const ordered = input.orderByStage === false ? drills : sortByWarmupStage(drills, d => d.slug, d => d.role);
     return { context: input.context, drills: ordered, estMinutes: drills.length ? 5 : 0, singleLegShare: null,
@@ -804,6 +840,7 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
     gameDay: input.gameDay,
     available: expandEquipment(input.equipment, input.venue),
     injuryRegions,
+    fit: input.fit,
   };
   if (injuryRegions.length > 0) {
     diagnostics.push({
