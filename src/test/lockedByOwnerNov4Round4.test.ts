@@ -89,7 +89,7 @@ describe("locked by owner Nov 4 r4 — (3) no drift after rule changes", () => {
 
 describe("locked by owner Nov 4 r4 — (4) clip → prompt → arm-strength gate → rebuild chain", () => {
   const today = "2026-11-04";
-  const green = Array.from({ length: 14 }, (_, i) => ({ entry_date: `2026-10-${String(22 + Math.min(i, 9)).padStart(2, "0")}`, physical_readiness: 5, pain_location: [], soreness_locations: [], stiffness_locations: [] }));
+  const green = Array.from({ length: 14 }, (_, i) => ({ entry_date: new Date(Date.parse("2026-10-21T12:00:00Z") + i * 86_400_000).toISOString().slice(0, 10), physical_readiness: 5, pain_location: [], soreness_locations: [], stiffness_locations: [] }));
   const checks = [1, 2].map((n) => ({ plan_date: `2026-11-0${n}`, payload: { outcome: "full", maxDistanceFt: 120, positionDistanceFt: 120 } }));
   const video = { id: "v1", created_at: "2026-11-03T18:00:00Z", module: "throwing", sport: "baseball" };
   const S = { ...DEFAULT_CATCH_PLAY_STANDARDS, armRiskFaults: ["th_low_elbow_slot", "arm_lag", "th_trunk_rotation_early", "th_front_side_flyout", "th_across_body"] };
