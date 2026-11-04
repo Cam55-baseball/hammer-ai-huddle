@@ -8,7 +8,7 @@ const dowOf = (d: string) => new Date(`${d}T12:00:00Z`).getUTCDay();
 
 function save(choices: RestChoice[], target: string, scope: "week" | "indefinite", at: string): RestChoice[] {
   const v = judgeRestMove({ today, target, scope, choices });
-  if (!v.ok) throw new Error(v.reason);
+  if (v.ok === false) throw new Error(v.reason);
   return [...choices, { rest_dow: dowOf(target), scope, week_start: v.weekStart, created_at: at }];
 }
 
