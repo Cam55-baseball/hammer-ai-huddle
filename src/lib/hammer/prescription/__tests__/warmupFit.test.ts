@@ -15,14 +15,9 @@ describe("backfill from minLifecycle (owner Part D rule 3)", () => {
     for (const d of WARMUP_LIBRARY.filter((x) => x.minLifecycle === "youth"))
       expect(fitTagsFor(d)).toEqual({ levels: ["youth", "high_school", "college", "pro"], ageBands: ["u13", "13_17", "18_plus"] });
   });
-  it("beginner items: HS/college/pro 13+, under-13s only for low-impact roles", () => {
-    for (const d of WARMUP_LIBRARY.filter((x) => x.minLifecycle === "beginner")) {
-      const t = fitTagsFor(d);
-      expect(t.levels).toEqual(expect.arrayContaining(["high_school", "college", "pro"]));
-      expect(t.ageBands).toEqual(expect.arrayContaining(["13_17", "18_plus"]));
-      expect(t.ageBands.includes("u13")).toBe(LOW_IMPACT_ROLES.has(d.role));
-    }
-    expect(LOW_IMPACT_ROLES.has("mobility_joint") && LOW_IMPACT_ROLES.has("activation") && LOW_IMPACT_ROLES.has("tissue_prep")).toBe(true);
+  it("beginner items fit every level and age band, under-13s included (owner Nov 4: need-based, not age-based)", () => {
+    for (const d of WARMUP_LIBRARY.filter((x) => x.minLifecycle === "beginner"))
+      expect(fitTagsFor(d)).toEqual({ levels: ["youth", "high_school", "college", "pro"], ageBands: ["u13", "13_17", "18_plus"] });
     expect(LOW_IMPACT_ROLES.has("fast_twitch")).toBe(false);
   });
   it("intermediate items: HS/college/pro, 13+", () => {
