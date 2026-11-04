@@ -30,6 +30,7 @@
  */
 
 import { firstPositionToken } from "@/lib/hammer/positions/positionNormalizer";
+import { catchPlayDay, cpPosition, defenseThrowsAllowed, type CatchPlayDay as CatchPlayDayResult, type CatchPlayStandards, type EarnResult as CatchPlayEarn } from "../../../../supabase/functions/_shared/wic/throwing/catchPlay";
 
 export type EassSport = "baseball" | "softball";
 export type EassPosition =
@@ -401,6 +402,8 @@ export interface EassPrescription {
   stopRules: string[];
   durationMin: number;
   overloadUsed: boolean;
+  /** Owner Nov 4 r3 Part B: today's catch-play kind and the plain Defense reason when throws are held back. */
+  catchPlay?: { kind: string; totalThrows: number; defenseThrows: boolean; because: string[] };
   softballWindmill: boolean;
 }
 
@@ -624,11 +627,12 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
     mode,
     title: `EASS Throwing — ${seasonLabel} ${posLabel}${isSoftball && isPitcher ? " (windmill)" : ""}`,
     why: isPositionPlayer
-      ? `Position-player arm care: band prep → fast-object → short regulation catch → position skill → cooldown. No pitcher-load work.`
+      ? `Position-player arm care: band prep → fast-object → catch play counted in throws → position skill → cooldown. No pitcher-load work.`
       : `Whole-body elastic ${isSoftball && isPitcher ? "windmill" : "throwing"} stack: band prep → fast-object → underload → regulation${offSeason || preSeason ? " → long-toss" : ""}${intentOk ? " → intent" : ""}${overloadOk ? " → overload" : ""} → position skill → cooldown.`,
     roadmapReason: `${seasonLabel.charAt(0).toUpperCase() + seasonLabel.slice(1)} — ${offSeason ? "build the elastic base now so you can spend it in season." : inSeason ? "maintain freshness; save max throws for competition." : preSeason ? "ramp intent week over week without overspend." : "protect the joint while staying connected."}`,
     drills, cues, stopRules: UNIVERSAL_STOP, durationMin,
     overloadUsed: overloadOk,
+    ...(cpDay ? { catchPlay: { kind: cpDay.kind, totalThrows: cpDay.totalThrows, defenseThrows: defenseGate.allowed, because: [...(defenseGate.because ? [defenseGate.because] : []), ...cpDay.because.filter((b) => b !== defenseGate.because)] } } : {}),
     softballWindmill: isSoftball && isPitcher,
   };
 }
