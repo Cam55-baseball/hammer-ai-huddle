@@ -42,7 +42,7 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
     const groupedIsDistance = grouped ? new RegExp(`\\b${grouped[1]}\\s*(?:ft|feet)\\s*x`).test(text) : false;
     const rows = grouped && !groupedIsDistance ? Number(grouped[1]) : 1;
     const per = grouped ? Number(grouped[2]) : firstNumber(text, /\b(\d+)\s*throws?\b/);
-    return { rows: Math.max(1, rows), completion: true, throwing: true, fields: [{ key: "throws", label: "Throws", prefill: per ?? null }] };
+    return { rows: Math.max(1, rows), completion: !["throwing", "pitching"].includes(modality), throwing: true, fields: [{ key: "throws", label: "Throws", prefill: per ?? null }] };
   }
   if (modality === 'bunting' || /\b(?:squeeze|sac|sacrifice|drag|push|hit) bunt\b|\bbunt for a hit\b/i.test(name)) return { rows:Math.max(1,sets),completion:false,fields:[{key:'attempts',label:'Attempts',prefill:firstNumber(text,/\b(\d+)\s*attempts?\b/) ?? reps},{key:'successes',label:'Successful bunts',prefill:null}] };
   if (jump) return { rows: Math.max(1, sets), completion: false, fields: [{ key: "distance", label: jump === "jump_distance" ? "Jump distance" : "Jump height", unit: jump === "jump_distance" ? "ft + in" : "in", prefill: null }] };
