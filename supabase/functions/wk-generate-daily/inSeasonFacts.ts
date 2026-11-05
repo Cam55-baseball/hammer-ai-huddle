@@ -98,7 +98,7 @@ export async function planInSeasonSprints(o: {
   const laterLighter = laterIdeal.filter((d) => dayLoadScore(gameOn(shift(d, -1)), gameOn(shift(d, 1))) < todayLoad).length;
   const weekCredits = credits.filter((c) => c.date >= mon && c.date < planDate);
   const heaviest = weekCredits.length ? Math.max(...weekCredits.map((c) => c.source === "unknown" ? Infinity : c.bases)) : -1;
-  const yesterdayWasHeaviest = !!yGame && weekCredits.length > 1 && (yGame.source === "unknown" ? true : yGame.bases >= heaviest);
+  const yesterdayWasHeaviest = !!yGame && (yGame.source === "unknown" ? true : yGame.bases >= heaviest);
 
   const facts = {
     gameToday: gameOn(planDate), gameTomorrow: gameOn(shift(planDate, 1)), yesterdayGame: yGame,
