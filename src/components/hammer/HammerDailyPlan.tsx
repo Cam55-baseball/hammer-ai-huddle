@@ -139,6 +139,7 @@ import { WkBatSpeedCard } from "@/components/hammer/WkBatSpeedCard";
 import { WkLiftsCard } from "@/components/hammer/WkLiftsCard";
 import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GameLogPromptCard } from "@/components/hammer/GameLogPromptCard";
+import { GameDayCard } from "@/components/hammer/GameDayCard";
 import { PracticeLogPromptCard } from "@/components/hammer/PracticeLogPromptCard";
 import { AnalysisRecordingPrompts } from "@/components/hammer/AnalysisRecordingPrompts";
 import { analysisGoalOrder } from "@/lib/hammer/analysisGoalOrder";
@@ -1473,6 +1474,9 @@ function HammerDailyPlanBody({
                 </PocketCard>
               </ErrorBoundary>}
               {coachCards(["lift", "supplemental"])}
+              {/* Owner Nov 5 round 4: the Game card sits after the pre-game warm-up and the day's work,
+                  before post-game recovery/flush (training cards carry no clock times). */}
+              <ErrorBoundary label="game-day-card"><GameDayCard sport={drillSport} /></ErrorBoundary>
               {recoveryBlocks.map((b, recoveryIndex) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 const tissueHere = liftIsTissueCare && recoveryIndex === 0;
