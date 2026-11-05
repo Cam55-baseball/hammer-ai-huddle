@@ -1,3 +1,5 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
+import { programOf, programQuestionScope } from "../../../../supabase/functions/_shared/programAccess";
 /**
  * Morning check-in questions about yesterday: "Did you play a game?" and,
  * for pitchers, "Did you pitch?". Saves through the same rows the plan
@@ -26,6 +28,7 @@ interface O { id: string; outing_type: "start" | "relief" | "bullpen"; planned_d
 
 export function MorningGameQuestions() {
   const { user } = useAuth();
+  const { modules: programModules } = useProgramModules();
   const qc = useQueryClient();
   const { sport } = useSportTheme();
   const ctx = useHammerAthleteContext();
@@ -67,7 +70,9 @@ export function MorningGameQuestions() {
     try { return localStorage.getItem(gameLogAskedKey(user?.id, yesterday)) === "1"; } catch { return false; }
   })();
 
-  const isPitcher = shouldShowPitchingCard(
+  // Owner Nov 5 #2: the shared program judge decides; 5Tool is never asked pitching questions.
+  const programSport = String(ctx.get<string>("sport_primary")?.value ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
+  const isPitcher = programQuestionScope(programOf(programSport, programModules)).pitching && shouldShowPitchingCard(
     readPitcherProfile(user?.id),
     ctx.get<unknown>("position_primary")?.value ?? null,
     ctx.get<unknown>("position_secondary")?.value ?? null,
