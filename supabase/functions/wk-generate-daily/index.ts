@@ -4053,7 +4053,7 @@ const handler = async (req: Request): Promise<Response> => {
             const isMax = (r: any) => r.slot === "conditioning" && basesPerRepOf(withRoute(r), sport) > 0 && (r.sets ?? 0) > 0;
             if (!placeSprintPrep(isMax)) {
               // Prep can't be placed → no max sprints: the speed day becomes easy (submax) running.
-              finalRxs.forEach((r) => { const ps = (r as any).why_payload?.position_sprints; if (ps) { ps.max_intent = false; ps.sprint_prep_missing = true; ps.because = "Your sprint warm-up couldn't be added today, so today's sprints are easy (not all-out)."; } });
+              finalRxs.forEach((r) => { const ps = (r as any).why_payload?.position_sprints; if (ps) { ps.max_intent = false; ps.sprint_prep_missing = true; ps.because = "Your sprint warm-up couldn't be added today, so today's sprints are easy (not all-out)."; } if ((r as any).why_payload?.in_season_added) (r as any).rationale = "Easy base runs at about 70% effort today (your sprint warm-up couldn't be added, so nothing all-out)."; });
             }
           }
           throw new InSeasonDone();
