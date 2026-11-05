@@ -1,3 +1,4 @@
+import { invokeSignedIn } from '@/lib/auth/invokeSignedIn';
 import {useEffect,useState} from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import {useAuth} from '@/hooks/useAuth';
@@ -15,7 +16,7 @@ type Receipt={id:string;phase:string;settings:Record<string,number>;before_value
 export function CoachPeriodizationEditor({athleteId}:{athleteId?:string}) {
  const {user}=useAuth();const qc=useQueryClient();const [phase,setPhase]=useState('');const [values,setValues]=useState<Record<string,string>>({});
  const [reviews,setReviews]=useState<Receipt[]>([]);const review=reviews[0]??null;const [scope,setScope]=useState<'all'|'chosen'>('all');const [chosen,setChosen]=useState<string[]>([]);const [first,setFirst]=useState(false);const [receipts,setReceipts]=useState<Receipt[]>([]);
- const players=useQuery({queryKey:['coach-phase-players',user?.id],enabled:!!user&&!athleteId,queryFn:async()=>{const {data,error}=await supabase.functions.invoke('coach-rx-safety',{body:{mode:'recipients'}});if(error)throw error;return ((data as any)?.players??[]) as {id:string;full_name:string|null}[];}});
+ const players=useQuery({queryKey:['coach-phase-players',user?.id],enabled:!!user&&!athleteId,queryFn:async()=>{const r=await invokeSignedIn<any>('coach-rx-safety',{mode:'recipients'});if(r.signedOut)return [];return ((r.data as any)?.players??[]) as {id:string;full_name:string|null}[];}});
  const nameOf=(id:string)=>players.data?.find(p=>p.id===id)?.full_name??null;const [busy,setBusy]=useState(false);const [error,setError]=useState<string|null>(null);
  const q=useQuery({queryKey:['coach-phase-settings',user?.id,athleteId],enabled:!!user,queryFn:async()=>{
    const global=await db.from('wk_periodization_blocks').select('*');if(global.error)throw global.error;
