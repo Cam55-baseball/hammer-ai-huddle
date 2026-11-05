@@ -1476,7 +1476,7 @@ function HammerDailyPlanBody({
               {coachCards(["lift", "supplemental"])}
               {/* Owner Nov 5 round 4: the Game card sits after the pre-game warm-up and the day's work,
                   before post-game recovery/flush (training cards carry no clock times). */}
-              <ErrorBoundary label="game-day-card"><GameDayCard sport={drillSport} /></ErrorBoundary>
+              <ErrorBoundary label="game-day-card"><GameDayCard sport={sportIsBaseball ? "baseball" : "softball"} /></ErrorBoundary>
               {recoveryBlocks.map((b, recoveryIndex) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 const tissueHere = liftIsTissueCare && recoveryIndex === 0;
