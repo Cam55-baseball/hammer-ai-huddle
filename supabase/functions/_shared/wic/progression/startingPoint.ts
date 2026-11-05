@@ -35,8 +35,14 @@ const DISTANCE: Record<Sport, readonly string[]> = {
   softball: ["Under 40 ft", "40–60 ft", "60–90 ft", "90–150 ft", "150+ ft"],
 };
 
-export function questionsFor(sport: Sport, program: Program): Question[] {
+/** Owner Nov 5: position players answer base-length sprints; pitchers (and Golden 2Way marked pitcher) keep yards. */
+export function sprintsInBases(program: Program, primaryFocus?: string | null): boolean {
+  return program === "5tool" || (program === "golden2way" && primaryFocus !== "pitcher");
+}
+
+export function questionsFor(sport: Sport, program: Program, primaryFocus?: string | null): Question[] {
   const sb = sport === "softball";
+  const bases = sprintsInBases(program, primaryFocus);
   const q: Question[] = [
     { id: "last_trained", category: "overall", label: "When did you last train 3+ days a week, consistently?", options: ["Right now", "1–2 weeks ago", "3–6 weeks ago", "2–6 months ago", "6+ months ago", "Never"] },
     { id: "throw_days", category: "throwing", label: "How many days a week do you throw right now?", options: ["0", "1–2", "3–4", "5–6"] },
@@ -52,7 +58,9 @@ export function questionsFor(sport: Sport, program: Program): Question[] {
     { id: "defense_reps", category: "defense", label: "How many reps in a session?", options: ["0–25", "25–50", "50–100", "100+"] },
     { id: "defense_throw_share", category: "defense", label: "About what share of those reps end with a throw?", options: ["0–25%", "25–50%", "50–75%", "75–100%"] },
     { id: "run_days", category: "speed", label: "How many days a week do you sprint or run?", options: ["0", "1–2", "3–4", "5+"] },
-    { id: "sprint_volume", category: "speed", label: "How many sprint yards in a session?", options: ["None", "Under 200 yd", "200–500 yd", "500–1,000 yd"] },
+    bases
+      ? { id: "base_sprints", category: "speed", label: `How many base-length sprints (${sb ? "60" : "90"} ft) in a session?`, options: ["None", "1–5", "6–10", "11–15", "16–20+"] }
+      : { id: "sprint_volume", category: "speed", label: "How many sprint yards in a session?", options: ["None", "Under 200 yd", "200–500 yd", "500–1,000 yd"] },
     { id: "max_sprints", category: "speed", label: "Do you do all-out sprints regularly?", options: ["Yes", "No"] },
     { id: "lift_days", category: "lifting", label: "How many days a week do you lift right now?", options: ["0", "1", "2", "3+"] },
     { id: "lift_history", category: "lifting", label: "How long have you lifted consistently?", options: ["Never", "Under 6 months", "6–24 months", "2+ years"] },
@@ -84,9 +92,11 @@ export function planningAnswers(sport: Sport, program: Program, answers: Answers
 }
 
 /** Every shown question answered with one of its options. */
-export function answersComplete(sport: Sport, program: Program, a: Answers | null | undefined): boolean {
+export function answersComplete(sport: Sport, program: Program, a: Answers | null | undefined, primaryFocus?: string | null): boolean {
   if (!a) return false;
-  return questionsFor(sport, program).every((q) => q.options.includes(a[q.id] ?? ""));
+  // An earlier yard answer still counts for position players, so nobody loses a finished start.
+  return questionsFor(sport, program, primaryFocus).every((q) => q.options.includes(a[q.id] ?? "") ||
+    (q.id === "base_sprints" && ["None", "Under 200 yd", "200–500 yd", "500–1,000 yd"].includes(a.sprint_volume ?? "")));
 }
 
 const THROW_SHARE: Record<string, number> = { "0–25%": 0.125, "25–50%": 0.375, "50–75%": 0.625, "75–100%": 0.875 };
