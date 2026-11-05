@@ -21,8 +21,10 @@ export function useSentActivities() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
 
-      const { data, error } = await supabase.functions.invoke('coach-rx-safety', { body: { mode: 'recipients' } });
-      if (error || data?.error) throw error ?? new Error(data.error);
+      const r = await invokeSignedIn<any>('coach-rx-safety', { mode: 'recipients' });
+      if (r.signedOut) return;
+      const data = r.data;
+      if (data?.error) throw new Error(data.error);
       setFollowedPlayers(data?.players ?? []);
     } catch (error) {
       console.error('Error fetching followed players:', error);

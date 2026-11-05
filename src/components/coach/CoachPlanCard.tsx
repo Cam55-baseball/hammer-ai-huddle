@@ -81,9 +81,9 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
     enabled: !!user?.id && !!query.data && query.data.state !== 'denied',
     staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('phase-state', { body: { athlete_id: athleteId, date: today } });
-      if (error) throw error;
-      return data?.live as { season: string; season_label: string; season_end_date: string | null } | undefined;
+      const r = await invokeSignedIn<any>('phase-state', { athlete_id: athleteId, date: today });
+      if (r.signedOut) return null;
+      return r.data?.live as { season: string; season_label: string; season_end_date: string | null } | undefined;
     },
   });
   const seasonLine = <div data-coach-season>
