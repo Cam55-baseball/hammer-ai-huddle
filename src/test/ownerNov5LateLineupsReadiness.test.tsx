@@ -55,10 +55,10 @@ describe("saved lineups", () => {
     expect(db.t.coach_lineup_players).toHaveLength(0);
   });
   it("only connected players, unique jerseys, a name", () => {
-    const d = draftFrom([...roster, { id: "z", name: "Zed" }]).map((r) => ({ ...r, included: true, jersey: String(r.name.length) }));
+    const d = draftFrom([...roster, { id: "z", name: "Zed" }]).map((r, i) => ({ ...r, included: true, jersey: String(i + 1) }));
     expect(validateLineup("T", d, connected).error).toMatch(/connected/);
     expect(validateLineup("", d, connected).error).toMatch(/Name/);
-    expect(validateLineup("T", d.slice(0, 3), connected).error).toMatch(/share/);
+    expect(validateLineup("T", d.slice(0, 3).map((r) => ({ ...r, jersey: "9" })), connected).error).toMatch(/share/);
   });
   it("another coach is blocked (same rule as the database policy)", async () => {
     const db = fakeDb("coach1", connected);
