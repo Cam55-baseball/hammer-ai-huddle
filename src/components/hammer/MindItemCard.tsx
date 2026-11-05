@@ -1,3 +1,4 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +10,6 @@ import { useTexVisionS2Priority } from "./TexVisionS2Priority";
 import { useTexVisionProgress } from "@/hooks/useTexVisionProgress";
 import { useDailyDrillSelection } from "@/hooks/useDailyDrillSelection";
 import { loadOwnerPlanDrills, ownerMindDrill, ownerCareDrill, careDosage } from "@/lib/prescription/ownerPlanDrills";
-import { useSubscription } from "@/hooks/useSubscription";
 import { InformationalVideos } from "@/components/video-suggestions/InformationalVideos";
 import { mindVideoTopics } from "@/lib/videoMoments/mindTopics";
 import { pickSituation } from "@/lib/hammer/mindContent";
@@ -50,7 +50,7 @@ export function MindItemCard({ planDate, placement }: { planDate: string; placem
   const builtIn = Number.isFinite(day) ? dailyMindItem(day, texVisionPrescribed).kind : null;
   const sport = typeof window !== "undefined" && localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball";
   // Owner Mind-tagged drills take the non-Tex-Vision days; a prescribed Tex Vision day stays Tex Vision.
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   // Owner Nov 1: on a focus-routine day an owner FOCUS ROUTINE activity (Programs-matched) is used first.
   const focusOwner = ownerLoaded && builtIn === "focus_routine" ? ownerCareDrill("hammers_today:focus_routine", { sport, modules, day: new Date(`${planDate}T12:00:00Z`) }) : null;
   const owner = focusOwner ?? (ownerLoaded && builtIn && builtIn !== "tex_vision" ? ownerMindDrill({ sport, day: new Date(`${planDate}T12:00:00Z`) }) : null);

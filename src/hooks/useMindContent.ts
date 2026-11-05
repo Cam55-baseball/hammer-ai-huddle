@@ -1,6 +1,6 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSubscription } from "@/hooks/useSubscription";
 import type { MindContentRow, PlayerTags } from "@/lib/hammer/mindContent";
 
 /** Owner rows for Game situations and coach advice. A failed read falls back to the built-ins. */
@@ -18,7 +18,7 @@ export function useMindContentRows() {
 
 /** The player's own sport, position, level and programs for tag matching. */
 export function usePlayerTags(): PlayerTags {
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const sport = typeof window !== "undefined" && localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball";
   const { data } = useQuery({
     queryKey: ["player-mind-tags"],

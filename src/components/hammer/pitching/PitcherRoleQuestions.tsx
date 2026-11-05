@@ -1,8 +1,8 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
 import { effectivePitchingRole } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { ownerPositionOnly } from "../../../../supabase/functions/_shared/owner/ownerPositionException";
 import { FOCUS_LABEL, ROLE_LABEL, playerPitches, type PrimaryFocus } from "@/lib/hammer/pitching/pitcherRoleAnswers";
@@ -10,7 +10,7 @@ import { FOCUS_LABEL, ROLE_LABEL, playerPitches, type PrimaryFocus } from "@/lib
 /** Owner Oct 31: pitcher/position focus, pitching role, Limit my pitching.
  *  Every tap saves and rebuilds the next 7 days through the shared pitching-schedule save. */
 export function PitcherRoleQuestions({ compact = false }: { compact?: boolean }) {
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const { user } = useOptionalAuth();
   const s = usePitcherSchedule();
   const settings = s.data?.settings ?? null;

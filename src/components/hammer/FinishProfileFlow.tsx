@@ -1,3 +1,4 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 /**
  * Owner Nov 2 — ONE guided "Finish your profile" flow.
  * Walks only the details the canonical `initial_plan_missing` judge lists,
@@ -24,7 +25,6 @@ import { PitcherRoleQuestions } from "@/components/hammer/pitching/PitcherRoleQu
 import { PhysioHealthIntakeDialog } from "@/components/physio/PhysioHealthIntakeDialog";
 import { CategoryGoalsCard } from "@/components/settings/CategoryGoalsCard";
 import { StartingPointForm } from "@/components/hammer/StartingPointForm";
-import { useSubscription } from '@/hooks/useSubscription';
 import { saveStartingPoint } from '@/hooks/useStartingPoint';
 import { programOf, type Sport } from '../../../supabase/functions/_shared/wic/progression/startingPoint';
 import { REQUIRED_PLAN_QUESTIONS } from '../../../supabase/functions/_shared/startReadiness';
@@ -236,7 +236,7 @@ function PitchingRoleStep({onSaved}:{onSaved:()=>Promise<void>}) {
 }
 
 function StartingChoiceStep({ userId, sport, onSaved }: {userId:string; sport:Sport; onSaved:()=>Promise<void>}) {
-  const {modules}=useSubscription();
+  const {modules}=useProgramModules();
   const s=useSaver(onSaved);
   const [value,setValue]=useState('');
   const program=programOf(sport,modules ?? []);

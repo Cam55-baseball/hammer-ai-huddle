@@ -1,8 +1,8 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Video } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { localIso } from '@/hooks/usePitcherSchedule';
@@ -27,7 +27,7 @@ export function DelaycamReminder({ skillToday, offSeason, majorMechanicalFlag = 
   skillToday: boolean; offSeason: boolean; majorMechanicalFlag?: boolean; mechanicsGoal?: boolean;
 }) {
   const { user } = useAuth();
-  const { modules, loading: subscriptionLoading } = useSubscription();
+  const { modules, loading: subscriptionLoading } = useProgramModules();
   const { sport } = useSportTheme();
   const switches = useFeatureSwitches();
   const hasHitting = priorityAccess(modules, sport).hasHitting;

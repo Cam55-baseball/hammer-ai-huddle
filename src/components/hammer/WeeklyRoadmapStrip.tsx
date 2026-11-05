@@ -1,3 +1,4 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 import { useState } from "react";
 import {useQuery}from '@tanstack/react-query';
 import {useAuth}from '@/hooks/useAuth';
@@ -77,7 +78,7 @@ export function WeeklyRoadmapStrip({ plan, todayCategories, savedPhase,sport }: 
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
   const { weeklyRoadmap, roadmap } = plan;
   const season = useSeasonStatus();
-  const {user}=useAuth();const {modules}=useSubscription();
+  const {user}=useAuth();const {modules}=useProgramModules();
   const today=localIso();
   const monday=isoShift(today,-((new Date(`${today}T12:00:00Z`).getUTCDay()+6)%7));
   const savedWeek=useQuery({queryKey:['composed-plan-week',user?.id,sport,monday],enabled:!!user&&!!sport,

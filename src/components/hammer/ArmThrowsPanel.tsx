@@ -1,3 +1,4 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 /**
  * Step 30 E — one-tap throw entry inside the throwing card and the pitching card.
  * Both cards read and write the SAME arm ledger and show the SAME budget line.
@@ -11,7 +12,6 @@ import { AUTO_STATUS_LABEL, autoStatus } from "@/lib/logging/autoCompletion";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { useRecentPitchingLoad } from "@/hooks/useRecentPitchingLoad";
@@ -39,7 +39,7 @@ export function ArmThrowsPanel({ source, planDate, fixture }: { source: EntrySou
   const { user } = useAuth();
   const qc = useQueryClient();
   const ctx = useHammerAthleteContext();
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const { isOwner } = useOwnerAccess();
   const date = planDate ?? todayIso();
 

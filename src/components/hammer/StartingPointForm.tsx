@@ -1,9 +1,9 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { saveStartingPoint, useInvalidateStartingPoint, useStartingPointAnswers } from "@/hooks/useStartingPoint";
 import { rebuildAfterChange } from "@/lib/hammer/rebuildAfterChange";
@@ -22,7 +22,7 @@ const TITLES: Record<string, string> = {
 /** "Where are you starting from?" — owner-approved multiple choice, by program and sport. */
 export function StartingPointForm({ onSaved, rebuild = true, compact = false }: { onSaved?: (message: string) => void; rebuild?: boolean; compact?: boolean }) {
   const { user } = useAuth();
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const ctx = useHammerAthleteContext();
   const sport: Sport = String(ctx.get<string>("sport_primary")?.value ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
   const program = programOf(sport, modules);
@@ -91,7 +91,7 @@ export function StartingPointForm({ onSaved, rebuild = true, compact = false }: 
 /** One-time Today card for existing players with no answers; disappears for good once saved. */
 export function StartingPointPromptCard() {
   const { user } = useAuth();
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const ctx = useHammerAthleteContext();
   const sport: Sport = String(ctx.get<string>("sport_primary")?.value ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
   const saved = useStartingPointAnswers(user?.id, sport);
@@ -111,7 +111,7 @@ export function StartingPointPromptCard() {
 
 /** Owner Nov 1 round 5: Golden 2Way players with no main role see this on Today until they pick. */
 export function Golden2WayRolePromptCard() {
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const ctx = useHammerAthleteContext();
   const sport: Sport = String(ctx.get<string>("sport_primary")?.value ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
   const pitcher = usePitcherSchedule();
