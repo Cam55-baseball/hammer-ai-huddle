@@ -123,6 +123,7 @@ import {
   type ProgressionState,
 } from "../_shared/wic/progression/progressionState.ts";
 import { planningPrimaryFocus } from "../_shared/wic/progression/startingPoint.ts";
+import { DEFAULT_POSITION_SPRINT_STANDARDS, positionSprintStandards, startingBases, sprintCapacity, sprintDay, sessionBases, fitRowsToBases } from "../_shared/wic/conditioning/positionSprints.ts";
 import { isTaggedJump } from "../_shared/wic/jumps/taxonomy.ts";
 import { readPitcherReturn, recordReturnDate } from "../_shared/wic/pitching/readPitcherReturn.ts";
 import { readReturningHitter, recordHittingDay } from "../_shared/wic/hitting/readReturningHitter.ts";
@@ -3952,11 +3953,51 @@ const handler = async (req: Request): Promise<Response> => {
       if (cond.some((r) => r.sets === 0)) finalRxs = assignSequenceOrder(finalRxs.filter((r) => !(r.slot === "conditioning" && r.sets === 0)));
     }
     // Owner Nov 1 round 5: starting sprint yards (no experience → 40 yd), stepped up by the greenlight rule.
-    if (serverStarts && !serverStarts.historyAreas.includes("speed") && serverStarts.levels.sprintYards != null) {
+    // Owner Nov 5 round 2 (locked): pitchers keep sprint yards; position players count base-length sprints below.
+    if (pitcherConditioning && serverStarts && !serverStarts.historyAreas.includes("speed") && serverStarts.levels.sprintYards != null) {
       const target = sprintStartYards(serverStarts.levels.sprintYards, serverStarts.greenlight.speed?.level ?? 0);
       const sp = finalRxs.filter((r) => r.slot === "speed");
       const capped = capYardsTo(sp as any[], target);
       sp.forEach((r, i) => { if ((capped[i] as any).sets !== r.sets) { (r as any).why_payload = { ...((r as any).why_payload ?? {}), starting_point: { area: "speed", target_yards: target, sets_from: r.sets, sets_to: (capped[i] as any).sets, because: `Because: you're starting at about ${target} sprint yards a session and building up when you're ready.` } }; r.sets = (capped[i] as any).sets; } });
+    }
+    // Owner Nov 5 round 2, Group 3 (locked): position players are prepared for game-day base running —
+    // up to 20 base-length sprints a day outside warm-up (90 ft baseball / 60 ft softball bases).
+    // Capacity = starting answer + greenlight steps; game day = the game's sprints, recovery after,
+    // lighter before; no back-to-back high-sprint days. Only trims whole sets (never adds, never
+    // removes a row), so the 2-a-week running floor and the base-count rest rule stay.
+    if (!pitcherConditioning) {
+      try {
+        let std = DEFAULT_POSITION_SPRINT_STANDARDS;
+        try { const { data: cr } = await admin.from("app_settings").select("setting_value").eq("setting_key", CONDITIONING_RULES_KEY).maybeSingle(); std = positionSprintStandards((cr?.setting_value as any)?.position); } catch { /* defaults */ }
+        const answers = (serverStarts as any)?.answers ?? null;
+        const start = startingBases(answers?.base_sprints, answers?.sprint_volume, sport, std);
+        const capacity = sprintCapacity(start, serverStarts?.greenlight?.speed?.level ?? 0, std);
+        const routeOf = new Map<string, unknown>(((lib ?? []) as any[]).map((m) => [String(m.slug), m.base_route ?? null]));
+        const withRoute = (r: any) => ({ ...r, base_route: routeOf.get(String(r.movement_slug)) ?? null });
+        const yRows = await admin.from("wk_prescriptions").select("slot, movement_slug, sets, reps, distance_feet")
+          .eq("user_id", user.id).eq("plan_date", isoShift(planDate, -1)).in("slot", ["speed", "conditioning"]).limit(100);
+        const gameOn = (d: string) => dayEffect(timelineEntries, d).games.length > 0 ||
+          scheduledGames.some((g) => g.date === d && !g.ignored && !["canceled", "cancelled", "rescheduled"].includes(String((g as any).status)));
+        const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");
+        const day = sprintDay(capacity, {
+          gameToday: isGameDay, gameYesterday: gameOn(isoShift(planDate, -1)), gameTomorrow: gameOn(isoShift(planDate, 1)),
+          yesterdayBases: yRows.error ? capacity : sessionBases(((yRows.data ?? []) as any[]).map(withRoute), sport),
+          lowReadiness: low,
+        }, std);
+        const before = finalRxs.map(withRoute);
+        const fitted = fitRowsToBases(before, day.bases, sport);
+        const total = sessionBases(fitted, sport);
+        finalRxs.forEach((r, i) => {
+          if (r.slot !== "speed" && r.slot !== "conditioning") return;
+          const changed = (fitted[i] as any).sets !== r.sets;
+          (r as any).why_payload = { ...((r as any).why_payload ?? {}), position_sprints: {
+            unit: "bases", base_feet: sport === "softball" ? 60 : 90, start_bases: start, capacity, day_kind: day.kind,
+            target_bases: day.bases, total_bases: total, max_bases: std.maxBasesPerDay, sets_from: r.sets,
+            sets_to: (fitted[i] as any).sets, yesterday_read_failed: !!yRows.error, because: day.because,
+          } };
+          if (changed) r.sets = (fitted[i] as any).sets;
+        });
+      } catch { /* any read failure leaves the chosen sprint work untouched */ }
     }
     // Owner Nov 1 round 6: jump classification + competency. Runs after the written tiers/age/Growth/contact
     // rules chose the day; it only narrows (introduction jumps ~20–25 contacts for beginners; never above the
