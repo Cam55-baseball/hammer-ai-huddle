@@ -5,7 +5,7 @@
  * 2 = throw-count catch play only (no timed catch play), arm cool-down in Recovery.
  * 3 = owner throwing drills can take the built-in catch-play steps' place (Nov 5 round 2).
  */
-export const PLAN_RULES_VERSION = 5;
+export const PLAN_RULES_VERSION = 6;
 
 export function savedRulesVersion(payload: unknown): number {
   const v = Number((payload as { rules_version?: unknown } | null)?.rules_version);
