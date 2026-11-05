@@ -1,3 +1,4 @@
+import { TeamReadinessStrip } from "@/components/coach/CoachCheckinsReadinessTab";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { SendAthleteRequest } from "@/components/connections/SendAthleteRequest";
@@ -375,6 +376,7 @@ export default function CoachDashboard() {
         <CoachProgramCard />
         <CoachWeeklySummary />
         <CoachPrescriptionStatus />
+        <TeamReadinessStrip />
         <TeamDisciplineSummary />
         <Link to="/games?view=coach" className="text-sm underline underline-offset-2" data-testid="coach-game-hub-link">Game Hub — log a game for one player, a team or a general game</Link>
         <Link to="/coach/lineup" className="text-sm underline underline-offset-2">Lineup mode — log a game for several players</Link>
