@@ -83,3 +83,14 @@ export function throwPracticeRoute(name: string, dosage: string, today: string):
   url.searchParams.set("constraints", line);
   return `${url.pathname}${url.search}`;
 }
+
+/**
+ * Owner Nov 5 (logging buttons by purpose): "Log throwing practice" belongs only to
+ * catch play (warm-up throws, build-up ladder, light catch, long toss, arm-strength,
+ * owner throwing drills) on the Warm-up or pitcher Throwing card. Defense throws log
+ * through the Defense card; bullpens/mound/circle/outings through the Pitching card.
+ */
+export function showsThrowLogButton(modality: string, name: string): boolean {
+  if (modality !== "warmup" && modality !== "throwing") return false;
+  return !/bullpen|mound|circle|outing|side session|live (?:bp|batting)|pitch(?:es|ing)?\b/i.test(name);
+}
