@@ -1387,6 +1387,13 @@
       "when": 1793889277927,
       "tag": "0197_coach_log_general_game",
       "breakpoints": true
+    },
+    {
+      "idx": 198,
+      "version": "7",
+      "when": 1793889355533,
+      "tag": "0198_coach_week_games",
+      "breakpoints": true
     }
   ]
 }
