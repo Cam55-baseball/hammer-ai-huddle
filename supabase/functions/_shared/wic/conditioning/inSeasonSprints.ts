@@ -257,7 +257,6 @@ export function inSeasonSprintDay(capacity: number, f: InSeasonFacts, std: InSea
     : `You ran about ${Math.round(f.yesterdayGame!.bases)} bases in yesterday's game: easy flush only today.` };
 
   const floorGap = Math.max(0, WEEKLY_RUNNING_FLOOR - f.weekRunningSessions);
-  const tb = topupBases(cap, std);
   const sp = speedEligible(f, cap, std);
   const lightest = (f.laterLighterSpeedDays ?? 0) === 0;
   if (!f.speedDoneThisWeek && ((sp === "ideal" && lightest) || (sp === "fallback" && f.laterSpeedChances === 0))) {
@@ -281,7 +280,6 @@ export function inSeasonSprintDay(capacity: number, f: InSeasonFacts, std: InSea
     if (floorGap > 0 && f.laterTopupChances === 0) return { kind: "pre_game_half", bases: Math.max(std.topupMin, half), maxIntent: false, flush: false, because: `Game tomorrow: a lighter day, ${Math.max(std.topupMin, half)} easy base sprints.` };
     return { kind: "pre_game_half", bases: half, maxIntent: false, flush: false, because: `Game tomorrow: a lighter day, ${half} easy base sprints.` };
   }
-  void tb;
   return { kind: "none", bases: 0, maxIntent: false, flush: false, because: "Games are setting your running this week, so no extra sprints today." };
 }
 
