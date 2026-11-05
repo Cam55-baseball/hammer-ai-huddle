@@ -67,9 +67,9 @@ export function bysExtraTriggers(f: BysExtraFacts): ExtraReasons {
   if (f.lowReadinessToday) add("mind_item", "your check-in shows low readiness today, so a calm mind item helps.");
 
   // Timing: late swings in clips, or a strikeout streak in logged at-bats.
-  let streak = 0, best = 0;
+  let streak = 0;
   for (const g of [...f.games].sort((a, b) => day(a.date) - day(b.date))) for (const ab of g.atBats) {
-    streak = KS.has(String(ab.result ?? "")) ? streak + 1 : 0; best = Math.max(best, streak);
+    streak = KS.has(String(ab.result ?? "")) ? streak + 1 : 0;
   }
   const lastAbsStreak = streak;
   if (f.lateSwingFaults.length) {
@@ -94,7 +94,6 @@ export function bysExtraTriggers(f: BysExtraFacts): ExtraReasons {
   const starting = (s: string | null) => !!s && daysBetween(s, f.today) >= 0 && daysBetween(s, f.today) < 7;
   if (starting(f.preseasonStart)) add("testing_day", "pre-season just started, a good time to test.");
   if (starting(f.inSeasonStart) || starting(f.preseasonStart)) add("competition_level", "a new season just started — check your playing level is still right.");
-  void best;
   return out;
 }
 
