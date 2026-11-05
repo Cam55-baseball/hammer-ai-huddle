@@ -1,0 +1,2 @@
+ALTER TABLE public.gp_games ADD COLUMN IF NOT EXISTS self_reported_at_bats smallint NULL CHECK (self_reported_at_bats IS NULL OR (self_reported_at_bats >= 0 AND self_reported_at_bats <= 20));
+COMMENT ON COLUMN public.gp_games.self_reported_at_bats IS 'Morning check-in estimate (Did you play? how many at-bats?) used for in-season sprint credit only when the game has no logged at-bats.';
