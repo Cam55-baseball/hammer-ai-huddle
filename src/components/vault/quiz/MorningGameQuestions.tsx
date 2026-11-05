@@ -134,8 +134,8 @@ export function MorningGameQuestions() {
             <div className="space-y-2" data-testid="morning-at-bats">
               <Label className="text-sm">How many at-bats did you get? (both games if you played two)</Label>
               <div className="grid grid-cols-4 gap-2">
-                {[0, 1, 2, 3, 4, 5, 6, 8].map((n) => (
-                  <Button key={n} size="sm" variant="outline" onClick={() => saveGame(n)}>{n === 8 ? "7+" : n === 0 ? "0 (didn't bat)" : n}</Button>
+                {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
+                  <Button key={n} size="sm" variant="outline" onClick={() => saveGame(n)}>{n === 7 ? "7+" : n === 0 ? "0 (didn't bat)" : n}</Button>
                 ))}
               </div>
               <Button size="sm" variant="ghost" onClick={() => saveGame(null)}>Not sure — just save the game</Button>
