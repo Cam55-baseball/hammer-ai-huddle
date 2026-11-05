@@ -3969,6 +3969,11 @@ const handler = async (req: Request): Promise<Response> => {
     // removes a row), so the 2-a-week running floor and the base-count rest rule stay.
     // Owner Nov 5 r4: build one catalog item late in the day (sprint prep / top-up route). Returns null
     // when the catalog lacks the movement — callers then refuse the dependent work.
+    const dayContextOf = (rows: any[]) => {
+      const src = (rows.find((r) => r?.why_payload?.training_context && r?.why_payload?.athlete_context)?.why_payload ?? {}) as Record<string, unknown>;
+      const keep = ["training_context", "athlete_context", "personalization_context", "training_age_context", "adaptive_phase"];
+      return Object.fromEntries(keep.filter((k) => src[k] != null).map((k) => [k, src[k]]));
+    };
     const addedRow = (slug: string, slot: "speed" | "conditioning", dose: { sets: number; reps: number | null; distance_feet?: number | null }, why: string, meta: Record<string, unknown> = {}, order = 999) => {
       const m = ((lib ?? []) as any[]).find((x) => String(x.slug) === slug);
       if (!m) return null;
@@ -3978,7 +3983,8 @@ const handler = async (req: Request): Promise<Response> => {
         slot, sequence_order: order, sequence_role: slot === "speed" ? "speed" : "conditioning", movement_slug: slug, movement_name: String(m.name ?? slug),
         sets: dose.sets, reps: dose.reps, tempo: null, load_pct: null, duration_seconds: null, distance_feet: dist ?? null, total_reps: null,
         dosage_unit: m.dosage_unit ?? "reps", cns_cost: Number(m.cns_cost ?? 0), cns_clamped: false, substituted_from_slug: null, substitution_reason: null,
-        why_payload: { ...meta }, rationale: why, adaptation: adaptationDecision.primary, engine, generator_version: WIC_VERSION,
+        // Same day, same context: carry the day's shared context blocks so the day validator accepts the row.
+        why_payload: { ...dayContextOf(finalRxs as any[]), ...meta }, rationale: why, adaptation: adaptationDecision.primary, engine, generator_version: WIC_VERSION,
         why_v2: buildWhy({ why_today: adaptationDecision.reason, why_athlete: adaptationDecision.reason_athlete, why_exercise: why, why_volume: `${dose.sets}×${dose.reps ?? 1}`,
           why_order: "Placed where the day's order needs it.", why_recovery: `${Number(m.cns_cost ?? 0)} CNS units.`, adaptation: adaptationDecision.primary, engine, generator_version: WIC_VERSION }),
       } as any;

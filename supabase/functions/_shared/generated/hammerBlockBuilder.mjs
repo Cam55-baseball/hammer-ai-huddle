@@ -2413,8 +2413,11 @@ var WARMUP_THROW = /warm-up throw|warm-up toss|whip throw|tennis-ball|tennis bal
 var LONG_TOSS = /long[- ]toss/i;
 var CATCH_PLAY = /catch play|extension toss|catch|partner toss|flat-ground toss/i;
 var THROW = /throw|toss|catch play|long[- ]toss/i;
+var SKILL_CATEGORY = /* @__PURE__ */ new Set(["position_skill"]);
+var SKILL_REP = /double[- ]play|quick[- ]release|pop[- ]time|crow[- ]hop|block[- ]to[- ]throw|throw[- ]down/i;
 function throwKind(d3) {
   const n = d3.name;
+  if (SKILL_CATEGORY.has(String(d3.eassCategory ?? "")) || SKILL_REP.test(n)) return "position";
   if (LONG_TOSS.test(n)) return "long_toss";
   if (WARMUP_THROW.test(n)) return "warmup";
   if (CATCH_PLAY.test(n)) return "catch_play";
@@ -9426,6 +9429,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const mappedDrills = eass.drills.map((d3) => ({
         name: d3.name,
         slug: d3.slug,
+        eassCategory: d3.category,
         setup: d3.setup,
         dosage: d3.dosage,
         stage: d3.stage ?? (d3.intensity === "prep" ? "prep" : "drills"),

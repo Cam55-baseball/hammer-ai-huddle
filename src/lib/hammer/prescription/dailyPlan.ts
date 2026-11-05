@@ -151,6 +151,8 @@ export interface DrillStep {
   readonly libraryVideoId?: string | null;
   readonly bunt?: {side:'R'|'L';type:import('../../../../supabase/functions/_shared/wic/buntingProgram').BuntType;attempts:number;sourceAttempts:number;sourceSuccesses:number};
   readonly name: string;
+  /** EASS catalog category (e.g. position_skill). Placement reads this, never the name, to keep skill reps off the warm-up. */
+  readonly eassCategory?: string;
   readonly armEvent?: import('../../../../supabase/functions/_shared/wic/phases/armLedger').ThrowEvent;
   readonly armCard?: 'pitching'|'throwing';
   readonly slug?: string;
@@ -1095,6 +1097,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const mappedDrills = eass.drills.map((d) => ({
         name: d.name,
         slug: (d as { slug?: string }).slug,
+        eassCategory: d.category,
         setup: d.setup,
         dosage: d.dosage,
         stage: d.stage ?? (d.intensity === 'prep' ? 'prep' : 'drills'),

@@ -11,6 +11,7 @@ import { getTodayDate } from "@/utils/dateUtils";
  */
 import { ReportProblemButton } from "@/components/support/ReportProblemButton";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useInRouterContext, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { Check, ChevronRight, ExternalLink, Lock, LogOut, X } from "lucide-react";
 import { DomainGlyph, domainOf, useRhythm } from "./todayRhythm";
@@ -82,6 +83,8 @@ interface Props {
   readonly link?: { route: string; label: string; steps: ReadonlyArray<string> } | null;
   readonly onNavigate?: (route: string) => void;
   readonly practiceLogging?: boolean;
+  /** Owner Nov 5 r5: the card's existing practice-log page (already prefilled for today). Shown beside "Log this work". */
+  readonly practiceRoute?: string | null;
 }
 
 export function PocketCard(props: Props) {
@@ -92,7 +95,20 @@ export function PocketCard(props: Props) {
   return <PocketCardShell {...props} />;
 }
 
-function PocketCardShell({ id, category, focus, tone, planDate, prescribed, countLabel, notPrescribedNote, children, progress, intro, link, onNavigate, practiceLogging = false }: Props) {
+/** Opens the card's existing practice-log page (same page every practice button uses). */
+function PracticeRouteButton({ route, onNavigate, onLeave }: { route: string; onNavigate?: (route: string) => void; onLeave: () => void }) {
+  const routed = useInRouterContext();
+  return routed && !onNavigate ? <RoutedPracticeButton route={route} onLeave={onLeave} /> : <PracticeButtonView route={route} go={(r) => { onLeave(); if (onNavigate) onNavigate(r); else window.location.assign(r); }} />;
+}
+function RoutedPracticeButton({ route, onLeave }: { route: string; onLeave: () => void }) {
+  const navigate = useNavigate();
+  return <PracticeButtonView route={route} go={(r) => { onLeave(); navigate(r); }} />;
+}
+function PracticeButtonView({ route, go }: { route: string; go: (route: string) => void }) {
+  return <Button size="sm" variant="outline" className="h-9 shrink-0" data-testid="card-practice-log-button" data-route={route} onClick={() => go(route)}>Log practice</Button>;
+}
+
+function PocketCardShell({ id, category, focus, tone, planDate, prescribed, countLabel, notPrescribedNote, children, progress, intro, link, onNavigate, practiceLogging = false, practiceRoute = null }: Props) {
   const [practiceOpen, setPracticeOpen] = useState(false);
   const practiceRef = useRef<HTMLDetailsElement>(null);
   const {user}=useAuth();
@@ -227,7 +243,8 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
               {/* Owner Nov 5 round 2 item 2: the practice-log button sits beside the title. */}
               <div className="flex items-center justify-between gap-2" data-log-title-row>
                 <h3 className="text-base font-semibold">Log this work</h3>
-                {practiceLogging && <Button size="sm" variant="outline" className="h-9 shrink-0" data-testid="card-practice-log-button" onClick={() => { setPracticeOpen(true); requestAnimationFrame(() => practiceRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }}>Log practice</Button>}
+                {practiceRoute ? <PracticeRouteButton route={practiceRoute} onNavigate={onNavigate} onLeave={() => { setOpen(false); setLocked(false); writeOpenPocket(null, planDate); }} />
+                  : practiceLogging && <Button size="sm" variant="outline" className="h-9 shrink-0" data-testid="card-practice-log-button" onClick={() => { setPracticeOpen(true); requestAnimationFrame(() => practiceRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }}>Log practice</Button>}
               </div>
               <div ref={setLogHost} className="space-y-4" />
               {!locked && <p className="text-xs text-muted-foreground">More information for each exercise is below ↓</p>}
