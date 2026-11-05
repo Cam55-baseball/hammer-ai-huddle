@@ -1422,6 +1422,13 @@
       "when": 1793905275383,
       "tag": "0202_gp_games_self_reported_at_bats",
       "breakpoints": true
+    },
+    {
+      "idx": 203,
+      "version": "7",
+      "when": 1793922540623,
+      "tag": "0203_coach_saved_lineups_and_readiness",
+      "breakpoints": true
     }
   ]
 }
