@@ -97,3 +97,17 @@ describe("item 3 — top-ups can add a base-sprint item", () => {
     expect([d.kind, d.bases]).toEqual(["low_readiness", 4]);
   });
 });
+
+describe("item 1 — everyday starter (6 games a week) still gets the short speed day", () => {
+  it("off day after a heavy game that wasn't the week's heaviest → 3 all-out sprints", () => {
+    const sunday = { date: "sun", bases: 14, source: "log" as const };
+    const d = inSeasonSprintDay(16, { ...base, gameTomorrow: true, yesterdayGame: sunday, yesterdayWasHeaviestGame: false });
+    expect([d.kind, d.bases, d.maxIntent, d.sprintPrep]).toEqual(["speed", 3, true, true]);
+  });
+  it("…but never after the heaviest game, an unlogged game, or on low readiness", () => {
+    const sunday = { date: "sun", bases: 14, source: "log" as const };
+    expect(inSeasonSprintDay(16, { ...base, gameTomorrow: true, yesterdayGame: sunday, yesterdayWasHeaviestGame: true }).kind).toBe("flush");
+    expect(inSeasonSprintDay(16, { ...base, yesterdayGame: { date: "sun", bases: 0, source: "unknown" }, yesterdayWasHeaviestGame: false }).kind).toBe("flush");
+    expect(inSeasonSprintDay(16, { ...base, gameTomorrow: true, yesterdayGame: sunday, yesterdayWasHeaviestGame: false, lowReadiness: true }).maxIntent).toBe(false);
+  });
+});
