@@ -10,7 +10,7 @@ import type { ContextVariable, HammerAthleteContext } from "@/lib/hammer/context
 const SKILL_CATEGORIES = new Set(["position_skill", "windmill_circle", "intent", "pulldown", "overload"]);
 const SKILL_AREAS = new Set(["defense", "fielding", "hitting", "pitching", "baserunning", "bunting", "catching"]);
 /** Defense / hitting / pitching / baserunning / bunting skill reps by name (independent of placement code). */
-const SKILL_NAME = /double[- ]play|quick[- ]release|pop[- ]time|crow[- ]hop|ground[- ]ball|one[- ]hop|block[- ]to[- ]throw|throw[- ]down|position throws|bullpen|\\bbunt|lead[- ]?off|steal|tee work|front toss|soft toss|\\bpfp\\b|windmill drill|k-drill|pulldown|intent throws|overload/i;
+const SKILL_NAME = /double[- ]play|quick[- ]release|pop[- ]time|crow[- ]hop|ground[- ]ball|one[- ]hop|block[- ]to[- ]throw|throw[- ]down|position throws|bullpen|\bbunt|lead[- ]?off|steal|tee work|front toss|soft toss|\bpfp\b|windmill drill|k-drill|pulldown|intent throws|overload/i;
 const WARMUP_SLUGS = new Set(WARMUP_LIBRARY.map((d) => d.slug));
 
 function ctx(values: Record<string, unknown>): HammerAthleteContext {
