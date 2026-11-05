@@ -98,6 +98,8 @@ export function StartingPointPromptCard() {
   const sport: Sport = String(ctx.get<string>("sport_primary")?.value ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
   const saved = useStartingPointAnswers(user?.id, sport);
   const lastLog = useLastLogDate(user?.id);
+  const pitcherSettings = usePitcherSchedule();
+  const focus = pitcherSettings.data?.settings?.primary_focus ?? null;
   const [open, setOpen] = useState(false);
   const program = programOf(sport, modules);
   if (!user || !program || saved.isLoading || saved.isError || lastLog.isLoading || lastLog.isError) return null;
