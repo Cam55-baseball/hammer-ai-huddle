@@ -24,3 +24,4 @@
 - Client seven-date rebuilds run one at a time through rebuildAfterChange's queue. Why: overlapping rebuilds trip the day-lock with "Day changed".
 
 - Server block generation bundles the existing pure daily-plan builder through `scripts/build-hammer-block-bundle.mjs`, rejecting browser/auth dependencies and injecting owner drills/stage tags. Why: block Swap must reuse the same generator rather than accept client snapshots or create a second builder.
+- Coach note issue tags (`coach_private_notes.issue_area/issue_label`) reach the player only through the `my_coach_issue_tags` definer RPC (area + label, connected coaches, never the note body); extra Before-you-start reasons come only from `src/lib/hammer/bysExtraTriggers.ts` and add to, never replace, each item's own triggers. Why: private notes stay private, and every card keeps one place that explains why it shows.

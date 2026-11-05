@@ -33,6 +33,7 @@ import { firstPositionToken } from "@/lib/hammer/positions/positionNormalizer";
 import { applyOwnerThrowingDrill, type OwnerThrowRow } from "@/lib/prescription/ownerThrowingDrills";
 import { ownerPlanDrillRows } from "@/lib/prescription/ownerPlanDrills";
 import { resolvePlayerFit } from "./warmupFit";
+import type { CatchPlayRow } from "../../../../supabase/functions/_shared/wic/throwing/catchPlay";
 import { positionDistance, catchPlayDay, lightCatch, cpPosition, defenseThrowsAllowed, type CatchPlayDay as CatchPlayDayResult, type CatchPlayStandards, type EarnResult as CatchPlayEarn } from "../../../../supabase/functions/_shared/wic/throwing/catchPlay";
 
 export type EassSport = "baseball" | "softball";
@@ -395,6 +396,31 @@ function catchPlayDrills(day: CatchPlayDayResult): EassDrill[] {
   }));
 }
 
+/** Built-in EASS throw rows as counted steps ("60ft x 15 throws", "to 120ft x 12", "~15 throws" to "240ft+"). */
+export function eassThrowSteps(drills: readonly EassDrill[]): { ft: number; throws: number; intent: "low" | "moderate" | "high" }[] | null {
+  const out: { ft: number; throws: number; intent: "low" | "moderate" | "high" }[] = [];
+  for (const d of drills) {
+    const ft = Number(/(\d+)\s*ft/i.exec(d.dosage)?.[1]);
+    const throws = Number(/(\d+)\s*throws/i.exec(d.dosage)?.[1]);
+    if (!(ft > 0) || !(throws > 0)) return null;
+    out.push({ ft, throws, intent: d.intensity === "low" ? "low" : d.intensity === "moderate" ? "moderate" : "high" });
+  }
+  return out.length ? out : null;
+}
+
+/** Replace a pitcher's counted EASS rows with a fitting owner drill (same or fewer throws, distance, intent); null keeps the built-in rows. */
+export function ownerSwapEass(drills: readonly EassDrill[], kind: "standard" | "long_toss", player: Parameters<typeof applyOwnerThrowingDrill>[1], rows: readonly OwnerThrowRow[], dayIndex: number): EassDrill[] | null {
+  const steps = eassThrowSteps(drills);
+  if (!steps) return null;
+  const day = {
+    kind, totalThrows: steps.reduce((n, x) => n + x.throws, 0), reachesPositionDistance: true,
+    rows: steps.map((x, i) => ({ name: drills[i].name, distanceFt: x.ft, throws: x.throws, part: (kind === "long_toss" ? "stretch_out" : "build") as CatchPlayRow["part"], intent: x.intent, dosage: drills[i].dosage })),
+  };
+  const out = applyOwnerThrowingDrill(day, player, rows, dayIndex);
+  if (!out.ownerDrillId) return null;
+  return catchPlayDrills(out as unknown as CatchPlayDayResult);
+}
+
 export interface EassPrescription {
   mode: EassMode;
   title: string;
@@ -602,9 +628,20 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
     positionSkill.splice(0, positionSkill.length, ...positionSkill.filter((d) => !/throw|toss/i.test(`${d.name} ${d.dosage}`)));
   }
 
+  // Owner Nov 5 round 3 #1: pitchers' catch play takes a fitting owner throwing drill in place of the built-in steps.
+  const pitcherPlayer = isPitcher ? {
+    sport: (isSoftball ? "softball" : "baseball") as "softball" | "baseball", role: "pitcher" as const,
+    fit: resolvePlayerFit({ ageYears: ctx.ageYears }), positionFt: 0,
+  } : null;
+  const ownerRows = ownerPlanDrillRows() as unknown as OwnerThrowRow[];
+  if (pitcherPlayer && !cpDay) {
+    const swapped = ownerSwapEass(regulationTrimmed, "standard", pitcherPlayer, ownerRows, cp?.trainingDayIndex ?? 0);
+    if (swapped) drills.splice(drills.length - regulationTrimmed.length, regulationTrimmed.length, ...swapped);
+  }
   // Long-toss on off/pre only, always regulation weight — pitchers only (position players use the ladder above).
   if ((offSeason || preSeason) && isPitcher) {
-    drills.push(...(isSoftball ? longTossSoftball() : longTossBaseball(ctx.position === "outfield")));
+    const lt = isSoftball ? longTossSoftball() : longTossBaseball(ctx.position === "outfield");
+    drills.push(...(ownerSwapEass(lt, "long_toss", pitcherPlayer!, ownerRows, cp?.trainingDayIndex ?? 0) ?? lt));
   }
 
   // Intent / pulldowns — heavily gated, pitchers only.

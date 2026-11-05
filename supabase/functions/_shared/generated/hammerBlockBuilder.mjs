@@ -6166,6 +6166,29 @@ function catchPlayDrills(day2) {
     stopIf: "any pain, pinch or tightness in the arm \u2014 stop throwing today and log it"
   }));
 }
+function eassThrowSteps(drills) {
+  const out = [];
+  for (const d3 of drills) {
+    const ft = Number(/(\d+)\s*ft/i.exec(d3.dosage)?.[1]);
+    const throws = Number(/(\d+)\s*throws/i.exec(d3.dosage)?.[1]);
+    if (!(ft > 0) || !(throws > 0)) return null;
+    out.push({ ft, throws, intent: d3.intensity === "low" ? "low" : d3.intensity === "moderate" ? "moderate" : "high" });
+  }
+  return out.length ? out : null;
+}
+function ownerSwapEass(drills, kind, player, rows3, dayIndex) {
+  const steps = eassThrowSteps(drills);
+  if (!steps) return null;
+  const day2 = {
+    kind,
+    totalThrows: steps.reduce((n, x) => n + x.throws, 0),
+    reachesPositionDistance: true,
+    rows: steps.map((x, i) => ({ name: drills[i].name, distanceFt: x.ft, throws: x.throws, part: kind === "long_toss" ? "stretch_out" : "build", intent: x.intent, dosage: drills[i].dosage }))
+  };
+  const out = applyOwnerThrowingDrill(day2, player, rows3, dayIndex);
+  if (!out.ownerDrillId) return null;
+  return catchPlayDrills(out);
+}
 var OVERLOAD_CUES = [
   "Overload is a tool, not a requirement \u2014 you earned it today.",
   "The heavy ball exposes any arm-only throwing. Stay connected."
@@ -6341,8 +6364,20 @@ function buildEassPrescription(ctx) {
   if (cpDay && !defenseGate.allowed) {
     positionSkill.splice(0, positionSkill.length, ...positionSkill.filter((d3) => !/throw|toss/i.test(`${d3.name} ${d3.dosage}`)));
   }
+  const pitcherPlayer = isPitcher3 ? {
+    sport: isSoftball ? "softball" : "baseball",
+    role: "pitcher",
+    fit: resolvePlayerFit({ ageYears: ctx.ageYears }),
+    positionFt: 0
+  } : null;
+  const ownerRows = ownerPlanDrillRows();
+  if (pitcherPlayer && !cpDay) {
+    const swapped = ownerSwapEass(regulationTrimmed, "standard", pitcherPlayer, ownerRows, cp?.trainingDayIndex ?? 0);
+    if (swapped) drills.splice(drills.length - regulationTrimmed.length, regulationTrimmed.length, ...swapped);
+  }
   if ((offSeason || preSeason) && isPitcher3) {
-    drills.push(...isSoftball ? longTossSoftball() : longTossBaseball(ctx.position === "outfield"));
+    const lt = isSoftball ? longTossSoftball() : longTossBaseball(ctx.position === "outfield");
+    drills.push(...ownerSwapEass(lt, "long_toss", pitcherPlayer, ownerRows, cp?.trainingDayIndex ?? 0) ?? lt);
   }
   const intentOk = isPitcher3 && intentEligible(ctx);
   if (intentOk) {

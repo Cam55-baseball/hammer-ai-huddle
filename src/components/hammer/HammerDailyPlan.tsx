@@ -1,4 +1,6 @@
 import { bysWhy, type BysWhyFacts } from "@/lib/hammer/beforeYouStartWhy";
+import { bysExtraTriggers, EXTRA_LINK, type ClipModule } from "@/lib/hammer/bysExtraTriggers";
+import { useBysExtraFacts } from "@/hooks/useBysExtraFacts";
 import { setWarmupFitOverrides } from "@/lib/hammer/prescription/warmupFit";
 import { planningProgramModules } from '../../../supabase/functions/_shared/programAccess';
 import { UpdatingBadge } from "@/components/hammer/PlanUpdatingNote";
@@ -1115,6 +1117,16 @@ function HammerDailyPlanBody({
     hasFuelGoal: !!fuelFacts.data?.goalType,
   };
   const why = (id: string) => bysWhy(id, bysFacts);
+  // Owner Nov 5 round 3 #4/#5: extra personal triggers (coach tags, game logs, readiness, clip age, re-test, season start).
+  const bysExtraFacts = useBysExtraFacts(sportKey, pocketDate, bysFacts.analysisModules as ClipModule[], faultContext.data?.recurringIssues.filter(issue => stillRecurring(issue)).map(issue => issue.fault_key) ?? []);
+  const bysExtra = bysExtraFacts.data ? bysExtraTriggers(bysExtraFacts.data) : {};
+  const extra = (id: string) => {
+    const reasons = bysExtra[id];
+    if (!reasons?.length) return null;
+    const link = EXTRA_LINK[id];
+    const to = id === "analysis_prompts" ? `/analyze/${bysFacts.analysisModules[0] ?? "hitting"}` : link.to;
+    return { reasons, title: link.title, to, cta: link.cta };
+  };
   return (
     <PlanAdjustContext.Provider value={adjustApi}>
     <div className="space-y-6">
@@ -1139,28 +1151,28 @@ function HammerDailyPlanBody({
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
         <Bys id="starting_point" why={why("starting_point")}><ErrorBoundary><StartingPointPromptCard /></ErrorBoundary></Bys>
         <Bys id="finish_profile" why={why("finish_profile")}><FinishProfileCard /></Bys>
-        <Bys id="competition_level" why={why("competition_level")}><CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} /></Bys>
-        <Bys id="mind_item" why={why("mind_item")}><ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary></Bys>
+        <Bys id="competition_level" why={why("competition_level")} extra={extra("competition_level")}><CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} /></Bys>
+        <Bys id="mind_item" why={why("mind_item")} extra={extra("mind_item")}><ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary></Bys>
         <Bys id="info_videos" why={why("info_videos")}><ErrorBoundary><InformationalVideos placement="before_you_start" sport={sportKey} /></ErrorBoundary></Bys>
-        <Bys id="recurring_videos" why={why("recurring_videos")}><ErrorBoundary><InformationalVideos placement="recurring" sport={sportKey} faultKeys={faultContext.data?.recurringIssues.filter(issue => stillRecurring(issue)).map(issue => issue.fault_key) ?? []} /></ErrorBoundary></Bys>
-        <Bys id="baserunning_study" why={why("baserunning_study")}>{splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}</Bys>
+        <Bys id="recurring_videos" why={why("recurring_videos")} extra={extra("recurring_videos")}><ErrorBoundary><InformationalVideos placement="recurring" sport={sportKey} faultKeys={faultContext.data?.recurringIssues.filter(issue => stillRecurring(issue)).map(issue => issue.fault_key) ?? []} /></ErrorBoundary></Bys>
+        <Bys id="baserunning_study" why={why("baserunning_study")} extra={extra("baserunning_study")}>{splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}</Bys>
         {/* Owner order 2026-10-05: aim (with breath primer) → defensive video → coach advice → why the plan changed.
             Performance context moved to The General; Recall & Clarity moved to the identity drawer. */}
         <Bys id="daily_intent" why={why("daily_intent")}><DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} /></Bys>
-        <Bys id="defensive_prep_video" why={why("defensive_prep_video")}><ErrorBoundary>
+        <Bys id="defensive_prep_video" why={why("defensive_prep_video")} extra={extra("defensive_prep_video")}><ErrorBoundary>
           <DefensivePrepVideo />
         </ErrorBoundary></Bys>
         <Bys id="coach_advice" why={why("coach_advice")}><TodaysWisdomCard /></Bys>
         <Bys id="day_notices" why={why("day_notices")}><ErrorBoundary>
           <DayNoticesDrawerItem planLines={plan.blocks.filter(b => b.modality === 'warmup').map(b => b.lowImpactBecause)} />
         </ErrorBoundary></Bys>
-        <Bys id="testing_day" why={why("testing_day")}><ErrorBoundary><TestingDayNotice /></ErrorBoundary></Bys>
-        <Bys id="royal_timing" why={why("royal_timing")}><RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} /></Bys>
+        <Bys id="testing_day" why={why("testing_day")} extra={extra("testing_day")}><ErrorBoundary><TestingDayNotice /></ErrorBoundary></Bys>
+        <Bys id="royal_timing" why={why("royal_timing")} extra={extra("royal_timing")}><RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} /></Bys>
         <Bys id="timing_study" why={why("timing_study")}><TimingStudyMoments sport={sportKey} position={ctx.get<string>('position_primary')?.value ?? null}
           savedGoals={ctx.get<unknown>('category_goals')?.value}
           flags={faultContext.data?.rankedFaults.flatMap(f => f.signals.map(s => s.fault_key)) ?? []}
           roles={plan.blocks.filter(prescribedToday).flatMap(b => b.modality === 'hitting' ? ['hitter' as const] : b.modality === 'baserunning' ? ['baserunner' as const] : new URL(b.route, window.location.origin).searchParams.get('module') === 'pitching' ? ['pitcher' as const] : [])} /></Bys>
-        <Bys id="analysis_prompts" why={why("analysis_prompts")}><AnalysisRecordingPrompts goalOrder={analysisGoalOrder(ctx.get<unknown>('category_goals')?.value, sportKey)} prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
+        <Bys id="analysis_prompts" why={why("analysis_prompts")} extra={extra("analysis_prompts")}><AnalysisRecordingPrompts goalOrder={analysisGoalOrder(ctx.get<unknown>('category_goals')?.value, sportKey)} prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
           // Exact module route only: arm care/throwing must not invent a pitching session.
           const module = new URL(b.route, window.location.origin).searchParams.get("module");
           return module === "hitting" || module === "pitching" || module === "throwing" ? [module] : [];
