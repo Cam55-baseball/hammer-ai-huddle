@@ -74,11 +74,11 @@ export function bysExtraTriggers(f: BysExtraFacts): ExtraReasons {
   const lastAbsStreak = streak;
   if (f.lateSwingFaults.length) {
     const why = `your clips show ${words(f.lateSwingFaults[0])}.`;
-    add("royal_timing", why); add("timing_study", why);
+    add("royal_timing", why);
   }
   if (lastAbsStreak >= 3) {
     const why = `you struck out ${lastAbsStreak} times in a row in your logged at-bats.`;
-    add("royal_timing", why); add("timing_study", why);
+    add("royal_timing", why);
   }
 
   // Record-a-clip: 3+ weeks since a clip of a skill you do today, or a recurring issue to re-check.

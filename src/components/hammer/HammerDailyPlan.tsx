@@ -1168,7 +1168,7 @@ function HammerDailyPlanBody({
         </ErrorBoundary></Bys>
         <Bys id="testing_day" why={why("testing_day")} extra={extra("testing_day")}><ErrorBoundary><TestingDayNotice /></ErrorBoundary></Bys>
         <Bys id="royal_timing" why={why("royal_timing")} extra={extra("royal_timing")}><RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} /></Bys>
-        <Bys id="timing_study" why={why("timing_study")} extra={extra("timing_study")}><TimingStudyMoments sport={sportKey} position={ctx.get<string>('position_primary')?.value ?? null}
+        <Bys id="timing_study" why={why("timing_study")}><TimingStudyMoments sport={sportKey} position={ctx.get<string>('position_primary')?.value ?? null}
           savedGoals={ctx.get<unknown>('category_goals')?.value}
           flags={faultContext.data?.rankedFaults.flatMap(f => f.signals.map(s => s.fault_key)) ?? []}
           roles={plan.blocks.filter(prescribedToday).flatMap(b => b.modality === 'hitting' ? ['hitter' as const] : b.modality === 'baserunning' ? ['baserunner' as const] : new URL(b.route, window.location.origin).searchParams.get('module') === 'pitching' ? ['pitcher' as const] : [])} /></Bys>
