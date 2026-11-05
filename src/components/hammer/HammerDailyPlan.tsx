@@ -1638,7 +1638,7 @@ const BLOCK_DOMAIN: Record<string, string | undefined> = {
   defense: "other",
 };
 
-function BlockCard({
+export function BlockCard({
   block,
   onNavigate,
   onEngagementChanged,
