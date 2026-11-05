@@ -376,7 +376,7 @@ export default function CoachDashboard() {
         <CoachWeeklySummary />
         <CoachPrescriptionStatus />
         <TeamDisciplineSummary />
-        <Button asChild className="w-full sm:w-auto"><Link to="/coach/log-game" data-testid="coach-log-a-game">Log a game</Link></Button>
+        <Link to="/games?view=coach" className="text-sm underline underline-offset-2" data-testid="coach-game-hub-link">Game Hub — log a game for one player, a team or a general game</Link>
         <Link to="/coach/lineup" className="text-sm underline underline-offset-2">Lineup mode — log a game for several players</Link>
         <Link to="/coach/guest" className="text-sm underline underline-offset-2">Guest analysis — a player without an account (nothing saved)</Link>
 
