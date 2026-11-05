@@ -9,7 +9,7 @@ import type { GreenlightStarts, GreenlightTargets } from "@/lib/hammer/prescript
 
 export const startingPointKey = (userId: string | undefined, sport: string) => ["starting-point", userId, sport];
 
-export interface StartingPointRow { answers: Answers; updated_at: string; updated_by: string | null }
+export interface StartingPointRow { answers: Answers; updated_at: string; updated_by: string | null; program?: string | null }
 
 export function useStartingPointAnswers(userId: string | undefined, sport: Sport) {
   return useQuery<StartingPointRow | null>({
@@ -17,7 +17,7 @@ export function useStartingPointAnswers(userId: string | undefined, sport: Sport
     enabled: !!userId,
     queryFn: async () => {
       if (!userId) return null;
-      const { data, error } = await supabase.from("athlete_starting_points").select("answers, updated_at, updated_by").eq("user_id", userId).eq("sport", sport).maybeSingle();
+      const { data, error } = await supabase.from("athlete_starting_points").select("answers, updated_at, updated_by, program").eq("user_id", userId).eq("sport", sport).maybeSingle();
       if (error) throw error;
       return (data as StartingPointRow | null) ?? null;
     },
@@ -84,6 +84,20 @@ export function useLoggedWeeks28(userId: string | undefined, today: string) {
       const out: Partial<Record<GreenlightArea, number>> = {};
       for (const [a, w] of Object.entries(weeks)) out[a as GreenlightArea] = w.filter((x) => x.completed > 0).length;
       return out;
+    },
+  });
+}
+
+/** Latest logged training date (any card) — feeds the 28-day "Where are you starting from?" rule. */
+export function useLastLogDate(userId: string | undefined) {
+  return useQuery<string | null>({
+    queryKey: ["last-log-date", userId],
+    enabled: !!userId,
+    staleTime: 10 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("wk_session_logs").select("plan_date").eq("user_id", userId!).order("plan_date", { ascending: false }).limit(1).maybeSingle();
+      if (error) throw error;
+      return ((data as any)?.plan_date as string | undefined) ?? null;
     },
   });
 }
