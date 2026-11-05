@@ -100,7 +100,7 @@ describe("coach check-ins & readiness", () => {
   it("a sharing player's data shows for their connected coach", () => {
     render(<CoachCheckinsReadinessView data={shared} />);
     expect(screen.getByTestId("checkins-readiness")).toBeTruthy();
-    expect(screen.getByText(/Pain flag: right elbow/)).toBeTruthy();
+    expect(screen.getAllByText(/Pain flag: right elbow/).length).toBe(2);
     expect(screen.getAllByText(/What this means/).length).toBeGreaterThanOrEqual(4);
   });
   it("a non-sharing player's data never shows", () => {
