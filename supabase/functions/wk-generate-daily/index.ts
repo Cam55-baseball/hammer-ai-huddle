@@ -123,7 +123,8 @@ import {
   type ProgressionState,
 } from "../_shared/wic/progression/progressionState.ts";
 import { planningPrimaryFocus } from "../_shared/wic/progression/startingPoint.ts";
-import { DEFAULT_POSITION_SPRINT_STANDARDS, positionSprintStandards, startingBases, sprintCapacity, sprintDay, sessionBases, fitRowsToBases } from "../_shared/wic/conditioning/positionSprints.ts";
+import { DEFAULT_POSITION_SPRINT_STANDARDS, positionSprintStandards, startingBases, sprintCapacity, sprintDay, sessionBases, fitRowsToBases, basesPerRep as basesPerRepOf } from "../_shared/wic/conditioning/positionSprints.ts";
+import { planInSeasonSprints, InSeasonDone } from "./inSeasonFacts.ts";
 import { isTaggedJump } from "../_shared/wic/jumps/taxonomy.ts";
 import { readPitcherReturn, recordReturnDate } from "../_shared/wic/pitching/readPitcherReturn.ts";
 import { readReturningHitter, recordHittingDay } from "../_shared/wic/hitting/readReturningHitter.ts";
