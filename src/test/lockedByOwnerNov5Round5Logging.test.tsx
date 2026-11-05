@@ -53,7 +53,7 @@ describe("locked by owner Nov 5 round 5: throwing items open the EXISTING throwi
   it("no other throwing logging UI exists: the custom item logger is gone", () => {
     const src = readFileSync("src/components/hammer/logging/LegacyDrillInlineLog.tsx", "utf8");
     expect(src).not.toMatch(/ArmThrowsPanel|throwLogOpen/);
-    const hits = execSync(`grep -rl "Log throwing practice" src --include=*.tsx --exclude=*.test.tsx || true`).toString().trim().split("\n").filter(Boolean);
+    const hits = execSync(`grep -rlE ">Log throwing practice<|throwing practice log|ThrowingPracticeLog" src --include=*.tsx --exclude=*.test.tsx || true`).toString().trim().split("\n").filter(Boolean);
     expect(hits).toEqual(["src/components/hammer/logging/LegacyDrillInlineLog.tsx"]);
   });
 });
