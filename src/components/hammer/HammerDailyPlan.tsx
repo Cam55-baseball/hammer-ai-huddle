@@ -2025,8 +2025,7 @@ function BlockCard({
 
           {block.modality === "warmup" && block.drills.some((d) => (d as { throwSection?: boolean }).throwSection) && (
             <div className="space-y-1" data-testid="warmup-throw-log">
-              <p className="text-xs font-semibold">Log throwing practice</p>
-              <ArmThrowsPanel source="position" planDate={planDate} />
+              {/* Owner Nov 5 round 2 item 3: "Log throwing practice" sits beside each throwing item, not below the card. */}
               {(() => { const pd = positionDistanceFromWarmup(block.drills as never); return pd ? <CatchPlayCheckPanel planDate={planDate} positionDistanceFt={pd} /> : null; })()}
             </div>
           )}
