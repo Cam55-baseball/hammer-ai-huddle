@@ -5393,6 +5393,8 @@ export type Database = {
           coach_id: string
           created_at: string
           id: string
+          issue_area: string | null
+          issue_label: string | null
         }
         Insert: {
           athlete_id: string
@@ -5400,6 +5402,8 @@ export type Database = {
           coach_id?: string
           created_at?: string
           id?: string
+          issue_area?: string | null
+          issue_label?: string | null
         }
         Update: {
           athlete_id?: string
@@ -5407,6 +5411,8 @@ export type Database = {
           coach_id?: string
           created_at?: string
           id?: string
+          issue_area?: string | null
+          issue_label?: string | null
         }
         Relationships: []
       }
@@ -25404,6 +25410,15 @@ export type Database = {
       mastery_pitching_lines: {
         Args: { p_athlete?: string; p_date: string; p_sport: string }
         Returns: Json
+      }
+      my_coach_issue_tags: {
+        Args: { _days?: number }
+        Returns: {
+          coach_name: string
+          created_at: string
+          issue_area: string
+          issue_label: string
+        }[]
       }
       org_can_add_athletes: { Args: { _org: string }; Returns: boolean }
       org_compare_athletes: {

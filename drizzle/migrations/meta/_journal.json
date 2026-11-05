@@ -1408,6 +1408,13 @@
       "when": 1793900830998,
       "tag": "0200_owner_throwing_drill_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 201,
+      "version": "7",
+      "when": 1793904335247,
+      "tag": "0201_coach_note_issue_tags",
+      "breakpoints": true
     }
   ]
 }
