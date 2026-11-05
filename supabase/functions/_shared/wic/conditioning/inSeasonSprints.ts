@@ -10,12 +10,56 @@
  * still lightens. Off-season and pre-season keep positionSprints.ts (build-up to 20 a day).
  */
 
-export const TOPUP_MIN = 4;
-export const TOPUP_MAX = 8;
-export const SPEED_MIN = 3;
-export const SPEED_MAX = 6;
+/**
+ * Owner Nov 5 round 4 — OPTIMIZED IN-SEASON DEFAULTS (every value editable in the Coaching
+ * Console under conditioning rules → `inSeason`). Reasons are reported to the owner.
+ */
+export interface InSeasonStandards {
+  /** Max-effort base sprints on the weekly speed day (owner r4: 3, full rest). */
+  speedSprints: number;
+  /** Top-up = this share of the daily count, kept between topupMin and topupMax bases. */
+  topupShare: number; topupMin: number; topupMax: number;
+  /** A day counts toward the weekly running floor once it reaches this many bases. */
+  runningDayBases: number;
+  /** Weekly target = this many full days of the normal daily count. */
+  weeklyTargetDays: number;
+  /** A game at or above this share of the daily count is a heavy game. */
+  heavyGameShare: number;
+  /** Base-length sprint credit per defensive chance, by where the player played. */
+  chanceOutfield: number; chanceMiddleInfield: number; chanceCornerCatcher: number;
+  /** Morning at-bats estimate: default bases per plate appearance, and the logged plate appearances needed to use the player's own average. */
+  basesPerPaDefault: number; ownAverageMinPa: number;
+}
+export const DEFAULT_IN_SEASON_STANDARDS: InSeasonStandards = {
+  speedSprints: 3,
+  topupShare: 0.5, topupMin: 4, topupMax: 8,
+  runningDayBases: 4,
+  weeklyTargetDays: 2,
+  heavyGameShare: 0.6,
+  chanceOutfield: 1, chanceMiddleInfield: 0.5, chanceCornerCatcher: 0.25,
+  basesPerPaDefault: 1, ownAverageMinPa: 15,
+};
+export function inSeasonStandards(raw: unknown): InSeasonStandards {
+  const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const d = DEFAULT_IN_SEASON_STANDARDS;
+  const n = (k: keyof InSeasonStandards, lo: number, hi: number) => { const v = Number(o[k]); return Number.isFinite(v) && v >= lo && v <= hi ? v : d[k]; };
+  const s: InSeasonStandards = {
+    speedSprints: n("speedSprints", 1, 6), topupShare: n("topupShare", 0.1, 1), topupMin: n("topupMin", 1, 20), topupMax: n("topupMax", 1, 20),
+    runningDayBases: n("runningDayBases", 1, 20), weeklyTargetDays: n("weeklyTargetDays", 1, 6), heavyGameShare: n("heavyGameShare", 0.1, 1),
+    chanceOutfield: n("chanceOutfield", 0, 4), chanceMiddleInfield: n("chanceMiddleInfield", 0, 4), chanceCornerCatcher: n("chanceCornerCatcher", 0, 4),
+    basesPerPaDefault: n("basesPerPaDefault", 0, 4), ownAverageMinPa: n("ownAverageMinPa", 1, 200),
+  };
+  if (s.topupMax < s.topupMin) { s.topupMin = d.topupMin; s.topupMax = d.topupMax; }
+  return s;
+}
+const D = DEFAULT_IN_SEASON_STANDARDS;
+export const TOPUP_MIN = D.topupMin;
+export const TOPUP_MAX = D.topupMax;
+/** Owner r4: the speed day is exactly 3 max-effort sprints (kept short). */
+export const SPEED_MIN = D.speedSprints;
+export const SPEED_MAX = D.speedSprints;
 /** A game at or above this share of capacity is a HEAVY game (next day = flush only). */
-export const HEAVY_GAME_SHARE = 0.6;
+export const HEAVY_GAME_SHARE = D.heavyGameShare;
 /** Running sessions required per week (existing 2-a-week floor). */
 export const WEEKLY_RUNNING_FLOOR = 2;
 
@@ -24,6 +68,15 @@ const RESULT_BASES: Record<string, number> = {
   "1B": 1, "SINGLE": 1, "BB": 1, "WALK": 1, "IBB": 1, "HBP": 1, "E": 1, "ROE": 1, "FC": 1,
   "2B": 2, "DOUBLE": 2, "3B": 3, "TRIPLE": 3, "HR": 4, "HOME_RUN": 4,
 };
+export const resultBases = (r: string | null | undefined) => RESULT_BASES[String(r ?? "").trim().toUpperCase()] ?? 0;
+
+/** Credit for one defensive chance by position: outfield runs farthest, catcher/1B/pitcher least. */
+export function chanceCredit(position: string | null | undefined, std: InSeasonStandards = D): number {
+  const p = String(position ?? "").trim().toUpperCase();
+  if (["LF", "CF", "RF", "OF"].includes(p)) return std.chanceOutfield;
+  if (["C", "1B", "P"].includes(p)) return std.chanceCornerCatcher;
+  return std.chanceMiddleInfield; // 2B/SS/3B and unknown
+}
 
 export interface GameLogFacts {
   date: string;
@@ -33,33 +86,58 @@ export interface GameLogFacts {
   baserun: readonly { event_type: string | null; base_from: number | null; base_to: number | null }[];
   /** gp_defense_plays rows (each a defensive chance). */
   defenseChances: number;
+  /** Position of each defensive chance, when known (weights the chance). */
+  defensePositions?: readonly (string | null)[];
   /** Morning check-in answer, used only when no at-bats are logged. */
   selfReportedAtBats: number | null;
+  /** The player's own logged bases per plate appearance (null = not enough logs → default). */
+  ownBasesPerPa?: number | null;
 }
 
 export interface GameCredit { date: string; bases: number; source: "log" | "estimate" | "unknown" }
 
+function baserunBases(baserun: GameLogFacts["baserun"]): number {
+  let b = 0;
+  for (const e of baserun) {
+    const from = Number(e.base_from), to = Number(e.base_to);
+    if (e.base_from != null && e.base_to != null && Number.isFinite(from) && Number.isFinite(to) && to > from) b += to - from;
+    else if (String(e.event_type ?? "").toLowerCase().includes("steal")) b += 1;
+  }
+  return b;
+}
+
+/**
+ * The player's own bases per plate appearance from logged games (bases reached on the at-bat plus
+ * bases run afterwards). Null until they have `ownAverageMinPa` logged plate appearances.
+ */
+export function ownBasesPerPa(atBatResults: readonly (string | null)[], baserun: GameLogFacts["baserun"], std: InSeasonStandards = D): number | null {
+  const pa = atBatResults.filter((r) => r != null && String(r).trim() !== "").length;
+  if (pa < std.ownAverageMinPa) return null;
+  let b = baserunBases(baserun);
+  for (const r of atBatResults) b += resultBases(r);
+  return Math.round((b / pa) * 100) / 100;
+}
+
 /**
  * Base-length sprints one game put on the player.
- * Log: bases reached on each at-bat + every base advanced on the bases (steals, taking extra,
- * scoring; a caught-stealing attempt still ran one base) + one per defensive chance.
- * No logged at-bats: the morning at-bats answer, one base each (running it out) — an estimate.
- * Neither: unknown (credited 0 toward the floor, treated as heavy for recovery).
+ * Log: bases reached on each at-bat + every base advanced on the bases (a caught-stealing attempt
+ * still ran one base) + each defensive chance weighted by position.
+ * No logged at-bats: the morning at-bats answer × the player's own bases per plate appearance
+ * (or the default) — an estimate. Neither: unknown (0 toward the floor, heavy for recovery).
  */
-export function gameCredit(g: GameLogFacts): GameCredit {
+export function gameCredit(g: GameLogFacts, std: InSeasonStandards = D): GameCredit {
   const logged = g.atBatResults.filter((r) => r != null).length > 0 || g.baserun.length > 0 || g.defenseChances > 0;
   if (logged) {
-    let b = 0;
-    for (const r of g.atBatResults) b += RESULT_BASES[String(r ?? "").trim().toUpperCase()] ?? 0;
-    for (const e of g.baserun) {
-      const from = Number(e.base_from), to = Number(e.base_to);
-      if (Number.isFinite(from) && Number.isFinite(to) && to > from) b += to - from;
-      else if (String(e.event_type ?? "").toLowerCase().includes("steal")) b += 1;
-    }
-    b += Math.max(0, g.defenseChances);
-    return { date: g.date, bases: b, source: "log" };
+    let b = baserunBases(g.baserun);
+    for (const r of g.atBatResults) b += resultBases(r);
+    const pos = g.defensePositions ?? [];
+    for (let i = 0; i < Math.max(0, g.defenseChances); i++) b += chanceCredit(pos[i] ?? null, std);
+    return { date: g.date, bases: Math.round(b * 100) / 100, source: "log" };
   }
-  if (g.selfReportedAtBats != null && g.selfReportedAtBats >= 0) return { date: g.date, bases: g.selfReportedAtBats, source: "estimate" };
+  if (g.selfReportedAtBats != null && g.selfReportedAtBats >= 0) {
+    const per = g.ownBasesPerPa != null && Number.isFinite(g.ownBasesPerPa) ? g.ownBasesPerPa : std.basesPerPaDefault;
+    return { date: g.date, bases: Math.round(g.selfReportedAtBats * per * 100) / 100, source: "estimate" };
+  }
   return { date: g.date, bases: 0, source: "unknown" };
 }
 
@@ -71,16 +149,65 @@ export function dayCredit(credits: readonly GameCredit[], date: string): GameCre
   return { date, bases: own.reduce((n, c) => n + c.bases, 0), source };
 }
 
-export const isHeavyGame = (c: GameCredit | null, capacity: number) =>
-  !!c && (c.source === "unknown" || c.bases >= Math.max(1, Math.ceil(capacity * HEAVY_GAME_SHARE)));
+export const isHeavyGame = (c: GameCredit | null, capacity: number, std: InSeasonStandards = D) =>
+  !!c && (c.source === "unknown" || c.bases >= Math.max(1, Math.ceil(capacity * std.heavyGameShare)));
 
-/** A day's running counts toward the 2-a-week floor once it reaches a top-up's worth. */
-export const countsAsRunningSession = (bases: number) => bases >= TOPUP_MIN;
+/** A day's running counts toward the 2-a-week floor once it reaches the running-day threshold. */
+export const countsAsRunningSession = (bases: number, std: InSeasonStandards = D) => bases >= std.runningDayBases;
 
-/** Weekly in-season target: two capacity sessions (the running floor) — games count first. */
-export const weeklyTarget = (capacity: number) => WEEKLY_RUNNING_FLOOR * Math.max(0, capacity);
+/** Weekly in-season target: N full days of the normal daily count — games count first. */
+export const weeklyTarget = (capacity: number, std: InSeasonStandards = D) => std.weeklyTargetDays * Math.max(0, capacity);
 
-export const speedBases = (capacity: number) => Math.min(SPEED_MAX, Math.max(SPEED_MIN, Math.floor(capacity / 3)));
+/** Owner r4: the speed day is short — a fixed number of max-effort sprints (default 3). */
+export const speedBases = (_capacity: number, std: InSeasonStandards = D) => std.speedSprints;
+
+export const topupBases = (capacity: number, std: InSeasonStandards = D) =>
+  Math.min(std.topupMax, Math.max(std.topupMin, Math.floor(Math.max(0, capacity) * std.topupShare)));
+
+/**
+ * Owner r4 item 1: the proper progressive sprint prep that must END the warm-up before any
+ * max-effort sprint. Catalog slugs; the generator refuses max sprints if it can't place these.
+ */
+export const SPRINT_PREP = [
+  { slug: "wu_a_skip", label: "A-skips, then ankle dribbles", dose: "2 x 20 yd each", effort: "easy rhythm" },
+  { slug: "build_up_sprint", label: "Build-ups", dose: "3 runs: about 60%, then 75%, then 90%", effort: "60% → 75% → 90%" },
+] as const;
+export const SPRINT_PREP_SLUGS = SPRINT_PREP.map((p) => p.slug);
+
+/**
+ * Places the sprint prep directly before the first max-effort sprint row. Returns null when the
+ * prep can't be placed (missing catalog drill) — then max sprints must not be prescribed.
+ */
+export function withSprintPrep<R extends { movement_slug: string }>(
+  rows: readonly R[], isMaxSprint: (r: R) => boolean, makePrep: (p: (typeof SPRINT_PREP)[number]) => R | null,
+): R[] | null {
+  const at = rows.findIndex(isMaxSprint);
+  if (at < 0) return [...rows];
+  const have = new Set(rows.slice(0, at).map((r) => r.movement_slug));
+  const missing = SPRINT_PREP.filter((p) => !have.has(p.slug));
+  const prep: R[] = [];
+  for (const p of missing) { const r = makePrep(p); if (!r) return null; prep.push(r); }
+  return [...rows.slice(0, at), ...prep, ...rows.slice(at)];
+}
+/** Validator: every max sprint is preceded (in order) by every sprint-prep item. */
+export function sprintPrepOk(rows: readonly { movement_slug: string }[], isMaxSprint: (r: any) => boolean): boolean {
+  const at = rows.findIndex(isMaxSprint);
+  if (at < 0) return true;
+  const before = rows.slice(0, at).map((r) => r.movement_slug);
+  const ia = before.indexOf(SPRINT_PREP_SLUGS[0]), ib = before.indexOf(SPRINT_PREP_SLUGS[1]);
+  return ia >= 0 && ib > ia;
+}
+
+/** Owner r4 item 3: the base route a top-up adds when the day has no base sprint (one base per rep). */
+export const topupRouteSlug = (sport: "baseball" | "softball") => sport === "softball" ? "bases_single_sb" : "repeat_90ft_bb";
+/** Day kinds that may add a short base-sprint item when the day has none (never before a game / after a heavy game — those kinds never get here). */
+export const ADDS_ROW_KINDS: ReadonlySet<string> = new Set(["topup", "low_readiness", "speed"]);
+
+/**
+ * Lightest-load score for choosing the week's speed day (lower = lighter): a game the day before
+ * weighs 1, a game the day after weighs 0.5. Ties go to the earlier day.
+ */
+export const dayLoadScore = (gameYesterday: boolean, gameTomorrow: boolean) => (gameYesterday ? 1 : 0) + (gameTomorrow ? 0.5 : 0);
 
 export type InSeasonKind = "game" | "flush" | "speed" | "topup" | "normal" | "pre_game_half" | "low_readiness" | "none";
 
