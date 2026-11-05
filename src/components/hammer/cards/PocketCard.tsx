@@ -10,7 +10,7 @@ import { getTodayDate } from "@/utils/dateUtils";
  * on this device for the plan date, so a reload or app close reopens it.
  */
 import { ReportProblemButton } from "@/components/support/ReportProblemButton";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronRight, ExternalLink, Lock, LogOut, X } from "lucide-react";
 import { DomainGlyph, domainOf, useRhythm } from "./todayRhythm";
@@ -93,6 +93,8 @@ export function PocketCard(props: Props) {
 }
 
 function PocketCardShell({ id, category, focus, tone, planDate, prescribed, countLabel, notPrescribedNote, children, progress, intro, link, onNavigate, practiceLogging = false }: Props) {
+  const [practiceOpen, setPracticeOpen] = useState(false);
+  const practiceRef = useRef<HTMLDetailsElement>(null);
   const {user}=useAuth();
   const decisions=useSessionControls(user?.id,planDate,planDate);
   const blockMatch=/^block_(.+)_([LRx])$/.exec(id);
@@ -222,7 +224,11 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
             <FocusSession active={locked} storageKey={`hm-focus:${planDate}:${id}`} onExit={() => { setLocked(false); toast.success("Saved. Your logged work is kept."); }}>
             {!link && <section data-workout-log className="space-y-3">
-              <h3 className="text-base font-semibold">Log this work</h3>
+              {/* Owner Nov 5 round 2 item 2: the practice-log button sits beside the title. */}
+              <div className="flex items-center justify-between gap-2" data-log-title-row>
+                <h3 className="text-base font-semibold">Log this work</h3>
+                {practiceLogging && <Button size="sm" variant="outline" className="h-9 shrink-0" data-testid="card-practice-log-button" onClick={() => { setPracticeOpen(true); requestAnimationFrame(() => practiceRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }}>Log practice</Button>}
+              </div>
               <div ref={setLogHost} className="space-y-4" />
               {!locked && <p className="text-xs text-muted-foreground">More information for each exercise is below ↓</p>}
             </section>}
@@ -246,7 +252,7 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
               </div>
             )}
             <PocketLogContext.Provider value={logHost}><PocketDetailsContext.Provider value={true}>{children({ pocket: true })}</PocketDetailsContext.Provider></PocketLogContext.Provider>
-            {practiceLogging && <details className="mt-4 border-t border-border pt-3" data-card-practice>
+            {practiceLogging && <details ref={practiceRef} open={practiceOpen} onToggle={(e) => setPracticeOpen((e.currentTarget as HTMLDetailsElement).open)} className="mt-4 border-t border-border pt-3" data-card-practice>
               <summary className="min-h-11 cursor-pointer text-sm font-semibold text-foreground">Finish this workout</summary>
               <ol className="my-2 list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
                 <li>Finish the prescribed work. Do not repeat it to make a log.</li>
