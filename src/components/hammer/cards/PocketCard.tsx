@@ -10,7 +10,7 @@ import { getTodayDate } from "@/utils/dateUtils";
  * on this device for the plan date, so a reload or app close reopens it.
  */
 import { ReportProblemButton } from "@/components/support/ReportProblemButton";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronRight, ExternalLink, Lock, LogOut, X } from "lucide-react";
 import { DomainGlyph, domainOf, useRhythm } from "./todayRhythm";
