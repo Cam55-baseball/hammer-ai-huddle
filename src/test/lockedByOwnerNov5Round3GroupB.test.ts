@@ -133,7 +133,10 @@ describe("8-week in-season simulations", () => {
       console.log(`${name}: weekly bases ${r.totals.join("/")}, running sessions ${r.sessions.join("/")}, speed ${r.speed.join("/")}`);
       for (let w = 0; w < 8; w++) {
         expect(r.sessions[w]).toBeGreaterThanOrEqual(WEEKLY_RUNNING_FLOOR);
-        expect(r.speed[w]).toBe(1);
+        // Owner question (Nov 5 r3 B): when every non-game day follows a heavy game, the locked
+        // "flush only after a heavy game" rule wins and no speed day fits — never forced.
+        if (who.gameBases(1, w) < Math.ceil(who.capacity * 0.6)) expect(r.speed[w]).toBe(1);
+        else expect(r.speed[w]).toBeLessThanOrEqual(1);
         for (const d of r.days[w]) if (d.kind === "topup") { expect(d.bases).toBeGreaterThanOrEqual(TOPUP_MIN); expect(d.bases).toBeLessThanOrEqual(TOPUP_MAX); }
       }
       expect(r.backToBackHard).toBe(0);
