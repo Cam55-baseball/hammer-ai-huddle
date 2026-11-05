@@ -1380,6 +1380,13 @@
       "when": 1793823492155,
       "tag": "0196_warmup_fit_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 197,
+      "version": "7",
+      "when": 1793889277927,
+      "tag": "0197_coach_log_general_game",
+      "breakpoints": true
     }
   ]
 }
