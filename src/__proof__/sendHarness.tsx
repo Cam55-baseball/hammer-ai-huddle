@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router-dom";
 import { useState } from "react";
 import { BulkSendDialog } from "@/components/coach/BulkSendDialog";
 import { SendToPlayerDialog } from "@/components/custom-activities/SendToPlayerDialog";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider } from "@/contexts/AuthContext";
 const qc = new QueryClient();
 const mode = new URLSearchParams(location.search).get("m");
 function H() {
