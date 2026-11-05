@@ -1469,7 +1469,7 @@ function HammerDailyPlanBody({
               })}
               {coachCards(["hitting", "pitching", "throwing", "fielding", "baserunning", "vision"])}
               <ErrorBoundary label="wk-conditioning">
-                <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} category={runningCardTitle({ has5Tool: combinedBaseRunning, hasG2W: false })} focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.conditioningCard.length > 0 || baseConditioning.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
+                <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} category={runningCardTitle({ has5Tool: combinedBaseRunning, hasG2W: false })} focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} practiceLogging={logPractice} practiceRoute={baseConditioning.length > 0 ? cardPracticeRoute("/practice?module=baserunning", { modality: "baserunning", activity: "Base-route running" }, getTodayDate()) : null} prescribed={wkRx.grouped.conditioningCard.length > 0 || baseConditioning.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
                   {() => <>{wkRx.grouped.conditioningCard.length > 0 && <WkConditioningCard pocket />}{baseConditioning.map(b => <div key={`physical-${b.side ?? "x"}`}><BlockCard block={{...b, title: "Base-route running"}} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
                 </PocketCard>
               </ErrorBoundary>
