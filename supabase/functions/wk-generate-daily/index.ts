@@ -3634,6 +3634,15 @@ const handler = async (req: Request): Promise<Response> => {
           conditioningFloor = { due: floor.due, needed: floor.needed, added: [] };
           if (floor.due) {
             const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");
+        // Owner Nov 5 final: the body decides — very low readiness skips the extra speed session; a leg
+        // pain flag (active injury or today's check-in pain spot) removes sprints.
+        const veryLow = cnsReadiness <= 4 || soreness >= 8;
+        let legPain = painAreasFromInjuries(injurySlugs).leg === true;
+        try {
+          const { data: tq } = await admin.from("vault_focus_quizzes").select("pain_location").eq("user_id", user.id).eq("entry_date", planDate).limit(5);
+          const locs = ((tq ?? []) as any[]).flatMap((q) => Array.isArray(q.pain_location) ? q.pain_location : []).map((x) => String(x));
+          if (locs.length && painAreasFromInjuries(locs).leg) legPain = true;
+        } catch { /* injury record still applies */ }
             const slugs = floorConditioningSlugs({ sport, isPitcher: pitcherConditioning && !isCombinedBaseConditioningProgram(schedulingModules, sport), lowReadiness: low });
             const why = low
               ? "Weekly running minimum: an easy run today because your readiness is lower. It still counts as one of your 2 this week."
@@ -4020,17 +4029,30 @@ const handler = async (req: Request): Promise<Response> => {
         const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");
         // Owner Nov 5 round 3, Group B (locked): in-season uses game-load credit + weekly target.
         const inSeasonDay = phaseRes.phase === "in_season"
-          ? await planInSeasonSprints({ admin, userId: user.id, planDate, capacity, sport, gameOn, lowReadiness: low, withRoute, std: isStd })
+          ? await planInSeasonSprints({ admin, userId: user.id, planDate, capacity, sport, gameOn, lowReadiness: low, veryLowReadiness: veryLow, legPain, withRoute, std: isStd })
           : null;
         if (inSeasonDay) {
           // Owner Nov 5 r4 item 3: a top-up / speed day with no base sprint adds ONE short base-route
           // item for the sport (one base per rep). Kinds that reach here already passed "never before
           // a game, never after a heavy game"; low readiness already lightened the count.
           if (inSeasonDay.bases > 0 && ADDS_ROW_KINDS.has(inSeasonDay.kind) && !finalRxs.some((r) => r.slot === "conditioning" && basesPerRepOf(withRoute(r), sport) > 0)) {
-            const added = addedRow(topupRouteSlug(sport), "conditioning", { sets: inSeasonDay.bases, reps: 1 }, inSeasonDay.kind === "speed"
+            const added = addedRow(topupRouteSlug(sport), "conditioning", { sets: inSeasonDay.bases, reps: 1 }, inSeasonDay.kind === "extra_speed_pre_game"
+              ? "Early work, well before game time: all-out base sprints with full rest (walk back and rest until you feel fresh). Nothing after the game."
+              : inSeasonDay.maxIntent
               ? "Your speed day: all-out base sprints with full rest (walk back and rest until you feel fresh)."
               : "Short base-sprint top-up at about 80% effort to keep your weekly running on track.", { in_season_added: true });
             if (added) finalRxs = assignSequenceOrder([...finalRxs, added] as typeof finalRxs);
+          }
+          // Owner Nov 5 final (locked): NOTHING after a game. On a game day the only running allowed is
+          // the extra pre-game speed session; every other sprint, top-up and flush jog row is removed.
+          // A leg-pain day removes every sprint row too.
+          if (inSeasonDay.gameToday || inSeasonDay.kind === "pain_no_sprints") {
+            const keepPre = inSeasonDay.kind === "extra_speed_pre_game";
+            finalRxs = assignSequenceOrder(finalRxs.filter((r) => {
+              if (r.slot !== "speed" && r.slot !== "conditioning") return true;
+              return keepPre && r.slot === "conditioning" && basesPerRepOf(withRoute(r), sport) > 0;
+            }) as any) as typeof finalRxs;
+            if (keepPre) for (const r of finalRxs as any[]) if (r.slot === "conditioning") r.why_payload = { ...(r.why_payload ?? {}), pre_game: true, timing_note: "Early work, well before game time." };
           }
           const before = finalRxs.map(withRoute);
           let fitted = fitRowsToBases(before, inSeasonDay.bases, sport);
@@ -4048,7 +4070,7 @@ const handler = async (req: Request): Promise<Response> => {
             (r as any).why_payload = { ...((r as any).why_payload ?? {}), position_sprints: {
               unit: "bases", base_feet: sport === "softball" ? 60 : 90, start_bases: start, capacity, day_kind: inSeasonDay.kind,
               in_season: true, target_bases: inSeasonDay.bases, total_bases: total, max_intent: inSeasonDay.maxIntent,
-              flush: inSeasonDay.flush, post_game_topup: inSeasonDay.postGame ?? null, game_credit: inSeasonDay.credit ?? null,
+              flush: inSeasonDay.flush, pre_game: inSeasonDay.preGame === true, game_credit: inSeasonDay.credit ?? null,
               week_bases: inSeasonDay.weekBases, week_running_sessions: inSeasonDay.weekSessions, read_failed: inSeasonDay.readFailed,
               max_bases: std.maxBasesPerDay, sets_from: r.sets, sets_to: (fitted[i] as any).sets, because: inSeasonDay.because,
             } };
