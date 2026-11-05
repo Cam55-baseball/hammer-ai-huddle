@@ -13867,6 +13867,12 @@ export type Database = {
           sports: string[]
           steps: string[]
           test_overrides: Json
+          throw_contexts: string[] | null
+          throw_flight: string | null
+          throw_intent: string | null
+          throw_pulldowns: boolean
+          throw_role_fit: string[] | null
+          throw_steps: Json | null
           updated_at: string
           video_url: string | null
           work_seconds: number | null
@@ -13927,6 +13933,12 @@ export type Database = {
           sports?: string[]
           steps?: string[]
           test_overrides?: Json
+          throw_contexts?: string[] | null
+          throw_flight?: string | null
+          throw_intent?: string | null
+          throw_pulldowns?: boolean
+          throw_role_fit?: string[] | null
+          throw_steps?: Json | null
           updated_at?: string
           video_url?: string | null
           work_seconds?: number | null
@@ -13987,6 +13999,12 @@ export type Database = {
           sports?: string[]
           steps?: string[]
           test_overrides?: Json
+          throw_contexts?: string[] | null
+          throw_flight?: string | null
+          throw_intent?: string | null
+          throw_pulldowns?: boolean
+          throw_role_fit?: string[] | null
+          throw_steps?: Json | null
           updated_at?: string
           video_url?: string | null
           work_seconds?: number | null

@@ -3,8 +3,9 @@
  * already-saved days. Saved days stamped with an older version (or none) are rebuilt,
  * today and later, through the normal build path; logged/marked work is never touched.
  * 2 = throw-count catch play only (no timed catch play), arm cool-down in Recovery.
+ * 3 = owner throwing drills can take the built-in catch-play steps' place (Nov 5 round 2).
  */
-export const PLAN_RULES_VERSION = 2;
+export const PLAN_RULES_VERSION = 3;
 
 export function savedRulesVersion(payload: unknown): number {
   const v = Number((payload as { rules_version?: unknown } | null)?.rules_version);

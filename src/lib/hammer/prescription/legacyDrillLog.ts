@@ -10,6 +10,8 @@ export type LegacyDrillLogSpec = {
   rows: number;
   fields: LegacyLogField[];
   completion: boolean;
+  /** Owner Nov 5: a throwing item — logged in throws, with the throwing log button beside it. */
+  throwing?: boolean;
   rowFields?: LegacyLogField[][];
   rowLabels?: string[];
 };
@@ -34,6 +36,14 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   const yards = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:yards?|yds?)\b/);
   const distance = feet ?? (yards == null ? null : yards * 3);
   const jump = jumpMeasure(name);
+  // Owner Nov 5 round 2 item 3: every throwing item logs THROWS; the distance stays in the description.
+  if (isThrowingItem(name, dosage)) {
+    const grouped = text.match(/\b(\d+)\s*x\s*(\d+)\s*throws?\b/);
+    const groupedIsDistance = grouped ? new RegExp(`\\b${grouped[1]}\\s*(?:ft|feet)\\s*x`).test(text) : false;
+    const rows = grouped && !groupedIsDistance ? Number(grouped[1]) : 1;
+    const per = grouped ? Number(grouped[2]) : firstNumber(text, /\b(\d+)\s*throws?\b/);
+    return { rows: Math.max(1, rows), completion: !["throwing", "pitching"].includes(modality), throwing: true, fields: [{ key: "throws", label: "Throws", prefill: per ?? null }] };
+  }
   if (modality === 'bunting' || /\b(?:squeeze|sac|sacrifice|drag|push|hit) bunt\b|\bbunt for a hit\b/i.test(name)) return { rows:Math.max(1,sets),completion:false,fields:[{key:'attempts',label:'Attempts',prefill:firstNumber(text,/\b(\d+)\s*attempts?\b/) ?? reps},{key:'successes',label:'Successful bunts',prefill:null}] };
   if (jump) return { rows: Math.max(1, sets), completion: false, fields: [{ key: "distance", label: jump === "jump_distance" ? "Jump distance" : "Jump height", unit: jump === "jump_distance" ? "ft + in" : "in", prefill: null }] };
 
@@ -86,4 +96,10 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
     return { rows: sets, completion: false, fields: [{ key: "time", label: "Seconds", unit: "s", prefill: seconds ?? (minutes == null ? null : minutes * 60) }] };
   }
   return { rows: sets, completion: false, fields: [{ key: "reps", label: /swing|contact|hit/.test(activity) ? "Swings" : "Reps", prefill: reps }] };
+}
+const THROW_NAME = /\bthrows?\b|catch play|build-up catch|light catch|long[- ]toss|pull-?downs?|arm[- ]strength day/i;
+/** Throwing items: warm-up throws, catch play, build-up/light catch, long toss, pull-downs, arm-strength day. */
+export function isThrowingItem(name: string, dosage: string): boolean {
+  if (/^arm prep —/i.test(name)) return false;
+  return THROW_NAME.test(name) || /\b\d+\s*(?:ft|feet)\s*x\s*\d+\s*throws?\b/i.test(dosage);
 }

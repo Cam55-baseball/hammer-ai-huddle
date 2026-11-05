@@ -1958,6 +1958,9 @@ var init_ownerConditioning = __esm({
 });
 
 // src/lib/prescription/ownerPlanDrills.ts
+function ownerPlanDrillRows() {
+  return rows;
+}
 function setOwnerPlanDrills(next) {
   rows = next;
 }
@@ -5630,7 +5633,89 @@ function placeBreathing(blocks, toSteps) {
   });
 }
 
+// src/lib/prescription/ownerThrowingDrills.ts
+init_warmupFit();
+var THROWING_SLOT = "hammers_today:throwing_drill";
+var THROW_INTENTS = [
+  { id: "catch_light", label: "Catch-light" },
+  { id: "sub_max", label: "Sub-max" },
+  { id: "full", label: "Full" }
+];
+function throwSteps(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((s) => {
+    const ft = Number(s?.ft), throws = Number(s?.throws);
+    const pd = s?.pulldownThrows == null ? null : Number(s.pulldownThrows);
+    return Number.isInteger(ft) && Number.isInteger(throws) && ft > 0 && throws > 0 ? [{ ft, throws, pulldownThrows: pd && pd > 0 ? Math.round(pd) : null }] : [];
+  });
+}
+function ownerThrowingProblems(r) {
+  const out = [];
+  const steps = throwSteps(r.throw_steps);
+  if (!steps.length) out.push("at least one step (distance + throws)");
+  if (steps.some((s) => s.ft < 20 || s.ft > 400)) out.push("distances between 20 and 400 ft");
+  if (steps.some((s) => s.throws > 50)) out.push("50 or fewer throws per step");
+  if (!THROW_INTENTS.some((i) => i.id === r.throw_intent)) out.push("intent");
+  if (!r.throw_contexts?.length) out.push("where it's prescribed");
+  if (!r.throw_role_fit?.length) out.push("role fit");
+  if (!r.sports?.length) out.push("sport");
+  if (!cleanFit(r.fit_levels, r.fit_age_bands)) out.push("level and age bands");
+  if (r.throw_pulldowns && !steps.some((s) => (s.pulldownThrows ?? 0) > 0)) out.push("pull-down throws on a step");
+  return out;
+}
+var KIND_CONTEXT = {
+  standard: "catch_play",
+  long_toss: "long_toss",
+  arm_strength: "arm_strength",
+  build_up: "build_up",
+  light: "light_catch",
+  pitcher_interval: null,
+  none: null
+};
+var INTENT_RANK = { catch_light: 0, sub_max: 1, full: 2 };
+var ROW_RANK = { low: 0, moderate: 1, high: 2 };
+var ROW_INTENT = { catch_light: "low", sub_max: "moderate", full: "high" };
+function ownerThrowingFits(r, p, context) {
+  if (!r.active || !r.placements?.includes(THROWING_SLOT) || ownerThrowingProblems(r).length) return false;
+  if (!r.sports.includes(p.sport) || !r.throw_role_fit.includes(p.role) || !r.throw_contexts.includes(context)) return false;
+  return fits(cleanFit(r.fit_levels, r.fit_age_bands), p.fit);
+}
+function ownerThrowRows(r) {
+  const intent = r.throw_intent ?? "catch_light";
+  const label2 = THROW_INTENTS.find((i) => i.id === intent).label.toLowerCase();
+  const flight = r.throw_flight === "arc" ? " \xB7 arc" : r.throw_flight === "line" ? " \xB7 on a line" : "";
+  return throwSteps(r.throw_steps).flatMap((s) => {
+    const rows3 = [{ name: `${r.name} \u2014 ${s.ft} ft`, distanceFt: s.ft, throws: s.throws, part: "build", intent: ROW_INTENT[intent], dosage: `${s.ft}ft x ${s.throws} throws \xB7 ${label2}${flight}` }];
+    if (r.throw_pulldowns && s.pulldownThrows) rows3.push({ name: `${r.name} \u2014 ${s.ft}-ft pull-downs`, distanceFt: s.ft, throws: s.pulldownThrows, part: "pull_down", intent: "high", dosage: `${s.ft}ft x ${s.pulldownThrows} throws \xB7 pull-downs, on a line` });
+    return rows3;
+  });
+}
+function applyOwnerThrowingDrill(day2, p, rows3, dayIndex = 0) {
+  const context = KIND_CONTEXT[day2.kind];
+  if (!context || !day2.rows.length) return day2;
+  const maxFt = Math.max(...day2.rows.filter((r) => r.part !== "pull_down").map((r) => r.distanceFt));
+  const maxIntent = Math.max(...day2.rows.map((r) => ROW_RANK[r.intent]));
+  const hasPulldowns = day2.rows.some((r) => r.part === "pull_down");
+  const pool = rows3.filter((r) => ownerThrowingFits(r, p, context)).filter((r) => {
+    const out2 = ownerThrowRows(r);
+    const total = out2.reduce((n, x) => n + x.throws, 0);
+    return total <= day2.totalThrows && out2.every((x) => x.part === "pull_down" || x.distanceFt <= maxFt) && INTENT_RANK[r.throw_intent] <= maxIntent && (!out2.some((x) => x.part === "pull_down") || hasPulldowns);
+  }).sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  if (!pool.length) return day2;
+  const pick2 = pool[Math.abs(dayIndex) % pool.length];
+  const out = ownerThrowRows(pick2);
+  return {
+    ...day2,
+    rows: out,
+    ownerDrillId: pick2.id,
+    totalThrows: out.reduce((n, x) => n + x.throws, 0),
+    reachesPositionDistance: day2.reachesPositionDistance && out.some((x) => x.part !== "pull_down" && x.distanceFt >= p.positionFt)
+  };
+}
+
 // src/lib/hammer/prescription/eassLibrary.ts
+init_ownerPlanDrills();
+init_warmupFit();
 init_catchPlay();
 var BAND_PREP_BASEBALL = [
   {
@@ -6220,7 +6305,8 @@ function buildEassPrescription(ctx) {
   const underloadCount = isPositionPlayer || !plyoOk ? 0 : offSeason ? 3 : 1;
   const regulationTrimmed = isPositionPlayer ? regulation.slice(0, 2) : regulation;
   const cp = ctx.catchPlay;
-  const cpDay = isPositionPlayer ? catchPlayDay({
+  const cpPos = cpPosition(cp?.rawPosition ?? (ctx.position === "outfield" ? "OF" : ctx.position === "catcher" ? "C" : "IF"));
+  const cpBuilt = isPositionPlayer ? catchPlayDay({
     date: "",
     sport: isSoftball ? "softball" : "baseball",
     position: cpPosition(cp?.rawPosition ?? (ctx.position === "outfield" ? "OF" : ctx.position === "catcher" ? "C" : "IF")),
@@ -6239,6 +6325,12 @@ function buildEassPrescription(ctx) {
     buildUp: cp?.buildUp ?? null,
     standards: cp?.standards
   }) : null;
+  const cpDay = cpBuilt ? applyOwnerThrowingDrill(cpBuilt, {
+    sport: isSoftball ? "softball" : "baseball",
+    role: cpPos === "C" ? "catcher" : "position",
+    fit: resolvePlayerFit({ ageYears: ctx.ageYears }),
+    positionFt: positionDistance(isSoftball ? "softball" : "baseball", cpPos, ctx.ageYears, cp?.standards)
+  }, ownerPlanDrillRows(), cp?.trainingDayIndex ?? 0) : null;
   const defenseGate = cpDay ? defenseThrowsAllowed(cpDay, null) : { allowed: true, because: null };
   const drills = [
     ...scaledPrep,

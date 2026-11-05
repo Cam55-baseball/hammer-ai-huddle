@@ -27,7 +27,7 @@ describe("legacy drill visible log rows", () => {
 
   it("uses throws only for throwing work", () => {
     expect(legacyDrillLogSpec("throwing", "Catch play", "2 x 12 throws")).toEqual({
-      rows: 2, completion: false, fields: [{ key: "throws", label: "Throws", prefill: 12 }],
+      rows: 2, completion: false, throwing: true, fields: [{ key: "throws", label: "Throws", prefill: 12 }],
     });
   });
   it("throwing-card band prep records reps rather than inventing arm throws", () => {

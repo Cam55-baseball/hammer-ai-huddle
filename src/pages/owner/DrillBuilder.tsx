@@ -31,6 +31,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ownerConditioningProblems } from '../../../supabase/functions/_shared/wic/conditioning/ownerConditioning';
 import { ConditioningFields } from "@/components/owner/ConditioningFields";
 import { CareFields } from "@/components/owner/CareFields";
+import { ThrowingDrillFields } from "@/components/owner/ThrowingDrillFields";
+import { THROWING_SLOT, throwSteps } from "@/lib/prescription/ownerThrowingDrills";
 import { PitcherTagFields } from '@/components/owner/PitcherTagFields';
 import { SKILL_AREAS, ROUTINE_ROLES, BAT_SPEED_KINDS, validDrillRoleTags } from '@/lib/prescription/drillRoleTags';
 
@@ -215,8 +217,15 @@ export default function DrillBuilder() {
       setSaving(false);
       return;
     }
+    const throwingDrill = body.placements.includes(THROWING_SLOT);
+    const throwFit = throwingDrill ? (cleanFit(body.fit_levels, body.fit_age_bands) ?? defaultFitForNewItem(null)) : null;
     const payload = {
       ...body,
+      ...(throwingDrill ? {
+        throw_steps: throwSteps(body.throw_steps),
+        dosage: body.dosage?.trim() || throwSteps(body.throw_steps).map((s) => `${s.ft}ft x ${s.throws} throws`).join(", "),
+        fit_levels: [...throwFit!.levels], fit_age_bands: [...throwFit!.ageBands],
+      } : {}),
       ...(warmFit ? { fit_levels: [...warmFit.levels], fit_age_bands: [...warmFit.ageBands] } : {}),
       steps: body.steps.map((s) => s.trim()).filter(Boolean),
       equipment: body.equipment.map((s) => s.trim()).filter(Boolean),
@@ -495,6 +504,7 @@ export default function DrillBuilder() {
                   <div><Label>Bunt side</Label><Select value={draft.bunt_side ?? 'none'} onValueChange={value => set('bunt_side', value === 'none' ? null : value)}><SelectTrigger aria-label="Bunt side"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem><SelectItem value="R">Right-handed</SelectItem><SelectItem value="L">Left-handed</SelectItem></SelectContent></Select></div>
                 </div>}
                 {(draft.skill_area === 'hitting' || draft.placements.some(p => /hitting|bat_speed/.test(p))) && <div><Label>Pitch source</Label><Select value={(draft as any).pitch_source ?? 'none'} onValueChange={value => set('pitch_source' as any, value === 'none' ? null : value)}><SelectTrigger aria-label="Pitch source"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not set</SelectItem><SelectItem value="tee">Tee</SelectItem><SelectItem value="front_toss">Front toss</SelectItem><SelectItem value="machine">Machine</SelectItem><SelectItem value="live">Live</SelectItem></SelectContent></Select></div>}
+                {draft.placements.includes(THROWING_SLOT) && <ThrowingDrillFields draft={draft as any} set={set as any} />}
                 <PitcherTagFields draft={draft} set={set as any} />
                 {draft.placements.includes('hammers_today:conditioning') && <ConditioningFields draft={draft as any} set={set as any} />}
                 {(draft.placements.includes('hammers_today:tissue_care') || draft.placements.includes('hammers_today:focus_routine')) && !draft.placements.includes('hammers_today:conditioning') && <CareFields draft={draft as any} set={set as any} />}

@@ -70,6 +70,9 @@ export interface OwnerDrillRow {
   /** Owner Part D: warm-up level / age-band tags (empty = fits everyone). */
   fit_levels?: string[];
   fit_age_bands?: string[];
+  /** Owner Nov 5: throwing-drill fields (see ownerThrowingDrills.ts). */
+  throw_steps?: unknown; throw_intent?: string | null; throw_flight?: string | null;
+  throw_pulldowns?: boolean | null; throw_contexts?: string[] | null; throw_role_fit?: string[] | null;
   active: boolean;
   pinned: boolean;
   created_at: string;
@@ -99,6 +102,7 @@ export const OTHER_PLACEMENTS: Array<{ id: Placement; label: string }> = [
   { id: "hammers_today:defense_low_taxing", label: "Hammers Today — defense (low-taxing)" },
   { id: "hammers_today:baserunning", label: "Hammers Today — baserunning" },
   { id: "hammers_today:throwing", label: "Hammers Today — throwing" },
+  { id: "hammers_today:throwing_drill", label: "Throwing drill (its own type: catch play, long toss, arm-strength day…)" },
   { id: "hammers_today:pitching", label: "Hammers Today — pitching" },
   { id: "hammers_today:conditioning", label: "Hammers Today — conditioning" },
   { id: "hammers_today:mind", label: "Hammers Today — Mind (non-physical)" },
