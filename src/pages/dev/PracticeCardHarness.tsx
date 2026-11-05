@@ -27,7 +27,7 @@ export default function PracticeCardHarness() {
     lifecycle_band: "college", lifting_age_years: 2, development_priorities: ["throwing", "defense", "hitting"], weekly_availability_days: 6, injury_history: [], equipment_effective: gear }),
     NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 2), { subscriptionModules: [pitcher ? "baseball_pitcher" : "baseball_5tool"] });
   const block = plan.blocks.find((b) => b.modality === card && b.drills.length > 0);
-  if (!block) return <main className="p-4 text-sm">No {card} card in the sample plan.</main>;
+  if (!block) return <main className="p-4 text-sm">No {card} card in the sample plan: {plan.blocks.map((b) => `${b.modality}:${b.drills.length}`).join(", ")}</main>;
   const route = block.route.startsWith("/practice") ? cardPracticeRoute(block.route, { modality: block.modality, activity: block.title }, getTodayDate()) : null;
   return (
     <HammersTodayProvider>
