@@ -69,4 +69,3 @@
 
 - Player-facing questions, prompts and cards take modules from `useProgramModules`/`playerProgramModules` (`_shared/programAccess.ts`), which applies the owner-only 5Tool rule; access/purchase checks keep raw `useSubscription`. Why: one program judge everywhere without changing what the owner can open.
 - Coach game entry front door is `/coach/log-game` over existing `coach_log_entry` lines and `coach_log_general_game` (per-player gp_games, no stats). Why: every save lands on each player's own record with the server connection/jersey guards.
-- Coach note issue tags (`coach_private_notes.issue_area/issue_label`) reach the player only through the `my_coach_issue_tags` definer RPC (area + label, connected coaches, never the note body); extra Before-you-start reasons come only from `src/lib/hammer/bysExtraTriggers.ts` and add to, never replace, each item's own triggers. Why: private notes stay private, and every card keeps one place that explains why it shows.
