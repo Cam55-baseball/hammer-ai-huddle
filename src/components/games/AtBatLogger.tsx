@@ -1,3 +1,4 @@
+import { asksRunners, asksScored, parseRunners, formatRunners, rbiForAtBat, FREE_PASS_RESULTS, type Base } from "@/lib/games/rbi";
 import { entrySourceLabel } from "@/lib/intelligence/entrySource";
 /**
  * AtBatLogger — V2 with inline pitch coupling + keyboard shortcuts + undo.
@@ -56,6 +57,13 @@ import {
 
 
 const RESULTS = AB_RESULTS;
+
+/** Recomputes the RBI from the runners/scored answers whenever the result asks for them. */
+function withRbi(p: Record<string, any>): Record<string, any> {
+  if (!asksRunners(p.result) || !p.runners_on) return p;
+  const n = rbiForAtBat(p.result, parseRunners(p.runners_on), p.rbi_scored === "" || p.rbi_scored == null ? 0 : Number(p.rbi_scored));
+  return n == null ? p : { ...p, rbi: String(n) };
+}
 const CONTACT = CONTACT_QUALITY;
 const DIRECTION_CODES = DIRECTIONS;
 
@@ -453,7 +461,7 @@ function AtBatForm({
     opponent_pitcher_id: defaultPitcherId ?? "",
   });
 
-  const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
+  const set = (k: string, v: any) => setF((p) => (k === "result" ? withRbi({ ...p, [k]: v }) : { ...p, [k]: v }));
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Keyboard shortcuts — active when the form is open and the focus is not
@@ -483,7 +491,7 @@ function AtBatForm({
       const result = SHORTCUTS[key];
       if (result) {
         e.preventDefault();
-        setF((p) => ({ ...p, result }));
+        setF((p) => withRbi({ ...p, result }));
       }
     };
     window.addEventListener("keydown", handler);
@@ -493,7 +501,8 @@ function AtBatForm({
 
   const submit = () => {
     try {
-      onSave(atBatEntryPayload(f));
+      const { rbi_scored: _scored, ...rest } = f;
+      onSave(atBatEntryPayload(rest));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Check the at-bat details.");
     }
@@ -602,17 +611,51 @@ function AtBatForm({
           <NumberField min={0} max={2} value={f.outs}
             onValueChange={(v) => set("outs", v ?? "")} />
         </Field>
-        <Field
-          label="Which bases had runners on them"
-          help="Type the base numbers, e.g. 1,3 means a runner on first base and a runner on third base. Leave blank if not entered. Type none if the bases were empty."
-        >
-          <Input placeholder="e.g. 1,3" value={f.runners_on}
-            onChange={(e) => set("runners_on", e.target.value)} />
-        </Field>
-        <Field label="Runs you drove in (RBI)" help="How many teammates scored because of your at-bat.">
-          <NumberField min={0} value={f.rbi}
-            onValueChange={(v) => set("rbi", v ?? "")} />
-        </Field>
+        {asksRunners(f.result) ? (
+          <div className="col-span-full space-y-2 rounded-md border border-border p-3" data-testid="rbi-runners">
+            <Label className="text-sm font-medium">Anyone on base?</Label>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" size="sm" variant={parseRunners(f.runners_on).length === 0 && f.runners_on ? "default" : "outline"} aria-pressed={f.runners_on === "none"}
+                onClick={() => setF((p) => withRbi({ ...p, runners_on: "none", rbi_scored: "0" }))}>None</Button>
+              {([1, 2, 3] as Base[]).map((base) => {
+                const on = parseRunners(f.runners_on).includes(base);
+                return <Button key={base} type="button" size="sm" variant={on ? "default" : "outline"} aria-pressed={on}
+                  onClick={() => setF((p) => { const cur = parseRunners(p.runners_on); const next = on ? cur.filter((x) => x !== base) : [...cur, base]; return withRbi({ ...p, runners_on: formatRunners(next) }); })}>
+                  {base === 1 ? "1st" : base === 2 ? "2nd" : "3rd"}</Button>;
+              })}
+            </div>
+            {asksScored(f.result) && parseRunners(f.runners_on).length > 0 && (
+              <div className="space-y-1">
+                <Label className="text-sm">{f.result === "SF" ? "How many scored on the fly ball?" : "How many scored on this hit?"}</Label>
+                <div className="flex flex-wrap gap-2">
+                  {Array.from({ length: parseRunners(f.runners_on).length + 1 }, (_, n) => n).map((n) => (
+                    <Button key={n} type="button" size="sm" variant={String(f.rbi_scored ?? "") === String(n) ? "default" : "outline"}
+                      onClick={() => setF((p) => withRbi({ ...p, rbi_scored: String(n) }))}>{n}</Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground" data-testid="rbi-total">
+              Runs you drove in (RBI): {f.rbi === "" || f.rbi == null ? "pick who was on base" : f.rbi}
+              {f.result === "HR" ? " — a home run counts 1 for you plus every runner on base." : ""}
+              {FREE_PASS_RESULTS.has(String(f.result)) ? " — a walk or hit by pitch counts 1 only with the bases loaded." : ""}
+            </p>
+          </div>
+        ) : (
+          <>
+            <Field
+              label="Which bases had runners on them"
+              help="Type the base numbers, e.g. 1,3 means a runner on first base and a runner on third base. Leave blank if not entered. Type none if the bases were empty."
+            >
+              <Input placeholder="e.g. 1,3" value={f.runners_on}
+                onChange={(e) => set("runners_on", e.target.value)} />
+            </Field>
+            <Field label="Runs you drove in (RBI)" help="How many teammates scored because of your at-bat.">
+              <NumberField min={0} value={f.rbi}
+                onValueChange={(v) => set("rbi", v ?? "")} />
+            </Field>
+          </>
+        )}
         <Field
           label="Runners you left on base (LOB)"
           help="Runners who were still standing on base when your at-bat ended without scoring."
