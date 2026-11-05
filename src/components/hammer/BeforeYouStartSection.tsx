@@ -13,6 +13,7 @@ import { Children, isValidElement, useEffect, useState, type ReactNode } from "r
 import { bysLevel, type BysLevel } from "@/lib/hammer/beforeYouStartImportance";
 import { useBysImportance } from "@/hooks/useBysImportance";
 import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
 
 import { ChevronDown, ChevronUp, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,10 +29,16 @@ import {
  * shows, a plain "Why you see this" line says why for this player. Item and line hide
  * together when the item has nothing to show today.
  */
-export function Bys({ id, why, children }: { id: string; why?: string | null; children?: ReactNode }) {
+export function Bys({ id, why, extra, children }: { id: string; why?: string | null; extra?: { reasons: readonly string[]; title: string; to: string; cta: string } | null; children?: ReactNode }) {
   return (
     <div data-bys-item={id} className="[&:not(:has(>.bys-body>*))]:hidden">
-      <div className="bys-body">{children}</div>
+      <div className="bys-body">{children}{extra && extra.reasons.length > 0 ? (
+        <Card className="p-3 space-y-1" data-testid={`bys-extra-${id}`}>
+          <p className="text-sm font-medium">{extra.title}</p>
+          {extra.reasons.map((r) => <p key={r} className="text-xs text-muted-foreground">Because {r}</p>)}
+          <Button asChild size="sm" variant="outline" className="h-7 text-xs mt-1"><Link to={extra.to}>{extra.cta}</Link></Button>
+        </Card>
+      ) : null}</div>
       {why ? <p className="mt-1 px-1 text-[11px] text-muted-foreground" data-testid={`bys-why-${id}`}>Why you see this: {why}</p> : null}
     </div>
   );
