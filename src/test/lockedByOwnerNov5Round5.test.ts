@@ -9,6 +9,8 @@ import type { ContextVariable, HammerAthleteContext } from "@/lib/hammer/context
  *  pitching, baserunning or bunting SKILL drill. */
 const SKILL_CATEGORIES = new Set(["position_skill", "windmill_circle", "intent", "pulldown", "overload"]);
 const SKILL_AREAS = new Set(["defense", "fielding", "hitting", "pitching", "baserunning", "bunting", "catching"]);
+/** Defense / hitting / pitching / baserunning / bunting skill reps by name (independent of placement code). */
+const SKILL_NAME = /double[- ]play|quick[- ]release|pop[- ]time|crow[- ]hop|ground[- ]ball|one[- ]hop|block[- ]to[- ]throw|throw[- ]down|position throws|bullpen|\\bbunt|lead[- ]?off|steal|tee work|front toss|soft toss|\\bpfp\\b|windmill drill|k-drill|pulldown|intent throws|overload/i;
 const WARMUP_SLUGS = new Set(WARMUP_LIBRARY.map((d) => d.slug));
 
 function ctx(values: Record<string, unknown>): HammerAthleteContext {
@@ -26,9 +28,10 @@ export function warmupSkillRows(drills: readonly Record<string, unknown>[]) {
     if (SKILL_CATEGORIES.has(String(d.eassCategory ?? ""))) return true;
     if (SKILL_AREAS.has(String(d.skillArea ?? ""))) return true;
     if (typeof d.slug === "string" && (WARMUP_SLUGS.has(d.slug) || d.slug.startsWith("wu_"))) return false;
+    if (SKILL_NAME.test(name)) return true;
     // Throwing warm-up → catch play section (and arm prep moved in by withWarmupThrows) is allowed.
-    if (d.throwSection || /^(Arm prep|Warm-up throws) — /.test(name)) return throwKind(d as never) === "position";
-    return throwKind(d as never) === "position" || /double[- ]play|quick[- ]release|pop[- ]time|crow[- ]hop|ground[- ]ball|bullpen|bunt|lead[- ]off|steal|tee work|front toss|soft toss/i.test(name);
+    if (d.throwSection || /^(Arm prep|Warm-up throws) — /.test(name)) return false;
+    return throwKind(d as never) === "position";
   });
 }
 
