@@ -81,7 +81,7 @@ function simulate(schedule: number[], who: Who, weeks = 8) {
       const games = schedule[dow];
       const gameTomorrow = schedule[(dow + 1) % 7] > 0;
       const isRest = dow === 6;
-      const later = (pred: (i: number) => boolean) => [...Array(6 - dow - 1).keys()].map((k) => dow + 1 + k).filter((i) => i < 6 && pred(i)).length;
+      const later = (pred: (i: number) => boolean) => [...Array(Math.max(0, 6 - dow - 1)).keys()].map((k) => dow + 1 + k).filter((i) => i < 6 && pred(i)).length;
       const laterSpeed = later((i) => schedule[i] === 0);
       const laterTop = later((i) => schedule[i] === 0 && schedule[i + 1] === 0);
       let planned = 0; let hard = false; let d: InSeasonDay = { kind: "none", bases: 0, maxIntent: false, flush: false, because: "" };
