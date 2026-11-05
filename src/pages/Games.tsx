@@ -53,6 +53,9 @@ import { GameSheet } from "@/components/games/GameSheet";
 import { useGpRealtime } from "@/hooks/useGpRealtime";
 import { useGameDayContext } from "@/hooks/useGameDayContext";
 import { useSmartBack } from "@/hooks/useSmartBack";
+import { useScoutAccess } from "@/hooks/useScoutAccess";
+import { StaffPlanGate } from "@/components/staff/StaffPlanGate";
+import { CoachGameLog } from "@/components/games/CoachGameLog";
 
 interface GameRow {
   id: string;
@@ -82,6 +85,9 @@ export default function Games() {
   const [openSheet, setOpenSheet] = useState<string | null>(deepLinkGameId);
   const [sheetTab, setSheetTab] = useState<string | undefined>(undefined);
   const [newDialogOpen, setNewDialogOpen] = useState(false);
+  // Owner Nov 5 round 2: coaches open the Game Hub on their coach view (Log a game).
+  const { isCoach } = useScoutAccess();
+  const [ownView, setOwnView] = useState(() => new URLSearchParams(window.location.search).get("view") === "mine");
   useGpRealtime(true);
   const gameDay = useGameDayContext();
 
@@ -162,6 +168,18 @@ export default function Games() {
     });
   }, [games.data, search, filterStatus]);
 
+  if (isCoach && !ownView) {
+    return (
+      <div className="container max-w-2xl mx-auto py-8 px-4 space-y-4" data-testid="game-hub-coach-view">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2"><Trophy className="h-6 w-6 text-primary" />Game Hub</h1>
+          <Button variant="outline" size="sm" onClick={() => setOwnView(true)}>My own games</Button>
+        </div>
+        <StaffPlanGate><CoachGameLog /></StaffPlanGate>
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-5xl mx-auto py-8 px-4 space-y-6">
       <motion.div
@@ -189,6 +207,7 @@ export default function Games() {
           </p>
         </div>
         <div className="flex gap-2">
+          {isCoach && <Button variant="outline" onClick={() => setOwnView(false)}>Coach view</Button>}
           <Button onClick={() => setNewDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             New game
