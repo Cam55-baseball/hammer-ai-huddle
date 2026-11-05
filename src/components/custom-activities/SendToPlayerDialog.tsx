@@ -181,15 +181,15 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] p-0">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-1rem)] max-w-lg flex-col gap-0 overflow-hidden p-0" data-testid="send-workouts-dialog">
+        <DialogHeader className="shrink-0 p-6 pb-2">
           <DialogTitle className="text-xl font-black flex items-center gap-2">
             <Send className="h-5 w-5" />
             Send workouts
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(90vh-140px)] px-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6" data-testid="send-workouts-scroll">
           {preview ? <section aria-label="Player workout preview" className="space-y-4 py-4">
             <h3 className="font-bold">From Coach · {title}</h3>
             <p className="text-sm">{scheduleSummary(buildSchedule())}</p>
@@ -507,13 +507,13 @@ export function SendToPlayerDialog({ open, onOpenChange, template, initialPlayer
               />
             </div>
           </div>}
-        </ScrollArea>
+        </div>
 
-        {missingInputs.length > 0 && <div role="status" aria-label="What's left before sending" className="mx-6 mt-3 rounded-md border border-border bg-muted p-3 text-sm">
+        {missingInputs.length > 0 && <div role="status" aria-label="What's left before sending" className="mx-6 mt-3 max-h-24 shrink-0 overflow-y-auto rounded-md border border-border bg-muted p-3 text-sm">
           <p className="font-medium">{sendHint}</p>
           <ul className="mt-1 list-disc pl-5 text-muted-foreground">{missingInputs.map(m => <li key={m}>{m}</li>)}</ul>
         </div>}
-        <div className="flex items-center justify-end gap-3 p-6 pt-4 border-t">
+        <div className="flex shrink-0 items-center justify-end gap-3 p-4 border-t">
           <Button variant="outline" disabled={loading} onClick={() => preview ? setPreview(false) : onOpenChange(false)}>
             {preview ? 'Back to edit' : t('common.cancel')}
           </Button>
