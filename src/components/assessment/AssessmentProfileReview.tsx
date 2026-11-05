@@ -12,7 +12,7 @@ import { AssessmentPlanInputs } from './AssessmentPlanInputs';
 import { FinishProfileDialog } from '@/components/hammer/FinishProfileFlow';
 import type { DraftFlush, RegisterDraftFlush } from "@/lib/assessment/draftFlush";
 type Profile = { full_name: string; position: string };
-// Owner Nov 5 round 2 Part 3: "Where are you starting from?" is never inside the assessment.
+// Owner Nov 5 round 2 Part 3: the starting questions are never inside the assessment.
 type Section = "body" | "equipment" | "goals" | "planning";
 /** Existing self-scoped answer forms, not assessment-only copies. */
 export function AssessmentProfileReview({ profile, onChange, registerFlush, detailsOnly = false }: { profile: Profile; onChange: (profile: Profile) => void; registerFlush?: RegisterDraftFlush; detailsOnly?: boolean }) {
