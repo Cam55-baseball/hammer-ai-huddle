@@ -5,6 +5,7 @@
  * Health-bearing reason lines are omitted server-side unless the athlete's
  * separate health-sharing switch is on.
  */
+import { invokeSignedIn } from '@/lib/auth/invokeSignedIn';
 import { useQuery } from "@tanstack/react-query";
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';

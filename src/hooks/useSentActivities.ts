@@ -1,3 +1,4 @@
+import { invokeSignedIn } from '@/lib/auth/invokeSignedIn';
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomActivityTemplate } from '@/types/customActivity';
