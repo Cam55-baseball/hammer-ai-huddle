@@ -12,7 +12,8 @@
 import type { CatchPlayRow, CPDayKind } from "../../../supabase/functions/_shared/wic/throwing/catchPlay";
 import { cleanFit, fits, type PlayerFit } from "../hammer/prescription/warmupFit";
 
-export const THROWING_SLOT = "hammers_today:throwing" as const;
+/** Its own type — distinct from the "hammers_today:throwing" engine tag (which files into the skill block). */
+export const THROWING_SLOT = "hammers_today:throwing_drill" as const;
 export type ThrowContext = "warmup_throws" | "catch_play" | "long_toss" | "arm_strength" | "build_up" | "light_catch";
 export type ThrowIntent = "catch_light" | "sub_max" | "full";
 export type ThrowRole = "position" | "pitcher" | "catcher";
