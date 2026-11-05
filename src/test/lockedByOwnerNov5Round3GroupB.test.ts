@@ -13,7 +13,7 @@ import {
 describe("game-load credit", () => {
   it("counts bases reached, bases advanced and defensive chances from the log", () => {
     const c = gameCredit({ date: "d", atBatResults: ["2B", "HR", "FO", "BB"], baserun: [{ event_type: "steal", base_from: 1, base_to: 2 }], defenseChances: 3, selfReportedAtBats: 9 });
-    expect(c).toEqual({ date: "d", bases: 2 + 4 + 0 + 1 + 1 + 3, source: "log" });
+    expect(c).toEqual({ date: "d", bases: 2 + 4 + 0 + 1 + 1 + 3 * 0.5, source: "log" }); // owner r4: unknown-position chances count as infield (0.5)
   });
   it("caught stealing still ran one base", () => {
     expect(gameCredit({ date: "d", atBatResults: [], baserun: [{ event_type: "steal", base_from: null, base_to: null }], defenseChances: 0, selfReportedAtBats: null }).bases).toBe(1);
