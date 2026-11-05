@@ -30,7 +30,7 @@ import { usePhaseState } from "@/hooks/usePhaseState";
 import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
 import { partitionCoachRows } from "@/lib/coachRx/planRows";
 import { composedDayRequest } from "@/lib/hammer/composedDayRequest";
-import { rebuildAfterChange, rebuildWrongSeasonDays, repairSavedWeek, startRulesVersionSweep } from "@/lib/hammer/rebuildAfterChange";
+import { invokeDayChange, rebuildAfterChange, rebuildWrongSeasonDays, repairSavedWeek, startRulesVersionSweep } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
 
 // Must equal the version the generator stamps on every row. A mismatch made
@@ -379,14 +379,12 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       .maybeSingle();
 
     return withTimeout(
-      supabase.functions.invoke("wk-generate-daily", {
-        body: {
-          ...composedDayRequest(planDate),
-          side_hit: sideHit,
-          side_throw: sideThrow,
-          recent_ack: lastAck ?? null,
-          ...(change ? { change_reason: change.reason, change_text: change.text, change_key: change.key } : {}),
-        },
+      invokeDayChange({
+        ...composedDayRequest(planDate),
+        side_hit: sideHit,
+        side_throw: sideThrow,
+        recent_ack: lastAck ?? null,
+        ...(change ? { change_reason: change.reason, change_text: change.text, change_key: change.key } : {}),
       }),
       30_000,
       "wk-generate-daily",
