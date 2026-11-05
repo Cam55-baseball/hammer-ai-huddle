@@ -25,7 +25,7 @@ import { ToolSessionWindow } from "../cards/ToolSessionWindow";
 import { PRACTICE_MODULES } from "@/lib/hammer/practiceWindow";
 import { ExerciseTimer } from "../cards/ExerciseTimer";
 import { useInRouterContext, useNavigate } from "react-router-dom";
-import { throwPracticeRoute } from "@/lib/hammer/practiceWindow";
+import { showsThrowLogButton, throwPracticeRoute } from "@/lib/hammer/practiceWindow";
 import { getTodayDate } from "@/utils/dateUtils";
 import { displayDistance, storeDistance } from "@/lib/logging/measureType";
 
@@ -151,7 +151,7 @@ export function LegacyDrillInlineLog({
   const entries = <section data-exercise-entry-grid className="space-y-2">
     <div hidden={!focus.visible} className="space-y-2">
     <div hidden={focus.active && focus.resting} className="space-y-2">
-    {spec.throwing ? <div className="flex items-start justify-between gap-2" data-throw-item-row>
+    {spec.throwing && showsThrowLogButton(modality, name) ? <div className="flex items-start justify-between gap-2" data-throw-item-row>
       <h4 className="text-sm font-semibold">{name}{logHost && <span className="text-xs font-normal text-muted-foreground"> (instructions below)</span>}</h4>
       <ThrowPracticeButton name={name} dosage={dosage} />
     </div> : logHost && <h4 className="text-sm font-semibold">{name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>}
