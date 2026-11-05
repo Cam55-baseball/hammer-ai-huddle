@@ -64,7 +64,8 @@ describe("day types", () => {
     expect(speedEligible({ ...base, hardYesterday: true }, 20)).toBe(false);
   });
   it("low readiness lightens", () => {
-    expect(inSeasonSprintDay(20, { ...base, lowReadiness: true }).bases).toBe(0);
+    expect(inSeasonSprintDay(20, { ...base, lowReadiness: true, weekRunningSessions: 2 }).bases).toBe(0);
+    expect(inSeasonSprintDay(20, { ...base, lowReadiness: true }).bases).toBe(TOPUP_MIN);
   });
 });
 
