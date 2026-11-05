@@ -1401,6 +1401,13 @@
       "when": 1793899357709,
       "tag": "0199_coach_game_add_details",
       "breakpoints": true
+    },
+    {
+      "idx": 200,
+      "version": "7",
+      "when": 1793900830998,
+      "tag": "0200_owner_throwing_drill_fields",
+      "breakpoints": true
     }
   ]
 }
