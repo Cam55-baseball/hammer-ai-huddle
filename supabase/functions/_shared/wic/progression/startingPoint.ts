@@ -216,7 +216,7 @@ export function startingLevels(sport: Sport, program: Program, a: Answers, posit
     why.bunting = buntRepsPerSide ? `${buntRepsPerSide} bunts per side` : "your bunting identity rules";
   }
   for (const category of cats) {
-    if (questionsFor(sport, program).some(q => q.category === category && !q.options.includes(answered[q.id] ?? ''))) why[category] = 'Easing back in until you add your starting answers.';
+    if (questionsFor(sport, program).some(q => q.category === category && !q.options.includes(answered[q.id] ?? '') && !(q.id === 'base_sprints' && answered.sprint_volume))) why[category] = 'Easing back in until you add your starting answers.';
   }
   return { throwsPerWeek, defenseThrowsPerWeek, startThrowDistanceFt, swingsPerSession, defenseRepsPerSession, teeFirst: cats.has("hitting") && a.live_pitching === "No", sprintYards, buildUpsFirstWeeks, lifting, jumps, pitching, buntRepsPerSide, why };
 }

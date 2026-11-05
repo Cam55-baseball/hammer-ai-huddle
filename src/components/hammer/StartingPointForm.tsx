@@ -34,15 +34,16 @@ export function StartingPointForm({ onSaved, rebuild = true, compact = false }: 
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => { if (saved.data?.answers) setAnswers(saved.data.answers); }, [saved.data]);
-  const questions = useMemo(() => (program ? questionsFor(sport, program) : []), [sport, program]);
   const pitcher = usePitcherSchedule();
+  const focus = pitcher.data?.settings?.primary_focus ?? null;
+  const questions = useMemo(() => (program ? questionsFor(sport, program, focus) : []), [sport, program, focus]);
   const roleMissing = golden2wayRoleMissing(sport, modules ?? [], pitcher.data?.settings?.primary_focus ?? null);
 
   if (!program) return <p className="text-sm text-muted-foreground">These questions open once you have a training program for {sport}.</p>;
   if (saved.isLoading) return <Loader2 className="h-5 w-5 animate-spin" aria-label="Loading your answers" />;
   if (saved.isError) return <p role="alert" className="text-sm text-destructive">Your answers could not be loaded. Try again.</p>;
 
-  const complete = answersComplete(sport, program, answers);
+  const complete = answersComplete(sport, program, answers, focus);
   let lastCat = "";
   const answered = Object.values(answers).some((v) => v != null && v !== "");
   // Owner Nov 2 item 4: every tap saves at once; Save works with any answers and
@@ -104,7 +105,7 @@ export function StartingPointPromptCard() {
   // Owner Nov 5 #2: cue only when needed (unanswered, 28+ days without logged training, just healed, program changed).
   const need = startingPointNeed({
     today: getLocalDateString(), program,
-    saved: saved.data ? { complete: answersComplete(sport, program, saved.data.answers), program: saved.data.program ?? null, updatedAt: saved.data.updated_at } : null,
+    saved: saved.data ? { complete: answersComplete(sport, program, saved.data.answers, focus), program: saved.data.program ?? null, updatedAt: saved.data.updated_at } : null,
     lastLogDate: lastLog.data ?? null,
     healedAts: Array.isArray(injuries) ? injuries.map((e: any) => (e?.recovery_status === "healed" ? e?.healed_at ?? null : null)) : [],
   });
