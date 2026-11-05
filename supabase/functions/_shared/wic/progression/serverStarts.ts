@@ -45,6 +45,8 @@ export interface ServerStarts {
   jumpWeeks?: { weekStart: string; green: boolean }[];
   /** No owner "ready" threshold saved → every step-up holds. */
   held?: boolean;
+  /** Saved starting answers (raw), e.g. base_sprints for position-player conditioning. */
+  answers?: Record<string, string> | null;
 }
 
 const shift = (d: string, n: number) => new Date(new Date(`${d}T12:00:00Z`).getTime() + n * 86_400_000).toISOString().slice(0, 10);
@@ -83,5 +85,5 @@ export async function readServerStarts(db: any, userId: string, sport: Sport, mo
   const after = shift(mondayOf(today), 7);
   const recent = areaWeeks(after, rows.filter((r) => r.plan_date >= since), logged);
   const historyAreas = (Object.keys(recent) as GreenlightArea[]).filter((a) => historyWins(recent[a].filter((w) => w.completed > 0).length));
-  return { levels: startingLevels(sport, program, answers ?? {}, null), historyAreas, greenlight, jumpWeeks, held: readyAt == null };
+  return { levels: startingLevels(sport, program, answers ?? {}, null), historyAreas, greenlight, jumpWeeks, held: readyAt == null, answers: (answers ?? null) as Record<string, string> | null };
 }
