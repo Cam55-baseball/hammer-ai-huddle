@@ -1284,6 +1284,10 @@ function HammerDailyPlanBody({
           const warmupBlocks = plan.blocks.filter((b) => b.modality === "warmup" && prescribedToday(b));
           const baseWork = splitBaserunning(plan.blocks);
           const logPractice = sched.practicesToday.some(s => ["team", "trainer", "solo", "showcase"].includes(s.practiceKind ?? ""));
+          // Owner Nov 5 r5 (G4): each practice card's practice-log button sits beside "Log this work" and opens
+          // the existing practice-log page for today, prefilled with the card's activity.
+          const practiceRouteFor = (b: { route: string; modality: string; title: string; drills: ReadonlyArray<{ bunt?: unknown }> }) =>
+            b.route.startsWith("/practice") ? cardPracticeRoute(b.route, { modality: b.modality === "hitting" && b.drills.length > 0 && b.drills.every(d => !!d.bunt) ? "bunting" : b.modality, activity: b.title }, getTodayDate()) : null;
           const { speed: baseSpeed, conditioning: baseConditioning } = groupPhysicalBaserunning(baseWork.physical, hasBaseStealer);
           const WK_OWNED = new Set(["speed", "bat_speed", "strength", "lift", "lifts", "conditioning", "cross_sport"]);
           const allOtherBlocks = plan.blocks.filter(
@@ -1346,6 +1350,7 @@ function HammerDailyPlanBody({
                     tone="bg-muted-foreground"
                     planDate={pocketDate}
                     practiceLogging={logPractice && ["throwing", "pitching", "defense", "hitting"].includes(b.modality)}
+                    practiceRoute={practiceRouteFor(b)}
                     prescribed={prescribedToday(b)}
                     progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
@@ -1371,13 +1376,13 @@ function HammerDailyPlanBody({
                 onOpen={() => setCheckInQuiz("pre_lift")}
               />
               <ErrorBoundary label="wk-speed">
-                <PocketCard id="speed" progress={progressOf(wkRx.grouped.speedCard)} intro={POCKET_INTROS.speed} category="Speed" focus={pocketFocus(wkRx.grouped.speedCard)} tone="bg-primary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.speedCard.length > 0 || baseSpeed.length > 0} countLabel={countLabel(wkRx.grouped.speedCard)}>
+                <PocketCard id="speed" progress={progressOf(wkRx.grouped.speedCard)} intro={POCKET_INTROS.speed} category="Speed" focus={pocketFocus(wkRx.grouped.speedCard)} tone="bg-primary" planDate={pocketDate} practiceLogging={logPractice} practiceRoute={baseSpeed.length > 0 ? cardPracticeRoute("/practice?module=baserunning", { modality: "baserunning", activity: "Baserunning" }, getTodayDate()) : null} prescribed={wkRx.grouped.speedCard.length > 0 || baseSpeed.length > 0} countLabel={countLabel(wkRx.grouped.speedCard)}>
                   {() => <>{wkRx.grouped.speedCard.length > 0 && <WkSpeedCard pocket />}{baseSpeed.map(b => <div key={`speed-${b.side ?? "x"}`}><Badge variant="secondary">Speed</Badge><BlockCard block={{...b, title: "Speed — Base Stealer"}} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
                 </PocketCard>
               </ErrorBoundary>
               {coachCards(["speed"])}
               <ErrorBoundary label="wk-bat-speed">
-                <PocketCard id="bat_speed" progress={progressOf(wkRx.grouped.batSpeedCard)} intro={POCKET_INTROS.bat_speed} category="Bat speed" focus={pocketFocus(wkRx.grouped.batSpeedCard)} tone="bg-accent" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.batSpeedCard.length > 0} countLabel={countLabel(wkRx.grouped.batSpeedCard)}>
+                <PocketCard id="bat_speed" progress={progressOf(wkRx.grouped.batSpeedCard)} intro={POCKET_INTROS.bat_speed} category="Bat speed" focus={pocketFocus(wkRx.grouped.batSpeedCard)} tone="bg-accent" planDate={pocketDate} practiceLogging={logPractice} practiceRoute={cardPracticeRoute("/practice", { modality: "bat_speed", activity: "Bat speed" }, getTodayDate())} prescribed={wkRx.grouped.batSpeedCard.length > 0} countLabel={countLabel(wkRx.grouped.batSpeedCard)}>
                   {() => isSwitchHitter ? (
                     <>
                       <WkBatSpeedCard side="L" pocket />
@@ -1390,7 +1395,7 @@ function HammerDailyPlanBody({
               </ErrorBoundary>
               {wkRx.grouped.windmillCard.length > 0 && (
                 <ErrorBoundary label="wk-windmill">
-                  <PocketCard id="windmill" progress={progressOf(wkRx.grouped.windmillCard)} intro={POCKET_INTROS.windmill} category="Windmill pitching" focus={pocketFocus(wkRx.grouped.windmillCard)} tone="bg-primary" planDate={pocketDate} prescribed countLabel={countLabel(wkRx.grouped.windmillCard)}>
+                  <PocketCard id="windmill" progress={progressOf(wkRx.grouped.windmillCard)} intro={POCKET_INTROS.windmill} category="Windmill pitching" focus={pocketFocus(wkRx.grouped.windmillCard)} tone="bg-primary" planDate={pocketDate} practiceRoute={cardPracticeRoute("/practice?module=pitching", { modality: "pitching", activity: "Windmill pitching" }, getTodayDate())} prescribed countLabel={countLabel(wkRx.grouped.windmillCard)}>
                     {() => <WkWindmillCard />}
                   </PocketCard>
                 </ErrorBoundary>
@@ -1415,6 +1420,7 @@ function HammerDailyPlanBody({
                     planDate={pocketDate}
                     prescribed
                     practiceLogging={logPractice}
+                    practiceRoute={cardPracticeRoute("/practice?module=pitching", { modality: "pitching", activity: "Pitching" }, getTodayDate())}
                     intro={POCKET_INTROS.pitching}
                     notPrescribedNote={null}
                     countLabel={null}
@@ -1444,6 +1450,7 @@ function HammerDailyPlanBody({
                     tone="bg-muted-foreground"
                     planDate={pocketDate}
                     practiceLogging={logPractice && ["throwing", "pitching", "defense", "hitting"].includes(b.modality)}
+                    practiceRoute={practiceRouteFor(b)}
                     prescribed={prescribedToday(b)}
                     progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
@@ -1492,6 +1499,7 @@ function HammerDailyPlanBody({
                     tone="bg-muted-foreground"
                     planDate={pocketDate}
                     practiceLogging={logPractice && ["throwing", "pitching", "defense", "hitting"].includes(b.modality)}
+                    practiceRoute={practiceRouteFor(b)}
                     prescribed={prescribedToday(b)}
                     progress={combined}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
@@ -1854,7 +1862,7 @@ function BlockCard({
                   Do a light block anyway
                 </Button>
               )}
-            {block.status !== "off-day" && !(pocketDetails && block.route === "hammer:open-warmup-generator") && (
+            {block.status !== "off-day" && !(pocketDetails && (block.route === "hammer:open-warmup-generator" || block.route.startsWith("/practice"))) && (
               <Button
                 size="sm"
                 variant={block.status === "awaiting-input" ? "outline" : "default"}
