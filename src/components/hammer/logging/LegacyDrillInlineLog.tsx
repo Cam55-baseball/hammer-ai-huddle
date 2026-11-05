@@ -24,6 +24,7 @@ import { DistanceField } from "./DistanceField";
 import { ToolSessionWindow } from "../cards/ToolSessionWindow";
 import { PRACTICE_MODULES } from "@/lib/hammer/practiceWindow";
 import { ExerciseTimer } from "../cards/ExerciseTimer";
+import { ArmThrowsPanel } from "../ArmThrowsPanel";
 import { displayDistance, storeDistance } from "@/lib/logging/measureType";
 
 type Draft = Record<string, string>[];
@@ -59,6 +60,7 @@ export function LegacyDrillInlineLog({
   const initial = useMemo<Draft>(() => Array.from({ length: spec.rows }, (_, row) => Object.fromEntries((spec.rowFields?.[row] ?? spec.fields).map((f) => [f.key, spec.rowFields || f.prefill == null ? "" : String(f.prefill)]))), [spec]);
   const [rounds, setRounds] = useState<Draft>(initial);
   const [skipped, setSkipped] = useState(false);
+  const [throwLogOpen, setThrowLogOpen] = useState(false);
   const [hard, setHard] = useState("");
   const [notes, setNotes] = useState("");
   const stopwatch = spec.fields.some(f => f.unit === "ss.hh") || ((modality === "speed" || modality === "conditioning" || modality === "baserunning") && spec.fields.some(f => f.key === "distance") && spec.fields.some(f => f.key === "time"));
@@ -135,7 +137,11 @@ export function LegacyDrillInlineLog({
   const entries = <section data-exercise-entry-grid className="space-y-2">
     <div hidden={!focus.visible} className="space-y-2">
     <div hidden={focus.active && focus.resting} className="space-y-2">
-    {logHost && <h4 className="text-sm font-semibold">{name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>}
+    {spec.throwing ? <div className="flex items-start justify-between gap-2" data-throw-item-row>
+      <h4 className="text-sm font-semibold">{name}{logHost && <span className="text-xs font-normal text-muted-foreground"> (instructions below)</span>}</h4>
+      <Button type="button" size="sm" variant="outline" className="h-8 shrink-0" data-testid="throw-item-log-button" aria-expanded={throwLogOpen} onClick={() => setThrowLogOpen(v => !v)}>Log throwing practice</Button>
+    </div> : logHost && <h4 className="text-sm font-semibold">{name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>}
+    {spec.throwing && throwLogOpen && <ArmThrowsPanel source="position" planDate={taskSync?.planDate} />}
     {(focus.active ? fieldsAt(focus.row) : spec.rowFields?.flat() ?? spec.fields).some(f => f.key === "time") && <ExerciseTimer key={focus.active ? focus.row : `regular-${timedRow}`} target={stopwatch ? undefined : fieldsAt(focus.active ? focus.row : Math.max(0, timedRow)).find(f => f.key === "time")?.prefill ?? undefined} hasEnteredValue={Number(rounds[focus.active ? focus.row : timedRow]?._manual_time) > 0}
       onRecord={value => { const next = focus.active ? focus.row : timedRow; if (next >= 0 && !(Number(rounds[next]?._manual_time) > 0)) edit(next, "time", String(value), 0, true); }} />}
     {!focus.active && (modality === "speed" || modality === "conditioning") && <RestTimer label="Rest between repeats" seconds={modality === "speed" ? sprintRestSeconds(spec.fields.find(f => f.key === "distance")?.prefill) : null} />}
