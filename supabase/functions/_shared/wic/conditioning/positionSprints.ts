@@ -4,8 +4,7 @@
  *
  * A position player is prepared to run up to 20 base-length sprints in a day
  * outside the warm-up (a game: about 4 at-bats × 4 bases; BP base runs are left out —
- * players run those on their own, owner Nov 5 round 3). Earlier note: plus pre-game base
- * runs). Counted in BASES, never yards: baseball base = 90 ft, softball = 60 ft.
+ * players run those on their own, owner Nov 5 round 3). Counted in BASES, never yards: baseball base = 90 ft, softball = 60 ft.
  * The existing base-count rest rule stays (30 s between reps until 4 bases,
  * then 5 min). Pitchers keep their yard rules (yards.ts).
  */
