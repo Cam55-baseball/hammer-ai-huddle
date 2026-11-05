@@ -1,5 +1,4 @@
 import { useProgramModules } from '@/hooks/useProgramModules';
-import { useHammerAthleteContext } from '@/lib/hammer/context/athleteContext';
 import { programOf, programQuestionScope } from '../../../supabase/functions/_shared/programAccess';
 /** One athlete-owned entry surface for Today and both check-ins. */
 import { useEffect, useMemo, useState } from "react";
@@ -60,8 +59,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   const pitcher = usePitcherSchedule();
   // Owner Nov 5 #2: pitching questions only for programs that pitch (shared judge, owner rule included).
   const { modules: programModules } = useProgramModules();
-  const programCtx = useHammerAthleteContext();
-  const showsPitching = programQuestionScope(programOf(String(programCtx.get<string>('sport_primary')?.value ?? 'baseball').toLowerCase() === 'softball' ? 'softball' : 'baseball', programModules)).pitching;
+  const showsPitching = (['baseball', 'softball'] as const).some(sport => programQuestionScope(programOf(sport, programModules)).pitching);
   const [busy, setBusy] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [picked, setPicked] = useState<Date[]>([]);
