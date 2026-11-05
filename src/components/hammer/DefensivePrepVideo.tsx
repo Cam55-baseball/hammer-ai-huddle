@@ -12,11 +12,10 @@
 import { useMemo, useState } from "react";
 import { Play, ShieldCheck } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useFaultLedger } from "@/hooks/useFaultLedger";
-import { useFoundationVideos } from "@/hooks/useFoundationVideos";
+import { defensivePrepTriggers } from "@/lib/hammer/defensivePrepTrigger";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { useVideoSuggestions, trackVideoWatched } from "@/hooks/useVideoSuggestions";
 import { VideoThumb } from "@/components/video/VideoThumb";
@@ -31,17 +30,9 @@ export function DefensivePrepVideo() {
 
   const { data: ranked = [] } = useFaultLedger();
 
-  // Fielding signals only. A hitting fault never drives defensive prep.
-  const faultKeys = useMemo(() => {
-    const keys: string[] = [];
-    for (const group of ranked) {
-      for (const s of group.signals) {
-        if (s.discipline !== "fielding") continue;
-        if (s.fault_key && !keys.includes(s.fault_key)) keys.push(s.fault_key);
-      }
-    }
-    return keys.slice(0, 6);
-  }, [ranked]);
+  // Owner Nov 5 round 2 Part 4: only a specific recent defensive issue triggers this.
+  const triggers = useMemo(() => defensivePrepTriggers(ranked.flatMap((g) => g.signals)), [ranked]);
+  const faultKeys = useMemo(() => triggers.map((t) => t.faultKey), [triggers]);
 
   // Layer-agnostic: the ledger stores a fault key, the engine matches it in
   // whichever layer the taxonomy actually defines it.
@@ -56,17 +47,11 @@ export function DefensivePrepVideo() {
     enabled: faultKeys.length > 0,
   });
 
-  const { results: foundationPicks } = useFoundationVideos({
-    domain: "fielding",
-    limit: 1,
-    triggerGated: false,
-    surface: "library",
-  });
-  const fallback = suggestions.length === 0 ? foundationPicks[0] ?? null : null;
-
-  if (!faultKeys.length) return null;
-
+  // No trigger, still loading, or no video matching THAT issue → nothing shows.
+  if (!faultKeys.length || isLoading) return null;
   const top = suggestions.slice(0, 1);
+  if (!top.length) return null;
+  const because = triggers.find((t) => top[0].faultScope?.includes?.(t.faultKey))?.because ?? triggers[0].because;
 
   return (
     <div className="rounded-md border border-border/60 bg-card p-2.5 space-y-2">
@@ -75,9 +60,8 @@ export function DefensivePrepVideo() {
         <div className="text-sm font-semibold leading-tight">Watch before defensive work</div>
       </div>
 
-      {isLoading ? (
-        <p className="text-xs text-muted-foreground">Matching your defensive work to the library…</p>
-      ) : top.length > 0 ? (
+      <p className="text-xs text-muted-foreground" data-testid="defense-prep-because">{because}</p>
+      {(
         top.map(({ video, reasons, faultScope }) => (
           <div key={video.id} className="flex gap-2.5 rounded-md border bg-background p-2">
             <VideoThumb
@@ -109,47 +93,6 @@ export function DefensivePrepVideo() {
             </Button>
           </div>
         ))
-      ) : fallback ? (
-        <div className="space-y-1.5">
-          <p className="text-xs text-muted-foreground">
-            No video covers your defensive work yet. Here's the closest foundational clip — it
-            isn't a fix for what your defence is showing.
-          </p>
-          <div className="flex gap-2.5 rounded-md border bg-background p-2">
-            <VideoThumb
-              videoUrl={fallback.video.video_url}
-              thumbnailUrl={fallback.video.thumbnail_url}
-              title={fallback.video.title}
-              className="h-14 w-20 shrink-0"
-            />
-            <div className="min-w-0 flex-1 self-center">
-              <p className="truncate text-sm font-medium">{fallback.video.title}</p>
-              <Badge variant="outline" className="mt-1 px-1.5 py-0 text-[9px]">
-                Foundational · not a fix
-              </Badge>
-            </div>
-            <Button
-              size="sm"
-              className="shrink-0 self-center"
-              onClick={() => {
-                if (user) trackVideoWatched(user.id, fallback.video.id, 0).catch(() => {});
-                setPlaying({
-                  id: fallback.video.id,
-                  title: fallback.video.title,
-                  video_url: fallback.video.video_url,
-                  thumbnail_url: fallback.video.thumbnail_url,
-                });
-              }}
-            >
-              <Play className="mr-1 h-3 w-3" /> Watch
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <p className="text-xs text-muted-foreground">
-          There's no defensive video for what your fielding is showing yet. We won't put an
-          unrelated clip here to fill the space — it'll appear the day one is added.
-        </p>
       )}
 
       <VideoLightbox video={playing} onOpenChange={(open) => !open && setPlaying(null)} />
