@@ -5,15 +5,15 @@
  */
 import { describe, it, expect } from "vitest";
 import {
-  gameCredit, dayCredit, isHeavyGame, inSeasonSprintDay, postGameTopup, countsAsRunningSession,
+  gameCredit, dayCredit, isHeavyGame, inSeasonSprintDay, countsAsRunningSession,
   TOPUP_MIN, TOPUP_MAX, SPEED_MIN, SPEED_MAX, WEEKLY_RUNNING_FLOOR, speedEligible, topupEligible,
   type GameCredit, type InSeasonDay,
 } from "../../supabase/functions/_shared/wic/conditioning/inSeasonSprints.ts";
 
 describe("game-load credit", () => {
-  it("counts bases reached, bases advanced and defensive chances from the log", () => {
+  it("counts bases reached and bases advanced from the log (defense never counts — owner Nov 5 final)", () => {
     const c = gameCredit({ date: "d", atBatResults: ["2B", "HR", "FO", "BB"], baserun: [{ event_type: "steal", base_from: 1, base_to: 2 }], defenseChances: 3, selfReportedAtBats: 9 });
-    expect(c).toEqual({ date: "d", bases: 2 + 4 + 0 + 1 + 1 + 3 * 0.5, source: "log" }); // owner r4: unknown-position chances count as infield (0.5)
+    expect(c).toEqual({ date: "d", bases: 2 + 4 + 0 + 1 + 1, source: "log" });
   });
   it("caught stealing still ran one base", () => {
     expect(gameCredit({ date: "d", atBatResults: [], baserun: [{ event_type: "steal", base_from: null, base_to: null }], defenseChances: 0, selfReportedAtBats: null }).bases).toBe(1);
@@ -34,9 +34,9 @@ describe("game-load credit", () => {
 
 describe("day types", () => {
   const base = { gameToday: false, gameTomorrow: false, yesterdayGame: null, hardYesterday: false, lowReadiness: false, weekBases: 0, weekRunningSessions: 0, speedDoneThisWeek: true, laterSpeedChances: 0, laterTopupChances: 0 };
-  it("game day: no extra, flush after", () => {
+  it("game day: nothing extra, no flush jog after (owner Nov 5 final)", () => {
     const d = inSeasonSprintDay(16, { ...base, gameToday: true });
-    expect([d.kind, d.bases, d.flush]).toEqual(["game", 0, true]);
+    expect([d.kind, d.bases, d.flush]).toEqual(["game", 0, false]);
   });
   it("day after a heavy game (≥60% of capacity): flush only", () => {
     expect(inSeasonSprintDay(20, { ...base, yesterdayGame: { date: "y", bases: 12, source: "log" } }).kind).toBe("flush");
@@ -74,7 +74,7 @@ type Who = { capacity: number; gameBases: (dow: number, wk: number) => number };
 /** dow 0=Mon..6=Sun; schedule: dow → games that day (2 = doubleheader). Sunday is the plan's rest day. */
 function simulate(schedule: number[], who: Who, weeks = 8) {
   const out: { totals: number[]; sessions: number[]; speed: number[]; backToBackHard: number; days: InSeasonDay[][] } = { totals: [], sessions: [], speed: [], backToBackHard: 0, days: [] };
-  let prevHard = false; let yesterday: GameCredit | null = null;
+  let prevHard = false; let yesterday: GameCredit | null = null; let pending: GameCredit | null = null;
   for (let wk = 0; wk < weeks; wk++) {
     let weekBases = 0, sessions = 0, speed = 0; const days: InSeasonDay[] = [];
     for (let dow = 0; dow < 7; dow++) {
@@ -86,19 +86,19 @@ function simulate(schedule: number[], who: Who, weeks = 8) {
       const laterTop = later((i) => schedule[i] === 0 && schedule[i + 1] === 0);
       let planned = 0; let hard = false; let d: InSeasonDay = { kind: "none", bases: 0, maxIntent: false, flush: false, because: "" };
       if (!isRest || games > 0) {
-        d = isRest ? { kind: "game", bases: 0, maxIntent: false, flush: true, because: "" } : inSeasonSprintDay(who.capacity, {
+        d = isRest ? { kind: "game", bases: 0, maxIntent: false, flush: false, because: "" } : inSeasonSprintDay(who.capacity, {
           gameToday: games > 0, gameTomorrow, yesterdayGame: yesterday, hardYesterday: prevHard, lowReadiness: false,
           weekBases, weekRunningSessions: sessions, speedDoneThisWeek: speed > 0, laterSpeedChances: laterSpeed, laterTopupChances: laterTop,
+          pendingGame: pending,
         });
         planned = d.bases;
-        if (d.kind === "speed") { speed++; hard = true; }
+        if (d.kind === "speed" || d.kind.startsWith("extra_speed")) { speed++; hard = true; pending = null; }
         if (d.bases >= Math.ceil(who.capacity * 0.75)) hard = true;
       }
       let credit = 0;
       if (games > 0) {
         credit = [...Array(games).keys()].reduce((n) => n + who.gameBases(dow, wk), 0);
-        const pg = postGameTopup(who.capacity, sessions);
-        if (pg && credit < Math.ceil(who.capacity * 0.6) && !isRest) { planned += pg.bases; d = { ...d, kind: "topup", bases: pg.bases }; }
+        pending = { date: String(dow), bases: credit, source: "log" };
       }
       if (prevHard && hard) out.backToBackHard++;
       const dayTotal = planned + credit;
@@ -135,8 +135,8 @@ describe("8-week in-season simulations", () => {
         expect(r.sessions[w]).toBeGreaterThanOrEqual(WEEKLY_RUNNING_FLOOR);
         // Owner question (Nov 5 r3 B): when every non-game day follows a heavy game, the locked
         // "flush only after a heavy game" rule wins and no speed day fits — never forced.
-        if (who.gameBases(1, w) < Math.ceil(who.capacity * 0.6)) expect(r.speed[w]).toBe(1);
-        else expect(r.speed[w]).toBeLessThanOrEqual(1);
+        // Owner Nov 5 final: bench players also get extra short speed sessions (never back to back).
+        if (who.gameBases(1, w) > 2 && who.gameBases(1, w) < Math.ceil(who.capacity * 0.6)) expect(r.speed[w]).toBe(1);
         for (const d of r.days[w]) if (d.kind === "topup") { expect(d.bases).toBeGreaterThanOrEqual(TOPUP_MIN); expect(d.bases).toBeLessThanOrEqual(TOPUP_MAX); }
       }
       expect(r.backToBackHard).toBe(0);

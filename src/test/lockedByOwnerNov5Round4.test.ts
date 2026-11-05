@@ -6,7 +6,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
-  inSeasonSprintDay, speedEligible, gameCredit, ownBasesPerPa, chanceCredit, inSeasonStandards, topupBases,
+  inSeasonSprintDay, speedEligible, gameCredit, ownBasesPerPa, inSeasonStandards, topupBases,
   withSprintPrep, sprintPrepOk, SPRINT_PREP, SPRINT_PREP_SLUGS, topupRouteSlug, ADDS_ROW_KINDS, dayLoadScore,
   DEFAULT_IN_SEASON_STANDARDS as D, countsAsRunningSession, weeklyTarget, isHeavyGame,
 } from "../../supabase/functions/_shared/wic/conditioning/inSeasonSprints.ts";
@@ -50,11 +50,6 @@ describe("item 1 — speed day wins, kept short, with sprint prep", () => {
 });
 
 describe("item 2 — optimized, editable in-season numbers", () => {
-  it("fielding chances by position: outfield > infield > catcher/1B", () => {
-    expect([chanceCredit("CF"), chanceCredit("SS"), chanceCredit("C"), chanceCredit("1B")]).toEqual([1, 0.5, 0.25, 0.25]);
-    const c = gameCredit({ date: "d", atBatResults: [], baserun: [], defenseChances: 3, defensePositions: ["LF", "LF", "SS"], selfReportedAtBats: null });
-    expect(c.bases).toBe(2.5);
-  });
   it("morning at-bats estimate uses the player's own average once they have 15 logged plate appearances", () => {
     const results = Array.from({ length: 15 }, (_, i) => (i < 5 ? "2B" : "GO"));
     expect(ownBasesPerPa(results, [])).toBeCloseTo(10 / 15, 2);
@@ -73,8 +68,8 @@ describe("item 2 — optimized, editable in-season numbers", () => {
     expect(c.bases).toBe(0); expect(isHeavyGame(c, 20)).toBe(true);
   });
   it("every value is editable and bad values fall back", () => {
-    const s = inSeasonStandards({ speedSprints: 4, chanceOutfield: 1.25, topupMin: 9, topupMax: 5 });
-    expect(s.speedSprints).toBe(4); expect(s.chanceOutfield).toBe(1.25);
+    const s = inSeasonStandards({ speedSprints: 4, lowPlayMaxBases: 3, topupMin: 9, topupMax: 5 });
+    expect(s.speedSprints).toBe(4); expect(s.lowPlayMaxBases).toBe(3);
     expect([s.topupMin, s.topupMax]).toEqual([4, 8]);
     expect(inSeasonStandards({ speedSprints: 50 }).speedSprints).toBe(3);
     expect(inSeasonSprintDay(20, base, s).bases).toBe(4);
