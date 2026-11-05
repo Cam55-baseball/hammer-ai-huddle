@@ -35,6 +35,7 @@ export function MorningGameQuestions() {
   const today = localIso();
   const yesterday = shiftIso(today, -1);
   const [, bump] = useState(0);
+  const [askAtBats, setAskAtBats] = useState(false);
   const markAnswered = () => {
     try { localStorage.setItem(gameLogAskedKey(user?.id, yesterday), "1"); } catch { /* ignore */ }
     bump((n) => n + 1);
