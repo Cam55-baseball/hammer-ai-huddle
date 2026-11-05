@@ -1394,6 +1394,13 @@
       "when": 1793889355533,
       "tag": "0198_coach_week_games",
       "breakpoints": true
+    },
+    {
+      "idx": 199,
+      "version": "7",
+      "when": 1793899357709,
+      "tag": "0199_coach_game_add_details",
+      "breakpoints": true
     }
   ]
 }
