@@ -66,7 +66,8 @@ export default function PracticeHub() {
   // Prescribed drill pre-fill from URL params
   const prescribedDrillType = searchParams.get('drill_type');
   const prescribedModule = practiceModuleFor(searchParams.get('module')) ?? searchParams.get('module');
-  const prescribedConstraints = searchParams.get('constraints');
+  // Kept for the whole visit: the deep-link auto-start clears the URL params.
+  const [prescribedConstraints] = useState(() => searchParams.get('constraints'));
   const todayWindow = useRef(searchParams.get('today_window'));
 
   const [activeModule, setActiveModule] = useState(prescribedModule || 'hitting');
