@@ -15,7 +15,7 @@ export const BYS_ITEMS = [
   { id: "recurring_videos", label: "Videos for recurring issues", when: "Your analyses show an issue that keeps coming back" },
   { id: "baserunning_study", label: "Base-running study (mental)", when: "Base-running card has a no-physical study part today" },
   { id: "daily_intent", label: "Today's aim + breathing primer (focus routine)", when: "Every training day" },
-  { id: "defensive_prep_video", label: "Defensive prep video", when: "Defense is on today and a video fits your position" },
+  { id: "defensive_prep_video", label: "Defensive prep video", when: "A defensive issue in the last 4 weeks (came back in clips, or showed in logged games/practice) and a video matches that issue" },
   { id: "coach_advice", label: "Today's coach's advice", when: "Every day (tagged advice only for matching players)" },
   { id: "day_notices", label: "Why today's plan changed / load notes / rest day / running readiness / coach notes", when: "Today has a reduction, change note, coach change, rest day or readiness line" },
   { id: "testing_day", label: "Testing day notice", when: "A coach or org scheduled a testing day" },
