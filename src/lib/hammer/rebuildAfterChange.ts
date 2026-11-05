@@ -68,6 +68,17 @@ async function rebuildOnce(reason: string, today: string, effectiveDate?: string
       : kept.length ? `${reason} — your plan was rebuilt for the next 7 days.`
       : `${reason} — your plan was rebuilt for ${firstDate === today ? 'today and the next 6 days' : `${firstDate} and the next 6 days`}.`) + (failed.length || missingInputs ? '' : keptNote) };
 }
+/** Day-change call that retries once with a fresh server reread when another save
+ *  changed the day first (revision conflict). Safety and protected-work refusals are never retried. */
+export async function invokeDayChange(body: Record<string, unknown>) {
+  const first = await supabase.functions.invoke('wk-generate-daily', { body });
+  if (!first.error) return first;
+  const b = await (first.error as { context?: Response }).context?.clone?.().json?.().catch(() => null);
+  const conflict = (b?.error === 'adjust_failed' && /day changed/i.test(String(b?.message ?? ''))) || /changed; rebuild/i.test(String(b?.error ?? ''));
+  if (!conflict) return first;
+  return await supabase.functions.invoke('wk-generate-daily', { body: { ...body, change_key: `${String(body.change_key ?? '')}:fresh` } });
+}
+
 /**
  * Owner Nov 1 round 2 (item 2): saved future days whose season is wrong are rebuilt
  * through the same day-lock change path. The server lists only unlogged, unmarked
@@ -78,9 +89,7 @@ export async function rebuildWrongSeasonDays(today: string): Promise<{ checked: 
   if (error || data?.ok !== true || !Array.isArray(data?.stale_dates)) return { checked: false, rebuilt: [], failed: [] };
   const rebuilt: string[] = []; const failed: string[] = [];
   for (const date of data.stale_dates as string[]) {
-    const r = await supabase.functions.invoke('wk-generate-daily', {
-      body: { plan_date: date, compose_sport_day: true, change_reason: 'player_request', change_text: 'Your season for this day changed, so Hammer rebuilt it.', change_key: `season-fix:${date}:${today}` },
-    });
+    const r = await invokeDayChange({ plan_date: date, compose_sport_day: true, change_reason: 'player_request', change_text: 'Your season for this day changed, so Hammer rebuilt it.', change_key: `season-fix:${date}:${today}` });
     if (r.error || r.data?.ok !== true) failed.push(date); else rebuilt.push(date);
   }
   return { checked: true, rebuilt, failed };
@@ -104,9 +113,7 @@ export async function repairSavedWeek(today: string): Promise<{ checked: boolean
   const window = Array.from({ length: 7 }, (_, i) => isoShift(today, i));
   const rebuilt: string[] = []; const failed: string[] = [];
   for (const date of datesToRebuild(window, new Set<string>(data.protected_dates ?? []))) {
-    const r = await supabase.functions.invoke('wk-generate-daily', {
-      body: { plan_date: date, compose_sport_day: true, change_reason: 'player_request', change_text: 'Your week was missing a rest day or a weekly minimum, so Hammer rebuilt it.', change_key: `week-fix:${date}:${today}` },
-    });
+    const r = await invokeDayChange({ plan_date: date, compose_sport_day: true, change_reason: 'player_request', change_text: 'Your week was missing a rest day or a weekly minimum, so Hammer rebuilt it.', change_key: `week-fix:${date}:${today}` });
     if (r.error || r.data?.ok !== true) failed.push(date); else rebuilt.push(date);
   }
   let after: string[];
