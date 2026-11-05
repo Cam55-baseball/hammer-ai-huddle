@@ -125,6 +125,7 @@ import {
 import { planningPrimaryFocus } from "../_shared/wic/progression/startingPoint.ts";
 import { DEFAULT_POSITION_SPRINT_STANDARDS, positionSprintStandards, startingBases, sprintCapacity, sprintDay, sessionBases, fitRowsToBases, basesPerRep as basesPerRepOf } from "../_shared/wic/conditioning/positionSprints.ts";
 import { planInSeasonSprints, InSeasonDone } from "./inSeasonFacts.ts";
+import { inSeasonStandards, withSprintPrep, sprintPrepOk, topupRouteSlug, ADDS_ROW_KINDS, SPRINT_PREP_SLUGS, type InSeasonStandards } from "../_shared/wic/conditioning/inSeasonSprints.ts";
 import { isTaggedJump } from "../_shared/wic/jumps/taxonomy.ts";
 import { readPitcherReturn, recordReturnDate } from "../_shared/wic/pitching/readPitcherReturn.ts";
 import { readReturningHitter, recordHittingDay } from "../_shared/wic/hitting/readReturningHitter.ts";
@@ -3966,10 +3967,41 @@ const handler = async (req: Request): Promise<Response> => {
     // Capacity = starting answer + greenlight steps; game day = the game's sprints, recovery after,
     // lighter before; no back-to-back high-sprint days. Only trims whole sets (never adds, never
     // removes a row), so the 2-a-week running floor and the base-count rest rule stay.
+    // Owner Nov 5 r4: build one catalog item late in the day (sprint prep / top-up route). Returns null
+    // when the catalog lacks the movement — callers then refuse the dependent work.
+    const addedRow = (slug: string, slot: "speed" | "conditioning", dose: { sets: number; reps: number | null; distance_feet?: number | null }, why: string, meta: Record<string, unknown> = {}, order = 999) => {
+      const m = ((lib ?? []) as any[]).find((x) => String(x.slug) === slug);
+      if (!m) return null;
+      const dist = dose.distance_feet ?? m.default_distance_feet ?? (m.base_route?.sport === sport ? m.base_route.bases_per_rep * m.base_route.base_distance_feet : null);
+      const engine = engineForSlotRole(slot as any, (slot === "speed" ? "speed" : "conditioning") as any);
+      return {
+        slot, sequence_order: order, sequence_role: slot === "speed" ? "speed" : "conditioning", movement_slug: slug, movement_name: String(m.name ?? slug),
+        sets: dose.sets, reps: dose.reps, tempo: null, load_pct: null, duration_seconds: null, distance_feet: dist ?? null, total_reps: null,
+        dosage_unit: m.dosage_unit ?? "reps", cns_cost: Number(m.cns_cost ?? 0), cns_clamped: false, substituted_from_slug: null, substitution_reason: null,
+        why_payload: { ...meta }, rationale: why, adaptation: adaptationDecision.primary, engine, generator_version: WIC_VERSION,
+        why_v2: buildWhy({ why_today: adaptationDecision.reason, why_athlete: adaptationDecision.reason_athlete, why_exercise: why, why_volume: `${dose.sets}×${dose.reps ?? 1}`,
+          why_order: "Placed where the day's order needs it.", why_recovery: `${Number(m.cns_cost ?? 0)} CNS units.`, adaptation: adaptationDecision.primary, engine, generator_version: WIC_VERSION }),
+      } as any;
+    };
+    // Owner Nov 5 r4 item 1: progressive sprint prep (A-skips/dribbles → build-ups 60/75/90%) ends the
+    // warm-up, placed at the top of the speed block (negative order) before any max sprint.
+    const placeSprintPrep = (isMax: (r: any) => boolean): boolean => {
+      const out = withSprintPrep(finalRxs as any[], isMax, (p) => addedRow(p.slug, "speed", p.slug === "build_up_sprint" ? { sets: 1, reps: 3 } : { sets: 2, reps: 1, distance_feet: 60 },
+        p.slug === "build_up_sprint" ? "Sprint prep, last part of your warm-up: 3 build-ups at about 60%, then 75%, then 90%. Walk back between." : "Sprint prep: A-skips, then ankle dribbles, 2 x 20 yards each. Easy rhythm, tall posture.",
+        { placement: "sprint_prep", sprint_prep: true, stage_note: "End of warm-up" }, p.slug === "build_up_sprint" ? -10 : -20));
+      if (!out) return false;
+      // Keep the prep at the top of the speed block (sequence order is the in-slot sort key).
+      for (const r of out as any[]) if (r.why_payload?.sprint_prep) r.sequence_order = r.movement_slug === "build_up_sprint" ? -10 : -20;
+      const ordered = assignSequenceOrder(out as any) as typeof finalRxs;
+      if (!sprintPrepOk(ordered as any[], isMax)) return false;
+      finalRxs = ordered;
+      return true;
+    };
     if (!pitcherConditioning) {
       try {
         let std = DEFAULT_POSITION_SPRINT_STANDARDS;
-        try { const { data: cr } = await admin.from("app_settings").select("setting_value").eq("setting_key", CONDITIONING_RULES_KEY).maybeSingle(); std = positionSprintStandards((cr?.setting_value as any)?.position); } catch { /* defaults */ }
+        let isStd: InSeasonStandards = inSeasonStandards(null);
+        try { const { data: cr } = await admin.from("app_settings").select("setting_value").eq("setting_key", CONDITIONING_RULES_KEY).maybeSingle(); std = positionSprintStandards((cr?.setting_value as any)?.position); isStd = inSeasonStandards((cr?.setting_value as any)?.inSeason); } catch { /* defaults */ }
         const answers = serverStarts?.answers ?? null;
         const start = startingBases(answers?.base_sprints, answers?.sprint_volume, sport, std);
         const capacity = sprintCapacity(start, serverStarts?.greenlight?.speed?.level ?? 0, std);
@@ -3982,9 +4014,18 @@ const handler = async (req: Request): Promise<Response> => {
         const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");
         // Owner Nov 5 round 3, Group B (locked): in-season uses game-load credit + weekly target.
         const inSeasonDay = phaseRes.phase === "in_season"
-          ? await planInSeasonSprints({ admin, userId: user.id, planDate, capacity, sport, gameOn, lowReadiness: low, withRoute })
+          ? await planInSeasonSprints({ admin, userId: user.id, planDate, capacity, sport, gameOn, lowReadiness: low, withRoute, std: isStd })
           : null;
         if (inSeasonDay) {
+          // Owner Nov 5 r4 item 3: a top-up / speed day with no base sprint adds ONE short base-route
+          // item for the sport (one base per rep). Kinds that reach here already passed "never before
+          // a game, never after a heavy game"; low readiness already lightened the count.
+          if (inSeasonDay.bases > 0 && ADDS_ROW_KINDS.has(inSeasonDay.kind) && !finalRxs.some((r) => r.slot === "conditioning" && basesPerRepOf(withRoute(r), sport) > 0)) {
+            const added = addedRow(topupRouteSlug(sport), "conditioning", { sets: inSeasonDay.bases, reps: 1 }, inSeasonDay.kind === "speed"
+              ? "Your speed day: all-out base sprints with full rest (walk back and rest until you feel fresh)."
+              : "Short base-sprint top-up at about 80% effort to keep your weekly running on track.", { in_season_added: true });
+            if (added) finalRxs = assignSequenceOrder([...finalRxs, added] as typeof finalRxs);
+          }
           const before = finalRxs.map(withRoute);
           let fitted = fitRowsToBases(before, inSeasonDay.bases, sport);
           let total = sessionBases(fitted, sport);
@@ -4007,6 +4048,14 @@ const handler = async (req: Request): Promise<Response> => {
             } };
             if ((fitted[i] as any).sets !== r.sets) r.sets = (fitted[i] as any).sets;
           });
+          // Owner Nov 5 r4 item 1: max sprints only after the progressive sprint prep that ends the warm-up.
+          if (inSeasonDay.maxIntent) {
+            const isMax = (r: any) => r.slot === "conditioning" && basesPerRepOf(withRoute(r), sport) > 0 && (r.sets ?? 0) > 0;
+            if (!placeSprintPrep(isMax)) {
+              // Prep can't be placed → no max sprints: the speed day becomes easy (submax) running.
+              finalRxs.forEach((r) => { const ps = (r as any).why_payload?.position_sprints; if (ps) { ps.max_intent = false; ps.sprint_prep_missing = true; ps.because = "Your sprint warm-up couldn't be added today, so today's sprints are easy (not all-out)."; } if ((r as any).why_payload?.in_season_added) (r as any).rationale = "Easy base runs at about 70% effort today (your sprint warm-up couldn't be added, so nothing all-out)."; });
+            }
+          }
           throw new InSeasonDone();
         }
         const day = sprintDay(capacity, {
@@ -4029,6 +4078,15 @@ const handler = async (req: Request): Promise<Response> => {
         });
       } catch (e) { if (!(e instanceof InSeasonDone)) { /* any read failure leaves the chosen sprint work untouched */ } }
     }
+    // Owner Nov 5 r4 item 1 (locked): EVERY speed-exposure day ends the warm-up with the progressive
+    // sprint prep before any max sprint (speed-block sprints for every athlete). If it can't be placed,
+    // the max sprints are not prescribed.
+    try {
+      const isSpeedWork = (r: any) => r.slot === "speed" && !r.why_payload?.sprint_prep && (r.sets ?? 1) > 0;
+      if (finalRxs.some(isSpeedWork) && !placeSprintPrep(isSpeedWork)) {
+        finalRxs = assignSequenceOrder(finalRxs.filter((r) => !isSpeedWork(r)) as typeof finalRxs);
+      }
+    } catch { /* leave the day as built */ }
     // Owner Nov 1 round 6: jump classification + competency. Runs after the written tiers/age/Growth/contact
     // rules chose the day; it only narrows (introduction jumps ~20–25 contacts for beginners; never above the
     // athlete's landing-competency level). Any read failure leaves the written jumps untouched.
