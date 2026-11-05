@@ -4078,6 +4078,15 @@ const handler = async (req: Request): Promise<Response> => {
         });
       } catch (e) { if (!(e instanceof InSeasonDone)) { /* any read failure leaves the chosen sprint work untouched */ } }
     }
+    // Owner Nov 5 r4 item 1 (locked): EVERY speed-exposure day ends the warm-up with the progressive
+    // sprint prep before any max sprint (speed-block sprints for every athlete). If it can't be placed,
+    // the max sprints are not prescribed.
+    try {
+      const isSpeedWork = (r: any) => r.slot === "speed" && !r.why_payload?.sprint_prep && (r.sets ?? 1) > 0;
+      if (finalRxs.some(isSpeedWork) && !placeSprintPrep(isSpeedWork)) {
+        finalRxs = assignSequenceOrder(finalRxs.filter((r) => !isSpeedWork(r)) as typeof finalRxs);
+      }
+    } catch { /* leave the day as built */ }
     // Owner Nov 1 round 6: jump classification + competency. Runs after the written tiers/age/Growth/contact
     // rules chose the day; it only narrows (introduction jumps ~20–25 contacts for beginners; never above the
     // athlete's landing-competency level). Any read failure leaves the written jumps untouched.
