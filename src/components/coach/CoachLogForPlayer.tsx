@@ -9,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { STAT_FIELDS, cleanStats, guardSinglePlayer, ENTRY_STATUS_LABEL } from "@/lib/coach/coachLogging";
 import { showUndoToast } from "@/lib/games/undoToast";
+import { CoachGameDetailsFields, saveGameDetails } from "@/components/coach/CoachGameDetailsFields";
+import { cleanDetails, emptyDetails } from "@/lib/coach/coachGameDetails";
 
 export function useAthleteHeader(athleteId: string) {
   return useQuery({
@@ -59,6 +61,7 @@ export function CoachLogForPlayer({ athleteId, startOpen = false }: { athleteId:
   const [vals, setVals] = useState<Record<string, string>>({});
   const [parent, setParent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [details, setDetails] = useState(emptyDetails());
 
   const { data: entries } = useQuery({
     queryKey: ["coach-entries", athleteId],
@@ -73,10 +76,15 @@ export function CoachLogForPlayer({ athleteId, startOpen = false }: { athleteId:
     if (!g.ok) return toast.error(g.reason);
     const { stats, error } = cleanStats(vals);
     if (error) return toast.error(error);
+    if (kind === "game") { const d = cleanDetails(details); if (d.error) return toast.error(d.error); }
     setBusy(true);
     try {
       const r = await saveCoachEntry({ athleteId: g.athleteId!, confirmId: athleteId, kind, date, opponent, stats, parentPresent: parent });
-      setVals({}); setOpponent("");
+      if (kind === "game") {
+        const dErr = await saveGameDetails([r.id], details);
+        if (dErr) toast.error(`The line saved, but the extra details didn't: ${dErr}`);
+      }
+      setVals({}); setOpponent(""); setDetails(emptyDetails());
       qc.invalidateQueries({ queryKey: ["coach-entries", athleteId] });
       showUndoToast({ label: `Saved for ${head?.name ?? "this player"}`, description: r.label, undo: async () => { await undoCoachEntry(r.id); qc.invalidateQueries({ queryKey: ["coach-entries", athleteId] }); } });
     } catch (e: any) { toast.error(e.message || "Could not save."); }
@@ -107,6 +115,7 @@ export function CoachLogForPlayer({ athleteId, startOpen = false }: { athleteId:
               <div className="space-y-1"><Label htmlFor="log-opp" className="text-xs">Opponent</Label><Input id="log-opp" value={opponent} onChange={(e) => setOpponent(e.target.value)} placeholder="Optional" /></div>
             </div>
             <StatInputs values={vals} onChange={setVals} />
+            {kind === "game" && <CoachGameDetailsFields value={details} onChange={setDetails} scope="both" idPrefix="one-" />}
             <label className="flex items-start gap-2 text-xs"><Checkbox checked={parent} onCheckedChange={(v) => setParent(!!v)} />Under 13: the parent is here and agrees</label>
             <Button className="w-full" disabled={busy} onClick={save}>Save for {head?.name ?? "this player"}</Button>
             <p className="text-xs text-muted-foreground">Saved as coach-entered with your name and the date. The player confirms or flags it. Their own entries are never changed.</p>

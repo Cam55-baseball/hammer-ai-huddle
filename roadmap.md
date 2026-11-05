@@ -4602,3 +4602,11 @@ Deploys/additive migrations needed for 2, 3, 13, 18, 20 and server scheduling ce
 - [x] Nov 4 r3 Part D: warm-up level/age tags (owner answers Nov 4; redeployed 4 builder functions)
 - [x] Nov 4 r3 Part E: close-out (776 files / 6,238 tests)
 - [x] Nov 4 r3 Part A: lock-in tests (src/test/lockedByOwnerNov4.test.ts)
+
+## Owner directives Nov 5 round 2 (one part per run)
+- [x] Part 1 — Coach game logging in Game Hub coach view + "Add more details" on every save path
+- [ ] Part 2 — Position-player conditioning = game-day readiness (base sprints, starting questions, lock-ins, sims)
+- [ ] Part 3 — "Where are you starting from?" end to end proof
+- [ ] Part 4 — Before you start trigger matrix (Watch before defensive work fix)
+- [ ] Part 5 — Throwing items layout + owner throwing drill builder
+- [ ] Part 6 — Close-out suite/build

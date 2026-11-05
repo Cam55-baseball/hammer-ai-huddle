@@ -24766,6 +24766,10 @@ export type Database = {
         }
         Returns: Json
       }
+      coach_game_add_details: {
+        Args: { _details: Json; _entries: string[] }
+        Returns: Json
+      }
       coach_log_entry: {
         Args: {
           _athlete: string
