@@ -3,6 +3,7 @@
 import { useNavigate } from "react-router-dom";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { BlockCard } from "@/components/hammer/HammerDailyPlan";
+import { HammersTodayProvider } from "@/components/hammer/HammersTodayProvider";
 import { buildHammerDailyPlan } from "@/lib/hammer/prescription/dailyPlan";
 import { NORMAL_SIGNAL } from "@/lib/hammer/prescription/scheduleContext";
 import { cardPracticeRoute } from "@/lib/hammer/practiceWindow";
@@ -29,11 +30,13 @@ export default function PracticeCardHarness() {
   if (!block) return <main className="p-4 text-sm">No {card} card in the sample plan.</main>;
   const route = block.route.startsWith("/practice") ? cardPracticeRoute(block.route, { modality: block.modality, activity: block.title }, getTodayDate()) : null;
   return (
+    <HammersTodayProvider>
     <main className="mx-auto max-w-md space-y-3 bg-background p-4">
       <PocketCard id={`harness-${card}`} category={block.title} tone="bg-primary" planDate={getTodayDate()} prescribed practiceRoute={route}
         countLabel={`${block.drills.length} items`}>
         {() => <BlockCard block={block} onNavigate={navigate} />}
       </PocketCard>
     </main>
+    </HammersTodayProvider>
   );
 }
