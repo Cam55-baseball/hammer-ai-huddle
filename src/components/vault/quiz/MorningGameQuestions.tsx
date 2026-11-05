@@ -86,9 +86,10 @@ export function MorningGameQuestions() {
   });
   if (!askGame && !askPitch) return null;
 
-  const saveGame = async () => {
+  const saveGame = async (atBats: number | null) => {
     const existing = games[0];
     if (existing) {
+      if (atBats != null) await (supabase as any).from("gp_games").update({ self_reported_at_bats: atBats }).eq("id", existing.id).eq("user_id", user!.id);
       toast("Your game is saved in Games — finish logging it when you can.");
     } else {
       const { error } = await (supabase as any).from("gp_games").insert({
@@ -96,6 +97,7 @@ export function MorningGameQuestions() {
         game_date: yesterday,
         sport: sport === "softball" ? "softball" : "baseball",
         status: "draft",
+        self_reported_at_bats: atBats,
       });
       if (error) { toast.error(`Couldn't save the game: ${error.message}`); return; }
       toast("Game saved — you can finish logging it in Games when you can.");
@@ -125,9 +127,20 @@ export function MorningGameQuestions() {
         <div className="space-y-2">
           <Label className="text-sm font-medium">Did you play a game yesterday?</Label>
           <div className="grid grid-cols-2 gap-2">
-            <Button size="sm" onClick={saveGame}>Yes — save it</Button>
+            <Button size="sm" onClick={() => setAskAtBats(true)} disabled={askAtBats}>Yes</Button>
             <Button size="sm" variant="outline" onClick={markAnswered}>No</Button>
           </div>
+          {askAtBats && (
+            <div className="space-y-2" data-testid="morning-at-bats">
+              <Label className="text-sm">How many at-bats did you get? (both games if you played two)</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {[0, 1, 2, 3, 4, 5, 6, 8].map((n) => (
+                  <Button key={n} size="sm" variant="outline" onClick={() => saveGame(n)}>{n === 8 ? "7+" : n === 0 ? "0 (didn't bat)" : n}</Button>
+                ))}
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => saveGame(null)}>Not sure — just save the game</Button>
+            </div>
+          )}
         </div>
       )}
       {askPitch && (
