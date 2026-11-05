@@ -1,6 +1,7 @@
 // Force rebuild to clear stale module references - Dec 2025
 import { lazy as lazyDev } from "react";
 const GameCardHarness = lazyDev(() => import("./pages/dev/GameCardHarness"));
+const PracticeCardHarness = lazyDev(() => import("./pages/dev/PracticeCardHarness"));
 import { PageFooterReport } from "@/components/support/PageFooterReport";
 import { StaffPlanGate } from "@/components/staff/StaffPlanGate";
 import { RetiredProgramRoute } from "@/components/archive/RetiredProgramRoute";
@@ -593,6 +594,7 @@ const App = () => {
               <Route path="/owner/organizations" element={<StaffOnlyRoute><OwnerOrganizationsPage /></StaffOnlyRoute>} />
               <Route path="/admin-verification" element={<StaffOnlyRoute><AdminVerification /></StaffOnlyRoute>} />
               {import.meta.env.DEV && <Route path="/dev/game-card" element={<GameCardHarness />} />}
+              {import.meta.env.DEV && <Route path="/dev/practice-card" element={<PracticeCardHarness />} />}
               <Route path="/games" element={<Games />} />
               <Route path="/games/dossiers" element={<GameIqLock><Dossiers /></GameIqLock>} />
               <Route path="/games/reports" element={<GameIqLock><GameReports /></GameIqLock>} />
