@@ -2,7 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-vi.mock("@/components/hammer/PracticeLog", () => ({ PracticeLog: () => <div data-testid="practice-log-form" /> }));
+vi.mock("@/components/hammer/logging/ExtraLogs", () => ({ PracticeLog: () => <div data-testid="practice-log-form" /> }));
+vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "u" } }) }));
 import { PocketCard } from "./PocketCard";
 
 // Owner Nov 5 round 2 item 2: the practice-log button sits beside "Log this work".
