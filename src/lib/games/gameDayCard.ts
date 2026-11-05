@@ -5,7 +5,7 @@
  * identity windows and the coach view all read the same facts.
  */
 import { programQuestionScope, type TrainingProgram } from "../../../supabase/functions/_shared/programAccess";
-import { rbiForAtBat, asksRunners, asksScored, parseRunners, type Base } from "./rbi";
+import { rbiForAtBat, asksRunners, parseRunners, formatRunners, type Base } from "./rbi";
 
 export type GameSectionId = "hitting" | "fielding" | "baserunning" | "pitching" | "review";
 
@@ -66,7 +66,7 @@ export function gamePhase(o: { status: string | null; time: string | null; nowMi
   return o.nowMinutes >= t ? "log" : "before";
 }
 
-export interface AtBatEntry { result: string; inning: number; runners?: Base[]; scored?: number | null }
+export interface AtBatEntry { result: string; inning: number; runners?: Base[]; scored?: number | null; /** Saved RBI (from the log), kept until this at-bat is changed. */ rbi?: number | null }
 export interface GameLine {
   atBats: AtBatEntry[];
   position: string | null; chances: number; errors: number;
@@ -81,7 +81,7 @@ export const emptyLine = (): GameLine => ({ atBats: [], position: null, chances:
 
 const HITS = new Set(["1B", "2B", "3B", "HR"]);
 const NOT_AB = new Set(["BB", "IBB", "HBP", "SAC", "SF"]);
-export const atBatRbi = (ab: AtBatEntry) => (asksRunners(ab.result) || asksScored(ab.result) ? rbiForAtBat(ab.result, ab.runners ?? [], ab.scored ?? 0) : ab.result === "HR" ? 1 : 0) ?? 0;
+export const atBatRbi = (ab: AtBatEntry) => ab.rbi != null ? ab.rbi : (rbiForAtBat(ab.result, ab.runners ?? [], ab.scored ?? 0) ?? 0);
 
 /** Clean summary line, e.g. "2-for-4 · 1 HR · 3 RBI · 1 SB" (pitching: "5.1 IP · 78 pitches · 6 K · 1 BB"). */
 export function summaryLine(line: GameLine, sections: readonly GameSectionId[]): string {
@@ -111,7 +111,7 @@ export function ledgerRows(line: GameLine, sections: readonly GameSectionId[], i
   const own = { user_id: ids.userId, game_id: ids.gameId, entry_source: "player_entered" };
   const atBats = sections.includes("hitting") ? line.atBats.map((a, i) => ({
     ...own, inning: a.inning, ab_order: i + 1, result: a.result,
-    runners_on: asksRunners(a.result) && a.runners ? (a.runners.length ? a.runners.join(",") : "empty") : null,
+    runners_on: asksRunners(a.result) && a.runners ? formatRunners(a.runners) : null,
     rbi: atBatRbi(a), position_played: line.position,
   })) : [];
   const defense = sections.includes("fielding") && line.position ? Array.from({ length: Math.max(0, line.chances) }, (_, i) => ({
@@ -141,9 +141,8 @@ export function lineFromRows(r: { atBats: any[]; defense: any[]; baserun: any[];
   return {
     atBats: [...r.atBats].sort((a, b) => (a.ab_order ?? 0) - (b.ab_order ?? 0)).map((a) => ({
       result: String(a.result ?? ""), inning: Number(a.inning ?? 1),
-      runners: a.runners_on && a.runners_on !== "empty" ? parseRunners(a.runners_on) : [], scored: null,
-      _rbi: a.rbi ?? null,
-    } as AtBatEntry)),
+      runners: parseRunners(a.runners_on), scored: null, rbi: a.rbi ?? null,
+    })),
     position: r.defense[0]?.position ?? (Array.isArray(g.my_positions) ? g.my_positions[0] ?? null : null),
     chances: r.defense.length, errors: r.defense.filter((d) => d.error_flag).length,
     steals: r.baserun.filter((b) => b.event_type === "steal" && b.success === true).length,
