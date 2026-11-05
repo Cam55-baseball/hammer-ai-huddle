@@ -45,3 +45,32 @@ export const ENTRY_STATUS_LABEL: Record<string, string> = {
   pending: "Waiting for the player to confirm", confirmed: "Confirmed by the player",
   flagged: "Flagged by the player — kept out of ratings", undone: "Undone by the coach",
 };
+
+/** Owner Nov 5 #3 — coach "Log a game" front door. */
+export type CoachGameMode = "player" | "team" | "general";
+
+export interface TeamLineRow { athlete_id: string; jersey: string; name: string; played: boolean; values: Record<string, string> }
+
+/** Team mode: players marked "didn't play" are skipped; everyone else needs a valid line. */
+export function teamLinesToSave(rows: TeamLineRow[]): { save: Array<{ row: TeamLineRow; stats: Record<string, number> }>; errors: string[] } {
+  const save: Array<{ row: TeamLineRow; stats: Record<string, number> }> = [];
+  const errors: string[] = [];
+  for (const row of rows) {
+    if (!row.played) continue;
+    const { stats, error } = cleanStats(row.values);
+    if (error) errors.push(`#${row.jersey} ${row.name}: ${error}`);
+    else save.push({ row, stats });
+  }
+  if (!save.length && !errors.length) errors.push("Mark at least one player as played and enter their line.");
+  return { save, errors };
+}
+
+/** General game: score fields are optional, but a half-entered score is not saved as a result. */
+export function generalGameInput(myScore: string, oppScore: string, athletes: string[]): { my: number | null; opp: number | null; error: string | null } {
+  const parse = (v: string) => (v.trim() === "" ? null : Number(v));
+  const my = parse(myScore), opp = parse(oppScore);
+  if (!athletes.length) return { my, opp, error: "Pick a team or your roster first." };
+  for (const n of [my, opp]) if (n !== null && (!Number.isInteger(n) || n < 0 || n > 99)) return { my, opp, error: "Scores must be whole numbers 0–99." };
+  if ((my === null) !== (opp === null)) return { my, opp, error: "Enter both scores, or leave both blank." };
+  return { my, opp, error: null };
+}
