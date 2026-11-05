@@ -237,7 +237,9 @@ export interface InSeasonDay { kind: InSeasonKind; bases: number; maxIntent: boo
 
 /** Can this day host the weekly speed exposure? Never after a hard day, a heavy game or the week's heaviest game; readiness cancels. */
 export function speedEligible(f: Pick<InSeasonFacts, "gameToday" | "gameTomorrow" | "yesterdayGame" | "hardYesterday" | "lowReadiness" | "yesterdayWasHeaviestGame">, capacity: number, std: InSeasonStandards = D): "ideal" | "fallback" | false {
-  if (f.gameToday || f.hardYesterday || f.lowReadiness || f.yesterdayWasHeaviestGame || isHeavyGame(f.yesterdayGame, capacity, std)) return false;
+  if (f.gameToday || f.hardYesterday || f.lowReadiness || f.yesterdayWasHeaviestGame || f.yesterdayGame?.source === "unknown") return false;
+  // Owner r4 "speed day wins": a heavy (but not the heaviest) game yesterday no longer blocks the short speed day.
+  if (isHeavyGame(f.yesterdayGame, capacity, std) && f.yesterdayWasHeaviestGame !== false) return false;
   if (!f.gameTomorrow) return "ideal";
   if (f.yesterdayGame) return "ideal"; // after a light game
   return "fallback"; // off day before a game: only when it's the week's last chance
@@ -252,17 +254,17 @@ export function topupEligible(f: Pick<InSeasonFacts, "gameToday" | "gameTomorrow
 export function inSeasonSprintDay(capacity: number, f: InSeasonFacts, std: InSeasonStandards = D): InSeasonDay {
   const cap = Math.max(0, capacity);
   if (f.gameToday) return { kind: "game", bases: 0, maxIntent: false, flush: true, because: "Game today: your game's base running is today's sprint work. Easy flush jog after the game." };
-  if (isHeavyGame(f.yesterdayGame, cap, std)) return { kind: "flush", bases: 0, maxIntent: false, flush: true, because: f.yesterdayGame?.source === "unknown"
-    ? "Day after your game (not logged yet): easy flush only. Log the game so your plan can count it."
-    : `You ran about ${Math.round(f.yesterdayGame!.bases)} bases in yesterday's game: easy flush only today.` };
-
-  const floorGap = Math.max(0, WEEKLY_RUNNING_FLOOR - f.weekRunningSessions);
   const sp = speedEligible(f, cap, std);
   const lightest = (f.laterLighterSpeedDays ?? 0) === 0;
   if (!f.speedDoneThisWeek && ((sp === "ideal" && lightest) || (sp === "fallback" && f.laterSpeedChances === 0))) {
     const b = speedBases(cap, std);
     return { kind: "speed", bases: b, maxIntent: true, flush: false, sprintPrep: true, because: `Your one speed day this week (your lightest day): ${b} all-out base sprints with full rest, right after your sprint warm-up. Games rarely make you run all-out, so this keeps your speed.` };
   }
+  if (isHeavyGame(f.yesterdayGame, cap, std)) return { kind: "flush", bases: 0, maxIntent: false, flush: true, because: f.yesterdayGame?.source === "unknown"
+    ? "Day after your game (not logged yet): easy flush only. Log the game so your plan can count it."
+    : `You ran about ${Math.round(f.yesterdayGame!.bases)} bases in yesterday's game: easy flush only today.` };
+
+  const floorGap = Math.max(0, WEEKLY_RUNNING_FLOOR - f.weekRunningSessions);
   if (f.lowReadiness) {
     if (topupEligible(f, cap, std) && floorGap > 0) return { kind: "low_readiness", bases: std.topupMin, maxIntent: false, flush: false, because: `Your body needs a lighter day: ${std.topupMin} easy base sprints to keep your weekly running on track.` };
     return { kind: "low_readiness", bases: 0, maxIntent: false, flush: true, because: "Your body needs a lighter day: easy flush only." };

@@ -26,7 +26,9 @@ export async function planInSeasonSprints(o: {
   const std = o.std ?? DEFAULT_IN_SEASON_STANDARDS;
   const mon = mondayOf(planDate);
   const yesterday = shift(planDate, -1);
-  const from = mon < yesterday ? mon : yesterday;
+  // Owner r4: read the last 7 days too, so "the heaviest game" is judged across a full week of games.
+  const weekAgo = shift(planDate, -7);
+  const from = mon < weekAgo ? mon : weekAgo;
   let readFailed = false;
   const credits: GameCredit[] = [];
   // Owner r4: the morning at-bats estimate uses the player's OWN bases per plate appearance once
@@ -96,7 +98,7 @@ export async function planInSeasonSprints(o: {
   // Owner r4: speed goes on the week's LIGHTEST day, never the day after the heaviest game.
   const todayLoad = dayLoadScore(gameOn(yesterday), gameOn(shift(planDate, 1)));
   const laterLighter = laterIdeal.filter((d) => dayLoadScore(gameOn(shift(d, -1)), gameOn(shift(d, 1))) < todayLoad).length;
-  const weekCredits = credits.filter((c) => c.date >= mon && c.date < planDate);
+  const weekCredits = credits.filter((c) => c.date >= weekAgo && c.date < planDate);
   const heaviest = weekCredits.length ? Math.max(...weekCredits.map((c) => c.source === "unknown" ? Infinity : c.bases)) : -1;
   const yesterdayWasHeaviest = !!yGame && (yGame.source === "unknown" ? true : yGame.bases >= heaviest);
 
