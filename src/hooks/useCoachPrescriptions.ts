@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { runCoachWarningAction } from "@/lib/coachRx/warningAction";
+import { invokeSignedIn } from "@/lib/auth/invokeSignedIn";
 
 export type CoachRxCategory =
   | "hitting" | "pitching" | "throwing" | "fielding" | "baserunning"
@@ -207,7 +208,12 @@ export function useManageSentWorkouts() {
   const listQ = useQuery({
     queryKey: ["coach-rx-manage", user?.id],
     enabled: !!user?.id,
-    queryFn: () => call({ action: "list" }),
+    // Background read: skip quietly while the sign-in is changing instead of
+    // sending a request the server rejects as "Not signed in".
+    queryFn: async () => {
+      const r = await invokeSignedIn<any>("coach-rx-safety", { mode: "manage", action: "list" });
+      return r.signedOut ? { rows: [] } : r.data;
+    },
     staleTime: 30_000,
     refetchInterval: 30_000,
   });
