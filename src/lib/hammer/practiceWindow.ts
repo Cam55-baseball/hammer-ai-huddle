@@ -49,3 +49,37 @@ export function cardPracticeRoute(route: string, card?: { modality?: string | nu
   if (today) url.searchParams.set("date", today);
   return `${url.pathname}${url.search}`;
 }
+
+/** A throwing item's prescribed throws, by distance when the dose names one (e.g. "60ft x 10 throws"). */
+export function throwsByDistance(dosage: string): { feet: number | null; throws: number }[] {
+  const text = dosage.replace(/×/g, "x");
+  const pairs = [...text.matchAll(/(\d+)\s*(?:ft|feet)\s*x\s*(\d+)\s*throws?/gi)].map((m) => ({ feet: Number(m[1]), throws: Number(m[2]) }));
+  if (pairs.length) return pairs;
+  const sets = text.match(/(\d+)\s*x\s*(\d+)\s*throws?/i);
+  if (sets) return [{ feet: null, throws: Number(sets[1]) * Number(sets[2]) }];
+  const one = text.match(/(\d+)\s*throws?/i);
+  return one ? [{ feet: null, throws: Number(one[1]) }] : [];
+}
+
+/** Plain line shown on the practice log, e.g. "Throws: 45 ft × 10 · 60 ft × 10 (20 total)". */
+export function throwPlanLine(dosage: string): string | null {
+  const rows = throwsByDistance(dosage);
+  if (!rows.length) return null;
+  const total = rows.reduce((sum, r) => sum + r.throws, 0);
+  const parts = rows.map((r) => (r.feet ? `${r.feet} ft × ${r.throws}` : `${r.throws}`));
+  return rows.length > 1 || rows[0].feet ? `Throws: ${parts.join(" · ")} (${total} total)` : `Throws: ${total}`;
+}
+
+/**
+ * Owner Nov 5 round 5: a throwing item's practice button opens the EXISTING throwing practice log
+ * (the same page every other card's practice button opens) for today, with the item and its throws
+ * by distance. No separate throwing logger.
+ */
+export function throwPracticeRoute(name: string, dosage: string, today: string): string {
+  const base = cardPracticeRoute("/practice?module=throwing", { modality: "throwing", activity: name }, today);
+  const line = throwPlanLine(dosage);
+  if (!line) return base;
+  const url = new URL(base, "https://hammersmodality.org");
+  url.searchParams.set("constraints", line);
+  return `${url.pathname}${url.search}`;
+}
