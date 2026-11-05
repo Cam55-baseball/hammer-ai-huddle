@@ -23,9 +23,11 @@ export default function PracticeCardHarness() {
   const navigate = useNavigate();
   const card = new URLSearchParams(window.location.search).get("card") ?? "defense";
   const pitcher = card === "throwing" || card === "pitching";
-  const plan = buildHammerDailyPlan(ctx({ sport_primary: "baseball", position_primary: pitcher ? "P" : "SS", season_phase: "off", age_years: 20,
+  const build = (day: number) => buildHammerDailyPlan(ctx({ sport_primary: "baseball", position_primary: pitcher ? "P" : "SS", season_phase: "off", age_years: 20,
     lifecycle_band: "college", lifting_age_years: 2, development_priorities: ["throwing", "defense", "hitting"], weekly_availability_days: 6, injury_history: [], equipment_effective: gear }),
-    NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 2), { subscriptionModules: [pitcher ? "baseball_pitcher" : "baseball_5tool"] });
+    NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 2 + day), { subscriptionModules: [pitcher ? "baseball_pitcher" : "baseball_5tool"] });
+  let plan = build(0);
+  for (let day = 1; day < 14 && !plan.blocks.some((b) => b.modality === card && b.drills.length > 0); day++) plan = build(day);
   const block = plan.blocks.find((b) => b.modality === card && b.drills.length > 0);
   if (!block) return <main className="p-4 text-sm">No {card} card in the sample plan: {plan.blocks.map((b) => `${b.modality}:${b.drills.length}`).join(", ")}</main>;
   const route = block.route.startsWith("/practice") ? cardPracticeRoute(block.route, { modality: block.modality, activity: block.title }, getTodayDate()) : null;
