@@ -1,3 +1,4 @@
+import { bysWhy, type BysWhyFacts } from "@/lib/hammer/beforeYouStartWhy";
 import { setWarmupFitOverrides } from "@/lib/hammer/prescription/warmupFit";
 import { planningProgramModules } from '../../../supabase/functions/_shared/programAccess';
 import { UpdatingBadge } from "@/components/hammer/PlanUpdatingNote";
@@ -1102,6 +1103,18 @@ function HammerDailyPlanBody({
     [plan.blocks, user?.id, engagementTick],
   );
 
+  // Owner Nov 5 #6c: plain "Why you see this" per Before-you-start item, from facts already on screen.
+  const bysTimingRoles = plan.blocks.filter(prescribedToday).flatMap(b => b.modality === 'hitting' ? ['hitter' as const] : b.modality === 'baserunning' ? ['baserunner' as const] : new URL(b.route, window.location.origin).searchParams.get('module') === 'pitching' ? ['pitcher' as const] : []);
+  const bysFacts: BysWhyFacts = {
+    restDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []),
+    hittingToday: plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting'),
+    timingRoles: [...new Set(bysTimingRoles)],
+    analysisModules: [...new Set(plan.blocks.filter(b => prescribedToday(b)).flatMap(b => { const m = new URL(b.route, window.location.origin).searchParams.get("module"); return m === "hitting" || m === "pitching" || m === "throwing" ? [m] : []; }))],
+    recurringIssueCount: faultContext.data?.recurringIssues.filter(issue => stillRecurring(issue)).length ?? 0,
+    baserunningStudyToday: splitBaserunning(plan.blocks).mental.length > 0,
+    hasFuelGoal: !!fuelFacts.data?.goalType,
+  };
+  const why = (id: string) => bysWhy(id, bysFacts);
   return (
     <PlanAdjustContext.Provider value={adjustApi}>
     <div className="space-y-6">
@@ -1124,36 +1137,36 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
-        <Bys id="starting_point"><ErrorBoundary><StartingPointPromptCard /></ErrorBoundary></Bys>
-        <Bys id="finish_profile"><FinishProfileCard /></Bys>
-        <Bys id="competition_level"><CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} /></Bys>
-        <Bys id="mind_item"><ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary></Bys>
-        <Bys id="info_videos"><ErrorBoundary><InformationalVideos placement="before_you_start" sport={sportKey} /></ErrorBoundary></Bys>
-        <Bys id="recurring_videos"><ErrorBoundary><InformationalVideos placement="recurring" sport={sportKey} faultKeys={faultContext.data?.recurringIssues.filter(issue => stillRecurring(issue)).map(issue => issue.fault_key) ?? []} /></ErrorBoundary></Bys>
-        <Bys id="baserunning_study">{splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}</Bys>
+        <Bys id="starting_point" why={why("starting_point")}><ErrorBoundary><StartingPointPromptCard /></ErrorBoundary></Bys>
+        <Bys id="finish_profile" why={why("finish_profile")}><FinishProfileCard /></Bys>
+        <Bys id="competition_level" why={why("competition_level")}><CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} /></Bys>
+        <Bys id="mind_item" why={why("mind_item")}><ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary></Bys>
+        <Bys id="info_videos" why={why("info_videos")}><ErrorBoundary><InformationalVideos placement="before_you_start" sport={sportKey} /></ErrorBoundary></Bys>
+        <Bys id="recurring_videos" why={why("recurring_videos")}><ErrorBoundary><InformationalVideos placement="recurring" sport={sportKey} faultKeys={faultContext.data?.recurringIssues.filter(issue => stillRecurring(issue)).map(issue => issue.fault_key) ?? []} /></ErrorBoundary></Bys>
+        <Bys id="baserunning_study" why={why("baserunning_study")}>{splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}</Bys>
         {/* Owner order 2026-10-05: aim (with breath primer) → defensive video → coach advice → why the plan changed.
             Performance context moved to The General; Recall & Clarity moved to the identity drawer. */}
-        <Bys id="daily_intent"><DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} /></Bys>
-        <Bys id="defensive_prep_video"><ErrorBoundary>
+        <Bys id="daily_intent" why={why("daily_intent")}><DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} /></Bys>
+        <Bys id="defensive_prep_video" why={why("defensive_prep_video")}><ErrorBoundary>
           <DefensivePrepVideo />
         </ErrorBoundary></Bys>
-        <Bys id="coach_advice"><TodaysWisdomCard /></Bys>
-        <Bys id="day_notices"><ErrorBoundary>
+        <Bys id="coach_advice" why={why("coach_advice")}><TodaysWisdomCard /></Bys>
+        <Bys id="day_notices" why={why("day_notices")}><ErrorBoundary>
           <DayNoticesDrawerItem planLines={plan.blocks.filter(b => b.modality === 'warmup').map(b => b.lowImpactBecause)} />
         </ErrorBoundary></Bys>
-        <Bys id="testing_day"><ErrorBoundary><TestingDayNotice /></ErrorBoundary></Bys>
-        <Bys id="royal_timing"><RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} /></Bys>
-        <Bys id="timing_study"><TimingStudyMoments sport={sportKey} position={ctx.get<string>('position_primary')?.value ?? null}
+        <Bys id="testing_day" why={why("testing_day")}><ErrorBoundary><TestingDayNotice /></ErrorBoundary></Bys>
+        <Bys id="royal_timing" why={why("royal_timing")}><RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} /></Bys>
+        <Bys id="timing_study" why={why("timing_study")}><TimingStudyMoments sport={sportKey} position={ctx.get<string>('position_primary')?.value ?? null}
           savedGoals={ctx.get<unknown>('category_goals')?.value}
           flags={faultContext.data?.rankedFaults.flatMap(f => f.signals.map(s => s.fault_key)) ?? []}
           roles={plan.blocks.filter(prescribedToday).flatMap(b => b.modality === 'hitting' ? ['hitter' as const] : b.modality === 'baserunning' ? ['baserunner' as const] : new URL(b.route, window.location.origin).searchParams.get('module') === 'pitching' ? ['pitcher' as const] : [])} /></Bys>
-        <Bys id="analysis_prompts"><AnalysisRecordingPrompts goalOrder={analysisGoalOrder(ctx.get<unknown>('category_goals')?.value, sportKey)} prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
+        <Bys id="analysis_prompts" why={why("analysis_prompts")}><AnalysisRecordingPrompts goalOrder={analysisGoalOrder(ctx.get<unknown>('category_goals')?.value, sportKey)} prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
           // Exact module route only: arm care/throwing must not invent a pitching session.
           const module = new URL(b.route, window.location.origin).searchParams.get("module");
           return module === "hitting" || module === "pitching" || module === "throwing" ? [module] : [];
         })} /><ArmStrengthUnlockPrompt throwingToday={plan.blocks.some(b => prescribedToday(b) && /throw|catch play|long toss/i.test(`${b.title ?? ''} ${b.route ?? ''}`))} /></Bys>
         {/* 6. Non-physical prescribed blocks: mental / vision work + eating plan */}
-        <Bys id="non_physical">{plan.blocks
+        <Bys id="non_physical" why={why("non_physical")}>{plan.blocks
           .filter((b) => PRE_START_MODALITIES.has(b.modality) && (b.modality === 'fueling' || prescribedToday(b)) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES))
           .map((b) => b.modality === 'fueling' ? fuelPlanToday(b, { goalType: fuelFacts.data?.goalType ?? null, age: buntAge, restDay: savedWholePlanRest(bodyPlanDate, wkRx.data ?? []), saved: fuelFacts.data?.saved ?? null }) : b)
           .map((b) => {
@@ -1168,7 +1181,7 @@ function HammerDailyPlanBody({
               />
             );
           })}</Bys>
-        <Bys id="season_card"><UpdatingBadge />
+        <Bys id="season_card" why={why("season_card")}><UpdatingBadge />
         {/* Quarter / phase + weekly rhythm context */}
         <WeeklyRoadmapStrip plan={plan}
           sport={sportKey}

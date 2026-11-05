@@ -23,9 +23,18 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
-/** Marks one "Before you start" item for the importance map. Renders its children unchanged. */
-export function Bys({ children }: { id: string; children?: ReactNode }) {
-  return <>{children}</>;
+/**
+ * Marks one "Before you start" item for the importance map. Owner Nov 5 #6c: when the item
+ * shows, a plain "Why you see this" line says why for this player. Item and line hide
+ * together when the item has nothing to show today.
+ */
+export function Bys({ id, why, children }: { id: string; why?: string | null; children?: ReactNode }) {
+  return (
+    <div data-bys-item={id} className="[&:not(:has(>.bys-body>*))]:hidden">
+      <div className="bys-body">{children}</div>
+      {why ? <p className="mt-1 px-1 text-[11px] text-muted-foreground" data-testid={`bys-why-${id}`}>Why you see this: {why}</p> : null}
+    </div>
+  );
 }
 
 const LEVEL_STYLE: Record<BysLevel, string> = {
@@ -49,7 +58,7 @@ export function LevelDrawer({ lv, open, onOpenChange, children }: { lv: BysLevel
   return (
     <Collapsible open={open} onOpenChange={onOpenChange} asChild>
       <section data-bys-level={lv} aria-label={`Level ${lv}`}
-        className={`rounded-lg border-2 p-2 [&:not(:has(>div>div>*))]:hidden ${LEVEL_STYLE[lv]}`}>
+        className={`rounded-lg border-2 p-2 [&:not(:has(.bys-body>*))]:hidden ${LEVEL_STYLE[lv]}`}>
         <CollapsibleTrigger asChild>
           <button type="button" aria-expanded={open} className="flex w-full items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             <span>Level {lv}</span>
