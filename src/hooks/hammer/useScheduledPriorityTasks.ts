@@ -1,3 +1,4 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 /**
  * Scheduled priority tasks for Hammers Today.
  *
@@ -12,7 +13,6 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useRecapCountdown } from "@/hooks/useRecapCountdown";
 import { getVaultSectionUrl, getVaultRecapUrl } from "@/utils/vaultNavigation";
 import { startOfWeek, format } from "date-fns";
@@ -43,7 +43,7 @@ function daysPast(nextDate: string | null | undefined): number {
 
 export function useScheduledPriorityTasks() {
   const { user } = useAuth();
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const { sport } = useSportTheme();
   const recap = useRecapCountdown();
 

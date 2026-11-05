@@ -24780,6 +24780,19 @@ export type Database = {
         }
         Returns: Json
       }
+      coach_log_general_game: {
+        Args: {
+          _athletes: string[]
+          _date: string
+          _lineup?: string
+          _my_score?: number
+          _notes?: string
+          _opp_score?: number
+          _opponent: string
+          _parent_present?: boolean
+        }
+        Returns: Json
+      }
       coach_phase_ack: { Args: { at_time: string }; Returns: undefined }
       coach_phase_confirm: {
         Args: { first_confirm: boolean; rid: string; second_confirm: boolean }

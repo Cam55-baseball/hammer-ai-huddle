@@ -1,3 +1,4 @@
+import { playerProgramModules } from "../../../supabase/functions/_shared/programAccess";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, ClipboardCheck } from "lucide-react";
@@ -53,7 +54,7 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
         supabase.from("subscriptions").select("status,subscribed_modules").eq("user_id", uid).eq("status", "active"),
       ]);
       for (const result of [row, s2, vids, tests, prof, subscription]) if (result.error) throw result.error;
-      const modules = [...new Set((subscription.data ?? []).flatMap(sub => assessmentModules(sub, sport)))];
+      const modules = playerProgramModules(uid, [...new Set((subscription.data ?? []).flatMap(sub => assessmentModules(sub, sport)))]).filter(m => m.startsWith(`${sport}_`));
       return { row: row.data, s2: (s2.count ?? 0) > 0, analyses: [...new Set((vids.data ?? []).map(v => v.module).filter(isAnalysisType))], tests: (tests.count ?? 0) > 0, profile: prof.data, modules };
     },
   });

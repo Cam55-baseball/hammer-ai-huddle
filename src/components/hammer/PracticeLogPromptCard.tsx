@@ -1,7 +1,7 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { localIso } from "@/hooks/usePitcherSchedule";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,7 @@ import { ClipboardList } from "lucide-react";
 
 export function PracticeLogPromptCard() {
   const { user } = useAuth();
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const { sport } = useSportTheme();
   const navigate = useNavigate();
   const today = localIso();

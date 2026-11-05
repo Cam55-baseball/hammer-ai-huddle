@@ -1,8 +1,8 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Camera } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
 import { localIso } from '@/hooks/usePitcherSchedule';
@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 /** Read-only adapter; caller supplies existing prescribed modules, never a new plan. */
 export function AnalysisRecordingPrompts({ prescribed, goalOrder = [] }: { prescribed: readonly AnalysisModule[]; goalOrder?: readonly AnalysisModule[] }) {
   const { user } = useAuth();
-  const { modules, loading: subscriptionLoading } = useSubscription();
+  const { modules, loading: subscriptionLoading } = useProgramModules();
   const { sport } = useSportTheme();
   const switches = useFeatureSwitches();
   const navigate = useNavigate();

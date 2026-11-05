@@ -7,7 +7,8 @@ export type WorkStatus = 'done' | 'partial' | 'not_done' | 'skipped' | 'removed'
 export const WORK_STATUS: Record<WorkStatus, string> = { done: 'Done ✓', partial: 'Partly done', not_done: 'Not done', skipped: 'Skipped (allowed)', removed: 'Removed by coach', rest: 'Rest day' };
 interface Prescription { id: string; slot: string; movement_name: string; movement_slug: string; sets: number | null; reps: number | null; duration_seconds?: number | null; rest_seconds?: number | null; distance_feet?: number | null; status: string; replaced_by_coach_rx: string | null; dosage_unit: string | null; coach_rx?: string | null }
 interface Task { task_id: string; side: string | null; completed: boolean; outcome: string | null; name: string; dosage: string; log?: { rounds?: Record<string, unknown>[]; fields?: { key: string; label: string; unit: string | null }[] } }
-export interface WeekDay { date: string; plan: SavedCoachPlan; restDay: boolean; prescriptions: Prescription[]; logs: (WorkoutActual & { prescription_id: string; load_used?: number | null })[]; tasks: Task[]; coachWorkouts: { id: string; title: string; category: string; status: string; cancelled_at: string | null; exercises: {name?: string; movement_name?: string; slug?: string; movement_slug?: string; sets?: number; reps?: number}[] }[] }
+export interface WeekDay { games?: WeekGame[]; date: string; plan: SavedCoachPlan; restDay: boolean; prescriptions: Prescription[]; logs: (WorkoutActual & { prescription_id: string; load_used?: number | null })[]; tasks: Task[]; coachWorkouts: { id: string; title: string; category: string; status: string; cancelled_at: string | null; exercises: {name?: string; movement_name?: string; slug?: string; movement_slug?: string; sets?: number; reps?: number}[] }[] }
+export interface WeekGame { id: string; opponent: string | null; my_score: number | null; opp_score: number | null; entry_source: string | null; general: boolean }
 export interface WeekResult { state: 'ok' | 'denied'; sport?: string; days: WeekDay[] }
 export interface WeekActivity { id: string; name: string; dosage: string; status: WorkStatus; results: string[]; target?: SessionTarget; control?: SessionControl }
 export interface WeekCard { id: string; title: string; status: WorkStatus; activities: WeekActivity[] }
@@ -72,6 +73,11 @@ export function playerWeekCards(day: WeekDay, controls: SessionControl[] = []): 
     if (!['accepted','added','replaced','cancelled','removed'].includes(coach.status) && !coach.cancelled_at) continue;
     // Canonical prescription rows already show accepted exercises and exact logs.
     if (!cards.some(c => c.id===coach.id) && (coach.cancelled_at || ['cancelled','removed'].includes(coach.status))) cards.push({id:coach.id,title:coach.title,status:'removed',activities:coach.exercises.map((e,i)=>({id:`${coach.id}:${i}`,name:e.name ?? e.movement_name ?? 'Exercise',dosage:'',status:'removed',results:[]}))});
+  }
+  // Owner Nov 5 #3: logged games (player- or coach-entered, incl. general team games) show on the day.
+  for (const g of day.games ?? []) {
+    const score = g.my_score == null || g.opp_score == null ? 'Score not entered' : `${g.my_score > g.opp_score ? 'Won' : g.my_score < g.opp_score ? 'Lost' : 'Tied'} ${g.my_score}–${g.opp_score}`;
+    cards.push({ id: `game:${g.id}`, title: `Game${g.opponent ? ` vs ${g.opponent}` : ''}`, status: 'done', activities: [{ id: `game:${g.id}:line`, name: score, dosage: g.general ? 'Team game (no player stats)' : g.entry_source === 'coach' ? 'Logged by coach' : 'Logged by player', status: 'done', results: [] }] });
   }
   // A later safe rebuild may change the exact activity. Keep the dated decision
   // visible as history without applying it to the new activity or its dose.

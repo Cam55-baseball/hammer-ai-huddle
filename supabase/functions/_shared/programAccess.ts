@@ -44,3 +44,17 @@ export function planningProgramModules(userId: string | null | undefined, module
   }
   return normalizeProgramModules(modules, primarySport);
 }
+
+/** Owner Nov 5 #2: the ONE player-facing program judge input. Every screen that decides which
+ * questions, prompts or cards a player sees passes its modules through here. Access (purchases,
+ * navigation) keeps the raw subscription; only the owner-only planning rule changes the result. */
+export function playerProgramModules(userId: string | null | undefined, modules: readonly string[]): string[] {
+  if (ownerPositionOnly(userId)) return normalizeProgramModules(["baseball_5tool", "softball_5tool"], "baseball");
+  return [...modules];
+}
+
+/** Which question families a program may see. Complete Pitcher: no hitting/bunting; 5Tool: no pitching. */
+export function programQuestionScope(program: TrainingProgram | null): { hitting: boolean; bunting: boolean; pitching: boolean; throwing: boolean } {
+  if (!program) return { hitting: false, bunting: false, pitching: false, throwing: false };
+  return { hitting: program !== "pitcher", bunting: program !== "pitcher", pitching: program !== "5tool", throwing: true };
+}

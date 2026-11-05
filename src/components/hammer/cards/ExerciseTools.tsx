@@ -1,9 +1,9 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/AuthContext";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { priorityAccess } from "@/lib/hammer/priorityAccess";
@@ -21,7 +21,7 @@ export function ExerciseTools({ module, exerciseId, planDate }: { module: string
 }
 function SignedInExerciseTools({ module, exerciseId, planDate, userId }: { module: string; exerciseId: string; planDate: string; userId: string }) {
   const { sport } = useSportTheme();
-  const { modules, loading } = useSubscription();
+  const { modules, loading } = useProgramModules();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [started, setStarted] = useState<string | null>(null);

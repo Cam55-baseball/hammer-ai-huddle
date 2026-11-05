@@ -1,4 +1,4 @@
-import { useSubscription } from "@/hooks/useSubscription";
+import { useProgramModules } from "@/hooks/useProgramModules";
 
 export function rulesForCard(category: string, modules: readonly string[]): string[] {
   const key = category.toLowerCase();
@@ -21,7 +21,7 @@ export function rulesForCard(category: string, modules: readonly string[]): stri
 }
 
 export function CardRules({ category }: { category: string }) {
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const rules = rulesForCard(category, modules);
   if (!rules.length) return null;
   return <section data-card-rules className="mb-3 border-b border-border pb-3 text-sm">

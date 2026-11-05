@@ -1124,6 +1124,7 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
+        <Bys id="starting_point"><ErrorBoundary><StartingPointPromptCard /></ErrorBoundary></Bys>
         <Bys id="finish_profile"><FinishProfileCard /></Bys>
         <Bys id="competition_level"><CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} /></Bys>
         <Bys id="mind_item"><ErrorBoundary><MindItemCard planDate={pocketDate} placement="before_you_start" /></ErrorBoundary></Bys>

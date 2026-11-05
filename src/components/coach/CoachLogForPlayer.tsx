@@ -21,13 +21,13 @@ export function useAthleteHeader(athleteId: string) {
   });
 }
 
-export function StatInputs({ values, onChange }: { values: Record<string, string>; onChange: (v: Record<string, string>) => void }) {
+export function StatInputs({ values, onChange, idPrefix = "" }: { values: Record<string, string>; onChange: (v: Record<string, string>) => void; idPrefix?: string }) {
   return (
     <div className="grid grid-cols-2 gap-2">
       {STAT_FIELDS.map((f) => (
         <div key={f.key} className="space-y-1">
-          <Label htmlFor={`stat-${f.key}`} className="text-xs">{f.label}</Label>
-          <Input id={`stat-${f.key}`} inputMode="numeric" value={values[f.key] ?? ""} onChange={(e) => onChange({ ...values, [f.key]: e.target.value.replace(/[^0-9]/g, "") })} />
+          <Label htmlFor={`stat-${idPrefix}${f.key}`} className="text-xs">{f.label}</Label>
+          <Input id={`stat-${idPrefix}${f.key}`} inputMode="numeric" value={values[f.key] ?? ""} onChange={(e) => onChange({ ...values, [f.key]: e.target.value.replace(/[^0-9]/g, "") })} />
         </div>
       ))}
     </div>
@@ -49,10 +49,10 @@ export async function undoCoachEntry(id: string) {
 }
 
 /** Option 1 (default): log one player at a time. The player's name and photo stay locked at the top. */
-export function CoachLogForPlayer({ athleteId }: { athleteId: string }) {
+export function CoachLogForPlayer({ athleteId, startOpen = false }: { athleteId: string; startOpen?: boolean }) {
   const qc = useQueryClient();
   const { data: head } = useAthleteHeader(athleteId);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
   const [kind, setKind] = useState("game");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [opponent, setOpponent] = useState("");

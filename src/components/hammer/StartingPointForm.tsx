@@ -1,11 +1,12 @@
+import { useProgramModules } from "@/hooks/useProgramModules";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
-import { saveStartingPoint, useInvalidateStartingPoint, useStartingPointAnswers } from "@/hooks/useStartingPoint";
+import { saveStartingPoint, useInvalidateStartingPoint, useStartingPointAnswers, useLastLogDate } from "@/hooks/useStartingPoint";
+import { startingPointNeed, STARTING_NEED_LINE } from "@/lib/hammer/startingPointNeeded";
 import { rebuildAfterChange } from "@/lib/hammer/rebuildAfterChange";
 import { getLocalDateString } from "@/utils/dateUtils";
 import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
@@ -22,7 +23,7 @@ const TITLES: Record<string, string> = {
 /** "Where are you starting from?" — owner-approved multiple choice, by program and sport. */
 export function StartingPointForm({ onSaved, rebuild = true, compact = false }: { onSaved?: (message: string) => void; rebuild?: boolean; compact?: boolean }) {
   const { user } = useAuth();
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const ctx = useHammerAthleteContext();
   const sport: Sport = String(ctx.get<string>("sport_primary")?.value ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
   const program = programOf(sport, modules);
@@ -91,19 +92,28 @@ export function StartingPointForm({ onSaved, rebuild = true, compact = false }: 
 /** One-time Today card for existing players with no answers; disappears for good once saved. */
 export function StartingPointPromptCard() {
   const { user } = useAuth();
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const ctx = useHammerAthleteContext();
   const sport: Sport = String(ctx.get<string>("sport_primary")?.value ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
   const saved = useStartingPointAnswers(user?.id, sport);
+  const lastLog = useLastLogDate(user?.id);
   const [open, setOpen] = useState(false);
   const program = programOf(sport, modules);
-  // Owner round 5 added questions: earlier answers missing them get the card again, once.
-  if (!user || !program || saved.isLoading || saved.isError || (saved.data && answersComplete(sport, program, saved.data.answers))) return null;
+  if (!user || !program || saved.isLoading || saved.isError || lastLog.isLoading || lastLog.isError) return null;
+  const injuries = ctx.get<unknown>("injury_history")?.value;
+  // Owner Nov 5 #2: cue only when needed (unanswered, 28+ days without logged training, just healed, program changed).
+  const need = startingPointNeed({
+    today: getLocalDateString(), program,
+    saved: saved.data ? { complete: answersComplete(sport, program, saved.data.answers), program: saved.data.program ?? null, updatedAt: saved.data.updated_at } : null,
+    lastLogDate: lastLog.data ?? null,
+    healedAts: Array.isArray(injuries) ? injuries.map((e: any) => (e?.recovery_status === "healed" ? e?.healed_at ?? null : null)) : [],
+  });
+  if (!need) return null;
   const update = !!saved.data;
-  return <Card data-testid="starting-point-card">
+  return <Card data-testid="starting-point-card" data-need={need}>
     <CardHeader className="pb-2"><CardTitle className="text-base">Where are you starting from?</CardTitle></CardHeader>
     <CardContent className="space-y-3">
-      <p className="text-sm text-muted-foreground">{update ? "We added a question or two. Your earlier answers are kept — just fill in the new ones." : "A few quick taps so Hammer starts you at the right level. You only answer once — change it any time in Profile."}</p>
+      <p className="text-sm text-muted-foreground">{need === "unanswered" && update ? "We added a question or two. Your earlier answers are kept — just fill in the new ones." : STARTING_NEED_LINE[need]}</p>
       {open ? <StartingPointForm compact /> : <Button className="w-full" onClick={() => setOpen(true)}>Answer now</Button>}
     </CardContent>
   </Card>;
@@ -111,7 +121,7 @@ export function StartingPointPromptCard() {
 
 /** Owner Nov 1 round 5: Golden 2Way players with no main role see this on Today until they pick. */
 export function Golden2WayRolePromptCard() {
-  const { modules } = useSubscription();
+  const { modules } = useProgramModules();
   const ctx = useHammerAthleteContext();
   const sport: Sport = String(ctx.get<string>("sport_primary")?.value ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball";
   const pitcher = usePitcherSchedule();

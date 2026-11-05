@@ -205,6 +205,7 @@ const OwnerOrganizationsPage = lazyWithRetry(() => import("./pages/OwnerOrganiza
 const AdminVerification = lazyWithRetry(() => import("./pages/AdminVerification"));
 const Games = lazyWithRetry(() => import("./pages/Games"));
 const CoachLineupMode = lazyWithRetry(() => import("./pages/CoachLineupMode"));
+const CoachLogGame = lazyWithRetry(() => import("./pages/CoachLogGame"));
 const CoachGuestMode = lazyWithRetry(() => import("./pages/CoachGuestMode"));
 const Dossiers = lazyWithRetry(() => import("./pages/Dossiers"));
 const AdminPeriodization = lazyWithRetry(() => import("./pages/AdminPeriodization"));
@@ -467,6 +468,7 @@ const App = () => {
               <Route path="/staff-plans" element={<StaffPlans />} />
               <Route path="/digest" element={<AthleteDigest />} />
               <Route path="/coach/lineup" element={<StaffPlanGate><CoachLineupMode /></StaffPlanGate>} />
+              <Route path="/coach/log-game" element={<StaffPlanGate><CoachLogGame /></StaffPlanGate>} />
               <Route path="/coach/guest" element={<StaffPlanGate><CoachGuestMode /></StaffPlanGate>} />
               <Route path="/coach/digest" element={<StaffPlanGate><CoachDigest /></StaffPlanGate>} />
               <Route path="/forecast" element={<ForecastSurface />} />

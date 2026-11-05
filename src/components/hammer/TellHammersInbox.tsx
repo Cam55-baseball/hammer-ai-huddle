@@ -1,3 +1,5 @@
+import { useProgramModules } from '@/hooks/useProgramModules';
+import { programOf, programQuestionScope } from '../../../supabase/functions/_shared/programAccess';
 /** One athlete-owned entry surface for Today and both check-ins. */
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -55,6 +57,9 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   const [roleOpen, setRoleOpen] = useState(false);
   const [roleConfirm, setRoleConfirm] = useState<RoleChange | null>(null);
   const pitcher = usePitcherSchedule();
+  // Owner Nov 5 #2: pitching questions only for programs that pitch (shared judge, owner rule included).
+  const { modules: programModules } = useProgramModules();
+  const showsPitching = (['baseball', 'softball'] as const).some(sport => programQuestionScope(programOf(sport, programModules)).pitching);
   const [busy, setBusy] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [picked, setPicked] = useState<Date[]>([]);
@@ -176,7 +181,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       {!checkIn && user && <ActiveSportSwitch userId={user.id} />}
       {!checkIn && <p className="text-sm font-medium" data-testid="season-where-line">{seasonStatus.isLoading ? 'Checking your season…' : seasonWhereLine(seasonCtx?.seasonPhase ?? seasonStatus.resolvedPhase, { preseason_start_date: seasonStatus.preseasonStartDate, in_season_start_date: seasonStatus.inSeasonStartDate, in_season_end_date: seasonStatus.inSeasonEndDate, post_season_end_date: seasonStatus.postSeasonEndDate }, today)}</p>}
       {!checkIn && <><Button variant="outline" className="w-full" aria-expanded={startOpen} data-testid="tell-starting-point" onClick={() => setStartOpen(v => !v)}>Where I'm starting from</Button>{startOpen && <StartingPointForm />}</>}
-      {!checkIn && <><Button variant="outline" className="w-full" aria-expanded={roleOpen} data-testid="tell-pitcher-role" onClick={() => setRoleOpen(v => !v)}>Pitcher or position player</Button>{roleOpen && <PitcherRoleQuestions />}</>}
+      {!checkIn && showsPitching && <><Button variant="outline" className="w-full" aria-expanded={roleOpen} data-testid="tell-pitcher-role" onClick={() => setRoleOpen(v => !v)}>Pitcher or position player</Button>{roleOpen && <PitcherRoleQuestions />}</>}
       {roleConfirm && <div className="rounded-md border p-3 space-y-2" data-testid="role-confirm"><p>I'll save: <strong>{describeRoleChange(roleConfirm)}</strong>. Is that right?</p><div className="flex gap-2"><Button disabled={pitcher.saveSettings.isPending} onClick={() => pitcher.saveSettings.mutate(roleConfirm, { onSuccess: () => { setRoleConfirm(null); setText(""); } })}>Yes, save</Button><Button variant="outline" onClick={() => setRoleConfirm(null)}>Back</Button></div></div>}
       {!checkIn && flow && backBtn}
       {lastMessage && <div role="status" data-testid="tell-hammers-result" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm"><strong>Got it — Hammer has it</strong><p>{lastMessage}</p></div>}

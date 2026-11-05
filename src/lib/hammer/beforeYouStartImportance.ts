@@ -7,6 +7,7 @@ export type BysLevel = 1 | 2 | 3;
 export const BYS_SETTING_KEY = "before_you_start_importance";
 
 export const BYS_ITEMS = [
+  { id: "starting_point", label: "Where are you starting from?", when: "Only when needed: an area is unanswered, 4+ weeks without logged training, an injury was just marked healed, or your program/sport changed" },
   { id: "finish_profile", label: "Finish your profile", when: "A needed or optional profile detail is still missing" },
   { id: "competition_level", label: "Competition level question", when: "Playing level isn't saved yet" },
   { id: "mind_item", label: "Mind study / game situation", when: "A Mind item (game situation) is due today" },
@@ -28,7 +29,7 @@ export type BysItemId = (typeof BYS_ITEMS)[number]["id"];
 
 /** Starting map so nothing is lost; the owner sets the final levels. */
 export const BYS_DEFAULT_LEVELS: Partial<Record<BysItemId, BysLevel>> = {
-  daily_intent: 1, coach_advice: 1, mind_item: 1, non_physical: 1,
+  starting_point: 1, daily_intent: 1, coach_advice: 1, mind_item: 1, non_physical: 1,
   finish_profile: 3, day_notices: 3, testing_day: 3,
 };
 

@@ -18,6 +18,7 @@ import { quickAtBatPayload } from "@/lib/games/pitchEntry";
 import { validAtBatInning } from "@/lib/games/atBatEntry";
 import { NumberField } from "./NumberField";
 import { Label } from "@/components/ui/label";
+import { asksRunners, asksScored, rbiForAtBat, type Base } from "@/lib/games/rbi";
 
 const QUICK_RESULTS: ReadonlyArray<{ code: string; label: string; tone: string }> = [
   { code: "1B", label: "1B · Single", tone: "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300" },
@@ -49,6 +50,17 @@ export function QuickAtBatBar({
   const [inning, setInning] = useState<number | "">(defaultInning ?? "");
   const [direction, setDirection] = useState<string | null>(null);
   const [showDirection, setShowDirection] = useState(false);
+  // RBI step (owner Nov 5): hits, home runs, walks and HBP ask who was on base before saving.
+  const [pending, setPending] = useState<string | null>(null);
+  const [bases, setBases] = useState<Base[] | null>(null);
+  const [scored, setScored] = useState(0);
+  const pendingRbi = pending && bases ? rbiForAtBat(pending, bases, scored) : null;
+  const finish = (code: string, runners: Base[] | null, rbi: number | null) => {
+    const row = quickAtBatPayload(Number(inning), code, direction) as Record<string, any>;
+    if (runners) { row.runners_on = runners.length ? runners.join(",") : "none"; row.rbi = rbi; }
+    onQuickSave(row);
+    setDirection(null); setPending(null); setBases(null); setScored(0);
+  };
 
   return (
     <Card className="p-3 space-y-2.5 border-primary/30">
@@ -82,8 +94,8 @@ export function QuickAtBatBar({
             variant="ghost"
             disabled={submitting || !validAtBatInning(inning)}
             onClick={() => {
-              onQuickSave(quickAtBatPayload(Number(inning), r.code, direction));
-              setDirection(null);
+              if (asksRunners(r.code)) { setPending(r.code); setBases(null); setScored(0); return; }
+              finish(r.code, null, null);
             }}
             className={`h-auto min-h-[3rem] whitespace-normal py-1.5 text-[11px] font-semibold leading-tight ${r.tone}`}
           >
@@ -91,6 +103,36 @@ export function QuickAtBatBar({
           </Button>
         ))}
       </div>
+
+      {pending && (
+        <div className="space-y-2 rounded-md border border-primary/30 p-2.5" data-testid="quick-rbi-step">
+          <Label className="text-sm font-medium">Anyone on base?</Label>
+          <div className="flex flex-wrap gap-1.5">
+            <Button type="button" size="sm" variant={bases && bases.length === 0 ? "default" : "outline"} onClick={() => { setBases([]); setScored(0); }}>None</Button>
+            {([1, 2, 3] as Base[]).map((b) => {
+              const on = !!bases?.includes(b);
+              return <Button key={b} type="button" size="sm" variant={on ? "default" : "outline"} aria-pressed={on}
+                onClick={() => { const cur = bases ?? []; const next = on ? cur.filter((x) => x !== b) : [...cur, b].sort() as Base[]; setBases(next); setScored((s) => Math.min(s, next.length)); }}>
+                {b === 1 ? "1st" : b === 2 ? "2nd" : "3rd"}</Button>;
+            })}
+          </div>
+          {asksScored(pending) && bases && bases.length > 0 && (
+            <div className="space-y-1">
+              <Label className="text-sm">How many scored on this hit?</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {Array.from({ length: bases.length + 1 }, (_, n) => n).map((n) => (
+                  <Button key={n} type="button" size="sm" variant={scored === n ? "default" : "outline"} onClick={() => setScored(n)}>{n}</Button>
+                ))}
+              </div>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">Runs you drove in (RBI): {pendingRbi ?? "pick who was on base"}</p>
+          <div className="flex justify-end gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={() => setPending(null)}>Cancel</Button>
+            <Button type="button" size="sm" disabled={submitting || !bases} onClick={() => finish(pending, bases, pendingRbi)}>Save at-bat</Button>
+          </div>
+        </div>
+      )}
 
       <p className="text-[11px] text-muted-foreground">
         Pick the inning, then tap what happened — that's a complete at-bat, saved. Pitch
