@@ -21,7 +21,7 @@ const THROW = /throw|toss|catch play|long[- ]toss/i;
 
 export type ThrowKind = "arm_care" | "warmup" | "catch_play" | "long_toss" | "position";
 /** Owner Nov 5 r5: skill reps (defense/pitching transfer work) are never warm-up rows. */
-const SKILL_CATEGORY = new Set(["position_skill", "windmill_circle", "intent", "pulldown", "overload"]);
+const SKILL_CATEGORY = new Set(["position_skill"]);
 const SKILL_REP = /double[- ]play|quick[- ]release|pop[- ]time|crow[- ]hop|block[- ]to[- ]throw|throw[- ]down/i;
 export function throwKind(d: Drill): ThrowKind {
   const n = d.name;
