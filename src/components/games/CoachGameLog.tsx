@@ -16,6 +16,8 @@ import { CoachGameDetailsFields, saveGameDetails } from "@/components/coach/Coac
 import { cleanDetails, emptyDetails, type DetailsInput } from "@/lib/coach/coachGameDetails";
 import { generalGameInput, teamLinesToSave, type CoachGameMode, type TeamLineRow } from "@/lib/coach/coachLogging";
 import { scoreLine } from "@/lib/coach/games";
+import { useAuth } from "@/hooks/useAuth";
+import { draftFrom, sameAsSaved, validateLineup, saveLineup, updateLineup, renameLineup, deleteLineup, type DraftRow } from "@/lib/coach/savedLineups";
 
 const today = () => new Date().toLocaleDateString("en-CA");
 
@@ -42,6 +44,82 @@ function GameBasics({ date, setDate, opponent, setOpponent, parent, setParent }:
       <div className="space-y-1"><Label htmlFor="game-opp">Opponent (optional)</Label><Input id="game-opp" value={opponent} onChange={(e) => setOpponent(e.target.value)} /></div>
     </div>
     <label className="flex items-start gap-2 text-sm"><Checkbox checked={parent} onCheckedChange={(v) => setParent(v === true)} /><span>A parent of every under-13 player here was present and agreed.</span></label>
+  </div>;
+}
+
+/** Owner Nov 5 (late): build a lineup, "Save this lineup", "Use a saved lineup", and rename/delete in "My lineups". */
+function LineupBuilder({ lineups, onReady }: { lineups: Lineup[]; onReady: (id: string | null) => void }) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const { followedPlayers, loadingPlayers, fetchFollowedPlayers } = useSentActivities();
+  useEffect(() => { void fetchFollowedPlayers?.(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const connected = useMemo(() => followedPlayers.map((p) => ({ id: p.id, name: p.full_name ?? "Player" })), [followedPlayers]);
+  const connectedIds = useMemo(() => new Set(connected.map((c) => c.id)), [connected]);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const saved = lineups.find((l) => l.id === savedId) ?? null;
+  const [draft, setDraft] = useState<DraftRow[]>([]);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const [renameTo, setRenameTo] = useState("");
+  useEffect(() => { setDraft(draftFrom(connected, saved?.players)); setName(saved?.name ?? ""); }, [connected, saved]);
+  const matches = sameAsSaved(draft, saved?.players);
+  useEffect(() => { onReady(matches ? savedId : null); }, [matches, savedId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const refresh = () => qc.invalidateQueries({ queryKey: ["coach-lineups-log"] });
+  const save = async (asNew: boolean) => {
+    const v = validateLineup(name, draft, connectedIds);
+    if (v.error) return toast.error(v.error);
+    setBusy(true);
+    try {
+      if (saved && !asNew) { await updateLineup(supabase as any, saved.id, name, v.players); toast.success("Lineup updated."); }
+      else { const id = await saveLineup(supabase as any, user!.id, name, v.players); setSavedId(id); toast.success(`Saved "${name.trim()}".`); }
+      await refresh();
+    } catch (e: any) { toast.error(e.message); }
+    setBusy(false);
+  };
+  const rename = async (id: string) => { try { await renameLineup(supabase as any, id, renameTo); setRenaming(null); await refresh(); } catch (e: any) { toast.error(e.message); } };
+  const remove = async (id: string, n: string) => {
+    if (!window.confirm(`Delete the lineup "${n}"? Games you already logged stay saved.`)) return;
+    try { await deleteLineup(supabase as any, id); if (id === savedId) setSavedId(null); await refresh(); toast.success("Lineup deleted."); } catch (e: any) { toast.error(e.message); }
+  };
+  if (loadingPlayers) return <p role="status">Loading players…</p>;
+  if (!connected.length) return <p className="text-sm">No connected players yet. Connect with players first, then build a lineup.</p>;
+  return <div className="space-y-3" data-testid="lineup-builder">
+    <div className="space-y-1">
+      <Label>Use a saved lineup</Label>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant={savedId === null ? "default" : "outline"} onClick={() => setSavedId(null)}>New lineup</Button>
+        {lineups.map((l) => <Button key={l.id} size="sm" variant={l.id === savedId ? "default" : "outline"} onClick={() => setSavedId(l.id)}>{l.name}</Button>)}
+      </div>
+    </div>
+    <div className="rounded-lg border divide-y">
+      {draft.map((r, i) => <div key={r.athlete_id} className="flex items-center gap-2 p-2">
+        <Checkbox id={`lp-${r.athlete_id}`} checked={r.included} onCheckedChange={(v) => setDraft((d) => d.map((x, k) => k === i ? { ...x, included: v === true } : x))} />
+        <Label htmlFor={`lp-${r.athlete_id}`} className="flex-1 text-sm">{r.name}</Label>
+        <Input aria-label={`Jersey for ${r.name}`} className="h-9 w-20" inputMode="numeric" placeholder="#" value={r.jersey} onChange={(e) => { const j = e.target.value.replace(/[^0-9]/g, "").slice(0, 3); setDraft((d) => d.map((x, k) => k === i ? { ...x, jersey: j, included: x.included || j !== "" } : x)); }} />
+      </div>)}
+    </div>
+    <div className="space-y-1"><Label htmlFor="lineup-name">Lineup name</Label><Input id="lineup-name" placeholder="Varsity vs lefties" value={name} onChange={(e) => setName(e.target.value)} /></div>
+    <div className="flex flex-wrap gap-2">
+      {saved ? <>
+        <Button size="sm" disabled={busy || (matches && name.trim() === saved.name)} onClick={() => save(false)}>Save changes</Button>
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => save(true)}>Save as a new lineup</Button>
+      </> : <Button size="sm" disabled={busy} onClick={() => save(true)}>Save this lineup</Button>}
+    </div>
+    {!matches && <p className="text-xs text-muted-foreground">Save the lineup to log this game, so every jersey checks out against your players.</p>}
+    {lineups.length > 0 && <details className="rounded-lg border p-2" data-testid="my-lineups">
+      <summary className="cursor-pointer text-sm font-medium">My lineups ({lineups.length})</summary>
+      <div className="mt-2 space-y-2">{lineups.map((l) => <div key={l.id} className="flex flex-wrap items-center gap-2 text-sm">
+        {renaming === l.id ? <>
+          <Input aria-label="New lineup name" className="h-9 flex-1" value={renameTo} onChange={(e) => setRenameTo(e.target.value)} />
+          <Button size="sm" onClick={() => rename(l.id)}>Save</Button><Button size="sm" variant="ghost" onClick={() => setRenaming(null)}>Cancel</Button>
+        </> : <>
+          <span className="flex-1">{l.name} ({l.players.length})</span>
+          <Button size="sm" variant="ghost" onClick={() => { setRenaming(l.id); setRenameTo(l.name); }}>Rename</Button>
+          <Button size="sm" variant="ghost" onClick={() => remove(l.id, l.name)}>Delete</Button>
+        </>}
+      </div>)}</div>
+    </details>}
   </div>;
 }
 
@@ -83,9 +161,8 @@ function TeamGame() {
   };
   if (lineups.isLoading) return <p role="status">Loading your teams…</p>;
   if (lineups.isError) return <p role="alert" className="text-sm text-destructive">Couldn't load your teams. Try again.</p>;
-  if (!lineups.data?.length) return <p className="text-sm">No team lineups yet. <Link className="underline" to="/coach/lineup">Make a lineup</Link> (jersey numbers for your players), then come back.</p>;
   return <div className="space-y-4">
-    <div className="flex flex-wrap gap-2">{lineups.data.map((l) => <Button key={l.id} size="sm" variant={l.id === lineupId ? "default" : "outline"} onClick={() => setLineupId(l.id)}>{l.name}</Button>)}</div>
+    <LineupBuilder lineups={lineups.data ?? []} onReady={setLineupId} />
     {lineup && <>
       <GameBasics {...{ date, setDate, opponent, setOpponent, parent, setParent }} />
       <CoachGameDetailsFields value={gameDetails} onChange={setGameDetails} scope="game" idPrefix="team-" showNotes={false} />
