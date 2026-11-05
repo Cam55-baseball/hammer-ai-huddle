@@ -9370,6 +9370,7 @@ export type Database = {
           pitching_history_complete: boolean
           probable_pitcher_dossier_id: string | null
           scheduled_time: string | null
+          self_reported_at_bats: number | null
           sport: string
           status: string
           updated_at: string
@@ -9436,6 +9437,7 @@ export type Database = {
           pitching_history_complete?: boolean
           probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
+          self_reported_at_bats?: number | null
           sport: string
           status?: string
           updated_at?: string
@@ -9502,6 +9504,7 @@ export type Database = {
           pitching_history_complete?: boolean
           probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
+          self_reported_at_bats?: number | null
           sport?: string
           status?: string
           updated_at?: string

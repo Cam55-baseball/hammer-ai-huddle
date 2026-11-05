@@ -1415,6 +1415,13 @@
       "when": 1793904335247,
       "tag": "0201_coach_note_issue_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 202,
+      "version": "7",
+      "when": 1793905275383,
+      "tag": "0202_gp_games_self_reported_at_bats",
+      "breakpoints": true
     }
   ]
 }

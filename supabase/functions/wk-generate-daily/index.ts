@@ -123,7 +123,8 @@ import {
   type ProgressionState,
 } from "../_shared/wic/progression/progressionState.ts";
 import { planningPrimaryFocus } from "../_shared/wic/progression/startingPoint.ts";
-import { DEFAULT_POSITION_SPRINT_STANDARDS, positionSprintStandards, startingBases, sprintCapacity, sprintDay, sessionBases, fitRowsToBases } from "../_shared/wic/conditioning/positionSprints.ts";
+import { DEFAULT_POSITION_SPRINT_STANDARDS, positionSprintStandards, startingBases, sprintCapacity, sprintDay, sessionBases, fitRowsToBases, basesPerRep as basesPerRepOf } from "../_shared/wic/conditioning/positionSprints.ts";
+import { planInSeasonSprints, InSeasonDone } from "./inSeasonFacts.ts";
 import { isTaggedJump } from "../_shared/wic/jumps/taxonomy.ts";
 import { readPitcherReturn, recordReturnDate } from "../_shared/wic/pitching/readPitcherReturn.ts";
 import { readReturningHitter, recordHittingDay } from "../_shared/wic/hitting/readReturningHitter.ts";
@@ -3979,6 +3980,35 @@ const handler = async (req: Request): Promise<Response> => {
         const gameOn = (d: string) => dayEffect(timelineEntries, d).games.length > 0 ||
           scheduledGames.some((g) => g.date === d && !g.ignored && !["canceled", "cancelled", "rescheduled"].includes(String((g as any).status)));
         const low = reductions.some((r) => r.reason === "cns" || r.reason === "sleep" || r.reason === "running_readiness" || r.reason === "day_intent");
+        // Owner Nov 5 round 3, Group B (locked): in-season uses game-load credit + weekly target.
+        const inSeasonDay = phaseRes.phase === "in_season"
+          ? await planInSeasonSprints({ admin, userId: user.id, planDate, capacity, sport, gameOn, lowReadiness: low, withRoute })
+          : null;
+        if (inSeasonDay) {
+          const before = finalRxs.map(withRoute);
+          let fitted = fitRowsToBases(before, inSeasonDay.bases, sport);
+          let total = sessionBases(fitted, sport);
+          // Fill a top-up/normal/speed target by raising sets of an existing base-length sprint row (never a new row).
+          if (total + 1e-9 < inSeasonDay.bases) {
+            const i = fitted.findIndex((r: any) => r.slot === "conditioning" && basesPerRepOf(r, sport) > 0);
+            if (i >= 0) {
+              const per = basesPerRepOf(fitted[i], sport) * ((fitted[i] as any).reps ?? 1);
+              while (per > 0 && total + per <= inSeasonDay.bases + 1e-9) { (fitted[i] as any).sets = ((fitted[i] as any).sets ?? 1) + 1; total += per; }
+            }
+          }
+          finalRxs.forEach((r, i) => {
+            if (r.slot !== "speed" && r.slot !== "conditioning") return;
+            (r as any).why_payload = { ...((r as any).why_payload ?? {}), position_sprints: {
+              unit: "bases", base_feet: sport === "softball" ? 60 : 90, start_bases: start, capacity, day_kind: inSeasonDay.kind,
+              in_season: true, target_bases: inSeasonDay.bases, total_bases: total, max_intent: inSeasonDay.maxIntent,
+              flush: inSeasonDay.flush, post_game_topup: inSeasonDay.postGame ?? null, game_credit: inSeasonDay.credit ?? null,
+              week_bases: inSeasonDay.weekBases, week_running_sessions: inSeasonDay.weekSessions, read_failed: inSeasonDay.readFailed,
+              max_bases: std.maxBasesPerDay, sets_from: r.sets, sets_to: (fitted[i] as any).sets, because: inSeasonDay.because,
+            } };
+            if ((fitted[i] as any).sets !== r.sets) r.sets = (fitted[i] as any).sets;
+          });
+          throw new InSeasonDone();
+        }
         const day = sprintDay(capacity, {
           gameToday: isGameDay, gameYesterday: gameOn(isoShift(planDate, -1)), gameTomorrow: gameOn(isoShift(planDate, 1)),
           yesterdayBases: yRows.error ? capacity : sessionBases(((yRows.data ?? []) as any[]).map(withRoute), sport),
@@ -3997,7 +4027,7 @@ const handler = async (req: Request): Promise<Response> => {
           } };
           if (changed) r.sets = (fitted[i] as any).sets;
         });
-      } catch { /* any read failure leaves the chosen sprint work untouched */ }
+      } catch (e) { if (!(e instanceof InSeasonDone)) { /* any read failure leaves the chosen sprint work untouched */ } }
     }
     // Owner Nov 1 round 6: jump classification + competency. Runs after the written tiers/age/Growth/contact
     // rules chose the day; it only narrows (introduction jumps ~20–25 contacts for beginners; never above the
