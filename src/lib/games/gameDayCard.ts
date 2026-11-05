@@ -103,7 +103,7 @@ export function summaryLine(line: GameLine, sections: readonly GameSectionId[]):
     if (p.strikeouts) parts.push(`${p.strikeouts} K`);
     if (p.walks) parts.push(`${p.walks} BB`);
   }
-  return parts.length ? parts.join(" · ") : "Logged";
+  return parts.length ? parts.join(" · ") : "Nothing entered yet";
 }
 
 /** Rows for the existing ledgers. Every row is the player's own, player_entered. */

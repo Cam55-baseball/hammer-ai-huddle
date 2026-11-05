@@ -106,7 +106,7 @@ export function GameDayCard({ demo, sport: sportProp }: { demo?: GameCardDemo; s
           <div className="flex items-center justify-between gap-3" data-testid="game-summary">
             <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Final line</p>
-              <p className="truncate text-base font-semibold">{summaryLine(shown, viewSections)}</p>
+              <p className="text-base font-semibold leading-snug">{summaryLine(shown, viewSections)}</p>
             </div>
             <Button variant="outline" size="sm" className="h-10 shrink-0" onClick={() => setOpen(true)}><Pencil className="mr-1.5 h-4 w-4" aria-hidden />Edit</Button>
           </div>
