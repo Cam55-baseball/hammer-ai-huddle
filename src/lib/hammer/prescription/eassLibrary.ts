@@ -30,7 +30,10 @@
  */
 
 import { firstPositionToken } from "@/lib/hammer/positions/positionNormalizer";
-import { catchPlayDay, lightCatch, cpPosition, defenseThrowsAllowed, type CatchPlayDay as CatchPlayDayResult, type CatchPlayStandards, type EarnResult as CatchPlayEarn } from "../../../../supabase/functions/_shared/wic/throwing/catchPlay";
+import { applyOwnerThrowingDrill, type OwnerThrowRow } from "@/lib/prescription/ownerThrowingDrills";
+import { ownerPlanDrillRows } from "@/lib/prescription/ownerPlanDrills";
+import { resolvePlayerFit } from "./warmupFit";
+import { positionDistance, catchPlayDay, lightCatch, cpPosition, defenseThrowsAllowed, type CatchPlayDay as CatchPlayDayResult, type CatchPlayStandards, type EarnResult as CatchPlayEarn } from "../../../../supabase/functions/_shared/wic/throwing/catchPlay";
 
 export type EassSport = "baseball" | "softball";
 export type EassPosition =
@@ -572,7 +575,8 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
 
   // Owner Nov 4 r3 Part B: position players' catch play is a THROW-COUNT ladder, never time.
   const cp = ctx.catchPlay;
-  const cpDay = isPositionPlayer ? catchPlayDay({
+  const cpPos = cpPosition(cp?.rawPosition ?? (ctx.position === "outfield" ? "OF" : ctx.position === "catcher" ? "C" : "IF"));
+  const cpBuilt = isPositionPlayer ? catchPlayDay({
     date: "", sport: isSoftball ? "softball" : "baseball",
     position: cpPosition(cp?.rawPosition ?? (ctx.position === "outfield" ? "OF" : ctx.position === "catcher" ? "C" : "IF")),
     age: ctx.ageYears, phase: (ctx.seasonPhase ?? "off"), isPitcher: false, restDay: false, gameToday: false,
@@ -580,6 +584,12 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
     lowReadiness: (ctx.readinessScore ?? 1) < 0.55, trainingDayIndex: cp?.trainingDayIndex ?? -1,
     earn: cp?.earn ?? CATCH_PLAY_NOT_EARNED, progress: cp?.progress ?? { greenWeeks: 0 }, buildUp: cp?.buildUp ?? null, standards: cp?.standards,
   }) : null;
+  // Owner Nov 5 round 2 item 4: a fitting owner throwing drill takes the built-in steps' place (never more arm work).
+  const cpDay = cpBuilt ? applyOwnerThrowingDrill(cpBuilt, {
+    sport: isSoftball ? "softball" : "baseball", role: cpPos === "C" ? "catcher" : "position",
+    fit: resolvePlayerFit({ ageYears: ctx.ageYears }),
+    positionFt: positionDistance(isSoftball ? "softball" : "baseball", cpPos, ctx.ageYears, cp?.standards),
+  }, ownerPlanDrillRows() as unknown as OwnerThrowRow[], cp?.trainingDayIndex ?? 0) : null;
   const defenseGate = cpDay ? defenseThrowsAllowed(cpDay, null) : { allowed: true, because: null };
   const drills: EassDrill[] = [
     ...scaledPrep,

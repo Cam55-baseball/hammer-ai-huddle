@@ -24,6 +24,9 @@ export const PLAN_SLOTS: PlanSlot[] = ["hammers_today:skill", "hammers_today:war
 let rows: OwnerDrillRow[] = [];
 let loading: Promise<void> | null = null;
 
+/** Owner Nov 5: loaded owner rows (throwing drills read their own fields from these). */
+export function ownerPlanDrillRows(): readonly OwnerDrillRow[] { return rows; }
+
 export function setOwnerPlanDrills(next: OwnerDrillRow[]) {
   rows = next;
 }
