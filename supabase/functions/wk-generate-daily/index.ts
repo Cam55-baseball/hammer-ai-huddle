@@ -3969,7 +3969,7 @@ const handler = async (req: Request): Promise<Response> => {
       try {
         let std = DEFAULT_POSITION_SPRINT_STANDARDS;
         try { const { data: cr } = await admin.from("app_settings").select("setting_value").eq("setting_key", CONDITIONING_RULES_KEY).maybeSingle(); std = positionSprintStandards((cr?.setting_value as any)?.position); } catch { /* defaults */ }
-        const answers = (serverStarts as any)?.answers ?? null;
+        const answers = serverStarts?.answers ?? null;
         const start = startingBases(answers?.base_sprints, answers?.sprint_volume, sport, std);
         const capacity = sprintCapacity(start, serverStarts?.greenlight?.speed?.level ?? 0, std);
         const routeOf = new Map<string, unknown>(((lib ?? []) as any[]).map((m) => [String(m.slug), m.base_route ?? null]));
