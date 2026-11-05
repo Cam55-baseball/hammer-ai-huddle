@@ -2,7 +2,7 @@
 // Self-scoped reads (the athlete's own user_id). Any read failure → read_failed and a conservative
 // day (game rules + flush), never invented credit.
 import {
-  gameCredit, dayCredit, inSeasonSprintDay, postGameTopup, countsAsRunningSession, speedEligible, topupEligible,
+  gameCredit, dayCredit, inSeasonSprintDay, countsAsRunningSession, MAX_SPRINT_KINDS, speedEligible, topupEligible,
   ownBasesPerPa, dayLoadScore, DEFAULT_IN_SEASON_STANDARDS, type GameCredit, type InSeasonStandards,
 } from "../_shared/wic/conditioning/inSeasonSprints.ts";
 import { sessionBases } from "../_shared/wic/conditioning/positionSprints.ts";
@@ -14,13 +14,13 @@ const mondayOf = (iso: string) => { const d = new Date(`${iso}T12:00:00Z`).getUT
 
 export interface InSeasonPlan {
   kind: string; bases: number; maxIntent: boolean; flush: boolean; because: string; sprintPrep?: boolean; ownBasesPerPa?: number | null;
-  postGame?: { bases: number; because: string } | null; credit?: GameCredit | null;
+  postGame?: null; credit?: GameCredit | null; gameToday?: boolean; preGame?: boolean;
   weekBases: number; weekSessions: number; readFailed: boolean;
 }
 
 export async function planInSeasonSprints(o: {
   admin: any; userId: string; planDate: string; capacity: number; sport: "baseball" | "softball";
-  gameOn: (d: string) => boolean; lowReadiness: boolean; withRoute: (r: any) => any; std?: InSeasonStandards;
+  gameOn: (d: string) => boolean; lowReadiness: boolean; veryLowReadiness?: boolean; legPain?: boolean; withRoute: (r: any) => any; std?: InSeasonStandards;
 }): Promise<InSeasonPlan> {
   const { admin, userId, planDate, capacity, sport, gameOn } = o;
   const std = o.std ?? DEFAULT_IN_SEASON_STANDARDS;
@@ -53,10 +53,11 @@ export async function planInSeasonSprints(o: {
   const games = (g.data ?? []) as any[];
   if (games.length) {
     const ids = games.map((x) => x.id);
+    // Defense rows are read only to know the player played (owner Nov 5 final: defense never counts).
     const [ab, br, df] = await Promise.all([
       admin.from("gp_at_bats").select("game_id, result").eq("user_id", userId).in("game_id", ids).limit(1000),
       admin.from("gp_baserun_events").select("game_id, event_type, base_from, base_to").eq("user_id", userId).in("game_id", ids).limit(1000),
-      admin.from("gp_defense_plays").select("game_id, position").eq("user_id", userId).in("game_id", ids).limit(2000),
+      admin.from("gp_defense_plays").select("game_id").eq("user_id", userId).in("game_id", ids).limit(2000),
     ]);
     if (ab.error || br.error || df.error) readFailed = true;
     for (const x of games) credits.push(gameCredit({
@@ -64,7 +65,6 @@ export async function planInSeasonSprints(o: {
       atBatResults: ((ab.data ?? []) as any[]).filter((r) => r.game_id === x.id).map((r) => r.result),
       baserun: ((br.data ?? []) as any[]).filter((r) => r.game_id === x.id),
       defenseChances: ((df.data ?? []) as any[]).filter((r) => r.game_id === x.id).length,
-      defensePositions: ((df.data ?? []) as any[]).filter((r) => r.game_id === x.id).map((r) => r.position ?? null),
       selfReportedAtBats: x.self_reported_at_bats ?? null,
       ownBasesPerPa: own,
     }, std));
@@ -79,14 +79,14 @@ export async function planInSeasonSprints(o: {
   let weekBases = 0, weekSessions = 0, speedDone = false;
   const hardDay = (d: string) => {
     const own = rows.filter((r) => r.plan_date === d);
-    return own.some((r) => r.why_payload?.position_sprints?.day_kind === "speed") || sessionBases(own.map(o.withRoute), sport) >= Math.ceil(capacity * 0.75);
+    return own.some((r) => MAX_SPRINT_KINDS.has(r.why_payload?.position_sprints?.day_kind)) || sessionBases(own.map(o.withRoute), sport) >= Math.ceil(capacity * 0.75);
   };
   for (let d = mon; d < planDate; d = shift(d, 1)) {
     const own = rows.filter((r) => r.plan_date === d);
     const total = sessionBases(own.map(o.withRoute), sport) + (dayCredit(credits, d)?.bases ?? 0);
     weekBases += total;
     if (countsAsRunningSession(total, std)) weekSessions++;
-    if (own.some((r) => r.why_payload?.position_sprints?.day_kind === "speed")) speedDone = true;
+    if (own.some((r) => MAX_SPRINT_KINDS.has(r.why_payload?.position_sprints?.day_kind))) speedDone = true;
   }
   const yGame = dayCredit(credits, yesterday);
   const sunday = shift(mon, 6);
@@ -102,13 +102,23 @@ export async function planInSeasonSprints(o: {
   const heaviest = weekCredits.length ? Math.max(...weekCredits.map((c) => c.source === "unknown" ? Infinity : c.bases)) : -1;
   const yesterdayWasHeaviest = !!yGame && (yGame.source === "unknown" ? true : yGame.bases >= heaviest);
 
+  // Owner Nov 5 final: the most recent game in the last 3 days with no all-out sprint session since.
+  let pendingGame: GameCredit | null = null;
+  for (let d = yesterday; d >= shift(planDate, -3); d = shift(d, -1)) {
+    const c = dayCredit(credits, d);
+    if (!c) continue;
+    let sprintedSince = false;
+    for (let e = shift(d, 1); e < planDate; e = shift(e, 1)) if (rows.some((r) => r.plan_date === e && MAX_SPRINT_KINDS.has(r.why_payload?.position_sprints?.day_kind))) sprintedSince = true;
+    pendingGame = sprintedSince || readFailed ? null : c;
+    break;
+  }
   const facts = {
     gameToday: gameOn(planDate), gameTomorrow: gameOn(shift(planDate, 1)), yesterdayGame: yGame,
     hardYesterday: hardDay(yesterday), lowReadiness: o.lowReadiness, weekBases, weekRunningSessions: weekSessions,
     speedDoneThisWeek: speedDone || readFailed, laterSpeedChances: laterSpeed, laterTopupChances: laterTop,
     yesterdayWasHeaviestGame: yesterdayWasHeaviest, laterLighterSpeedDays: laterLighter,
+    pendingGame, veryLowReadiness: !!o.veryLowReadiness, legPain: !!o.legPain,
   };
   const day = inSeasonSprintDay(capacity, facts, std);
-  const postGame = facts.gameToday ? postGameTopup(capacity, weekSessions, std) : null;
-  return { ...day, postGame, credit: yGame, weekBases, weekSessions, readFailed, ownBasesPerPa: own };
+  return { ...day, postGame: null, gameToday: facts.gameToday, credit: yGame, weekBases, weekSessions, readFailed, ownBasesPerPa: own };
 }

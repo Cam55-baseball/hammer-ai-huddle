@@ -25,12 +25,12 @@ const POSITION: [string, string][] = [
 ];
 /** Owner Nov 5 r4: in-season (dense schedule) numbers, all editable. */
 const IN_SEASON: [string, string][] = [
-  ["speedSprints", "Speed day: all-out base sprints (full rest)"], ["topupShare", "Top-up: share of the daily count (0–1)"],
-  ["topupMin", "Top-up: fewest bases"], ["topupMax", "Top-up: most bases"],
+  ["speedSprints", "Speed day: all-out base sprints (full rest)"], ["topupShare", "Off-day top-up: share of the daily count (0–1)"],
+  ["topupMin", "Off-day top-up: fewest bases"], ["topupMax", "Off-day top-up: most bases"],
   ["runningDayBases", "A day counts as a running day at this many bases"], ["weeklyTargetDays", "Weekly target: full days of the daily count"],
   ["heavyGameShare", "A game is heavy at this share of the daily count (0–1)"],
-  ["chanceOutfield", "Bases per fielding chance: outfield"], ["chanceMiddleInfield", "Bases per fielding chance: 2B / SS / 3B"],
-  ["chanceCornerCatcher", "Bases per fielding chance: catcher / 1B / pitcher"],
+  ["lowPlayMaxBases", "Not getting playing time: a game at or under this many bases"],
+  ["extraSprintsMax", "Extra speed session: all-out base sprints (3–4)"], ["extraSprintsMin", "Extra speed session on a tired day (3–4)"],
   ["basesPerPaDefault", "At-bats estimate: bases per plate appearance (default)"], ["ownAverageMinPa", "Use the player's own average after this many logged plate appearances"],
 ];
 const db = supabase as any;

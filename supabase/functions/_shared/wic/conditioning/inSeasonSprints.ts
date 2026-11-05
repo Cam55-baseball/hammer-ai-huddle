@@ -25,8 +25,10 @@ export interface InSeasonStandards {
   weeklyTargetDays: number;
   /** A game at or above this share of the daily count is a heavy game. */
   heavyGameShare: number;
-  /** Base-length sprint credit per defensive chance, by where the player played. */
-  chanceOutfield: number; chanceMiddleInfield: number; chanceCornerCatcher: number;
+  /** Owner Nov 5 final: a game crediting at most this many bases = not getting playing time (extra speed session). */
+  lowPlayMaxBases: number;
+  /** Owner Nov 5 final: extra speed session size (3–4 all-out base sprints); low readiness uses the smaller number. */
+  extraSprintsMin: number; extraSprintsMax: number;
   /** Morning at-bats estimate: default bases per plate appearance, and the logged plate appearances needed to use the player's own average. */
   basesPerPaDefault: number; ownAverageMinPa: number;
 }
@@ -36,7 +38,7 @@ export const DEFAULT_IN_SEASON_STANDARDS: InSeasonStandards = {
   runningDayBases: 4,
   weeklyTargetDays: 2,
   heavyGameShare: 0.6,
-  chanceOutfield: 1, chanceMiddleInfield: 0.5, chanceCornerCatcher: 0.25,
+  lowPlayMaxBases: 2, extraSprintsMin: 3, extraSprintsMax: 4,
   basesPerPaDefault: 1, ownAverageMinPa: 15,
 };
 export function inSeasonStandards(raw: unknown): InSeasonStandards {
@@ -46,10 +48,11 @@ export function inSeasonStandards(raw: unknown): InSeasonStandards {
   const s: InSeasonStandards = {
     speedSprints: n("speedSprints", 1, 6), topupShare: n("topupShare", 0.1, 1), topupMin: n("topupMin", 1, 20), topupMax: n("topupMax", 1, 20),
     runningDayBases: n("runningDayBases", 1, 20), weeklyTargetDays: n("weeklyTargetDays", 1, 6), heavyGameShare: n("heavyGameShare", 0.1, 1),
-    chanceOutfield: n("chanceOutfield", 0, 4), chanceMiddleInfield: n("chanceMiddleInfield", 0, 4), chanceCornerCatcher: n("chanceCornerCatcher", 0, 4),
+    lowPlayMaxBases: n("lowPlayMaxBases", 0, 10), extraSprintsMin: n("extraSprintsMin", 3, 4), extraSprintsMax: n("extraSprintsMax", 3, 4),
     basesPerPaDefault: n("basesPerPaDefault", 0, 4), ownAverageMinPa: n("ownAverageMinPa", 1, 200),
   };
   if (s.topupMax < s.topupMin) { s.topupMin = d.topupMin; s.topupMax = d.topupMax; }
+  if (s.extraSprintsMax < s.extraSprintsMin) { s.extraSprintsMin = d.extraSprintsMin; s.extraSprintsMax = d.extraSprintsMax; }
   return s;
 }
 const D = DEFAULT_IN_SEASON_STANDARDS;
@@ -70,24 +73,15 @@ const RESULT_BASES: Record<string, number> = {
 };
 export const resultBases = (r: string | null | undefined) => RESULT_BASES[String(r ?? "").trim().toUpperCase()] ?? 0;
 
-/** Credit for one defensive chance by position: outfield runs farthest, catcher/1B/pitcher least. */
-export function chanceCredit(position: string | null | undefined, std: InSeasonStandards = D): number {
-  const p = String(position ?? "").trim().toUpperCase();
-  if (["LF", "CF", "RF", "OF"].includes(p)) return std.chanceOutfield;
-  if (["C", "1B", "P"].includes(p)) return std.chanceCornerCatcher;
-  return std.chanceMiddleInfield; // 2B/SS/3B and unknown
-}
-
 export interface GameLogFacts {
   date: string;
   /** gp_at_bats.result for this game (empty when nothing logged). */
   atBatResults: readonly (string | null)[];
   /** gp_baserun_events for this game. */
   baserun: readonly { event_type: string | null; base_from: number | null; base_to: number | null }[];
-  /** gp_defense_plays rows (each a defensive chance). */
-  defenseChances: number;
-  /** Position of each defensive chance, when known (weights the chance). */
-  defensePositions?: readonly (string | null)[];
+  /** Owner Nov 5 final: defense does NOT count toward base-sprint credit. Kept only so a
+   *  defense-only log still reads as "played" (credit 0), never as an unlogged game. */
+  defenseChances?: number;
   /** Morning check-in answer, used only when no at-bats are logged. */
   selfReportedAtBats: number | null;
   /** The player's own logged bases per plate appearance (null = not enough logs → default). */
@@ -120,18 +114,16 @@ export function ownBasesPerPa(atBatResults: readonly (string | null)[], baserun:
 
 /**
  * Base-length sprints one game put on the player.
- * Log: bases reached on each at-bat + every base advanced on the bases (a caught-stealing attempt
- * still ran one base) + each defensive chance weighted by position.
+ * Log (OFFENSE ONLY, owner Nov 5 final): bases reached on each at-bat + every base advanced on the
+ * bases (steals, steal attempts, extra bases, runs scored). Defense never counts.
  * No logged at-bats: the morning at-bats answer × the player's own bases per plate appearance
  * (or the default) — an estimate. Neither: unknown (0 toward the floor, heavy for recovery).
  */
 export function gameCredit(g: GameLogFacts, std: InSeasonStandards = D): GameCredit {
-  const logged = g.atBatResults.filter((r) => r != null).length > 0 || g.baserun.length > 0 || g.defenseChances > 0;
+  const logged = g.atBatResults.filter((r) => r != null).length > 0 || g.baserun.length > 0 || (g.defenseChances ?? 0) > 0;
   if (logged) {
     let b = baserunBases(g.baserun);
     for (const r of g.atBatResults) b += resultBases(r);
-    const pos = g.defensePositions ?? [];
-    for (let i = 0; i < Math.max(0, g.defenseChances); i++) b += chanceCredit(pos[i] ?? null, std);
     return { date: g.date, bases: Math.round(b * 100) / 100, source: "log" };
   }
   if (g.selfReportedAtBats != null && g.selfReportedAtBats >= 0) {
@@ -201,7 +193,7 @@ export function sprintPrepOk(rows: readonly { movement_slug: string }[], isMaxSp
 /** Owner r4 item 3: the base route a top-up adds when the day has no base sprint (one base per rep). */
 export const topupRouteSlug = (sport: "baseball" | "softball") => sport === "softball" ? "bases_single_sb" : "repeat_90ft_bb";
 /** Day kinds that may add a short base-sprint item when the day has none (never before a game / after a heavy game — those kinds never get here). */
-export const ADDS_ROW_KINDS: ReadonlySet<string> = new Set(["topup", "low_readiness", "speed"]);
+export const ADDS_ROW_KINDS: ReadonlySet<string> = new Set(["topup", "low_readiness", "speed", "extra_speed", "extra_speed_pre_game"]);
 
 /**
  * Lightest-load score for choosing the week's speed day (lower = lighter): a game the day before
@@ -209,7 +201,13 @@ export const ADDS_ROW_KINDS: ReadonlySet<string> = new Set(["topup", "low_readin
  */
 export const dayLoadScore = (gameYesterday: boolean, gameTomorrow: boolean) => (gameYesterday ? 1 : 0) + (gameTomorrow ? 0.5 : 0);
 
-export type InSeasonKind = "game" | "flush" | "speed" | "topup" | "normal" | "pre_game_half" | "low_readiness" | "none";
+export type InSeasonKind = "game" | "flush" | "speed" | "topup" | "normal" | "pre_game_half" | "low_readiness" | "none"
+  | "extra_speed" | "extra_speed_pre_game" | "pain_no_sprints";
+/** Day kinds that are an all-out sprint session (never two back to back). */
+export const MAX_SPRINT_KINDS: ReadonlySet<string> = new Set(["speed", "extra_speed", "extra_speed_pre_game"]);
+/** Owner Nov 5 final: not getting playing time = a logged/estimated game crediting at most lowPlayMaxBases. */
+export const isLowPlayingTime = (c: GameCredit | null | undefined, std: InSeasonStandards = D) =>
+  !!c && c.source !== "unknown" && c.bases <= std.lowPlayMaxBases;
 
 export interface InSeasonFacts {
   gameToday: boolean;
@@ -231,9 +229,15 @@ export interface InSeasonFacts {
   yesterdayWasHeaviestGame?: boolean;
   /** Owner r4: later eligible days this week that carry a LIGHTER load than today (speed waits for the lightest). */
   laterLighterSpeedDays?: number;
+  /** Owner Nov 5 final: most recent game (last 3 days) with no all-out sprint session since it. */
+  pendingGame?: GameCredit | null;
+  /** Owner Nov 5 final: very low readiness (red check-in / heavy soreness) skips the extra speed session. */
+  veryLowReadiness?: boolean;
+  /** Owner Nov 5 final: a leg pain flag (active injury or today's check-in) removes all sprints. */
+  legPain?: boolean;
 }
 
-export interface InSeasonDay { kind: InSeasonKind; bases: number; maxIntent: boolean; flush: boolean; because: string; sprintPrep?: boolean }
+export interface InSeasonDay { kind: InSeasonKind; bases: number; maxIntent: boolean; flush: boolean; because: string; sprintPrep?: boolean; preGame?: boolean }
 
 /** Can this day host the weekly speed exposure? Never after a hard day, a heavy game or the week's heaviest game; readiness cancels. */
 export function speedEligible(f: Pick<InSeasonFacts, "gameToday" | "gameTomorrow" | "yesterdayGame" | "hardYesterday" | "lowReadiness" | "yesterdayWasHeaviestGame">, capacity: number, std: InSeasonStandards = D): "ideal" | "fallback" | false {
@@ -253,16 +257,37 @@ export function topupEligible(f: Pick<InSeasonFacts, "gameToday" | "gameTomorrow
 
 export function inSeasonSprintDay(capacity: number, f: InSeasonFacts, std: InSeasonStandards = D): InSeasonDay {
   const cap = Math.max(0, capacity);
-  if (f.gameToday) return { kind: "game", bases: 0, maxIntent: false, flush: true, because: "Game today: your game's base running is today's sprint work. Easy flush jog after the game." };
+  // Owner Nov 5 final (locked): a leg pain flag removes every sprint (game days stay game days).
+  if (f.legPain) return f.gameToday
+    ? { kind: "game", bases: 0, maxIntent: false, flush: false, because: "Game today: your game is today's running. You flagged leg pain, so nothing extra before or after it." }
+    : { kind: "pain_no_sprints", bases: 0, maxIntent: false, flush: false, because: "You flagged leg pain, so no sprints today. Let it settle first." };
+  // Owner Nov 5 final (locked): not getting playing time → one EXTRA SHORT SPEED SESSION, pre-game early
+  // work on the next game day or on the next off day. Never post-game, never right after another
+  // all-out day, never after a heavy game; the body decides (very low readiness skips, low shortens).
+  const pg = f.pendingGame ?? null;
+  const extraBlockedBy = f.veryLowReadiness ? "body" : f.hardYesterday ? "hard" : null;
+  if (isLowPlayingTime(pg, std) && !extraBlockedBy) {
+    const n = f.lowReadiness ? std.extraSprintsMin : std.extraSprintsMax;
+    const ran = Math.round(pg!.bases);
+    const lead = `You didn't get much running in your last game (about ${ran} base${ran === 1 ? "" : "s"}), so a short speed session keeps you sharp: ${n} all-out base sprints with full rest, right after your sprint warm-up`;
+    const tired = f.lowReadiness ? ` Your check-in says your body is a bit tired, so it's ${n} instead of ${std.extraSprintsMax}.` : "";
+    return f.gameToday
+      ? { kind: "extra_speed_pre_game", bases: n, maxIntent: true, flush: false, sprintPrep: true, preGame: true, because: `${lead}, as early work well before game time. Nothing after the game.${tired}` }
+      : { kind: "extra_speed", bases: n, maxIntent: true, flush: false, sprintPrep: true, because: `${lead}.${tired}` };
+  }
+  if (f.gameToday) return { kind: "game", bases: 0, maxIntent: false, flush: false, because: isLowPlayingTime(pg, std) && extraBlockedBy === "body"
+    ? "Game today: your game is today's running. Your body needs rest, so the extra speed session is skipped. Nothing after the game."
+    : "Game today: your game is today's running. No sprints or jogs after the game." };
   const sp = speedEligible(f, cap, std);
   const lightest = (f.laterLighterSpeedDays ?? 0) === 0;
   if (!f.speedDoneThisWeek && ((sp === "ideal" && lightest) || (sp === "fallback" && f.laterSpeedChances === 0))) {
     const b = speedBases(cap, std);
     return { kind: "speed", bases: b, maxIntent: true, flush: false, sprintPrep: true, because: `Your one speed day this week (your lightest day): ${b} all-out base sprints with full rest, right after your sprint warm-up. Games rarely make you run all-out, so this keeps your speed.` };
   }
+  // Owner Nov 5 final: after a heavy game an OFF day is light recovery only (no sprints).
   if (isHeavyGame(f.yesterdayGame, cap, std)) return { kind: "flush", bases: 0, maxIntent: false, flush: true, because: f.yesterdayGame?.source === "unknown"
-    ? "Day after your game (not logged yet): easy flush only. Log the game so your plan can count it."
-    : `You ran about ${Math.round(f.yesterdayGame!.bases)} bases in yesterday's game: easy flush only today.` };
+    ? "Day after your game (not logged yet): light recovery only, no sprints. Log the game so your plan can count it."
+    : `You ran about ${Math.round(f.yesterdayGame!.bases)} bases in yesterday's game: light recovery only today, no sprints.` };
 
   const floorGap = Math.max(0, WEEKLY_RUNNING_FLOOR - f.weekRunningSessions);
   if (f.lowReadiness) {
@@ -291,12 +316,4 @@ function topup(cap: number, f: InSeasonFacts, std: InSeasonStandards, lead: stri
   return { kind: "topup", bases: b, maxIntent: false, flush: false, because: `${lead} ${b} base sprints at about 80% effort.` };
 }
 
-/**
- * Post-game top-up for a LIGHT game (didn't play / few at-bats): the card is planned before the game,
- * so it is conditional — done only if the game's running stayed under a heavy game.
- */
-export function postGameTopup(capacity: number, weekRunningSessions: number, std: InSeasonStandards = D): { bases: number; because: string } | null {
-  if (weekRunningSessions >= WEEKLY_RUNNING_FLOOR) return null;
-  const b = topupBases(capacity, std);
-  return { bases: b, because: `If you didn't play or ran fewer than ${Math.ceil(capacity * std.heavyGameShare)} bases in today's game: ${b} easy base sprints after it.` };
-}
+// Owner Nov 5 final (locked): NO post-game sprints or top-ups of any kind — postGameTopup was removed.
