@@ -22,6 +22,7 @@ import { planningGear } from '../../../../supabase/functions/_shared/planSwap/pl
 import { pitchingDay, guardArmDrills, eassArmEvent, windmillPlanningDrills, type PlanningArmHistory } from './pitchingDay';
 import {finalArmGuard} from './finalArmGuard';
 import {pitcherMoundGate} from './pitcherMoundGate';
+import {pitchingAfterThrowing} from './pitchAfterThrow';
 import { pitcherYardRuleApplies } from '../../../../supabase/functions/_shared/wic/conditioning/yards';
 import { ownerConditioningPlan } from './ownerConditioningPlan';
 import { structureSkillSession } from './skillSessionStructure';
@@ -2767,7 +2768,7 @@ export function buildHammerDailyPlan(
     console.debug("[dailyPlan] gp-signal bias →", gpBiasTags);
   }
   return {
-    blocks: enforceSkillStageOrder(placeBreathing(warmed, (d) => drillsToSteps(d))).map((b, i) => {
+    blocks: pitchingAfterThrowing(enforceSkillStageOrder(placeBreathing(warmed, (d) => drillsToSteps(d)))).map((b, i) => {
       const notice = availabilityNotice(proj.weeklyAvailabilityDays);
       return i === 0 && notice ? { ...b, because: [...(b.because ?? []), `Days available: ${proj.weeklyAvailabilityDays} per week (information only).`, notice] } : b;
     }),
