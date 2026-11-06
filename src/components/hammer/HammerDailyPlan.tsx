@@ -1304,7 +1304,10 @@ function HammerDailyPlanBody({
           const otherBlocks = splitBunting(allOtherBlocks.filter((b) => !RECOVERY_LAST.has(b.modality)));
           const recoveryBlocks = allOtherBlocks.filter((b) => RECOVERY_LAST.has(b.modality));
           const coachCards = (categories: string[]) => {
-            const rows = (wkRx.grouped.coach ?? []).filter(rx => categories.includes(rx.slot));
+            // Owner Nov 6: a coach's pitching work also follows their throwing work.
+            const rank = (s: string) => (s === "pitching" ? 1 : 0);
+            const rows = (wkRx.grouped.coach ?? []).filter(rx => categories.includes(rx.slot)).map((rx, i) => ({ rx, i }))
+              .sort((a, b) => rank(a.rx.slot) - rank(b.rx.slot) || a.i - b.i).map(x => x.rx);
             const ids = [...new Set(rows.map(rx => {
               const payload = rx.why_payload as unknown as { coach_rx?: string } | null;
               return payload?.coach_rx ?? rx.id;
