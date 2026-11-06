@@ -50,6 +50,7 @@ const COLS =
 
 export default function CoachAthleteDetail() {
   const { athleteId } = useParams<{ athleteId: string }>();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
 
   // P0-REC-3 — roster membership guard. A coach may only drill into an
@@ -215,7 +216,7 @@ export default function CoachAthleteDetail() {
 
         {/* Plan v3.1 Phase 5 — coach page organized into tabs so a coach on a
             phone can reach messages, training and activity without a long scroll. */}
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs defaultValue={searchParams.get("tab") || "overview"} className="w-full">
           <TabsList className="grid h-auto w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="development">Development</TabsTrigger>
