@@ -1443,6 +1443,13 @@
       "when": 1793934671881,
       "tag": "0205_coach_checkins_always_visible_testing_day_notices",
       "breakpoints": true
+    },
+    {
+      "idx": 206,
+      "version": "7",
+      "when": 1793995182659,
+      "tag": "0206_org_sponsorships_admin_read_fix",
+      "breakpoints": true
     }
   ]
 }
