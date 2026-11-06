@@ -13,3 +13,4 @@
 - Self movement re-screen prompts use only movement_done_at at 84 local calendar days and save complete new bilateral entries to the same assessment, retaining historical pain flags. Why: profile updates and copied old control answers must not delay or fake re-screening.
 - Saved movement drafts remount by viewer/subject and bind to the canonical screen date before writing. Why: account, coach-view or source changes must not carry another assessment's unsaved answers.
 - Re-screen updates compare the captured movement_done_at on the server and require returned confirmation. Why: a newer screen saved on another device must not be overwritten by a stale draft.
+- Initial Assessment athletic test and every 6-week re-test share `src/lib/assessment/positionBattery.ts` (program-filtered tabs + saved primary position, registry filter only). Why: results compare test to test and no test is invented.

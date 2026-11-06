@@ -63,4 +63,3 @@
 
 - Player-facing questions, prompts and cards take modules from `useProgramModules`/`playerProgramModules` (`_shared/programAccess.ts`), which applies the owner-only 5Tool rule; access/purchase checks keep raw `useSubscription`. Why: one program judge everywhere without changing what the owner can open.
 - Coach game entry front door is `/coach/log-game` over existing `coach_log_entry` lines and `coach_log_general_game` (per-player gp_games, no stats). Why: every save lands on each player's own record with the server connection/jersey guards.
-- Initial Assessment athletic test and every 6-week re-test share `src/lib/assessment/positionBattery.ts` (program-filtered tabs + saved primary position, registry filter only). Why: results compare test to test and no test is invented.
