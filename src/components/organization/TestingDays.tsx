@@ -67,7 +67,7 @@ export function TestingDays({ orgId }: { orgId: string }) {
   const schedule = () => {
     const list = tests.split(",").map((t) => t.trim()).filter(Boolean);
     if (!athlete || list.length === 0) return toast.error("Pick a player and list at least one test.");
-    call("schedule_testing_day", { _org: orgId, _athlete: athlete, _date: date, _tests: list }, "Testing day scheduled. Coaches were notified.").then(() => setTests(""));
+    call("schedule_testing_day", { _org: orgId, _athlete: athlete, _date: date, _tests: list }, "Testing day scheduled. The player and their coaches were notified.").then(() => setTests(""));
   };
 
   return (
