@@ -48,7 +48,7 @@ export interface MoundGateInput {
 /** Arm units still free today after every counted row already on the day. */
 export function armRoomLeft(blocks: readonly Block[], i: Pick<MoundGateInput, 'role' | 'age' | 'date' | 'history' | 'sport'>): number {
   if (!i.history || i.history.unavailable || i.age === null) return 0;
-  const budget = armBudget({ sport: i.sport, role: i.role, age: i.age } as Parameters<typeof armBudget>[0]);
+  const budget = armBudget(i as Parameters<typeof armBudget>[0]);
   const by = equivalentsByDay((i.history.rows ?? []).filter((r) => r.entry_date <= i.date));
   const since = new Date(Date.parse(i.date) - 6 * 86400000).toISOString().slice(0, 10);
   const room = Math.max(0, Math.min(budget.daily - (by.get(i.date) ?? 0), budget.weekly - [...by].filter(([d]) => d >= since).reduce((n, [, v]) => n + v, 0)));
@@ -65,7 +65,7 @@ export function pitcherMoundGate<T extends Block>(blocks: readonly T[], i: Mound
 
   const ladder = fullPitcherWarmupRows(i.sport);
   const ladderCost = throwUnits(ladder.map((d) => d.armEvent!));
-  const replacedCost = rows.filter((d) => isCatchPlay(d) || (isPullDown(d) && !wantsMound ? false : isPullDown(d))).reduce((n, d) => n + throwUnits([d.armEvent!]), 0);
+  const replacedCost = rows.filter((d) => isCatchPlay(d) || (i.sport === 'baseball' && isPullDown(d))).reduce((n, d) => n + throwUnits([d.armEvent!]), 0);
   const why = i.armProtected ? 'arm_protected' : i.lowReadiness ? 'low_readiness' : i.buildUp ? 'build_up' : null;
   const fits = !why && ladderCost <= armRoomLeft(blocks, i) + replacedCost;
 
