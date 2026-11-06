@@ -5993,6 +5993,8 @@ const handler = async (req: Request): Promise<Response> => {
       });
       // Protected saved work is an expected "keep the day" outcome, not a crash.
       if (adjErr && /protected/i.test(String(adjErr.message ?? ""))) return json({ ok: true, kept: true, adjusted: false, plan_date: planDate, reason: "protected_saved_work" }, 200);
+      // Another save changed the day first: an expected revision conflict the caller retries once from fresh saved work.
+      if (adjErr && /changed/i.test(String(adjErr.message ?? ""))) return json({ ok: false, conflict: true, error: "adjust_failed", message: adjErr.message, plan_date: planDate }, 200);
       if (adjErr) return json({ error: "adjust_failed", message: adjErr.message }, 500);
       return json({ ok: true, adjusted: true, plan_date: planDate, ...(adj as any),...(composed?{user_id:user.id,bunting_entitled:bsModules.includes(`${sport}_5tool`)||bsModules.includes(`${sport}_golden2way`)||['hitting',`${sport}_hitting`].some(m=>bsModules.includes(m))&&['throwing',`${sport}_throwing`].some(m=>bsModules.includes(m))}: {}) }, 200);
     }
