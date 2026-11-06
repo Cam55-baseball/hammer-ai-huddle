@@ -436,7 +436,13 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       let lastErr: unknown = null;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const { error } = await invokeOnce(change);
+          const { data, error } = await invokeOnce(change);
+          // Another save changed this day first (even after one fresh reread):
+          // the newest saved day stands, so refresh it instead of failing.
+          if (!error && (data as any)?.conflict === true) {
+            console.debug("[wk-generate-daily] day changed by another save — showing the newest saved day");
+            break;
+          }
           if (error) {
             // Logged or chosen work protects the saved day: the server keeps it
             // as-is. That is a definite, correct answer, not a failure.
