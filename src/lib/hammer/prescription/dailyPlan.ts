@@ -21,6 +21,7 @@ import { subscriptionSchedule } from './subscriptionSchedule';
 import { planningGear } from '../../../../supabase/functions/_shared/planSwap/planningGear';
 import { pitchingDay, guardArmDrills, eassArmEvent, windmillPlanningDrills, type PlanningArmHistory } from './pitchingDay';
 import {finalArmGuard} from './finalArmGuard';
+import {pitcherMoundGate} from './pitcherMoundGate';
 import { pitcherYardRuleApplies } from '../../../../supabase/functions/_shared/wic/conditioning/yards';
 import { ownerConditioningPlan } from './ownerConditioningPlan';
 import { structureSkillSession } from './skillSessionStructure';
@@ -2734,7 +2735,15 @@ export function buildHammerDailyPlan(
   // Owner Nov 1 round 6 Part 3: returning hitters — prescribed effort, tee/front toss only for injury/under-13 start or the bridge.
   const hitReturned = roadmapInputs.hitterReturn ? cared.map(b => { if (b.modality !== 'hitting' || b.status !== 'ready') return b; const r = applyHitterReturn(b.drills as any[], roadmapInputs.hitterReturn ?? null, new Set(proj.equipmentList)); return { ...b, drills: r.rows as typeof b.drills, steps: drillsToSteps(r.rows as typeof b.drills), because: [...(b.because ?? []), ...r.because] }; }) : cared;
   // Owner Nov 3 round 2: position players have no Throwing card (warm-up section + Defense); pitchers keep it, ordered.
-  const warmed = withCooldownInRecovery((!access ? withWarmupThrows(hitReturned) : placeThrowsByRole(withWarmupThrows(hitReturned) as any[], { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === 'pitcher'), toSteps: (d) => drillsToSteps(d as any) })) as any[], { toSteps: (d) => drillsToSteps(d as any) }) as typeof hitReturned;
+  const warmedRaw = withCooldownInRecovery((!access ? withWarmupThrows(hitReturned) : placeThrowsByRole(withWarmupThrows(hitReturned) as any[], { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === 'pitcher'), toSteps: (d) => drillsToSteps(d as any) })) as any[], { toSteps: (d) => drillsToSteps(d as any) }) as typeof hitReturned;
+  // Locked by owner Nov 6: no full pitcher catch-play warm-up → no pull-downs → no mound work.
+  const gateDate=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const gateAge=ctx.get<number>('age_years')?.value??null;
+  const warmed = (access?.hasPitching ? pitcherMoundGate(warmedRaw as any[], { sport, role: access.pitcherOnly?'pitcher':'two_way', age: gateAge, date: gateDate, history: roadmapInputs.armHistory,
+    lowReadiness: (ctx.get<number>('readiness')?.value ?? 1) < 0.55 || !!(ctx.get<{ arm_sore?: boolean }>('daily_log')?.value as { arm_sore?: boolean })?.arm_sore,
+    armProtected: physio.activeAreas.some((r: string)=>['shoulder','elbow','ucl','forearm'].includes(r)),
+    buildUp: !!(roadmapInputs.catchPlayFacts && catchPlayPlanInputs(roadmapInputs.catchPlayFacts, { today: gateDate, sport, position: 'P', age: gateAge }).buildUp?.active),
+  }).map((b: any, k: number) => b === (warmedRaw as any[])[k] ? b : { ...b, steps: drillsToSteps(b.drills) }) : warmedRaw) as typeof hitReturned;
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map(day=>({...day,modalities:day.modalities.map(m=>m.key==='throwing'?{...m,key:'pitching' as const}:m)})) : weeklyRoadmap;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
