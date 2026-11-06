@@ -1324,6 +1324,47 @@ function HammerDailyPlanBody({
           const throwingBlock = plan.blocks.find((b) => b.modality === "throwing");
           const armCareOwner: import("@/components/hammer/ArmCareBudgetContext").ArmCareOwner =
             throwingBlock && prescribedToday(throwingBlock) ? "throwing" : "lift";
+          // Locked by owner Nov 6: pitching (incl. windmill) always renders right after the throwing card.
+          const orderedOther = pitchingAfterThrowing(otherBlocks);
+          const throwAt = orderedOther.findIndex((b) => b.modality === "throwing");
+          const firstOther = throwAt >= 0 ? orderedOther.slice(0, throwAt + 1) : [];
+          const laterOther = throwAt >= 0 ? orderedOther.slice(throwAt + 1) : orderedOther;
+          const renderOther = (b) => {
+                const adj = adaptive.find((a) => a.modality === b.modality);
+                const isBunting = b.modality === 'hitting' && b.drills.length > 0 && b.drills.every(drill => !!drill.bunt);
+                const cardKey = `${isBunting ? 'bunting' : b.modality}_${b.side ?? 'x'}`;
+                const category = isBunting ? 'Bunting' : BLOCK_CATEGORY[b.modality] ?? b.title;
+                if (b.status === 'awaiting-input') return <BlockCard
+                  key={`${b.modality}-${b.side ?? 'x'}`}
+                  block={b}
+                  onNavigate={r => navigate(cardPracticeRoute(r, undefined, getTodayDate()))}
+                />;
+                return (
+                  <PocketCard
+                    key={cardKey}
+                    id={`block_${cardKey}`}
+                    category={category}
+                    focus={blockFocus(b.title, category, b.side)}
+                    tone="bg-muted-foreground"
+                    planDate={pocketDate}
+                    practiceLogging={logPractice && ["throwing", "pitching", "defense", "hitting"].includes(b.modality)}
+                    practiceRoute={practiceRouteFor(b)}
+                    prescribed={prescribedToday(b)}
+                    progress={blockProgress(b)}
+                    countLabel={b.durationMin ? `${b.durationMin} min` : null}
+                    intro={POCKET_INTROS[b.modality] ?? null}
+                  >
+                    {() => (
+                      <BlockCard
+                        block={b}
+                        onNavigate={(r) => navigate(cardPracticeRoute(r, undefined, getTodayDate()))}
+                        onEngagementChanged={bumpEngagement}
+                        adaptiveNote={adj?.note}
+                      />
+                    )}
+                  </PocketCard>
+                );
+              });
           return (
             <ArmCareBudgetProvider owner={armCareOwner}>
              <TodayRhythmProvider planDate={pocketDate}>
@@ -1393,13 +1434,6 @@ function HammerDailyPlanBody({
                   )}
                 </PocketCard>
               </ErrorBoundary>
-              {wkRx.grouped.windmillCard.length > 0 && (
-                <ErrorBoundary label="wk-windmill">
-                  <PocketCard id="windmill" progress={progressOf(wkRx.grouped.windmillCard)} intro={POCKET_INTROS.windmill} category="Windmill pitching" focus={pocketFocus(wkRx.grouped.windmillCard)} tone="bg-primary" planDate={pocketDate} practiceRoute={cardPracticeRoute("/practice?module=pitching", { modality: "pitching", activity: "Windmill pitching" }, getTodayDate())} prescribed countLabel={countLabel(wkRx.grouped.windmillCard)}>
-                    {() => <WkWindmillCard />}
-                  </PocketCard>
-                </ErrorBoundary>
-              )}
               <ErrorBoundary label="game-log-prompt">
                 <GameLogPromptCard />
                 <PracticeLogPromptCard />
@@ -1410,6 +1444,14 @@ function HammerDailyPlanBody({
               <ErrorBoundary label="pitcher-schedule">
                 <PitcherScheduleGate />
               </ErrorBoundary>
+              {firstOther.map(renderOther)}
+              {wkRx.grouped.windmillCard.length > 0 && (
+                <ErrorBoundary label="wk-windmill">
+                  <PocketCard id="windmill" progress={progressOf(wkRx.grouped.windmillCard)} intro={POCKET_INTROS.windmill} category="Windmill pitching" focus={pocketFocus(wkRx.grouped.windmillCard)} tone="bg-primary" planDate={pocketDate} practiceRoute={cardPracticeRoute("/practice?module=pitching", { modality: "pitching", activity: "Windmill pitching" }, getTodayDate())} prescribed countLabel={countLabel(wkRx.grouped.windmillCard)}>
+                    {() => <WkWindmillCard />}
+                  </PocketCard>
+                </ErrorBoundary>
+              )}
               {showPitching && !plan.blocks.some(b=>b.modality==='pitching') && plan.blocks.some(b => b.modality === "throwing" && prescribedToday(b)) && (
                 <ErrorBoundary label="pitching-card">
                   <PocketCard
@@ -1431,42 +1473,7 @@ function HammerDailyPlanBody({
                   </PocketCard>
                 </ErrorBoundary>
               )}
-              {otherBlocks.map((b) => {
-                const adj = adaptive.find((a) => a.modality === b.modality);
-                const isBunting = b.modality === 'hitting' && b.drills.length > 0 && b.drills.every(drill => !!drill.bunt);
-                const cardKey = `${isBunting ? 'bunting' : b.modality}_${b.side ?? 'x'}`;
-                const category = isBunting ? 'Bunting' : BLOCK_CATEGORY[b.modality] ?? b.title;
-                if (b.status === 'awaiting-input') return <BlockCard
-                  key={`${b.modality}-${b.side ?? 'x'}`}
-                  block={b}
-                  onNavigate={r => navigate(cardPracticeRoute(r, undefined, getTodayDate()))}
-                />;
-                return (
-                  <PocketCard
-                    key={cardKey}
-                    id={`block_${cardKey}`}
-                    category={category}
-                    focus={blockFocus(b.title, category, b.side)}
-                    tone="bg-muted-foreground"
-                    planDate={pocketDate}
-                    practiceLogging={logPractice && ["throwing", "pitching", "defense", "hitting"].includes(b.modality)}
-                    practiceRoute={practiceRouteFor(b)}
-                    prescribed={prescribedToday(b)}
-                    progress={blockProgress(b)}
-                    countLabel={b.durationMin ? `${b.durationMin} min` : null}
-                    intro={POCKET_INTROS[b.modality] ?? null}
-                  >
-                    {() => (
-                      <BlockCard
-                        block={b}
-                        onNavigate={(r) => navigate(cardPracticeRoute(r, undefined, getTodayDate()))}
-                        onEngagementChanged={bumpEngagement}
-                        adaptiveNote={adj?.note}
-                      />
-                    )}
-                  </PocketCard>
-                );
-              })}
+              {laterOther.map(renderOther)}
               {coachCards(["hitting", "pitching", "throwing", "fielding", "baserunning", "vision"])}
               <ErrorBoundary label="wk-conditioning">
                 <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} category={runningCardTitle({ has5Tool: combinedBaseRunning, hasG2W: false })} focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} practiceLogging={logPractice} practiceRoute={baseConditioning.length > 0 ? cardPracticeRoute("/practice?module=baserunning", { modality: "baserunning", activity: "Base-route running" }, getTodayDate()) : null} prescribed={wkRx.grouped.conditioningCard.length > 0 || baseConditioning.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
