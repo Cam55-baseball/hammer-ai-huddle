@@ -4706,6 +4706,84 @@ function finalArmGuard(blocks, input) {
   });
 }
 
+// src/lib/hammer/prescription/pitcherMoundGate.ts
+init_catchPlay();
+var REDUCED_CATCH_REASON = "Your arm budget only fits a short catch play today, so no pull-downs or mound work.";
+var REASON_BY = {
+  low_readiness: "Low readiness today means only a short catch play, so no pull-downs or mound work.",
+  arm_protected: "Your arm is being protected today, so only a short catch play \u2014 no pull-downs or mound work.",
+  build_up: "You're building your arm back up, so only a short catch play \u2014 no pull-downs or mound work.",
+  budget: REDUCED_CATCH_REASON
+};
+var MOUND = /bullpen|mound|circle|side session|shortbox|short box|live|outing prep/i;
+var PULL = /pull[-_ ]?downs?/i;
+var CATCH = /catch play|extension toss|catch|partner toss|flat-ground toss|long-toss|long toss|warm-up toss|warm-up throws/i;
+function isMoundWork(d3) {
+  if (!d3.armEvent) return false;
+  if (d3.armEvent.kind === "pitch" && d3.pitchTags?.moundType) return d3.pitchTags.moundType !== "flat_ground";
+  return MOUND.test(d3.name ?? "") && !/flat[- ]ground/i.test(d3.name ?? "");
+}
+var isPullDown = (d3) => d3.eassCategory === "pulldown" || PULL.test(d3.name ?? "");
+var isCatchPlay = (d3) => !!d3.armEvent && d3.armEvent.kind !== "pitch" && !isPullDown(d3) && !isMoundWork(d3) && d3.stage !== "full_go" && CATCH.test(d3.name ?? "");
+function fullPitcherWarmupRows(sport) {
+  return pitcherIntervalWarmup(sport).map((r) => ({
+    name: r.name,
+    dosage: `${r.throws} throws at ${r.distanceFt} ft`,
+    stage: "prep",
+    armCard: "throwing",
+    eassCategory: r.part === "pull_down" ? "pulldown" : "catch_play",
+    armEvent: { kind: r.part === "pull_down" ? "long_toss" : "warmup", count: r.throws, intent: r.intent, estimated: false },
+    fullPitcherWarmup: true
+  }));
+}
+function armRoomLeft(blocks, i) {
+  if (!i.history || i.history.unavailable || i.age === null) return 0;
+  const budget = armBudget(i);
+  const by = equivalentsByDay((i.history.rows ?? []).filter((r) => r.entry_date <= i.date));
+  const since = new Date(Date.parse(i.date) - 6 * 864e5).toISOString().slice(0, 10);
+  const room = Math.max(0, Math.min(budget.daily - (by.get(i.date) ?? 0), budget.weekly - [...by].filter(([d3]) => d3 >= since).reduce((n, [, v]) => n + v, 0)));
+  const used = blocks.filter((b) => b.status === "ready").flatMap((b) => b.drills).reduce((n, d3) => n + (d3.armEvent ? throwUnits([d3.armEvent]) : 0), 0);
+  return room - used;
+}
+function pitcherMoundGate(blocks, i) {
+  const arm = (b) => b.status === "ready" && (b.modality === "pitching" || b.modality === "throwing");
+  const rows3 = blocks.filter(arm).flatMap((b) => b.drills);
+  const wantsMound = rows3.some(isMoundWork);
+  const hasPull = rows3.some(isPullDown);
+  if (!wantsMound && !hasPull) return [...blocks];
+  const ladder = fullPitcherWarmupRows(i.sport);
+  const ladderCost = throwUnits(ladder.map((d3) => d3.armEvent));
+  const replacedCost = rows3.filter((d3) => isCatchPlay(d3) || i.sport === "baseball" && isPullDown(d3)).reduce((n, d3) => n + throwUnits([d3.armEvent]), 0);
+  const why = i.armProtected ? "arm_protected" : i.lowReadiness ? "low_readiness" : i.buildUp ? "build_up" : null;
+  const fits2 = !why && ladderCost <= armRoomLeft(blocks, i) + replacedCost;
+  if (fits2 && wantsMound) {
+    let placed = false;
+    const out = blocks.map((b) => {
+      if (!arm(b)) return b;
+      const kept = b.drills.filter((d3) => !isCatchPlay(d3) && !(i.sport === "baseball" && isPullDown(d3) && !d3.fullPitcherWarmup));
+      if (b.modality === "throwing" && !placed) {
+        placed = true;
+        return { ...b, drills: [...ladder, ...kept] };
+      }
+      return { ...b, drills: kept };
+    });
+    if (!placed) {
+      const pi = out.findIndex((b) => arm(b));
+      out[pi] = { ...out[pi], drills: [...ladder, ...out[pi].drills] };
+    }
+    return out;
+  }
+  const reason = REASON_BY[why ?? "budget"];
+  const dry = { name: "Dry mechanics \u2014 no-ball deliveries on flat ground", dosage: "2 x 8 slow deliveries", stage: "drills", armCard: "pitching", eassCategory: "dry_mechanics" };
+  return blocks.map((b) => {
+    if (!arm(b)) return b;
+    const kept = b.drills.filter((d3) => !isPullDown(d3) && !isMoundWork(d3));
+    if (kept.length === b.drills.length) return b;
+    const drills = b.modality === "pitching" && !kept.some((d3) => d3.eassCategory === "dry_mechanics") ? [...kept, dry] : kept;
+    return { ...b, drills, because: [...(b.because ?? []).filter((x) => x !== reason), reason] };
+  });
+}
+
 // supabase/functions/_shared/wic/conditioning/yards.ts
 function conditioningProgram(sport, modules, primaryFocus) {
   const program = programOf(sport, modules);
@@ -10637,7 +10715,19 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     const r = applyHitterReturn(b.drills, roadmapInputs.hitterReturn ?? null, new Set(proj.equipmentList));
     return { ...b, drills: r.rows, steps: drillsToSteps(r.rows), because: [...b.because ?? [], ...r.because] };
   }) : cared;
-  const warmed = withCooldownInRecovery(!access ? withWarmupThrows(hitReturned) : placeThrowsByRole(withWarmupThrows(hitReturned), { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === "pitcher"), toSteps: (d3) => drillsToSteps(d3) }), { toSteps: (d3) => drillsToSteps(d3) });
+  const warmedRaw = withCooldownInRecovery(!access ? withWarmupThrows(hitReturned) : placeThrowsByRole(withWarmupThrows(hitReturned), { pitcher: access?.hasPitching === true && (access.pitcherOnly || roadmapInputs.pitcherOutings?.primaryFocus === "pitcher"), toSteps: (d3) => drillsToSteps(d3) }), { toSteps: (d3) => drillsToSteps(d3) });
+  const gateDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const gateAge = ctx.get("age_years")?.value ?? null;
+  const warmed = access?.hasPitching ? pitcherMoundGate(warmedRaw, {
+    sport,
+    role: access.pitcherOnly ? "pitcher" : "two_way",
+    age: gateAge,
+    date: gateDate,
+    history: roadmapInputs.armHistory,
+    lowReadiness: (ctx.get("readiness")?.value ?? 1) < 0.55 || !!ctx.get("daily_log")?.value?.arm_sore,
+    armProtected: physio.activeAreas.some((r) => ["shoulder", "elbow", "ucl", "forearm"].includes(r)),
+    buildUp: !!(roadmapInputs.catchPlayFacts && catchPlayPlanInputs(roadmapInputs.catchPlayFacts, { today: gateDate, sport, position: "P", age: gateAge }).buildUp?.active)
+  }).map((b, k) => b === warmedRaw[k] ? b : { ...b, steps: drillsToSteps(b.drills) }) : warmedRaw;
   const savedRoadmap = access?.hasPitching ? weeklyRoadmap.map((day2) => ({ ...day2, modalities: day2.modalities.map((m) => m.key === "throwing" ? { ...m, key: "pitching" } : m) })) : weeklyRoadmap;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));
