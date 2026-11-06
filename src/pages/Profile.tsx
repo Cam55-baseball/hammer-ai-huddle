@@ -26,7 +26,8 @@ import { SiTiktok } from "react-icons/si";
 import { UserMenu } from "@/components/UserMenu";
 import { PositionListEditor } from "@/components/profile/PositionListEditor";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
-import { billingRows, heldPlanLabels } from "@/lib/subscription/planDisplay";
+import { billingRows } from "@/lib/subscription/planDisplay";
+import { HeldPlanBadges, PlanBillingCards } from "@/components/subscription/HeldPlans";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
 import { OnboardingStatusCard } from "@/components/settings/OnboardingStatusCard";
@@ -100,7 +101,6 @@ export default function Profile() {
   const { isAdmin } = useAdminAccess();
   const { modules: subscribedModules, plan_modules: planModules, primary_sport: planPrimarySport, module_details, subscription_end, has_discount, discount_percent, loading: subLoading, refetch } = useSubscription();
   // Owner Nov 6 r5: plan names come only from the shared activePlans judge.
-  const planLabels = heldPlanLabels(planModules ?? [], planPrimarySport ?? 'baseball');
   const planBillingRows = billingRows(module_details, planModules ?? [], planPrimarySport ?? 'baseball');
   const navigate = useNavigate();
   const goBack = useSmartBack();
@@ -1838,13 +1838,7 @@ export default function Profile() {
             <div className="space-y-4">
               <div>
                 <h4 className="font-semibold mb-2">{t('profile.activeModules')}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {planLabels.map((label) => (
-                    <Badge key={label} variant="outline" data-held-plan>
-                      {label}
-                    </Badge>
-                  ))}
-                </div>
+                <HeldPlanBadges planModules={planModules ?? []} primarySport={planPrimarySport ?? 'baseball'} />
               </div>
 
               {has_discount && discount_percent !== null && (
@@ -1915,19 +1909,7 @@ export default function Profile() {
                 )}
               </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {planBillingRows.map((row) => (
-                    <ModuleManagementCard
-                      key={row.key}
-                      sport={row.sport}
-                      module={row.module}
-                      details={row.details}
-                      planTitle={row.planTitle}
-                      note={row.note}
-                      onActionComplete={refetch}
-                    />
-                ))}
-              </div>
+              <PlanBillingCards moduleDetails={module_details} planModules={planModules ?? []} primarySport={planPrimarySport ?? 'baseball'} onActionComplete={refetch} />
             </div>
           </Card>
         )}
