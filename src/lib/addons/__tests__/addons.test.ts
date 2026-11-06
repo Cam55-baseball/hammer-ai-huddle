@@ -12,7 +12,7 @@ describe("Early recap: one per block, after 14 days (owner Nov 6)", () => {
   it("is closed before 14 days of the current block, with days left", () => {
     const r = earlyRecapEligibility({ hasActivePlan: true, anchor, now: at(10), boughtBlockStarts: [] });
     expect(r.ok).toBe(false);
-    if (!r.ok) { expect(r.reason).toBe("too_early"); expect(r.daysLeft).toBe(4); }
+    { const x = r as any; expect(x.reason).toBe("too_early"); expect(x.daysLeft).toBe(4); }
   });
   it("opens on day 14", () => {
     expect(earlyRecapEligibility({ hasActivePlan: true, anchor, now: at(14), boughtBlockStarts: [] }).ok).toBe(true);
@@ -21,7 +21,7 @@ describe("Early recap: one per block, after 14 days (owner Nov 6)", () => {
     const b = currentBlock(anchor, at(20)).startDate;
     const r = earlyRecapEligibility({ hasActivePlan: true, anchor, now: at(20), boughtBlockStarts: [b] });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe("already_bought");
+    expect((r as any).reason).toBe("already_bought");
   });
   it("a new block counts its own 14 days and allows one more", () => {
     const first = currentBlock(anchor, at(20)).startDate;
