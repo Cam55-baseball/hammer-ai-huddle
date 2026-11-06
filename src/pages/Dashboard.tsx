@@ -456,6 +456,9 @@ export default function Dashboard() {
         ] as const).map(({ tier, Icon: ModIcon, title, desc: rawDesc, topBadge }) => {
           const desc = programsRetired ? scrubRetiredFromList(rawDesc) : rawDesc;
           const unlocked = isTierUnlocked(tier);
+          // Owner Nov 6 r5: a Golden 2Way holder holds ONE plan. The other tiles are its parts, not
+          // extra unlocked plans and not something to buy again.
+          const partOfGolden = !unlocked && tier !== 'golden2way' && heldPlans.includes('golden2way');
           const price = TIER_CONFIG[tier]?.price;
           return (
             <Card
@@ -466,6 +469,8 @@ export default function Dashboard() {
                   : "border-primary/40 border-2"
               }`}
               onClick={() => handleModuleSelect(tier)}
+              data-plan-tile={tier}
+              data-plan-state={unlocked ? 'unlocked' : partOfGolden ? 'part-of-golden2way' : 'locked'}
             >
               <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
                 <div className="p-2 sm:p-4 rounded-full bg-primary/10">
@@ -475,12 +480,14 @@ export default function Dashboard() {
                   <Badge variant="secondary" className="text-[10px] bg-emerald-500/15 text-emerald-600 border border-emerald-500/40">
                     <Check className="h-3 w-3 mr-1" /> Unlocked
                   </Badge>
+                ) : partOfGolden ? (
+                  <Badge variant="outline" className="text-[10px]">Part of your Golden 2Way</Badge>
                 ) : topBadge && canShowPurchaseUI ? (
                   <Badge className="bg-primary text-primary-foreground text-xs">{topBadge}</Badge>
                 ) : null}
                 <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
                   {title}
-                  {!unlocked && <Lock className="h-5 w-5" />}
+                  {!unlocked && !partOfGolden && <Lock className="h-5 w-5" />}
                 </h3>
                 <p className="text-sm sm:text-base text-muted-foreground">{desc}</p>
                 {unlocked ? (
@@ -490,6 +497,8 @@ export default function Dashboard() {
                   >
                     <ModIcon className="h-4 w-4 sm:mr-2" /> Start Training
                   </Button>
+                ) : partOfGolden ? (
+                  <Button variant="outline" className="w-full h-11">Open this part</Button>
                 ) : !canShowPurchaseUI ? (
                   <p className="text-xs text-muted-foreground">Not available on your account yet</p>
                 ) : purchaseMode === "native-linkout" ? (
