@@ -1,5 +1,6 @@
 import { TestingDayNotices } from "@/components/organization/TestingDayNotices";
 import { StaffPlanTiles } from "@/components/staff/StaffPlanTiles";
+import { AddOnsSection } from "@/components/dashboard/AddOnsSection";
 import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
 import { scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
@@ -625,6 +626,9 @@ export default function Dashboard() {
 
         {/* Coach and Organization plans — the same regular-size advertising tiles for every account (owner 2026-10-13). */}
         {!purchaseRoleLoading && canShowPurchaseUI && <StaffPlanTiles />}
+
+        {/* Add-ons (owner Nov 6): right under the Coach and Organization plans tiles. */}
+        {!purchaseRoleLoading && canShowPurchaseUI && !isStaffAccount && <AddOnsSection hasActivePlan={hasAnyTier} />}
       </div>
     </DashboardLayout>
   );

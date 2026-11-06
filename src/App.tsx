@@ -96,6 +96,8 @@ const ScoutApplicationPending = lazyWithRetry(() => import("./pages/ScoutApplica
 const SelectSport = lazyWithRetry(() => import("./pages/SelectSport"));
 const SelectModules = lazyWithRetry(() => import("./pages/SelectModules"));
 const Pricing = lazyWithRetry(() => import("./pages/Pricing"));
+const Lessons = lazyWithRetry(() => import("./pages/Lessons"));
+const AddonSuccess = lazyWithRetry(() => import("./pages/AddonSuccess"));
 const Checkout = lazyWithRetry(() => import("./pages/Checkout"));
 const AssessmentEntry = lazyWithRetry(() => import("./pages/AssessmentEntry"));
 const ProfileSetup = lazyWithRetry(() => import("./pages/ProfileSetup"));
@@ -403,6 +405,8 @@ const App = () => {
               <Route path="/select-sport" element={<SelectSport />} />
               <Route path="/select-modules" element={<SelectModules />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/lessons" element={<Lessons />} />
+              <Route path="/addons/success" element={<AddonSuccess />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/profile-setup" element={<ProfileSetup />} />
               <Route path="/activate" element={<Activate />} />
