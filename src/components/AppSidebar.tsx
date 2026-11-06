@@ -22,7 +22,7 @@ import { useVaultPendingStatus } from "@/hooks/useVaultPendingStatus";
 import { usePendingRequests } from "@/hooks/usePendingRequests";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { supabase } from "@/integrations/supabase/client";
-import { getActiveTier } from "@/utils/tierAccess";
+import { getActiveTier, sidebarPlanKeys } from "@/utils/tierAccess";
 import { branding } from "@/branding";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -233,12 +233,15 @@ export function AppSidebar() {
     const items: any[] = [];
 
     const sport = selectedSport;
-    const hasGolden = modules.includes(`${sport}_golden2way`);
-    const hasPitcherTier = modules.includes(`${sport}_pitcher`);
-    const hasFiveTool = modules.includes(`${sport}_5tool`);
-    const hasLegacyPitching = modules.includes(`${sport}_pitching`);
-    const hasLegacyHitting = modules.includes(`${sport}_hitting`);
-    const hasLegacyThrowing = modules.includes(`${sport}_throwing`);
+    // Owner Nov 6 r4: show ONLY the one plan the player holds (shared program judge). Golden 2Way's
+    // read-time skill aliases must never surface 5Tool or Complete Pitcher as separately unlocked plans.
+    const shownPlans = sidebarPlanKeys(activeTier);
+    const hasGolden = shownPlans.includes('golden2way');
+    const hasPitcherTier = shownPlans.includes('pitcher');
+    const hasFiveTool = shownPlans.includes('5tool');
+    const hasLegacyPitching = false;
+    const hasLegacyHitting = false;
+    const hasLegacyThrowing = false;
 
     // Complete Pitcher — shown if user owns Pitcher tier, Golden (which includes pitching),
     // or legacy pitching key. Owner/Admin always.
