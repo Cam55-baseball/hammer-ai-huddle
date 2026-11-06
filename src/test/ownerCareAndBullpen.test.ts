@@ -48,7 +48,7 @@ describe("bullpen before start insight", () => {
     expect(c.howSure).toBe("hunch");
     expect(c.weSee).toContain("about 71 pitches");
     expect(c.because).toContain("doesn't show what caused");
-    expect(c.because).toContain("Health answers aren't shared");
+    expect(c.because).toContain("Check-in answers aren't available here");
   });
   it("advises against pre-start bullpens when results trend worse", () => {
     const worse = { start_pitch_count: 60, days_completed_next3: 1 };
