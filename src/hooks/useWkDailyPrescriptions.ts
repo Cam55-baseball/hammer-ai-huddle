@@ -424,6 +424,15 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       console.debug("[wk-generate-daily] skipped — already in flight");
       return;
     }
+    // A signed-out or mid-sign-in moment has no session yet: asking the
+    // server then only earns a 401. Wait for the session instead.
+    {
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess?.session?.access_token) {
+        console.debug("[wk-generate-daily] skipped — no session yet");
+        return;
+      }
+    }
     inFlightRef.current = true;
     setGenerating(true);
     setFailed(false);
@@ -434,6 +443,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     const started = Date.now();
     try {
       let lastErr: unknown = null;
+      let unauth = false;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
           const { data, error } = await invokeOnce(change);
@@ -460,12 +470,23 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
           // A 409 is a definite answer (e.g. starting details missing);
           // retrying cannot change it.
           if ((e as any)?.context?.status === 409) break;
+          // Expired sign-in token: refresh once and retry. If there is still
+          // no valid session, stop quietly (Sign out / sign-in handles it).
+          if ((e as any)?.context?.status === 401) {
+            const { data: ref } = await supabase.auth.refreshSession().catch(() => ({ data: null as any }));
+            if (attempt === 0 && ref?.session) continue;
+            console.debug("[wk-generate-daily] not signed in — waiting for sign-in");
+            lastErr = null;
+            unauth = true;
+            break;
+          }
           if (attempt === 0) {
             await new Promise((r) => setTimeout(r, 1500));
           }
         }
       }
       if (lastErr) throw lastErr;
+      if (unauth) return;
       console.debug("[wk-generate-daily] ok", { ms: Date.now() - started });
       await qc.invalidateQueries({ queryKey: ["wk-rx", user.id, planDate] });
       await qc.invalidateQueries({ queryKey: ["wk-plan-changes", user.id, planDate] });
@@ -561,9 +582,12 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     const key = `${user.id}:${planDate}:${(rows[0] as any)?.created_at ?? ""}`;
     if (verifiedKey.current === key) return;
     verifiedKey.current = key;
-    void supabase.functions
-      .invoke("wk-generate-daily", { body: { plan_date: planDate, verify_saved: true } })
-      .then(({ data, error }) => {
+    void supabase.auth.getSession().then(({ data: sess }) => {
+      if (!sess?.session?.access_token) { verifiedKey.current = null; return null; }
+      return supabase.functions.invoke("wk-generate-daily", { body: { plan_date: planDate, verify_saved: true } });
+    }).then((res) => {
+        if (!res) return;
+        const { data, error } = res;
         if (error) { console.debug("[wk-verify-saved] failed", error); return; }
         const ne = (data as any)?.next_eligible;
         if (ne && typeof ne === "object") setNextEligible(ne);
