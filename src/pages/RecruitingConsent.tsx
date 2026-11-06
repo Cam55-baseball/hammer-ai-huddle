@@ -21,12 +21,13 @@ import { TranscriptUploadCard } from "@/components/recruiting/TranscriptUploadCa
 import {
   CONSENT_SCOPES, SCOPE_LABEL, scopeColumn, statusLine, guardianCleared, type GranularConsent,
 } from "@/lib/recruiting/consentStatus";
+import { CHECKINS_ALWAYS_SHARED } from "@/lib/recruiting/checkinsAlwaysShared";
 
 const SCOPE_HELP: Record<string, string> = {
   profile: "Name, school, position and grad year.",
   metrics: "Test results such as sprint, jump and velocity.",
   video: "Clips you've uploaded.",
-  health: "Injury and health notes. Kept separate from everything else.",
+  health: "Detailed health profile: medications, injury history and nutrition targets.",
   academics: "GPA, test scores and transcript you add.",
   contact: "Scouts and coaches may message you.",
 };
@@ -83,6 +84,12 @@ export default function RecruitingConsent() {
                 Stop sharing everything
               </Button>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm font-medium" data-testid="checkins-always-shared">{CHECKINS_ALWAYS_SHARED}</p>
           </CardContent>
         </Card>
 
