@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { Input } from "@/components/ui/input";
+import { PROGRAM_NAMES } from "../../../supabase/functions/_shared/programAccess";
 import { athletesOnly, searchSponsorOptions, sponsorOptions, type SponsorOption } from "@/lib/organization/orgPeople";
 
 /** Searchable athlete picker: full names, team and position, sorted by name. */
@@ -32,10 +33,11 @@ export function SponsorPlayerPicker({ options, value, onChange }: { options: Spo
   );
 }
 
+// Owner Nov 6 r5: names from the shared program judge; each sponsorship row names only its own plan.
 const PLANS = [
-  { tier: "pitcher", name: "Complete Pitcher", price: "$200/month" },
-  { tier: "5tool", name: "5Tool Player", price: "$300/month" },
-  { tier: "golden2way", name: "The Golden 2Way", price: "$400/month" },
+  { tier: "pitcher", name: PROGRAM_NAMES.pitcher, price: "$200/month" },
+  { tier: "5tool", name: PROGRAM_NAMES["5tool"], price: "$300/month" },
+  { tier: "golden2way", name: PROGRAM_NAMES.golden2way, price: "$400/month" },
 ];
 const STATUS_LABEL: Record<string, string> = {
   pending: "Waiting for payment", scheduled: "Starts when the player's own paid month ends", active: "Active",
@@ -122,7 +124,7 @@ export function SponsorshipsCard({ orgId }: { orgId: string }) {
           {(data?.rows ?? []).length === 0 && <p className="text-sm text-muted-foreground">No sponsored players yet.</p>}
           {(data?.rows ?? []).map((r) => (
             <div key={r.id} className="rounded-lg border p-3 text-sm space-y-1">
-              <div className="flex justify-between gap-2">
+              <div className="flex justify-between gap-2" data-sponsored-plan={r.tier}>
                 <span className="font-medium">{data?.names.get(r.player_id) ?? "Player"}</span>
                 <span className="text-muted-foreground">{PLANS.find((p) => p.tier === r.tier)?.name} · {r.sport}</span>
               </div>
