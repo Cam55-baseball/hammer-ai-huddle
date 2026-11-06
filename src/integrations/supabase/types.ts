@@ -5061,18 +5061,24 @@ export type Database = {
       coach_lineup_players: {
         Row: {
           athlete_id: string
+          batting_order: number | null
           jersey: string
           lineup_id: string
+          position: string | null
         }
         Insert: {
           athlete_id: string
+          batting_order?: number | null
           jersey: string
           lineup_id: string
+          position?: string | null
         }
         Update: {
           athlete_id?: string
+          batting_order?: number | null
           jersey?: string
           lineup_id?: string
+          position?: string | null
         }
         Relationships: [
           {

@@ -1429,6 +1429,13 @@
       "when": 1793922540623,
       "tag": "0203_coach_saved_lineups_and_readiness",
       "breakpoints": true
+    },
+    {
+      "idx": 204,
+      "version": "7",
+      "when": 1793925434537,
+      "tag": "0204_lineup_player_position_order",
+      "breakpoints": true
     }
   ]
 }

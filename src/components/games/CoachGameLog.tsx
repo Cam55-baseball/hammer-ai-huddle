@@ -17,22 +17,22 @@ import { cleanDetails, emptyDetails, type DetailsInput } from "@/lib/coach/coach
 import { generalGameInput, teamLinesToSave, type CoachGameMode, type TeamLineRow } from "@/lib/coach/coachLogging";
 import { scoreLine } from "@/lib/coach/games";
 import { useAuth } from "@/hooks/useAuth";
-import { draftFrom, sameAsSaved, validateLineup, saveLineup, updateLineup, renameLineup, deleteLineup, type DraftRow } from "@/lib/coach/savedLineups";
+import { gameSpots, withLineupSpot, positionsFor, positionLabel, draftFrom, sameAsSaved, validateLineup, saveLineup, updateLineup, renameLineup, deleteLineup, type DraftRow } from "@/lib/coach/savedLineups";
 
 const today = () => new Date().toLocaleDateString("en-CA");
 
-interface Lineup { id: string; name: string; players: { athlete_id: string; jersey: string; name: string }[] }
+interface Lineup { id: string; name: string; players: { athlete_id: string; jersey: string; name: string; position?: string | null; batting_order?: number | null }[] }
 
 function useLineups() {
   return useQuery({
     queryKey: ["coach-lineups-log"],
     queryFn: async (): Promise<Lineup[]> => {
-      const { data: ls, error } = await (supabase as any).from("coach_lineups").select("id, name, coach_lineup_players(athlete_id, jersey)").order("created_at", { ascending: false });
+      const { data: ls, error } = await (supabase as any).from("coach_lineups").select("id, name, coach_lineup_players(athlete_id, jersey, position, batting_order)").order("created_at", { ascending: false });
       if (error) throw error;
       const ids = [...new Set((ls ?? []).flatMap((l: any) => (l.coach_lineup_players ?? []).map((p: any) => p.athlete_id)))];
       const { data: profiles } = ids.length ? await supabase.from("profiles").select("id, full_name").in("id", ids as string[]) : { data: [] as any[] };
       const name = new Map((profiles ?? []).map((p: any) => [p.id, p.full_name || "Player"]));
-      return (ls ?? []).map((l: any) => ({ id: l.id, name: l.name, players: (l.coach_lineup_players ?? []).map((p: any) => ({ athlete_id: p.athlete_id, jersey: p.jersey, name: name.get(p.athlete_id) ?? "Player" })) }));
+      return (ls ?? []).map((l: any) => ({ id: l.id, name: l.name, players: (l.coach_lineup_players ?? []).map((p: any) => ({ athlete_id: p.athlete_id, jersey: p.jersey, position: p.position ?? null, batting_order: p.batting_order ?? null, name: name.get(p.athlete_id) ?? "Player" })) }));
     },
   });
 }
@@ -48,7 +48,7 @@ function GameBasics({ date, setDate, opponent, setOpponent, parent, setParent }:
 }
 
 /** Owner Nov 5 (late): build a lineup, "Save this lineup", "Use a saved lineup", and rename/delete in "My lineups". */
-function LineupBuilder({ lineups, onReady }: { lineups: Lineup[]; onReady: (id: string | null) => void }) {
+function LineupBuilder({ lineups, onReady, onSpots }: { lineups: Lineup[]; onReady: (id: string | null) => void; onSpots: (s: ReturnType<typeof gameSpots>) => void }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { followedPlayers, loadingPlayers, fetchFollowedPlayers } = useSentActivities();
@@ -60,14 +60,16 @@ function LineupBuilder({ lineups, onReady }: { lineups: Lineup[]; onReady: (id: 
   const [draft, setDraft] = useState<DraftRow[]>([]);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sport, setSport] = useState<"baseball" | "softball">("baseball");
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameTo, setRenameTo] = useState("");
-  useEffect(() => { setDraft(draftFrom(connected, saved?.players)); setName(saved?.name ?? ""); }, [connected, saved]);
+  useEffect(() => { setDraft(draftFrom(connected, saved?.players)); setName(saved?.name ?? ""); if (saved?.players.some((p) => p.position === "DP" || p.position === "FLEX")) setSport("softball"); }, [connected, saved]);
+  useEffect(() => { onSpots(gameSpots(draft)); }, [draft]); // eslint-disable-line react-hooks/exhaustive-deps
   const matches = sameAsSaved(draft, saved?.players);
   useEffect(() => { onReady(matches ? savedId : null); }, [matches, savedId]); // eslint-disable-line react-hooks/exhaustive-deps
   const refresh = () => qc.invalidateQueries({ queryKey: ["coach-lineups-log"] });
   const save = async (asNew: boolean) => {
-    const v = validateLineup(name, draft, connectedIds);
+    const v = validateLineup(name, draft, connectedIds, sport);
     if (v.error) return toast.error(v.error);
     setBusy(true);
     try {
@@ -92,11 +94,17 @@ function LineupBuilder({ lineups, onReady }: { lineups: Lineup[]; onReady: (id: 
         {lineups.map((l) => <Button key={l.id} size="sm" variant={l.id === savedId ? "default" : "outline"} onClick={() => setSavedId(l.id)}>{l.name}</Button>)}
       </div>
     </div>
+    <div className="flex items-center gap-2 text-sm"><span>Sport</span>{(["baseball", "softball"] as const).map((sp) => <Button key={sp} size="sm" variant={sport === sp ? "default" : "outline"} onClick={() => setSport(sp)}>{sp === "baseball" ? "Baseball" : "Softball"}</Button>)}</div>
+    <p className="text-xs text-muted-foreground">Position and batting order are for this game. Change them any time; save the lineup to keep them as the defaults.</p>
     <div className="rounded-lg border divide-y">
       {draft.map((r, i) => <div key={r.athlete_id} className="flex items-center gap-2 p-2">
         <Checkbox id={`lp-${r.athlete_id}`} checked={r.included} onCheckedChange={(v) => setDraft((d) => d.map((x, k) => k === i ? { ...x, included: v === true } : x))} />
         <Label htmlFor={`lp-${r.athlete_id}`} className="flex-1 text-sm">{r.name}</Label>
-        <Input aria-label={`Jersey for ${r.name}`} className="h-9 w-20" inputMode="numeric" placeholder="#" value={r.jersey} onChange={(e) => { const j = e.target.value.replace(/[^0-9]/g, "").slice(0, 3); setDraft((d) => d.map((x, k) => k === i ? { ...x, jersey: j, included: x.included || j !== "" } : x)); }} />
+        <Input aria-label={`Jersey for ${r.name}`} className="h-9 w-16" inputMode="numeric" placeholder="#" value={r.jersey} onChange={(e) => { const j = e.target.value.replace(/[^0-9]/g, "").slice(0, 3); setDraft((d) => d.map((x, k) => k === i ? { ...x, jersey: j, included: x.included || j !== "" } : x)); }} />
+        <select aria-label={`Position for ${r.name}`} className="h-9 rounded-md border border-input bg-background px-1 text-sm" value={r.position ?? ""} onChange={(e) => setDraft((d) => d.map((x, k) => k === i ? { ...x, position: e.target.value } : x))}>
+          <option value="">Pos</option>{positionsFor(sport).map((p) => <option key={p} value={p}>{positionLabel(p)}</option>)}
+        </select>
+        <Input aria-label={`Batting order for ${r.name}`} className="h-9 w-14" inputMode="numeric" placeholder="Bat" value={r.order ?? ""} onChange={(e) => { const o = e.target.value.replace(/[^0-9]/g, "").slice(0, 2); setDraft((d) => d.map((x, k) => k === i ? { ...x, order: o } : x)); }} />
       </div>)}
     </div>
     <div className="space-y-1"><Label htmlFor="lineup-name">Lineup name</Label><Input id="lineup-name" placeholder="Varsity vs lefties" value={name} onChange={(e) => setName(e.target.value)} /></div>
@@ -135,19 +143,21 @@ function TeamGame() {
   const [busy, setBusy] = useState(false);
   const [gameDetails, setGameDetails] = useState<DetailsInput>(emptyDetails());
   const [rowDetails, setRowDetails] = useState<Record<string, DetailsInput>>({});
+  const [spots, setSpots] = useState<ReturnType<typeof gameSpots>>({});
+  const detailsFor = (id: string) => withLineupSpot(rowDetails[id] ?? emptyDetails(), spots[id]);
   const lineup = lineups.data?.find((l) => l.id === lineupId) ?? null;
   useEffect(() => { setRows((lineup?.players ?? []).map((p) => ({ ...p, played: true, values: {} }))); }, [lineup]);
   const save = async () => {
     const { save, errors } = teamLinesToSave(rows);
     if (errors.length) return toast.error(errors[0]);
     const g = cleanDetails(gameDetails); if (g.error) return toast.error(g.error);
-    for (const { row } of save) { const d = cleanDetails(rowDetails[row.athlete_id] ?? emptyDetails()); if (d.error) return toast.error(`#${row.jersey} ${row.name}: ${d.error}`); }
+    for (const { row } of save) { const d = cleanDetails(detailsFor(row.athlete_id)); if (d.error) return toast.error(`#${row.jersey} ${row.name}: ${d.error}`); }
     setBusy(true);
     let ok = 0; const failed: string[] = []; const saved: string[] = [];
     for (const { row, stats } of save) {
       try {
         const r = await saveCoachEntry({ athleteId: row.athlete_id, confirmId: row.athlete_id, kind: "game", date, opponent, stats, parentPresent: parent, lineupId: lineupId!, jersey: row.jersey }); ok++; saved.push(r.id);
-        const dErr = await saveGameDetails([r.id], rowDetails[row.athlete_id] ?? emptyDetails());
+        const dErr = await saveGameDetails([r.id], detailsFor(row.athlete_id));
         if (dErr) failed.push(`#${row.jersey} ${row.name}: line saved, details not saved (${dErr})`);
       }
       catch (e: any) { failed.push(`#${row.jersey} ${row.name}: ${e.message || "not saved"}`); }
@@ -162,7 +172,7 @@ function TeamGame() {
   if (lineups.isLoading) return <p role="status">Loading your teams…</p>;
   if (lineups.isError) return <p role="alert" className="text-sm text-destructive">Couldn't load your teams. Try again.</p>;
   return <div className="space-y-4">
-    <LineupBuilder lineups={lineups.data ?? []} onReady={setLineupId} />
+    <LineupBuilder lineups={lineups.data ?? []} onReady={setLineupId} onSpots={setSpots} />
     {lineup && <>
       <GameBasics {...{ date, setDate, opponent, setOpponent, parent, setParent }} />
       <CoachGameDetailsFields value={gameDetails} onChange={setGameDetails} scope="game" idPrefix="team-" showNotes={false} />
