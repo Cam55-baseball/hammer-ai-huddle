@@ -3637,11 +3637,11 @@ const handler = async (req: Request): Promise<Response> => {
         // Owner Nov 5 final: the body decides — very low readiness skips the extra speed session; a leg
         // pain flag (active injury or today's check-in pain spot) removes sprints.
         const veryLow = cnsReadiness <= 4 || soreness >= 8;
-        let legPain = painAreasFromInjuries(injurySlugs).leg === true;
+        let legPain = sprintBlockingPain(injurySlugs);
         try {
           const { data: tq } = await admin.from("vault_focus_quizzes").select("pain_location").eq("user_id", user.id).eq("entry_date", planDate).limit(5);
           const locs = ((tq ?? []) as any[]).flatMap((q) => Array.isArray(q.pain_location) ? q.pain_location : []).map((x) => String(x));
-          if (locs.length && painAreasFromInjuries(locs).leg) legPain = true;
+          if (locs.length && sprintBlockingPain(locs)) legPain = true;
         } catch { /* injury record still applies */ }
             const slugs = floorConditioningSlugs({ sport, isPitcher: pitcherConditioning && !isCombinedBaseConditioningProgram(schedulingModules, sport), lowReadiness: low });
             const why = low
