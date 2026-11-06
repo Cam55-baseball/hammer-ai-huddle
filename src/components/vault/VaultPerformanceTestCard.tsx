@@ -1,4 +1,5 @@
 import { formatGrade } from "@/lib/benchmarks/gradeScale";
+import { positionBattery, type BatteryModule } from "@/lib/assessment/positionBattery";
 import { bandFor } from "@/lib/intelligence/areaGrade";
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -144,20 +145,10 @@ export function VaultPerformanceTestCard({
   }, [userProfile, throwingHand, battingSide]);
 
   // Get metrics from registry, filtered by sport, module, and tier
-  const registryMetrics = selectedModule
-    ? getMetricsForContext(sport, selectedModule, densityLevel)
+  // Owner Nov 6: one position-specific battery for the Initial Assessment and every 6-week re-test.
+  const allMetrics = selectedModule
+    ? positionBattery({ sport, module: selectedModule as BatteryModule, modules: availableModules, position, densityLevel })
     : [];
-
-  // Also include 'general' metrics
-  const generalMetrics = selectedModule
-    ? getMetricsForContext(sport, 'general', densityLevel)
-    : [];
-
-  // Combine and deduplicate
-  const allMetrics = [...registryMetrics];
-  for (const gm of generalMetrics) {
-    if (!allMetrics.find(m => m.key === gm.key)) allMetrics.push(gm);
-  }
 
   // Group by category
   const categorizedMetrics: Record<string, MetricDefinition[]> = {};
