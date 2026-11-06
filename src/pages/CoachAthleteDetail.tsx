@@ -4,6 +4,7 @@ import { CoachLogForPlayer } from "@/components/coach/CoachLogForPlayer";
 import { CoachCheckinSummary } from "@/components/coach/CoachCheckinSummary";
 import { CoachPlanCard } from "@/components/coach/CoachPlanCard";
 import { CoachPlayerWeek } from "@/components/coach/CoachPlayerWeek";
+import { AddCoachNoteDialog, TAG_INSTRUCTIONS } from "@/components/coach/CoachTestsAndNotes";
 import { CoachDisciplineTab } from "@/components/coach/CoachDisciplineTab";
 import { CoachOnSpotAssessment } from "@/components/coach/CoachOnSpotAssessment";
 import { CoachMessageBox } from "@/components/coach/CoachMessageBox";
@@ -207,6 +208,13 @@ export default function CoachAthleteDetail() {
             />
           )}
         </div>
+
+        {athleteId && (
+          <section className="space-y-2 rounded-md border p-3" data-testid="coach-view-notes-issues">
+            <AddCoachNoteDialog athleteId={athleteId} triggerLabel="Notes & issues" big />
+            <p className="text-xs text-muted-foreground">{TAG_INSTRUCTIONS}</p>
+          </section>
+        )}
 
         {error && (
           <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
