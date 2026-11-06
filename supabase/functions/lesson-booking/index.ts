@@ -5,7 +5,7 @@ import { corsHeaders, json, admin, requireUser, isOwner, athleteFacts, emailOf, 
 import { googleCalendar } from "../_shared/addons/google.ts";
 import { validatePicks, dayKey } from "../_shared/addons/slots.ts";
 import { confirmSessions, approveReschedule, inviteList, type SessionRow } from "../_shared/addons/booking.ts";
-import { loadOpenSlots } from "../lesson-availability/index.ts";
+import { loadOpenSlots } from "../_shared/addons/availability.ts";
 
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("mine") }),
