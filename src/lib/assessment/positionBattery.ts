@@ -5,7 +5,7 @@
  * invents a test. Position comes from the saved primary position at render
  * time, so a position change moves the next assessment/re-test with it.
  */
-import { METRIC_CATEGORIES, getMetricsForContext, type MetricDefinition } from "@/data/performanceTestRegistry";
+import { getMetricsForContext, type MetricDefinition } from "@/data/performanceTestRegistry";
 import { normalizePositionCode } from "@/lib/drills/positionLabels";
 import type { TrainingProgram } from "../../../supabase/functions/_shared/programAccess";
 
@@ -75,6 +75,19 @@ export function positionBattery(i: BatteryInput): MetricDefinition[] {
     if (only && !only.includes(group)) continue;
     out.push(sportWording(m, i.sport));
   }
-  const order = (c: string) => (METRIC_CATEGORIES as readonly string[]).indexOf(c);
-  return out.map((m, idx) => ({ m, idx })).sort((a, b) => order(a.m.category) - order(b.m.category) || a.idx - b.idx).map(x => x.m);
+  return sortPreferred(out);
+}
+
+/** The existing preferred testing order (categories), unchanged. */
+export const PREFERRED_CATEGORY_ORDER = ['mobility','body_control','quickness','power_lower','power_upper','speed','exit_velocity','throwing_velocity','fielding','energy_system'] as const;
+function sortPreferred(list: MetricDefinition[]): MetricDefinition[] {
+  const order = (c: string) => (PREFERRED_CATEGORY_ORDER as readonly string[]).indexOf(c);
+  return list.map((m, idx) => ({ m, idx })).sort((a, b) => order(a.m.category) - order(b.m.category) || a.idx - b.idx).map(x => x.m);
+}
+
+/** Every test across the player's tabs, deduplicated, in the preferred order. */
+export function fullPositionBattery(i: Omit<BatteryInput, "module">): MetricDefinition[] {
+  const seen = new Map<string, MetricDefinition>();
+  for (const module of ["hitting", "pitching", "throwing"] as const) for (const m of positionBattery({ ...i, module })) if (!seen.has(m.key)) seen.set(m.key, m);
+  return sortPreferred([...seen.values()]);
 }

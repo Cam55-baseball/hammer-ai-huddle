@@ -1,5 +1,5 @@
 import { formatGrade } from "@/lib/benchmarks/gradeScale";
-import { positionBattery, type BatteryModule } from "@/lib/assessment/positionBattery";
+import { positionBattery, fullPositionBattery, type BatteryModule } from "@/lib/assessment/positionBattery";
 import { bandFor } from "@/lib/intelligence/areaGrade";
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -346,8 +346,7 @@ export function VaultPerformanceTestCard({
             {allowedModules && <section className="space-y-3 border-b border-border pb-4">
               <h3 className="font-semibold">Your testing order</h3>
               <ol className="list-decimal space-y-2 pl-5 text-sm">
-                {[...new Map(allowedModules.flatMap(module => [...getMetricsForContext(sport, module, densityLevel), ...getMetricsForContext(sport, 'general', densityLevel)]).map(metric => [metric.key, metric])).values()]
-                  .sort((a,b) => ['mobility','body_control','quickness','power_lower','power_upper','speed','exit_velocity','throwing_velocity','fielding','energy_system'].indexOf(a.category) - ['mobility','body_control','quickness','power_lower','power_upper','speed','exit_velocity','throwing_velocity','fielding','energy_system'].indexOf(b.category))
+                {fullPositionBattery({ sport, modules: availableModules, position, densityLevel })
                   .map(metric => <li key={metric.key}><span className="font-medium">{metric.label}</span><span className="block text-xs text-muted-foreground">{CATEGORY_LABELS[metric.category as MetricCategory] ?? metric.category}</span></li>)}
               </ol>
             </section>}
