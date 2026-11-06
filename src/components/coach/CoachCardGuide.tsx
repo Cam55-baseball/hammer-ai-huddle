@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, ChevronDown, CalendarDays, Send, Pencil, Save } from 'lucide-react';
+import { BookOpen, ChevronDown, CalendarDays, Send, Pencil, Save, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const steps = [
@@ -9,6 +9,7 @@ const steps = [
   { title: 'Remove work for one session', icon: CalendarDays, buttons: ['Remove for this session', 'Okay'], text: 'In the same day details, choose Remove for this session on a card or activity. Add a note and confirm. That work is removed only for this session, with no Discipline penalty. Other dates and already-entered results stay intact. The decision remains in Player week and Sent workouts.' },
   { title: 'Edit a day', icon: Pencil, buttons: ['Edit this day', 'Save this day', 'Okay', 'Cancel'], text: 'Expand an editable card in Player week and choose Edit this day. Change its exercises, order, sets, reps, rest and notes. Save this day checks safety. Read any warning before Okay or Cancel. Under-18 edits require a typed reason and parent notice. A saved edit names the coach in Because and notifies the player. Logged work, preparation and unsafe changes remain protected.' },
   { title: 'Save and reuse a template', icon: Save, buttons: ['Save as template', 'Apply to…', 'Apply to this day', 'Send workouts'], text: 'In the edit screen, name the template and tap Save as template. This saves a reusable card, not a change to the player’s day. Find it in Send workouts → Saved templates. Apply to… lets you choose an authorized player and date, then Apply to this day checks safety again. Or choose Send workouts to preview and schedule it as an offer.' },
+  { title: 'Add a note and tag an issue', icon: StickyNote, buttons: ['Add a note', 'Defense', 'Hitting', 'Throwing', 'Baserunning', 'Save note'], text: "Open the player profile → Notes (or pick a day in Player week) and tap Add a note. Write your note, then under Tag an issue (optional) pick Defense, Hitting, Throwing or Baserunning and add a short label. Tagging an issue adds a card to this player's Before you start, with your reason. The player never sees your note." },
   { title: 'Read the week and results', icon: CalendarDays, buttons: ['This week', 'Sent workouts'], text: 'Open Player week in the player profile. Pick a day to see cards, activities and the actual entered results. Week arrows open earlier or later weeks. Sent workouts shows each player’s response separately from completion. Done means recorded work, not a skill grade. Organization staff see only assigned, shared athletes.' },
 ];
 

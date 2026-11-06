@@ -6,7 +6,7 @@
  * 3 = owner throwing drills can take the built-in catch-play steps' place (Nov 5 round 2).
  * 7 = skill reps (e.g. double-play / quick-release) never sit in the warm-up (Nov 5 round 5).
  */
-export const PLAN_RULES_VERSION = 8;
+export const PLAN_RULES_VERSION = 9;
 
 export function savedRulesVersion(payload: unknown): number {
   const v = Number((payload as { rules_version?: unknown } | null)?.rules_version);
