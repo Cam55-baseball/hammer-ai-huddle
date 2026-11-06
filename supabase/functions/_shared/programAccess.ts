@@ -67,6 +67,8 @@ export function activePlans(sport: string, storedModules: readonly string[], pri
   const keys = new Set(storedModules.map(m => m.trim().toLowerCase()));
   const has = (key: string) => keys.has(`${sport}_${key}`) || (sport === primarySport && keys.has(key));
   if (has("golden2way")) return ["golden2way"];
+  // Older accounts with only skill keys keep their legacy reading (pitching + hitting/throwing = Golden 2Way).
+  if (!has("pitcher") && !has("5tool") && has("pitching") && (has("hitting") || has("throwing"))) return ["golden2way"];
   const out = new Set<TrainingProgram>();
   if (has("pitcher") || has("pitching")) out.add("pitcher");
   if (has("5tool") || has("hitting") || has("throwing")) out.add("5tool");
