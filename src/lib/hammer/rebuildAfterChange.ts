@@ -29,8 +29,8 @@ async function rebuildOnce(reason: string, today: string, effectiveDate?: string
       const { data, error } = await supabase.functions.invoke('wk-generate-daily', {
         body: { plan_date: date, compose_sport_day: true, change_reason: 'player_request', change_text: reason, change_key: `${key}:${date}` },
       });
-      if (error) {
-        const conflict = await (error as { context?: Response }).context?.clone?.().json?.().catch(() => null);
+      if (error || (data as { conflict?: boolean } | null)?.conflict === true) {
+        const conflict = error ? await (error as { context?: Response }).context?.clone?.().json?.().catch(() => null) : data;
         if ((conflict?.error === 'adjust_failed' && conflict?.message === 'Day changed; rebuild from fresh saved work') || conflict?.error === 'Sport day changed; rebuild from fresh saved work') {
           // One fresh server reread under the same lock; never bypass a safety or protected-work refusal.
           const retry = await supabase.functions.invoke('wk-generate-daily', {body:{plan_date:date,compose_sport_day:true,change_reason:'player_request',change_text:reason,change_key:`${key}:${date}:fresh`}});
@@ -73,8 +73,8 @@ async function rebuildOnce(reason: string, today: string, effectiveDate?: string
  *  changed the day first (revision conflict). Safety and protected-work refusals are never retried. */
 export async function invokeDayChange(body: Record<string, unknown>) {
   const first = await supabase.functions.invoke('wk-generate-daily', { body });
-  if (!first.error) return first;
-  const b = await (first.error as { context?: Response }).context?.clone?.().json?.().catch(() => null);
+  if (!first.error && first.data?.conflict !== true) return first;
+  const b = first.error ? await (first.error as { context?: Response }).context?.clone?.().json?.().catch(() => null) : first.data;
   const conflict = (b?.error === 'adjust_failed' && /day changed/i.test(String(b?.message ?? ''))) || /changed; rebuild/i.test(String(b?.error ?? ''));
   if (!conflict) return first;
   return await supabase.functions.invoke('wk-generate-daily', { body: { ...body, change_key: `${String(body.change_key ?? '')}:fresh` } });
