@@ -1,6 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { normalizeProgramModules } from '../../supabase/functions/_shared/programAccess';
+import { activePlans as judgeActivePlans, heldPlans, normalizeProgramModules, type TrainingProgram } from '../../supabase/functions/_shared/programAccess';
+
+/** Until check-subscription sends stored keys, the stored mapping keys are the honest source;
+ *  bare (owner bypass) skill keys pass through unchanged. Never the normalized aliases. */
+function storedKeysFallback(details: unknown, modules: unknown): string[] {
+  const keys = details && typeof details === 'object' ? Object.keys(details as object) : [];
+  if (keys.length) return keys;
+  return Array.isArray(modules) ? (modules as string[]).filter((m) => !m.includes('_')) : [];
+}
 
 export interface ModuleDetails {
   subscription_id: string;
@@ -37,6 +45,8 @@ export const useSubscription = () => {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
     subscribed: false,
     modules: [],
+    plan_modules: [],
+    primary_sport: 'baseball',
     module_details: {},
     subscription_end: null,
     loading: true,
@@ -76,6 +86,8 @@ export const useSubscription = () => {
         setSubscriptionData({
           subscribed: false,
           modules: [],
+    plan_modules: [],
+    primary_sport: 'baseball',
           module_details: {},
           subscription_end: null,
           loading: false,
@@ -128,6 +140,8 @@ export const useSubscription = () => {
           setSubscriptionData({
             subscribed: false,
             modules: [],
+    plan_modules: [],
+    primary_sport: 'baseball',
             module_details: {},
             subscription_end: null,
             loading: false,
@@ -203,6 +217,8 @@ export const useSubscription = () => {
         setSubscriptionData({
           subscribed: data.subscribed || false,
           modules: newModules,
+          plan_modules: Array.isArray(data.plan_modules) ? data.plan_modules : storedKeysFallback(data.module_details, data.modules),
+          primary_sport: data.primary_sport || 'baseball',
           module_details: data.module_details || {},
           subscription_end: data.subscription_end || null,
           loading: false,
@@ -239,6 +255,8 @@ export const useSubscription = () => {
             setSubscriptionData({
               subscribed: isActive,
               modules: normalizeProgramModules(fallbackData.subscribed_modules || [], context?.sport_primary || 'baseball'),
+              plan_modules: fallbackData.subscribed_modules || [],
+              primary_sport: context?.sport_primary || 'baseball',
               module_details: (fallbackData.module_subscription_mapping as unknown as Record<string, ModuleDetails>) || {},
               subscription_end: fallbackData.current_period_end || null,
               loading: false,
@@ -250,6 +268,8 @@ export const useSubscription = () => {
             setSubscriptionData({
               subscribed: false,
               modules: [],
+    plan_modules: [],
+    primary_sport: 'baseball',
               module_details: {},
               subscription_end: null,
               loading: false,
@@ -263,6 +283,8 @@ export const useSubscription = () => {
           setSubscriptionData({
             subscribed: false,
             modules: [],
+    plan_modules: [],
+    primary_sport: 'baseball',
             module_details: {},
             subscription_end: null,
             loading: false,
@@ -277,6 +299,8 @@ export const useSubscription = () => {
       setSubscriptionData({
         subscribed: false,
         modules: [],
+    plan_modules: [],
+    primary_sport: 'baseball',
         module_details: {},
         subscription_end: null,
         loading: false,
@@ -329,6 +353,8 @@ export const useSubscription = () => {
           setSubscriptionData({
             subscribed: false,
             modules: [],
+    plan_modules: [],
+    primary_sport: 'baseball',
             module_details: {},
             subscription_end: null,
             loading: false,
@@ -400,8 +426,17 @@ export const useSubscription = () => {
     setFastPolling(enabled);
   }, []);
 
+  // Owner Nov 6 r5: the one "active plans" answer every plan-naming screen uses.
+  const activePlansForSport = useCallback(
+    (sport: string): TrainingProgram[] => judgeActivePlans(sport, subscriptionData.plan_modules, subscriptionData.primary_sport),
+    [subscriptionData.plan_modules, subscriptionData.primary_sport],
+  );
+  const plans = heldPlans(subscriptionData.plan_modules, subscriptionData.primary_sport);
+
   return { 
     ...subscriptionData, 
+    plans,
+    activePlansForSport,
     refetch, 
     hasModuleForSport, 
     hasAccessForSport,
