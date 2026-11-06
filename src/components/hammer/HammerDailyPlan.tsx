@@ -246,6 +246,7 @@ import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 import { usePlanCheckFailureLog } from "@/lib/hammer/planCheckFailures";
 import { isPapStrengthRow } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
+import { pitchingAfterThrowing } from "@/lib/hammer/prescription/pitchAfterThrow";
 
 
 /**
@@ -1329,7 +1330,7 @@ function HammerDailyPlanBody({
           const throwAt = orderedOther.findIndex((b) => b.modality === "throwing");
           const firstOther = throwAt >= 0 ? orderedOther.slice(0, throwAt + 1) : [];
           const laterOther = throwAt >= 0 ? orderedOther.slice(throwAt + 1) : orderedOther;
-          const renderOther = (b) => {
+          const renderOther = (b: (typeof otherBlocks)[number]) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 const isBunting = b.modality === 'hitting' && b.drills.length > 0 && b.drills.every(drill => !!drill.bunt);
                 const cardKey = `${isBunting ? 'bunting' : b.modality}_${b.side ?? 'x'}`;
