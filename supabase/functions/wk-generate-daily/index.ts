@@ -125,7 +125,7 @@ import {
 import { planningPrimaryFocus } from "../_shared/wic/progression/startingPoint.ts";
 import { DEFAULT_POSITION_SPRINT_STANDARDS, positionSprintStandards, startingBases, sprintCapacity, sprintDay, sessionBases, fitRowsToBases, basesPerRep as basesPerRepOf } from "../_shared/wic/conditioning/positionSprints.ts";
 import { planInSeasonSprints, InSeasonDone } from "./inSeasonFacts.ts";
-import { inSeasonStandards, withSprintPrep, sprintPrepOk, topupRouteSlug, ADDS_ROW_KINDS, SPRINT_PREP_SLUGS, type InSeasonStandards } from "../_shared/wic/conditioning/inSeasonSprints.ts";
+import { inSeasonStandards, sprintBlockingPain, withSprintPrep, sprintPrepOk, topupRouteSlug, ADDS_ROW_KINDS, SPRINT_PREP_SLUGS, type InSeasonStandards } from "../_shared/wic/conditioning/inSeasonSprints.ts";
 import { isTaggedJump } from "../_shared/wic/jumps/taxonomy.ts";
 import { readPitcherReturn, recordReturnDate } from "../_shared/wic/pitching/readPitcherReturn.ts";
 import { readReturningHitter, recordHittingDay } from "../_shared/wic/hitting/readReturningHitter.ts";
