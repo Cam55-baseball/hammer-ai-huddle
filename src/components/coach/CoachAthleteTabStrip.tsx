@@ -22,7 +22,7 @@ export const COACH_ATHLETE_TABS: { value: string; label: string }[] = [
   { value: "notes", label: "Notes" },
 ];
 
-export const TAB_STRIP_CLASS = "relative flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 snap-x [scrollbar-width:thin]";
+export const TAB_STRIP_CLASS = "relative flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 snap-x [scrollbar-width:thin] after:block after:w-2 after:shrink-0 after:content-['']";
 export const TAB_TRIGGER_CLASS = "shrink-0 snap-start whitespace-nowrap px-3";
 
 /** Scroll only the strip sideways so the active tab is fully visible (never the page). */
