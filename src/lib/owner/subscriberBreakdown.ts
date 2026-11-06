@@ -6,7 +6,7 @@ export function subscriberBreakdown(players: PlayerPlan[], staff: StaffPlan[], s
   const counts = new Map<string, number>();
   const add = (label: string) => counts.set(label, (counts.get(label) ?? 0) + 1);
   // Owner Nov 6 r5: each player's plans come from the shared activePlans judge (stored keys), never
-  // one saved tier copied onto every sport. Sponsored plans are counted below as sponsorships.
+  // one saved tier copied onto every sport. Sponsorship rows are also counted below, as before.
   const playerPlans = new Map<string, number>();
   for (const row of players) {
     const held = heldPlans(row.subscribed_modules ?? [], "baseball");
