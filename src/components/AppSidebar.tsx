@@ -368,7 +368,7 @@ export function AppSidebar() {
         .map((it: any) => it.subModules ? { ...it, subModules: it.subModules.filter((sm: any) => !isRetiredRoute(sm.url)) } : it);
     }
     return items;
-  }, [isOwner, isAdmin, activeTier, modules, selectedSport, hasPlayerAccess, t, programsRetired]);
+  }, [isOwner, isAdmin, heldPlanSig, modules, selectedSport, hasPlayerAccess, t, programsRetired]);
 
   const accountItems = [
     { title: t('navigation.helpDesk', 'Help Desk'), url: "/help-desk", icon: HelpCircle },
