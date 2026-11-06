@@ -35,7 +35,7 @@ describe("activePlans — the one shared judge", () => {
     expect(heldPlans(["baseball_golden2way"], "baseball")).toEqual([{ sport: "baseball", plan: "golden2way" }]);
     expect(activePlans("softball", ["baseball_golden2way"])).toEqual([]);
     // The normalized access list contains pitching + hitting aliases; plan naming never uses it.
-    expect(normalizeProgramModules(["baseball_golden2way"]).length).toBeGreaterThan(1);
+    expect(normalizeProgramModules(["baseball_golden2way"], "baseball").length).toBeGreaterThan(1);
     expect(plansForSport({ activePlansForSport: (s) => activePlans(s, ["baseball_golden2way"]) }, "baseball")).toEqual(["golden2way"]);
   });
   it("Profile labels and billing rows for the TEST account name only Golden 2Way", () => {
