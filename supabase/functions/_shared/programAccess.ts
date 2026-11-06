@@ -53,6 +53,41 @@ export function playerProgramModules(userId: string | null | undefined, modules:
   return [...modules];
 }
 
+/** Owner Nov 6 r5: the ONE "active plans" judge for every screen that names a plan or marks it
+ * unlocked. Reads the STORED keys only (never the read-time aliases from normalizeProgramModules,
+ * which would turn Complete Pitcher + 5Tool into a fake Golden 2Way, or Golden 2Way into 5Tool).
+ * - Golden 2Way is its own plan and already includes Complete Pitcher and 5Tool: show only it.
+ * - A tier key wins over the old skill keys it covers (never infer a tier from them).
+ * - Old skill-only purchases keep Option A: pitching → Complete Pitcher, hitting/throwing → 5Tool.
+ * - Two genuinely separate plans (own Complete Pitcher + sponsored 5Tool) both show. */
+export const PROGRAM_ORDER: readonly TrainingProgram[] = ["pitcher", "5tool", "golden2way"];
+export const PROGRAM_NAMES: Record<TrainingProgram, string> = { pitcher: "Complete Pitcher", "5tool": "5Tool Player", golden2way: "The Golden 2Way" };
+export function activePlans(sport: string, storedModules: readonly string[], primarySport: string = sport): TrainingProgram[] {
+  if (sport !== "baseball" && sport !== "softball") return [];
+  const keys = new Set(storedModules.map(m => m.trim().toLowerCase()));
+  const has = (key: string) => keys.has(`${sport}_${key}`) || (sport === primarySport && keys.has(key));
+  if (has("golden2way")) return ["golden2way"];
+  const out = new Set<TrainingProgram>();
+  if (has("pitcher") || has("pitching")) out.add("pitcher");
+  if (has("5tool") || has("hitting") || has("throwing")) out.add("5tool");
+  return PROGRAM_ORDER.filter(p => out.has(p));
+}
+/** Every plan held across both sports, for lists that name plans (Profile, owner lists). */
+export function heldPlans(storedModules: readonly string[], primarySport: string): { sport: ProgramSport; plan: TrainingProgram }[] {
+  return (["baseball", "softball"] as const).flatMap(sport => activePlans(sport, storedModules, primarySport).map(plan => ({ sport, plan })));
+}
+/** Which held plan a stored subscription key belongs to (for billing rows). Golden 2Way absorbs the rest. */
+export function planForStoredKey(key: string, storedModules: readonly string[], primarySport: string): { sport: ProgramSport; plan: TrainingProgram; included: boolean } | null {
+  const k = key.trim().toLowerCase();
+  const [first, rest] = k.includes("_") ? [k.slice(0, k.indexOf("_")), k.slice(k.indexOf("_") + 1)] : [primarySport, k];
+  if (first !== "baseball" && first !== "softball") return null;
+  const own: TrainingProgram | null = rest === "golden2way" ? "golden2way" : rest === "pitcher" || rest === "pitching" ? "pitcher" : rest === "5tool" || rest === "hitting" || rest === "throwing" ? "5tool" : null;
+  if (!own) return null;
+  const plans = activePlans(first, storedModules, primarySport);
+  if (plans.includes(own)) return { sport: first, plan: own, included: false };
+  return plans.includes("golden2way") ? { sport: first, plan: "golden2way", included: true } : null;
+}
+
 /** Which question families a program may see. Complete Pitcher: no hitting/bunting; 5Tool: no pitching. */
 export function programQuestionScope(program: TrainingProgram | null): { hitting: boolean; bunting: boolean; pitching: boolean; throwing: boolean } {
   if (!program) return { hitting: false, bunting: false, pitching: false, throwing: false };
