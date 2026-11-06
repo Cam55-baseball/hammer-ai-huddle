@@ -11,7 +11,7 @@ import type { OwnerDrillRow } from "@/lib/prescription/ownerDrills";
 const ext = { name: "Regulation extension toss", stage: "prep", armCard: "throwing", eassCategory: "regulation", armEvent: { kind: "warmup" as const, count: 10, intent: "moderate" as const, estimated: false } };
 const pull = { name: "Intent throws — pulldown phase (5oz)", stage: "drills", eassCategory: "pulldown", armEvent: { kind: "long_toss" as const, count: 6, intent: "high" as const, estimated: false } };
 const box = { name: "Shortbox mound (40 ft)", stage: "full_go", armEvent: { kind: "pitch" as const, count: 20, intent: "moderate" as const, estimated: false }, pitchTags: { moundType: "shortbox" } };
-const day = () => [
+const day = (): any[] => [
   { status: "ready", modality: "throwing", drills: [ext] },
   { status: "ready", modality: "pitching", drills: [pull, box] },
 ];
