@@ -622,7 +622,7 @@ const handler = async (req: Request): Promise<Response> => {
           let r = await selfCall({ plan_date: date, compose_sport_day: true, change_reason: "player_request", change_text: reason, change_key: key });
           if (r.status === 429) { await new Promise((ok) => setTimeout(ok, 20_000)); r = await selfCall({ plan_date: date, compose_sport_day: true, change_reason: "player_request", change_text: reason, change_key: `${key}:retry` }); }
           if (r.body?.error === "adjust_failed" && /changed/i.test(String(r.body?.message ?? "")) || /changed; rebuild/i.test(String(r.body?.error ?? ""))) r = await selfCall({ plan_date: date, compose_sport_day: true, change_reason: "player_request", change_text: reason, change_key: `${key}:fresh` });
-          if (r.body?.error === "adjust_failed" && /protected/i.test(String(r.body?.message ?? ""))) result.kept.push(date);
+          if (r.body?.kept === true || r.body?.error === "adjust_failed" && /protected/i.test(String(r.body?.message ?? ""))) result.kept.push(date);
           else if (r.body?.ok === true) result.rebuilt.push(date);
           else result.failed.push(date);
         }
@@ -694,7 +694,7 @@ const handler = async (req: Request): Promise<Response> => {
             }
             let r = await call(date);
             if (r.body?.error === "adjust_failed" && r.body?.message === "Day changed; rebuild from fresh saved work" || r.body?.error === "Sport day changed; rebuild from fresh saved work") r = await call(date, ":fresh");
-            if (r.body?.error === "adjust_failed" && /protected/i.test(String(r.body?.message ?? ""))) kept.push(date);
+            if (r.body?.kept === true || r.body?.error === "adjust_failed" && /protected/i.test(String(r.body?.message ?? ""))) kept.push(date);
             else if (r.body?.error === "not_started") { message = `${reason} — saved. Your plan builds when you tap Start.`; break; }
             else if (r.body?.ok === true && r.body?.composed === true && r.body?.degraded !== true) done.push(date);
             else failed.push(date);
@@ -5991,6 +5991,8 @@ const handler = async (req: Request): Promise<Response> => {
         p_detail: { generator_version: WIC_VERSION, change_key: String((rawBody as any).change_key ?? "").slice(0, 120) || null },
         ...(composed?{p_sport:sport,p_engine:composed.engine,p_payload:composed.payload,p_expected_rows:expectedDayRows,p_expected_snapshot:composed.expectedSnapshot,p_diag:{},p_shared:{}}:{}),
       });
+      // Protected saved work is an expected "keep the day" outcome, not a crash.
+      if (adjErr && /protected/i.test(String(adjErr.message ?? ""))) return json({ ok: true, kept: true, adjusted: false, plan_date: planDate, reason: "protected_saved_work" }, 200);
       if (adjErr) return json({ error: "adjust_failed", message: adjErr.message }, 500);
       return json({ ok: true, adjusted: true, plan_date: planDate, ...(adj as any),...(composed?{user_id:user.id,bunting_entitled:bsModules.includes(`${sport}_5tool`)||bsModules.includes(`${sport}_golden2way`)||['hitting',`${sport}_hitting`].some(m=>bsModules.includes(m))&&['throwing',`${sport}_throwing`].some(m=>bsModules.includes(m))}: {}) }, 200);
     }

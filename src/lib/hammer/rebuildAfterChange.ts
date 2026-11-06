@@ -40,6 +40,7 @@ async function rebuildOnce(reason: string, today: string, effectiveDate?: string
           }
         }
       }
+      if (!error && (data as { kept?: boolean } | null)?.kept === true) { kept.push(date); continue; }
       if (error) {
         const body = await (error as { context?: Response }).context?.clone?.().json?.().catch(() => null);
         // Server refused to replace work the player already chose or marked: kept by design, not a failure to retry.
