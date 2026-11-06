@@ -22,7 +22,7 @@ import { useVaultPendingStatus } from "@/hooks/useVaultPendingStatus";
 import { usePendingRequests } from "@/hooks/usePendingRequests";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { supabase } from "@/integrations/supabase/client";
-import { getActiveTier, sidebarPlanKeys } from "@/utils/tierAccess";
+import { plansForSport } from "@/utils/tierAccess";
 import { branding } from "@/branding";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -108,7 +108,8 @@ export function AppSidebar() {
   // Purchased modules stay navigable for coaches and scouts too; never tease unowned ones.
   const { hasPlayerAccess } = usePlayerModuleAccess();
   const { visible: rankingsVisible, loading: rankingsVisibilityLoading } = useRankingsVisibility();
-  const { modules } = useSubscription();
+  const subscription = useSubscription();
+  const { modules } = subscription;
   const { retired: programsRetired } = useProgramsRetired();
   const { hasPendingItems, pendingCount } = useVaultPendingStatus();
   const { pendingCount: pendingRequestCount } = usePendingRequests();
@@ -221,8 +222,9 @@ export function AppSidebar() {
     location.pathname.startsWith('/nutrition'),
   );
 
-  // Determine active tier (kept for downstream display logic if needed)
-  const activeTier = useMemo(() => getActiveTier(modules, selectedSport), [modules, selectedSport]);
+  // Owner Nov 6 r5: the plans the player really holds, from the one shared activePlans judge.
+  const heldPlanKeys = plansForSport(subscription, selectedSport);
+  const heldPlanSig = heldPlanKeys.join(',');
 
   // Build training modules — show ONLY blocks the user is actually subscribed to.
   // Owner/Admin always see all blocks for testing.
@@ -235,7 +237,7 @@ export function AppSidebar() {
     const sport = selectedSport;
     // Owner Nov 6 r4: show ONLY the one plan the player holds (shared program judge). Golden 2Way's
     // read-time skill aliases must never surface 5Tool or Complete Pitcher as separately unlocked plans.
-    const shownPlans = sidebarPlanKeys(activeTier);
+    const shownPlans = heldPlanSig ? heldPlanSig.split(',') : [];
     const hasGolden = shownPlans.includes('golden2way');
     const hasPitcherTier = shownPlans.includes('pitcher');
     const hasFiveTool = shownPlans.includes('5tool');
@@ -245,7 +247,7 @@ export function AppSidebar() {
 
     // Complete Pitcher — shown if user owns Pitcher tier, Golden (which includes pitching),
     // or legacy pitching key. Owner/Admin always.
-    if (showAll || hasPitcherTier || hasGolden || hasLegacyPitching) {
+    if (showAll || hasPitcherTier || hasLegacyPitching) {
       items.push({
         key: 'pitching',
         title: t('dashboard.modules.completePitcherShort'),
@@ -269,7 +271,7 @@ export function AppSidebar() {
     }
 
     // 5Tool Player — shown if user owns 5Tool tier or Golden (which includes hitting/throwing).
-    if (showAll || hasFiveTool || hasGolden || hasLegacyHitting || hasLegacyThrowing) {
+    if (showAll || hasFiveTool || hasLegacyHitting || hasLegacyThrowing) {
       items.push({
         key: '5tool',
         title: '5Tool Player',
@@ -310,6 +312,11 @@ export function AppSidebar() {
           { title: 'DelayCam Pitching', url: `/delaycam/pitching?sport=${selectedSport}`, icon: Camera, description: 'Watch your delivery back seconds after you throw it' },
 
           { title: 'The Unicorn', url: "/the-unicorn", icon: Sparkles, description: "Elite merged workout system" },
+          // Golden 2Way is one plan: the workouts it includes from Complete Pitcher and 5Tool live here,
+          // so nothing is taken away when those plans are no longer listed separately.
+          { title: t('workoutModules.productionLab.title'), url: "/production-lab", icon: Dumbbell, description: "Iron Bambino" },
+          { title: t('workoutModules.productionStudio.title'), url: "/production-studio", icon: Dumbbell, description: t('workoutModules.productionStudio.subtitle') || "6-week workout" },
+          { title: 'Explosive Conditioning', url: "/explosive-conditioning", icon: Zap, description: "Build elite speed and explosive power" },
           { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
           ...(softballLocked ? [] : [{ title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') }]),
           { title: 'Pitch Tipping 101', url: '/learn/pitch-tipping', icon: Eye, description: "Spot a pitcher's tells at the plate" },

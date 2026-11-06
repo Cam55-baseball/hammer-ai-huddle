@@ -10,7 +10,7 @@
  * Check if user has access to a specific feature type based on their subscribed modules.
  * Supports both legacy keys (baseball_hitting) and new tier keys (baseball_5tool).
  */
-import { normalizeProgramModules, programOf } from '../../supabase/functions/_shared/programAccess';
+import { activePlans, normalizeProgramModules, programOf, type TrainingProgram } from '../../supabase/functions/_shared/programAccess';
 export function hasFeatureAccess(
   modules: string[],
   feature: 'hitting' | 'pitching' | 'throwing'
@@ -68,4 +68,14 @@ export function hasUnicornAccess(modules: string[]): boolean {
 /** Owner Nov 6 r4: the plan sections shown as unlocked — exactly the one active plan. */
 export function sidebarPlanKeys(activeTier: 'golden2way' | '5tool' | 'pitcher' | null): ('golden2way' | '5tool' | 'pitcher')[] {
   return activeTier ? [activeTier] : [];
+}
+
+/** Owner Nov 6 r5: plans to NAME or mark unlocked for one sport, from the shared activePlans judge.
+ *  Pass the useSubscription() result; screens never infer a plan from skill keys themselves. */
+export function plansForSport(
+  sub: { activePlansForSport?: (sport: string) => TrainingProgram[]; plan_modules?: string[]; modules?: string[] },
+  sport: string,
+): TrainingProgram[] {
+  if (typeof sub.activePlansForSport === 'function') return sub.activePlansForSport(sport);
+  return activePlans(sport, sub.plan_modules ?? sub.modules ?? []);
 }
