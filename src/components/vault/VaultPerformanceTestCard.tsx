@@ -1,4 +1,5 @@
 import { formatGrade } from "@/lib/benchmarks/gradeScale";
+import { positionBattery, fullPositionBattery, type BatteryModule } from "@/lib/assessment/positionBattery";
 import { bandFor } from "@/lib/intelligence/areaGrade";
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -144,20 +145,10 @@ export function VaultPerformanceTestCard({
   }, [userProfile, throwingHand, battingSide]);
 
   // Get metrics from registry, filtered by sport, module, and tier
-  const registryMetrics = selectedModule
-    ? getMetricsForContext(sport, selectedModule, densityLevel)
+  // Owner Nov 6: one position-specific battery for the Initial Assessment and every 6-week re-test.
+  const allMetrics = selectedModule
+    ? positionBattery({ sport, module: selectedModule as BatteryModule, modules: availableModules, position, densityLevel })
     : [];
-
-  // Also include 'general' metrics
-  const generalMetrics = selectedModule
-    ? getMetricsForContext(sport, 'general', densityLevel)
-    : [];
-
-  // Combine and deduplicate
-  const allMetrics = [...registryMetrics];
-  for (const gm of generalMetrics) {
-    if (!allMetrics.find(m => m.key === gm.key)) allMetrics.push(gm);
-  }
 
   // Group by category
   const categorizedMetrics: Record<string, MetricDefinition[]> = {};
@@ -355,8 +346,7 @@ export function VaultPerformanceTestCard({
             {allowedModules && <section className="space-y-3 border-b border-border pb-4">
               <h3 className="font-semibold">Your testing order</h3>
               <ol className="list-decimal space-y-2 pl-5 text-sm">
-                {[...new Map(allowedModules.flatMap(module => [...getMetricsForContext(sport, module, densityLevel), ...getMetricsForContext(sport, 'general', densityLevel)]).map(metric => [metric.key, metric])).values()]
-                  .sort((a,b) => ['mobility','body_control','quickness','power_lower','power_upper','speed','exit_velocity','throwing_velocity','fielding','energy_system'].indexOf(a.category) - ['mobility','body_control','quickness','power_lower','power_upper','speed','exit_velocity','throwing_velocity','fielding','energy_system'].indexOf(b.category))
+                {fullPositionBattery({ sport, modules: availableModules, position, densityLevel })
                   .map(metric => <li key={metric.key}><span className="font-medium">{metric.label}</span><span className="block text-xs text-muted-foreground">{CATEGORY_LABELS[metric.category as MetricCategory] ?? metric.category}</span></li>)}
               </ol>
             </section>}

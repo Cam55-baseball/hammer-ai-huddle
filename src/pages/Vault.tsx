@@ -65,6 +65,10 @@ import { VaultDrillWork } from '@/components/vault/VaultDrillWork';
 
 
 import { useAuth } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useProgramModules } from '@/hooks/useProgramModules';
+import { requiredAnalyses } from '@/lib/assessment/initialAssessment';
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
@@ -135,6 +139,17 @@ export default function Vault() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [userSport, setUserSport] = useState<'baseball' | 'softball'>('baseball');
   const { modules: subscribedModules } = useSubscription();
+  // Owner Nov 6: the 6-week re-test uses the same program judge and saved position as the Initial Assessment.
+  const { modules: programModules } = useProgramModules();
+  const sixWeekModules = requiredAnalyses(programModules.filter(m => m.startsWith(`${userSport}_`)));
+  const sixWeekProfile = useQuery({
+    queryKey: ['six-week-profile', user?.id], enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('profiles').select('position,throwing_hand,batting_side,date_of_birth').eq('id', user!.id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
   
   // Use shared recap countdown hook
   const { 
@@ -790,7 +805,9 @@ export default function Vault() {
                         tests={performanceTests}
                         onSave={handleSavePerformanceTest}
                         sport={userSport}
-                        subscribedModules={subscribedModules}
+                        subscribedModules={sixWeekModules}
+                        allowedModules={sixWeekModules}
+                        userProfile={{ primary_position: sixWeekProfile.data?.position ?? undefined, throwing_hand: sixWeekProfile.data?.throwing_hand ?? undefined, batting_side: sixWeekProfile.data?.batting_side ?? undefined, date_of_birth: sixWeekProfile.data?.date_of_birth ?? undefined }}
                         autoOpen={autoOpenSection === 'performance-tests' || autoOpenSection === 'six-week-checkin'}
                         recapUnlockedAt={progressReportsUnlockedAt}
                       />
