@@ -38,7 +38,7 @@ export const DEFAULT_IN_SEASON_STANDARDS: InSeasonStandards = {
   runningDayBases: 4,
   weeklyTargetDays: 2,
   heavyGameShare: 0.6,
-  lowPlayMaxBases: 2, extraSprintsMin: 3, extraSprintsMax: 4,
+  lowPlayMaxBases: 1, extraSprintsMin: 3, extraSprintsMax: 4,
   basesPerPaDefault: 1, ownAverageMinPa: 15,
 };
 export function inSeasonStandards(raw: unknown): InSeasonStandards {
@@ -317,3 +317,14 @@ function topup(cap: number, f: InSeasonFacts, std: InSeasonStandards, lead: stri
 }
 
 // Owner Nov 5 final (locked): NO post-game sprints or top-ups of any kind — postGameTopup was removed.
+
+/** Owner Nov 6: pain spots that remove sprints — legs, hips and lower back (arm/shoulder never). */
+export function sprintBlockingPain(spots: Iterable<string>): boolean {
+  for (const s0 of spots) {
+    const s = String(s0).toLowerCase();
+    if (/shoulder|elbow|ucl|rotator|labr|bicep|forearm|wrist|arm|upper_back|upper back/.test(s) && !/lower/.test(s)) continue;
+    if (/hamstring|knee|ankle|calf|quad|groin|achilles|shin|foot|hip|acl|leg|glute/.test(s)) return true;
+    if (/lower_back|lower back|low_back|low back|lumbar|spine|disc|spondy|sacr|^back$/.test(s)) return true;
+  }
+  return false;
+}

@@ -31,6 +31,24 @@ describe("1 — never any sprints after a game", () => {
   });
 });
 
+describe("Owner Nov 6 — playing-time and pain settings", () => {
+  it("1 base triggers the extra speed session; 2 bases never does", () => {
+    expect(D.lowPlayMaxBases).toBe(1);
+    expect(isLowPlayingTime({ date: "y", bases: 1, source: "log" }, D)).toBe(true);
+    expect(isLowPlayingTime({ date: "y", bases: 2, source: "log" }, D)).toBe(false);
+  });
+  it("lower-back pain removes sprints; arm/shoulder pain does not", () => {
+    expect(mod.sprintBlockingPain(["lower_back"])).toBe(true);
+    expect(mod.sprintBlockingPain(["lumbar_strain"])).toBe(true);
+    expect(mod.sprintBlockingPain(["left_hip"])).toBe(true);
+    expect(mod.sprintBlockingPain(["right_shoulder", "elbow"])).toBe(false);
+    expect(readFileSync("supabase/functions/wk-generate-daily/index.ts", "utf8")).toContain("sprintBlockingPain(locs)");
+  });
+  it("very low readiness = readiness ≤ 4 or soreness ≥ 8", () => {
+    expect(readFileSync("supabase/functions/wk-generate-daily/index.ts", "utf8")).toContain("cnsReadiness <= 4 || soreness >= 8");
+  });
+});
+
 describe("2/3 — extra short speed session for players not getting playing time", () => {
   it("next game day: 4 all-out sprints as pre-game early work, with sprint prep", () => {
     const d = inSeasonSprintDay(18, { ...base, gameToday: true, pendingGame: benchGame });
