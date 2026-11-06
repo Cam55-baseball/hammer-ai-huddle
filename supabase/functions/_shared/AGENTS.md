@@ -1,0 +1,6 @@
+- Non-self service-role data must pass `_shared/recruitingGate.ts`; RLS is bypassed.
+- Owner creation identity/defaults and common gear mapping live in `_shared/vault/ownerDefaults.ts`, imported by the Vault editor; unknown equipment remains visible for review. Why: automatic fields must use Swap vocabulary without silently discarding owner words or claiming safety certification.
+- 13–17 parent waiver gating lives only in `supabase/functions/_shared/legal/teenWaiverRules.ts` (used by `teen-parent-waiver` and tests); `TeenWaiverGate` wraps only the training-plan routes. Why: one rule source, and non-physical parts of the app stay open.
+- Staff plan purchase eligibility lives only in `supabase/functions/_shared/staffEligibility.ts` (used by create-staff-checkout and tests). Why: one rule for age, coach role and org-admin status.
+- Purchase handoff landing validation is shared by the token issuer and website in `_shared/purchaseHandoffLanding.ts`. Why: Staff Plans and existing purchase destinations must survive both checks without divergent allowlists.
+- Owner-only position exception: one literal ID in `_shared/owner/ownerPositionException.ts`, mirrored in `initial_plan_missing`. Why: no other account drifts into it.

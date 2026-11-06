@@ -1,8 +1,6 @@
-- Non-self service-role data must pass `_shared/recruitingGate.ts`; RLS is bypassed.
 - Swap uses plan-swap/day-lock for atomic work/log/memory; blocks read saved JSON. Coach skips share that lock, canonical exemptions and audit; preparation/logs/other dates stay intact. Why: no partial saves, fake work or safety bypass.
 - Server block Swap uses packaged copies of existing sport drills and declared warm-up equipment siblings; regenerate them when source declarations change. Why: edge deployments cannot import browser project paths and must not invent a second catalog.
 - No-field acceleration mixes use the explicit speed Swap catalog and save child reps/distance/rest within the existing block item via the same day-lock transaction; fresh canonical readiness/CNS and player-confirmed space constrain selection. Why: no new save path or disguised max-velocity/tempo substitution may alter the day's dose.
-- Owner creation identity/defaults and common gear mapping live in `_shared/vault/ownerDefaults.ts`, imported by the Vault editor; unknown equipment remains visible for review. Why: automatic fields must use Swap vocabulary without silently discarding owner words or claiming safety certification.
 - `create-test-athlete` is owner-only; freshPersona has exact unstarted TEST identities and never reseeds them. Why: real generator proof cannot impersonate or reset players.
 - Measurements use `public.ledger_record` (source triggers + tiles); trigger errors never cost a clip.
 - Movement: training+health consent, never dose. Vault/Swap tracking resolves by plan date, no dose conversion. Reports: `_shared/practiceReport.ts`. Why: scoped sources.
@@ -22,10 +20,7 @@
 - Sessions end only by explicit Sign out (`signOut({ scope: 'local' })`) or server end; `/` and `/auth` forward signed-in players after session load; native auth key mirrored to `@capacitor/preferences` (`src/lib/auth/nativeSessionStore.ts`), restored in `main.tsx`. Why: iOS may clear WebView storage.
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
-- 13–17 parent waiver gating lives only in `supabase/functions/_shared/legal/teenWaiverRules.ts` (used by `teen-parent-waiver` and tests); `TeenWaiverGate` wraps only the training-plan routes. Why: one rule source, and non-physical parts of the app stay open.
 - Pairings use connection_requests + definer RPCs (coach email invites wrap send_connection_request); org coaches see org_athlete_assignments. Org activation is automatic, not identity proof. Why: membership/consent still govern access.
-- Staff plan purchase eligibility lives only in `supabase/functions/_shared/staffEligibility.ts` (used by create-staff-checkout and tests). Why: one rule for age, coach role and org-admin status.
-- Purchase handoff landing validation is shared by the token issuer and website in `_shared/purchaseHandoffLanding.ts`. Why: Staff Plans and existing purchase destinations must survive both checks without divergent allowlists.
 
 - Staff signup uses /get-started → /signup/:role and staffSignup adult rules; only scouts need approval. Why: coaches/orgs start immediately.
 - LegalDocLink uses same-URL history including sub-terms. Why: Back keeps sign-up fields.
@@ -59,12 +54,11 @@
 - Stray TEST cleanup snapshots exact identities privately; fixed-ID readback and job/list/stat exclusions certify parking, never a shrinking name query. Why: hidden flags alone cannot prove zero stray data.
 - Exact exercise measurement decisions are shared by the library, inline logger and log-sheet resolver; yard entry converts only at the display boundary, keeping canonical distance in feet. Why: ambiguous names must not diverge between logging paths or change existing distance readers.
 - Mastery: gated judges, weekly boost, JWT-only new days; saved sport, no backfill. Why: provenance.
-- Read nested AGENTS.md before edits, including hooks, owner, hammer, lib/owner, _shared/wic and wic/jumps.
+- Read nested AGENTS.md before edits, including hooks, owner, hammer, lib/owner, _shared, _shared/wic and wic/jumps.
 - Primer in Warm-up; Both inbox reuses getActiveTier/Checkout/customer-portal. Why: one save/billing path.
 - Goal shelves resolve self-scoped readable IDs, never fault attribution. Goal editors save picks/order together with readback and shared pickRanking. Why: retain both goals and pass Start without inventing evidence.
 - Owner conditioning drills serve only the weekly running floor, validated by `_shared/wic/conditioning/ownerConditioning.ts` against `runRest.ts`. Why: owner numbers used as entered, no new limit or path.
 
-- Owner-only position exception: one literal ID in `_shared/owner/ownerPositionException.ts`, mirrored in `initial_plan_missing`. Why: no other account drifts into it.
 - Health entry points reuse PhysioHealthIntakeDialog and existing health/goal/target stores; season answers use athlete_mpi_settings with derived context reads. Why: one saved answer must serve every entry point.- Saved sport days carry `payload.rules_version` (`_shared/planRulesVersion.ts`); bump PLAN_RULES_VERSION when a rule must reach saved days. The player's plan load triggers `rules_version_sweep` (athlete JWT, background, one day at a time with load waits) which rebuilds today-and-later unprotected days that are older or saved before the newest analyzed throwing/pitching clip. Why: composition needs the player's own session, and rule changes must not leave stale saved days.
 
 - Player-facing questions, prompts and cards take modules from `useProgramModules`/`playerProgramModules` (`_shared/programAccess.ts`), which applies the owner-only 5Tool rule; access/purchase checks keep raw `useSubscription`. Why: one program judge everywhere without changing what the owner can open.
