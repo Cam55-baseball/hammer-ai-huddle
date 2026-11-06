@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 const { invoke,readWeek } = vi.hoisted(() => ({ invoke: vi.fn(),readWeek:vi.fn() }));
-vi.mock('@/integrations/supabase/client', () => ({ supabase: { functions: { invoke } } }));
+vi.mock('@/integrations/supabase/client', () => ({ supabase: { functions: { invoke }, auth: { getSession: async () => ({ data: { session: { access_token: 't' } } }), refreshSession: async () => ({ data: { session: null } }) } } }));
 vi.mock('./readComposedWeek',()=>({readComposedWeek:readWeek}));
 import { rebuildAfterChange } from './rebuildAfterChange';
 beforeEach(() => { invoke.mockReset(); invoke.mockResolvedValue({ data: { ok: true, composed: true,sport:'baseball',user_id:'test-self',bunting_entitled:true }, error: null });readWeek.mockReset();readWeek.mockResolvedValue({issues:[]}); });

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { restDateFor, restDowFor, judgeRestMove } from "../../../supabase/functions/_shared/wic/schedule/restDay";
 
 const invoke = vi.fn();
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { functions: { invoke: (...a: unknown[]) => invoke(...a) } } }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { functions: { invoke: (...a: unknown[]) => invoke(...a) }, auth: { getSession: async () => ({ data: { session: { access_token: "t" } } }), refreshSession: async () => ({ data: { session: null } }) } } }));
 
 describe("change rest day", () => {
   it("only this week: Friday becomes the rest day, Sunday trains", () => {
