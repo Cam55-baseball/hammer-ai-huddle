@@ -10,6 +10,7 @@ import { useSessionControls } from '@/hooks/useSessionControls';
 import { SessionControlActions } from './SessionControlActions';
 import { controlNote } from '@/lib/coachRx/sessionControls';
 import { CoachDayEditor } from './CoachDayEditor';
+import { AddCoachNoteDialog } from './CoachTestsAndNotes';
 
 const dateLabel = (date:string, options:Intl.DateTimeFormatOptions) => new Date(`${date}T12:00:00`).toLocaleDateString('en-US',options);
 export function CoachPlayerWeek({athleteId}:{athleteId:string}) {
@@ -57,7 +58,7 @@ export function CoachPlayerWeek({athleteId}:{athleteId:string}) {
           </div>;})}
       </div>
       <div className="space-y-3 border-t border-border pt-4" data-week-day-details>
-        <h3 className="font-semibold">{dateLabel(selected,{weekday:'long',month:'short',day:'numeric'})}{active?.restDay?' · Rest day':''}</h3>
+        <div className="flex items-center justify-between gap-2"><h3 className="font-semibold">{dateLabel(selected,{weekday:'long',month:'short',day:'numeric'})}{active?.restDay?' · Rest day':''}</h3><AddCoachNoteDialog key={selected} athleteId={athleteId} contextLine={dateLabel(selected,{weekday:'short',month:'short',day:'numeric'})}/></div>
         {!cards.length && <p className="text-sm text-muted-foreground">{active?.plan.state==='unavailable'?'No plan saved for this day.':'No saved activities for this day.'}</p>}
         {controlQuery.error && <p role="alert">Coach decisions could not be loaded. Refresh before changing work.</p>}
         {cards.map(card=><details key={card.id} open={card.activities.some(a=>a.results.length>0 || a.control)} className="space-y-2 border-b border-border pb-3"><summary className="cursor-pointer font-semibold">{card.title} <span className="text-sm font-normal text-muted-foreground">· {WORK_STATUS[card.status]}</span></summary>
