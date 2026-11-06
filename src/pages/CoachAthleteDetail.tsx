@@ -18,7 +18,7 @@ import { CoachReadinessTab } from "@/components/coach/CoachReadinessTab";
 import { CoachReportsTab, CoachGradesTab, CoachRecapTab } from "@/components/coach/CoachReportsTab";
 import { CoachDevelopmentTab } from "@/components/coach/CoachDevelopmentTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
