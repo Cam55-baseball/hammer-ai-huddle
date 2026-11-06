@@ -1,3 +1,4 @@
+import { CoachCheckinsReadinessTab } from "@/components/coach/CoachCheckinsReadinessTab";
 import { useEffect, useRef } from "react";
 import { CoachLogForPlayer } from "@/components/coach/CoachLogForPlayer";
 import { CoachCheckinSummary } from "@/components/coach/CoachCheckinSummary";
@@ -227,6 +228,7 @@ export default function CoachAthleteDetail() {
             <TabsTrigger value="trends">Trends</TabsTrigger>
             <TabsTrigger value="load">Body load</TabsTrigger>
             <TabsTrigger value="games">Game stats</TabsTrigger>
+            <TabsTrigger value="checkins">Check-ins &amp; readiness</TabsTrigger>
             <TabsTrigger value="readiness">Readiness &amp; pain</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
             <TabsTrigger value="grades">Grades</TabsTrigger>
@@ -247,6 +249,10 @@ export default function CoachAthleteDetail() {
 
           <TabsContent value="trends" className="space-y-4 pt-4">
             {athleteId && <CoachTrendsTab athleteId={athleteId} />}
+          </TabsContent>
+
+          <TabsContent value="checkins" className="space-y-4 pt-4">
+            {athleteId && <CoachCheckinsReadinessTab athleteId={athleteId} />}
           </TabsContent>
 
           <TabsContent value="readiness" className="space-y-4 pt-4">

@@ -24729,6 +24729,7 @@ export type Database = {
       cleanup_old_weight_adjustments: { Args: never; Returns: undefined }
       cleanup_old_weight_history: { Args: never; Returns: undefined }
       cleanup_synthetic_activity_logs: { Args: never; Returns: undefined }
+      coach_athlete_checkins_28: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_development: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_discipline: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_games: { Args: { _athlete: string }; Returns: Json }
@@ -24914,6 +24915,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      coach_team_readiness_today: { Args: never; Returns: Json }
       coach_undo_entry: { Args: { _entry: string }; Returns: undefined }
       coach_week_rx_lineage: {
         Args: { _athlete: string; _from: string }
