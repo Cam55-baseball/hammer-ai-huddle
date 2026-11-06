@@ -68,7 +68,15 @@ export function TodayRhythmProvider({ planDate, children }: { readonly planDate:
   }, []);
   const unregister = useCallback((id: string) => { if (map.current.delete(id)) setVersion((v) => v + 1); }, []);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const entries = useMemo(() => [...map.current.values()].sort((a, b) => a.seq - b.seq), [version]);
+  // Order follows the cards on screen (owner Nov 6: Pitching never before Throwing), falling back to first-seen order.
+  const entries = useMemo(() => [...map.current.values()].sort((a, b) => {
+    if (typeof document !== "undefined") {
+      const x = document.querySelector(`[data-pocket-tile="${CSS.escape(a.id)}"]`);
+      const y = document.querySelector(`[data-pocket-tile="${CSS.escape(b.id)}"]`);
+      if (x && y && x !== y) return x.compareDocumentPosition(y) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+    }
+    return a.seq - b.seq;
+  }), [version]);
   const nextId = entries.find((e) => e.progress && e.progress.total > 0 && e.progress.done < e.progress.total)?.id ?? null;
   const ctx = useMemo(() => ({ register, unregister, nextId }), [register, unregister, nextId]);
   const view = useMemo(() => ({ entries, nextId, planDate }), [entries, nextId, planDate]);
