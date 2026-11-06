@@ -4784,6 +4784,20 @@ function pitcherMoundGate(blocks, i) {
   });
 }
 
+// src/lib/hammer/prescription/pitchAfterThrow.ts
+var isPitching = (m) => m === "pitching" || m === "windmill";
+function pitchingAfterThrowing(blocks) {
+  const out = [...blocks];
+  const throwIdx = out.findIndex((b) => b.modality === "throwing");
+  if (throwIdx < 0) return out;
+  const early = out.filter((b, i) => i < throwIdx && isPitching(b.modality));
+  if (!early.length) return out;
+  const rest = out.filter((b) => !early.includes(b));
+  const t = rest.findIndex((b) => b.modality === "throwing");
+  rest.splice(t + 1, 0, ...early);
+  return rest;
+}
+
 // supabase/functions/_shared/wic/conditioning/yards.ts
 function conditioningProgram(sport, modules, primaryFocus) {
   const program = programOf(sport, modules);
@@ -10746,7 +10760,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     console.debug("[dailyPlan] gp-signal bias \u2192", gpBiasTags);
   }
   return {
-    blocks: enforceSkillStageOrder(placeBreathing(warmed, (d3) => drillsToSteps(d3))).map((b, i) => {
+    blocks: pitchingAfterThrowing(enforceSkillStageOrder(placeBreathing(warmed, (d3) => drillsToSteps(d3)))).map((b, i) => {
       const notice = availabilityNotice(proj.weeklyAvailabilityDays);
       return i === 0 && notice ? { ...b, because: [...b.because ?? [], `Days available: ${proj.weeklyAvailabilityDays} per week (information only).`, notice] } : b;
     }),
