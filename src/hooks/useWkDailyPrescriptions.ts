@@ -437,7 +437,16 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
           const { error } = await invokeOnce(change);
-          if (error) throw error;
+          if (error) {
+            // Logged or chosen work protects the saved day: the server keeps it
+            // as-is. That is a definite, correct answer, not a failure.
+            const body = await (error as any)?.context?.clone?.().json?.().catch(() => null);
+            if (body?.error === "adjust_failed" && /protected/i.test(String(body?.message ?? ""))) {
+              console.debug("[wk-generate-daily] day kept — saved work is protected");
+              break;
+            }
+            throw error;
+          }
           lastErr = null;
           break;
         } catch (e) {
