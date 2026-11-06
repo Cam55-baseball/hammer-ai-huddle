@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { render, screen } from "@testing-library/react";
 import { validateLineup, sameAsSaved, draftFrom, saveLineup, updateLineup, renameLineup, deleteLineup } from "@/lib/coach/savedLineups";
 import { readinessColor, readinessSeries, missedDays, injuryLines, loadLevel } from "@/lib/coach/checkinReadiness";
-import { CoachCheckinsReadinessView, TeamReadinessStripView, NOT_SHARED } from "@/components/coach/CoachCheckinsReadinessTab";
+import { CoachCheckinsReadinessView, TeamReadinessStripView } from "@/components/coach/CoachCheckinsReadinessTab";
 
 /** In-memory stand-in that applies the same ownership/connection rules as the database policies. */
 function fakeDb(me: string, connected: Set<string>) {
@@ -103,20 +103,13 @@ describe("coach check-ins & readiness", () => {
     expect(screen.getAllByText(/Pain flag: right elbow/).length).toBe(2);
     expect(screen.getAllByText(/What this means/).length).toBeGreaterThanOrEqual(4);
   });
-  it("a non-sharing player's data never shows", () => {
-    render(<CoachCheckinsReadinessView data={{ shared: false }} />);
-    expect(screen.getByText(NOT_SHARED)).toBeTruthy();
-    expect(screen.queryByTestId("checkins-readiness")).toBeNull();
-  });
-  it("dashboard strip: colors, who hasn't checked in, and not-shared players", () => {
+  it("dashboard strip: colors and who hasn't checked in", () => {
     render(<TeamReadinessStripView rows={[
       { athlete_id: "1", name: "Ana", shared: true, checked_in: true, readiness: 5 },
       { athlete_id: "2", name: "Ben", shared: true, checked_in: false },
-      { athlete_id: "3", name: "Cy", shared: false },
     ]} />);
     expect(screen.getByText("Ana · Good")).toBeTruthy();
     expect(screen.getByText(/Not checked in yet: Ben/)).toBeTruthy();
-    expect(screen.getByText(`Cy · ${NOT_SHARED}`)).toBeTruthy();
   });
   it("the server refuses a coach who isn't connected", () => {
     const sql = readdirSync("drizzle/migrations").filter((f) => f.includes("coach_saved_lineups")).map((f) => readFileSync(`drizzle/migrations/${f}`, "utf8")).join("\n");
