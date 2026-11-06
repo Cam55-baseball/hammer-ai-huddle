@@ -1,19 +1,11 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { checkinDays, checkinFacts, checkinKind, painDays, type Checkin, type CheckinDone } from "@/lib/coach/readiness";
 
 export const HEALTH_CONSENT_LABEL = "Shared only with health consent";
-const ASK_BODY =
-  "Your coach asked to see your check-in answers (sleep, soreness, pain, energy). To share them, open Settings → Scouting visibility (/athlete/recruiting-consent) and turn on Health. Players under 18 need a parent to agree. You can turn it off anytime.";
 
-/** Coach "Readiness & pain" tab. Check-in attendance always; contents only with health consent. */
+/** Coach "Readiness & pain" tab. Connected coaches always see check-ins (owner Nov 6). */
 export function CoachReadinessTab({ athleteId }: { athleteId: string }) {
-  const { user } = useAuth();
-  const [asked, setAsked] = useState(false);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["coach-athlete-readiness", athleteId],
     queryFn: async (): Promise<{ shared: boolean; checkins: Checkin[]; completed: CheckinDone[] }> => {
@@ -28,11 +20,6 @@ export function CoachReadinessTab({ athleteId }: { athleteId: string }) {
 
   const today = new Date().toISOString().slice(0, 10);
   const done = data.completed ?? [];
-  const ask = async () => {
-    const { error } = await supabase.from("coach_messages").insert({ coach_id: user!.id, athlete_id: athleteId, body: ASK_BODY, parent_copied: true } as any);
-    if (error) toast.error("Couldn't send the request.");
-    else { setAsked(true); toast.success("Request sent to the player (and parent copy)."); }
-  };
 
   return (
     <div className="space-y-3">
@@ -49,13 +36,7 @@ export function CoachReadinessTab({ athleteId }: { athleteId: string }) {
         <p className="text-xs text-muted-foreground">Source: athlete-entered.</p>
       </div>
 
-      {!data.shared ? (
-        <div className="rounded-lg border p-3 space-y-2" data-testid="coach-readiness-not-shared">
-          <p className="text-sm font-medium">{HEALTH_CONSENT_LABEL}</p>
-          <p className="text-xs text-muted-foreground">Check-in answers (readiness, sleep, soreness, pain, energy, notes) are health data. The player turns on Health sharing; a parent must agree for players under 18.</p>
-          <Button size="sm" disabled={asked} onClick={ask}>{asked ? "Request sent" : "Ask to turn on health sharing"}</Button>
-        </div>
-      ) : (() => {
+      {(() => {
         const rows = data.checkins.filter((r) => checkinFacts(r).length > 0);
         if (rows.length === 0) return <p className="text-sm text-muted-foreground" data-testid="coach-readiness-empty">No check-in answers in the last 7 days.</p>;
         return (
