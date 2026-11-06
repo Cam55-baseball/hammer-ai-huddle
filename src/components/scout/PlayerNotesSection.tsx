@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { StickyNote, User, Pencil, Trash2, Save, X, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
+import { AddCoachNoteDialog, TAG_INSTRUCTIONS } from '@/components/coach/CoachTestsAndNotes';
 
 interface Player {
   id: string;
@@ -27,9 +28,11 @@ interface PlayerNote {
 
 interface PlayerNotesSectionProps {
   players: Player[];
+  /** Owner Nov 6 r3: coach dashboard players who can receive a tagged issue note. */
+  tagPlayers?: { id: string; full_name: string }[];
 }
 
-export function PlayerNotesSection({ players }: PlayerNotesSectionProps) {
+export function PlayerNotesSection({ players, tagPlayers }: PlayerNotesSectionProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -126,6 +129,13 @@ export function PlayerNotesSection({ players }: PlayerNotesSectionProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {tagPlayers && (
+          <section className="space-y-2 rounded-md border p-3" data-testid="dashboard-tag-issue">
+            <p className="text-sm font-semibold">Tag an issue (optional)</p>
+            <p className="text-xs text-muted-foreground">{TAG_INSTRUCTIONS}</p>
+            <AddCoachNoteDialog players={tagPlayers} triggerLabel="Note & tag an issue" big />
+          </section>
+        )}
         <Select value={selectedPlayerId} onValueChange={setSelectedPlayerId}>
           <SelectTrigger>
             <SelectValue placeholder="Select a player..." />

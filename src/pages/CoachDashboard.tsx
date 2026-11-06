@@ -455,7 +455,7 @@ export default function CoachDashboard() {
         )}
 
 
-        <PlayerNotesSection players={following} />
+        <PlayerNotesSection players={following} tagPlayers={following.filter(p => p.relationship_type === 'linked')} />
 
         {(() => {
           const linkedPlayers = following.filter(p => p.relationship_type === 'linked');
