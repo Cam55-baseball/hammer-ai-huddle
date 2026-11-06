@@ -86,7 +86,7 @@ describe("rendered screens for a Golden 2Way holder show exactly one plan", () =
 
 // ── Side menu ────────────────────────────────────────────────────────────────
 const sub = { modules: [] as string[], plan_modules: [] as string[] };
-vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (_k: string, f?: string) => f ?? _k }) }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (_k: string, f?: unknown) => (typeof f === "string" ? f : _k) }) }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ signOut: vi.fn() }) }));
 vi.mock("@/hooks/useOrganization", () => ({ useOrganization: () => ({ myOrgs: { data: [] } }) }));
 vi.mock("@/hooks/usePlayerOrganization", () => ({ usePlayerOrganization: () => ({ membership: null, roleInOrg: "player" }) }));
@@ -115,11 +115,12 @@ describe("side menu for a Golden 2Way holder", () => {
     const { SidebarProvider } = await import("@/components/ui/sidebar");
     const { container } = render(<MemoryRouter><SidebarProvider><AppSidebar /></SidebarProvider></MemoryRouter>);
     const text = container.textContent ?? "";
-    expect(text).toMatch(/Golden 2Way|golden/i);
+    expect(text.match(/The Golden 2Way/g)).toHaveLength(1);
     expect(text).not.toMatch(/5Tool Player/);
     expect(text).not.toMatch(/completePitcherShort|Complete Pitcher/);
     // Nothing taken away: the Pitcher/5Tool workouts are reachable inside Golden 2Way.
-    expect(text).toMatch(/The Unicorn/);
-    expect(text).toMatch(/Explosive Conditioning/);
+    expect(text).toMatch(/Pitch Tipping 101/);
+    expect(text).toMatch(/Pick-Off Trainer/);
+    expect(text).toMatch(/Baserunning IQ/);
   });
 });
