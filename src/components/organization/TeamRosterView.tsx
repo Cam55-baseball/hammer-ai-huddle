@@ -224,7 +224,7 @@ export function TeamRosterView({ orgId }: { orgId: string }) {
                       {p.integrityScore != null && <span>MPI: {p.integrityScore}</span>}
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate(`/player/${p.userId}`)}>
+                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate(`/coach/athlete/${p.userId}`)}>
                     <Eye className="h-3 w-3 mr-1" /> View
                   </Button>
                 </div>
@@ -233,7 +233,7 @@ export function TeamRosterView({ orgId }: { orgId: string }) {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {players.map(p => (
-                <Card key={p.userId} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/player/${p.userId}`)}>
+                <Card key={p.userId} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/coach/athlete/${p.userId}`)}>
                   <CardContent className="p-4 space-y-2">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">

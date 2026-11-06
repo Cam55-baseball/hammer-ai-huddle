@@ -1436,6 +1436,13 @@
       "when": 1793925434537,
       "tag": "0204_lineup_player_position_order",
       "breakpoints": true
+    },
+    {
+      "idx": 205,
+      "version": "7",
+      "when": 1793934671881,
+      "tag": "0205_coach_checkins_always_visible_testing_day_notices",
+      "breakpoints": true
     }
   ]
 }

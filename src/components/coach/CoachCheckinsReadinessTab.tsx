@@ -8,7 +8,6 @@ import {
   COLOR_LABEL, type ReadinessColor, type CheckinRow, type DailyLogRow, type LoadRow,
 } from "@/lib/coach/checkinReadiness";
 
-export const NOT_SHARED = "Not shared by the player";
 export const COLOR_VAR: Record<ReadinessColor, string> = {
   good: "hsl(var(--success))", okay: "hsl(var(--wellness-warning))", low: "hsl(var(--destructive))", none: "hsl(var(--muted))",
 };
@@ -17,10 +16,9 @@ export interface Checkins28 { shared: boolean; checkins?: CheckinRow[]; daily_lo
 
 const Meaning = ({ children }: { children: string }) => <p className="text-xs text-muted-foreground"><span className="font-medium">What this means:</span> {children}</p>;
 
-/** Coach View "Check-ins & readiness" — only for players who share check-ins (parent rule for minors). */
+/** Coach View "Check-ins & readiness" — always visible to connected coaches and assigned org staff (owner Nov 6). */
 export function CoachCheckinsReadinessView({ data }: { data: Checkins28 }) {
   const [days, setDays] = useState<14 | 28>(14);
-  if (!data.shared) return <div className="rounded-lg border p-3" data-testid="checkins-not-shared"><p className="text-sm font-medium">{NOT_SHARED}</p><p className="text-xs text-muted-foreground">This player hasn't turned on sharing check-ins with coaches (players under 18 need a parent to agree).</p></div>;
   const today = data.today ?? new Date().toLocaleDateString("en-CA");
   const rows = data.checkins ?? [];
   const series = readinessSeries(rows, today, days);
@@ -96,24 +94,23 @@ export function CoachCheckinsReadinessTab({ athleteId }: { athleteId: string }) 
   return <CoachCheckinsReadinessView data={data} />;
 }
 
-export interface TeamReadinessRow { athlete_id: string; name: string; shared: boolean; readiness?: number | null; checked_in?: boolean }
+export interface TeamReadinessRow { athlete_id: string; name: string; shared?: boolean; readiness?: number | null; checked_in?: boolean }
 
 export function TeamReadinessStripView({ rows }: { rows: TeamReadinessRow[] }) {
-  const shared = rows.filter((r) => r.shared);
-  const notIn = shared.filter((r) => !r.checked_in);
+  const notIn = rows.filter((r) => !r.checked_in);
   return (
     <section className="rounded-lg border p-3 space-y-2" data-testid="team-readiness-strip">
       <h2 className="text-sm font-semibold">Today's readiness</h2>
       {rows.length === 0 ? <p className="text-sm text-muted-foreground">No connected players yet.</p> : (
         <div className="flex flex-wrap gap-2">
           {rows.map((r) => {
-            const label = !r.shared ? NOT_SHARED : !r.checked_in ? "Not checked in yet" : r.readiness == null ? "Checked in" : COLOR_LABEL[r.readiness >= 4 ? "good" : r.readiness >= 3 ? "okay" : "low"];
-            const color = !r.shared || !r.checked_in || r.readiness == null ? COLOR_VAR.none : COLOR_VAR[r.readiness >= 4 ? "good" : r.readiness >= 3 ? "okay" : "low"];
+            const label = !r.checked_in ? "Not checked in yet" : r.readiness == null ? "Checked in" : COLOR_LABEL[r.readiness >= 4 ? "good" : r.readiness >= 3 ? "okay" : "low"];
+            const color = !r.checked_in || r.readiness == null ? COLOR_VAR.none : COLOR_VAR[r.readiness >= 4 ? "good" : r.readiness >= 3 ? "okay" : "low"];
             return <span key={r.athlete_id} className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs"><span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />{r.name} · {label}</span>;
           })}
         </div>
       )}
-      {shared.length > 0 && <p className="text-xs text-muted-foreground">{notIn.length ? `Not checked in yet: ${notIn.map((r) => r.name).join(", ")}.` : "Everyone who shares has checked in today."}</p>}
+      {rows.length > 0 && <p className="text-xs text-muted-foreground">{notIn.length ? `Not checked in yet: ${notIn.map((r) => r.name).join(", ")}.` : "Everyone has checked in today."}</p>}
     </section>
   );
 }

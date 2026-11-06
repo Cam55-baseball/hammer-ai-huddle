@@ -24520,6 +24520,7 @@ export type Database = {
       }
     }
     Functions: {
+      _coach_checkin_access: { Args: { _athlete: string }; Returns: boolean }
       _coach_log_throws: {
         Args: { _athlete: string; _date: string; _sign: number; _stats: Json }
         Returns: undefined
@@ -25703,6 +25704,7 @@ export type Database = {
         }
         Returns: string
       }
+      send_my_testing_day_reminders: { Args: never; Returns: number }
       send_testing_day_reminders: { Args: { _org: string }; Returns: number }
       set_game_verification: {
         Args: { _game: string; _verified: boolean }

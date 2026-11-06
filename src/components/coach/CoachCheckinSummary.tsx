@@ -15,14 +15,12 @@ export function CoachCheckinSummary({ athleteId }: { athleteId: string }) {
   });
   if (!data) return null;
   const today = new Date().toISOString().slice(0, 10);
-  const latest = data.shared ? data.checkins.find((r) => checkinFacts(r).length > 0) : undefined;
+  const latest = (data.checkins ?? []).find((r) => checkinFacts(r).length > 0);
   return (
     <Card className="p-4 space-y-1" data-testid="coach-checkin-summary">
       <h3 className="font-semibold">Check-ins</h3>
       <p className="text-sm">Completed: {checkinDays(data.completed ?? [], today, 7)} of the last 7 days · {checkinDays(data.completed ?? [], today, 28)} of the last 28 days</p>
-      {!data.shared ? (
-        <p className="text-sm text-muted-foreground">Answers: Shared only with health consent (see the Readiness &amp; pain tab to ask).</p>
-      ) : latest ? (
+      {latest ? (
         <p className="text-sm">Latest answers ({latest.entry_date}): {checkinFacts(latest).join(" · ")}</p>
       ) : (
         <p className="text-sm text-muted-foreground">Answers: No check-in answers in the last 7 days.</p>

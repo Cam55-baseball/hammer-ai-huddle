@@ -1,3 +1,5 @@
+import { TestingDayNotices } from "@/components/organization/TestingDayNotices";
+import { CalendarDays } from 'lucide-react';
 import { TeamReadinessStrip } from "@/components/coach/CoachCheckinsReadinessTab";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
@@ -350,6 +352,10 @@ export default function CoachDashboard() {
                         <User className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.viewProfile', 'View Profile')}</span>
                       </Button>
+                      <Button aria-label={`Plan and week: ${player.full_name}`} title="Today's plan and week" onClick={() => navigate(`/coach/athlete/${player.id}?tab=week`)} size="sm" variant="outline" className="flex-shrink-0">
+                        <CalendarDays className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Plan &amp; week</span>
+                      </Button>
                       <Button aria-label={`View library: ${player.full_name}`} title="View library" onClick={() => navigate(`/players-club?playerId=${player.id}`)} size="sm" variant="outline" className="flex-shrink-0">
                         <BookMarked className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.viewLibrary', 'View Library')}</span>
@@ -377,6 +383,7 @@ export default function CoachDashboard() {
         <CoachWeeklySummary />
         <CoachPrescriptionStatus />
         <TeamReadinessStrip />
+        <TestingDayNotices />
         <TeamDisciplineSummary />
         <Link to="/games?view=coach" className="text-sm underline underline-offset-2" data-testid="coach-game-hub-link">Game Hub — log a game for one player, a team or a general game</Link>
         <Link to="/coach/lineup" className="text-sm underline underline-offset-2">Lineup mode — log a game for several players</Link>

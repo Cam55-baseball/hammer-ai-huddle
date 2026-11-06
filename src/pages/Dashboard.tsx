@@ -1,3 +1,4 @@
+import { TestingDayNotices } from "@/components/organization/TestingDayNotices";
 import { StaffPlanTiles } from "@/components/staff/StaffPlanTiles";
 import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
@@ -589,6 +590,7 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-3 sm:space-y-5 overflow-x-hidden max-w-full">
         <FollowRequestsPanel />
+        <TestingDayNotices />
         
         <div data-tour="landing" data-tour-context>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('dashboard.title')}</h1>
