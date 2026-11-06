@@ -99,7 +99,7 @@ export function bullpenBeforeStartCard(f: Followups | null, games: readonly (Pit
     show: true, samples: a.starts,
     howSure: howSureFor({ samples: a.starts }),
     weSee: `${line("After a bullpen the day before", a)} ${line("Other starts", b)}`,
-    because: `This only compares what was logged. It doesn't show what caused any difference.${f.health_shared ? "" : " Health answers aren't shared, so they're left out."}`,
+    because: `This only compares what was logged. It doesn't show what caused any difference.${f.health_shared ? "" : " Check-in answers aren't available here, so they're left out."}`,
     ...base, doThis,
   };
 }

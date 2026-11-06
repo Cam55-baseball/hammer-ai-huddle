@@ -17,7 +17,7 @@ const HELP: Record<ConsentScope, string> = {
   profile: "Name, school, position and grad year.",
   metrics: "Test results such as sprint, jump and velocity.",
   video: "Clips they've uploaded.",
-  health: "Injury and health notes. Kept separate from everything else.",
+  health: "Detailed health profile: medications, injury history and nutrition targets.",
   academics: "GPA, test scores and transcript.",
   contact: "Scouts and coaches may message them (you get a copy).",
 };

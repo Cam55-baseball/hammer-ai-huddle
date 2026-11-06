@@ -154,7 +154,7 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
       {dayToggle}
       {seasonLine}
       {plan.health_shared === false && (
-        <p className="text-xs text-muted-foreground">Health details stay private — the player hasn't turned on health sharing.</p>
+        <p className="text-xs text-muted-foreground">Detailed health notes stay private — the player hasn't turned on health sharing.</p>
       )}
       {blocks.length === 0 ? (
         <p className="text-sm text-muted-foreground">No training prescribed {ahead === 0 ? 'today' : 'tomorrow'}.</p>
