@@ -7,6 +7,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { Input } from "@/components/ui/input";
+import { athletesOnly, searchSponsorOptions, sponsorOptions, type SponsorOption } from "@/lib/organization/orgPeople";
+
+/** Searchable athlete picker: full names, team and position, sorted by name. */
+export function SponsorPlayerPicker({ options, value, onChange }: { options: SponsorOption[]; value: string; onChange: (id: string) => void }) {
+  const [q, setQ] = useState("");
+  const shown = searchSponsorOptions(options, q);
+  return (
+    <div className="space-y-2">
+      <Input aria-label="Search players" placeholder="Search players by name" value={q} onChange={(e) => setQ(e.target.value)} />
+      <ul role="listbox" aria-label="Player" className="max-h-56 space-y-1 overflow-y-auto rounded-md border p-1">
+        {shown.length === 0 && <li className="p-2 text-sm text-muted-foreground">No matching athletes in your organization.</li>}
+        {shown.map((o) => (
+          <li key={o.id} role="option" aria-selected={value === o.id}>
+            <button type="button" onClick={() => onChange(o.id)} className={`w-full rounded px-2 py-2 text-left text-sm ${value === o.id ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}>
+              <span className="block font-medium">{o.name}</span>
+              {o.detail && <span className="block text-xs opacity-80">{o.detail}</span>}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 const PLANS = [
   { tier: "pitcher", name: "Complete Pitcher", price: "$200/month" },
@@ -30,13 +54,22 @@ export function SponsorshipsCard({ orgId }: { orgId: string }) {
   const { data } = useQuery({
     queryKey: ["org-sponsorships", orgId],
     queryFn: async () => {
-      const { data: members } = await supabase.from("organization_members").select("user_id")
-        .eq("organization_id", orgId).eq("role_in_org", "player").eq("status", "active").is("removed_at", null);
-      const ids = (members ?? []).map((m) => m.user_id);
-      const { data: profiles } = ids.length ? await supabase.from("profiles").select("id, full_name").in("id", ids) : { data: [] as any[] };
+      // Owner Nov 6 r3: server-checked roster names (org admins can't read private profiles).
+      const { data: roster } = await supabase.rpc("list_org_roster", { _organization_id: orgId });
+      const ids = athletesOnly((roster ?? []) as any[]).map((r: any) => r.user_id as string);
+      const teams: Record<string, string[]> = {};
+      const t = await (supabase as any).from("org_teams").select("id,name").eq("organization_id", orgId).is("archived_at", null);
+      if (!t.error && t.data?.length) {
+        const tn = new Map<string, string>(t.data.map((r: any) => [r.id, r.name]));
+        const tm = await (supabase as any).from("org_team_members").select("team_id,user_id").in("team_id", [...tn.keys()]).is("removed_at", null);
+        for (const r of (tm.data ?? []) as any[]) (teams[r.user_id] ??= []).push(tn.get(r.team_id) ?? "Team");
+      }
+      const positions: Record<string, string | null> = {};
+      if (ids.length) { const m = await supabase.from("athlete_mpi_settings").select("user_id, primary_position").in("user_id", ids); for (const r of (m.data ?? []) as any[]) positions[r.user_id] = r.primary_position; }
+      const options = sponsorOptions((roster ?? []) as any[], teams, positions);
       const { data: rows } = await (supabase as any).from("org_sponsorships").select("*").eq("organization_id", orgId).order("created_at", { ascending: false });
-      const names = new Map((profiles ?? []).map((p: any) => [p.id, p.full_name || "Player"]));
-      return { players: ids.map((id) => ({ id, name: names.get(id) ?? "Player" })), rows: (rows ?? []) as any[], names };
+      const names = new Map<string, string>(options.map((o) => [o.id, o.name]));
+      return { players: options, rows: (rows ?? []) as any[], names };
     },
   });
 
@@ -71,12 +104,7 @@ export function SponsorshipsCard({ orgId }: { orgId: string }) {
           <p className="text-sm">Subscribe on our website to sponsor players.</p>
         ) : (
           <div className="grid gap-2">
-            <Select value={player} onValueChange={setPlayer}>
-              <SelectTrigger aria-label="Player"><SelectValue placeholder="Player" /></SelectTrigger>
-              <SelectContent>
-                {(data?.players ?? []).filter((p) => !live.has(p.id)).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SponsorPlayerPicker options={(data?.players ?? []).filter((p) => !live.has(p.id))} value={player} onChange={setPlayer} />
             <div className="grid grid-cols-2 gap-2">
               <Select value={tier} onValueChange={setTier}>
                 <SelectTrigger aria-label="Plan"><SelectValue /></SelectTrigger>

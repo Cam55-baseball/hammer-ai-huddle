@@ -9,7 +9,7 @@ import { CoachOnSpotAssessment } from "@/components/coach/CoachOnSpotAssessment"
 import { CoachMessageBox } from "@/components/coach/CoachMessageBox";
 import { CoachDrillAssign } from "@/components/coach/CoachDrillAssign";
 import { CoachAthleteSummary } from "@/components/coach/CoachAthleteSummary";
-import { CoachTestsTab, CoachPrivateNotes } from "@/components/coach/CoachTestsAndNotes";
+import { CoachTestsTab, CoachPrivateNotes, AddCoachNoteDialog, TAG_INSTRUCTIONS } from "@/components/coach/CoachTestsAndNotes";
 import { CoachTrendsTab } from "@/components/coach/CoachTrendsTab";
 import { CoachLoadTab } from "@/components/coach/CoachLoadTab";
 import { BullpenBeforeStartCard } from "@/components/intelligence/BullpenBeforeStartCard";
@@ -207,6 +207,13 @@ export default function CoachAthleteDetail() {
             />
           )}
         </div>
+
+        {athleteId && (
+          <section className="space-y-2 rounded-md border p-3" data-testid="coach-view-notes-issues">
+            <AddCoachNoteDialog athleteId={athleteId} triggerLabel="Notes & issues" big />
+            <p className="text-xs text-muted-foreground">{TAG_INSTRUCTIONS}</p>
+          </section>
+        )}
 
         {error && (
           <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">

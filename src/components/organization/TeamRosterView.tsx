@@ -36,7 +36,8 @@ function getPositionGroup(pos: string | null): string {
   for (const [group, positions] of Object.entries(POSITION_GROUPS)) {
     if (positions.some(p => pos.toLowerCase().includes(p.toLowerCase()))) return group;
   }
-  return 'Utility';
+  if (/util/i.test(pos)) return 'Utility';
+  return 'Unassigned';
 }
 
 export function TeamRosterView({ orgId }: { orgId: string }) {
@@ -55,7 +56,8 @@ export function TeamRosterView({ orgId }: { orgId: string }) {
         .from('organization_members')
         .select('user_id')
         .eq('organization_id', orgId)
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .eq('role_in_org', 'player'); // Owner Nov 6 r3: coaches/staff never appear as players
       const memberIds = (members ?? []).map(m => m.user_id);
       if (memberIds.length === 0) return [];
 

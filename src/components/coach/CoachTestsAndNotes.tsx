@@ -60,14 +60,17 @@ export function CoachTestsTab({ athleteId }: { athleteId: string }) {
 export const TAG_INSTRUCTIONS = "Tagging an issue adds a card to this player's Before you start, with your reason. The player never sees your note.";
 
 /** Owner Nov 6: the one note form (Coach View Notes + Player week day view). */
-export function AddCoachNoteDialog({ athleteId, triggerLabel = "Add a note", big = false, contextLine }: { athleteId: string; triggerLabel?: string; big?: boolean; contextLine?: string }) {
+export function AddCoachNoteDialog({ athleteId: fixedAthleteId, players, triggerLabel = "Add a note", big = false, contextLine }: { athleteId?: string; players?: { id: string; full_name: string }[]; triggerLabel?: string; big?: boolean; contextLine?: string }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [picked, setPicked] = useState("");
+  const athleteId = fixedAthleteId ?? picked;
   const [body, setBody] = useState(contextLine ? `${contextLine}: ` : "");
   const [area, setArea] = useState<IssueArea | null>(null);
   const [label, setLabel] = useState("");
   const add = useMutation({
     mutationFn: async () => {
+      if (!athleteId) throw new Error("Pick a player");
       const { error } = await supabase.from("coach_private_notes").insert({ athlete_id: athleteId, body: body.trim(), ...noteTag(area, label) });
       if (error) throw error;
     },
@@ -85,6 +88,16 @@ export function AddCoachNoteDialog({ athleteId, triggerLabel = "Add a note", big
           <DialogDescription>Only you can see your note. The player, parents and other coaches cannot.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          {!fixedAthleteId && (
+            <div className="space-y-1.5">
+              <Label htmlFor="coach-note-player">Player</Label>
+              <select id="coach-note-player" data-testid="coach-note-player" className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+                value={picked} onChange={(e) => setPicked(e.target.value)}>
+                <option value="">Pick a player…</option>
+                {[...(players ?? [])].sort((a, b) => a.full_name.localeCompare(b.full_name)).map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+              </select>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor="coach-note-body">Your note</Label>
             <Textarea id="coach-note-body" value={body} maxLength={2000} onChange={(e) => setBody(e.target.value)} placeholder="Write a note for yourself…" rows={4} />
@@ -107,7 +120,7 @@ export function AddCoachNoteDialog({ athleteId, triggerLabel = "Add a note", big
           </fieldset>
         </div>
         <DialogFooter>
-          <Button className="w-full h-11" disabled={!body.trim() || add.isPending} onClick={() => add.mutate()}>Save note</Button>
+          <Button className="w-full h-11" disabled={!body.trim() || !athleteId || add.isPending} onClick={() => add.mutate()}>Save note</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
