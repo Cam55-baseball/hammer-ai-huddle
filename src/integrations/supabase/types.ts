@@ -1975,6 +1975,120 @@ export type Database = {
         }
         Relationships: []
       }
+      addon_notices: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          link: string | null
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      addon_parent_requests: {
+        Row: {
+          athlete_user_id: string
+          created_at: string
+          id: string
+          parent_user_id: string
+          product: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_user_id: string
+          created_at?: string
+          id?: string
+          parent_user_id: string
+          product: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_user_id?: string
+          created_at?: string
+          id?: string
+          parent_user_id?: string
+          product?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      addon_purchases: {
+        Row: {
+          amount_cents: number
+          block_start: string | null
+          channel: string
+          created_at: string
+          delivery_attempts: number
+          delivery_status: string
+          external_id: string
+          id: string
+          last_error: string | null
+          payer_user_id: string
+          product: string
+          recap_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          block_start?: string | null
+          channel: string
+          created_at?: string
+          delivery_attempts?: number
+          delivery_status?: string
+          external_id: string
+          id?: string
+          last_error?: string | null
+          payer_user_id: string
+          product: string
+          recap_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          block_start?: string | null
+          channel?: string
+          created_at?: string
+          delivery_attempts?: number
+          delivery_status?: string
+          external_id?: string
+          id?: string
+          last_error?: string | null
+          payer_user_id?: string
+          product?: string
+          recap_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       advisory_feedback_logs: {
         Row: {
           advice_directive: string | null
@@ -11793,6 +11907,130 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_bookings: {
+        Row: {
+          athlete_user_id: string
+          created_at: string
+          id: string
+          player_time_zone: string | null
+          purchase_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_user_id: string
+          created_at?: string
+          id?: string
+          player_time_zone?: string | null
+          purchase_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_user_id?: string
+          created_at?: string
+          id?: string
+          player_time_zone?: string | null
+          purchase_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_bookings_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: true
+            referencedRelation: "addon_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_hours_settings: {
+        Row: {
+          end_minute: number
+          id: number
+          lesson_minutes: number
+          max_weeks_ahead: number
+          min_notice_hours: number
+          start_minute: number
+          time_zone: string
+          updated_at: string
+          weekdays: number[]
+        }
+        Insert: {
+          end_minute?: number
+          id?: number
+          lesson_minutes?: number
+          max_weeks_ahead?: number
+          min_notice_hours?: number
+          start_minute?: number
+          time_zone?: string
+          updated_at?: string
+          weekdays?: number[]
+        }
+        Update: {
+          end_minute?: number
+          id?: number
+          lesson_minutes?: number
+          max_weeks_ahead?: number
+          min_notice_hours?: number
+          start_minute?: number
+          time_zone?: string
+          updated_at?: string
+          weekdays?: number[]
+        }
+        Relationships: []
+      }
+      lesson_sessions: {
+        Row: {
+          booking_id: string
+          created_at: string
+          end_at: string
+          google_event_id: string | null
+          id: string
+          lesson_number: number
+          meet_url: string | null
+          requested_start_at: string | null
+          start_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          end_at: string
+          google_event_id?: string | null
+          id?: string
+          lesson_number: number
+          meet_url?: string | null
+          requested_start_at?: string | null
+          start_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          end_at?: string
+          google_event_id?: string | null
+          id?: string
+          lesson_number?: number
+          meet_url?: string | null
+          requested_start_at?: string | null
+          start_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_sessions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_trainers: {
         Row: {
           created_at: string
@@ -19881,6 +20119,7 @@ export type Database = {
           generated_at: string | null
           id: string
           recap_data: Json
+          recap_kind: string
           recap_period_end: string
           recap_period_start: string
           saved_to_library: boolean | null
@@ -19894,6 +20133,7 @@ export type Database = {
           generated_at?: string | null
           id?: string
           recap_data?: Json
+          recap_kind?: string
           recap_period_end: string
           recap_period_start: string
           saved_to_library?: boolean | null
@@ -19907,6 +20147,7 @@ export type Database = {
           generated_at?: string | null
           id?: string
           recap_data?: Json
+          recap_kind?: string
           recap_period_end?: string
           recap_period_start?: string
           saved_to_library?: boolean | null

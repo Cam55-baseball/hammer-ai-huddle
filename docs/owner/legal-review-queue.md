@@ -23,3 +23,15 @@ Status: pending lawyer review. Nothing in the app shows this line yet.
 The privacy policy should state: "Coaches you connect with, and organizations (and their assigned staff) you belong to, can see your daily check-ins and readiness — including sleep, soreness, pain and energy answers. This is part of using the app with a coach and does not need a separate sharing setting. Your detailed health profile (injury history, medications and nutrition targets) is only shared if you (or a parent, for players under 18) turn on Health sharing."
 
 Status: pending lawyer review. The app now shows check-ins and readiness to connected coaches and assigned organization staff.
+
+## Add-ons (owner Nov 6) — for lawyer review; NOT shown in the app
+The app shows no refund or cancellation promises — only "Questions about your lessons? Contact us".
+
+### Early 6-Week Recap ($100; iPhone in-app purchase / web Stripe)
+- Refunds/cancellation: **Owner to decide** for web purchases. iPhone purchases: Apple handles refund requests under Apple's Media Services terms (reportaprobleme.apple.com); we don't process them.
+- Draft Terms wording (needs review): "The Early 6-Week Recap is a one-time digital report covering your current 6-week training block up to the purchase date. One may be bought per block, after at least 14 days of that block. It is delivered in the app once generated. In-app purchases made through Apple are subject to Apple's terms, including its refund process."
+
+### Hammers Online ×4 — Private lessons ($20,000; Stripe, incl. Apple Pay)
+- Refunds/cancellation/no-show/reschedule limits: **Owner to decide**.
+- Draft Terms wording (needs review): "Hammers Online ×4 is four one-hour, one-on-one live online lessons between one coach and one player by Google Meet. After payment, the player requests four times on four different days from the coach's open hours; lessons are scheduled once the coach confirms. Reschedule requests are subject to the coach's approval. For players under 18, a parent or guardian must approve and pay and is invited to every lesson. Cancellation and refund terms: [Owner to decide]."
+- Note for counsel: lessons are sold outside Apple in-app purchase under App Review Guideline 3.1.3(d) (person-to-person real-time services).

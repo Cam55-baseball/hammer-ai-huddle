@@ -1457,6 +1457,13 @@
       "when": 1793997544505,
       "tag": "0207_checkins_always_shared_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 208,
+      "version": "7",
+      "when": 1794005041864,
+      "tag": "0208_addons_recap_lessons",
+      "breakpoints": true
     }
   ]
 }

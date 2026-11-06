@@ -59,6 +59,7 @@ export function useRecapCountdown(): RecapCountdownData {
       .from('vault_recaps')
       .select('recap_period_end, recap_period_start, generated_at, unlocked_progress_reports_at')
       .eq('user_id', userId)
+      .eq('recap_kind', 'regular') // early add-on recaps never move the 6-week countdown (owner Nov 6)
       .order('generated_at', { ascending: false })
       .limit(1)
       .maybeSingle();

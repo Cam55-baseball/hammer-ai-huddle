@@ -1,3 +1,4 @@
+import { LessonRequestsPanel } from "@/components/owner/LessonRequestsPanel";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { VIDEO_PUBLIC_COLUMNS, withStaffScores } from "@/lib/reportCard/staffVideoScores";
@@ -75,6 +76,7 @@ interface AdminRequest {
 
 const sectionLabels: Record<OwnerSection, string> = {
   'overview': 'Overview',
+  'lessons': 'Lesson requests',
   'builds': 'Builds',
   'users': 'User Management',
   'admin-requests': 'Admin Requests',
@@ -113,7 +115,7 @@ const OwnerDashboard = () => {
   const [playerSearch, setPlayerSearch] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [rankingsVisible, setRankingsVisible] = useState(true);
-  const [activeSection, setActiveSection] = useState<OwnerSection>(() => (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('section') === 'users' ? 'users' : 'overview'));
+  const [activeSection, setActiveSection] = useState<OwnerSection>(() => (typeof window !== 'undefined' && (['users','lessons'] as OwnerSection[]).includes(new URLSearchParams(window.location.search).get('section') as OwnerSection) ? new URLSearchParams(window.location.search).get('section') as OwnerSection : 'overview'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [builds, setBuilds] = useState<BuildItem[]>([]);
   const [pendingBuildId, setPendingBuildId] = useState<string | null>(null);
@@ -1316,6 +1318,8 @@ const OwnerDashboard = () => {
           {activeSection === 'engine-settings' && (
             <OwnerEngineSettingsPanel />
           )}
+
+          {activeSection === 'lessons' && <LessonRequestsPanel />}
 
           {/* Player Search Section */}
           {activeSection === 'player-search' && (

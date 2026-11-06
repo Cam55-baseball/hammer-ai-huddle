@@ -46,7 +46,8 @@ export type OwnerSection =
   | "engine-settings"
   | "subscriptions"
   | "settings"
-  | "player-search";
+  | "player-search"
+  | "lessons";
 
 interface SidebarItem {
   id: OwnerSection;
@@ -99,6 +100,7 @@ const GROUPS: SidebarGroup[] = [
     label: "Commerce",
     items: [
       { id: "builds", label: "Builds", icon: Package },
+      { id: "lessons", label: "Lesson requests", icon: Users },
       { id: "subscriptions", label: "Subscriptions", icon: CreditCard },
       { id: "subscriptions", label: "Subscribers", icon: Users, href: "/subscribers" },
     ],
