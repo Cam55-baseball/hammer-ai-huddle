@@ -5,6 +5,16 @@ import { weekRuleBreaks, datesToRebuild, blockedReason } from './weekRuleRepair'
 
 /** Same authenticated day-lock adjustment path as Today. Never replaces marked work. */
 // Rebuilds run one at a time: overlapping 7-day rebuilds make the day-lock report "Day changed".
+/** Background plan calls wait for a session and renew once on 401; signed-out calls stay quiet. */
+async function invokePlan(opts: { body: Record<string, unknown> }) {
+  const { data: s } = await supabase.auth.getSession();
+  if (!s?.session?.access_token) return { data: null, error: Object.assign(new Error('not_signed_in'), { context: undefined }) } as { data: any; error: any };
+  const first = await supabase.functions.invoke('wk-generate-daily', opts);
+  if ((first.error as { context?: Response } | null)?.context?.status !== 401) return first;
+  const { data: r } = await supabase.auth.refreshSession();
+  if (!r?.session?.access_token) return first;
+  return await supabase.functions.invoke('wk-generate-daily', opts);
+}
 let queue: Promise<unknown> = Promise.resolve();
 export function rebuildAfterChange(reason: string, today: string, effectiveDate?: string) {
   const run = queue.then(() => rebuildOnce(reason, today, effectiveDate));
@@ -26,14 +36,14 @@ async function rebuildOnce(reason: string, today: string, effectiveDate?: string
   for (let offset = 0; offset < 7 + kept.length && offset < 14; offset++) {
     const date = isoShift(firstDate, offset);
     try {
-      const { data, error } = await supabase.functions.invoke('wk-generate-daily', {
+      const { data, error } = await invokePlan( {
         body: { plan_date: date, compose_sport_day: true, change_reason: 'player_request', change_text: reason, change_key: `${key}:${date}` },
       });
       if (error || (data as { conflict?: boolean } | null)?.conflict === true) {
         const conflict = error ? await (error as { context?: Response }).context?.clone?.().json?.().catch(() => null) : data;
         if ((conflict?.error === 'adjust_failed' && conflict?.message === 'Day changed; rebuild from fresh saved work') || conflict?.error === 'Sport day changed; rebuild from fresh saved work') {
           // One fresh server reread under the same lock; never bypass a safety or protected-work refusal.
-          const retry = await supabase.functions.invoke('wk-generate-daily', {body:{plan_date:date,compose_sport_day:true,change_reason:'player_request',change_text:reason,change_key:`${key}:${date}:fresh`}});
+          const retry = await invokePlan( {body:{plan_date:date,compose_sport_day:true,change_reason:'player_request',change_text:reason,change_key:`${key}:${date}:fresh`}});
           if (!retry.error && retry.data?.ok===true && retry.data?.composed===true && retry.data?.degraded!==true) {
             if(retry.data.sport==='baseball'||retry.data.sport==='softball'){sport=retry.data.sport;userId=typeof retry.data.user_id==='string'?retry.data.user_id:null;boughtBunting=retry.data.bunting_entitled===true;}
             continue;
@@ -72,12 +82,12 @@ async function rebuildOnce(reason: string, today: string, effectiveDate?: string
 /** Day-change call that retries once with a fresh server reread when another save
  *  changed the day first (revision conflict). Safety and protected-work refusals are never retried. */
 export async function invokeDayChange(body: Record<string, unknown>) {
-  const first = await supabase.functions.invoke('wk-generate-daily', { body });
+  const first = await invokePlan( { body });
   if (!first.error && first.data?.conflict !== true) return first;
   const b = first.error ? await (first.error as { context?: Response }).context?.clone?.().json?.().catch(() => null) : first.data;
   const conflict = (b?.error === 'adjust_failed' && /day changed/i.test(String(b?.message ?? ''))) || /changed; rebuild/i.test(String(b?.error ?? ''));
   if (!conflict) return first;
-  return await supabase.functions.invoke('wk-generate-daily', { body: { ...body, change_key: `${String(body.change_key ?? '')}:fresh` } });
+  return await invokePlan( { body: { ...body, change_key: `${String(body.change_key ?? '')}:fresh` } });
 }
 
 /**
@@ -86,7 +96,7 @@ export async function invokeDayChange(body: Record<string, unknown>) {
  * dates, and the change path still refuses protected work.
  */
 export async function rebuildWrongSeasonDays(today: string): Promise<{ checked: boolean; rebuilt: string[]; failed: string[] }> {
-  const { data, error } = await supabase.functions.invoke('wk-generate-daily', { body: { plan_date: today, stale_season_sweep: true } });
+  const { data, error } = await invokePlan( { body: { plan_date: today, stale_season_sweep: true } });
   if (error || data?.ok !== true || !Array.isArray(data?.stale_dates)) return { checked: false, rebuilt: [], failed: [] };
   const rebuilt: string[] = []; const failed: string[] = [];
   for (const date of data.stale_dates as string[]) {
@@ -104,7 +114,7 @@ export async function rebuildWrongSeasonDays(today: string): Promise<{ checked: 
  */
 export async function repairSavedWeek(today: string): Promise<{ checked: boolean; rebuilt: string[]; failed: string[]; blocked: string | null }> {
   const none = { checked: false, rebuilt: [] as string[], failed: [] as string[], blocked: null as string | null };
-  const { data, error } = await supabase.functions.invoke('wk-generate-daily', { body: { plan_date: today, week_rule_sweep: true } });
+  const { data, error } = await invokePlan( { body: { plan_date: today, week_rule_sweep: true } });
   if (error || data?.ok !== true || typeof data?.user_id !== 'string' || (data.sport !== 'baseball' && data.sport !== 'softball')) return none;
   const last = isoShift(today, 6);
   const read = () => readComposedWeek(data.user_id, today, last, data.sport, data.bunting_entitled === true);
@@ -132,7 +142,7 @@ export const PLAN_UPDATING_MESSAGE = "Saved. Updating your plan… you can keep 
 export async function startBackgroundRebuild(reason: string, today: string, effectiveDate?: string): Promise<{ jobId: string } | null> {
   const firstDate = effectiveDate && effectiveDate > today ? effectiveDate : today;
   try {
-    const { data, error } = await supabase.functions.invoke('wk-generate-daily', {
+    const { data, error } = await invokePlan( {
       body: { rebuild_week_background: true, change_text: reason, first_date: firstDate },
     });
     if (error || data?.background !== true || typeof data?.job_id !== 'string') return null;
@@ -144,7 +154,7 @@ export async function startBackgroundRebuild(reason: string, today: string, effe
  *  made under older plan rules or before the newest analyzed throwing/pitching clip. */
 export async function startRulesVersionSweep(today: string): Promise<{ stale: string[] } | null> {
   try {
-    const { data, error } = await supabase.functions.invoke('wk-generate-daily', { body: { rules_version_sweep: true, plan_date: today } });
+    const { data, error } = await invokePlan( { body: { rules_version_sweep: true, plan_date: today } });
     if (error || data?.ok !== true) return null;
     return { stale: Array.isArray(data.stale) ? data.stale : [] };
   } catch { return null; }
