@@ -11,7 +11,7 @@ import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 
 export interface ModuleDetails {
   subscription_id: string;
-  status: 'active' | 'canceled' | 'past_due';
+  status: 'active' | 'canceled' | 'past_due' | 'scheduled' | 'paused';
   current_period_end: string | null;
   cancel_at_period_end: boolean;
   price_id: string;
@@ -20,12 +20,16 @@ export interface ModuleDetails {
 
 interface Props {
   sport: 'baseball' | 'softball';
-  module: 'hitting' | 'pitching' | 'throwing';
-  details: ModuleDetails | undefined;
+  module: string;
+  details: (ModuleDetails & { sponsored?: boolean }) | undefined;
   onActionComplete: () => void;
+  /** Owner Nov 6 r5: the plan name from the shared activePlans judge (never the raw key). */
+  planTitle?: string;
+  /** Plain line under the title, e.g. that this payment is already part of another plan. */
+  note?: string;
 }
 
-export function ModuleManagementCard({ sport, module, details, onActionComplete }: Props) {
+export function ModuleManagementCard({ sport, module, details, onActionComplete, planTitle, note }: Props) {
   const { canShowPurchaseUI, isStaffAccount, roleLoading } = usePurchaseAvailability();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -34,7 +38,9 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
   
   if (!details) return null;
   
-  const moduleName = `${sport.charAt(0).toUpperCase() + sport.slice(1)} ${module.charAt(0).toUpperCase() + module.slice(1)}`;
+  const sportName = sport.charAt(0).toUpperCase() + sport.slice(1);
+  const moduleName = planTitle ? `${sportName} · ${planTitle}` : `${sportName} ${module.charAt(0).toUpperCase() + module.slice(1)}`;
+  const sponsored = !!details.sponsored || String(details.subscription_id ?? '').startsWith('sponsor:');
   const emoji = sport === 'baseball' ? '⚾' : '🥎';
   
   const formatDate = (dateStr: string) => {
@@ -43,6 +49,14 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
   
   // Determine status display
   const getStatusInfo = () => {
+    if (sponsored) {
+      return {
+        label: 'Sponsored',
+        color: 'bg-green-500',
+        icon: <CheckCircle className="w-3 h-3" />,
+        message: 'Paid by your organization',
+      };
+    }
     if (details.cancel_at_period_end && details.status === 'active') {
       return {
         label: t('moduleManagement.canceling'),
@@ -150,12 +164,13 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {note && <p className="text-xs text-muted-foreground">{note}</p>}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="w-4 h-4" />
             <span>{statusInfo.message}</span>
           </div>
           
-          <div className="flex gap-2">
+          {!sponsored && <div className="flex gap-2">
             {/* Active module - show cancel button */}
             {details.status === 'active' && !details.cancel_at_period_end && (
               <Button
@@ -189,7 +204,7 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
                 {t('moduleManagement.resubscribe')}
               </Button>
             )}
-          </div>
+          </div>}
         </CardContent>
       </Card>
       

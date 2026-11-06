@@ -14,7 +14,7 @@ import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
-import { getActiveTier } from "@/utils/tierAccess";
+import { plansForSport } from "@/utils/tierAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -27,7 +27,7 @@ import { TIER_CONFIG } from "@/constants/tiers";
 import { baseball } from "@lucide/lab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
-import { ModuleManagementCard } from "@/components/ModuleManagementCard";
+import { PlanTiles } from "@/components/dashboard/PlanTiles";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { PostGameLogPrompt } from "@/components/games/PostGameLogPrompt";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
@@ -118,7 +118,8 @@ function DashboardTodayPlan({
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
-  const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = useSubscription();
+  const subscription = useSubscription();
+  const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = subscription;
   const { canShowPurchaseUI, mode: purchaseMode, isStaffAccount, roleLoading: purchaseRoleLoading } = usePurchaseAvailability();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
@@ -144,9 +145,10 @@ export default function Dashboard() {
   const [beforeStartPortalTarget, setBeforeStartPortalTarget] = useState<HTMLDivElement | null>(null);
   
   // Tier-based display: only the purchased tier card shows "Start Training"
-  const activeTier = getActiveTier(subscribedModules, selectedSport);
-  const isTierUnlocked = (tier: string) => isOwner || isAdmin || activeTier === tier;
-  const hasAnyTier = isOwner || isAdmin || activeTier !== null;
+  // Owner Nov 6 r5: tiles marked Unlocked come from the one shared activePlans judge.
+  const heldPlans: string[] = plansForSport(subscription, selectedSport);
+  const isTierUnlocked = (tier: string) => isOwner || isAdmin || heldPlans.includes(tier);
+  const hasAnyTier = isOwner || isAdmin || heldPlans.length > 0;
 
   const heroImages = [dashboardHero1, dashboardHero2, dashboardHero3, dashboardHero4];
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
@@ -327,7 +329,7 @@ export default function Dashboard() {
 
     // Purchase hidden: a locked tile is inert. No routing to pricing, no toast
     // that hints the tier can be bought elsewhere.
-    if (!canShowPurchaseUI && !isOwnerOrAdmin && !isTierUnlocked(module)) {
+    if (!canShowPurchaseUI && !isOwnerOrAdmin && !isTierUnlocked(module) && !heldPlans.includes('golden2way')) {
       return;
     }
     
@@ -446,83 +448,15 @@ export default function Dashboard() {
       </div>
 
       {/* Module Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 module-cards">
-        {([
-          { tier: 'pitcher', Icon: CircleDot, title: 'Complete Pitcher', desc: 'Pitching Analysis, Heat Factory, Ask the Coach', topBadge: null as string | null },
-          { tier: '5tool', Icon: Zap, title: '5Tool Player', desc: 'Hitting + Throwing Analysis, Iron Bambino, Speed Lab, Tex Vision', topBadge: 'Most Popular' },
-          { tier: 'golden2way', Icon: Target, title: 'The Golden 2Way', desc: 'Everything + The Unicorn workout system', topBadge: 'Best Value' },
-        ] as const).map(({ tier, Icon: ModIcon, title, desc: rawDesc, topBadge }) => {
-          const desc = programsRetired ? scrubRetiredFromList(rawDesc) : rawDesc;
-          const unlocked = isTierUnlocked(tier);
-          const price = TIER_CONFIG[tier]?.price;
-          return (
-            <Card
-              key={tier}
-              className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
-                !unlocked
-                  ? "border-2 border-dashed border-primary/40 hover:border-primary/70"
-                  : "border-primary/40 border-2"
-              }`}
-              onClick={() => handleModuleSelect(tier)}
-            >
-              <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
-                <div className="p-2 sm:p-4 rounded-full bg-primary/10">
-                  <ModIcon className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
-                </div>
-                {unlocked ? (
-                  <Badge variant="secondary" className="text-[10px] bg-emerald-500/15 text-emerald-600 border border-emerald-500/40">
-                    <Check className="h-3 w-3 mr-1" /> Unlocked
-                  </Badge>
-                ) : topBadge && canShowPurchaseUI ? (
-                  <Badge className="bg-primary text-primary-foreground text-xs">{topBadge}</Badge>
-                ) : null}
-                <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                  {title}
-                  {!unlocked && <Lock className="h-5 w-5" />}
-                </h3>
-                <p className="text-sm sm:text-base text-muted-foreground">{desc}</p>
-                {unlocked ? (
-                  <Button
-                    variant="outline"
-                    className="w-full h-11 border-primary/40 text-foreground hover:bg-primary/5"
-                  >
-                    <ModIcon className="h-4 w-4 sm:mr-2" /> Start Training
-                  </Button>
-                ) : !canShowPurchaseUI ? (
-                  <p className="text-xs text-muted-foreground">Not available on your account yet</p>
-                ) : purchaseMode === "native-linkout" ? (
-                  <Button
-                    className="w-full h-11 font-semibold"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void openWebsiteCheckout("/pricing").catch(() =>
-                        toast.error("Couldn't open the website. Please try again."),
-                      );
-                    }}
-                  >
-                    Subscribe on our website
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate("/pricing", { state: { sport: selectedSport, tier } });
-                    }}
-                    className="w-full h-12 font-bold uppercase tracking-wide text-primary-foreground border-0
-                               bg-[linear-gradient(110deg,hsl(var(--primary)),hsl(45_100%_55%),hsl(var(--primary)))]
-                               bg-[length:200%_100%] animate-gradient-shift
-                               shadow-[0_0_24px_hsl(var(--primary)/0.45)]
-                               hover:shadow-[0_0_36px_hsl(var(--primary)/0.65)] hover:scale-[1.03]"
-                  >
-                    <Sparkles className="h-4 w-4 sm:mr-2 animate-pulse" />
-                    Unlock Now!
-                  </Button>
-                )}
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+      <PlanTiles
+        isTierUnlocked={isTierUnlocked}
+        heldPlans={heldPlans}
+        canShowPurchaseUI={canShowPurchaseUI}
+        purchaseMode={purchaseMode}
+        programsRetired={programsRetired}
+        onSelect={(tier) => handleModuleSelect(tier)}
+        onUnlock={(tier) => navigate("/pricing", { state: { sport: selectedSport, tier } })}
+      />
     </>
   );
 

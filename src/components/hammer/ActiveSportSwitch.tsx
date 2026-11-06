@@ -10,7 +10,7 @@ import { rebuildAfterChange } from "@/lib/hammer/rebuildAfterChange";
 import { getTodayDate } from "@/utils/dateUtils";
 import { priorityAccess } from '@/lib/hammer/priorityAccess';
 import { useNavigate } from "react-router-dom";
-import { getActiveTier } from "@/utils/tierAccess";
+import { activePlans } from "../../../supabase/functions/_shared/programAccess";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { goToStripe } from "@/lib/purchase/goToStripe";
 
@@ -46,7 +46,9 @@ export function ActiveSportSwitch({ userId }: { userId: string }) {
       const access=priorityAccess(subscription?.status==='active'?subscription.subscribed_modules??[]:[],next);
       if(!access.hasHitting&&!access.hasPitching&&!access.hasThrowing){
         const message=`Your plan covers ${NAME[primary]} only. Add a ${NAME[next]} plan or switch your subscription. Your sport and saved work have not changed.`;
-        setPurchase({ sport: next, tier: getActiveTier(subscription?.subscribed_modules ?? [], primary) });
+        // Owner Nov 6 r5: suggest the plan really held (shared activePlans judge); two separate plans → Pricing.
+        const held = activePlans(primary, subscription?.subscribed_modules ?? [], primary);
+        setPurchase({ sport: next, tier: held.length === 1 ? held[0] : null });
         setResult(message);toast.error(message);return;
       }
       await persistContextAnswer(userId, "sport_primary", next, "tell_hammer", "self_report");

@@ -101,6 +101,8 @@ Deno.serve(async (req) => {
         subscribed: isActive,
         modules: normalizeProgramModules(subscription?.subscribed_modules ?? [], primarySport),
         primary_sport: primarySport,
+        // Owner Nov 6 r5: the stored keys, so plan names come from activePlans, never read-time aliases.
+        plan_modules: subscription?.subscribed_modules ?? [],
         module_details: subscription?.module_subscription_mapping ?? null,
         subscription_end: subscription?.current_period_end ?? null,
         has_discount: !!subscription?.coupon_code,

@@ -26,6 +26,8 @@ import { SiTiktok } from "react-icons/si";
 import { UserMenu } from "@/components/UserMenu";
 import { PositionListEditor } from "@/components/profile/PositionListEditor";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
+import { billingRows } from "@/lib/subscription/planDisplay";
+import { HeldPlanBadges, PlanBillingCards } from "@/components/subscription/HeldPlans";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
 import { OnboardingStatusCard } from "@/components/settings/OnboardingStatusCard";
@@ -97,7 +99,9 @@ export default function Profile() {
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
-  const { modules: subscribedModules, module_details, subscription_end, has_discount, discount_percent, loading: subLoading, refetch } = useSubscription();
+  const { modules: subscribedModules, plan_modules: planModules, primary_sport: planPrimarySport, module_details, subscription_end, has_discount, discount_percent, loading: subLoading, refetch } = useSubscription();
+  // Owner Nov 6 r5: plan names come only from the shared activePlans judge.
+  const planBillingRows = billingRows(module_details, planModules ?? [], planPrimarySport ?? 'baseball');
   const navigate = useNavigate();
   const goBack = useSmartBack();
   const [searchParams] = useSearchParams();
@@ -1834,13 +1838,7 @@ export default function Profile() {
             <div className="space-y-4">
               <div>
                 <h4 className="font-semibold mb-2">{t('profile.activeModules')}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {subscribedModules.map((module) => (
-                    <Badge key={module} variant="outline" className="capitalize">
-                      {module}
-                    </Badge>
-                  ))}
-                </div>
+                <HeldPlanBadges planModules={planModules ?? []} primarySport={planPrimarySport ?? 'baseball'} />
               </div>
 
               {has_discount && discount_percent !== null && (
@@ -1894,7 +1892,7 @@ export default function Profile() {
         )}
 
         {/* Manage Subscriptions Section */}
-        {!viewingOtherProfile && !roleLoading && module_details && Object.keys(module_details).length > 0 && (
+        {!viewingOtherProfile && !roleLoading && planBillingRows.length > 0 && (
           <Card className="p-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -1904,27 +1902,14 @@ export default function Profile() {
                     {t('profile.controlModulesDescription')}
                   </p>
                 </div>
-                {Object.keys(module_details).length > 1 && (
+                {planBillingRows.filter((r) => !String(r.details?.subscription_id ?? '').startsWith('sponsor:')).length > 1 && (
                   <Button variant="outline" onClick={handleCancelAll} disabled={isRefreshing}>
                     {t('profile.cancelAllModules')}
                   </Button>
                 )}
               </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(module_details).map(([key, details]) => {
-                  const [sport, module] = key.split('_') as ['baseball' | 'softball', 'hitting' | 'pitching' | 'throwing'];
-                  return (
-                    <ModuleManagementCard
-                      key={key}
-                      sport={sport}
-                      module={module}
-                      details={details}
-                      onActionComplete={refetch}
-                    />
-                  );
-                })}
-              </div>
+              <PlanBillingCards moduleDetails={module_details} planModules={planModules ?? []} primarySport={planPrimarySport ?? 'baseball'} onActionComplete={refetch} />
             </div>
           </Card>
         )}
