@@ -9,6 +9,7 @@ export function subscriberBreakdown(players: PlayerPlan[], staff: StaffPlan[], s
   // one saved tier copied onto every sport. Sponsorship rows are also counted below, as before.
   const playerPlans = new Map<string, number>();
   for (const row of players) {
+    if (!row.tier || !TIER_DISPLAY_NAMES[row.tier]) continue; // no current plan saved
     const held = heldPlans(row.subscribed_modules ?? [], "baseball");
     playerPlans.set(row.user_id, held.length);
     for (const { sport, plan } of held) add(`${sport.charAt(0).toUpperCase() + sport.slice(1)} - ${TIER_DISPLAY_NAMES[plan]}`);
