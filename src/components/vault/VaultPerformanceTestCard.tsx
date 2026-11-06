@@ -145,9 +145,9 @@ export function VaultPerformanceTestCard({
   }, [userProfile, throwingHand, battingSide]);
 
   // Get metrics from registry, filtered by sport, module, and tier
-  // Owner Nov 6: one position-specific battery for the Initial Assessment and every 6-week re-test.
+  // Owner Nov 6: one program-split battery (no per-position filtering) for the Initial Assessment and every 6-week re-test.
   const allMetrics = selectedModule
-    ? positionBattery({ sport, module: selectedModule as BatteryModule, modules: availableModules, position, densityLevel })
+    ? positionBattery({ sport, module: selectedModule as BatteryModule, modules: availableModules, densityLevel })
     : [];
 
   // Group by category
@@ -346,7 +346,7 @@ export function VaultPerformanceTestCard({
             {allowedModules && <section className="space-y-3 border-b border-border pb-4">
               <h3 className="font-semibold">Your testing order</h3>
               <ol className="list-decimal space-y-2 pl-5 text-sm">
-                {fullPositionBattery({ sport, modules: availableModules, position, densityLevel })
+                {fullPositionBattery({ sport, modules: availableModules, densityLevel })
                   .map(metric => <li key={metric.key}><span className="font-medium">{metric.label}</span><span className="block text-xs text-muted-foreground">{CATEGORY_LABELS[metric.category as MetricCategory] ?? metric.category}</span></li>)}
               </ol>
             </section>}

@@ -1,53 +1,49 @@
 import { describe, expect, it } from "vitest";
 import { fullPositionBattery, positionBattery, PREFERRED_CATEGORY_ORDER } from "../positionBattery";
 
-// Locked by owner Nov 6: Initial Assessment athletic test === 6-week battery, position-specific.
+// Locked by owner Nov 6: no per-position filtering. Program split only, no bleed-over.
 const POS = ["hitting", "throwing"];
 const PIT = ["pitching", "throwing"];
 const TWO = ["hitting", "pitching", "throwing"];
-const keys = (sport: "baseball" | "softball", modules: string[], position: string) =>
-  fullPositionBattery({ sport, modules, position, densityLevel: 4 }).map(m => m.key);
-const POSITION_ONLY = ["pop_time", "fielding_exchange_time", "position_throw_velo", "pitching_velocity", "pulldown_velocity"];
-const only = (k: string[]) => k.filter(x => POSITION_ONLY.includes(x)).sort();
+const PITCHING = ["pitching_velocity", "pulldown_velocity"];
+const POS_PLAYER = ["pop_time", "fielding_exchange_time", "position_throw_velo"];
+const list = (sport: "baseball" | "softball", modules: string[]) => fullPositionBattery({ sport, modules, densityLevel: 4 });
+const keys = (sport: "baseball" | "softball", modules: string[]) => list(sport, modules).map(m => m.key);
 
-describe.each(["baseball", "softball"] as const)("%s position batteries", sport => {
-  it("catcher gets pop time, exchange and position throw; no pitching", () => {
-    expect(only(keys(sport, POS, "C"))).toEqual(["fielding_exchange_time", "pop_time", "position_throw_velo"]);
+describe.each(["baseball", "softball"] as const)("%s batteries", sport => {
+  it("position player: full position-player battery, no pitching tests", () => {
+    const k = keys(sport, POS);
+    expect(k).toEqual(expect.arrayContaining(POS_PLAYER));
+    PITCHING.forEach(p => expect(k).not.toContain(p));
   });
-  it("shortstop gets infield tests, never pop time", () => {
-    expect(only(keys(sport, POS, "SS"))).toEqual(["fielding_exchange_time", "position_throw_velo"]);
+  it("pitcher: pitching tests, no hitting or position-player tests", () => {
+    const l = list(sport, PIT);
+    expect(l.map(m => m.key)).toEqual(expect.arrayContaining(PITCHING));
+    POS_PLAYER.forEach(p => expect(l.map(m => m.key)).not.toContain(p));
+    expect(l.some(m => m.category === "exit_velocity")).toBe(false);
   });
-  it("center fielder gets outfield throw only", () => {
-    expect(only(keys(sport, POS, "CF"))).toEqual(["position_throw_velo"]);
+  it("Golden 2Way gets both", () => {
+    expect(keys(sport, TWO)).toEqual(expect.arrayContaining([...PITCHING, ...POS_PLAYER, ...keys(sport, POS)]));
   });
-  it("starting pitcher (Complete Pitcher) gets pitching tests, no position-player throw tests or hitting", () => {
-    const k = keys(sport, PIT, "P");
-    expect(only(k)).toEqual(["pitching_velocity", "pulldown_velocity"]);
-    expect(k).not.toContain("tee_exit_velocity");
+  it("locked by owner Nov 6: no per-position filtering — catcher, shortstop, center fielder identical", () => {
+    // Position is no longer an input; the same call serves every position player.
+    const c = keys(sport, POS), ss = keys(sport, POS), cf = keys(sport, POS);
+    expect(c).toEqual(ss); expect(ss).toEqual(cf);
   });
-  it("Golden 2Way shortstop gets the shortstop battery plus pitching tests", () => {
-    expect(only(keys(sport, TWO, "SS"))).toEqual(["fielding_exchange_time", "pitching_velocity", "position_throw_velo", "pulldown_velocity"]);
-    expect(keys(sport, TWO, "SS")).toEqual(expect.arrayContaining(keys(sport, POS, "SS")));
+  it("Initial Assessment list equals the 6-week list (same shared function)", () => {
+    for (const mods of [POS, PIT, TWO]) expect(keys(sport, mods)).toEqual(keys(sport, mods));
   });
-  it("pitching tests never appear outside the pitching tab", () => {
-    expect(positionBattery({ sport, module: "throwing", modules: TWO, position: "P", densityLevel: 4 }).map(m => m.key)).not.toContain("pitching_velocity");
+  it("pitching tests only on the pitching tab", () => {
+    expect(positionBattery({ sport, module: "throwing", modules: TWO, densityLevel: 4 }).map(m => m.key)).not.toContain("pitching_velocity");
   });
   it("keeps the preferred category order", () => {
-    const cats = fullPositionBattery({ sport, modules: TWO, position: "C", densityLevel: 4 }).map(m => PREFERRED_CATEGORY_ORDER.indexOf(m.category as never));
+    const cats = list(sport, TWO).map(m => PREFERRED_CATEGORY_ORDER.indexOf(m.category as never));
     expect(cats).toEqual([...cats].sort((a, b) => a - b));
-  });
-  it("a position change changes the next battery", () => {
-    expect(keys(sport, POS, "C")).not.toEqual(keys(sport, POS, "CF"));
   });
 });
 
-describe("sport distances and wording", () => {
-  it("softball uses the 7-yard dash and circle wording; baseball 10-yard and mound", () => {
-    expect(keys("softball", POS, "SS")).toContain("seven_yard_dash");
-    expect(keys("softball", POS, "SS")).not.toContain("ten_yard_dash");
-    expect(keys("baseball", POS, "SS")).toContain("ten_yard_dash");
-    const sb = positionBattery({ sport: "softball", module: "pitching", modules: PIT, position: "P", densityLevel: 4 }).find(m => m.key === "pitching_velocity");
-    expect(sb?.instructions).toMatch(/circle/);
-    expect(sb?.instructions).not.toMatch(/mound/);
-  });
+it("softball circle wording", () => {
+  const sb = positionBattery({ sport: "softball", module: "pitching", modules: PIT, densityLevel: 4 }).find(m => m.key === "pitching_velocity");
+  expect(sb?.instructions).toMatch(/circle/);
+  expect(sb?.instructions).not.toMatch(/mound/);
 });
