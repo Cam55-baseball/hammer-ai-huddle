@@ -1,5 +1,6 @@
 import { CoachCheckinsReadinessTab } from "@/components/coach/CoachCheckinsReadinessTab";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { CoachAthleteTabStrip } from "@/components/coach/CoachAthleteTabStrip";
 import { CoachLogForPlayer } from "@/components/coach/CoachLogForPlayer";
 import { CoachCheckinSummary } from "@/components/coach/CoachCheckinSummary";
 import { CoachPlanCard } from "@/components/coach/CoachPlanCard";
@@ -17,7 +18,7 @@ import { CoachGamesTab } from "@/components/coach/CoachGamesTab";
 import { CoachReadinessTab } from "@/components/coach/CoachReadinessTab";
 import { CoachReportsTab, CoachGradesTab, CoachRecapTab } from "@/components/coach/CoachReportsTab";
 import { CoachDevelopmentTab } from "@/components/coach/CoachDevelopmentTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +52,7 @@ const COLS =
 export default function CoachAthleteDetail() {
   const { athleteId } = useParams<{ athleteId: string }>();
   const [searchParams] = useSearchParams();
+  const [coachTab, setCoachTab] = useState(searchParams.get("tab") || "overview");
   const { user } = useAuth();
 
   // P0-REC-3 — roster membership guard. A coach may only drill into an
