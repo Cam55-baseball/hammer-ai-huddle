@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { healthSaveConfirmed } from '@/lib/physio/healthSaveReadback';
 
 export interface PhysioHealthProfile {
   id: string;
@@ -88,7 +89,7 @@ export function usePhysioProfile() {
           ...updates 
         }, { onConflict: 'user_id' }).select('*').single();
       if (error) throw error;
-      if (!data || Object.entries(updates).some(([key, value]) => JSON.stringify((data as Record<string, unknown>)[key]) !== JSON.stringify(value))) throw new Error('Health save was not confirmed.');
+      if (!healthSaveConfirmed(updates as Record<string, unknown>, data as Record<string, unknown> | null)) throw new Error('Health save was not confirmed.');
       queryClient.invalidateQueries({ queryKey: ['physioProfile'] });
       queryClient.invalidateQueries({ queryKey: ['physioGamePlanBadges'] });
       queryClient.invalidateQueries({ queryKey: ['physio-plan-mapping'] });
