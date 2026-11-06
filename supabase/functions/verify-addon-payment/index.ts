@@ -7,7 +7,7 @@ import {
   athleteFacts, hasActivePlan, recapAnchor, boughtBlocks, notify, ownerIds,
 } from "../_shared/addons/server.ts";
 import { recordPurchaseOnce } from "../_shared/addons/apple.ts";
-import { earlyRecapEligibility, purchaseGate, PRODUCTS_NOTE } from "../_shared/addons/rulesNote.ts";
+import { earlyRecapEligibility, purchaseGate } from "../_shared/addons/rules.ts";
 
 const Body = z.union([
   z.object({ action: z.literal("confirm"), sessionId: z.string().min(5).max(255).optional(), paymentIntentId: z.string().min(5).max(255).optional() }),
@@ -24,7 +24,6 @@ Deno.serve(async (req) => {
     if (!parsed.success) return json({ error: "bad_request" }, 400);
     const db = admin();
     const uid = me.user.id;
-    void PRODUCTS_NOTE;
 
     // Retry any undelivered early recap for this player (no new charge, ever).
     const retry = async () => {
