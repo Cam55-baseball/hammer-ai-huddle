@@ -25,16 +25,20 @@ export const COACH_ATHLETE_TABS: { value: string; label: string }[] = [
 export const TAB_STRIP_CLASS = "relative flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 snap-x [scrollbar-width:thin]";
 export const TAB_TRIGGER_CLASS = "shrink-0 snap-start whitespace-nowrap px-3";
 
+/** Scroll only the strip sideways so the active tab is fully visible (never the page). */
+export function keepActiveInView(strip: HTMLElement | null) {
+  const el = strip?.querySelector<HTMLElement>('[data-state="active"]');
+  if (!strip || !el) return;
+  const left = el.offsetLeft;
+  if (left < strip.scrollLeft) strip.scrollLeft = Math.max(0, left - 4);
+  else if (left + el.offsetWidth > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = left + el.offsetWidth - strip.clientWidth + 4;
+}
+
 export function CoachAthleteTabStrip({ value }: { value?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const strip = ref.current;
-    const el = strip?.querySelector<HTMLElement>('[data-state="active"]');
-    if (!strip || !el) return;
-    // Scroll only the strip sideways so the active tab is fully visible (never the page).
-    const left = el.offsetLeft;
-    if (left < strip.scrollLeft) strip.scrollLeft = left - 4;
-    else if (left + el.offsetWidth > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = left + el.offsetWidth - strip.clientWidth + 4;
+    const id = requestAnimationFrame(() => keepActiveInView(ref.current));
+    return () => cancelAnimationFrame(id);
   }, [value]);
   return (
     <TabsList ref={ref} aria-label="Player sections" className={TAB_STRIP_CLASS} data-coach-tab-strip>
