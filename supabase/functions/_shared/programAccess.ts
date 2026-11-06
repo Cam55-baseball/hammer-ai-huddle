@@ -87,7 +87,10 @@ export function planForStoredKey(key: string, storedModules: readonly string[], 
   if (!own) return null;
   const plans = activePlans(first, storedModules, primarySport);
   if (plans.includes(own)) return { sport: first, plan: own, included: false };
-  return plans.includes("golden2way") ? { sport: first, plan: "golden2way", included: true } : null;
+  if (!plans.includes("golden2way")) return null;
+  // "included" only when a separate Golden 2Way payment exists; legacy skill-key bundles ARE the Golden plan.
+  const goldenKey = storedModules.some(m => { const x = m.trim().toLowerCase(); return x === `${first}_golden2way` || (first === primarySport && x === "golden2way"); });
+  return { sport: first, plan: "golden2way", included: goldenKey };
 }
 
 /** Which question families a program may see. Complete Pitcher: no hitting/bunting; 5Tool: no pitching. */

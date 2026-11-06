@@ -31,6 +31,11 @@ describe("activePlans — the one shared judge", () => {
   it("two separate plans really held → both shown", () => {
     expect(activePlans("baseball", ["baseball_pitcher", "baseball_5tool"])).toEqual(["pitcher", "5tool"]);
   });
+  it("older skill-key-only accounts keep their legacy reading; a tier key is never overridden by skill keys", () => {
+    expect(activePlans("baseball", ["baseball_hitting", "baseball_pitching", "baseball_throwing"])).toEqual(["golden2way"]);
+    expect(activePlans("baseball", ["baseball_hitting"])).toEqual(["5tool"]);
+    expect(activePlans("baseball", ["baseball_pitching", "baseball_5tool"])).toEqual(["pitcher", "5tool"]);
+  });
   it("never reads the read-time aliases as extra plans (sports stay separate)", () => {
     expect(heldPlans(["baseball_golden2way"], "baseball")).toEqual([{ sport: "baseball", plan: "golden2way" }]);
     expect(activePlans("softball", ["baseball_golden2way"])).toEqual([]);
