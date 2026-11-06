@@ -1365,7 +1365,7 @@ function HammerDailyPlanBody({
                     )}
                   </PocketCard>
                 );
-              });
+              };
           return (
             <ArmCareBudgetProvider owner={armCareOwner}>
              <TodayRhythmProvider planDate={pocketDate}>
