@@ -14,6 +14,9 @@ export interface ModuleDetails {
 export interface SubscriptionData {
   subscribed: boolean;
   modules: string[]; // Format: ['baseball_hitting', 'softball_pitching']
+  /** Stored keys (no read-time aliases) — input to activePlans for naming plans. */
+  plan_modules: string[];
+  primary_sport: string;
   module_details: Record<string, ModuleDetails>;
   subscription_end: string | null;
   loading: boolean;
