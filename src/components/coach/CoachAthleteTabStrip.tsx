@@ -28,8 +28,13 @@ export const TAB_TRIGGER_CLASS = "shrink-0 snap-start whitespace-nowrap px-3";
 export function CoachAthleteTabStrip({ value }: { value?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const el = ref.current?.querySelector<HTMLElement>('[data-state="active"]');
-    el?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+    const strip = ref.current;
+    const el = strip?.querySelector<HTMLElement>('[data-state="active"]');
+    if (!strip || !el) return;
+    // Scroll only the strip sideways so the active tab is fully visible (never the page).
+    const left = el.offsetLeft - strip.offsetLeft;
+    if (left < strip.scrollLeft) strip.scrollLeft = left - 4;
+    else if (left + el.offsetWidth > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = left + el.offsetWidth - strip.clientWidth + 4;
   }, [value]);
   return (
     <TabsList ref={ref} aria-label="Player sections" className={TAB_STRIP_CLASS} data-coach-tab-strip>
