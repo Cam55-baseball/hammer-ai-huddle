@@ -65,6 +65,10 @@ import { VaultDrillWork } from '@/components/vault/VaultDrillWork';
 
 
 import { useAuth } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useProgramModules } from '@/hooks/useProgramModules';
+import { requiredAnalyses } from '@/lib/assessment/initialAssessment';
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 
