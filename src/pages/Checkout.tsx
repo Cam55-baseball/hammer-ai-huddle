@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { plansForSport } from "@/utils/tierAccess";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
@@ -46,7 +47,8 @@ const Checkout = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { refetch, loading: subLoading, modules: ownedModules } = useSubscription();
+  const subscription = useSubscription();
+  const { refetch, loading: subLoading } = subscription;
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isAdmin, loading: adminLoading } = useAdminAccess();
   const { toast } = useToast();
@@ -192,8 +194,10 @@ const Checkout = () => {
 
   const handleCreateCheckout = async (opts?: { silent?: boolean }) => {
     // Already own this plan? Don't ask the server (it would refuse with 409).
-    if (selectedTier && selectedSport && ownedModules.includes(`${selectedSport}_${selectedTier}`)) {
-      toast({ title: "You already have this plan", description: "Manage it from your account settings." });
+    // Owner Nov 6 r5: shared activePlans judge; Golden 2Way already includes the other two plans.
+    const held = selectedSport ? plansForSport(subscription, selectedSport) : [];
+    if (selectedTier && selectedSport && (held.includes(selectedTier as any) || (held.includes("golden2way") && selectedTier !== "golden2way"))) {
+      toast({ title: held.includes(selectedTier as any) ? "You already have this plan" : "The Golden 2Way already includes this", description: "Manage it from your account settings." });
       navigate("/dashboard");
       return;
     }

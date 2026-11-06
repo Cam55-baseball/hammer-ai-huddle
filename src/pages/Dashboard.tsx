@@ -14,7 +14,7 @@ import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
-import { getActiveTier } from "@/utils/tierAccess";
+import { plansForSport } from "@/utils/tierAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -118,7 +118,8 @@ function DashboardTodayPlan({
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
-  const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = useSubscription();
+  const subscription = useSubscription();
+  const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = subscription;
   const { canShowPurchaseUI, mode: purchaseMode, isStaffAccount, roleLoading: purchaseRoleLoading } = usePurchaseAvailability();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
@@ -144,9 +145,10 @@ export default function Dashboard() {
   const [beforeStartPortalTarget, setBeforeStartPortalTarget] = useState<HTMLDivElement | null>(null);
   
   // Tier-based display: only the purchased tier card shows "Start Training"
-  const activeTier = getActiveTier(subscribedModules, selectedSport);
-  const isTierUnlocked = (tier: string) => isOwner || isAdmin || activeTier === tier;
-  const hasAnyTier = isOwner || isAdmin || activeTier !== null;
+  // Owner Nov 6 r5: tiles marked Unlocked come from the one shared activePlans judge.
+  const heldPlans: string[] = plansForSport(subscription, selectedSport);
+  const isTierUnlocked = (tier: string) => isOwner || isAdmin || heldPlans.includes(tier);
+  const hasAnyTier = isOwner || isAdmin || heldPlans.length > 0;
 
   const heroImages = [dashboardHero1, dashboardHero2, dashboardHero3, dashboardHero4];
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
