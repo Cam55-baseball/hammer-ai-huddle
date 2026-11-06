@@ -1450,6 +1450,13 @@
       "when": 1793995182659,
       "tag": "0206_org_sponsorships_admin_read_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 207,
+      "version": "7",
+      "when": 1793997544505,
+      "tag": "0207_checkins_always_shared_fix",
+      "breakpoints": true
     }
   ]
 }
