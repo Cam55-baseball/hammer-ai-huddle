@@ -64,3 +64,8 @@ export function getActiveTier(
 export function hasUnicornAccess(modules: string[]): boolean {
   return ['baseball', 'softball'].some(sport => programOf(sport, modules) === 'golden2way');
 }
+
+/** Owner Nov 6 r4: the plan sections shown as unlocked — exactly the one active plan. */
+export function sidebarPlanKeys(activeTier: 'golden2way' | '5tool' | 'pitcher' | null): ('golden2way' | '5tool' | 'pitcher')[] {
+  return activeTier ? [activeTier] : [];
+}

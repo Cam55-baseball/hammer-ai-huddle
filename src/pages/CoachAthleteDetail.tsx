@@ -1,5 +1,6 @@
 import { CoachCheckinsReadinessTab } from "@/components/coach/CoachCheckinsReadinessTab";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { CoachAthleteTabStrip } from "@/components/coach/CoachAthleteTabStrip";
 import { CoachLogForPlayer } from "@/components/coach/CoachLogForPlayer";
 import { CoachCheckinSummary } from "@/components/coach/CoachCheckinSummary";
 import { CoachPlanCard } from "@/components/coach/CoachPlanCard";
@@ -17,7 +18,7 @@ import { CoachGamesTab } from "@/components/coach/CoachGamesTab";
 import { CoachReadinessTab } from "@/components/coach/CoachReadinessTab";
 import { CoachReportsTab, CoachGradesTab, CoachRecapTab } from "@/components/coach/CoachReportsTab";
 import { CoachDevelopmentTab } from "@/components/coach/CoachDevelopmentTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +52,7 @@ const COLS =
 export default function CoachAthleteDetail() {
   const { athleteId } = useParams<{ athleteId: string }>();
   const [searchParams] = useSearchParams();
+  const [coachTab, setCoachTab] = useState(searchParams.get("tab") || "overview");
   const { user } = useAuth();
 
   // P0-REC-3 — roster membership guard. A coach may only drill into an
@@ -223,26 +225,8 @@ export default function CoachAthleteDetail() {
 
         {/* Plan v3.1 Phase 5 — coach page organized into tabs so a coach on a
             phone can reach messages, training and activity without a long scroll. */}
-        <Tabs defaultValue={searchParams.get("tab") || "overview"} className="w-full">
-          <TabsList className="grid h-auto w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="development">Development</TabsTrigger>
-            <TabsTrigger value="week">Week calendar</TabsTrigger>
-            <TabsTrigger value="discipline">Discipline</TabsTrigger>
-            <TabsTrigger value="training">Training</TabsTrigger>
-            <TabsTrigger value="messages">Messages</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-            <TabsTrigger value="tests">Tests</TabsTrigger>
-            <TabsTrigger value="trends">Trends</TabsTrigger>
-            <TabsTrigger value="load">Body load</TabsTrigger>
-            <TabsTrigger value="games">Game stats</TabsTrigger>
-            <TabsTrigger value="checkins">Check-ins &amp; readiness</TabsTrigger>
-            <TabsTrigger value="readiness">Readiness &amp; pain</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-            <TabsTrigger value="grades">Grades</TabsTrigger>
-            <TabsTrigger value="recap">Six-week recap</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-          </TabsList>
+        <Tabs value={coachTab} onValueChange={setCoachTab} className="w-full">
+          <CoachAthleteTabStrip value={coachTab} />
 
           <TabsContent value="development" className="space-y-4 pt-4">
             {athleteId && <CoachPlanCard athleteId={athleteId} />}

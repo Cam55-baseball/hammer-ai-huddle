@@ -19,7 +19,7 @@ export function ClampText({text,className=''}:{text:string;className?:string}) {
     className={`block w-full min-w-0 text-left break-words ${open?'':'line-clamp-2'} ${className}`}>{text}</button>;
 }
 export function StatusChip({label,done}:{label:string;done?:boolean}) {
-  return <span className={`inline-block max-w-full truncate rounded-full border px-2 py-0.5 text-[11px] leading-4 ${done?'border-primary text-primary':'border-border text-muted-foreground'}`}>{label}</span>;
+  return <span className={`inline-block max-w-full whitespace-normal break-words rounded-full border px-2 py-0.5 text-[11px] leading-4 ${done?'border-primary text-primary':'border-border text-muted-foreground'}`}>{label}</span>;
 }
 const dateLabel = (date:string, options:Intl.DateTimeFormatOptions) => new Date(`${date}T12:00:00`).toLocaleDateString('en-US',options);
 export function CoachPlayerWeek({athleteId}:{athleteId:string}) {

@@ -5,6 +5,7 @@ const PracticeCardHarness = lazyDev(() => import("./pages/dev/PracticeCardHarnes
 const CoachNotesHarness = lazyDev(() => import("./pages/dev/CoachNotesHarness"));
 const PlayerWeekLayoutHarness = lazyDev(() => import("./pages/dev/PlayerWeekLayoutHarness"));
 const HealthSetupHarness = lazyDev(() => import("./pages/dev/HealthSetupHarness"));
+const CoachPlayerPageHarness = lazyDev(() => import("./pages/dev/CoachPlayerPageHarness"));
 import { PageFooterReport } from "@/components/support/PageFooterReport";
 import { StaffPlanGate } from "@/components/staff/StaffPlanGate";
 import { RetiredProgramRoute } from "@/components/archive/RetiredProgramRoute";
@@ -601,6 +602,7 @@ const App = () => {
               {import.meta.env.DEV && <Route path="/dev/coach-notes" element={<CoachNotesHarness />} />}
               {import.meta.env.DEV && <Route path="/dev/player-week-layout" element={<PlayerWeekLayoutHarness />} />}
               {import.meta.env.DEV && <Route path="/dev/health-setup" element={<HealthSetupHarness />} />}
+              {import.meta.env.DEV && <Route path="/dev/coach-player-page" element={<CoachPlayerPageHarness />} />}
               <Route path="/games" element={<Games />} />
               <Route path="/games/dossiers" element={<GameIqLock><Dossiers /></GameIqLock>} />
               <Route path="/games/reports" element={<GameIqLock><GameReports /></GameIqLock>} />
