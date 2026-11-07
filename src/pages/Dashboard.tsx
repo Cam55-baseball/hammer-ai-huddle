@@ -1,6 +1,8 @@
 import { TestingDayNotices } from "@/components/organization/TestingDayNotices";
 import { SportToggleRow, savedSport, useSportSwitch } from "@/components/dashboard/SportToggle";
 import { trainingPlansUrl } from "@/lib/dashboard/trainingPlans";
+import { FindTrainingPlanButton, findPlanSubtitle } from "@/components/dashboard/FindTrainingPlanButton";
+import { MerchTile } from "@/components/dashboard/MerchTile";
 import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
 import { scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
@@ -330,14 +332,15 @@ export default function Dashboard() {
   if (authLoading || loading || subLoading || scoutLoading)  return <HMLoadingFallback />;
 
   // Owner Nov 6: one "Find Your Training Plan" button replaces everything that sat under the toggle.
+  // Owner Nov 7: card-style look (same behavior) and the merch card back directly below it.
   const findPlanButton = (
-    <Button
-      className="w-full min-h-11 font-semibold"
-      onClick={() => navigate(trainingPlansUrl(selectedSport))}
-      data-find-training-plan
-    >
-      Find Your Training Plan
-    </Button>
+    <>
+      <FindTrainingPlanButton
+        onClick={() => navigate(trainingPlansUrl(selectedSport))}
+        subtitle={findPlanSubtitle({ isStaffAccount, canShowPurchaseUI })}
+      />
+      <MerchTile />
+    </>
   );
 
   const moduleCardsSection = (
@@ -415,7 +418,7 @@ export default function Dashboard() {
         {/* Module cards below Game Plan when user has a tier, or is coach/scout */}
         {!purchaseRoleLoading && !isStaffAccount && hasAnyTier && moduleCardsSection}
 
-        {/* Staff accounts have no toggle; their button sits where the merch square was. */}
+        {/* Staff accounts have no toggle; their button (and the merch card under it) sit here. */}
         {!purchaseRoleLoading && isStaffAccount && findPlanButton}
       </div>
     </DashboardLayout>
