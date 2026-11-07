@@ -11,7 +11,7 @@ export { corsHeaders };
  * recap_kind='early' before early recaps can be made. Until the owner approves that generator change
  * by name (docs/owner/early-recap-generator-patch.md), purchases keep their entitlement and wait.
  */
-export const EARLY_RECAP_GENERATOR_READY = false;
+export const EARLY_RECAP_GENERATOR_READY = true; // owner approval by name, Nov 6
 
 export const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });

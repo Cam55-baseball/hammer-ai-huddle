@@ -40,32 +40,42 @@ serve(async (req) => {
 
     console.log(`Generating vault recap for user: ${user.id}`);
 
-    // Parse optional periodEnd from request body (for missed recaps)
+    // Parse optional periodEnd from request body (for missed recaps).
+    // Owner-approved Nov 6 (docs/owner/early-recap-generator-patch.md): an Early 6-Week Recap add-on
+    // also sends periodStart and kind: 'early'.
     let periodEndDate: Date | null = null;
+    let periodStartDate: Date | null = null;
+    let isEarly = false;
     try {
       const body = await req.json();
       if (body?.periodEnd) {
         periodEndDate = new Date(body.periodEnd);
         console.log(`Using custom period end: ${periodEndDate.toISOString()}`);
       }
+      isEarly = body?.kind === 'early';
+      if (isEarly && body?.periodStart) periodStartDate = new Date(body.periodStart);
     } catch {
       // No body or invalid JSON, use current date
     }
 
     // Calculate 6-week period (use custom end date if provided for missed recaps)
     const endDate = periodEndDate || new Date();
-    const startDate = new Date(endDate);
+    let startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - 42);
+    if (isEarly && periodStartDate) startDate = periodStartDate;
     const startDateStr = startDate.toISOString().split("T")[0];
     const endDateStr = endDate.toISOString().split("T")[0];
     
     console.log(`Recap period: ${startDateStr} to ${endDateStr}`);
 
     // DUPLICATE CHECK: Prevent generating multiple recaps for the same period
-    const { data: existingRecap } = await supabase
+    let duplicateQuery = supabase
       .from('vault_recaps')
       .select('id, recap_period_start, recap_period_end')
       .eq('user_id', user.id)
+      .eq('recap_kind', isEarly ? 'early' : 'regular');
+    if (isEarly) duplicateQuery = duplicateQuery.eq('recap_period_start', startDateStr);
+    const { data: existingRecap } = await duplicateQuery
       .gte('recap_period_start', startDateStr)
       .lte('recap_period_end', endDateStr)
       .maybeSingle();
@@ -1975,15 +1985,17 @@ Return ONLY valid JSON with this exact structure:
     };
 
     // Save recap to database with unlocked_progress_reports_at set immediately
-    const { error: insertError } = await supabase.from("vault_recaps").insert({
+    const { data: savedRecap, error: insertError } = await supabase.from("vault_recaps").insert({
       user_id: user.id,
       recap_period_start: startDateStr,
       recap_period_end: endDateStr,
       recap_data: recapData,
       total_weight_lifted: totalWeightLifted,
       strength_change_percent: strengthChangePercent,
-      unlocked_progress_reports_at: new Date().toISOString(), // Set immediately to gate countdown
-    });
+      recap_kind: isEarly ? 'early' : 'regular',
+      // Regular: set immediately to gate countdown. Early: left empty so the regular countdown is never paused.
+      unlocked_progress_reports_at: isEarly ? null : new Date().toISOString(),
+    }).select('id').single();
 
     if (insertError) {
       console.error("Error saving recap:", insertError);
@@ -1995,7 +2007,7 @@ Return ONLY valid JSON with this exact structure:
 
     console.log("Elite recap generated and saved successfully");
 
-    return new Response(JSON.stringify({ success: true, recap_data: recapData }), {
+    return new Response(JSON.stringify({ success: true, recap_id: savedRecap?.id ?? null, recap_data: recapData }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
