@@ -1,7 +1,8 @@
 /**
  * Owner Nov 6 (locked): the Dashboard shows ONE "Find Your Training Plan" button under the
  * baseball/softball toggle. The button opens /training-plans, which holds — in the same order and
- * unchanged — the three plan squares, merch, the Coach/Organization plans and Add-ons.
+ * unchanged — the three plan squares, the Coach/Organization plans and Add-ons.
+ * Owner Nov 7: the merch card is back on the Dashboard directly below the button.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -107,7 +108,7 @@ describe("Dashboard — one Find Your Training Plan button", () => {
   it("keeps the toggle, puts the button directly under it, and no longer shows the moved items", async () => {
     const { container } = app("/dashboard");
     await screen.findByRole("button", { name: "Find Your Training Plan" });
-    expect(sectionOrder(container)).toEqual(["toggle", "button"]);
+    expect(sectionOrder(container)).toEqual(["toggle", "button", "merch"]);
   });
 
   it("the button opens the plans page on the sport selected on the Dashboard", async () => {
@@ -118,19 +119,20 @@ describe("Dashboard — one Find Your Training Plan button", () => {
     expect(container.querySelector('[role="tab"][data-state="active"]')?.getAttribute("data-value") ?? container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toMatch(/softball/i);
   });
 
-  it("staff accounts (no toggle) still get the button where the merch square was", async () => {
+  it("staff accounts (no toggle) still get the button, with the merch card below it", async () => {
     h.staff = true;
     const { container } = app("/dashboard");
     await screen.findByRole("button", { name: "Find Your Training Plan" });
-    expect(sectionOrder(container)).toEqual(["button"]);
+    expect(sectionOrder(container)).toEqual(["button", "merch"]);
   });
 });
 
 describe("/training-plans — same items, same order, same behavior", () => {
-  it("shows the plan squares, merch, Coach/Organization plans and Add-ons in the old order", async () => {
+  it("shows the plan squares, Coach/Organization plans and Add-ons in the old order — merch is not here", async () => {
     const { container } = app("/training-plans?sport=baseball");
     await screen.findByRole("heading", { name: "Find Your Training Plan" });
-    await waitFor(() => expect(sectionOrder(container)).toEqual(["toggle", "tiles", "merch", "staff", "addons"]));
+    await waitFor(() => expect(sectionOrder(container)).toEqual(["toggle", "tiles", "staff", "addons"]));
+    expect(container.querySelector("[data-merch-tile]")).toBeNull();
     expect(container.querySelectorAll("[data-plan-tile]")).toHaveLength(3);
   });
 
@@ -185,7 +187,118 @@ describe("/training-plans — same items, same order, same behavior", () => {
     h.purchase = false;
     const { container } = app("/training-plans?sport=baseball");
     await screen.findByRole("heading", { name: "Find Your Training Plan" });
-    expect(sectionOrder(container)).toEqual(["toggle", "tiles", "merch"]);
+    expect(sectionOrder(container)).toEqual(["toggle", "tiles"]);
+  });
+});
+
+describe("Owner Nov 7 — merch back on the Dashboard, card-style button, colorful add-ons", () => {
+  it("the merch card sits directly below the button and still opens the shop", async () => {
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    const { container } = app("/dashboard");
+    const button = await screen.findByRole("button", { name: "Find Your Training Plan" });
+    const merch = container.querySelector("[data-merch-tile]")!;
+    expect(button.nextElementSibling).toBe(merch.parentElement);
+    fireEvent.click(merch);
+    expect(open).toHaveBeenCalledWith("https://hammers-modality-shop.fourthwall.com", "_blank");
+    open.mockRestore();
+  });
+
+  it("the button names what is on the plans page and still carries the sport", async () => {
+    localStorage.setItem("selectedSport", "softball");
+    app("/dashboard");
+    const button = await screen.findByRole("button", { name: "Find Your Training Plan" });
+    expect(button).toHaveAccessibleDescription("Pitcher · 5Tool · Golden 2Way · Coach & Org plans · Add-ons");
+    fireEvent.click(button);
+    await screen.findByRole("heading", { name: "Find Your Training Plan" });
+    expect(localStorage.getItem("selectedSport")).toBe("softball");
+  });
+
+  it("staff see only Coach & Org plans named; purchase hidden drops the buying parts", async () => {
+    h.staff = true;
+    const { unmount } = app("/dashboard");
+    expect(await screen.findByRole("button", { name: "Find Your Training Plan" })).toHaveAccessibleDescription("Coach & Org plans");
+    unmount();
+    h.staff = false; h.purchase = false;
+    app("/dashboard");
+    expect(await screen.findByRole("button", { name: "Find Your Training Plan" })).toHaveAccessibleDescription("Pitcher · 5Tool · Golden 2Way");
+  });
+
+  const cards = async () => {
+    const section = await screen.findByLabelText("Add-ons");
+    return {
+      section,
+      recap: section.querySelector('[data-addon-card="Early 6-Week Recap"]') as HTMLElement,
+      lessons: section.querySelector('[data-addon-card="Hammers Online ×4 — Private lessons"]') as HTMLElement,
+    };
+  };
+  const btn = (el: HTMLElement) => el.querySelector("button") as HTMLButtonElement;
+
+  it("both add-ons show as cards with title, description, price and Buy; no plan keeps the recap disabled with its reason", async () => {
+    app("/training-plans?sport=baseball");
+    const { recap, lessons } = await cards();
+    await waitFor(() => expect(btn(lessons).disabled).toBe(false));
+    expect(recap.textContent).toContain("$100");
+    expect(recap.textContent).toContain("Get your 6-week recap early, covering this block so far.");
+    expect(recap.textContent).toContain("Needs an active plan.");
+    expect(btn(recap).disabled).toBe(true);
+    expect(lessons.textContent).toContain("$20,000");
+    expect(btn(lessons).textContent).toBe("Buy");
+  });
+
+  it("an active plan enables the recap Buy and it uses the same purchase path", async () => {
+    h.held = ["5tool"];
+    app("/training-plans?sport=baseball");
+    const { recap } = await cards();
+    await waitFor(() => expect(btn(recap).disabled).toBe(false));
+    fireEvent.click(btn(recap));
+    await waitFor(() => expect(h.buyAddon).toHaveBeenCalledWith("early_recap", "u1"));
+  });
+
+  it("under-18 with a parent: both buttons read Ask parent; a pending request waits", async () => {
+    h.held = ["5tool"];
+    h.callFn.mockResolvedValue({ ...ADDON_STATUS, gate: "ask_parent", parentIds: ["p1"], requests: [{ product: "online_lessons" }] });
+    app("/training-plans?sport=baseball");
+    const { recap, lessons } = await cards();
+    await waitFor(() => expect(btn(recap).textContent).toBe("Ask parent"));
+    expect(btn(recap).disabled).toBe(false);
+    expect(btn(lessons).textContent).toBe("Ask parent");
+    expect(btn(lessons).disabled).toBe(true);
+    expect(lessons.textContent).toContain("Waiting for your parent.");
+  });
+
+  it("under-18 without a parent: both disabled with the invite reason", async () => {
+    h.held = ["5tool"];
+    h.callFn.mockResolvedValue({ ...ADDON_STATUS, gate: "blocked_no_parent" });
+    app("/training-plans?sport=baseball");
+    const { recap, lessons } = await cards();
+    await waitFor(() => expect(lessons.textContent).toContain("Players under 18 need a linked parent to buy. Invite a parent first."));
+    expect(btn(recap).disabled).toBe(true);
+    expect(btn(lessons).disabled).toBe(true);
+  });
+
+  it("a recap the server refuses stays disabled with the server's reason; while loading both read Loading…", async () => {
+    h.held = ["5tool"];
+    h.callFn.mockResolvedValue({ ...ADDON_STATUS, recap: { ok: false, message: "Your regular recap is almost ready." } });
+    const { unmount } = app("/training-plans?sport=baseball");
+    let c = await cards();
+    await waitFor(() => expect(c.recap.textContent).toContain("Your regular recap is almost ready."));
+    expect(btn(c.recap).disabled).toBe(true);
+    unmount();
+    h.callFn.mockReset().mockReturnValue(new Promise(() => {}));
+    app("/training-plans?sport=baseball");
+    c = await cards();
+    expect(c.recap.textContent).toContain("Loading…");
+    expect(c.lessons.textContent).toContain("Loading…");
+    expect(btn(c.lessons).disabled).toBe(true);
+  });
+
+  it("bought lessons keep the link to pick lesson times; a paid recap keeps its being-made note", async () => {
+    h.held = ["5tool"];
+    h.callFn.mockResolvedValue({ ...ADDON_STATUS, purchases: [{ product: "online_lessons", delivery_status: "delivered" }, { product: "early_recap", delivery_status: "awaiting_generator" }] });
+    app("/training-plans?sport=baseball");
+    const { recap, lessons } = await cards();
+    await waitFor(() => expect(lessons.querySelector('a[href="/lessons"]')).not.toBeNull());
+    expect(recap.textContent).toContain("Your early recap is paid and being made.");
   });
 });
 

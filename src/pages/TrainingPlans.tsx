@@ -1,5 +1,5 @@
 // Owner Nov 6: "Find Your Training Plan" — the items that used to sit under the Dashboard's
-// baseball/softball toggle, moved here unchanged and in the same order.
+// baseball/softball toggle, moved here unchanged and in the same order. Owner Nov 7: merch went back to the Dashboard.
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -9,7 +9,6 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { Button } from "@/components/ui/button";
 import { PlanTiles } from "@/components/dashboard/PlanTiles";
-import { MerchTile } from "@/components/dashboard/MerchTile";
 import { StaffPlanTiles } from "@/components/staff/StaffPlanTiles";
 import { AddOnsSection } from "@/components/dashboard/AddOnsSection";
 import { SportToggleRow, isSport, savedSport, useSportSwitch } from "@/components/dashboard/SportToggle";
@@ -96,8 +95,6 @@ export default function TrainingPlans() {
             />
           </>
         )}
-
-        <MerchTile />
 
         {/* Coach and Organization plans — the same regular-size advertising tiles for every account (owner 2026-10-13). */}
         {!purchaseRoleLoading && canShowPurchaseUI && <StaffPlanTiles />}

@@ -1,4 +1,4 @@
-// The merch square, moved unchanged from the Dashboard to the "Find Your Training Plan" page.
+// The merch square (unchanged look and behavior). Owner Nov 7: back on the Dashboard, directly below "Find Your Training Plan".
 import { useTranslation } from "react-i18next";
 import { ShoppingBag, Sparkles, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
