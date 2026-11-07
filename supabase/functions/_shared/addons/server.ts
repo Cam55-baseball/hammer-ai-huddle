@@ -1,5 +1,5 @@
 // Server helpers for the add-on edge functions (service role; scoped to the buyer, their linked parent, or the owner).
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.57.2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { EARLY_RECAP, ONLINE_LESSONS, isUnder18, type AddonProduct } from "./rules.ts";
 import type { PurchaseRow, PurchaseStore } from "./apple.ts";
@@ -11,7 +11,7 @@ export { corsHeaders };
  * recap_kind='early' before early recaps can be made. Until the owner approves that generator change
  * by name (docs/owner/early-recap-generator-patch.md), purchases keep their entitlement and wait.
  */
-export const EARLY_RECAP_GENERATOR_READY = false;
+export const EARLY_RECAP_GENERATOR_READY = true; // owner approval by name, Nov 6
 
 export const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });

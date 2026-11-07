@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.57.2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { earlyRecapEligibility, payerAllowed, type AddonProduct } from "./rules.ts";
 import { athleteFacts, boughtBlocks, hasActivePlan, recapAnchor } from "./server.ts";
 
