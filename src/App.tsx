@@ -98,6 +98,7 @@ const SelectModules = lazyWithRetry(() => import("./pages/SelectModules"));
 const Pricing = lazyWithRetry(() => import("./pages/Pricing"));
 const Lessons = lazyWithRetry(() => import("./pages/Lessons"));
 const AddonSuccess = lazyWithRetry(() => import("./pages/AddonSuccess"));
+const TrainingPlans = lazyWithRetry(() => import("./pages/TrainingPlans"));
 const Checkout = lazyWithRetry(() => import("./pages/Checkout"));
 const AssessmentEntry = lazyWithRetry(() => import("./pages/AssessmentEntry"));
 const ProfileSetup = lazyWithRetry(() => import("./pages/ProfileSetup"));
@@ -411,6 +412,7 @@ const App = () => {
               <Route path="/profile-setup" element={<ProfileSetup />} />
               <Route path="/activate" element={<Activate />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/training-plans" element={<TrainingPlans />} />
               <Route path="/my-daily-game-plan" element={<MyDailyGamePlan />} />
               <Route path="/timeline" element={<AsbTimeline />} />
               <Route path="/replay/:eventId" element={<AsbReplay />} />

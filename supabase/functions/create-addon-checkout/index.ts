@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       metadata,
       payment_intent_data: { metadata },
       success_url: `${origin}/addons/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/dashboard`,
+      cancel_url: `${origin}/training-plans`, // owner Nov 6: back to Find Your Training Plan
     });
     return json({ url: session.url });
   } catch (e) {
