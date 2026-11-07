@@ -1,5 +1,5 @@
 // Server helpers for the add-on edge functions (service role; scoped to the buyer, their linked parent, or the owner).
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.57.2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { EARLY_RECAP, ONLINE_LESSONS, isUnder18, type AddonProduct } from "./rules.ts";
 import type { PurchaseRow, PurchaseStore } from "./apple.ts";

@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.57.2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { googleCalendar } from "./google.ts";
 import { DEFAULT_LESSON_HOURS, openSlots, type LessonHours } from "./slots.ts";
 
