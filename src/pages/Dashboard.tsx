@@ -130,18 +130,9 @@ export default function Dashboard() {
   const { hasPlayerAccess } = usePlayerModuleAccess();
   const navigate = useNavigate();
   const { retired: programsRetired } = useProgramsRetired();
-  const [selectedSport, setSelectedSport] = useState<SportType>(() => {
-    const saved = localStorage.getItem('selectedSport');
-    if (saved === 'baseball' || saved === 'softball') {
-      return saved as SportType;
-    }
-    return "baseball";
-  });
+  const { selectedSport, setSelectedSport, handleSportChange, dialog: sportSwitchDialog } = useSportSwitch(() => savedSport() ?? "baseball");
   const [progress, setProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showSportSwitchDialog, setShowSportSwitchDialog] = useState(false);
-  const [pendingSportSwitch, setPendingSportSwitch] = useState<SportType | null>(null);
-  const [dontShowAgain, setDontShowAgain] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [beforeStartPortalTarget, setBeforeStartPortalTarget] = useState<HTMLDivElement | null>(null);
   
@@ -176,15 +167,13 @@ export default function Dashboard() {
       const hasSoftball = subscribedModules.some(m => m.startsWith('softball_'));
       const hasBaseball = subscribedModules.some(m => m.startsWith('baseball_'));
       
+      // setSelectedSport also saves the sport on this device.
       if (hasSoftball && !hasBaseball) {
         setSelectedSport('softball');
-        localStorage.setItem('selectedSport', 'softball');
       } else if (hasBaseball && !hasSoftball) {
         setSelectedSport('baseball');
-        localStorage.setItem('selectedSport', 'baseball');
       } else if (hasSoftball) {
         setSelectedSport('softball');
-        localStorage.setItem('selectedSport', 'softball');
       }
     }
   }, [subscribedModules]);
@@ -284,88 +273,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleSportChange = (sport: string) => {
-    const newSport = sport as SportType;
-    
-    // Check if user has dismissed the warning
-    const dontShowWarning = localStorage.getItem('dontShowSportWarning') === 'true';
-    
-    // If trying to switch to a different sport and warning not dismissed
-    if (newSport !== selectedSport && !dontShowWarning) {
-      setPendingSportSwitch(newSport);
-      setShowSportSwitchDialog(true);
-      return;
-    }
-    
-    // Otherwise proceed with the switch
-    setSelectedSport(newSport);
-    localStorage.setItem('selectedSport', newSport);
-    toast.info(t('dashboard.switchedToSport', { sport: newSport === 'baseball' ? t('dashboard.baseball') : t('dashboard.softball') }));
-  };
-
-  const handleConfirmSportSwitch = () => {
-    if (pendingSportSwitch) {
-      setSelectedSport(pendingSportSwitch);
-      localStorage.setItem('selectedSport', pendingSportSwitch);
-      
-      if (dontShowAgain) {
-        localStorage.setItem('dontShowSportWarning', 'true');
-      }
-      
-      toast.info(t('dashboard.switchedToSport', { sport: pendingSportSwitch === 'baseball' ? t('dashboard.baseball') : t('dashboard.softball') }));
-    }
-    setShowSportSwitchDialog(false);
-    setPendingSportSwitch(null);
-    setDontShowAgain(false);
-  };
-
-  const handleCancelSportSwitch = () => {
-    setShowSportSwitchDialog(false);
-    setPendingSportSwitch(null);
-    setDontShowAgain(false);
-  };
-
-  const handleModuleSelect = (module: ModuleType) => {
-    const isOwnerOrAdmin = isOwner || isAdmin;
-
-    // Purchase hidden: a locked tile is inert. No routing to pricing, no toast
-    // that hints the tier can be bought elsewhere.
-    if (!canShowPurchaseUI && !isOwnerOrAdmin && !isTierUnlocked(module) && !heldPlans.includes('golden2way')) {
-      return;
-    }
-    
-    // For tier-based modules, check access differently
-    if (module === 'pitcher') {
-      const hasAccess = isOwnerOrAdmin || hasAccessForSport('pitching', selectedSport, isOwnerOrAdmin);
-      if (!hasAccess) {
-        navigate("/pricing", { state: { sport: selectedSport, tier: 'pitcher' } });
-        return;
-      }
-      navigate("/complete-pitcher");
-    } else if (module === '5tool') {
-      const hasAccess = isOwnerOrAdmin || hasAccessForSport('hitting', selectedSport, isOwnerOrAdmin);
-      if (!hasAccess) {
-        navigate("/pricing", { state: { sport: selectedSport, tier: '5tool' } });
-        return;
-      }
-      navigate("/5tool-player");
-    } else if (module === 'golden2way') {
-      const hasAccess = isOwnerOrAdmin || (hasAccessForSport('hitting', selectedSport, isOwnerOrAdmin) && hasAccessForSport('pitching', selectedSport, isOwnerOrAdmin));
-      if (!hasAccess) {
-        navigate("/pricing", { state: { sport: selectedSport, tier: 'golden2way' } });
-        return;
-      }
-      navigate("/golden-2way");
-    } else {
-      // Legacy module handling
-      const hasAccess = hasAccessForSport(module, selectedSport, isOwnerOrAdmin);
-      if (!hasAccess) {
-        navigate("/pricing", { state: { sport: selectedSport } });
-        return;
-      }
-      navigate(`/analyze/${module}?sport=${selectedSport}`);
-    }
-  };
+  // Plan squares (and their tap rules) moved to the "Find Your Training Plan" page — owner Nov 6.
 
   const getModuleProgress = (module: ModuleType) => {
     return progress.find((p) => p.module === module && p.sport === selectedSport);
