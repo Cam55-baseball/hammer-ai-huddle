@@ -197,7 +197,7 @@ describe("Owner Nov 7 — merch back on the Dashboard, card-style button, colorf
     const { container } = app("/dashboard");
     const button = await screen.findByRole("button", { name: "Find Your Training Plan" });
     const merch = container.querySelector("[data-merch-tile]")!;
-    expect(button.nextElementSibling).toBe(merch);
+    expect(button.nextElementSibling).toBe(merch.parentElement);
     fireEvent.click(merch);
     expect(open).toHaveBeenCalledWith("https://hammers-modality-shop.fourthwall.com", "_blank");
     open.mockRestore();
