@@ -16,17 +16,23 @@ const h = vi.hoisted(() => ({
   mode: "web" as string,
   callFn: vi.fn(),
   buyAddon: vi.fn(),
+  // Stable objects: real hooks return the same user/session between renders.
+  auth: { user: { id: "u1", user_metadata: { full_name: "Test Player" } }, session: {}, loading: false, isAuthStable: true },
+  modules: [] as string[],
+  refetch: async () => {},
+  onModulesChange: () => () => {},
+  enableFastPolling: () => {},
 }));
 
 vi.mock("@/hooks/useAuth", () => ({
-  useAuth: () => ({ user: { id: "u1", user_metadata: { full_name: "Test Player" } }, session: {}, loading: false, isAuthStable: true }),
+  useAuth: () => h.auth,
 }));
 vi.mock("@/hooks/useSubscription", () => ({
   useSubscription: () => ({
-    modules: [], module_details: {}, loading: false, refetch: vi.fn(async () => {}),
+    modules: h.modules, module_details: {}, loading: false, refetch: h.refetch,
     hasAccessForSport: (m: string) => (h.held.includes("golden2way") ? ["hitting", "pitching"].includes(m) : false),
     activePlansForSport: () => h.held,
-    getModuleDetails: () => null, onModulesChange: () => () => {}, enableFastPolling: () => {},
+    getModuleDetails: () => null, onModulesChange: h.onModulesChange, enableFastPolling: h.enableFastPolling,
   }),
 }));
 vi.mock("@/hooks/usePurchaseAvailability", () => ({
