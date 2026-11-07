@@ -5,6 +5,7 @@ import { useDemoProgress } from '@/hooks/useDemoProgress';
 import { usePurchaseAvailability } from '@/hooks/usePurchaseAvailability';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { TRAINING_PLANS_PATH } from '@/lib/dashboard/trainingPlans';
 
 // Purchase is a deliberate choice, never an enrollment-demo prerequisite.
 const GATED_PREFIXES = ['/training', '/nutrition', '/vault'];
@@ -37,6 +38,9 @@ export function DemoGate({ children }: { children: ReactNode }) {
     // Deliberate saved-drill access is not a training session or a demo step.
     if (pathname === '/vault' && new URLSearchParams(search).get('openSection') === 'saved-items') return;
     if (pathname.startsWith('/demo') || pathname.startsWith('/start-here')) return;
+    // Locked by owner Nov 7: "Find Your Training Plan" opens its page directly — never the demo.
+    // ('/training-plans' only matched the '/training' prefix by spelling.)
+    if (pathname === TRAINING_PLANS_PATH) return;
     if (!GATED_PREFIXES.some(p => pathname.startsWith(p))) return;
     const intent = encodeURIComponent(pathname + search);
     navigate(`/start-here?intent=${intent}`, { replace: true });
