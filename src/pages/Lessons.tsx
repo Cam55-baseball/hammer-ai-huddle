@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -78,7 +79,7 @@ export default function Lessons() {
         <h1 className="text-xl font-bold text-foreground">Hammers Online — Private lessons</h1>
         <p className="text-xs text-muted-foreground">Times are shown in your time zone ({tz}).</p>
         {!bookings && <p className="text-sm text-muted-foreground">Loading…</p>}
-        {bookings && !active && <p className="text-sm text-muted-foreground">You don't have lessons yet. You can buy them in Add-ons on your Dashboard.</p>}
+        {bookings && !active && <p className="text-sm text-muted-foreground">You don't have lessons yet. You can buy them in Add-ons on <Link className="text-primary underline" to="/training-plans">Find Your Training Plan</Link>.</p>}
 
         {active?.status === "awaiting_times" && (
           <div className="space-y-3">

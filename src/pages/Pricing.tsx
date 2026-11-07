@@ -18,6 +18,7 @@ import { BackButton } from "@/components/common/BackButton";
 import { SignedInAs } from "@/components/purchase/SignedInAs";
 import { openWebsiteCheckout } from "@/lib/purchase/websiteHandoff";
 import { toast } from "sonner";
+import { pricingBackTarget } from "@/lib/dashboard/trainingPlans";
 
 const Pricing = () => {
   const { canShowPurchaseUI, mode } = usePurchaseAvailability();
@@ -153,8 +154,9 @@ const Pricing = () => {
         <StaffPlansTeaser />
 
         <div className="text-center mt-6">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-            {t('subscriptionTiers.backToDashboard')}
+          {/* Owner Nov 6: came from a plan square → back to Find Your Training Plan. */}
+          <Button variant="ghost" onClick={() => navigate(pricingBackTarget(location.state).path)}>
+            {pricingBackTarget(location.state).toPlans ? "Back to Find Your Training Plan" : t('subscriptionTiers.backToDashboard')}
           </Button>
         </div>
       </div>
