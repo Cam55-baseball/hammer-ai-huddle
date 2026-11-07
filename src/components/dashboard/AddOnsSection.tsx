@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { CalendarClock, Sparkles, Video, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { BRAND_GRADIENT, BRAND_TEXT_SHADOW } from "@/components/dashboard/brandGradient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { askParents, buyAddon, callFn } from "@/lib/addons/client";
@@ -23,23 +27,38 @@ export interface AddOnRowProps {
   busy?: boolean;
   onAction?: () => void;
   extra?: React.ReactNode;
+  icon?: LucideIcon;
 }
 
-export function AddOnRow({ title, price, description, disabledReason, actionLabel, busy, onAction, extra }: AddOnRowProps) {
+// Owner Nov 7: each add-on is a colorful card matching the plan squares before purchase
+// (icon, title, one-line description, price, gradient Buy/state button). Behavior unchanged.
+export function AddOnRow({ title, price, description, disabledReason, actionLabel, busy, onAction, extra, icon: AddOnIcon = Sparkles }: AddOnRowProps) {
+  const disabled = !!disabledReason || busy;
   return (
-    <div className="flex items-start justify-between gap-3 py-3">
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-foreground">
-          {title} <span className="text-muted-foreground font-normal">— {price}</span>
-        </p>
-        <p className="text-xs text-muted-foreground">{description}</p>
-        {disabledReason && <p className="text-xs text-muted-foreground mt-1">{disabledReason}</p>}
+    <Card
+      className="p-4 sm:p-6 border-2 border-dashed border-primary/40 bg-gradient-to-br from-primary/10 via-card to-primary/5"
+      data-addon-card={title}
+    >
+      <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+        <div className="p-3 rounded-full bg-primary/10">
+          <AddOnIcon className="h-7 w-7 sm:h-10 sm:w-10 text-primary" aria-hidden />
+        </div>
+        <h3 className="text-lg sm:text-xl font-bold text-foreground">{title}</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
+        <Badge className="bg-primary text-primary-foreground text-sm px-3 py-0.5">{price}</Badge>
+        {disabledReason && <p className="text-xs text-muted-foreground">{disabledReason}</p>}
+        <Button
+          className={`w-full h-12 font-bold uppercase tracking-wide text-primary-foreground border-0 ${BRAND_GRADIENT}
+                      shadow-[0_0_24px_hsl(var(--primary)/0.45)] transition-[transform,box-shadow] active:scale-[0.98]
+                      hover:shadow-[0_0_36px_hsl(var(--primary)/0.65)] disabled:shadow-none ${BRAND_TEXT_SHADOW}`}
+          disabled={disabled}
+          onClick={onAction}
+        >
+          {busy ? "…" : actionLabel}
+        </Button>
         {extra}
       </div>
-      <Button size="sm" className="shrink-0" disabled={!!disabledReason || busy} onClick={onAction}>
-        {busy ? "…" : actionLabel}
-      </Button>
-    </div>
+    </Card>
   );
 }
 
@@ -84,10 +103,11 @@ export function AddOnsSection({ hasActivePlan }: { hasActivePlan: boolean }) {
   const label = status?.gate === "ask_parent" ? "Ask parent" : "Buy";
 
   return (
-    <section aria-label="Add-ons" className="rounded-lg border border-border bg-card px-4 py-2">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground pt-2">Add-ons</h2>
-      <div className="divide-y divide-border">
+    <section aria-label="Add-ons" className="space-y-3">
+      <h2 className="text-xl sm:text-2xl font-bold text-foreground">Add-ons</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <AddOnRow
+          icon={CalendarClock}
           title="Early 6-Week Recap" price="$100"
           description="Get your 6-week recap early, covering this block so far."
           disabledReason={status ? recapReason : "Loading…"}
@@ -95,6 +115,7 @@ export function AddOnsSection({ hasActivePlan }: { hasActivePlan: boolean }) {
           extra={recapWaiting ? <p className="text-xs text-muted-foreground mt-1">Your early recap is paid and being made. It will show with your recaps.</p> : null}
         />
         <AddOnRow
+          icon={Video}
           title="Hammers Online ×4 — Private lessons" price="$20,000"
           description="Four 1-hour one-on-one online lessons with the coach on Google Meet."
           disabledReason={status ? parentNote ?? (pending("online_lessons") ? "Waiting for your parent." : null) : "Loading…"}
@@ -102,7 +123,7 @@ export function AddOnsSection({ hasActivePlan }: { hasActivePlan: boolean }) {
           extra={lessonsBought ? <Link to="/lessons" className="text-xs text-primary underline mt-1 inline-block">See or pick your lesson times</Link> : null}
         />
       </div>
-      <p className="text-xs text-muted-foreground pb-2">Questions about your lessons? <a className="underline" href="mailto:hammersmodality@hammersmodality.org">Contact us</a></p>
+      <p className="text-xs text-muted-foreground">Questions about your lessons? <a className="underline" href="mailto:hammersmodality@hammersmodality.org">Contact us</a></p>
     </section>
   );
 }
