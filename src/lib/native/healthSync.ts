@@ -139,17 +139,15 @@ export async function connectAppleHealth(userId: string): Promise<{ ok: boolean;
   }
 }
 
-/** App open / resume: sync when connected, consent still given, and the last sync is a day old. */
-export async function maybeSyncAppleHealth(userId: string | null, now = Date.now()): Promise<boolean> {
+/**
+ * App open (force) and resume (daily): sync when connected and consent is still given.
+ * A consent change to "declined" stops syncing at once.
+ */
+export async function maybeSyncAppleHealth(userId: string | null, opts: { force?: boolean; now?: number } = {}): Promise<boolean> {
+  const now = opts.now ?? Date.now();
   if ((await healthEligibility(userId)) !== "connected" || !userId) return false;
   const { value } = await Preferences.get({ key: lastSyncKey(userId) });
   const last = Number(value ?? 0);
-  if (last && now - last < DAY) return false;
+  if (!opts.force && last && now - last < DAY) return false;
   try { await syncAppleHealth(userId, now); return true; } catch (e) { console.warn("[health] sync failed", e); return false; }
-}
-
-/** Sign out: this phone stops syncing for that person. */
-export async function forgetHealthConnection(userId: string | null) {
-  if (!userId || !isNativeIos()) return;
-  try { await Preferences.remove({ key: connectedKey(userId) }); await Preferences.remove({ key: lastSyncKey(userId) }); } catch { /* ignore */ }
 }
