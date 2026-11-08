@@ -24,6 +24,10 @@ export interface FanoutLookup {
   authorizingParents(athleteId: string): Promise<string[]>;
   /** Id of the first row (earliest plan date) of a recurring coach workout series. */
   firstInSeries(seriesId: string): Promise<string | null>;
+  /** Same under-13 check the request list uses (requests to a child are answered by a parent). */
+  isUnder13(userId: string): Promise<boolean>;
+  /** Organization owner + active admins (who answer requests sent to the organization). */
+  orgAdmins(orgId: string): Promise<string[]>;
 }
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
@@ -108,14 +112,24 @@ export async function deliveriesFor(table: PushSourceTable, row: any, lookup: Fa
       }];
     }
     case "connection_requests": {
-      if (!row.to_user || row.status !== "pending") return [];
+      // Same people who can answer it in My connections (list_my_requests_v2 can_answer).
+      if (row.status !== "pending") return [];
       const name = row.from_user ? await lookup.name(row.from_user) : null;
-      return [{
-        userId: row.to_user,
-        title: "New request",
-        body: `${name ?? "Someone"} sent you a ${KIND_LABEL[row.kind] ?? "connection"} request.`,
-        link: "/my-connections",
-      }];
+      const label = KIND_LABEL[row.kind] ?? "connection";
+      const msg = { title: "New request", body: `${name ?? "Someone"} sent you a ${label} request.`, link: "/my-connections" };
+      if (row.to_org) {
+        if (!row.organization_id) return [];
+        const admins = (await lookup.orgAdmins(row.organization_id)).filter((u) => u !== row.from_user);
+        return [...new Set(admins)].map((userId) => ({ userId, ...msg }));
+      }
+      if (!row.to_user) return [];
+      if (await lookup.isUnder13(row.to_user)) {
+        const child = await lookup.name(row.to_user);
+        return (await lookup.authorizingParents(row.to_user)).map((userId) => ({
+          userId, ...msg, body: `${name ?? "Someone"} sent ${child ?? "your player"} a ${label} request.`,
+        }));
+      }
+      return [{ userId: row.to_user, ...msg }];
     }
   }
   return [];

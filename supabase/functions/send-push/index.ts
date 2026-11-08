@@ -52,6 +52,17 @@ const lookup: FanoutLookup = {
       .order("plan_date", { ascending: true }).order("id", { ascending: true }).limit(1).maybeSingle();
     return (data as any)?.id ?? null;
   },
+  async isUnder13(userId) {
+    const { data } = await db.rpc("is_under_13", { _user_id: userId } as any);
+    return data === true;
+  },
+  async orgAdmins(orgId) {
+    const [{ data: org }, { data: members }] = await Promise.all([
+      db.from("organizations").select("owner_user_id").eq("id", orgId).maybeSingle(),
+      db.from("organization_members").select("user_id").eq("organization_id", orgId).eq("status", "active").eq("role_in_org", "admin"),
+    ]);
+    return [(org as any)?.owner_user_id, ...(members ?? []).map((m: any) => m.user_id)].filter(Boolean);
+  },
 };
 
 async function sendToUser(userId: string, msg: PushMessage): Promise<SendOutcome[]> {
