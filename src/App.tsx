@@ -283,6 +283,7 @@ const SafetyCenter = lazyWithRetry(() => import("./pages/SafetyCenter"));
 const RelationshipSettings = lazyWithRetry(() => import("./pages/RelationshipSettings"));
 import { DemoGate } from "./components/demo/DemoGate";
 import { LegalV2Gate } from "@/components/legal/LegalV2Gate";
+import { NativeBridge } from "@/components/native/NativeBridge";
 import { PolicyUpdateNotice } from "@/components/legal/PolicyUpdateNotice";
 import { StripeHandoffDialog } from "@/components/purchase/StripeHandoffDialog";
 import { GlobalBackFallback } from "@/components/common/GlobalBackFallback";
@@ -353,6 +354,7 @@ const App = () => {
             <LaunchOpening />
             <QuickEditProfileProvider>
             <PurchaseConfirmationWatcher />
+            <NativeBridge />
             <Suspense fallback={<PageLoadingSkeleton />}>
               <DemoGate>
               <AccountGate>
