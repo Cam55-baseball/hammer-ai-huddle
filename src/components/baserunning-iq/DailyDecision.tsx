@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Flame, Target, Clock, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBaserunningDaily } from "@/hooks/useBaserunningDaily";
+import { MentalLoadPrompt } from "@/components/mentalLoad/MentalLoadPrompt";
 import { SessionSummary } from "./SessionSummary";
 
 interface DailyDecisionProps {
@@ -58,6 +59,8 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
   const [showResult, setShowResult] = useState(false);
   const [sessionResults, setSessionResults] = useState<{ correct: boolean; timeMs: number }[]>([]);
   const [finished, setFinished] = useState(false);
+  // Release A2: last saved attempt of this visit carries the optional mental-load answer.
+  const [lastAttemptId, setLastAttemptId] = useState<string | null>(null);
   const startTimeRef = useRef<number>(Date.now());
 
   useEffect(() => {
@@ -80,6 +83,10 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
           <StatBox icon={<Clock className="h-4 w-4" />} label="7d Acc" value={`${stats.accuracy}%`} />
         </div>
         <p className="text-sm text-muted-foreground text-center">Come back tomorrow to keep your streak alive!</p>
+        {lastAttemptId && sessionResults.length > 0 && (
+          <MentalLoadPrompt activity="baserunning_iq" activityId={lastAttemptId} activityDate={new Date().toISOString().slice(0, 10)}
+            kind="baserunning_iq" trackedMinutes={sessionResults.reduce((s, r) => s + r.timeMs, 0) / 60_000} />
+        )}
       </Card>
     );
   }
@@ -108,6 +115,10 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
           onContinue={() => {}}
           onDismiss={() => {}}
         />
+        {lastAttemptId && sessionResults.length > 0 && (
+          <MentalLoadPrompt activity="baserunning_iq" activityId={lastAttemptId} activityDate={new Date().toISOString().slice(0, 10)}
+            kind="baserunning_iq" trackedMinutes={sessionResults.reduce((s, r) => s + r.timeMs, 0) / 60_000} />
+        )}
       </div>
     );
   }
@@ -133,7 +144,7 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
       scenarioId: current.id,
       correct,
       responseTimeMs: elapsed,
-    });
+    }, { onSuccess: (id) => { if (id) setLastAttemptId(id); } });
   };
 
   const handleNext = () => {
