@@ -141,6 +141,7 @@ export const OWNED_TABLES: Array<[table: string, column: string]> = [
   ["physio_daily_reports", "user_id"],
   ["physio_health_profiles", "user_id"],
   ["player_notes", "player_id"],
+  ["push_device_tokens", "user_id"],
   ["recall_messages", "user_id"],
   ["recall_threads", "user_id"],
   ["recruiter_contacts", "user_id"],

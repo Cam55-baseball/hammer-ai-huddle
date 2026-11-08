@@ -4,9 +4,11 @@
  * Without one it counts up ("Rest so far") — no rest time is invented.
  * Uses wall-clock deltas so a backgrounded phone stays accurate.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Pause, Play, RotateCcw, Square, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { hapticRestEnd } from "@/lib/native/haptics";
+import { useRestAlert } from "@/lib/native/restAlerts";
 
 export { sprintRestSeconds } from "../../../../supabase/functions/_shared/wic/runRest";
 
@@ -48,7 +50,7 @@ export function fmtClock(totalSec: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}.${String(cs % 100).padStart(2, "0")}`;
 }
 
-export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialStartedAt = null, managed = false }: { seconds?: number | null; maxSeconds?: number | null; label?: string; initialStartedAt?: number | null; managed?: boolean }) {
+export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialStartedAt = null, managed = false, nextExercise = null }: { seconds?: number | null; maxSeconds?: number | null; label?: string; initialStartedAt?: number | null; managed?: boolean; nextExercise?: string | null }) {
   const [extra, setExtra] = useState(0);
   const seconds = typeof base === "number" ? base + extra : base;
   const canAdd = typeof base === "number" && maxSeconds != null && base + extra + 30 <= maxSeconds;
@@ -72,9 +74,15 @@ export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialSt
   useEffect(() => {
     if (finished && !buzzed.current) {
       buzzed.current = true;
-      try { navigator.vibrate?.([200, 100, 200]); } catch { /* unsupported */ }
+      hapticRestEnd([200, 100, 200]);
     }
   }, [finished]);
+
+  // iPhone app: lock-screen "Rest is up" alert. Guided (managed) rests are scheduled by the
+  // focus session, which knows the next exercise; pause/stop/finish/leaving cancel it.
+  const alertKey = `rest:${useId()}`;
+  const endsAt = !managed && countdown && startedAt != null && !finished ? startedAt + (target - pausedSeconds) * 1000 : null;
+  useRestAlert(alertKey, endsAt, nextExercise);
 
   const start = (restart = false) => { buzzed.current = false; if (restart) setPausedSeconds(0); setNow(Date.now()); setStartedAt(Date.now()); };
   const pause = () => { setPausedSeconds(elapsed); setStartedAt(null); };

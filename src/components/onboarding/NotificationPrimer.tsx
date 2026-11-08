@@ -27,6 +27,8 @@ export function NotificationPrimer({ uid, open, onDone }: { uid: string; open: b
     try {
       if (Capacitor.isNativePlatform()) {
         result = (await PushNotifications.requestPermissions()).receive;
+        // Release A (native_push_v1): once allowed, register this phone with Apple.
+        if (result === "granted") void import("@/lib/native/push").then((m) => m.registerIfAllowed(uid));
       } else if ("Notification" in window && Notification.permission === "default") {
         result = await Notification.requestPermission();
       } else if ("Notification" in window) {

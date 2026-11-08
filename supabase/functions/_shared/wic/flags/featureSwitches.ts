@@ -47,6 +47,10 @@ export const FEATURE_KEYS = [
   "content_barefoot_items",
   // Plan v3.1: facility "Spaces" list was built without being requested — parked OFF until the owner decides.
   "facility_spaces",
+  // Release A (owner Nov 8) — iPhone app only; resolved in src/lib/native/nativeFlags.ts.
+  "native_push_v1",
+  "native_rest_alerts_v1",
+  "healthkit_read_v1",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];

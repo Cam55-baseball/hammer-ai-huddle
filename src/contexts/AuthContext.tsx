@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { emitObservability } from '@/hooks/useEmitObservability';
 import { clearProtectedEditing, isProtectedEditingActive } from '@/lib/auth/protectedEditing';
 import { canEvictNow, noteTokenRefreshed, hasPersistedSupabaseToken } from '@/lib/auth/canEvict';
-import { syncNativeSession } from '@/lib/auth/nativeSessionStore';
+import { syncNativeSession, isNativeApp } from '@/lib/auth/nativeSessionStore';
 
 // Set only by an explicit Sign out tap, so that path signs out at once while
 // every other SIGNED_OUT event is verified before anyone is evicted.
@@ -256,6 +256,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     clearProtectedEditing();
+    // iPhone app (native_push_v1): this phone stops getting this person's pushes. Needs the
+    // session, so it runs first; it never blocks sign out. No-op on the web.
+    if (isNativeApp()) {
+      try {
+        const [{ disablePushTokenOnSignOut }, { clearNativeFlags }] = await Promise.all([import('@/lib/native/push'), import('@/lib/native/nativeFlags')]);
+        await disablePushTokenOnSignOut();
+        clearNativeFlags();
+      } catch { /* sign out continues */ }
+    }
     explicitSignOutPending = true;
     // 'local' signs out this device only. The default ('global') revoked the
     // player's sessions on every other phone, tablet and browser too.

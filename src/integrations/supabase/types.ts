@@ -15947,6 +15947,84 @@ export type Database = {
         }
         Relationships: []
       }
+      push_device_tokens: {
+        Row: {
+          apns_env: string | null
+          app_version: string | null
+          created_at: string
+          disabled_at: string | null
+          disabled_reason: string | null
+          id: string
+          last_error: string | null
+          last_seen_at: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          apns_env?: string | null
+          app_version?: string | null
+          created_at?: string
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          id?: string
+          last_error?: string | null
+          last_seen_at?: string
+          platform?: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          apns_env?: string | null
+          app_version?: string | null
+          created_at?: string
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          id?: string
+          last_error?: string | null
+          last_seen_at?: string
+          platform?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_outbox: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          processed_at: string | null
+          result: Json | null
+          source_id: string
+          source_table: string
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          processed_at?: string | null
+          result?: Json | null
+          source_id: string
+          source_table: string
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          processed_at?: string | null
+          result?: Json | null
+          source_id?: string
+          source_table?: string
+          status?: string
+        }
+        Relationships: []
+      }
       rating_agreements: {
         Row: {
           agree: boolean
@@ -22104,10 +22182,15 @@ export type Database = {
       wearable_metrics: {
         Row: {
           captured_at: string
+          device_name: string | null
+          ended_at: string | null
           hrv_ms: number | null
           id: string
+          in_bed_min: number | null
+          metric: string | null
           raw: Json | null
           rhr_bpm: number | null
+          sample_id: string | null
           schema_version: number
           sleep_min: number | null
           source: string | null
@@ -22115,10 +22198,15 @@ export type Database = {
         }
         Insert: {
           captured_at?: string
+          device_name?: string | null
+          ended_at?: string | null
           hrv_ms?: number | null
           id?: string
+          in_bed_min?: number | null
+          metric?: string | null
           raw?: Json | null
           rhr_bpm?: number | null
+          sample_id?: string | null
           schema_version?: number
           sleep_min?: number | null
           source?: string | null
@@ -22126,10 +22214,15 @@ export type Database = {
         }
         Update: {
           captured_at?: string
+          device_name?: string | null
+          ended_at?: string | null
           hrv_ms?: number | null
           id?: string
+          in_bed_min?: number | null
+          metric?: string | null
           raw?: Json | null
           rhr_bpm?: number | null
+          sample_id?: string | null
           schema_version?: number
           sleep_min?: number | null
           source?: string | null
@@ -25216,6 +25309,7 @@ export type Database = {
       }
       cron_call: { Args: { body?: Json; fn: string }; Returns: number }
       delete_child_data: { Args: { _uid: string }; Returns: Json }
+      disable_push_token: { Args: { _token: string }; Returns: undefined }
       dispatch_standard_match_pings: { Args: never; Returns: Json }
       dispatch_standard_match_pings_v2: {
         Args: { p_message?: string }
@@ -25844,6 +25938,10 @@ export type Database = {
           _topic: string
         }
         Returns: string
+      }
+      register_push_token: {
+        Args: { _app_version?: string; _token: string }
+        Returns: undefined
       }
       reject_evaluation_attendance: {
         Args: { p_evaluation_id: string }
