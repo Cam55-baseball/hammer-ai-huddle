@@ -65,7 +65,7 @@ async function sendToUser(userId: string, msg: PushMessage): Promise<SendOutcome
     const r = await sendToToken((url, init) => fetch(url, init), jwt, topic, t, msg);
     results.push(r);
     const now = new Date().toISOString();
-    if (r.status === "sent") await db.from("push_device_tokens").update({ apns_env: r.env, last_error: null, last_seen_at: t.apns_env === r.env ? undefined : now }).eq("id", t.id);
+    if (r.status === "sent") { if (r.envChanged || t.apns_env == null) await db.from("push_device_tokens").update({ apns_env: r.env, last_error: null }).eq("id", t.id); }
     else if (r.status === "disabled") await db.from("push_device_tokens").update({ disabled_at: now, disabled_reason: r.reason }).eq("id", t.id);
     else await db.from("push_device_tokens").update({ last_error: r.error.slice(0, 300) }).eq("id", t.id);
   }
