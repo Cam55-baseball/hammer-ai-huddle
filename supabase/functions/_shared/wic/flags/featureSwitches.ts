@@ -51,6 +51,9 @@ export const FEATURE_KEYS = [
   "native_push_v1",
   "native_rest_alerts_v1",
   "healthkit_read_v1",
+  // Release A2 (owner Nov 8) — web and app; recovery side of readiness only (_shared/readiness/recoveryAdjust.ts).
+  "mental_load_v1",
+  "readiness_health_v1",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];

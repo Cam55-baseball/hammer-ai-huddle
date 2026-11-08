@@ -4263,6 +4263,11 @@ export type Database = {
           correct: boolean
           created_at: string
           id: string
+          mental_drain_rating: number | null
+          mental_load: number | null
+          mental_minutes: number | null
+          mental_minutes_source: string | null
+          mental_rated_at: string | null
           response_time_ms: number
           scenario_id: string
           user_id: string
@@ -4271,6 +4276,11 @@ export type Database = {
           correct: boolean
           created_at?: string
           id?: string
+          mental_drain_rating?: number | null
+          mental_load?: number | null
+          mental_minutes?: number | null
+          mental_minutes_source?: string | null
+          mental_rated_at?: string | null
           response_time_ms: number
           scenario_id: string
           user_id: string
@@ -4279,6 +4289,11 @@ export type Database = {
           correct?: boolean
           created_at?: string
           id?: string
+          mental_drain_rating?: number | null
+          mental_load?: number | null
+          mental_minutes?: number | null
+          mental_minutes_source?: string | null
+          mental_rated_at?: string | null
           response_time_ms?: number
           scenario_id?: string
           user_id?: string
@@ -12982,6 +12997,11 @@ export type Database = {
           id: string
           item_date: string
           kind: string
+          mental_drain_rating: number | null
+          mental_load: number | null
+          mental_minutes: number | null
+          mental_minutes_source: string | null
+          mental_rated_at: string | null
           owner_drill_id: string | null
           user_id: string
         }
@@ -12990,6 +13010,11 @@ export type Database = {
           id?: string
           item_date: string
           kind: string
+          mental_drain_rating?: number | null
+          mental_load?: number | null
+          mental_minutes?: number | null
+          mental_minutes_source?: string | null
+          mental_rated_at?: string | null
           owner_drill_id?: string | null
           user_id: string
         }
@@ -12998,6 +13023,11 @@ export type Database = {
           id?: string
           item_date?: string
           kind?: string
+          mental_drain_rating?: number | null
+          mental_load?: number | null
+          mental_minutes?: number | null
+          mental_minutes_source?: string | null
+          mental_rated_at?: string | null
           owner_drill_id?: string | null
           user_id?: string
         }
@@ -16374,6 +16404,11 @@ export type Database = {
           created_at: string | null
           findings: string | null
           id: string
+          mental_drain_rating: number | null
+          mental_load: number | null
+          mental_minutes: number | null
+          mental_minutes_source: string | null
+          mental_rated_at: string | null
           sport: string | null
           subject_reason: string | null
           timer_data: Json | null
@@ -16388,6 +16423,11 @@ export type Database = {
           created_at?: string | null
           findings?: string | null
           id?: string
+          mental_drain_rating?: number | null
+          mental_load?: number | null
+          mental_minutes?: number | null
+          mental_minutes_source?: string | null
+          mental_rated_at?: string | null
           sport?: string | null
           subject_reason?: string | null
           timer_data?: Json | null
@@ -16402,6 +16442,11 @@ export type Database = {
           created_at?: string | null
           findings?: string | null
           id?: string
+          mental_drain_rating?: number | null
+          mental_load?: number | null
+          mental_minutes?: number | null
+          mental_minutes_source?: string | null
+          mental_rated_at?: string | null
           sport?: string | null
           subject_reason?: string | null
           timer_data?: Json | null
@@ -25916,6 +25961,17 @@ export type Database = {
       recompute_recurring_issues: {
         Args: { _user: string }
         Returns: undefined
+      }
+      record_mental_load: {
+        Args: {
+          _activity: string
+          _activity_date: string
+          _activity_id: string
+          _minutes: number
+          _minutes_source: string
+          _rating: number
+        }
+        Returns: Json
       }
       record_my_test: {
         Args: {

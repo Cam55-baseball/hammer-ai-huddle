@@ -63,4 +63,3 @@
 
 - Player-facing questions, prompts and cards take modules from `useProgramModules`/`playerProgramModules` (`_shared/programAccess.ts`), which applies the owner-only 5Tool rule; access/purchase checks keep raw `useSubscription`. Why: one program judge everywhere without changing what the owner can open.
 - Coach game entry is `/coach/log-game` over existing `coach_log_entry` lines and `coach_log_general_game` (per-player gp_games, no stats). Why: saves land on each player's record under server connection/jersey checks.
-- iPhone-only features resolve through `src/lib/native/nativeFlags.ts` (always off on the web) and start from `NativeBridge`; in-app notifications reach phones only via `push_enqueue` triggers → `push_outbox` → `send-push`, whose recipients/words come from `_shared/push/fanout.ts` matching who sees the in-app row. Why: web stays unchanged and a push can never reach someone who couldn't see the notice in the app.
