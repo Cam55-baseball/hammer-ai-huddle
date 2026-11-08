@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useId } from 'react';
+import { hapticRestEnd } from '@/lib/native/haptics';
+import { useRestAlert } from '@/lib/native/restAlerts';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Minus, Plus, SkipForward, Volume2, VolumeX } from 'lucide-react';
@@ -108,8 +110,19 @@ export function RestTimer({
     };
   }, [isPaused, seconds, onComplete, playBeep]);
 
+  // iPhone app: "Rest is up" alert for a locked screen, rescheduled when the time changes.
+  const alertKey = `fullscreen-rest:${useId()}`;
+  const [endsAt, setEndsAt] = useState<number | null>(() => Date.now() + initialSeconds * 1000);
+  useRestAlert(alertKey, isPaused || seconds <= 0 ? null : endsAt, nextExerciseName);
+  const buzzed = useRef(false);
+  useEffect(() => {
+    if (seconds <= 0 && !buzzed.current) { buzzed.current = true; hapticRestEnd(); }
+  }, [seconds]);
+
   const adjustTime = (amount: number) => {
-    setSeconds((prev) => Math.max(0, Math.min(prev + amount, 600)));
+    const next = Math.max(0, Math.min(seconds + amount, 600));
+    setSeconds(next);
+    setEndsAt(Date.now() + next * 1000);
   };
 
   const formatTime = (secs: number) => {

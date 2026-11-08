@@ -6,6 +6,7 @@ import { Trophy, Sparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Exercise, ExperienceLevel, isExerciseObject } from '@/types/workout';
 import { RestTimer } from './RestTimer';
+import { hapticSetComplete } from '@/lib/native/haptics';
 import { ExerciseDisplayCard } from './ExerciseDisplayCard';
 import { WorkoutProgressBar } from './WorkoutProgressBar';
 
@@ -119,6 +120,7 @@ export function FullScreenWorkoutMode({
 
   const handleCompleteSet = useCallback(() => {
     // Mark set as completed
+    hapticSetComplete();
     setCompletedSets(prev => [...prev, currentSet - 1]);
     
     if (isLastSet) {
