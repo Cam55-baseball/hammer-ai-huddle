@@ -62,7 +62,7 @@ export function MentalLoadPrompt(props: MentalLoadPromptProps) {
       <p className="text-sm font-medium">How mentally draining was it? <span className="text-muted-foreground">(1 = not at all, 10 = very)</span></p>
       <div className="flex flex-wrap gap-1">
         {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-          <Button key={n} size="sm" variant="outline" className="h-8 w-8 p-0" disabled={state === "saving"} onClick={() => void rate(n)} aria-label={`${n} out of 10`}>{n}</Button>
+          <Button key={n} size="sm" variant="outline" className="h-8 w-8 p-0" disabled={state === "saving" || minutesQ.isLoading} onClick={() => void rate(n)} aria-label={`${n} out of 10`}>{n}</Button>
         ))}
         <Button size="sm" variant="ghost" disabled={state === "saving"} onClick={() => setState("skipped")}>Skip</Button>
       </div>
