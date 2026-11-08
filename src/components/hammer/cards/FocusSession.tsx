@@ -4,6 +4,8 @@ import { RestTimer } from "./RestTimer";
 import { ExerciseTimer } from "./ExerciseTimer";
 import { useConditioningRest } from "./ConditioningRestContext";
 import type { BaseRep } from "../../../../supabase/functions/_shared/wic/runRest";
+import { hapticSetComplete } from "@/lib/native/haptics";
+import { useRestAlert } from "@/lib/native/restAlerts";
 
 type Exercise = { id: string; name: string; rows: number; ready: boolean[]; restSeconds: number | null; bases?: BaseRep | null; enabled?: boolean; afterExerciseId?: string; beforeSeconds?: number; available?: (row: number) => boolean; save: (row: number) => Promise<void> };
 type Cursor = { exercise: number; exerciseId: string | null; row: number; restingUntil: number | null; restStartedAt: number | null; restSeconds: number | null; conditioningBases: number | null; awaitingManualRest: boolean; phase: "work" | "action" };
@@ -58,6 +60,12 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
     return { ...INITIAL, conditioningBases: prior.conditioningBases, exercise: index + 1, exerciseId: all[index + 1]?.id ?? null };
   }), []);
   useEffect(() => { sessionStorage.setItem(storageKey, JSON.stringify(cursor)); }, [cursor, storageKey]);
+  // iPhone app: lock-screen "Rest is up: <next exercise>" alert for the guided rest (presentation only).
+  const restNext = cursor.restingUntil == null || !base ? null
+    : cursor.phase !== "action" && continuation?.available?.(cursor.row) ? continuation.name
+    : cursor.row + 1 < base.rows ? base.name
+    : all[all.findIndex(entry => entry.id === base.id) + 1]?.name ?? null;
+  useRestAlert(`focus:${storageKey}`, active ? cursor.restingUntil : null, restNext);
   useEffect(() => {
     if (!active || cursor.restingUntil == null) return;
     const check = () => { if (Date.now() >= (cursor.restingUntil ?? Infinity)) advance(); };
@@ -72,6 +80,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
     setBusy(true); setError(null); setAwaitingManualRest(false);
     try {
       await current.save(cursor.row);
+      hapticSetComplete();
       let seconds = cursor.phase !== "action" && continuation?.available?.(cursor.row) ? continuation.beforeSeconds ?? current.restSeconds : current.restSeconds;
       if (current.bases) {
         const { conditioningRestAfterRep } = await import("../../../../supabase/functions/_shared/wic/runRest");
