@@ -37,6 +37,10 @@
 	<string></string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Hammers reads your sleep, heart rate and heart-rate variability from Apple Health to personalize your readiness and recovery.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Hammers does not save anything to Apple Health. It only reads your sleep, heart rate and heart-rate variability.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Hammers uses your camera to record swings, pitches and throws for analysis.</string>
 	<key>NSMicrophoneUsageDescription</key>
