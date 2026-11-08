@@ -55,4 +55,6 @@ export function nativeFlagOn(flag: NativeFlag): boolean {
   return !!cache?.values[flag];
 }
 
-export function _resetNativeFlagsForTests() { cache = null; pending = null; }
+/** Forget the answer (sign out). */
+export function clearNativeFlags() { cache = null; pending = null; }
+export const _resetNativeFlagsForTests = clearNativeFlags;
