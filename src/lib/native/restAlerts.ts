@@ -2,8 +2,8 @@
  * "Rest is up" alerts (owner Nov 8, native_rest_alerts_v1).
  * Scheduled when a rest starts, for the moment it ends, so it fires with the app in the
  * background or the screen locked. Pause, skip, stop or leaving the timer cancels it;
- * a change to the end time reschedules it. Marked silent so it never shows as a banner
- * while the app is open (the timer buzzes instead). Web: does nothing.
+ * a change to the end time reschedules it. Marked foreground:false so it never shows as a
+ * banner while the app is open (the timer buzzes instead). Web: does nothing.
  */
 import { useEffect } from "react";
 import { LocalNotifications } from "@capacitor/local-notifications";
@@ -51,7 +51,7 @@ export async function scheduleRestAlert(key: string, endsAt: number, nextExercis
     if (scheduled.has(key)) await LocalNotifications.cancel({ notifications: [{ id }] });
     const { title, body } = restAlertText(nextExercise);
     await LocalNotifications.schedule({
-      notifications: [{ id, title, body, schedule: { at: new Date(endsAt), allowWhileIdle: true }, silent: true, extra: { link: null } }],
+      notifications: [{ id, title, body, schedule: { at: new Date(endsAt), allowWhileIdle: true }, foreground: false }],
     });
     scheduled.set(key, endsAt);
     return true;
