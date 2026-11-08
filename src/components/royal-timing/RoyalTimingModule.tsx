@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { MentalLoadPrompt } from "@/components/mentalLoad/MentalLoadPrompt";
 import { useTranslation } from 'react-i18next';
 import { RoyalTimingExplanation } from './RoyalTimingExplanation';
 import { loadSharedHistory, recordSharedExchange } from "@/lib/hammer/oneConversation";
@@ -50,6 +51,8 @@ export function RoyalTimingModule() {
   const [submitting, setSubmitting] = useState(false);
   const [masterSpeed, setMasterSpeed] = useState(1);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  // Release A2: after a study is saved, the optional "How mentally draining was it?" question.
+  const [mentalFor, setMentalFor] = useState<string | null>(null);
   const [isReadOnly, setIsReadOnly] = useState(false);
 
   const video1Ref = useRef<HTMLVideoElement>(null);
@@ -257,6 +260,7 @@ export function RoyalTimingModule() {
       }
 
       notifyToolSaved(sessionId);
+      setMentalFor(sessionId);
       toast({ title: 'Session saved', description: 'Your timing study has been recorded.' });
     } catch (err) {
       console.error('Submit error:', err);
@@ -313,6 +317,7 @@ export function RoyalTimingModule() {
         setCurrentSessionId(sessionId);
       }
       notifyToolSaved(sessionId);
+      setMentalFor(sessionId);
       toast({ title: 'Session saved', description: 'Your session has been saved to My Sessions.' });
       queryClient.invalidateQueries({ queryKey: ['royal-timing-sessions'] });
     } catch (err) {
@@ -607,6 +612,10 @@ export function RoyalTimingModule() {
             <><Save className="h-4 w-4 mr-2" /> {currentSessionId ? 'Update Session' : 'Save Session'}</>
           )}
         </Button>
+      )}
+      {mentalFor && (
+        <MentalLoadPrompt key={mentalFor} activity="royal_timing" activityId={mentalFor}
+          activityDate={new Date().toISOString().slice(0, 10)} kind="royal_timing" />
       )}
     </div>
   );
