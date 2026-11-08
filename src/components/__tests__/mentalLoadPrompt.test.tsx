@@ -20,8 +20,7 @@ describe("mental-load prompt", () => {
 
   it("one tap saves rating × prescribed minutes on the activity", async () => {
     wrap(<MentalLoadPrompt activity="royal_timing" activityId="s1" activityDate="2026-11-20" kind="royal_timing" />);
-    await waitFor(() => expect(screen.getByRole("button", { name: "7 out of 10" })).toBeTruthy());
-    await new Promise((r) => setTimeout(r, 0));
+    await waitFor(() => expect((screen.getByRole("button", { name: "7 out of 10" }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "7 out of 10" }));
     await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("record_mental_load", {
       _activity: "royal_timing", _activity_id: "s1", _rating: 7, _minutes: 15, _minutes_source: "prescribed", _activity_date: "2026-11-20",
@@ -31,7 +30,8 @@ describe("mental-load prompt", () => {
 
   it("tracked minutes are used when the card recorded them", async () => {
     wrap(<MentalLoadPrompt activity="baserunning_iq" activityId="a1" activityDate="2026-11-20" kind="baserunning_iq" trackedMinutes={2.5} />);
-    fireEvent.click(await screen.findByRole("button", { name: "4 out of 10" }));
+    await waitFor(() => expect((screen.getByRole("button", { name: "4 out of 10" }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(screen.getByRole("button", { name: "4 out of 10" }));
     await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("record_mental_load", expect.objectContaining({ _rating: 4, _minutes: 2.5, _minutes_source: "tracked" })));
   });
 
