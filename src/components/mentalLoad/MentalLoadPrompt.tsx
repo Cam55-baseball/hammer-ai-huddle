@@ -43,10 +43,10 @@ export function MentalLoadPrompt(props: MentalLoadPromptProps) {
   const rate = async (rating: number) => {
     setState("saving");
     const pick = resolveMinutes({ trackedMinutes: props.trackedMinutes, drillWorkSeconds: props.drillWorkSeconds, kind: props.kind, prescribed: minutesQ.data ?? {} });
-    const { data, error } = await supabase.rpc("record_mental_load" as never, {
-      _activity: props.activity, _activity_id: props.activityId, _rating: rating,
-      _minutes: pick?.minutes ?? null, _minutes_source: pick?.source ?? null, _activity_date: props.activityDate,
-    } as never);
+    const { data, error } = await supabase.rpc("record_mental_load", {
+      _activity: props.activity, _activity_id: props.activityId!, _rating: rating,
+      _minutes: (pick?.minutes ?? null) as number, _minutes_source: (pick?.source ?? null) as string, _activity_date: props.activityDate,
+    });
     if (error) { setState("error"); setMsg("That didn't save. Tap a number again, or Skip."); return; }
     const res = (data ?? {}) as { ledger?: string };
     setMsg(res.ledger === "failed"
