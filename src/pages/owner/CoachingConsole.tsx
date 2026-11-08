@@ -18,6 +18,7 @@ import {MasterySettings} from '@/components/intelligence/MasterySettings';
 import {PitchingStandardsSettings} from '@/components/intelligence/PitchingStandardsSettings';
 import {ConditioningSettings} from '@/components/intelligence/ConditioningSettings';
 import {GreenlightSettings} from '@/components/intelligence/GreenlightSettings';
+import {ReadinessInputsSettings} from '@/components/intelligence/ReadinessInputsSettings';
 import { CatchPlaySettings } from '@/components/intelligence/CatchPlaySettings';
 import {TissueCareMatchingSettings} from '@/components/intelligence/TissueCareMatchingSettings';
 import {JumpTagSettings} from '@/components/intelligence/JumpTagSettings';
@@ -131,6 +132,7 @@ export default function CoachingConsole() {
       <PitchingStandardsSettings />
       <ConditioningSettings />
       <GreenlightSettings />
+      <ReadinessInputsSettings />
       <CatchPlaySettings />
       <TissueCareMatchingSettings />
       <JumpTagSettings />
