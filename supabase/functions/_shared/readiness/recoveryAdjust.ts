@@ -12,7 +12,7 @@
 //    sprint caps or lift caps, and it is never fed into the greenlight step-up rule.
 //  - Missing answers are unknown, never guessed.
 // Every number here is PROPOSED and editable by the owner in the Coaching Console.
-import { bandFor, type RunningReadiness } from "./runningReadiness.ts";
+import { bandFor, readinessLine, type RunningReadiness } from "./runningReadiness.ts";
 
 export const RECOVERY_SETTING_KEY = "readiness_recovery_inputs_v1";
 
@@ -189,7 +189,14 @@ export function applyRecoveryAdjustment(running: RunningReadiness | null, adj: R
   return { ...running, score, band: bandFor(score), reasons: reasons.slice(0, 3) };
 }
 
-/** True when the recovery inputs alone turned the day lighter (the plan then never lowers a cap). */
-export function lightenedByRecoveryOnly(raw: RunningReadiness | null, adjusted: RunningReadiness | null): boolean {
-  return !!adjusted && adjusted.band === "low" && raw?.band !== "low";
+/**
+ * One plain line for Today: the running readiness line, plus one sentence about today's
+ * recovery when an input moved it. The workouts are never described as changed by it.
+ */
+export function dayReadinessLine(running: RunningReadiness, adj: RecoveryAdjustment | null): string {
+  const base = readinessLine(running);
+  if (!adj?.chosen || adj.delta === 0 || running.score == null) return base;
+  return adj.delta < 0
+    ? `${base} Recovery today: lower, because ${adj.chosen.reason}. Your workouts stay the same, so take your full rest between sets and get good sleep tonight.`
+    : `${base} Recovery today: good, because ${adj.chosen.reason}.`;
 }
