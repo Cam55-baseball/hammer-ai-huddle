@@ -1,0 +1,1 @@
+- iPhone-only features resolve via `src/lib/native/nativeFlags.ts` (off on web) and start from `NativeBridge`; pushes go only `push_enqueue` → `push_outbox` → `send-push`, recipients/words from `_shared/push/fanout.ts`. Why: web unchanged; push only reaches who sees the in-app notice.
