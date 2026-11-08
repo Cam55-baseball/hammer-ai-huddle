@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { HeartPulse } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Capacitor } from "@capacitor/core";
 
 type State = "hidden" | "no_consent" | "ready" | "connected";
 
@@ -19,7 +20,7 @@ export function AppleHealthConnectCard({ userId }: { userId: string }) {
   useEffect(() => {
     let alive = true;
     let native = false;
-    try { native = (window as any).Capacitor?.isNativePlatform?.() === true; } catch { native = false; }
+    try { native = Capacitor.isNativePlatform(); } catch { native = false; }
     if (!native) return;
     void import("@/lib/native/healthSync").then(async (m) => {
       const e = await m.healthEligibility(userId);
