@@ -256,6 +256,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     clearProtectedEditing();
+    // iPhone app (native_push_v1): this phone stops getting this person's pushes. Needs the
+    // session, so it runs first; it never blocks sign out. No-op on the web.
+    if (isNativeApp()) {
+      try {
+        const [{ disablePushTokenOnSignOut }, { clearNativeFlags }] = await Promise.all([import('@/lib/native/push'), import('@/lib/native/nativeFlags')]);
+        await disablePushTokenOnSignOut();
+        clearNativeFlags();
+      } catch { /* sign out continues */ }
+    }
     explicitSignOutPending = true;
     // 'local' signs out this device only. The default ('global') revoked the
     // player's sessions on every other phone, tablet and browser too.
