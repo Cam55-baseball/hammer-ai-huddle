@@ -10,13 +10,16 @@ function vibrate(pattern: number | number[]) {
   try { navigator.vibrate?.(pattern); } catch { /* unsupported */ }
 }
 
-/** Rest is over (foreground). Web fallback keeps the previous [200, 100, 200] buzz. */
-export function hapticRestEnd(webPattern: number | number[] = [200, 100, 200]) {
+/**
+ * Rest is over (foreground). Web fallback keeps each timer's previous behavior:
+ * pass the pattern it used to buzz, or null where it never buzzed.
+ */
+export function hapticRestEnd(webPattern: number | number[] | null = [200, 100, 200]) {
   if (isNativeApp() && nativeFlagOn("native_rest_alerts_v1")) {
     void Haptics.notification({ type: NotificationType.Success }).catch(() => {});
     return;
   }
-  vibrate(webPattern);
+  if (webPattern != null) vibrate(webPattern);
 }
 
 /** A set was saved. Light tap on the iPhone app only; the web had no buzz here and keeps none. */

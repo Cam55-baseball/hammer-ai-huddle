@@ -116,7 +116,7 @@ export function RestTimer({
   useRestAlert(alertKey, isPaused || seconds <= 0 ? null : endsAt, nextExerciseName);
   const buzzed = useRef(false);
   useEffect(() => {
-    if (seconds <= 0 && !buzzed.current) { buzzed.current = true; hapticRestEnd(); }
+    if (seconds <= 0 && !buzzed.current) { buzzed.current = true; hapticRestEnd(null); }
   }, [seconds]);
 
   const adjustTime = (amount: number) => {
