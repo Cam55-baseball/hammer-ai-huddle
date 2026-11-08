@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { emitObservability } from '@/hooks/useEmitObservability';
 import { clearProtectedEditing, isProtectedEditingActive } from '@/lib/auth/protectedEditing';
 import { canEvictNow, noteTokenRefreshed, hasPersistedSupabaseToken } from '@/lib/auth/canEvict';
-import { syncNativeSession } from '@/lib/auth/nativeSessionStore';
+import { syncNativeSession, isNativeApp } from '@/lib/auth/nativeSessionStore';
 
 // Set only by an explicit Sign out tap, so that path signs out at once while
 // every other SIGNED_OUT event is verified before anyone is evicted.
