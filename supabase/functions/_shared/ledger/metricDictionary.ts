@@ -17,7 +17,7 @@
 
 export type Sport = "both" | "baseball" | "softball";
 export type Privacy = "training" | "health";
-export type NamingSystem = "six_week" | "combine" | "baserunning" | "self_test" | "ledger" | "game_log" | "checkin" | "healthkit" | "body" | "cv";
+export type NamingSystem = "six_week" | "combine" | "baserunning" | "self_test" | "ledger" | "game_log" | "checkin" | "healthkit" | "body" | "cv" | "practice";
 
 export interface MetricDef {
   key: string;
@@ -338,6 +338,14 @@ export const ALIASES: MetricAlias[] = [
 
   // Camera velocity (cv_velocity_measurements)
   { alias: "cv.pitch_velocity_mph", key: "pitch_velo_mph", unit: "mph", system: "cv" },
+
+  // Practice logs (Release 0b): partner/self-timed sprints (speed_partner_timings.distance "10y"…) and the
+  // "how hard was it" answer on a logged activity (custom_activity_logs.performance_data.rpe).
+  ...([
+    ["practice.sprint_7y", "sprint_7yd_s"], ["practice.sprint_10y", "sprint_10yd_s"], ["practice.sprint_20y", "sprint_20yd_s"],
+    ["practice.sprint_30y", "sprint_30yd_s"], ["practice.sprint_40y", "sprint_40yd_s"], ["practice.sprint_60y", "sprint_60yd_s"],
+  ] as const).map(([alias, key]) => ({ alias, key, unit: "s", system: "practice" as const })),
+  { alias: "practice.session_rpe", key: "session_rpe", unit: "rpe", system: "practice" },
 ];
 
 /** Unit conversions to each canonical unit. Unknown pairs return null (missing, never guessed). */
