@@ -108,7 +108,8 @@ describe("2. impossible typed numbers are blocked (one dictionary, with units)",
   it("combine entries and the self-test card", () => {
     for (const e of COMBINE_EVENTS) expect(canonicalize(`combine.${e}`, 1), e).not.toBeNull();
     for (const t of BATTERY) expect(canonicalize(t.key, 1, t.unit), t.key).not.toBeNull();
-    expect(isImpossibleEntry("combine.sixty_yard_dash" in {} ? "" : "combine.thirty_yard_dash", "1")).toBe(true);
+    expect(isImpossibleEntry("combine.thirty_yard_dash", "1")).toBe(true);
+    expect(isImpossibleEntry("combine.thirty_yard_dash", "4.1")).toBe(false);
     expect(isImpossibleEntry("test.broad_jump_in", "500", "in")).toBe(true);
     expect(isImpossibleEntry("test.broad_jump_in", "90", "in")).toBe(false);
   });
