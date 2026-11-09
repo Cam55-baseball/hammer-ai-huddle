@@ -2470,6 +2470,75 @@ export type Database = {
         }
         Relationships: []
       }
+      app_attest_challenges: {
+        Row: {
+          challenge: string
+          created_at: string
+          expires_at: string
+          id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          challenge: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          challenge?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      app_attest_keys: {
+        Row: {
+          app_build: string | null
+          created_at: string
+          environment: string
+          id: string
+          key_id: string
+          last_used_at: string | null
+          public_key_spki: string
+          receipt: string | null
+          revoked_at: string | null
+          sign_count: number
+          user_id: string
+        }
+        Insert: {
+          app_build?: string | null
+          created_at?: string
+          environment: string
+          id?: string
+          key_id: string
+          last_used_at?: string | null
+          public_key_spki: string
+          receipt?: string | null
+          revoked_at?: string | null
+          sign_count?: number
+          user_id: string
+        }
+        Update: {
+          app_build?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          key_id?: string
+          last_used_at?: string | null
+          public_key_spki?: string
+          receipt?: string | null
+          revoked_at?: string | null
+          sign_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           id: string
@@ -2918,6 +2987,13 @@ export type Database = {
             foreignKeyName: "athlete_baseline_alerts_observation_id_fkey"
             columns: ["observation_id"]
             isOneToOne: false
+            referencedRelation: "athlete_measurements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_baseline_alerts_observation_id_fkey"
+            columns: ["observation_id"]
+            isOneToOne: false
             referencedRelation: "athlete_metric_observations"
             referencedColumns: ["id"]
           },
@@ -2949,6 +3025,7 @@ export type Database = {
           n_used: number
           noise_floor: number | null
           observation_id: string
+          privacy_class: string
           q1: number | null
           q3: number | null
           robust_sd: number | null
@@ -2968,6 +3045,7 @@ export type Database = {
           n_used: number
           noise_floor?: number | null
           observation_id: string
+          privacy_class?: string
           q1?: number | null
           q3?: number | null
           robust_sd?: number | null
@@ -2987,6 +3065,7 @@ export type Database = {
           n_used?: number
           noise_floor?: number | null
           observation_id?: string
+          privacy_class?: string
           q1?: number | null
           q3?: number | null
           robust_sd?: number | null
@@ -2996,6 +3075,13 @@ export type Database = {
           version?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "athlete_baseline_history_observation_id_fkey"
+            columns: ["observation_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_measurements"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "athlete_baseline_history_observation_id_fkey"
             columns: ["observation_id"]
@@ -3602,19 +3688,89 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_metric_baselines: {
+        Row: {
+          as_of: string | null
+          canonical_key: string
+          context_key: string
+          mean_12w: number | null
+          mean_4w: number | null
+          n_12w: number
+          n_4w: number
+          privacy_class: string
+          sd_12w: number | null
+          sd_4w: number | null
+          season_best: number | null
+          season_best_at: string | null
+          season_best_observation_id: string | null
+          season_year: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          as_of?: string | null
+          canonical_key: string
+          context_key?: string
+          mean_12w?: number | null
+          mean_4w?: number | null
+          n_12w?: number
+          n_4w?: number
+          privacy_class?: string
+          sd_12w?: number | null
+          sd_4w?: number | null
+          season_best?: number | null
+          season_best_at?: string | null
+          season_best_observation_id?: string | null
+          season_year?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          as_of?: string | null
+          canonical_key?: string
+          context_key?: string
+          mean_12w?: number | null
+          mean_4w?: number | null
+          n_12w?: number
+          n_4w?: number
+          privacy_class?: string
+          sd_12w?: number | null
+          sd_4w?: number | null
+          season_best?: number | null
+          season_best_at?: string | null
+          season_best_observation_id?: string | null
+          season_year?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       athlete_metric_observations: {
         Row: {
+          app_build: string | null
+          attested: boolean
+          canonical_key: string | null
+          canonical_unit: string | null
+          canonical_value: number | null
+          capture_conditions: Json | null
           capture_context: Json
+          capture_fps: number | null
           confidence: number | null
           context_key: string
           created_at: string
+          device_model: string | null
           engine_version: string
           id: string
           metric_key: string
           noise_floor: number | null
+          physics_ok: boolean | null
+          platform: string | null
+          privacy_class: string
           recorded_at: string
+          rep_index: number | null
           session_id: string | null
           source: string
+          source_kind: string | null
           source_row_id: string | null
           unit: string | null
           user_id: string
@@ -3622,17 +3778,30 @@ export type Database = {
           video_id: string | null
         }
         Insert: {
+          app_build?: string | null
+          attested?: boolean
+          canonical_key?: string | null
+          canonical_unit?: string | null
+          canonical_value?: number | null
+          capture_conditions?: Json | null
           capture_context?: Json
+          capture_fps?: number | null
           confidence?: number | null
           context_key?: string
           created_at?: string
+          device_model?: string | null
           engine_version: string
           id?: string
           metric_key: string
           noise_floor?: number | null
+          physics_ok?: boolean | null
+          platform?: string | null
+          privacy_class?: string
           recorded_at?: string
+          rep_index?: number | null
           session_id?: string | null
           source: string
+          source_kind?: string | null
           source_row_id?: string | null
           unit?: string | null
           user_id: string
@@ -3640,17 +3809,30 @@ export type Database = {
           video_id?: string | null
         }
         Update: {
+          app_build?: string | null
+          attested?: boolean
+          canonical_key?: string | null
+          canonical_unit?: string | null
+          canonical_value?: number | null
+          capture_conditions?: Json | null
           capture_context?: Json
+          capture_fps?: number | null
           confidence?: number | null
           context_key?: string
           created_at?: string
+          device_model?: string | null
           engine_version?: string
           id?: string
           metric_key?: string
           noise_floor?: number | null
+          physics_ok?: boolean | null
+          platform?: string | null
+          privacy_class?: string
           recorded_at?: string
+          rep_index?: number | null
           session_id?: string | null
           source?: string
+          source_kind?: string | null
           source_row_id?: string | null
           unit?: string | null
           user_id?: string
@@ -11883,6 +12065,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ledger_write_failures: {
+        Row: {
+          attempts: number
+          created_at: string
+          error: string | null
+          id: string
+          metric_key: string | null
+          payload: Json | null
+          reason: string
+          resolved_at: string | null
+          source: string | null
+          user_id: string | null
+          value: number | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          metric_key?: string | null
+          payload?: Json | null
+          reason: string
+          resolved_at?: string | null
+          source?: string | null
+          user_id?: string | null
+          value?: number | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          metric_key?: string | null
+          payload?: Json | null
+          reason?: string
+          resolved_at?: string | null
+          source?: string | null
+          user_id?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
       legal_documents: {
         Row: {
           approved: boolean
@@ -12698,36 +12922,114 @@ export type Database = {
       measurement_definitions: {
         Row: {
           athlete_label: string | null
+          category: string | null
           created_at: string
+          definition: string | null
+          display_name: string | null
+          gt_device: string | null
+          gt_tolerance: number | null
+          higher_is_better: boolean | null
+          in_app_only: boolean
+          is_canonical: boolean
           metric_key: string
           min_confidence: number
           noise_floor: number | null
           notes: string | null
+          physical_max: number | null
+          physical_min: number | null
           policy: string
+          privacy_class: string
+          published_source: string | null
+          required_fps: number | null
+          source_status: string
+          sport: string
           unit: string | null
           updated_at: string
         }
         Insert: {
           athlete_label?: string | null
+          category?: string | null
           created_at?: string
+          definition?: string | null
+          display_name?: string | null
+          gt_device?: string | null
+          gt_tolerance?: number | null
+          higher_is_better?: boolean | null
+          in_app_only?: boolean
+          is_canonical?: boolean
           metric_key: string
           min_confidence?: number
           noise_floor?: number | null
           notes?: string | null
+          physical_max?: number | null
+          physical_min?: number | null
           policy?: string
+          privacy_class?: string
+          published_source?: string | null
+          required_fps?: number | null
+          source_status?: string
+          sport?: string
           unit?: string | null
           updated_at?: string
         }
         Update: {
           athlete_label?: string | null
+          category?: string | null
           created_at?: string
+          definition?: string | null
+          display_name?: string | null
+          gt_device?: string | null
+          gt_tolerance?: number | null
+          higher_is_better?: boolean | null
+          in_app_only?: boolean
+          is_canonical?: boolean
           metric_key?: string
           min_confidence?: number
           noise_floor?: number | null
           notes?: string | null
+          physical_max?: number | null
+          physical_min?: number | null
           policy?: string
+          privacy_class?: string
+          published_source?: string | null
+          required_fps?: number | null
+          source_status?: string
+          sport?: string
           unit?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      measurement_deletion_requests: {
+        Row: {
+          created_at: string
+          details: Json | null
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          requested_by: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_by: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_by?: string
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -12805,6 +13107,59 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           prompt_text?: string
+        }
+        Relationships: []
+      }
+      metric_aliases: {
+        Row: {
+          alias_key: string
+          alias_unit: string | null
+          canonical_key: string
+          created_at: string
+          naming_system: string
+          note: string | null
+        }
+        Insert: {
+          alias_key: string
+          alias_unit?: string | null
+          canonical_key: string
+          created_at?: string
+          naming_system: string
+          note?: string | null
+        }
+        Update: {
+          alias_key?: string
+          alias_unit?: string | null
+          canonical_key?: string
+          created_at?: string
+          naming_system?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metric_aliases_canonical_key_fkey"
+            columns: ["canonical_key"]
+            isOneToOne: false
+            referencedRelation: "measurement_definitions"
+            referencedColumns: ["metric_key"]
+          },
+        ]
+      }
+      metric_unit_conversions: {
+        Row: {
+          factor: number
+          from_unit: string
+          to_unit: string
+        }
+        Insert: {
+          factor: number
+          from_unit: string
+          to_unit: string
+        }
+        Update: {
+          factor?: number
+          from_unit?: string
+          to_unit?: string
         }
         Relationships: []
       }
@@ -13150,6 +13505,51 @@ export type Database = {
         }
         Relationships: []
       }
+      movement_consents: {
+        Row: {
+          accepted_at: string
+          app_build: string | null
+          created_at: string
+          id: string
+          parent_decided_at: string | null
+          parent_user_id: string | null
+          platform: string | null
+          revoked_at: string | null
+          status: string
+          text_sha256: string
+          user_id: string
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          app_build?: string | null
+          created_at?: string
+          id?: string
+          parent_decided_at?: string | null
+          parent_user_id?: string | null
+          platform?: string | null
+          revoked_at?: string | null
+          status: string
+          text_sha256: string
+          user_id: string
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          app_build?: string | null
+          created_at?: string
+          id?: string
+          parent_decided_at?: string | null
+          parent_user_id?: string | null
+          platform?: string | null
+          revoked_at?: string | null
+          status?: string
+          text_sha256?: string
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       mpi_scores: {
         Row: {
           adjusted_global_score: number | null
@@ -13296,6 +13696,7 @@ export type Database = {
           email: boolean
           in_app: boolean
           push: boolean
+          push_set_at: string | null
           updated_at: string
           user_id: string
         }
@@ -13303,6 +13704,7 @@ export type Database = {
           email?: boolean
           in_app?: boolean
           push?: boolean
+          push_set_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -13310,6 +13712,7 @@ export type Database = {
           email?: boolean
           in_app?: boolean
           push?: boolean
+          push_set_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -19702,6 +20105,112 @@ export type Database = {
           },
         ]
       }
+      validation_scorecards: {
+        Row: {
+          app_build: string
+          created_at: string
+          created_by: string
+          device_name: string | null
+          gates: Json
+          id: string
+          metric_key: string
+          ready_to_open: boolean
+          trial_count: number
+        }
+        Insert: {
+          app_build: string
+          created_at?: string
+          created_by?: string
+          device_name?: string | null
+          gates: Json
+          id?: string
+          metric_key: string
+          ready_to_open: boolean
+          trial_count: number
+        }
+        Update: {
+          app_build?: string
+          created_at?: string
+          created_by?: string
+          device_name?: string | null
+          gates?: Json
+          id?: string
+          metric_key?: string
+          ready_to_open?: boolean
+          trial_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validation_scorecards_metric_key_fkey"
+            columns: ["metric_key"]
+            isOneToOne: false
+            referencedRelation: "measurement_definitions"
+            referencedColumns: ["metric_key"]
+          },
+        ]
+      }
+      validation_trials: {
+        Row: {
+          app_build: string
+          app_value: number | null
+          conditions: Json
+          consistency_group: string | null
+          created_at: string
+          created_by: string
+          detected: boolean
+          device_name: string
+          device_value: number | null
+          id: string
+          measured_fps: number | null
+          metric_key: string
+          notes: string | null
+          observation_id: string | null
+          subject_user_id: string | null
+        }
+        Insert: {
+          app_build: string
+          app_value?: number | null
+          conditions?: Json
+          consistency_group?: string | null
+          created_at?: string
+          created_by?: string
+          detected: boolean
+          device_name: string
+          device_value?: number | null
+          id?: string
+          measured_fps?: number | null
+          metric_key: string
+          notes?: string | null
+          observation_id?: string | null
+          subject_user_id?: string | null
+        }
+        Update: {
+          app_build?: string
+          app_value?: number | null
+          conditions?: Json
+          consistency_group?: string | null
+          created_at?: string
+          created_by?: string
+          detected?: boolean
+          device_name?: string
+          device_value?: number | null
+          id?: string
+          measured_fps?: number | null
+          metric_key?: string
+          notes?: string | null
+          observation_id?: string | null
+          subject_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validation_trials_metric_key_fkey"
+            columns: ["metric_key"]
+            isOneToOne: false
+            referencedRelation: "measurement_definitions"
+            referencedColumns: ["metric_key"]
+          },
+        ]
+      }
       vault_entries: {
         Row: {
           created_at: string | null
@@ -24444,6 +24953,90 @@ export type Database = {
       }
     }
     Views: {
+      athlete_measurements: {
+        Row: {
+          app_build: string | null
+          athlete_id: string | null
+          attested: boolean | null
+          capture_conditions: Json | null
+          capture_context: Json | null
+          capture_fps: number | null
+          captured_at: string | null
+          confidence: number | null
+          device_model: string | null
+          engine_version: string | null
+          id: string | null
+          metric_key: string | null
+          physics_ok: boolean | null
+          platform: string | null
+          privacy_class: string | null
+          recorded_as: string | null
+          recorded_unit: string | null
+          recorded_value: number | null
+          rep_index: number | null
+          session_id: string | null
+          source: string | null
+          source_kind: string | null
+          source_row_id: string | null
+          unit: string | null
+          value: number | null
+        }
+        Insert: {
+          app_build?: string | null
+          athlete_id?: string | null
+          attested?: boolean | null
+          capture_conditions?: Json | null
+          capture_context?: Json | null
+          capture_fps?: number | null
+          captured_at?: string | null
+          confidence?: number | null
+          device_model?: string | null
+          engine_version?: string | null
+          id?: string | null
+          metric_key?: string | null
+          physics_ok?: boolean | null
+          platform?: string | null
+          privacy_class?: string | null
+          recorded_as?: string | null
+          recorded_unit?: string | null
+          recorded_value?: number | null
+          rep_index?: number | null
+          session_id?: string | null
+          source?: string | null
+          source_kind?: string | null
+          source_row_id?: string | null
+          unit?: string | null
+          value?: number | null
+        }
+        Update: {
+          app_build?: string | null
+          athlete_id?: string | null
+          attested?: boolean | null
+          capture_conditions?: Json | null
+          capture_context?: Json | null
+          capture_fps?: number | null
+          captured_at?: string | null
+          confidence?: number | null
+          device_model?: string | null
+          engine_version?: string | null
+          id?: string | null
+          metric_key?: string | null
+          physics_ok?: boolean | null
+          platform?: string | null
+          privacy_class?: string | null
+          recorded_as?: string | null
+          recorded_unit?: string | null
+          recorded_value?: number | null
+          rep_index?: number | null
+          session_id?: string | null
+          source?: string | null
+          source_kind?: string | null
+          source_row_id?: string | null
+          unit?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
       athlete_metric_pairs: {
         Row: {
           context_a: string | null
@@ -25688,6 +26281,16 @@ export type Database = {
       is_training_intel_owner: { Args: { _user_id: string }; Returns: boolean }
       is_under_13: { Args: { _user_id: string }; Returns: boolean }
       join_by_invite_code: { Args: { _code: string }; Returns: Json }
+      ledger_backfill_athlete: { Args: { _user: string }; Returns: Json }
+      ledger_baseline_update: {
+        Args: { _ctx: string; _key: string; _user: string }
+        Returns: undefined
+      }
+      ledger_log_failure: {
+        Args: { _attempts: number; _error: string; _p: Json; _reason: string }
+        Returns: undefined
+      }
+      ledger_mirror_row: { Args: { _table: string; j: Json }; Returns: number }
       ledger_record: {
         Args: {
           p_at: string
@@ -25710,6 +26313,7 @@ export type Database = {
         Args: { p_field: string; p_tiles: Json; p_video: string }
         Returns: number
       }
+      ledger_save: { Args: { _p: Json }; Returns: string }
       list_my_coaches: {
         Args: { _athlete?: string }
         Returns: {
@@ -25803,6 +26407,26 @@ export type Database = {
         Args: { p_athlete?: string; p_date: string; p_sport: string }
         Returns: Json
       }
+      metric_convert: {
+        Args: { _from: string; _to: string; _value: number }
+        Returns: number
+      }
+      movement_consent_agree: {
+        Args: {
+          _app_build: string
+          _platform: string
+          _text_sha256: string
+          _version: string
+        }
+        Returns: Json
+      }
+      movement_consent_parent_decide: {
+        Args: { _approve: boolean; _athlete: string }
+        Returns: Json
+      }
+      movement_consent_revoke: { Args: { _athlete?: string }; Returns: Json }
+      movement_consent_state: { Args: { _user: string }; Returns: string }
+      movement_consent_status: { Args: never; Returns: Json }
       my_coach_issue_tags: {
         Args: { _days?: number }
         Returns: {
@@ -26012,6 +26636,10 @@ export type Database = {
         }
         Returns: string
       }
+      request_measurement_deletion: {
+        Args: { _athlete?: string }
+        Returns: Json
+      }
       reschedule_testing_day: {
         Args: { _date: string; _id: string }
         Returns: undefined
@@ -26152,6 +26780,7 @@ export type Database = {
         Returns: undefined
       }
       swap_v2_enabled: { Args: never; Returns: boolean }
+      switch_on_for: { Args: { _key: string; _user: string }; Returns: boolean }
       sync_game_arm_day: {
         Args: { p_date: string; p_user: string }
         Returns: undefined
