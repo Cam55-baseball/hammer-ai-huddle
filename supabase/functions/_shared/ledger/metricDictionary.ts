@@ -207,7 +207,8 @@ export const METRICS: MetricDef[] = [
   def({ key: "mental_load", label: "Mental load", unit: "rating_x_minutes", category: "readiness", higherIsBetter: null, physMin: 1, physMax: 6000, privacy: "health", definition: "\"How mentally draining was it?\" (1–10) × the card's minutes (tracked, else prescribed). Skipped = unknown." }),
   def({ key: "sleep_hours", label: "Hours slept (reported)", unit: "hours", category: "readiness", higherIsBetter: null, physMin: 0, physMax: 24, privacy: "health", definition: "Hours slept as answered in the check-in." }),
   def({ key: "sleep_quality", label: "Sleep quality (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 5, privacy: "health", definition: "Check-in sleep quality answer." }),
-  def({ key: "perceived_recovery", label: "Perceived recovery (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 5, privacy: "health", definition: "Check-in perceived recovery answer." }),
+  // Release 0b parity fix: the check-in asks this on a 1–10 scale (VaultFocusQuizDialog TenPointScale), not 1–5.
+  def({ key: "perceived_recovery", label: "Perceived recovery (1–10)", unit: "score_1_10", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 10, privacy: "health", definition: "Check-in perceived recovery answer (1–10)." }),
   def({ key: "physical_readiness", label: "Physical readiness (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 5, privacy: "health", definition: "Check-in physical readiness answer." }),
   def({ key: "mental_readiness", label: "Mental readiness (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 5, privacy: "health", definition: "Check-in mental readiness answer." }),
   def({ key: "mood", label: "Mood (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 5, privacy: "health", definition: "Check-in mood answer." }),
@@ -304,7 +305,7 @@ export const ALIASES: MetricAlias[] = [
   // Morning check-in (vault_focus_quizzes) — written as checkin.<column>
   ...([
     ["stress_level", "stress", "score_1_5"], ["hours_slept", "sleep_hours", "hours"], ["sleep_quality", "sleep_quality", "score_1_5"],
-    ["perceived_recovery", "perceived_recovery", "score_1_5"], ["physical_readiness", "physical_readiness", "score_1_5"],
+    ["perceived_recovery", "perceived_recovery", "score_1_10"], ["physical_readiness", "physical_readiness", "score_1_5"],
     ["mental_readiness", "mental_readiness", "score_1_5"], ["mood_level", "mood", "score_1_5"], ["mental_energy", "mental_energy", "score_1_5"],
     ["pain_scale", "pain_scale", "score_0_10"], ["resting_hr", "resting_hr_bpm", "bpm"], ["reaction_time_ms", "reaction_tap_ms", "ms"],
     ["balance_left_seconds", "checkin_balance_s", "s"], ["balance_right_seconds", "checkin_balance_s", "s"], ["weight_lbs", "body_weight_lb", "lb"],
