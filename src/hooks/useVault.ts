@@ -5,6 +5,7 @@ import { useAuth } from './useAuth';
 import { computeToolGrades } from '@/data/positionToolProfiles';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays } from 'date-fns';
 import { mergeHpiLifestyle, type StressLevel } from '@/lib/hpi/lifestyleStore';
+import { readViaLedger } from '@/lib/ledger/ledgerRead';
 
 export interface VaultEntry {
   id: string;

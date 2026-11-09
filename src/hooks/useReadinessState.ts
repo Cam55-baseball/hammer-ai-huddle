@@ -59,10 +59,10 @@ export function useReadinessState(): ReadinessResult {
       if (!user) return null;
       const since = new Date(Date.now() - FOCUS_MAX_AGE_MS).toISOString();
 
-      const [hieRes, physioRes, focusRes] = await Promise.all([
+      const [hieStored, physioRes, focusRes] = await Promise.all([
         supabase
           .from('hie_snapshots')
-          .select('readiness_score, training_readiness_score, computed_at')
+          .select('id, user_id, readiness_score, training_readiness_score, computed_at')
           .eq('user_id', user.id)
           .order('computed_at', { ascending: false })
           .limit(1)
@@ -83,6 +83,8 @@ export function useReadinessState(): ReadinessResult {
           .limit(1)
           .maybeSingle(),
       ]);
+      // Release 0b: readiness numbers come from the ledger only when ledger_unify_v1 is on for this player.
+      const hieRes = { data: await readOneViaLedger('hie_snapshots', hieStored.data, user.id) };
 
       const sources: ReadinessSource[] = [];
       const hieSnap = hieRes.data as { readiness_score: number | null; training_readiness_score: number | null; computed_at: string } | null;
