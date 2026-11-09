@@ -107,6 +107,7 @@ export const OWNED_TABLES: Array<[table: string, column: string]> = [
   ["hammer_daily_task_completions", "user_id"],
   ["hammer_state_explanations_v2", "user_id"],
   ["hammer_state_snapshots", "user_id"],
+  ["health_workout_writes", "user_id"],
   ["heat_map_snapshots", "user_id"],
   ["hie_dirty_users", "user_id"],
   ["hie_execution_locks", "user_id"],

@@ -7,7 +7,7 @@
  *
  * Constitutional subordination: Eternal Laws · Megaphase 151–160 · RR-5 · RR-6.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
   makeBlockTaskId,
   type TaskSeed,
 } from "@/hooks/useHammerDailyTasks";
+import { removeCardFromHealth, saveCardToHealth } from "@/lib/native/healthCards";
 
 type DrillLike = DrillLineage;
 
@@ -57,6 +58,14 @@ export function BlockCompletionControls({
   // Owner Nov 1 A9: a block whose every drill has been logged reads as done.
   const allLogged = !!drills && drills.length > 0 && drills.every((d) => tasks.isDone(makeBlockTaskId(String(modality), d.slug ?? d.name), side));
   const shown = current ?? (allLogged ? "done" : null);
+  // Release A3 (iPhone + healthkit_write_v1 + the player's Settings switch only): silent, no UI.
+  const taskKeys = (drills ?? []).map((d) => makeBlockTaskId(String(modality), d.slug ?? d.name));
+  const healthRef = {
+    userId: user?.id, planDate: date, kind: String(modality), sport,
+    card: { type: "block" as const, modality: String(modality), side, keys: taskKeys },
+  };
+  const healthKey = `${user?.id}|${date}|${modality}|${side}|${taskKeys.join(",")}`;
+  useEffect(() => { if (allLogged) void saveCardToHealth(healthRef); }, [allLogged, healthKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const encouragement = useMemo(() => {
     const bank = [
       "That's a rep in the bank.",
@@ -93,6 +102,8 @@ export function BlockCompletionControls({
     recordCompletion(user?.id, modality, status, side);
     setCurrent(status);
     onChanged();
+    if (status === "done") void saveCardToHealth(healthRef);
+    else void removeCardFromHealth(healthRef);
     if (status === "done") {
       toast.success(`${modalityLabel} — done. ${encouragement}`);
     } else {

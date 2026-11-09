@@ -215,7 +215,7 @@ export function WkLiftsCard({ pocket = false, recovery = false }: { pocket?: boo
             )}
             {items.length > 0 && <CardDashboard mode="lift" slugs={items.filter((r) => r.load_pct).map((r) => r.movement_slug)} />}
             <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
-            {items.length > 0 && <WkCardCompletion modality="lifts" modalityLabel={recovery ? "Recovery" : "Lifts"} items={items} />}
+            {items.length > 0 && <WkCardCompletion modality="lifts" modalityLabel={recovery ? "Recovery" : "Lifts"} items={items} healthKind={recovery ? "recovery" : undefined} />}
             {items.length > 0 && <CardActions modality="lifts" items={items} phaseDisplay={phaseDisplay} />}
           </CardContent>
         </CollapsibleContent>

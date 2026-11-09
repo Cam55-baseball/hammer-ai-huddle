@@ -51,6 +51,8 @@ export const FEATURE_KEYS = [
   "native_push_v1",
   "native_rest_alerts_v1",
   "healthkit_read_v1",
+  // Release A3 (owner Nov 9) — iPhone app only: save completed Today cards to Apple Health (src/lib/native/healthWorkouts.ts).
+  "healthkit_write_v1",
   // Release A2 (owner Nov 8) — Apple Health effect on the recovery side of readiness only (_shared/readiness/recoveryAdjust.ts).
   // mental_load_v1 was removed (owner Nov 9: mental load is not accounted for).
   "readiness_health_v1",

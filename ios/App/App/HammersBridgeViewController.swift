@@ -6,5 +6,6 @@ class HammersBridgeViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(StorefrontPlugin())
         bridge?.registerPluginInstance(AppAttestPlugin())
+        bridge?.registerPluginInstance(HealthWorkoutPlugin())
     }
 }

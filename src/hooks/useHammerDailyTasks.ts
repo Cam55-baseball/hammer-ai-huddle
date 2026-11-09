@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useSessionControls } from './useSessionControls';
 import { activityControl, sessionExempt } from '@/lib/coachRx/sessionControls';
+import { noteWorkTime } from "@/lib/native/workTimeJournal";
 
 export type LateralSide = "L" | "R" | null;
 
@@ -130,8 +131,12 @@ export function useHammerDailyTasks(planDate: string) {
   });
 
   const toggleTask = useCallback(
-    (seed: TaskSeed, completed: boolean) => upsertMut.mutate({ seed, completed }),
-    [upsertMut],
+    (seed: TaskSeed, completed: boolean) => {
+      // Release A3: a single drill check-off is a real logging moment (bulk card marks are not).
+      if (completed) noteWorkTime(user?.id, planDate, seed.taskId);
+      upsertMut.mutate({ seed, completed });
+    },
+    [upsertMut, user?.id, planDate],
   );
 
   const bulkSetMut = useMutation({

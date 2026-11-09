@@ -9,6 +9,7 @@ import { DeleteAccountSection } from "@/components/account/DeleteAccountSection"
 import { ParentControls } from "@/components/parent/ParentControls";
 import { useParentLinks } from "@/hooks/useParentLink";
 import { Button } from "@/components/ui/button";
+import { AppleHealthSettings } from "@/components/native/AppleHealthSettings";
 
 export default function DeleteAccountSettings() {
   const { user } = useAuth();
@@ -25,6 +26,8 @@ export default function DeleteAccountSettings() {
           <ArrowLeft className="h-4 w-4" /> Back
         </Link>
         <h1 className="text-2xl font-bold">Account settings</h1>
+        {/* Release A3 (owner Nov 9): iPhone app only; renders nothing on the website. */}
+        <AppleHealthSettings userId={user.id} />
         <ParentControls userId={user.id} />
         {children.length > 0 && <section className="space-y-3">
           <h2 className="text-lg font-semibold">Children’s scouting visibility</h2>

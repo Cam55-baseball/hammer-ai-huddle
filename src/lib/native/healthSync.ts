@@ -12,6 +12,7 @@ import { Preferences } from "@capacitor/preferences";
 import { supabase } from "@/integrations/supabase/client";
 import { isNativeIos, loadNativeFlags } from "./nativeFlags";
 import { myConsentStatus, AGREEMENT_SLUGS } from "@/lib/legal/legalV2";
+import { reportHealthProblem, setHealthNote } from "./healthNotes";
 
 export const HEALTH_READ_TYPES: HealthDataType[] = ["sleep", "heartRateVariability", "restingHeartRate"];
 const DAY = 24 * 60 * 60_000;
@@ -120,6 +121,8 @@ export async function syncAppleHealth(userId: string, now = Date.now()): Promise
     }
   }
   const rows = samplesToRows(userId, all);
+  // Owner Nov 9: the Settings switch can be turned off mid-sync; off means nothing is saved.
+  if (!(await Preferences.get({ key: connectedKey(userId) })).value) return { rows: 0 };
   await saveRows(rows);
   await Preferences.set({ key: lastSyncKey(userId), value: String(now) });
   return { rows: rows.length };
@@ -149,5 +152,15 @@ export async function maybeSyncAppleHealth(userId: string | null, opts: { force?
   const { value } = await Preferences.get({ key: lastSyncKey(userId) });
   const last = Number(value ?? 0);
   if (!opts.force && last && now - last < DAY) return false;
-  try { await syncAppleHealth(userId, now); return true; } catch (e) { console.warn("[health] sync failed", e); return false; }
+  try { await syncAppleHealth(userId, now); setHealthNote(userId, "read", null); return true; }
+  catch (e) {
+    await reportHealthProblem(userId, "read", "The last Apple Health read didn't work. It will try again next time you open the app.", e instanceof Error ? e.message : String(e));
+    return false;
+  }
+}
+
+/** Settings switch "Read my sleep and heart data" off: reading stops at once (nothing more is read or saved). */
+export async function disableAppleHealthRead(userId: string): Promise<void> {
+  await Preferences.remove({ key: connectedKey(userId) });
+  setHealthNote(userId, "read", null);
 }
