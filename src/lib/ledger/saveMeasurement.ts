@@ -39,11 +39,12 @@ export async function saveMeasurements(measurements: IncomingMeasurement[], deps
     await logPlanCheckFailure("measurement_save", r.error);
     return { ok: false, reason: "save_failed" };
   }
-  if (r.value.refused) {
+  const v = r.value;
+  if (v.refused) {
     let reason = "refused";
-    try { reason = (await (r.value.error as { context?: Response }).context?.json?.())?.error ?? reason; } catch { /* keep generic */ }
+    try { reason = (await (v.error as { context?: Response }).context?.json?.())?.error ?? reason; } catch { /* keep generic */ }
     return { ok: false, reason };
   }
-  const data = r.value.data as { attested?: boolean; results?: Array<{ id: string | null }> } | null;
+  const data = v.data as { attested?: boolean; results?: Array<{ id: string | null }> } | null;
   return { ok: true, attested: !!data?.attested, ids: (data?.results ?? []).map((x) => x.id) };
 }

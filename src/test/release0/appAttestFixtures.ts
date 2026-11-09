@@ -1,5 +1,7 @@
 /** Test-only builders: a fake "Apple" root → intermediate → leaf chain and CBOR objects shaped like App Attest's. */
-const subtle = { digest: (...a: Parameters<SubtleCrypto["digest"]>) => globalThis.crypto.subtle.digest(...a), importKey: (...a: Parameters<SubtleCrypto["importKey"]>) => globalThis.crypto.subtle.importKey(...a), verify: (...a: Parameters<SubtleCrypto["verify"]>) => globalThis.crypto.subtle.verify(...a), sign: (...a: Parameters<SubtleCrypto["sign"]>) => globalThis.crypto.subtle.sign(...a), generateKey: (...a: Parameters<SubtleCrypto["generateKey"]>) => globalThis.crypto.subtle.generateKey(...a), exportKey: (...a: Parameters<SubtleCrypto["exportKey"]>) => globalThis.crypto.subtle.exportKey(...a) } as unknown as SubtleCrypto;
+/** WebCrypto, looked up on each call (Deno, Node, browsers); loosely typed so Uint8Array views pass on every TS lib. */
+// deno-lint-ignore no-explicit-any
+const subtle: any = new Proxy({}, { get: (_t, k) => (...a: unknown[]) => (globalThis.crypto.subtle as any)[k](...a) });
 
 const len = (n: number) => (n < 128 ? [n] : n < 256 ? [0x81, n] : [0x82, n >> 8, n & 255]);
 export const tlv = (tag: number, body: Uint8Array) => new Uint8Array([tag, ...len(body.length), ...body]);

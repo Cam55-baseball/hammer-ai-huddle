@@ -11,7 +11,7 @@ const lookup = (over: Partial<FanoutLookup> = {}): FanoutLookup => ({
   orgAdmins: async () => ["orgOwner", "orgAdmin"],
   owners: async () => ["owner1"],
   ...over,
-});
+} as FanoutLookup);
 
 describe("push wiring: every in-app notification also goes to the same person's phone", () => {
   it("each wired notification table has a database trigger in the migration", () => {
