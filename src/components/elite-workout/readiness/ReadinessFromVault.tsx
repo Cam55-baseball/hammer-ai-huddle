@@ -36,6 +36,9 @@ interface ReadinessFromVaultProps {
   className?: string;
 }
 
+/** The morning check-in's Perceived Recovery question is a 1-10 scale (VaultFocusQuizDialog TenPointScale). */
+export const RECOVERY_SCALE_MAX = 10;
+
 function calculateReadinessScore(checkin: VaultCheckinData | null): number {
   if (!checkin) return 100; // No data = assume good to go
   
@@ -54,9 +57,9 @@ function calculateReadinessScore(checkin: VaultCheckinData | null): number {
     factors++;
   }
   
-  // Perceived recovery (1-5 scale)
+  // Perceived recovery: the morning check-in asks it on a 1-10 scale (Nov 9 fix: was read as 1-5)
   if (checkin.perceived_recovery) {
-    score += (checkin.perceived_recovery / 5) * 100;
+    score += (checkin.perceived_recovery / RECOVERY_SCALE_MAX) * 100;
     factors++;
   }
   
@@ -275,7 +278,7 @@ export function ReadinessFromVault({
                   <div className="p-2 rounded-lg bg-muted/50">
                     <Activity className="h-4 w-4 mx-auto mb-1 text-green-500" />
                     <p className="text-xs text-muted-foreground">{t('eliteWorkout.readiness.soreness', 'Recovery')}</p>
-                    <p className="font-bold">{result.checkin.perceived_recovery}/5</p>
+                    <p className="font-bold">{result.checkin.perceived_recovery}/{RECOVERY_SCALE_MAX}</p>
                   </div>
                 )}
               </div>
