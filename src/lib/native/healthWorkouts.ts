@@ -13,7 +13,9 @@
  */
 import { Preferences } from "@capacitor/preferences";
 import { supabase } from "@/integrations/supabase/client";
-import { isNativeIos, loadNativeFlags, nativeFlagOn } from "./nativeFlags";
+import { isNativeIos, loadNativeFlags } from "./nativeFlags";
+import { setJournalSwitch, workTimes } from "./workTimeJournal";
+export { noteWorkTime, workTimes, healthWriteJournalOn } from "./workTimeJournal";
 import { hasHealthConsent } from "./healthSync";
 import { HealthWorkouts, type HealthShareStatus } from "./healthWorkoutPlugin";
 export { PERMISSION_OFF_NOTE, healthNote, setHealthNote } from "./healthNotes";
@@ -101,62 +103,26 @@ export function cardKeyFor(kind: "wk" | "block", modality: string, side: "L" | "
   return kind === "block" ? `${base}:${shortHash([...keys].sort().join("|"))}` : base;
 }
 
-// ── The per-phone switch ───────────────────────────────────────────────────────────────────
+// ── The per-phone switch (Preferences is the record; the journal keeps a sync copy) ───────
 
 const switchKey = (uid: string) => `hm.health.write.on.${uid}`;
-let switchMemo: { uid: string; on: boolean } | null = null;
 
 export async function healthWriteSwitchOn(userId: string): Promise<boolean> {
   const { value } = await Preferences.get({ key: switchKey(userId) });
   const on = value === "1";
-  switchMemo = { uid: userId, on };
+  setJournalSwitch(userId, on);
   return on;
 }
 
 export async function loadHealthWriteSwitch(userId: string | null): Promise<void> {
-  if (!userId || !isNativeIos()) { switchMemo = null; return; }
+  if (!userId || !isNativeIos()) { setJournalSwitch(null, false); return; }
   await healthWriteSwitchOn(userId);
 }
 
 async function setSwitch(userId: string, on: boolean) {
   if (on) await Preferences.set({ key: switchKey(userId), value: "1" });
   else await Preferences.remove({ key: switchKey(userId) });
-  switchMemo = { uid: userId, on };
-}
-
-/** Sync gate for recording logging times on this phone (only while saving is on). */
-export function healthWriteJournalOn(userId: string | null | undefined): boolean {
-  return !!userId && isNativeIos() && nativeFlagOn("healthkit_write_v1") && switchMemo?.uid === userId && switchMemo.on;
-}
-
-// ── Real logging times, recorded on this phone at the moment of each logging action ────────
-
-const journalKey = (uid: string) => `hm.hw.times.v1.${uid}`;
-type Journal = Record<string, Record<string, [number, number]>>;
-
-function readJournal(uid: string): Journal {
-  try { const v = JSON.parse(localStorage.getItem(journalKey(uid)) ?? "{}"); return v && typeof v === "object" ? v : {}; } catch { return {}; }
-}
-
-/** Called by the set/drill save paths. Never throws; does nothing unless saving is on. */
-export function noteWorkTime(userId: string | null | undefined, planDate: string | null | undefined, key: string | null | undefined, at = Date.now()): void {
-  try {
-    if (!userId || !planDate || !key || !healthWriteJournalOn(userId)) return;
-    const all = readJournal(userId);
-    const day = all[planDate] ?? {};
-    const cur = day[key];
-    day[key] = cur ? [Math.min(cur[0], at), Math.max(cur[1], at)] : [at, at];
-    all[planDate] = day;
-    const keep = Object.keys(all).sort().slice(-4); // a few days is plenty
-    const pruned: Journal = {};
-    for (const d of keep) pruned[d] = all[d];
-    localStorage.setItem(journalKey(userId), JSON.stringify(pruned));
-  } catch { /* storage full or unavailable: the card is simply skipped later */ }
-}
-
-export function workTimes(userId: string, planDate: string, keys: readonly string[]): TimeSpan[] {
-  const day = readJournal(userId)[planDate] ?? {};
-  return keys.map((k) => day[k]).filter((v): v is [number, number] => Array.isArray(v)).map(([first, last]) => ({ first, last }));
+  setJournalSwitch(userId, on);
 }
 
 // ── Switch on / off (Settings) ─────────────────────────────────────────────────────────────
@@ -317,4 +283,4 @@ export async function removeCardWorkout(input: Pick<CardWorkoutInput, "userId" |
   }
 }
 
-export function _resetHealthWorkoutsForTests() { switchMemo = null; inflight.clear(); }
+export function _resetHealthWorkoutsForTests() { setJournalSwitch(null, false); inflight.clear(); }
