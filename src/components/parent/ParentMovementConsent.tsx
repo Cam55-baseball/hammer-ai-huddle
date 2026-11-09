@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useParentLinks } from "@/hooks/useParentLink";
 import { supabase } from "@/integrations/supabase/client";
-import { MOVEMENT_CONSENT_TEXT, movementConsentLabel, type MovementConsentStatus } from "@/lib/legal/movementConsent";
+import { MOVEMENT_CONSENT_TEXT, type MovementConsentStatus } from "@/lib/legal/movementConsent";
 
 const db = supabase as never as { from: (t: string) => any };
 const rpc = supabase.rpc as unknown as (fn: string, args?: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
@@ -14,6 +15,8 @@ const rpc = supabase.rpc as unknown as (fn: string, args?: Record<string, unknow
  */
 export function ParentMovementConsent() {
   const { user } = useAuth();
+  const { data: links } = useParentLinks();
+  const nameOf = (id: string) => links?.find((l) => l.athlete_user_id === id)?.athlete_full_name ?? "Your player";
   const [rows, setRows] = useState<Array<{ user_id: string; status: MovementConsentStatus }>>([]);
   const [note, setNote] = useState<string | null>(null);
   const load = useCallback(async () => {
@@ -36,9 +39,9 @@ export function ParentMovementConsent() {
     <section aria-label="Camera measurement consent" className="rounded-lg border border-border bg-card p-4 space-y-3">
       <h2 className="text-sm font-bold text-foreground">Camera measurements</h2>
       <p className="whitespace-pre-line text-xs text-muted-foreground">{MOVEMENT_CONSENT_TEXT}</p>
-      {rows.map((r, i) => (
+      {rows.map((r) => (
         <div key={r.user_id} className="space-y-2 border-t border-border pt-2 text-sm">
-          <p>Player {i + 1}: {r.status === "pending_parent" ? "asked you to say yes." : movementConsentLabel("active").replace("You said", "They said")}</p>
+          <p><span className="font-medium">{nameOf(r.user_id)}</span>: {r.status === "pending_parent" ? "asked you to say yes." : "camera measurements are allowed."}</p>
           <div className="flex flex-wrap gap-2">
             {r.status === "pending_parent" ? (
               <>
