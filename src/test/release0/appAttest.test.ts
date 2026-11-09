@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, beforeAll } from "vitest";
 import { verifyAttestation, verifyAssertion, assertionClientData, AttestError } from "../../../supabase/functions/_shared/appAttest/verify";
 import { decodeCbor } from "../../../supabase/functions/_shared/appAttest/cbor";
