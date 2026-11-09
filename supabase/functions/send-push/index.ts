@@ -63,6 +63,10 @@ const lookup: FanoutLookup = {
     ]);
     return [(org as any)?.owner_user_id, ...(members ?? []).map((m: any) => m.user_id)].filter(Boolean);
   },
+  async owners() {
+    const { data } = await db.from("user_roles").select("user_id").eq("role", "owner");
+    return [...new Set((data ?? []).map((r: any) => String(r.user_id)))];
+  },
 };
 
 async function sendToUser(userId: string, msg: PushMessage): Promise<SendOutcome[]> {
@@ -126,7 +130,7 @@ Deno.serve(async (req) => {
     let skippedRecipients = 0;
     for (const d of deliveries) {
       if (!isSwitchOnFor(sw as any, d.userId)) { skippedRecipients++; continue; }
-      const { data: pref } = await db.from("notification_preferences").select("push").eq("user_id", d.userId).maybeSingle();
+      const { data: pref } = await db.from("notification_preferences").select("push, push_set_at").eq("user_id", d.userId).maybeSingle();
       if (!pushAllowedByPrefs(pref as any)) { skippedRecipients++; continue; }
       all.push(...await sendToUser(d.userId, d));
     }

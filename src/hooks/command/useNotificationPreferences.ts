@@ -8,7 +8,14 @@ export interface NotificationPreferences {
   push: boolean;
 }
 
-const DEFAULT_PREFS: NotificationPreferences = { in_app: true, email: false, push: false };
+// Owner Nov 8: Push is on until the person turns it off themselves (the phone permission still decides).
+const DEFAULT_PREFS: NotificationPreferences = { in_app: true, email: false, push: true };
+
+/** What the Push switch shows: off only when the person chose off (push_set_at recorded). */
+export function shownPush(row: { push?: boolean | null; push_set_at?: string | null } | null | undefined): boolean {
+  if (!row) return true;
+  return row.push === false ? !row.push_set_at : true;
+}
 
 export function useNotificationPreferences() {
   const { user } = useAuth();
@@ -21,14 +28,14 @@ export function useNotificationPreferences() {
     queryFn: async (): Promise<NotificationPreferences> => {
       const { data } = await (supabase as any)
         .from("notification_preferences")
-        .select("in_app,email,push")
+        .select("in_app,email,push,push_set_at")
         .eq("user_id", uid!)
         .maybeSingle();
       if (!data) return DEFAULT_PREFS;
       return {
         in_app: !!data.in_app,
         email: !!data.email,
-        push: !!data.push,
+        push: shownPush(data),
       };
     },
   });
@@ -39,15 +46,18 @@ export function useUpdateNotificationPreferences() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async (next: Partial<NotificationPreferences>) => {
+    /** `pushChosen`: the person flipped the Push switch itself (only then is "off" recorded as their choice). */
+    mutationFn: async (next: Partial<NotificationPreferences> & { pushChosen?: boolean }) => {
       if (!user?.id) throw new Error("not authenticated");
-      const row = {
+      const now = new Date().toISOString();
+      const row: Record<string, unknown> = {
         user_id: user.id,
         in_app: next.in_app ?? true,
         email: next.email ?? false,
-        push: next.push ?? false,
-        updated_at: new Date().toISOString(),
+        push: next.push ?? true,
+        updated_at: now,
       };
+      if (next.pushChosen) row.push_set_at = now;
       const { error } = await (supabase as any)
         .from("notification_preferences")
         .upsert(row, { onConflict: "user_id" });
