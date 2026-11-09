@@ -136,7 +136,9 @@ export function resolveAthleteContext(input: {
   need(Number.isFinite(chronoAge), "chronological_age");
   need(compLevel !== "unknown", "competitive_level");
 
-  const weightLb = Number(input.latestWeight?.weight_lb ?? input.latestWeight?.weight ?? p.weight_lb ?? p.weight ?? NaN);
+  // weight_entries stores weight_lbs (Nov 9 fix: the old weight_lb/weight names never existed there).
+  // A blank, zero or impossible entry is unknown, never a guess.
+  const weightLb = latestWeightLb(input.latestWeight, p);
   const heightIn = Number(p.height_inches ?? p.height_in ?? NaN);
   need(Number.isFinite(weightLb), "weight_lb");
   need(Number.isFinite(heightIn), "height_in");
