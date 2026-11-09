@@ -243,7 +243,7 @@ ${recoveryContext ? `
 - Sleep Quality: ${recoveryContext.sleepQuality ?? 'Unknown'}/5 ${(recoveryContext.sleepQuality ?? 5) <= 2 ? '⚠️ LOW' : ''}
 - Stress Level: ${recoveryContext.stressLevel ?? 'Unknown'}/5 ${(recoveryContext.stressLevel ?? 1) >= 4 ? '⚠️ HIGH' : ''}
 - Physical Readiness: ${recoveryContext.physicalReadiness ?? 'Unknown'}/5 ${(recoveryContext.physicalReadiness ?? 5) <= 2 ? '⚠️ LOW' : ''}
-- Perceived Recovery: ${recoveryContext.perceivedRecovery ?? 'Unknown'}/5 ${(recoveryContext.perceivedRecovery ?? 5) <= 2 ? '⚠️ LOW' : ''}
+- Perceived Recovery: ${recoveryContext.perceivedRecovery ?? 'Unknown'}/10 ${recoveryContext.perceivedRecovery != null && recoveryContext.perceivedRecovery <= 4 ? '⚠️ LOW' : ''}
 - Pain Areas: ${formatPainAreasForPrompt(recoveryContext.painAreas || [], recoveryContext.painScales)}
 - System Recovery Recommendation: ${recoveryContext.suggestRecovery ? `YES - ${recoveryContext.recoveryReason}` : 'No immediate concerns'}
 ` : 'No check-in data available - provide balanced recommendations.'}

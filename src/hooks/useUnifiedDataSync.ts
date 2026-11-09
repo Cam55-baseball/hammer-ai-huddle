@@ -363,7 +363,8 @@ export function useRecoveryStatus() {
     const painAreas = (latestQuiz.pain_location as string[]) || [];
     const painScales = latestQuiz.pain_scales as Record<string, number> | null;
     const physicalReadiness = latestQuiz.physical_readiness || 3;
-    const perceivedRecovery = latestQuiz.perceived_recovery || 3;
+    // Owner Nov 9: a missing recovery answer is unknown, never a default 3.
+    const perceivedRecovery: number | null = latestQuiz.perceived_recovery ?? null;
 
     let suggestRecovery = false;
     let reason: string | null = null;
@@ -380,7 +381,7 @@ export function useRecoveryStatus() {
     } else if (physicalReadiness <= 2) {
       suggestRecovery = true;
       reason = 'low_physical_readiness';
-    } else if (perceivedRecovery <= 2) {
+    } else if (perceivedRecovery !== null && perceivedRecovery <= POOR_RECOVERY_MAX) {
       suggestRecovery = true;
       reason = 'low_recovery';
     }
