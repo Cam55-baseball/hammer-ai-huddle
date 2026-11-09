@@ -110,7 +110,8 @@ function analyzeRecoveryStatus(context: RecoveryContext | undefined): RecoveryWa
     suggestions.push('Prioritize mobility work and dynamic stretching');
     if (physicalReadiness === 1) severity = 'high';
   }
-  if (perceivedRecovery !== null && perceivedRecovery <= 2) {
+  // Owner Nov 9: Perceived Recovery is asked 1–10; 4 or below is poor (was ≤2 from an old 1–5 reading).
+  if (perceivedRecovery !== null && perceivedRecovery <= 4) {
     issues.push('incomplete recovery from previous training');
     suggestions.push('Allow additional rest between sets');
   }
