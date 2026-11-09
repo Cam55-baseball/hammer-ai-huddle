@@ -915,8 +915,10 @@ const handler = async (req: Request): Promise<Response> => {
         for (const r of (vPrior ?? []) as any[]) byDate.set(String(r.plan_date), [...(byDate.get(String(r.plan_date)) ?? []), r]);
         const vMerged = mergeExternal(vExt, planDate, [...byDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d), vPriorKinds as any);
         const vAge = ageFromDob((vCtx as any)?.date_of_birth, planDate);
-        const { data: vH } = await admin.from("athlete_height_checks").select("measured_on, inches").eq("user_id", user.id)
+        const { data: vHStored } = await admin.from("athlete_height_checks").select("id, user_id, measured_on, inches").eq("user_id", user.id)
           .gte("measured_on", new Date(Date.parse(`${planDate}T00:00:00Z`) - 200 * 86_400_000).toISOString().slice(0, 10)).lte("measured_on", planDate).order("measured_on");
+        // Release 0b: heights through the ledger only when ledger_unify_v1 is on for this player.
+        const vH = await viaLedger(admin, "athlete_height_checks", (vHStored ?? []) as any[], await ledgerUnifyOn(admin, user.id));
         const vGrowth = growthMode(((vH ?? []) as any[]).map((h) => ({ date: h.measured_on, inches: Number(h.inches) })), planDate).active;
         const vPhase = String(savedRows.find((r) => r.phase)?.phase ?? "in_season");
         const vSpacing = resolveFeatures((vSw ?? []) as any, user.id).rest_day_calculator === true;
@@ -1085,13 +1087,16 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ error: "age_required", message: "Add your birthday first so we can build a safe plan for your age." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     // ONE growth rule: measured height only (docs/wic/training-intelligence-v1.md §10.2).
-    const { data: heightRows } = await admin
+    const { data: heightStored } = await admin
       .from("athlete_height_checks")
-      .select("measured_on, inches")
+      .select("id, user_id, measured_on, inches")
       .eq("user_id", user.id)
       .gte("measured_on", isoShift(planDate, -200))
       .lte("measured_on", planDate)
       .order("measured_on");
+    // Release 0b: heights through the ledger only when ledger_unify_v1 is on for this player.
+    const ledgerOn = await ledgerUnifyOn(admin, user.id);
+    const heightRows = await viaLedger(admin, "athlete_height_checks", (heightStored ?? []) as any[], ledgerOn);
     const heightReadings = ((heightRows ?? []) as any[]).map((h) => ({ date: h.measured_on as string, inches: Number(h.inches) }));
     const growthState = growthMode(heightReadings, planDate);
     // profiles has no sport column — the player's sport lives in athlete_context.sport_primary.
@@ -1607,8 +1612,9 @@ const handler = async (req: Request): Promise<Response> => {
     try {
       const from14 = isoShift(planDate, -13), from28 = isoShift(planDate, -27);
       const [rq, ra, rl, rr] = await Promise.all([
-        admin.from("vault_focus_quizzes").select("entry_date, physical_readiness, hours_slept, soreness_locations, pain_location, pain_scale")
-          .eq("user_id", user.id).gte("entry_date", from14).lte("entry_date", planDate).limit(200),
+        admin.from("vault_focus_quizzes").select("id, user_id, entry_date, physical_readiness, hours_slept, soreness_locations, pain_location, pain_scale")
+          .eq("user_id", user.id).gte("entry_date", from14).lte("entry_date", planDate).limit(200)
+          .then(async (r: any) => r.error ? r : { ...r, data: await viaLedger(admin, "vault_focus_quizzes", (r.data ?? []) as any[], ledgerOn) }),
         admin.from("asb_events").select("payload, occurred_at").eq("athlete_id", user.id).eq("topic_id", "behavioral.readiness")
           .gte("occurred_at", `${from14}T00:00:00Z`).order("occurred_at", { ascending: false }).limit(60),
         admin.from("wk_session_logs").select("plan_date, prescription_id").eq("user_id", user.id).gte("plan_date", from28).lte("plan_date", planDate).limit(2000),
