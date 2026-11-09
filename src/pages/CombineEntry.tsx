@@ -1,4 +1,6 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
+import { isImpossibleEntry } from '@/lib/ledger/entryCheck';
+import { ImpossibleNumberNote } from '@/components/measure/ImpossibleNumberNote';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -70,7 +72,11 @@ export default function CombineEntry() {
 
   const blocked = eligibility ? !eligibility.eligible : false;
 
+  // Owner Nov 9: a typed result outside the metric dictionary's physical range blocks Record.
+  const combineImpossible = includedEvents.some(({ meta }) => isImpossibleEntry(`combine.${meta.event}`, values[meta.event], meta.unit));
+
   const handleSave = async () => {
+    if (combineImpossible) return;
     const entries: CombineEntryInput[] = includedEvents
       .map(({ meta }) => {
         const raw = values[meta.event];
@@ -244,6 +250,7 @@ export default function CombineEntry() {
                       }
                       placeholder="—"
                     />
+                    <ImpossibleNumberNote show={isImpossibleEntry(`combine.${meta.event}`, values[meta.event], meta.unit)} />
                     <p className="text-xs text-muted-foreground">{meta.hint}</p>
                   </div>
                 ))}
@@ -269,7 +276,7 @@ export default function CombineEntry() {
 
               <Button
                 onClick={handleSave}
-                disabled={saving || blocked || includedEvents.length === 0}
+                disabled={saving || blocked || includedEvents.length === 0 || combineImpossible}
                 className="w-full sm:w-auto"
               >
                 {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
