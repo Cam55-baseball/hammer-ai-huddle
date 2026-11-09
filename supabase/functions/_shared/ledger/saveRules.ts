@@ -66,6 +66,11 @@ export function judgeMeasurement(def: DictRow | undefined, m: IncomingMeasuremen
     if (def.physical_min == null || def.physical_max == null) return { ok: false, reason: "no_physics_bounds", status: 422 };
     if (m.value < def.physical_min || m.value > def.physical_max) return { ok: false, reason: "physically_impossible", status: 422 };
   }
+  // Owner Nov 9: typed (manual) numbers outside the dictionary's physical range are rejected too —
+  // the backup to the entry screens, which use the same bounds.
+  if (def.physical_min != null && def.physical_max != null && (m.value < def.physical_min || m.value > def.physical_max)) {
+    return { ok: false, reason: "physically_impossible", status: 422 };
+  }
   return { ok: true, inApp };
 }
 
