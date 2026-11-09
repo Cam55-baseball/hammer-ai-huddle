@@ -35,11 +35,11 @@ export async function saveMeasurements(measurements: IncomingMeasurement[], deps
     }
     return { refused: false as const, data, error: null };
   }, [400, 1200]);
-  if (!r.ok) {
-    await logPlanCheckFailure("measurement_save", r.error);
+  if (r.ok === false) {
+    await logPlanCheckFailure("measurement_save", (r as { error: string }).error);
     return { ok: false, reason: "save_failed" };
   }
-  const v = r.value;
+  const v = (r as Extract<typeof r, { ok: true }>).value;
   if (v.refused) {
     let reason = "refused";
     try { reason = (await (v.error as { context?: Response }).context?.json?.())?.error ?? reason; } catch { /* keep generic */ }
