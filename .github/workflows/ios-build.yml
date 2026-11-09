@@ -36,7 +36,12 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - name: Install
         # Lovable maintains bun.lock (package-lock.json drifts).
-        run: bun install --frozen-lockfile
+        # --ignore-scripts (owner fix Nov 9): skips the native "canvas" compile. canvas is only an
+        # optional add-on of fabric (Node-only; the browser and the iPhone web view use their own
+        # canvas) and nothing in the app imports it. No canvas binary exists for Node 22 on macOS
+        # arm64, so its install script tried to compile and failed. The other skipped scripts
+        # (esbuild, @swc/core, core-js, protobufjs) are checks/banners; their binaries still install.
+        run: bun install --frozen-lockfile --ignore-scripts
       - name: Build the web app
         env:
           NODE_OPTIONS: --max-old-space-size=8192
