@@ -34,7 +34,7 @@ async function upsertSetting(key: string, value: unknown): Promise<string | null
   return r.error ? r.error.message : null;
 }
 
-/** Release A2: owner-editable PROPOSED thresholds for the Apple Health effect (stress and mental load removed Nov 9). */
+/** Release A2: owner-editable PROPOSED thresholds for the Apple Health effect only (owner Nov 9). */
 export function ReadinessInputsSettings() {
   const [vals, setVals] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState("");
