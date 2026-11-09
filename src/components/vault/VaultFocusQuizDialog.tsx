@@ -1780,6 +1780,7 @@ export function VaultFocusQuizDialog({
                   placeholder={t('vault.quiz.night.weightPlaceholder', 'e.g. 177')}
                   className="max-w-[160px]"
                 />
+                <ImpossibleNumberNote show={isImpossibleEntry('checkin.weight_lbs', nightWeightLbs)} />
                 <p className="text-xs text-muted-foreground">
                   {t('vault.quiz.night.weightTip', 'Evening weight is typically 2-4 lbs higher than morning')}
                 </p>
