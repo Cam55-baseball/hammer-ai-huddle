@@ -54,6 +54,7 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
   };
 
   const saveEdit = async (id: string) => {
+    if (isImpossibleEntry('body.weight_lbs', editWeight) || isImpossibleEntry('body.body_fat_percent', editBodyFat)) return;
     await onUpdate(id, {
       weight_lbs: parseFloat(editWeight),
       body_fat_percent: editBodyFat ? parseFloat(editBodyFat) : null,
@@ -112,6 +113,7 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
                       </TableCell>
                       <TableCell className="text-right">
                         {isEditing ? (
+                          <>
                           <Input
                             type="number"
                             step="0.1"
@@ -120,6 +122,7 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
                             className="w-20 h-7 text-right"
                           />
                           <ImpossibleNumberNote show={isImpossibleEntry('body.weight_lbs', editWeight)} />
+                          </>
                         ) : (
                           `${entry.weight_lbs} lbs`
                         )}
@@ -133,6 +136,7 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
                       </TableCell>
                       <TableCell className="text-right">
                         {isEditing ? (
+                          <>
                           <Input
                             type="number"
                             step="0.1"
@@ -142,6 +146,7 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
                             placeholder="-"
                           />
                           <ImpossibleNumberNote show={isImpossibleEntry('body.body_fat_percent', editBodyFat)} />
+                          </>
                         ) : (
                           entry.body_fat_percent ? `${entry.body_fat_percent}%` : '-'
                         )}
