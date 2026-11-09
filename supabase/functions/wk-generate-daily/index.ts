@@ -419,6 +419,7 @@ import { activeRestrictedAreas, restrictedConditioningReason } from '../_shared/
 import { PHILOSOPHY_TEST_USERS, testSettingsFor, boundedSkillFloor } from '../_shared/generated/hammerBlockBuilder.mjs';
 import { placeOwnerConditioning } from '../_shared/wic/conditioning/placeOwnerConditioning.ts';
 import { ownerConditioningDose, ownerConditioningFits, ownerConditioningLine } from '../_shared/wic/conditioning/ownerConditioning.ts';
+import { ledgerUnifyOn, viaLedger } from '../_shared/ledger/ledgerRead.ts';
 
 // Step 20 C3 — the first request an isolate serves pays for loading the code.
 // That build is not comparable with a warm one, so the watchdog logs it for
