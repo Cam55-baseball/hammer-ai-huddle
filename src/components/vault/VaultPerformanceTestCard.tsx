@@ -1,4 +1,6 @@
 import { formatGrade } from "@/lib/benchmarks/gradeScale";
+import { isImpossibleEntry } from '@/lib/ledger/entryCheck';
+import { ImpossibleNumberNote } from '@/components/measure/ImpossibleNumberNote';
 import { positionBattery, fullPositionBattery, type BatteryModule } from "@/lib/assessment/positionBattery";
 import { bandFor } from "@/lib/intelligence/areaGrade";
 import { useState, useEffect } from 'react';
@@ -184,7 +186,15 @@ export function VaultPerformanceTestCard({
     : [];
   const trendSummary = trends.length > 0 ? getTrendSummary(trends) : null;
 
+  // Owner Nov 9: a typed result outside the metric dictionary's physical range blocks Save.
+  const sixWeekImpossible = (key: string) => isImpossibleEntry(`six_week.${key.replace(/_(left|right)$/, '')}`, testResults[key]);
+  const anySixWeekImpossible = Object.keys(testResults).some(sixWeekImpossible);
+
   const handleSave = async () => {
+    if (anySixWeekImpossible) {
+      setSaveError("One number doesn't look right — double-check it before saving.");
+      return;
+    }
     const results: Record<string, number> = {};
     Object.entries(testResults).forEach(([key, value]) => {
       if (value && !isNaN(parseFloat(value))) results[key] = parseFloat(value);
@@ -284,6 +294,7 @@ export function VaultPerformanceTestCard({
               onChange={(v) => setTestResults({ ...testResults, [leftKey]: v })}
               className="h-8"
             />
+            <ImpossibleNumberNote show={sixWeekImpossible(leftKey)} />
           </div>
           <div className="space-y-1">
             <Label className="text-[10px] text-muted-foreground">{sideLabels[1]}</Label>
@@ -292,6 +303,7 @@ export function VaultPerformanceTestCard({
               onChange={(v) => setTestResults({ ...testResults, [rightKey]: v })}
               className="h-8"
             />
+            <ImpossibleNumberNote show={sixWeekImpossible(rightKey)} />
           </div>
         </div>
         {elasticBadges}
@@ -315,6 +327,7 @@ export function VaultPerformanceTestCard({
         onChange={(v) => setTestResults({ ...testResults, [metric.key]: v })}
         className="h-8"
       />
+      <ImpossibleNumberNote show={sixWeekImpossible(metric.key)} />
     </div>
   );
 
@@ -683,7 +696,7 @@ export function VaultPerformanceTestCard({
                   <p className="text-xs text-muted-foreground text-right">{sixWeekGoals.length}/500</p>
                 </div>
 
-                <Button onClick={handleSave} disabled={saving || !selectedModule} size="sm" className="w-full">
+                <Button onClick={handleSave} disabled={saving || !selectedModule || anySixWeekImpossible} size="sm" className="w-full">
                   {saving ? t('common.loading') : t('vault.performance.save')}
                 </Button>
                 {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
