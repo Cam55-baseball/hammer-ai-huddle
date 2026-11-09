@@ -171,6 +171,8 @@ export const METRICS: MetricDef[] = [
   def({ key: "fielding_exchange_s", label: "Fielding exchange time", unit: "s", category: "fielding", higherIsBetter: false, physMin: 0.3, physMax: 4, definition: "Glove contact to ball release." }),
   def({ key: "pop_time_s", label: "Pop time", unit: "s", category: "fielding", higherIsBetter: false, physMin: 1.5, physMax: 3.5,
     definition: "Catcher: pitch hitting the mitt to the throw reaching the base fielder's glove.", source: "Statcast pop-time definition", gtTolerance: 0.05, gtDevice: "Stopwatch by trained timer or video at 120 fps", requiredFps: 120 }),
+  def({ key: "throw_carry_ft", label: "Throw carry", unit: "ft", category: "throwing_velocity", higherIsBetter: true, physMin: 5, physMax: 500, definition: "Carry distance of a logged throw rep." }),
+  def({ key: "throw_release_time_s", label: "Throw release time", unit: "s", category: "fielding", higherIsBetter: false, physMin: 0.2, physMax: 4, definition: "Logged time from glove to release on a throw rep." }),
   def({ key: "throw_accuracy", label: "Throw accuracy", unit: "score", category: "fielding", higherIsBetter: true, physMin: 0, physMax: 100, definition: "Game-log throw accuracy as entered." }),
   def({ key: "hang_time_s", label: "Hang time", unit: "s", category: "fielding", higherIsBetter: null, physMin: 0, physMax: 10, definition: "Batted-ball hang time as logged." }),
   def({ key: "play_time_s", label: "Total play time", unit: "s", category: "fielding", higherIsBetter: null, physMin: 0, physMax: 20, definition: "Defensive play total time as logged." }),
@@ -321,6 +323,14 @@ export const ALIASES: MetricAlias[] = [
     ["game.hang_time", "hang_time_s", "s"], ["game.play_time", "play_time_s", "s"],
   ] as const).map(([alias, key, unit]) => ({ alias, key, unit, system: "game_log" as const })),
 
+  // Throwing / catching reps (src/lib/throwing/reps.ts, src/lib/catching/*)
+  { alias: "throwing.throw_velo_mph", key: "position_throw_velo_mph", unit: "mph", system: "game_log" },
+  { alias: "throwing.carry_ft", key: "throw_carry_ft", unit: "ft", system: "game_log" },
+  { alias: "throwing.accuracy_score", key: "throw_accuracy", unit: "score", system: "game_log" },
+  { alias: "throwing.release_time_sec", key: "throw_release_time_s", unit: "s", system: "game_log" },
+  { alias: "catching.catcher_pop_time", key: "pop_time_s", unit: "s", system: "game_log" },
+  { alias: "catching.exchange_time_sec", key: "fielding_exchange_s", unit: "s", system: "game_log" },
+
   // Body
   { alias: "body.height_in", key: "height_cm", unit: "in", system: "body" },
   { alias: "body.weight_lbs", key: "body_weight_lb", unit: "lb", system: "body" },
@@ -332,8 +342,8 @@ export const ALIASES: MetricAlias[] = [
 
 /** Unit conversions to each canonical unit. Unknown pairs return null (missing, never guessed). */
 const TO: Record<string, Record<string, number>> = {
-  cm: { cm: 1, in: 2.54, ft: 30.48, m: 100, mm: 0.1 },
-  ft: { ft: 1, in: 1 / 12, yd: 3, m: 3.280839895, cm: 0.03280839895 },
+  cm: { cm: 1, in: 2.54, inches: 2.54, ft: 30.48, feet: 30.48, m: 100, mm: 0.1 },
+  ft: { ft: 1, feet: 1, in: 1 / 12, inches: 1 / 12, yd: 3, m: 3.280839895, cm: 0.03280839895 },
   m: { m: 1, cm: 0.01, ft: 0.3048, yd: 0.9144, in: 0.0254 },
   s: { s: 1, sec: 1, seconds: 1, ms: 0.001 },
   ms: { ms: 1, s: 1000, sec: 1000, seconds: 1000 },
