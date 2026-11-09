@@ -61,13 +61,11 @@ Deno.serve(async (req) => {
   const body = parsed.data;
 
   try {
-    const [{ data: flags }, { data: consent }, { data: defs }] = await Promise.all([
-      db.from("wk_feature_switches").select("feature_key").in("feature_key", ["movement_consent_v1", "app_attest_v1"]),
+    const [{ data: consent }, { data: defs }] = await Promise.all([
       db.rpc("movement_consent_state", { _user: userId }),
       db.from("measurement_definitions").select("metric_key, unit, physical_min, physical_max, required_fps, in_app_only, privacy_class")
         .eq("is_canonical", true).in("metric_key", [...new Set(body.measurements.map((m) => m.metric_key))]),
     ]);
-    void flags;
     const [{ data: consentOn }, { data: attestOn }] = await Promise.all([
       db.rpc("switch_on_for", { _key: "movement_consent_v1", _user: userId }),
       db.rpc("switch_on_for", { _key: "app_attest_v1", _user: userId }),
