@@ -16,7 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { isNativeIos, loadNativeFlags, nativeFlagOn } from "./nativeFlags";
 import { hasHealthConsent } from "./healthSync";
 import { HealthWorkouts, type HealthShareStatus } from "./healthWorkoutPlugin";
-import { logPlanCheckFailure } from "@/lib/hammer/planCheckFailures";
+export { PERMISSION_OFF_NOTE, healthNote, setHealthNote } from "./healthNotes";
+import { PERMISSION_OFF_NOTE, reportHealthProblem, setHealthNote } from "./healthNotes";
 
 // ── Pure rules ─────────────────────────────────────────────────────────────────────────────
 
@@ -156,29 +157,6 @@ export function noteWorkTime(userId: string | null | undefined, planDate: string
 export function workTimes(userId: string, planDate: string, keys: readonly string[]): TimeSpan[] {
   const day = readJournal(userId)[planDate] ?? {};
   return keys.map((k) => day[k]).filter((v): v is [number, number] => Array.isArray(v)).map(([first, last]) => ({ first, last }));
-}
-
-// ── Quiet notes (Settings only) and owner System checks ────────────────────────────────────
-
-export type HealthNoteKind = "read" | "write";
-const noteKey = (uid: string, k: HealthNoteKind) => `hm.health.note.${k}.${uid}`;
-export const PERMISSION_OFF_NOTE = "Apple Health permission is off in iPhone Settings";
-
-export function healthNote(userId: string, kind: HealthNoteKind): string | null {
-  try { return localStorage.getItem(noteKey(userId, kind)); } catch { return null; }
-}
-export function setHealthNote(userId: string, kind: HealthNoteKind, text: string | null) {
-  try { if (text) localStorage.setItem(noteKey(userId, kind), text); else localStorage.removeItem(noteKey(userId, kind)); } catch { /* ignore */ }
-}
-
-const loggedOnce = new Set<string>();
-/** One System checks row per distinct problem per app session; never pushed, never shown to players. */
-export async function reportHealthProblem(userId: string, kind: HealthNoteKind, note: string, detail: string) {
-  setHealthNote(userId, kind, note);
-  const k = `${kind}:${detail}`;
-  if (loggedOnce.has(k)) return;
-  loggedOnce.add(k);
-  await logPlanCheckFailure("apple_health", `${kind === "read" ? "Apple Health read" : "Apple Health save"}: ${detail}`);
 }
 
 // ── Switch on / off (Settings) ─────────────────────────────────────────────────────────────
@@ -339,4 +317,4 @@ export async function removeCardWorkout(input: Pick<CardWorkoutInput, "userId" |
   }
 }
 
-export function _resetHealthWorkoutsForTests() { switchMemo = null; inflight.clear(); loggedOnce.clear(); }
+export function _resetHealthWorkoutsForTests() { switchMemo = null; inflight.clear(); }
