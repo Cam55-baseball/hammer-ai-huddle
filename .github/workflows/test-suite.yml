@@ -21,7 +21,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - name: Install deps
         # Lovable maintains bun.lock; package-lock.json drifted (2026-10-07) and broke npm ci.
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --ignore-scripts
       - name: Type check
         run: npx tsgo --noEmit -p tsconfig.app.json
       - name: Full test suite
