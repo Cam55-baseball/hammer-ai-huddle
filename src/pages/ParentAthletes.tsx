@@ -1,4 +1,5 @@
 import { ParentAddOnRequests } from "@/components/parent/ParentAddOnRequests";
+import { ParentMovementConsent } from "@/components/parent/ParentMovementConsent";
 /**
  * RR-10 — Parent-facing roster of linked athletes.
  *
@@ -31,6 +32,7 @@ export default function ParentAthletes() {
     <DashboardLayout>
       <div className="mx-auto max-w-3xl space-y-4 p-4">
         <ParentAddOnRequests />
+        <ParentMovementConsent />
         <header className="space-y-1">
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <Users className="h-6 w-6" /> Linked athletes
