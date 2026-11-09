@@ -6,7 +6,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type PlanCheckKey = 'analysis_findings' | 'drill_choice' | 'practice_history' | 'measurement_save';
+export type PlanCheckKey = 'analysis_findings' | 'drill_choice' | 'practice_history' | 'measurement_save' | 'apple_health';
 
 export const PLAN_CHECK_LABELS: Record<PlanCheckKey, string> = {
   analysis_findings: 'Analysis-findings check',
@@ -14,6 +14,8 @@ export const PLAN_CHECK_LABELS: Record<PlanCheckKey, string> = {
   practice_history: 'Practice-history check',
   // Release 0: a measurement that could not be saved to the ledger after retries (never pushed).
   measurement_save: 'Measurement save',
+  // Release A3: an Apple Health read or workout save that failed, or permission turned off in iPhone Settings (never pushed).
+  apple_health: 'Apple Health sync',
 };
 
 /** Retries before a lookup counts as failed ("once or twice"). */

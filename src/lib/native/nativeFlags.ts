@@ -6,7 +6,7 @@ import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { isSwitchOnFor, type FeatureSwitchRow } from "../../../supabase/functions/_shared/wic/flags/featureSwitches";
 
-export const NATIVE_FLAGS = ["native_push_v1", "native_rest_alerts_v1", "healthkit_read_v1", "app_attest_v1", "movement_consent_v1"] as const;
+export const NATIVE_FLAGS = ["native_push_v1", "native_rest_alerts_v1", "healthkit_read_v1", "healthkit_write_v1", "app_attest_v1", "movement_consent_v1"] as const;
 export type NativeFlag = (typeof NATIVE_FLAGS)[number];
 
 export function isNativeApp(): boolean {
@@ -19,7 +19,7 @@ export function isNativeIos(): boolean {
 
 let cache: { userId: string; at: number; values: Record<NativeFlag, boolean> } | null = null;
 let pending: Promise<Record<NativeFlag, boolean>> | null = null;
-const OFF: Record<NativeFlag, boolean> = { native_push_v1: false, native_rest_alerts_v1: false, healthkit_read_v1: false, app_attest_v1: false, movement_consent_v1: false };
+const OFF: Record<NativeFlag, boolean> = { native_push_v1: false, native_rest_alerts_v1: false, healthkit_read_v1: false, healthkit_write_v1: false, app_attest_v1: false, movement_consent_v1: false };
 
 /** Pure: resolve the three switches for one person. */
 export function resolveNativeFlags(rows: FeatureSwitchRow[] | null | undefined, userId: string | null): Record<NativeFlag, boolean> {
