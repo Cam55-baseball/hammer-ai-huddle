@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { setTaskCompletion, type TaskWrite } from "@/lib/hammer/taskCompletionWrite";
 import { markPrescriptionDone, type MarkableRx } from "@/lib/wic/execution/liftCompletion";
 import { writeExerciseLog, type ExerciseLogPayload } from "@/lib/logging/writeExerciseLog";
+import { noteWorkTime } from "@/lib/native/workTimeJournal";
 
 const KEY = "hm_log_outbox_v1";
 
@@ -27,6 +28,9 @@ export function pendingJobs(): OutboxJob[] { return Object.values(read()).sort((
 export function pendingFor(id: string): OutboxJob | null { return read()[id] ?? null; }
 
 export function enqueue(job: OutboxJob) {
+  // Release A3: the real moment of this logging action (iPhone + Apple Health saving on only).
+  if (job.kind === "exercise_log") noteWorkTime(job.userId, job.payload.plan_date, job.payload.prescription_id, job.at);
+  else if (job.kind === "task" && job.completed) noteWorkTime(job.userId, job.planDate, job.seed.taskId, job.at);
   const all = read();
   all[job.id] = job;
   write(all);

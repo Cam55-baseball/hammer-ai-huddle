@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 export type { ExerciseLogPayload } from "@/lib/logging/writeExerciseLog";
 import type { ExerciseLogPayload } from "@/lib/logging/writeExerciseLog";
 import { buildExerciseLogRow } from "@/lib/logging/writeExerciseLog";
+import { noteWorkTime } from "@/lib/native/workTimeJournal";
 
 /** Latest log for prefill / edit-in-place. */
 export function useLatestExerciseLog(prescriptionId: string, movementSlug: string) {
@@ -59,6 +60,7 @@ export function useSaveExerciseLog() {
   return useMutation({
     mutationFn: async (p: ExerciseLogPayload) => {
       if (!user) throw new Error("Not signed in");
+      noteWorkTime(user.id, p.plan_date, p.prescription_id); // Release A3: real logging time (iPhone only)
       const row = buildExerciseLogRow(user.id, p);
 
       // Upsert-style: delete the previous log for this prescription, then insert.
