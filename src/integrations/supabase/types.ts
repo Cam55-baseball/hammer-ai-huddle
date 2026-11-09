@@ -10583,6 +10583,57 @@ export type Database = {
         }
         Relationships: []
       }
+      health_workout_writes: {
+        Row: {
+          activity_type: string
+          card_key: string
+          created_at: string
+          deleted_at: string | null
+          distance_m: number | null
+          ended_at: string
+          hk_workout_id: string | null
+          id: string
+          modality: string
+          plan_date: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          card_key: string
+          created_at?: string
+          deleted_at?: string | null
+          distance_m?: number | null
+          ended_at: string
+          hk_workout_id?: string | null
+          id?: string
+          modality: string
+          plan_date: string
+          started_at: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          card_key?: string
+          created_at?: string
+          deleted_at?: string | null
+          distance_m?: number | null
+          ended_at?: string
+          hk_workout_id?: string | null
+          id?: string
+          modality?: string
+          plan_date?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       heat_map_snapshots: {
         Row: {
           blind_zones: Json | null
