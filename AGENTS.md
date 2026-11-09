@@ -63,3 +63,4 @@
 
 - Player-facing questions, prompts and cards take modules from `useProgramModules`/`playerProgramModules` (`_shared/programAccess.ts`), which applies the owner-only 5Tool rule; access/purchase checks keep raw `useSubscription`. Why: one program judge everywhere without changing what the owner can open.
 - Coach game entry is `/coach/log-game` over existing `coach_log_entry` lines and `coach_log_general_game` (per-player gp_games, no stats). Why: saves land on each player's record under server connection/jersey checks.
+- Client measurement saves go only through `ledger-save` → `public.ledger_save`, judged by `_shared/ledger/saveRules.ts`; keys/aliases/units come from `_shared/ledger/metricDictionary.ts` (seeded into measurement_definitions/metric_aliases). Why: one ledger, one judge, no side tables.
