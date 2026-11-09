@@ -26614,17 +26614,6 @@ export type Database = {
         Args: { _user: string }
         Returns: undefined
       }
-      record_mental_load: {
-        Args: {
-          _activity: string
-          _activity_date: string
-          _activity_id: string
-          _minutes: number
-          _minutes_source: string
-          _rating: number
-        }
-        Returns: Json
-      }
       record_my_test: {
         Args: {
           p_key: string
