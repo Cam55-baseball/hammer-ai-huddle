@@ -839,6 +839,48 @@ export type Database = {
         }
         Relationships: []
       }
+      _snapshot_implausible_measurements_20261109: {
+        Row: {
+          action: string
+          allowed_range: string | null
+          field: string
+          id: string
+          metric_key: string | null
+          parked_at: string
+          raw_value: Json | null
+          row_before: Json
+          source_row_id: string
+          source_table: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          allowed_range?: string | null
+          field: string
+          id?: string
+          metric_key?: string | null
+          parked_at?: string
+          raw_value?: Json | null
+          row_before: Json
+          source_row_id: string
+          source_table: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          allowed_range?: string | null
+          field?: string
+          id?: string
+          metric_key?: string | null
+          parked_at?: string
+          raw_value?: Json | null
+          row_before?: Json
+          source_row_id?: string
+          source_table?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       _snapshot_live_test_runs_20261014: {
         Row: {
           row: Json | null
