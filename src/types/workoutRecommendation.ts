@@ -7,7 +7,7 @@ export interface RecoveryContext {
   sleepQuality: number | null; // 1-5 scale
   stressLevel: number | null; // 1-5 scale
   physicalReadiness: number | null; // 1-5 scale
-  perceivedRecovery: number | null; // 1-5 scale
+  perceivedRecovery: number | null; // 1-10 scale (morning check-in); null = unknown
   painAreas: string[];
   painScales: Record<string, number> | null; // pain area -> intensity (1-10)
   suggestRecovery: boolean;

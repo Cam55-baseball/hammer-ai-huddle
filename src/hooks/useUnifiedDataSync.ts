@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { TAB_ID } from '@/utils/tabId';
+import { POOR_RECOVERY_MAX } from '@/lib/readiness/recoveryScale';
 
 /**
  * Cross-module query key mappings
