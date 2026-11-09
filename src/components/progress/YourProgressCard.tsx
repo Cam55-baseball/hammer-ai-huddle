@@ -26,7 +26,7 @@ export function YourProgressCard() {
     enabled: !!user?.id,
     queryFn: async () => {
       const [obs, logs, prof] = await Promise.all([
-        supabase.from("athlete_metric_observations").select("metric_key, value, recorded_at, capture_context").eq("user_id", user!.id).like("metric_key", "test.%").order("recorded_at").limit(500),
+        supabase.from("athlete_metric_observations").select("metric_key, value, recorded_at, capture_context").eq("user_id", user!.id).like("metric_key", "test.%").not("physics_ok", "is", false).order("recorded_at").limit(500),
         supabase.from("wk_session_logs" as any).select("movement_slug, plan_date, load_used, reps_completed, metrics").eq("user_id", user!.id).not("load_used", "is", null).limit(600),
         supabase.from("profiles").select("weight").eq("id", user!.id).maybeSingle(),
       ]);

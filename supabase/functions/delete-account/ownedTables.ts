@@ -274,6 +274,8 @@ export const AUTHORSHIP_TABLES: Array<[table: string, column: string]> = [
   ["udl_constraint_overrides", "created_by"],
   ["video_tag_rules", "created_by"],
   ["video_tag_taxonomy", "created_by"],
+  // Nov 9: private audit copy of parked impossible measurements (a player's own values).
+  ["_snapshot_implausible_measurements_20261109", "user_id"],
 ];
 
 /** Storage buckets where objects are stored under a `<user_id>/` prefix. */

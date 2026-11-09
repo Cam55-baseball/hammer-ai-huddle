@@ -61,7 +61,8 @@ weakness_scores:user_id wearable_metrics:user_id weather_favorite_locations:user
 wellness_milestones:user_id wellness_preferences:user_id wk_cns_ledger:user_id wk_fault_signals:user_id
 wk_generation_diagnostics:user_id wk_movement_overrides:user_id wk_prescriptions:user_id wk_recovery_acks:user_id
 wk_schedule_overrides:user_id wk_session_logs:user_id wk_standard_attempts:user_id wk_standard_awards:user_id
-workout_blocks:user_id workout_presets:user_id`;
+workout_blocks:user_id workout_presets:user_id
+_snapshot_implausible_measurements_20261109:user_id`;
 
 export const OWNED_TABLES: Array<[table: string, column: string]> = LIST.split(/\s+/).filter(Boolean)
   .map((p) => p.split(":") as [string, string]);
