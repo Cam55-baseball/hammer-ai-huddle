@@ -17,8 +17,8 @@ export interface DayReadiness {
 }
 
 /**
- * Release A2: today's readiness = the running 14-day readiness plus the recovery inputs
- * (stress, mental load, Apple Health) behind their own switches. The adjustment is shown to
+ * Release A2: today's readiness = the running 14-day readiness plus the Apple Health recovery
+ * input (readiness_health_v1). Stress and mental load were removed (owner Nov 9). The adjustment is shown to
  * the player only; it never changes the plan's throw, sprint or lift limits.
  * A failed read of the recovery inputs keeps the running readiness unchanged.
  */

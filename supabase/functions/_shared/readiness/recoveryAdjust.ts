@@ -1,9 +1,10 @@
-// Release A2 (owner-approved Nov 8): readiness inputs that need no watch, plus the Apple Health effect.
-// Pure and shared by the plan builder (wk-generate-daily) and Today's readiness line.
+// Release A2 (owner-approved Nov 8): the Apple Health effect on that day's readiness.
+// Pure; used by Today's readiness line (useDayReadiness). The plan builder never imports it.
+//
+// Owner Nov 9: stress and mental load were REMOVED from readiness (mental load is not accounted
+// for at all). The check-in's stress question stays as it was and has no effect here.
 //
 // Rules:
-//  - Stress (the check-in's existing stress answer) and mental load (rating × minutes after
-//    non-exercise cards, vs the athlete's own recent normal) are behind `mental_load_v1`.
 //  - Apple Health HRV (ln SDNN, 7-day mean vs own 30-day mean/SD) and resting heart rate are
 //    behind `readiness_health_v1`, and only count with at least 14 days of data. No data = no
 //    effect and no penalty; an Apple Watch is never required.
@@ -19,14 +20,6 @@ export const RECOVERY_SETTING_KEY = "readiness_recovery_inputs_v1";
 export interface RecoveryThresholds {
   capDown: number;            // largest drop on the 0–1 readiness scale
   capUp: number;              // largest lift
-  stressFrom: number;         // 1–5 stress at/above this lowers readiness
-  stressStep: number;         // drop per stress step at/above stressFrom
-  mentalMinDays: number;      // days with mental-load answers needed for a personal normal
-  mentalWindowDays: number;   // look-back for the personal normal
-  mentalHighRatio: number;    // yesterday ÷ normal at/above this = draining day
-  mentalHighDrop: number;
-  mentalVeryHighRatio: number;
-  mentalVeryHighDrop: number;
   healthMinDays: number;      // days of Apple Health data before HRV/RHR count
   hrvRecentDays: number;
   hrvMinRecentDays: number;
@@ -41,8 +34,6 @@ export interface RecoveryThresholds {
 /** Proposed defaults (owner edits them in the Coaching Console). */
 export const PROPOSED_RECOVERY_THRESHOLDS: RecoveryThresholds = {
   capDown: 0.15, capUp: 0.05,
-  stressFrom: 4, stressStep: 0.05,
-  mentalMinDays: 5, mentalWindowDays: 14, mentalHighRatio: 1.5, mentalHighDrop: 0.05, mentalVeryHighRatio: 2, mentalVeryHighDrop: 0.1,
   healthMinDays: 14, hrvRecentDays: 7, hrvMinRecentDays: 3, healthBaselineDays: 30,
   hrvLowSd: 0.5, hrvLowDrop: 0.1, hrvHighLift: 0.02,
   rhrAboveBpm: 5, rhrDrop: 0.1,
@@ -59,19 +50,15 @@ export function recoveryThresholdsFrom(saved: unknown): RecoveryThresholds {
   return out;
 }
 
-export interface StressAnswer { at: string; value: number; scale: 5 | 10 }
 export interface HealthSampleRow { captured_at: string; metric: string | null; hrv_ms?: number | null; rhr_bpm?: number | null; source?: string | null }
-export interface MentalLoadRow { activity_date: string; value: number }
 
 export interface RecoveryInputs {
   planDate: string;                      // YYYY-MM-DD
-  stress: readonly StressAnswer[];       // today's stress answers (any check-in)
-  mentalLoads: readonly MentalLoadRow[]; // ledger mental_load rows (only known values)
   health: readonly HealthSampleRow[];    // Apple Health rows
 }
-export interface RecoveryFlags { mentalLoad: boolean; health: boolean }
+export interface RecoveryFlags { health: boolean }
 
-export type EffectSource = "stress" | "mental_load" | "hrv" | "resting_hr";
+export type EffectSource = "hrv" | "resting_hr";
 export interface Effect { source: EffectSource; delta: number; reason: string }
 export interface RecoveryAdjustment {
   delta: number;                 // the one applied change (0 = none)
@@ -86,38 +73,6 @@ const daysBefore = (planDate: string, d: string) => Math.round((dayMs(planDate) 
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
 const sd = (xs: number[]) => { if (xs.length < 2) return 0; const m = mean(xs); return Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length - 1)); };
 const round2 = (x: number) => Math.round(x * 100) / 100;
-
-/** Any stress answer on a 1–5 scale (10-point answers map linearly: 1→1, 10→5). */
-export function stressOn5(a: StressAnswer): number | null {
-  if (!Number.isFinite(a.value)) return null;
-  return a.scale === 5 ? Math.max(1, Math.min(5, a.value)) : 1 + (Math.max(1, Math.min(10, a.value)) - 1) * 4 / 9;
-}
-
-export function stressEffect(answers: readonly StressAnswer[], t: RecoveryThresholds): Effect | null | "unknown" {
-  const latest = [...answers].filter((a) => stressOn5(a) != null).sort((a, b) => b.at.localeCompare(a.at))[0];
-  if (!latest) return "unknown";
-  const s = stressOn5(latest)!;
-  if (s < t.stressFrom) return null;
-  return { source: "stress", delta: -round2((s - t.stressFrom + 1) * t.stressStep), reason: "you said you're feeling stressed" };
-}
-
-/** Yesterday's mental load vs the athlete's own normal (days with answers only). */
-export function mentalLoadEffect(planDate: string, rows: readonly MentalLoadRow[], t: RecoveryThresholds): Effect | null | "unknown" {
-  const byDay = new Map<string, number>();
-  for (const r of rows) if (Number.isFinite(r.value) && r.value > 0) byDay.set(r.activity_date, (byDay.get(r.activity_date) ?? 0) + r.value);
-  let yesterday: number | null = null;
-  const normal: number[] = [];
-  for (const [d, v] of byDay) {
-    const ago = daysBefore(planDate, d);
-    if (ago === 1) yesterday = v;
-    else if (ago >= 2 && ago <= t.mentalWindowDays + 1) normal.push(v);
-  }
-  if (yesterday == null || normal.length < t.mentalMinDays) return "unknown";
-  const ratio = yesterday / mean(normal);
-  if (ratio >= t.mentalVeryHighRatio) return { source: "mental_load", delta: -t.mentalVeryHighDrop, reason: "yesterday was much more mentally draining than usual" };
-  if (ratio >= t.mentalHighRatio) return { source: "mental_load", delta: -t.mentalHighDrop, reason: "yesterday was more mentally draining than usual" };
-  return null;
-}
 
 function dailyMeans(planDate: string, rows: readonly HealthSampleRow[], pick: (r: HealthSampleRow) => number | null, windowDays: number) {
   const byDay = new Map<string, number[]>();
@@ -160,10 +115,6 @@ export function recoveryAdjustment(input: RecoveryInputs, flags: RecoveryFlags, 
     if (r === "unknown") unknown.push(source);
     else if (r && r.delta !== 0) effects.push(r);
   };
-  if (flags.mentalLoad) {
-    take("stress", stressEffect(input.stress, t));
-    take("mental_load", mentalLoadEffect(input.planDate, input.mentalLoads, t));
-  }
   if (flags.health) {
     take("hrv", hrvEffect(input.planDate, input.health, t));
     take("resting_hr", restingHrEffect(input.planDate, input.health, t));

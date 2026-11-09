@@ -134,14 +134,13 @@ export function useBaserunningDaily(sport: string) {
   // Submit attempt
   const submitAttempt = useMutation({
     mutationFn: async (params: { scenarioId: string; correct: boolean; responseTimeMs: number }) => {
-      const { data, error } = await supabase.from("baserunning_daily_attempts").insert({
+      const { error } = await supabase.from("baserunning_daily_attempts").insert({
         user_id: user!.id,
         scenario_id: params.scenarioId,
         correct: params.correct,
         response_time_ms: params.responseTimeMs,
-      }).select("id").single();
+      });
       if (error) throw error;
-      return (data as { id: string } | null)?.id ?? null;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["daily-attempts"] });

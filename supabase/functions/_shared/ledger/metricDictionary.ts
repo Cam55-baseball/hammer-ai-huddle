@@ -204,7 +204,6 @@ export const METRICS: MetricDef[] = [
 
   // ── Readiness inputs (health class: check-in answers reach coaches only with health consent) ──
   def({ key: "stress", label: "Stress (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: false, physMin: 1, physMax: 5, privacy: "health", definition: "Answer to \"How stressed do you feel today?\" in the morning check-in." }),
-  def({ key: "mental_load", label: "Mental load", unit: "rating_x_minutes", category: "readiness", higherIsBetter: null, physMin: 1, physMax: 6000, privacy: "health", definition: "\"How mentally draining was it?\" (1–10) × the card's minutes (tracked, else prescribed). Skipped = unknown." }),
   def({ key: "sleep_hours", label: "Hours slept (reported)", unit: "hours", category: "readiness", higherIsBetter: null, physMin: 0, physMax: 24, privacy: "health", definition: "Hours slept as answered in the check-in." }),
   def({ key: "sleep_quality", label: "Sleep quality (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 5, privacy: "health", definition: "Check-in sleep quality answer." }),
   // Release 0b parity fix: the check-in asks this on a 1–10 scale (VaultFocusQuizDialog TenPointScale), not 1–5.

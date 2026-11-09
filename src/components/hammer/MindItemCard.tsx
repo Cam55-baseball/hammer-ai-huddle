@@ -14,7 +14,6 @@ import { InformationalVideos } from "@/components/video-suggestions/Informationa
 import { mindVideoTopics } from "@/lib/videoMoments/mindTopics";
 import { pickSituation } from "@/lib/hammer/mindContent";
 import { useMindContentRows, usePlayerTags } from "@/hooks/useMindContent";
-import { MentalLoadPrompt } from "@/components/mentalLoad/MentalLoadPrompt";
 
 const COPY: Record<MindKind, { title: string; how: string }> = {
   situations: { title: "Game situations", how: "Pick 3 game spots (runner on 2nd, 1 out). Say out loud what you'd do before the pitch." },
@@ -45,7 +44,6 @@ export function MindItemCard({ planDate, placement }: { planDate: string; placem
   const [done, setDone] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rated, setRated] = useState<{ id: string; trackedMinutes: number | null } | null>(null);
   const day = Math.floor(new Date(`${planDate}T12:00:00Z`).getTime() / 86_400_000);
   const [ownerLoaded, setOwnerLoaded] = useState(false);
   useEffect(() => { void loadOwnerPlanDrills().then(() => setOwnerLoaded(true)); }, []);
@@ -84,18 +82,8 @@ export function MindItemCard({ planDate, placement }: { planDate: string; placem
     const { error: e } = await supabase.from("mind_item_logs")
       .upsert({ user_id: auth.user.id, item_date: planDate, kind: owner ? "owner_mind" : kind, owner_drill_id: owner?.id ?? null }, { onConflict: "user_id,item_date", ignoreDuplicates: true });
     setSaving(false);
-    if (e) { setError("That didn't save. Tap Done again."); return; }
-    setDone(true);
-    // Release A2: the optional mental-load question needs the saved row; a failed read just skips it.
-    const [row, tex] = await Promise.all([
-      supabase.from("mind_item_logs").select("id").eq("user_id", auth.user.id).eq("item_date", planDate).maybeSingle(),
-      kind === "tex_vision" && !owner
-        ? supabase.from("tex_vision_sessions").select("duration_minutes").eq("user_id", auth.user.id).eq("session_date", planDate).limit(20)
-        : Promise.resolve({ data: null, error: null }),
-    ]);
-    if (row.error || !row.data) return;
-    const texMinutes = !tex.error && tex.data?.length ? (tex.data as { duration_minutes: number | null }[]).reduce((a, s) => a + (Number(s.duration_minutes) || 0), 0) : null;
-    setRated({ id: row.data.id, trackedMinutes: texMinutes && texMinutes > 0 ? texMinutes : null });
+    if (e) setError("That didn't save. Tap Done again.");
+    else setDone(true);
   };
 
   return (
@@ -119,11 +107,6 @@ export function MindItemCard({ planDate, placement }: { planDate: string; placem
             )}
           </div>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-          {rated && (
-            <MentalLoadPrompt activity="mind_item" activityId={rated.id} activityDate={planDate}
-              kind={owner ? "owner_mind" : kind} trackedMinutes={rated.trackedMinutes}
-              drillWorkSeconds={owner && owner.care_measure === "time" ? owner.work_seconds ?? null : null} />
-          )}
           <InformationalVideos placement="mind" sport={sport} extras={{ topics: mindVideoTopics(kind) }} />
         </div>
       </CardContent>

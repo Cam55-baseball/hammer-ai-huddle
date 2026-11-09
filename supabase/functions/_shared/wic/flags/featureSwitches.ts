@@ -51,8 +51,8 @@ export const FEATURE_KEYS = [
   "native_push_v1",
   "native_rest_alerts_v1",
   "healthkit_read_v1",
-  // Release A2 (owner Nov 8) — web and app; recovery side of readiness only (_shared/readiness/recoveryAdjust.ts).
-  "mental_load_v1",
+  // Release A2 (owner Nov 8) — Apple Health effect on the recovery side of readiness only (_shared/readiness/recoveryAdjust.ts).
+  // mental_load_v1 was removed (owner Nov 9: mental load is not accounted for).
   "readiness_health_v1",
   // Release 0 (owner Nov 8). validation_lab_v1: owner-only lab; ledger_unify_v1: writers+readers on the one ledger.
   // app_attest_v1 and movement_consent_v1 are iPhone-app only (src/lib/native/nativeFlags.ts; servers check the same rows).
