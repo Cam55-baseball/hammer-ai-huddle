@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { isImpossibleEntry } from "@/lib/ledger/entryCheck";
+import { ImpossibleNumberNote } from "@/components/measure/ImpossibleNumberNote";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
@@ -54,6 +56,7 @@ export function YourProgressCard() {
     setMsg(null);
     const v = Number(value);
     if (!v || v <= 0) return setMsg("Enter a number above 0.");
+    if (isImpossibleEntry(key, value, test.unit)) return;
     const { error } = await supabase.rpc("record_my_test" as any, { p_key: key, p_value: v, p_unit: test.unit, p_side: test.sided ? side : null });
     if (error) return setMsg("Couldn't save. Try again.");
     setValue("");
@@ -109,8 +112,9 @@ export function YourProgressCard() {
               </select>
             )}
             <Input aria-label="Result" inputMode="decimal" placeholder={`Result in ${test.unit}`} value={value} onChange={(e) => setValue(e.target.value)} />
-            <Button onClick={save}>Save</Button>
+            <Button onClick={save} disabled={isImpossibleEntry(key, value, test.unit)}>Save</Button>
           </div>
+          <ImpossibleNumberNote show={isImpossibleEntry(key, value, test.unit)} />
           {msg && <p className="text-xs text-muted-foreground">{msg}</p>}
           <p className="text-xs text-muted-foreground">Test once each phase. Camera measuring comes later.</p>
         </div>
