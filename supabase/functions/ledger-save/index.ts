@@ -66,10 +66,13 @@ Deno.serve(async (req) => {
       db.from("measurement_definitions").select("metric_key, unit, physical_min, physical_max, required_fps, in_app_only, privacy_class")
         .eq("is_canonical", true).in("metric_key", [...new Set(body.measurements.map((m) => m.metric_key))]),
     ]);
-    const [{ data: consentOn }, { data: attestOn }] = await Promise.all([
+    const [{ data: unifyOn }, { data: consentOn }, { data: attestOn }] = await Promise.all([
+      db.rpc("switch_on_for", { _key: "ledger_unify_v1", _user: userId }),
       db.rpc("switch_on_for", { _key: "movement_consent_v1", _user: userId }),
       db.rpc("switch_on_for", { _key: "app_attest_v1", _user: userId }),
     ]);
+    // Hidden until the owner opens ledger_unify_v1 for this account (existing saves keep their current paths).
+    if (unifyOn !== true) return json({ error: "ledger_unify_off" }, 403);
 
     // App Attest: the assertion signs SHA-256(measurements JSON) + timestamp.
     let attested = false;
