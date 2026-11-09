@@ -6,7 +6,7 @@
  * task rows in `hammer_daily_task_completions` so the per-row checkboxes
  * stay in lockstep with this card-level control.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,8 @@ import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks, type TaskSeed } from "@/hooks/useHammerDailyTasks";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import type { SkillDomain } from "@/lib/videoRecommendationEngine";
+import { useSportTheme } from "@/contexts/SportThemeContext";
+import { removeCardFromHealth, saveCardToHealth } from "@/lib/native/healthCards";
 
 const MODALITY_DOMAIN: Partial<Record<EngagementKey, SkillDomain>> = {
   hitting: "hitting",
@@ -41,9 +43,11 @@ interface Props {
   readonly items: ReadonlyArray<WkRx>;
   /** Optional laterality tag for switch hitters / ambi throwers (L or R). */
   readonly side?: "L" | "R" | null;
+  /** Release A3: Apple Health type-map kind when it differs from the modality (e.g. a recovery lift day). */
+  readonly healthKind?: string;
 }
 
-export function WkCardCompletion({ modality, modalityLabel, items, side = null }: Props) {
+export function WkCardCompletion({ modality, modalityLabel, items, side = null, healthKind }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const planDate = items[0]?.plan_date ?? new Date().toISOString().slice(0, 10);
@@ -55,6 +59,14 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
   // Owner Nov 1 A9: a card whose every activity has been logged reads as done.
   const allLogged = items.length > 0 && items.every((r) => r.status === "completed");
   const shown = current ?? (allLogged ? "done" : null);
+  const { sport } = useSportTheme();
+  // Release A3 (iPhone + healthkit_write_v1 + the player's Settings switch only): silent, no UI.
+  const healthRef = {
+    userId: user?.id, planDate, kind: healthKind ?? modality, sport,
+    card: { type: "wk" as const, modality, side, keys: items.map((r) => r.id) },
+  };
+  const healthKey = `${user?.id}|${planDate}|${modality}|${side}|${items.map((r) => r.id).join(",")}`;
+  useEffect(() => { if (allLogged) void saveCardToHealth(healthRef); }, [allLogged, healthKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const encouragement = useMemo(() => {
     const bank = [
@@ -74,6 +86,7 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
     try {
       clearCompletion(user?.id, modality, side);
       setCurrent(null);
+      void removeCardFromHealth(healthRef);
       if (user?.id && items.length > 0) {
         const ids = items.map((r) => r.id);
         if (!side) {
@@ -218,6 +231,8 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
         qc.invalidateQueries({ queryKey: ["wk-rx", user.id] });
       }
 
+      if (status === "done") void saveCardToHealth(healthRef);
+      else void removeCardFromHealth(healthRef);
       if (status === "done") {
         toast.success(`${modalityLabel} — done. ${encouragement}`, {
           duration: 10_000,
