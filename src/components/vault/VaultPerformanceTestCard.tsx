@@ -1,5 +1,5 @@
 import { formatGrade } from "@/lib/benchmarks/gradeScale";
-import { isImpossibleEntry } from '@/lib/ledger/entryCheck';
+import { isImpossibleEntry, sixWeekAlias } from '@/lib/ledger/entryCheck';
 import { ImpossibleNumberNote } from '@/components/measure/ImpossibleNumberNote';
 import { positionBattery, fullPositionBattery, type BatteryModule } from "@/lib/assessment/positionBattery";
 import { bandFor } from "@/lib/intelligence/areaGrade";
@@ -187,7 +187,7 @@ export function VaultPerformanceTestCard({
   const trendSummary = trends.length > 0 ? getTrendSummary(trends) : null;
 
   // Owner Nov 9: a typed result outside the metric dictionary's physical range blocks Save.
-  const sixWeekImpossible = (key: string) => isImpossibleEntry(`six_week.${key.replace(/_(left|right)$/, '')}`, testResults[key]);
+  const sixWeekImpossible = (key: string) => isImpossibleEntry(sixWeekAlias(key, selectedModule), testResults[key]);
   const anySixWeekImpossible = Object.keys(testResults).some(sixWeekImpossible);
 
   const handleSave = async () => {

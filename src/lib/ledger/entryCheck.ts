@@ -6,6 +6,7 @@
  * with each screen); unknown metric names are never blocked (missing beats fabricated).
  */
 import { canonicalize, metricDef } from "../../../supabase/functions/_shared/ledger/metricDictionary";
+export { sixWeekAlias } from "../../../supabase/functions/_shared/ledger/metricDictionary";
 
 export const IMPOSSIBLE_NUMBER_MESSAGE = "That number doesn't look right — double-check it.";
 
