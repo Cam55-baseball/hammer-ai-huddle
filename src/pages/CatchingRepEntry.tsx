@@ -1,4 +1,6 @@
 import { formatGrade } from "@/lib/benchmarks/gradeScale";
+import { isImpossibleEntry } from '@/lib/ledger/entryCheck';
+import { ImpossibleNumberNote } from '@/components/measure/ImpossibleNumberNote';
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Evaluator-facing catching rep entry (pre-release, staff-gated route).
@@ -52,7 +54,10 @@ export default function CatchingRepEntry() {
 
   const parsed = value.trim() === '' ? null : Number(value);
 
+  const repImpossible = isImpossibleEntry(`catching.${metric}`, value, defaultUnitFor(metric));
+
   const handleSave = async () => {
+    if (repImpossible) return;
     if (!sport) return;
     try {
       await record({
@@ -174,10 +179,11 @@ export default function CatchingRepEntry() {
                       onChange={(e) => setValue(e.target.value)}
                       placeholder={metric === 'pop_time_sec' ? '2.02' : ''}
                     />
+                    <ImpossibleNumberNote show={isImpossibleEntry(`catching.${metric}`, value, defaultUnitFor(metric))} />
                   </div>
                 </div>
 
-                <Button onClick={handleSave} disabled={saving || !sport}>
+                <Button onClick={handleSave} disabled={saving || !sport || repImpossible}>
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Log rep
                 </Button>

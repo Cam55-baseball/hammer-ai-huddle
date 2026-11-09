@@ -1,4 +1,6 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
+import { isImpossibleEntry } from '@/lib/ledger/entryCheck';
+import { ImpossibleNumberNote } from '@/components/measure/ImpossibleNumberNote';
 /**
  * Evaluator-facing throwing rep entry (pre-release, staff-gated route).
  * Position context is load-bearing: an outfield throw and an infield throw
@@ -58,7 +60,10 @@ export default function ThrowingRepEntry() {
 
   const parsed = value.trim() === '' ? null : Number(value);
 
+  const repImpossible = isImpossibleEntry(`throwing.${metric}`, value, defaultUnitFor(metric));
+
   const handleSave = async () => {
+    if (repImpossible) return;
     if (!sport) return;
     try {
       await record({
@@ -200,10 +205,11 @@ export default function ThrowingRepEntry() {
                       onChange={(e) => setValue(e.target.value)}
                       placeholder={metric === 'throw_velo_mph' ? '84' : ''}
                     />
+                    <ImpossibleNumberNote show={isImpossibleEntry(`throwing.${metric}`, value, defaultUnitFor(metric))} />
                   </div>
                 </div>
 
-                <Button onClick={handleSave} disabled={saving || !sport}>
+                <Button onClick={handleSave} disabled={saving || !sport || repImpossible}>
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Log rep
                 </Button>

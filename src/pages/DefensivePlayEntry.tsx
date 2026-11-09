@@ -1,4 +1,6 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
+import { isImpossibleEntry } from '@/lib/ledger/entryCheck';
+import { ImpossibleNumberNote } from '@/components/measure/ImpossibleNumberNote';
 /**
  * Evaluator-facing defensive play entry (pre-release, staff-gated route).
  * Role gate matches Combine entry: active scout or coach only.
@@ -102,7 +104,11 @@ export default function DefensivePlayEntry() {
     [parsed.hangTimeSec, parsed.distanceToCoverFt, parsed.totalPlayTimeSec, outcome, batterHand, scaleRows],
   );
 
+  // Owner Nov 9: impossible typed times (metric dictionary range) can't be saved.
+  const playImpossible = isImpossibleEntry('game.hang_time', hangTime) || isImpossibleEntry('game.play_time', playTime);
+
   const handleSave = async () => {
+    if (playImpossible) return;
     try {
       await record({
         athleteId,
@@ -276,6 +282,7 @@ export default function DefensivePlayEntry() {
                       onChange={(e) => setHangTime(e.target.value)}
                       placeholder="e.g. 3.4"
                     />
+                    <ImpossibleNumberNote show={isImpossibleEntry('game.hang_time', hangTime)} />
                   </div>
 
                   <div className="space-y-1.5">
@@ -287,6 +294,7 @@ export default function DefensivePlayEntry() {
                       onChange={(e) => setPlayTime(e.target.value)}
                       placeholder="contact → out recorded, e.g. 4.15"
                     />
+                    <ImpossibleNumberNote show={isImpossibleEntry('game.play_time', playTime)} />
                   </div>
 
                   <div className="space-y-1.5">
@@ -343,7 +351,7 @@ export default function DefensivePlayEntry() {
                   )}
                 </div>
 
-                <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
+                <Button onClick={handleSave} disabled={saving || playImpossible} className="w-full sm:w-auto">
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Log defensive play
                 </Button>
