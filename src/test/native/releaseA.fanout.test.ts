@@ -9,12 +9,14 @@ const lookup = (over: Partial<FanoutLookup> = {}): FanoutLookup => ({
   firstInSeries: async () => null,
   isUnder13: async () => false,
   orgAdmins: async () => ["orgOwner", "orgAdmin"],
+  owners: async () => ["owner1"],
   ...over,
 });
 
 describe("push wiring: every in-app notification also goes to the same person's phone", () => {
   it("each wired notification table has a database trigger in the migration", () => {
-    const sql = readFileSync("drizzle/migrations/0209_native_push_and_health_v1.sql", "utf8");
+    const sql = readFileSync("drizzle/migrations/0209_native_push_and_health_v1.sql", "utf8")
+      + readFileSync("drizzle/migrations/0211_release0_data_foundation.sql", "utf8");
     for (const t of PUSH_SOURCE_TABLES) expect(sql).toContain(`AFTER INSERT ON public.${t} FOR EACH ROW EXECUTE FUNCTION public.push_enqueue()`);
   });
 
@@ -69,8 +71,9 @@ describe("push wiring: every in-app notification also goes to the same person's 
     expect(await deliveriesFor("connection_requests", { ...row, status: "accepted" }, lookup())).toEqual([]);
   });
 
-  it("an explicit 'push off' notification setting is respected", () => {
-    expect(pushAllowedByPrefs({ push: false })).toBe(false);
+  it("a 'push off' the person chose is respected; untouched settings push (owner Nov 8)", () => {
+    expect(pushAllowedByPrefs({ push: false, push_set_at: "2026-11-09T00:00:00Z" })).toBe(false);
+    expect(pushAllowedByPrefs({ push: false })).toBe(true);
     expect(pushAllowedByPrefs({ push: true })).toBe(true);
     expect(pushAllowedByPrefs(null)).toBe(true);
   });
