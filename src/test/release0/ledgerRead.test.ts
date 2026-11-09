@@ -59,8 +59,8 @@ describe("ledger read path (ledger_unify_v1)", () => {
   it("the switch is read per athlete: off/missing row = off, allowlisted athlete = on", async () => {
     expect(await ledgerUnifyOn(dbWith(async () => ({})).db, "u1")).toBe(false);
     expect(await ledgerUnifyOn(dbWith(async () => ({}), { feature_key: "ledger_unify_v1", mode: "off", allowlist: [] }).db, "u1")).toBe(false);
-    expect(await ledgerUnifyOn(dbWith(async () => ({}), { feature_key: "ledger_unify_v1", mode: "allowlist", allowlist: ["u1"] }).db, "u1")).toBe(true);
-    expect(await ledgerUnifyOn(dbWith(async () => ({}), { feature_key: "ledger_unify_v1", mode: "allowlist", allowlist: ["u1"] }).db, "u2")).toBe(false);
+    expect(await ledgerUnifyOn(dbWith(async () => ({}), { feature_key: "ledger_unify_v1", mode: "pilot", allowlist: ["u1"] }).db, "u1")).toBe(true);
+    expect(await ledgerUnifyOn(dbWith(async () => ({}), { feature_key: "ledger_unify_v1", mode: "pilot", allowlist: ["u1"] }).db, "u2")).toBe(false);
     expect(await ledgerUnifyOn(dbWith(async () => ({})).db, null)).toBe(false);
   });
 });
