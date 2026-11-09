@@ -69,9 +69,9 @@ describe("push tokens (native_push_v1)", () => {
     expect(safePushLink("//evil.example")).toBeNull();
   });
 
-  it("all three switches are off for everyone on the web", async () => {
+  it("every iPhone-only switch (Release A + Release 0) is off for everyone on the web", async () => {
     native.on = false;
-    expect(await loadNativeFlags("u1")).toEqual({ native_push_v1: false, native_rest_alerts_v1: false, healthkit_read_v1: false });
+    expect(await loadNativeFlags("u1")).toEqual({ native_push_v1: false, native_rest_alerts_v1: false, healthkit_read_v1: false, app_attest_v1: false, movement_consent_v1: false });
     expect(resolveNativeFlags([{ feature_key: "native_push_v1", mode: "off", allowlist: [], updated_by: null } as any], "u1").native_push_v1).toBe(false);
   });
 });
