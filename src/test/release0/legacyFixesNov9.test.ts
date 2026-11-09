@@ -51,12 +51,12 @@ describe("(c) impossible values are unknown", () => {
   it("the six parked values fail the physics check", () => {
     expect(judge("checkin.weight_lbs", 1734)).toBe(false);
     expect(judge("body.weight_lbs", 1734)).toBe(false);
-    for (const v of [0.01, 0.04]) expect(judge("sl_broad_jump", v)).toBe(false);
-    for (const v of [0.04, 0.26]) expect(judge("sl_lateral_broad_jump", v)).toBe(false);
+    for (const v of [0.01, 0.04]) expect(judge("six_week.sl_broad_jump", v)).toBe(false);
+    for (const v of [0.04, 0.26]) expect(judge("six_week.sl_lateral_broad_jump", v)).toBe(false);
   });
   it("normal values still pass", () => {
     expect(judge("body.weight_lbs", 180)).toBe(true);
-    expect(judge("sl_broad_jump", 48)).toBe(true);
+    expect(judge("six_week.sl_broad_jump", 48)).toBe(true);
   });
   it("the ledger read path skips values that failed the physics check", () => {
     const sql = readFileSync("drizzle/migrations/0217_park_implausible_measurements.sql", "utf8");
