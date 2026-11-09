@@ -5,6 +5,7 @@ import { useAuth } from './useAuth';
 import { computeToolGrades } from '@/data/positionToolProfiles';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays } from 'date-fns';
 import { mergeHpiLifestyle, type StressLevel } from '@/lib/hpi/lifestyleStore';
+import { readViaLedger } from '@/lib/ledger/ledgerRead';
 
 export interface VaultEntry {
   id: string;
@@ -1042,7 +1043,9 @@ export function useVault() {
   // Fetch performance tests
   const fetchPerformanceTests = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase.from('vault_performance_tests').select('*').eq('user_id', user.id).order('test_date', { ascending: false }).limit(20);
+    const { data: stored } = await supabase.from('vault_performance_tests').select('*').eq('user_id', user.id).order('test_date', { ascending: false }).limit(20);
+    // Release 0b: measurement numbers come from the ledger only when ledger_unify_v1 is on for this player.
+    const data = await readViaLedger('vault_performance_tests', stored || [], user.id);
     setPerformanceTests((data || []).map(t => ({ ...t, results: t.results as Record<string, number>, previous_results: t.previous_results as Record<string, number> | null })));
   }, [user]);
 
@@ -1286,7 +1289,7 @@ export function useVault() {
       { data: notes }, 
       { data: workouts }, 
       { data: nutrition },
-      { data: perfTests },
+      { data: storedPerfTests },
       { data: photos },
       { data: grades },
       { data: customActivities }
@@ -1307,6 +1310,7 @@ export function useVault() {
         )
       `).eq('user_id', user.id).eq('entry_date', date).eq('completed', true),
     ]);
+    const perfTests = await readViaLedger('vault_performance_tests', storedPerfTests || [], user.id);
     
     return {
       date,

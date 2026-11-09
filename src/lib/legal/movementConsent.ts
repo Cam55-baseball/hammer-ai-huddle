@@ -1,11 +1,12 @@
 /**
  * Movement-data (pose / camera measurement) consent — Release 0, switch movement_consent_v1.
- * The words MUST be the lawyer-approved text, pasted exactly. Until the owner supplies them this
- * stays null: the consent step cannot be shown or accepted, and the switch must stay off.
- * Bump the version whenever the approved words change (people then agree again).
+ * The words are the lawyer-approved text supplied by the owner (Nov 9, 2026), word for word.
+ * Never edit them here without a new approved text; bump the version whenever the approved
+ * words change (people then agree again).
  */
 export const MOVEMENT_CONSENT_VERSION = "movement-v1";
-export const MOVEMENT_CONSENT_TEXT: string | null = null;
+export const MOVEMENT_CONSENT_TEXT: string | null =
+  "Movement measurements. When you record inside the Hammers app, we use your camera to measure your movement, such as jump height, joint angles, sprint times and ground-contact times. We save these measurements to your training record to track your progress and personalize your plan. We don't sell them, and we only share them with the coaches and organizations you're connected to. Athletes under 18 need a parent or guardian to agree first. You can turn this off anytime in Settings and ask us to delete your measurement history.";
 
 export type MovementConsentStatus = "none" | "active" | "pending_parent" | "declined" | "revoked";
 

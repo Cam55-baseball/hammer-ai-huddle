@@ -3761,6 +3761,7 @@ export type Database = {
           device_model: string | null
           engine_version: string
           id: string
+          legacy_hidden: boolean
           metric_key: string
           noise_floor: number | null
           physics_ok: boolean | null
@@ -3792,6 +3793,7 @@ export type Database = {
           device_model?: string | null
           engine_version: string
           id?: string
+          legacy_hidden?: boolean
           metric_key: string
           noise_floor?: number | null
           physics_ok?: boolean | null
@@ -3823,6 +3825,7 @@ export type Database = {
           device_model?: string | null
           engine_version?: string
           id?: string
+          legacy_hidden?: boolean
           metric_key?: string
           noise_floor?: number | null
           physics_ok?: boolean | null
@@ -26281,6 +26284,7 @@ export type Database = {
       is_training_intel_owner: { Args: { _user_id: string }; Returns: boolean }
       is_under_13: { Args: { _user_id: string }; Returns: boolean }
       join_by_invite_code: { Args: { _code: string }; Returns: Json }
+      ledger_backfill_all: { Args: never; Returns: Json }
       ledger_backfill_athlete: { Args: { _user: string }; Returns: Json }
       ledger_baseline_update: {
         Args: { _ctx: string; _key: string; _user: string }
@@ -26290,7 +26294,31 @@ export type Database = {
         Args: { _attempts: number; _error: string; _p: Json; _reason: string }
         Returns: undefined
       }
+      ledger_mirror_legacy: {
+        Args: { _table: string; j: Json }
+        Returns: number
+      }
       ledger_mirror_row: { Args: { _table: string; j: Json }; Returns: number }
+      ledger_mirror_row_any: {
+        Args: { _table: string; j: Json }
+        Returns: number
+      }
+      ledger_parity_fields: {
+        Args: never
+        Returns: {
+          compared: number
+          examples: Json
+          field: string
+          matched: number
+          mismatched: number
+          source_table: string
+        }[]
+      }
+      ledger_project_row: { Args: { _table: string; j: Json }; Returns: Json }
+      ledger_project_rows: {
+        Args: { _rows: Json; _table: string }
+        Returns: Json
+      }
       ledger_record: {
         Args: {
           p_at: string

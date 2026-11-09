@@ -87,8 +87,8 @@ describe("Consent, deletion lists and iPhone project", () => {
     expect(["none", "pending_parent", "declined", "revoked"].map((s) => mayMeasureMovement(s as never))).toEqual([false, false, false, false]);
     expect(mayMeasureMovement("active")).toBe(true);
   });
-  it("no consent words are invented: the step is blocked until the lawyer-approved text is supplied", () => {
-    expect(MOVEMENT_CONSENT_TEXT).toBeNull();
+  it("the consent step uses the owner-supplied lawyer-approved words (never invented)", () => {
+    expect(MOVEMENT_CONSENT_TEXT?.startsWith("Movement measurements. When you record inside the Hammers app")).toBe(true);
   });
   it("every Release 0 table is on the delete-account (and so the download-my-data) list", () => {
     const names = OWNED_TABLES.map(([t]) => t);

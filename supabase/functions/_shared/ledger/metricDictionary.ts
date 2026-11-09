@@ -17,7 +17,7 @@
 
 export type Sport = "both" | "baseball" | "softball";
 export type Privacy = "training" | "health";
-export type NamingSystem = "six_week" | "combine" | "baserunning" | "self_test" | "ledger" | "game_log" | "checkin" | "healthkit" | "body" | "cv";
+export type NamingSystem = "six_week" | "combine" | "baserunning" | "self_test" | "ledger" | "game_log" | "checkin" | "healthkit" | "body" | "cv" | "practice";
 
 export interface MetricDef {
   key: string;
@@ -207,7 +207,8 @@ export const METRICS: MetricDef[] = [
   def({ key: "mental_load", label: "Mental load", unit: "rating_x_minutes", category: "readiness", higherIsBetter: null, physMin: 1, physMax: 6000, privacy: "health", definition: "\"How mentally draining was it?\" (1–10) × the card's minutes (tracked, else prescribed). Skipped = unknown." }),
   def({ key: "sleep_hours", label: "Hours slept (reported)", unit: "hours", category: "readiness", higherIsBetter: null, physMin: 0, physMax: 24, privacy: "health", definition: "Hours slept as answered in the check-in." }),
   def({ key: "sleep_quality", label: "Sleep quality (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 5, privacy: "health", definition: "Check-in sleep quality answer." }),
-  def({ key: "perceived_recovery", label: "Perceived recovery (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 5, privacy: "health", definition: "Check-in perceived recovery answer." }),
+  // Release 0b parity fix: the check-in asks this on a 1–10 scale (VaultFocusQuizDialog TenPointScale), not 1–5.
+  def({ key: "perceived_recovery", label: "Perceived recovery (1–10)", unit: "score_1_10", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 10, privacy: "health", definition: "Check-in perceived recovery answer (1–10)." }),
   def({ key: "physical_readiness", label: "Physical readiness (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 5, privacy: "health", definition: "Check-in physical readiness answer." }),
   def({ key: "mental_readiness", label: "Mental readiness (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 5, privacy: "health", definition: "Check-in mental readiness answer." }),
   def({ key: "mood", label: "Mood (1–5)", unit: "score_1_5", category: "readiness", higherIsBetter: true, physMin: 1, physMax: 5, privacy: "health", definition: "Check-in mood answer." }),
@@ -304,7 +305,7 @@ export const ALIASES: MetricAlias[] = [
   // Morning check-in (vault_focus_quizzes) — written as checkin.<column>
   ...([
     ["stress_level", "stress", "score_1_5"], ["hours_slept", "sleep_hours", "hours"], ["sleep_quality", "sleep_quality", "score_1_5"],
-    ["perceived_recovery", "perceived_recovery", "score_1_5"], ["physical_readiness", "physical_readiness", "score_1_5"],
+    ["perceived_recovery", "perceived_recovery", "score_1_10"], ["physical_readiness", "physical_readiness", "score_1_5"],
     ["mental_readiness", "mental_readiness", "score_1_5"], ["mood_level", "mood", "score_1_5"], ["mental_energy", "mental_energy", "score_1_5"],
     ["pain_scale", "pain_scale", "score_0_10"], ["resting_hr", "resting_hr_bpm", "bpm"], ["reaction_time_ms", "reaction_tap_ms", "ms"],
     ["balance_left_seconds", "checkin_balance_s", "s"], ["balance_right_seconds", "checkin_balance_s", "s"], ["weight_lbs", "body_weight_lb", "lb"],
@@ -338,6 +339,14 @@ export const ALIASES: MetricAlias[] = [
 
   // Camera velocity (cv_velocity_measurements)
   { alias: "cv.pitch_velocity_mph", key: "pitch_velo_mph", unit: "mph", system: "cv" },
+
+  // Practice logs (Release 0b): partner/self-timed sprints (speed_partner_timings.distance "10y"…) and the
+  // "how hard was it" answer on a logged activity (custom_activity_logs.performance_data.rpe).
+  ...([
+    ["practice.sprint_7y", "sprint_7yd_s"], ["practice.sprint_10y", "sprint_10yd_s"], ["practice.sprint_20y", "sprint_20yd_s"],
+    ["practice.sprint_30y", "sprint_30yd_s"], ["practice.sprint_40y", "sprint_40yd_s"], ["practice.sprint_60y", "sprint_60yd_s"],
+  ] as const).map(([alias, key]) => ({ alias, key, unit: "s", system: "practice" as const })),
+  { alias: "practice.session_rpe", key: "session_rpe", unit: "rpe", system: "practice" },
 ];
 
 /** Unit conversions to each canonical unit. Unknown pairs return null (missing, never guessed). */
