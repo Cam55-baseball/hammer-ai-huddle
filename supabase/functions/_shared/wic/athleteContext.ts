@@ -4,6 +4,7 @@ import { ageFromDob } from "../age/ageFromDob.ts";
 
 import type { TrainingAgeContext } from "./trainingAge.ts";
 import { resolveTrainingAge } from "./trainingAge.ts";
+import { physicallyPossible } from "../ledger/metricDictionary.ts";
 
 export const ATHLETE_CONTEXT_VERSION = "wic_ac_v1";
 
@@ -62,6 +63,19 @@ export interface AthleteContext {
   readonly injury: InjuryBlock;
   readonly completeness_score: number;
   readonly missing_fields: string[];
+}
+
+/**
+ * Body weight (lb): the newest weight_entries row (`weight_lbs`), else the profile's weight.
+ * Blank, non-numeric or physically impossible values (metric dictionary physics gate) are unknown (NaN).
+ */
+export function latestWeightLb(latestWeight: any | null | undefined, profile: any | null | undefined): number {
+  const pick = (v: unknown): number | null => {
+    if (v == null || v === "") return null;
+    const n = typeof v === "number" ? v : Number(String(v).replace(/\s*(lbs?|pounds?)\s*$/i, "").trim());
+    return Number.isFinite(n) && physicallyPossible("body_weight_lb", n) === true ? n : null;
+  };
+  return pick(latestWeight?.weight_lbs) ?? pick(profile?.weight_lb) ?? pick(profile?.weight) ?? NaN;
 }
 
 function toSide(v: unknown): Side {
@@ -136,7 +150,9 @@ export function resolveAthleteContext(input: {
   need(Number.isFinite(chronoAge), "chronological_age");
   need(compLevel !== "unknown", "competitive_level");
 
-  const weightLb = Number(input.latestWeight?.weight_lb ?? input.latestWeight?.weight ?? p.weight_lb ?? p.weight ?? NaN);
+  // weight_entries stores weight_lbs (Nov 9 fix: the old weight_lb/weight names never existed there).
+  // A blank, zero or impossible entry is unknown, never a guess.
+  const weightLb = latestWeightLb(input.latestWeight, p);
   const heightIn = Number(p.height_inches ?? p.height_in ?? NaN);
   need(Number.isFinite(weightLb), "weight_lb");
   need(Number.isFinite(heightIn), "height_in");

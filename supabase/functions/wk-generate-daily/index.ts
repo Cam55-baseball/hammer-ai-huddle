@@ -419,7 +419,7 @@ import { activeRestrictedAreas, restrictedConditioningReason } from '../_shared/
 import { PHILOSOPHY_TEST_USERS, testSettingsFor, boundedSkillFloor } from '../_shared/generated/hammerBlockBuilder.mjs';
 import { placeOwnerConditioning } from '../_shared/wic/conditioning/placeOwnerConditioning.ts';
 import { ownerConditioningDose, ownerConditioningFits, ownerConditioningLine } from '../_shared/wic/conditioning/ownerConditioning.ts';
-import { ledgerUnifyOn, viaLedger } from '../_shared/ledger/ledgerRead.ts';
+import { ledgerUnifyOn, viaLedger, viaLedgerOne } from '../_shared/ledger/ledgerRead.ts';
 
 // Step 20 C3 — the first request an isolate serves pays for loading the code.
 // That build is not comparable with a warm one, so the watchdog logs it for
@@ -1065,7 +1065,8 @@ const handler = async (req: Request): Promise<Response> => {
       admin.from("athlete_equipment_context").select("*").eq("user_id", user.id).limit(10),
 
       admin.from("training_preferences").select("*").eq("user_id", user.id).maybeSingle(),
-      admin.from("weight_entries").select("*").eq("user_id", user.id).order("recorded_at", { ascending: false }).limit(1).maybeSingle(),
+      // Nov 9 fix: weight_entries has no recorded_at (the read always failed); newest entry_date wins.
+      admin.from("weight_entries").select("*").eq("user_id", user.id).order("entry_date", { ascending: false }).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       admin.from("athlete_body_goals").select("*").eq("user_id", user.id),
       // Calendar games — the surface most athletes actually use.
       admin.from("calendar_events")
@@ -1461,7 +1462,7 @@ const handler = async (req: Request): Promise<Response> => {
       })(),
 
       trainingPreferences: trainingPrefs,
-      latestWeight,
+      latestWeight: await viaLedgerOne(admin, "weight_entries", latestWeight ?? null, ledgerOn),
       bodyGoals: bodyGoals ?? [],
       dailyLog,
       injuries: injuries ?? [],

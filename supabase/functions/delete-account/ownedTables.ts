@@ -258,6 +258,8 @@ export const OWNED_TABLES: Array<[table: string, column: string]> = [
   ["wk_standard_awards", "user_id"],
   ["workout_blocks", "user_id"],
   ["workout_presets", "user_id"],
+  // Nov 9: private audit copy of parked impossible measurements (a player's own values).
+  ["_snapshot_implausible_measurements_20261109", "user_id"],
 ];
 
 /**
