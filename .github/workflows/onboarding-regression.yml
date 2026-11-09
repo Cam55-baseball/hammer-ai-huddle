@@ -19,7 +19,8 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm ci
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile --ignore-scripts
       - run: npm run test:onboarding
 
   live-e2e:
@@ -54,7 +55,8 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm ci
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile --ignore-scripts
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Build app

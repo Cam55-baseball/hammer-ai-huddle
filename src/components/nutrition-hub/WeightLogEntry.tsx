@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Scale, Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import { isImpossibleEntry } from '@/lib/ledger/entryCheck';
+import { ImpossibleNumberNote } from '@/components/measure/ImpossibleNumberNote';
 
 interface WeightLogEntryProps {
   onSubmit: (weight: number, bodyFat?: number | null, notes?: string | null, date?: string) => Promise<any>;
@@ -22,10 +24,15 @@ export function WeightLogEntry({ onSubmit, loading, currentWeight }: WeightLogEn
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [submitting, setSubmitting] = useState(false);
 
+  // Owner Nov 9: bounds come from the one metric dictionary (same as ledger-save), not browser min/max.
+  const weightBad = isImpossibleEntry('body.weight_lbs', weight);
+  const bodyFatBad = isImpossibleEntry('body.body_fat_percent', bodyFat);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!weight || isNaN(parseFloat(weight))) return;
+    if (weightBad || bodyFatBad) return;
 
     setSubmitting(true);
     try {
@@ -62,13 +69,12 @@ export function WeightLogEntry({ onSubmit, loading, currentWeight }: WeightLogEn
                 id="weight"
                 type="number"
                 step="0.1"
-                min="50"
-                max="500"
                 placeholder="175.5"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
                 required
               />
+              <ImpossibleNumberNote show={weightBad} />
             </div>
             
             <div className="space-y-2">
@@ -91,12 +97,11 @@ export function WeightLogEntry({ onSubmit, loading, currentWeight }: WeightLogEn
               id="bodyFat"
               type="number"
               step="0.1"
-              min="3"
-              max="60"
               placeholder="15.0"
               value={bodyFat}
               onChange={(e) => setBodyFat(e.target.value)}
             />
+            <ImpossibleNumberNote show={bodyFatBad} />
           </div>
 
           <div className="space-y-2">
@@ -116,7 +121,7 @@ export function WeightLogEntry({ onSubmit, loading, currentWeight }: WeightLogEn
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={loading || submitting || !weight}
+            disabled={loading || submitting || !weight || weightBad || bodyFatBad}
           >
             <Plus className="h-4 w-4 mr-2" />
             {submitting 

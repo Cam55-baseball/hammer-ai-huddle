@@ -20,7 +20,7 @@ jobs:
         with:
           bun-version: latest
       - name: Install
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --ignore-scripts
       - name: Lint side-context writes
         run: bun scripts/lint-side-context.ts
 
@@ -34,7 +34,7 @@ jobs:
         with:
           bun-version: latest
       - name: Install
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --ignore-scripts
       - name: Install Playwright browser
         run: bunx playwright install --with-deps chromium
       - name: Start dev server

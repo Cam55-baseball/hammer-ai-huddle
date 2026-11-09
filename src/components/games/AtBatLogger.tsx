@@ -1,4 +1,6 @@
 import { asksRunners, asksScored, parseRunners, formatRunners, rbiForAtBat, FREE_PASS_RESULTS, type Base } from "@/lib/games/rbi";
+import { isImpossibleEntry } from "@/lib/ledger/entryCheck";
+import { ImpossibleNumberNote } from "@/components/measure/ImpossibleNumberNote";
 import { entrySourceLabel } from "@/lib/intelligence/entrySource";
 /**
  * AtBatLogger — V2 with inline pitch coupling + keyboard shortcuts + undo.
@@ -500,6 +502,8 @@ function AtBatForm({
   }, []);
 
   const submit = () => {
+    // Owner Nov 9: an impossible typed time can't be saved (metric dictionary range).
+    if (isImpossibleEntry("game.home_to_first", f.h1_time_sec)) return;
     try {
       const { rbi_scored: _scored, ...rest } = f;
       onSave(atBatEntryPayload(rest));
@@ -669,6 +673,7 @@ function AtBatForm({
         >
           <NumberField step="0.01" value={f.h1_time_sec}
             onChange={(e) => set("h1_time_sec", e.target.value)} />
+          <ImpossibleNumberNote show={isImpossibleEntry("game.home_to_first", f.h1_time_sec)} />
         </Field>
       </div>
 
@@ -692,7 +697,7 @@ function AtBatForm({
       </Field>
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button size="sm" onClick={submit} disabled={submitting || !validAtBatInning(f.inning) || !f.result}>
+        <Button size="sm" onClick={submit} disabled={submitting || !validAtBatInning(f.inning) || !f.result || isImpossibleEntry("game.home_to_first", f.h1_time_sec)}>
           Save at-bat
         </Button>
       </div>

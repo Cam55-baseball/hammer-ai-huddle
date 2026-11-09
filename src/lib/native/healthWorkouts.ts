@@ -42,6 +42,7 @@ export function workoutTypeFor(kind: string, sport: string | null | undefined): 
     case "defense":
     case "throwing":
     case "pitching":
+    case "baserunning": // owner Nov 9: baserunning practice saves like the other practice cards
       return sport === "softball" ? "softball" : "baseball";
     case "windmill":
       return "softball";

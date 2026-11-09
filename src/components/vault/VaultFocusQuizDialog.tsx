@@ -39,6 +39,8 @@ import { BodyAreaSelector } from './quiz/BodyAreaSelector';
 import { TrainingIntentSelector } from './quiz/TrainingIntentSelector';
 import { MentalEnergyRating } from './quiz/MentalEnergyRating';
 import { WeightTrendMini } from './quiz/WeightTrendMini';
+import { isImpossibleEntry } from '@/lib/ledger/entryCheck';
+import { ImpossibleNumberNote } from '@/components/measure/ImpossibleNumberNote';
 import { RestingHeartRateCapture } from './quiz/RestingHeartRateCapture';
 import { FasciaInsightPanel } from './FasciaInsightPanel';
 import { TissueTypeSelector } from './quiz/TissueTypeSelector';
@@ -569,7 +571,12 @@ export function VaultFocusQuizDialog({
     return labels[value - 1] || '';
   };
 
+  // Owner Nov 9: an impossible typed weight can't be saved (the one metric dictionary's physical range).
+  const typedWeight = quizType === 'morning' ? weightLbs : quizType === 'night' ? nightWeightLbs : preLiftWeightLbs;
+  const weightImpossible = isImpossibleEntry('checkin.weight_lbs', typedWeight);
+
   const handleSubmit = async () => {
+    if (weightImpossible) return;
     // Phase 10.5 — duplicate-submit guard for night check-in
     if (quizType === 'night' && existingNightQuiz) {
       if (import.meta.env.DEV) {
@@ -1063,6 +1070,7 @@ export function VaultFocusQuizDialog({
                   placeholder={t('vault.quiz.morning.weightPlaceholder', 'e.g. 175.5')}
                   className="max-w-[160px]"
                 />
+                <ImpossibleNumberNote show={isImpossibleEntry('checkin.weight_lbs', weightLbs)} />
                 <p className="text-xs text-muted-foreground">
                   {t('vault.quiz.morning.weightHint', 'Track daily for trends')}
                 </p>
@@ -1482,6 +1490,7 @@ export function VaultFocusQuizDialog({
                   placeholder={t('vault.quiz.bodyStatus.weightPlaceholder', 'e.g. 175.5')}
                   className="max-w-[160px]"
                 />
+                <ImpossibleNumberNote show={isImpossibleEntry('checkin.weight_lbs', preLiftWeightLbs)} />
                 <p className="text-xs text-muted-foreground">
                   {t('vault.quiz.bodyStatus.preLiftTip', 'Tracking before training helps identify hydration needs')}
                 </p>
@@ -1771,6 +1780,7 @@ export function VaultFocusQuizDialog({
                   placeholder={t('vault.quiz.night.weightPlaceholder', 'e.g. 177')}
                   className="max-w-[160px]"
                 />
+                <ImpossibleNumberNote show={isImpossibleEntry('checkin.weight_lbs', nightWeightLbs)} />
                 <p className="text-xs text-muted-foreground">
                   {t('vault.quiz.night.weightTip', 'Evening weight is typically 2-4 lbs higher than morning')}
                 </p>
@@ -2207,7 +2217,7 @@ export function VaultFocusQuizDialog({
           <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-4 border-t border-border">
             <Button
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || weightImpossible}
               className="flex-1 h-12 text-base font-semibold"
             >
               {loading ? t('common.loading') : t('vault.quiz.submit')}

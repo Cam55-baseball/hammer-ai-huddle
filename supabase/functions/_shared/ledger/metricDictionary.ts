@@ -37,6 +37,10 @@ export interface MetricDef {
   privacy: Privacy;
   /** Measured only by the iPhone app's camera/sensors (never a web feature). */
   inAppOnly: boolean;
+  /** Owner Nov 9: a self-rating (opinion), not a measurement — no device gate, never graded. */
+  opinion: boolean;
+  /** Owner Nov 9: never turned into a grade (opinions; caution-flag-only measures). */
+  neverGraded: boolean;
 }
 
 export interface MetricAlias {
@@ -51,7 +55,14 @@ export interface MetricAlias {
 const P = null; // "proposed" — no published source yet
 const def = (d: Partial<MetricDef> & Pick<MetricDef, "key" | "label" | "unit" | "category" | "definition">): MetricDef => ({
   source: P, sport: "both", higherIsBetter: null, physMin: null, physMax: null, gtTolerance: null, gtDevice: null,
-  requiredFps: null, privacy: "training", inAppOnly: false, ...d,
+  requiredFps: null, privacy: "training", inAppOnly: false, opinion: false, neverGraded: false, ...d,
+});
+
+/** Owner Nov 9: an old 0–10 self-rating kept as what it is — an opinion, never converted or graded. */
+const opinion = (key: string, label: string, about: string, privacy: Privacy = "training") => def({
+  key, label, unit: "score_0_10", category: "self_rating", higherIsBetter: true, physMin: 0, physMax: 10, privacy,
+  opinion: true, neverGraded: true,
+  definition: `The athlete's own 0–10 rating of ${about}. An opinion, not a measurement: no device check, never graded.`,
 });
 
 const sprint = (key: string, label: string, yards: number, min: number, max: number, sport: Sport = "both") => def({
@@ -239,6 +250,22 @@ export const METRICS: MetricDef[] = [
   def({ key: "velocity_loss_pct", label: "Velocity loss in the set", unit: "pct", category: "vbt", higherIsBetter: false, physMin: 0, physMax: 100, inAppOnly: true,
     definition: "Drop from the set's fastest rep (cutoff 20% elastic, 30% strength; owner-proposed).", source: "Pareja-Blanco et al. 2017 (velocity-loss thresholds)", gtTolerance: 3, gtDevice: "Linear position transducer", requiredFps: 60 }),
 
+  // ── Owner Nov 9: the four old six-week results (Dec 2025 form) ───────
+  // Old "/10" self-ratings stay opinions (never converted into a measured number).
+  opinion("arm_feel_self_0_10", "Arm feel (self-rating 0–10)", "how their throwing arm feels", "health"),
+  opinion("command_self_0_10", "Command (self-rating 0–10)", "their pitching command"),
+  opinion("accuracy_self_0_10", "Throwing accuracy (self-rating 0–10)", "their throwing accuracy"),
+  // The measurable versions (proposed; no data yet).
+  def({ key: "shoulder_trom_deficit_deg", label: "Shoulder total rotation deficit", unit: "deg", category: "mobility", higherIsBetter: false,
+    physMin: -30, physMax: 60, gtTolerance: 5, gtDevice: "Goniometer", neverGraded: true,
+    definition: "Non-throwing shoulder's total rotation (internal + external) minus the throwing shoulder's. Caution flag only (Release 4), never graded. Wilk et al. 2011 linked a deficit over 5° to shoulder injury; range and tolerance proposed." }),
+  def({ key: "strike_pct_20", label: "Strike % (20 fastballs)", unit: "pct", category: "pitching_command", higherIsBetter: true,
+    physMin: 0, physMax: 100, gtTolerance: 5, gtDevice: "Second observer, or Rapsodo/TrackMan zone call",
+    definition: "Strikes out of 20 fastballs thrown from the mound, as a percentage (the standard strike-percentage stat). Pitching programs. Tolerance ±1 pitch (5 points), proposed." }),
+  def({ key: "throw_target_pct_10", label: "Target hits (10 throws)", unit: "pct", category: "fielding", higherIsBetter: true,
+    physMin: 0, physMax: 100, gtTolerance: 10, gtDevice: "Video count by a second person",
+    definition: "Throws out of 10 that hit a chest-high target from the player's position distance, as a percentage. Throwing programs. No published standard; tolerance ±1 throw (10 points), proposed." }),
+
   // ── Body ──────────────────────────────────────────────────────────────
   def({ key: "height_cm", label: "Height", unit: "cm", category: "body", higherIsBetter: null, physMin: 90, physMax: 230, definition: "Standing height without shoes." }),
   def({ key: "body_weight_lb", label: "Body weight", unit: "lb", category: "body", higherIsBetter: null, physMin: 40, physMax: 450, privacy: "health", definition: "Body weight." }),
@@ -265,6 +292,11 @@ export const ALIASES: MetricAlias[] = [
     ["hip_internal_rotation", "hip_ir_deg", "deg"], ["ankle_dorsiflexion", "ankle_df_knee_to_wall_cm", "in"],
     // Older 6-week rows (before the registry): exit_velocity is the same tool as tee_exit_velocity.
     ["exit_velocity", "exit_velo_mph", "mph"],
+    // Owner Nov 9: the Dec 2025 form's /10 self-ratings, stored as opinions (never converted).
+    ["arm_health", "arm_feel_self_0_10", "score_0_10"], ["command_score", "command_self_0_10", "score_0_10"],
+    ["accuracy_score", "accuracy_self_0_10", "score_0_10"],
+    // Owner Nov 9: the old "velocity" depends on the test (see sixWeekAlias): peak radar mph.
+    ["throwing.velocity", "position_throw_velo_mph", "mph"], ["pitching.velocity", "pitch_velo_mph", "mph"],
   ] as const).map(([a, key, unit]) => ({ alias: `six_week.${a}`, key, unit, system: "six_week" as const })),
 
   // Combine events (src/lib/combine/events.ts) — written as combine.<event>; unit comes from the row.
@@ -330,6 +362,9 @@ export const ALIASES: MetricAlias[] = [
   { alias: "throwing.release_time_sec", key: "throw_release_time_s", unit: "s", system: "game_log" },
   { alias: "catching.catcher_pop_time", key: "pop_time_s", unit: "s", system: "game_log" },
   { alias: "catching.exchange_time_sec", key: "fielding_exchange_s", unit: "s", system: "game_log" },
+  // Nov 9 mapping fix: the catching rep page saves these names (src/lib/catching/reps.ts).
+  { alias: "catching.pop_time_sec", key: "pop_time_s", unit: "s", system: "game_log" },
+  { alias: "catching.throw_velo_mph", key: "position_throw_velo_mph", unit: "mph", system: "game_log" },
 
   // Body
   { alias: "body.height_in", key: "height_cm", unit: "in", system: "body" },
@@ -382,6 +417,15 @@ const byKey = new Map(METRICS.map((m) => [m.key, m]));
 const byAlias = new Map(ALIASES.map((a) => [a.alias, a]));
 
 export function metricDef(key: string): MetricDef | null { return byKey.get(key) ?? null; }
+
+/** Six-week names whose meaning depends on the test (owner Nov 9): the old "velocity". */
+const SIX_WEEK_BY_TEST = new Set(["velocity"]);
+
+/** Dictionary alias for a six-week result key, given the test type (same rule as ledger_save). */
+export function sixWeekAlias(resultKey: string, testType?: string | null): string {
+  const base = resultKey.replace(/_(left|right)$/, "");
+  return SIX_WEEK_BY_TEST.has(base) && testType ? `six_week.${testType}.${base}` : `six_week.${base}`;
+}
 
 /** Canonical key + value for any name a writer uses (canonical names map to themselves). */
 export function canonicalize(metricKey: string, value: number, unit?: string | null): { key: string; value: number | null; unit: string } | null {

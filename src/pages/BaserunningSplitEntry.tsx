@@ -1,4 +1,6 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
+import { isImpossibleEntry } from '@/lib/ledger/entryCheck';
+import { ImpossibleNumberNote } from '@/components/measure/ImpossibleNumberNote';
 /**
  * Evaluator-facing baserunning split entry (pre-release, staff-gated route).
  * Role gate matches Combine / Defensive Play entry: active scout or coach.
@@ -53,7 +55,11 @@ export default function BaserunningSplitEntry() {
 
   const parsedValue = value.trim() === '' ? null : Number(value);
 
+  // Owner Nov 9: one dictionary range for typed splits.
+  const splitImpossible = isImpossibleEntry(`baserunning.${event}`, value, defaultUnitFor(event));
+
   const handleSave = async () => {
+    if (splitImpossible) return;
     try {
       await record({
         athleteId,
@@ -169,6 +175,7 @@ export default function BaserunningSplitEntry() {
                       onChange={(e) => setValue(e.target.value)}
                       placeholder={defaultUnitFor(event) === 'sec' ? '4.21' : '12'}
                     />
+                    <ImpossibleNumberNote show={splitImpossible} />
                   </div>
 
                   {requiresBatterHand(event) && (
@@ -193,7 +200,7 @@ export default function BaserunningSplitEntry() {
                   )}
                 </div>
 
-                <Button onClick={handleSave} disabled={saving}>
+                <Button onClick={handleSave} disabled={saving || splitImpossible}>
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Log split
                 </Button>

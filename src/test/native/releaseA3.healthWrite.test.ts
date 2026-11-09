@@ -123,6 +123,9 @@ describe("A3 type mapping (owner rules)", () => {
       expect(workoutTypeFor(k, "softball")).toBe("softball");
     }
     expect(workoutTypeFor("windmill", "softball")).toBe("softball");
+    // Owner Nov 9: baserunning practice saves by the athlete's sport like the other practice cards.
+    expect(workoutTypeFor("baserunning", "baseball")).toBe("baseball");
+    expect(workoutTypeFor("baserunning", "softball")).toBe("softball");
     expect(workoutTypeFor("warmup", "baseball")).toBe("preparationAndRecovery");
     for (const k of ["mobility", "tissue_care", "recovery"]) expect(workoutTypeFor(k, "baseball")).toBe("flexibility");
   });

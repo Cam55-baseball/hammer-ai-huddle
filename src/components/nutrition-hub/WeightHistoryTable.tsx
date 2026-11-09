@@ -24,6 +24,8 @@ import {
 import { History, Trash2, Edit2, Check, X } from 'lucide-react';
 import { WeightEntry } from '@/hooks/useWeightTracking';
 import { format, parseISO } from 'date-fns';
+import { isImpossibleEntry } from '@/lib/ledger/entryCheck';
+import { ImpossibleNumberNote } from '@/components/measure/ImpossibleNumberNote';
 
 interface WeightHistoryTableProps {
   entries: WeightEntry[];
@@ -52,6 +54,7 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
   };
 
   const saveEdit = async (id: string) => {
+    if (isImpossibleEntry('body.weight_lbs', editWeight) || isImpossibleEntry('body.body_fat_percent', editBodyFat)) return;
     await onUpdate(id, {
       weight_lbs: parseFloat(editWeight),
       body_fat_percent: editBodyFat ? parseFloat(editBodyFat) : null,
@@ -110,6 +113,7 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
                       </TableCell>
                       <TableCell className="text-right">
                         {isEditing ? (
+                          <>
                           <Input
                             type="number"
                             step="0.1"
@@ -117,6 +121,8 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
                             onChange={(e) => setEditWeight(e.target.value)}
                             className="w-20 h-7 text-right"
                           />
+                          <ImpossibleNumberNote show={isImpossibleEntry('body.weight_lbs', editWeight)} />
+                          </>
                         ) : (
                           `${entry.weight_lbs} lbs`
                         )}
@@ -130,6 +136,7 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
                       </TableCell>
                       <TableCell className="text-right">
                         {isEditing ? (
+                          <>
                           <Input
                             type="number"
                             step="0.1"
@@ -138,6 +145,8 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
                             className="w-16 h-7 text-right"
                             placeholder="-"
                           />
+                          <ImpossibleNumberNote show={isImpossibleEntry('body.body_fat_percent', editBodyFat)} />
+                          </>
                         ) : (
                           entry.body_fat_percent ? `${entry.body_fat_percent}%` : '-'
                         )}
@@ -162,6 +171,7 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
                                 size="icon"
                                 className="h-7 w-7"
                                 onClick={() => saveEdit(entry.id)}
+                                disabled={isImpossibleEntry('body.weight_lbs', editWeight) || isImpossibleEntry('body.body_fat_percent', editBodyFat)}
                               >
                                 <Check className="h-3.5 w-3.5 text-green-500" />
                               </Button>

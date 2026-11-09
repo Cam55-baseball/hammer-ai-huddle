@@ -3,6 +3,8 @@
  * ground-truth device, enter trials side by side, and read the five-gate scorecard per app build.
  */
 import { useMemo, useState } from "react";
+import { isImpossibleEntry } from "@/lib/ledger/entryCheck";
+import { ImpossibleNumberNote } from "@/components/measure/ImpossibleNumberNote";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,7 +63,12 @@ export function ValidationLabCard() {
   const builds = useMemo(() => [...new Set((trials.data ?? []).map((t) => t.app_build))], [trials.data]);
   const card = metric ? scorecard(metric, forBuild) : null;
 
+  // Owner Nov 9: a device reading outside the metric dictionary's physical range can't be saved.
+  // (App readings stay unblocked: the scorecard's physics gate must see impossible app numbers.)
+  const deviceImpossible = !!metric && isImpossibleEntry(metric.metric_key, f.deviceValue);
+
   const add = async () => {
+    if (deviceImpossible) return;
     if (!metric || !build.trim() || !f.device.trim()) { toast({ title: "Pick a metric, an app build and the device", variant: "destructive" }); return; }
     setBusy(true);
     const conditions = Object.fromEntries(Object.entries({ lighting: f.lighting || undefined, distance_m: num(f.distance) ?? undefined, camera_height_m: num(f.height) ?? undefined, view_angle: f.angle || undefined, tilt_deg: num(f.tilt) ?? undefined }).filter(([, v]) => v !== undefined));
@@ -96,6 +103,7 @@ export function ValidationLabCard() {
     <div className="space-y-1">
       <Label htmlFor={`vl-${k}`} className="text-xs">{label}</Label>
       <Input id={`vl-${k}`} type={type} inputMode={type === "number" ? "decimal" : undefined} value={String(f[k])} onChange={(e) => setF((s) => ({ ...s, [k]: e.target.value }))} />
+      {k === "deviceValue" && <ImpossibleNumberNote show={deviceImpossible} />}
     </div>
   );
 
@@ -136,7 +144,7 @@ export function ValidationLabCard() {
             {field("angle", "View angle")}
             {field("tilt", "Phone tilt (°)", "number")}
             <label className="flex items-center gap-2 pt-5 text-sm"><Checkbox checked={f.detected} onCheckedChange={(v) => setF((s) => ({ ...s, detected: v === true }))} />Detected</label>
-            <div className="pt-4"><Button onClick={() => void add()} disabled={busy}>Add trial</Button></div>
+            <div className="pt-4"><Button onClick={() => void add()} disabled={busy || deviceImpossible}>Add trial</Button></div>
           </div>
         )}
         {card && (

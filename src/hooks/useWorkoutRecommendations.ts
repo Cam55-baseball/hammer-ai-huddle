@@ -9,6 +9,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { filterExercisesForPain } from '@/utils/painExerciseFilter';
+import { POOR_RECOVERY_MAX } from '@/lib/readiness/recoveryScale';
 import { useHammerAthleteContext } from '@/lib/hammer/context/athleteContext';
 import { projectEnvelope, toEdgeFunctionPayload } from '@/lib/hammer/context/decisionFilters';
 
@@ -76,7 +77,7 @@ async function fetchRecoveryContext(userId: string): Promise<RecoveryContext | n
     } else if (physicalReadiness !== null && physicalReadiness <= 2) {
       suggestRecovery = true;
       recoveryReason = 'Low physical readiness';
-    } else if (perceivedRecovery !== null && perceivedRecovery <= 2) {
+    } else if (perceivedRecovery !== null && perceivedRecovery <= POOR_RECOVERY_MAX) {
       suggestRecovery = true;
       recoveryReason = 'Incomplete recovery from previous training';
     }

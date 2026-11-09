@@ -22,6 +22,8 @@ import { showUndoToast } from "@/lib/games/undoToast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { NumberField } from "@/components/games/NumberField";
+import { isImpossibleEntry } from "@/lib/ledger/entryCheck";
+import { ImpossibleNumberNote } from "@/components/measure/ImpossibleNumberNote";
 
 import { pitchTypes, armSlots } from "@/lib/games/sportRules";
 import { pitchEntryPayload } from "@/lib/games/pitchEntry";
@@ -222,7 +224,8 @@ function PitchForm({
             </Select>
           </F>
           <F label="Velo"><NumberField value={f.pitch_velo}
-            onChange={(e) => set("pitch_velo", e.target.value)} /></F>
+            onChange={(e) => set("pitch_velo", e.target.value)} />
+            <ImpossibleNumberNote show={isImpossibleEntry("game.pitch_velo", f.pitch_velo)} /></F>
           <F label="Result">
             <Select value={f.result} onValueChange={(v) => set("result", v)}>
               <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
@@ -309,7 +312,8 @@ function PitchForm({
       </div>
       <div className="flex justify-end gap-2 mt-3">
         <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button size="sm" disabled={saving} onClick={async () => {
+        <Button size="sm" disabled={saving || isImpossibleEntry("game.pitch_velo", f.pitch_velo)} onClick={async () => {
+          if (isImpossibleEntry("game.pitch_velo", f.pitch_velo)) return;
           const payload = pitchEntryPayload(f, perspective, zoneVal, showIntent ? intentZone : undefined);
           try { await onSave(payload); } catch { /* Keep the unsaved form; the mutation reports the error. */ }
         }}>{saving ? "Saving…" : "Save pitch"}</Button>
