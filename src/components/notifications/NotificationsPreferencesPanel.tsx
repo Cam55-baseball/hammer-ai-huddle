@@ -32,7 +32,7 @@ export function NotificationsPreferencesPanel() {
 
   const update = (patch: Partial<NotificationPreferences>) => {
     if (!data) return;
-    mutate.mutate({ ...data, ...patch });
+    mutate.mutate({ ...data, ...patch, pushChosen: "push" in patch });
   };
 
   if (isLoading || !data) {

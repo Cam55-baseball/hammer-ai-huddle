@@ -37,6 +37,7 @@ import { StartingPointProfileCard } from "@/components/hammer/StartingPointForm"
 import { LegalSettingsLink } from "@/components/legal/LegalSettingsLink";
 import { DeleteAccountSection } from "@/components/account/DeleteAccountSection";
 import { AppleHealthConnectCard } from "@/components/native/AppleHealthConnectCard";
+import { MovementConsentCard } from "@/components/native/MovementConsentCard";
 import { ParentControls } from "@/components/parent/ParentControls";
 import { TrainingDataToggle } from "@/components/account/TrainingDataToggle";
 import { supabase } from "@/integrations/supabase/client";
@@ -1995,6 +1996,7 @@ export default function Profile() {
         {!viewingOtherProfile && <ParentControls userId={user.id} />}
         {!viewingOtherProfile && <TrainingDataToggle userId={user.id} />}
         {!viewingOtherProfile && <AppleHealthConnectCard userId={user.id} />}
+        {!viewingOtherProfile && <MovementConsentCard userId={user.id} />}
 
         {/* Danger zone — self-service account deletion (own profile only) */}
         {!viewingOtherProfile && <LegalSettingsLink />}

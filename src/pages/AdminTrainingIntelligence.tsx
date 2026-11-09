@@ -1,4 +1,5 @@
 import { PlanCheckFailuresCard } from "@/components/owner/PlanCheckFailuresCard";
+import { OwnerValidationLabSection } from "@/components/owner/OwnerValidationLabSection";
 import { ownerHealth } from "@/lib/intelligence/ownerHealth";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -514,6 +515,7 @@ export default function AdminTrainingIntelligence() {
           <h2 className="text-xl font-semibold">What Should I Do?</h2>
           {!attention.length ? <Button variant="outline" onClick={()=>void load()}>Refresh checks</Button> : attention.slice(0,5).map((a,i)=><div className="flex flex-col gap-2 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between" key={i}><p className="min-w-0 break-words text-base">{a.title}</p><Button variant="outline" className="shrink-0" onClick={()=>{if(a.target==='reload') void load(); else {setView(a.target);setDetails(true);}}}>{a.action}</Button></div>)}
         </section>
+        <OwnerValidationLabSection isOwner={isOwner} />
         <Button variant="outline" aria-expanded={details} onClick={()=>setDetails(!details)}>{details ? 'Hide Details' : 'Details'}</Button>
         <div hidden={!details}>
         <Tabs value={view} onValueChange={setView}>

@@ -12,8 +12,26 @@ export const PUSH_SOURCE_TABLES = [
   "coach_prescriptions",
   "addon_parent_requests",
   "connection_requests",
+  // Owner Nov 8 (a): scout applications are one of the two owner alerts that need action.
+  "scout_applications",
 ] as const;
 export type PushSourceTable = (typeof PUSH_SOURCE_TABLES)[number];
+
+/**
+ * Owner Nov 8 (b): these in-app cards NEVER push to anyone. The System checks card
+ * (plan_check_failures, including failed measurement saves) and the owner alert feed stay in the app.
+ */
+export const NEVER_PUSH_TABLES = ["plan_check_failures", "ledger_write_failures", "owner_alerts", "push_outbox"] as const;
+
+/** Owner Nov 8 (a): owner notices push only when they need the owner to act. */
+export const OWNER_ACTION_LINKS = ["/owner?section=lessons", "/owner?section=scout-applications"] as const;
+export function isOwnerActionNotice(link: unknown): boolean {
+  return typeof link === "string" && (OWNER_ACTION_LINKS as readonly string[]).includes(link);
+}
+/** Owner-facing notices are the ones that open an owner screen. */
+export function isOwnerNotice(link: unknown): boolean {
+  return typeof link === "string" && (link === "/owner" || link.startsWith("/owner?") || link.startsWith("/owner/"));
+}
 
 export interface Delivery extends PushMessage { userId: string }
 
@@ -28,6 +46,8 @@ export interface FanoutLookup {
   isUnder13(userId: string): Promise<boolean>;
   /** Organization owner + active admins (who answer requests sent to the organization). */
   orgAdmins(orgId: string): Promise<string[]>;
+  /** Accounts with the owner role (who approve scout applications). */
+  owners(): Promise<string[]>;
 }
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
@@ -78,6 +98,8 @@ export async function deliveriesFor(table: PushSourceTable, row: any, lookup: Fa
     }
     case "addon_notices":
       if (!row.user_id) return [];
+      // Owner alerts stay in the app unless they need action (lesson requests).
+      if (isOwnerNotice(row.link) && !isOwnerActionNotice(row.link)) return [];
       return [{ userId: row.user_id, title: String(row.title || "Hammers"), body: String(row.body || ""), link: safeLink(row.link) }];
     case "coach_messages": {
       const name = row.coach_id ? await lookup.name(row.coach_id) : null;
@@ -131,11 +153,27 @@ export async function deliveriesFor(table: PushSourceTable, row: any, lookup: Fa
       }
       return [{ userId: row.to_user, ...msg }];
     }
+    case "scout_applications": {
+      // Same pending list the owner approves in Owner Dashboard → Approvals.
+      if (row.status !== "pending") return [];
+      const name = [row.first_name, row.last_name].filter(Boolean).join(" ").trim();
+      const as = row.applying_as === "recruiter" ? "recruiter" : "scout";
+      return (await lookup.owners()).map((userId) => ({
+        userId, title: "New scout application",
+        body: `${name || "Someone"} applied as a ${as}. Review it in Approvals.`,
+        link: "/owner?section=scout-applications",
+      }));
+    }
   }
   return [];
 }
 
-/** An explicit "push off" choice in notification settings is respected; no saved choice means the phone permission decides. */
-export function pushAllowedByPrefs(pref: { push?: boolean | null } | null | undefined): boolean {
-  return !(pref && pref.push === false);
+/**
+ * Owner Nov 8 (c): a person who never touched the Push switch gets pushes when they allowed
+ * iPhone notifications. Only a Push "off" they chose themselves (push_set_at recorded) stops them.
+ * Older rows saved before push_set_at existed came from changing another switch, so they count as untouched.
+ */
+export function pushAllowedByPrefs(pref: { push?: boolean | null; push_set_at?: string | null } | null | undefined): boolean {
+  if (!pref || pref.push !== false) return true;
+  return !pref.push_set_at;
 }
