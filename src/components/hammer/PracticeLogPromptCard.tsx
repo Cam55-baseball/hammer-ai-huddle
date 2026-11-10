@@ -10,6 +10,7 @@ import { requiredAnalyses } from "@/lib/assessment/initialAssessment";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ClipboardList } from "lucide-react";
+import { MissingPracticeLengthNote } from "@/components/practice/MissingPracticeLengthNote";
 
 export function PracticeLogPromptCard() {
   const { user } = useAuth();
@@ -21,7 +22,7 @@ export function PracticeLogPromptCard() {
     queryFn: async () => {
       if (!user) throw new Error("Sign in first");
       const { data, error } = await supabase.from("scheduled_practice_sessions")
-        .select("id,scheduled_date,status,recurring_active,recurring_days,sport,session_module,title,requires_approval")
+        .select("id,scheduled_date,status,recurring_active,recurring_days,sport,session_module,title,requires_approval,duration_minutes")
         .eq("user_id", user.id).eq("sport", sport)
         .or(`scheduled_date.eq.${today},recurring_active.eq.true`).limit(200);
       if (error) throw error;
@@ -46,7 +47,7 @@ export function PracticeLogPromptCard() {
     <Button size="sm" onClick={() => navigate(`/practice?calendar=${encodeURIComponent(row.id)}`)}>Log practice</Button>
   </CardContent></Card>)}{due.map(row => <Card key={row.id} className="border-primary/30"><CardContent className="flex flex-wrap items-center gap-3 p-4">
     <ClipboardList className="h-5 w-5 shrink-0 text-primary" />
-    <div className="min-w-0 flex-1"><p className="text-sm font-semibold">Practice today — log it</p><p className="text-xs text-muted-foreground">{row.title}</p></div>
+    <div className="min-w-0 flex-1"><p className="text-sm font-semibold">Practice today — log it</p><p className="text-xs text-muted-foreground">{row.title}</p><MissingPracticeLengthNote practice={row} /></div>
     <Button size="sm" onClick={() => navigate(`/practice?scheduled=${encodeURIComponent(row.id)}&module=${encodeURIComponent(row.session_module)}`)}>Log practice</Button>
   </CardContent></Card>)}</>;
 }

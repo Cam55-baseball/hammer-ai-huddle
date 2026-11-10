@@ -2,6 +2,7 @@ export interface PracticePromptSource {
   id: string; scheduled_date: string; status: string | null; recurring_active: boolean | null;
   recurring_days: number[] | null; sport: string; session_module: string; title: string;
   requires_approval?: boolean | null;
+  duration_minutes?: number | null;
 }
 /** Reminder only: source completion is written by PracticeHub, never a prompt tap. */
 export interface PracticeCompletionSource {
