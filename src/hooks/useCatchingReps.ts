@@ -17,6 +17,7 @@ import {
   computeExchangeTimeGrade,
 } from '@/lib/catching/exchangeTimeGrade';
 import type { ScaleReferenceRow } from '@/lib/defense/beatenRunnerGrade';
+import { isArchivedCatchingMetric, withoutArchivedCatchingRows } from '@/lib/measure/archivedFields';
 
 export type { CatchingRepRow };
 
@@ -91,6 +92,7 @@ export function useRecordCatchingRep() {
       if (!user) throw new Error('Not signed in.');
       if (!input.athleteId) throw new Error('Select the athlete this rep belongs to.');
       if (!['baseball', 'softball'].includes(input.sport)) throw new Error('Select the sport for this rep.');
+      if (isArchivedCatchingMetric(input.metric)) throw new Error('That measurement is parked until the camera can measure it.');
       setSaving(true);
       try {
         const { data, error } = await (supabase as any)
@@ -137,7 +139,7 @@ export function useAthleteCatchingReps(athleteId: string) {
       )
       .eq('user_id', athleteId)
       .order('created_at', { ascending: false });
-    setRows((data ?? []) as CatchingRepRow[]);
+    setRows(withoutArchivedCatchingRows((data ?? []) as CatchingRepRow[]));
     setLoading(false);
   }, [athleteId]);
 

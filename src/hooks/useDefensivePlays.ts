@@ -8,6 +8,7 @@ import {
   type ScaleReferenceRow,
 } from '@/lib/defense/beatenRunnerGrade';
 import { computeCatchProbability, computeOaeCredit } from '@/lib/defense/catchProbability';
+import { withoutArchivedDefenseFields } from '@/lib/measure/archivedFields';
 
 export interface DefensivePlayRow {
   id: string;
@@ -89,7 +90,9 @@ export function deriveDefensivePlayMetrics(
   >,
   scaleRows: readonly ScaleReferenceRow[],
 ) {
-  const catchRes = computeCatchProbability(input.hangTimeSec, input.distanceToCoverFt);
+  // Owner Nov 9 round 4: distance to cover is archived until CV can measure it, so it never
+  // feeds a calculation; catch probability honestly reads as missing.
+  const catchRes = computeCatchProbability(input.hangTimeSec, null);
   const catchProbability = catchRes.missing ? null : catchRes.probability;
   const oaeCredit = computeOaeCredit(catchProbability, input.outcome);
   const runnerRes = computeBeatenRunnerGrade(
@@ -134,7 +137,7 @@ export function useRecordDefensivePlay() {
             fielder_id: input.fielderId ?? input.athleteId,
             fielder_position: input.fielderPosition,
             ball_landing_location: input.ballLandingLocation,
-            distance_to_cover: input.distanceToCoverFt,
+            distance_to_cover: null, // archived (owner Nov 9 round 4): never saved
             hang_time_sec: input.hangTimeSec,
             total_play_time_sec: input.totalPlayTimeSec,
             outcome: input.outcome,
@@ -179,7 +182,7 @@ export function useAthleteDefensivePlays(athleteId: string) {
       )
       .eq('user_id', athleteId)
       .order('created_at', { ascending: false });
-    setRows((data ?? []) as DefensivePlayRow[]);
+    setRows(((data ?? []) as DefensivePlayRow[]).map(withoutArchivedDefenseFields));
     setLoading(false);
   }, [athleteId]);
 

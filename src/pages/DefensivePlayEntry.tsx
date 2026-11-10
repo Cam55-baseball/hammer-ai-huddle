@@ -73,7 +73,6 @@ export default function DefensivePlayEntry() {
   const [position, setPosition] = useState<string>('SS');
   const [zone, setZone] = useState<string>('infield_middle');
   const [zoneNote, setZoneNote] = useState('');
-  const [distance, setDistance] = useState('');
   const [hangTime, setHangTime] = useState('');
   const [playTime, setPlayTime] = useState('');
   const [outcome, setOutcome] = useState<string>('out');
@@ -84,7 +83,7 @@ export default function DefensivePlayEntry() {
   const { record, saving, scaleRows } = useRecordDefensivePlay();
 
   const parsed = {
-    distanceToCoverFt: distance.trim() === '' ? null : Number(distance),
+    distanceToCoverFt: null, // archived: no input, never saved or calculated
     hangTimeSec: hangTime.trim() === '' ? null : Number(hangTime),
     totalPlayTimeSec: playTime.trim() === '' ? null : Number(playTime),
   };
@@ -126,7 +125,6 @@ export default function DefensivePlayEntry() {
         title: 'Defensive play logged',
         description: selfMode ? 'Saved to your defensive play log.' : 'Saved as evaluator-entered.',
       });
-      setDistance('');
       setHangTime('');
       setPlayTime('');
       setZoneNote('');
@@ -262,17 +260,7 @@ export default function DefensivePlayEntry() {
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="distance">Ground to cover (ft)</Label>
-                    <Input
-                      id="distance"
-                      inputMode="decimal"
-                      value={distance}
-                      onChange={(e) => setDistance(e.target.value)}
-                      placeholder="e.g. 45"
-                    />
-                  </div>
-
+                  {/* "Ground to cover" is parked until CV can measure it (owner Nov 9 round 4). */}
                   <div className="space-y-1.5">
                     <Label htmlFor="hang-time">Hang time (s)</Label>
                     <Input

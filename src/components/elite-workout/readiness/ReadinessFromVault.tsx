@@ -37,7 +37,8 @@ interface ReadinessFromVaultProps {
 }
 
 /** The morning check-in's Perceived Recovery question is a 1-10 scale (VaultFocusQuizDialog TenPointScale). */
-export const RECOVERY_SCALE_MAX = 10;
+import { RECOVERY_SCALE_MAX } from '@/lib/readiness/recoveryScale';
+export { RECOVERY_SCALE_MAX };
 
 function calculateReadinessScore(checkin: VaultCheckinData | null): number {
   if (!checkin) return 100; // No data = assume good to go

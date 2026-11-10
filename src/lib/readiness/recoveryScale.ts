@@ -1,12 +1,5 @@
 /**
- * Owner Nov 9 (round 3): the morning check-in asks Perceived Recovery on a 1–10 scale.
- * 4 or below counts as poor recovery; a missing answer is unknown (never a default).
+ * Owner Nov 9 (rounds 3 and 4): one recovery cutoff, shared with the edge functions.
+ * 4 or below on the 1–10 scale is poor recovery / high soreness; missing = unknown.
  */
-export const RECOVERY_SCALE_MAX = 10;
-export const POOR_RECOVERY_MAX = 4;
-
-/** null = unknown (no answer); never treated as poor or fine. */
-export function isPoorRecovery(value: number | null | undefined): boolean | null {
-  if (value == null || !Number.isFinite(value)) return null;
-  return value <= POOR_RECOVERY_MAX;
-}
+export { RECOVERY_SCALE_MAX, POOR_RECOVERY_MAX, isPoorRecovery } from "../../../supabase/functions/_shared/recoveryScale";

@@ -96,10 +96,6 @@ export function DefensivePlayList({
                 <dd className="font-medium">{landingZone(row.ball_landing_location)}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Ground to cover</dt>
-                <dd className="font-medium">{num(row.distance_to_cover, ' ft', 0)}</dd>
-              </div>
-              <div>
                 <dt className="text-muted-foreground">Hang time</dt>
                 <dd className="font-medium">{num(row.hang_time_sec, ' s')}</dd>
               </div>

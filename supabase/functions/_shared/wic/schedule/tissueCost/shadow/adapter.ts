@@ -1,4 +1,5 @@
 import { resolveSeasonPhase } from "../../../../seasonPhase.ts";
+import { isPoorRecovery } from "../../../../recoveryScale.ts";
 import { growthMode } from "../../../growth/growthMode.ts";
 import { resolveOutingFacts, type PitcherSettingsRow, type PitcherOutingRow, type PitcherAvailabilityRow } from "../../../pitching/outingFacts.ts";
 // Tissue Cost Scheduler — stage S3 shadow mode, input adapter.
@@ -442,7 +443,8 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
     if (!d) continue;
     const hours = num(q.hours_slept);
     const quality = num(q.sleep_quality);
-    const recovery = num(q.perceived_recovery);
+    // A blank answer is unknown (Number(null) would read it as 0 = "high soreness").
+    const recovery = q.perceived_recovery == null ? null : num(q.perceived_recovery);
     const scale = num(q.pain_scale) ?? 0;
     const pain: PainFlag[] = (q.pain_location ?? [])
       .filter((r) => !!r)
@@ -454,7 +456,8 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
     checkInByDate.set(d, {
       date: d,
       poorSleep: (hours !== null && hours < 6) || (quality !== null && quality <= 2),
-      highSoreness: recovery !== null && recovery <= 3,
+      // Owner Nov 9 round 4: the same single cutoff as "poor recovery" (4 or below on 1–10); missing = unknown.
+      highSoreness: isPoorRecovery(recovery) === true,
       pain: pain.length > 0 ? pain : null,
     });
   }
