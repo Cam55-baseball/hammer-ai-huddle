@@ -17,6 +17,7 @@ import {
   computeExchangeTimeGrade,
 } from '@/lib/catching/exchangeTimeGrade';
 import type { ScaleReferenceRow } from '@/lib/defense/beatenRunnerGrade';
+import { isArchivedCatchingMetric, withoutArchivedCatchingRows } from '@/lib/measure/archivedFields';
 
 export type { CatchingRepRow };
 
