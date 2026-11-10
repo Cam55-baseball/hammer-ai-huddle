@@ -108,7 +108,9 @@ export async function fetchShadowData(
     rows(
       db.from("vault_focus_quizzes").select(
         "entry_date,hours_slept,sleep_quality,perceived_recovery,pain_location,pain_scale,created_at",
-      ).eq("user_id", userId).gte("entry_date", windowStart).lte("entry_date", today),
+      ).eq("user_id", userId).gte("entry_date", windowStart).lte("entry_date", today)
+        // Owner Nov 10: explicit order so results never depend on how the database returns rows.
+        .order("entry_date", { ascending: true }).order("created_at", { ascending: true }),
     ),
     rows(
       db.from("athlete_daily_log").select(

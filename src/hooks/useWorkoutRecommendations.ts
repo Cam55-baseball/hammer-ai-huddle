@@ -86,14 +86,67 @@ export function deriveRecoveryContext(latestQuiz: {
   };
 }
 
+type DayCheckInRow = {
+  sleep_quality?: number | null;
+  physical_readiness?: number | null;
+  perceived_recovery?: number | null;
+  pain_location?: unknown;
+  pain_scales?: unknown;
+  created_at?: string | null;
+};
+
 /**
- * Fetch the latest check-in data for recovery context
+ * Owner Nov 10: combine ALL of one day's check-ins. Sleep quality, physical readiness and
+ * perceived recovery come from the most recent real answer that day (a blank never
+ * overwrites a real answer); pain areas and per-area scales come from any check-in that
+ * day, keeping the higher scale when an area repeats.
+ */
+export function mergeDayCheckIns(rows: readonly DayCheckInRow[]) {
+  const ordered = rows
+    .map((r, idx) => {
+      const t = r.created_at ? Date.parse(r.created_at) : NaN;
+      return { r, idx, at: Number.isFinite(t) ? t : -Infinity };
+    })
+    .sort((a, b) => a.at - b.at || a.idx - b.idx);
+  const real = (v: unknown): number | null =>
+    v == null || (typeof v === 'string' && v.trim() === '') || !Number.isFinite(Number(v)) ? null : Number(v);
+  let sleep_quality: number | null = null;
+  let physical_readiness: number | null = null;
+  let perceived_recovery: number | null = null;
+  const areas: string[] = [];
+  const scales: Record<string, number> = {};
+  for (const { r } of ordered) {
+    sleep_quality = real(r.sleep_quality) ?? sleep_quality;
+    physical_readiness = real(r.physical_readiness) ?? physical_readiness;
+    perceived_recovery = real(r.perceived_recovery) ?? perceived_recovery;
+    for (const a of Array.isArray(r.pain_location) ? (r.pain_location as unknown[]) : []) {
+      if (typeof a === 'string' && a && !areas.includes(a)) areas.push(a);
+    }
+    if (r.pain_scales && typeof r.pain_scales === 'object') {
+      for (const [k, v] of Object.entries(r.pain_scales as Record<string, unknown>)) {
+        const n = real(v);
+        if (n === null) continue;
+        scales[k] = k in scales ? Math.max(scales[k], n) : n;
+      }
+    }
+  }
+  return {
+    sleep_quality,
+    physical_readiness,
+    perceived_recovery,
+    pain_location: areas,
+    pain_scales: Object.keys(scales).length > 0 ? scales : null,
+  };
+}
+
+/**
+ * Fetch the most recent check-in day for recovery context (every check-in that day).
  */
 async function fetchRecoveryContext(userId: string): Promise<RecoveryContext | null> {
   try {
     const { data: latestQuiz, error } = await supabase
       .from('vault_focus_quizzes')
-      .select('sleep_quality, pain_location, pain_scales, physical_readiness, perceived_recovery')
+      .select('entry_date')
       .eq('user_id', userId)
       .order('entry_date', { ascending: false })
       .order('created_at', { ascending: false })
@@ -109,7 +162,23 @@ async function fetchRecoveryContext(userId: string): Promise<RecoveryContext | n
       return null;
     }
 
-    return deriveRecoveryContext(latestQuiz);
+    const { data: dayRows, error: dayError } = await supabase
+      .from('vault_focus_quizzes')
+      .select('sleep_quality, pain_location, pain_scales, physical_readiness, perceived_recovery, created_at')
+      .eq('user_id', userId)
+      .eq('entry_date', latestQuiz.entry_date)
+      .order('created_at', { ascending: true });
+
+    if (dayError) {
+      console.error('[useWorkoutRecommendations] Error fetching check-in data:', dayError);
+      return null;
+    }
+
+    if (!dayRows || dayRows.length === 0) {
+      return null;
+    }
+
+    return deriveRecoveryContext(mergeDayCheckIns(dayRows));
   } catch (err) {
     console.error('[useWorkoutRecommendations] Error in fetchRecoveryContext:', err);
     return null;

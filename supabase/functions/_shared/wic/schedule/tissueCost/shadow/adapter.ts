@@ -23,7 +23,8 @@ import {
 } from "../types.ts";
 
 // v2 (Nov 10): blank sleep = unknown; a day's check-ins merge sleep/recovery per field.
-export const SHADOW_ADAPTER_VERSION = "tcs_shadow_adapter_v2";
+// v3 (Nov 10): pain from every check-in that day counts (higher scale per repeated region).
+export const SHADOW_ADAPTER_VERSION = "tcs_shadow_adapter_v3";
 
 /* ------------------------------------------------------------------ raw rows */
 
@@ -447,14 +448,16 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
      Owner Nov 10: a blank answer is unknown, never 0 (Number(null) is 0). Sleep and
      recovery come from the row(s) that actually answered them — the most recent real
      answer wins — so a pre_lift / night row (which never asks them) can't erase them.
-     Pain is deliberately unchanged: the last row fetched for the date decides it. */
+     Owner Nov 10 (pain always counts): every region reported in ANY row that day is kept,
+     carrying that row's single pain_scale; a region reported twice keeps the higher scale;
+     a row without pain never removes another row's pain. Scale 6+ blocks loaded work. */
   type Answer = { value: number; at: number; idx: number };
   const latest = (cur: Answer | null, next: Answer | null): Answer | null => {
     if (!next) return cur;
     if (!cur) return next;
     return next.at > cur.at || (next.at === cur.at && next.idx > cur.idx) ? next : cur;
   };
-  const byDay = new Map<string, { hours: Answer | null; quality: Answer | null; recovery: Answer | null; pain: PainFlag[] | null }>();
+  const byDay = new Map<string, { hours: Answer | null; quality: Answer | null; recovery: Answer | null; pain: Map<string, number> }>();
   raw.quizzes.forEach((q, idx) => {
     const d = isoDay(q.entry_date);
     if (!d) return;
@@ -464,21 +467,19 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
       const n = answered(v);
       return n === null ? null : { value: n, at, idx };
     };
+    // The single pain_scale, read exactly as before (blank reads as 0 → never blocks).
     const scale = num(q.pain_scale) ?? 0;
-    const pain: PainFlag[] = (q.pain_location ?? [])
-      .filter((r) => !!r)
-      .map((region) => ({
-        region,
-        tank: null,
-        blocksLoadedWork: scale >= 6,
-      }));
-    const prev = byDay.get(d) ?? { hours: null, quality: null, recovery: null, pain: null };
+    const prev = byDay.get(d) ?? { hours: null, quality: null, recovery: null, pain: new Map<string, number>() };
+    for (const region of q.pain_location ?? []) {
+      if (!region) continue;
+      const had = prev.pain.get(region);
+      prev.pain.set(region, had === undefined ? scale : Math.max(had, scale));
+    }
     byDay.set(d, {
       hours: latest(prev.hours, answer(q.hours_slept)),
       quality: latest(prev.quality, answer(q.sleep_quality)),
       recovery: latest(prev.recovery, answer(q.perceived_recovery)),
-      // Unchanged on purpose (owner deciding): the last row for the date sets pain.
-      pain: pain.length > 0 ? pain : null,
+      pain: prev.pain,
     });
   });
   const checkInByDate = new Map<string, CheckIn>();
@@ -493,7 +494,9 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
         : (hours !== null && hours < 6) || (quality !== null && quality <= 2),
       // Owner Nov 9 round 4: the same single cutoff as "poor recovery" (4 or below on 1–10); missing = unknown.
       highSoreness: isPoorRecovery(a.recovery?.value ?? null),
-      pain: a.pain,
+      pain: a.pain.size > 0
+        ? [...a.pain].map(([region, scale]): PainFlag => ({ region, tank: null, blocksLoadedWork: scale >= 6 }))
+        : null,
     });
   }
   for (const l of raw.dailyLogs) {

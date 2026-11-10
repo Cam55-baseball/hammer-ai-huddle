@@ -8,8 +8,9 @@
  * 11 = pitching (incl. windmill) always follows the throwing card (owner Nov 6).
  * 12 = planner check-ins: soreness = recovery 4 or below, blank sleep/recovery = unknown,
  *      a day's check-ins never erase each other's sleep/recovery (owner Nov 9 r4 / Nov 10).
+ * 13 = planner pain: every check-in that day counts, higher scale per repeated area (owner Nov 10).
  */
-export const PLAN_RULES_VERSION = 12;
+export const PLAN_RULES_VERSION = 13;
 
 export function savedRulesVersion(payload: unknown): number {
   const v = Number((payload as { rules_version?: unknown } | null)?.rules_version);
