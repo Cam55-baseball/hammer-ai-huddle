@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { announceChange } from '@/hooks/useScheduleTimeline';
 import { toast } from 'sonner';
+import { parsePracticeLength } from "@/lib/practice/practiceLength";
 
 export type ParsedKind =
   | "game"
@@ -50,6 +51,13 @@ export interface ParsedScheduleEvent {
   time_local?: string | null;
   confidence: "high" | "medium" | "low";
   source_snippet: string;
+  /** Owner Nov 10: practice length as typed on the review screen (practice kinds only). */
+  duration_minutes_text?: string | null;
+}
+
+/** Imported kinds that are practices (so they ask "How long is practice?"). */
+export function isImportedPracticeKind(kind: ParsedKind): boolean {
+  return kind !== "game" && kind !== "tournament_day" && kind !== "travel" && kind !== "other";
 }
 
 export interface ImportSummary {
@@ -175,6 +183,8 @@ export function useImportScheduleEvents() {
             sport: defaultSport,
             practice_kind: practiceKind,
             intensity: practiceKind === "team" || practiceKind === "showcase" ? "heavy" : "standard",
+            // Saved only as entered; never filled with an assumed length.
+            duration_minutes: isImportedPracticeKind(ev.kind) ? parsePracticeLength(ev.duration_minutes_text) : null,
             status: "scheduled",
           });
         }

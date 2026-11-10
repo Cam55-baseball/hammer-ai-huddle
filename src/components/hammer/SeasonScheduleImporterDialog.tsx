@@ -17,7 +17,9 @@ import { Label } from "@/components/ui/label";
 import { Loader2, ImagePlus, Wand2, Trash2, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useImportScheduleEvents, undoScheduleImport, type ParsedScheduleEvent } from "@/hooks/useImportScheduleEvents";
+import { useImportScheduleEvents, undoScheduleImport, isImportedPracticeKind, type ParsedScheduleEvent } from "@/hooks/useImportScheduleEvents";
+import { PracticeLengthField } from "@/components/practice/PracticeLengthField";
+import { practiceLengthProblem } from "@/lib/practice/practiceLength";
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 import { logPasteImportPhase, watchAuthDuringPasteImport } from "@/lib/auth/authTelemetry";
 import { readDraftSlot, writeDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
@@ -62,6 +64,7 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
   const [keepRow, setKeepRow] = useState<boolean[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const importMutation = useImportScheduleEvents();
+  const [triedImport, setTriedImport] = useState(false);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { user } = useOptionalAuth();
 
@@ -216,6 +219,12 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
     let closedAfterSave = false;
     if (!selected.length) {
       toast.error("Pick at least one event to add.");
+      return;
+    }
+    // Owner Nov 10: every practice being added needs its length (10–360 minutes).
+    setTriedImport(true);
+    if (selected.some((e) => isImportedPracticeKind(e.kind) && practiceLengthProblem(e.duration_minutes_text))) {
+      toast.error("Add how long each practice is.");
       return;
     }
     try {
@@ -421,6 +430,15 @@ export function SeasonScheduleImporterDialog({ open, onOpenChange }: Props) {
                       <Input value={ev.location ?? ""} onFocus={() => noteProtectedEditing()} onChange={(e) => { noteProtectedEditing(); updateEvent(i, { location: e.target.value || null }); }} className="h-8" />
                     </div>
                   </div>
+                  {isImportedPracticeKind(ev.kind) && (
+                    <PracticeLengthField
+                      id={`import-length-${i}`}
+                      value={ev.duration_minutes_text ?? ""}
+                      showErrors={triedImport && (keepRow[i] ?? true)}
+                      onFocus={() => noteProtectedEditing()}
+                      onChange={(v) => { noteProtectedEditing(); updateEvent(i, { duration_minutes_text: v }); }}
+                    />
+                  )}
                   <p className="text-[10px] text-muted-foreground italic line-clamp-2">“{ev.source_snippet}”</p>
                 </div>
               ))}
