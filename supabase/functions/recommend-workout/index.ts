@@ -125,10 +125,13 @@ serve(async (req) => {
     }
     // --- End entitlement check ---
 
-    const { activityLogs, recoveryContext } = await req.json() as { 
+    const body = await req.json() as { 
       activityLogs: ActivityLog[];
       recoveryContext?: RecoveryContext;
     };
+    const activityLogs = body.activityLogs;
+    // Owner Nov 9: stress is not part of this feature; older clients may still send it — ignored.
+    const recoveryContext = withoutStress(body.recoveryContext);
 
     if (!HAS_AI_CREDENTIALS) {
       throw new Error("No AI credentials configured (GOOGLE_AI_API_KEY or OPENAI_API_KEY)");
