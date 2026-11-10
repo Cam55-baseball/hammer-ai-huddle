@@ -51,7 +51,8 @@ describe("Owner Nov 9 round 4 — one recovery cutoff", () => {
   });
 
   it("injury-risk planner: a missing recovery answer is never high soreness", () => {
-    expect(shadowWithRecovery(null).checkIns[0]).toMatchObject({ highSoreness: false });
+    // Nov 10: reported as unknown (null), never true.
+    expect(shadowWithRecovery(null).checkIns[0].highSoreness).toBeNull();
   });
 
   it("no hard-coded recovery cutoff remains in the planner, the app hooks or recommend-workout", () => {
