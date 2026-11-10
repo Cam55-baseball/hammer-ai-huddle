@@ -32,13 +32,68 @@ export interface UseWorkoutRecommendationsResult {
 }
 
 /**
+ * Turn the latest check-in into this feature's recovery context.
+ * Owner Nov 9 ("no mental measurement"): stress is not read or used here.
+ */
+export function deriveRecoveryContext(latestQuiz: {
+  sleep_quality?: number | null;
+  physical_readiness?: number | null;
+  perceived_recovery?: number | null;
+  pain_location?: unknown;
+  pain_scales?: unknown;
+}): RecoveryContext {
+  const sleepQuality = latestQuiz.sleep_quality ?? null;
+  const physicalReadiness = latestQuiz.physical_readiness ?? null;
+  const perceivedRecovery = latestQuiz.perceived_recovery ?? null;
+  const painAreas = (latestQuiz.pain_location as string[]) || [];
+  const painScales = (latestQuiz.pain_scales as Record<string, number> | null) ?? null;
+
+  // Determine if recovery should be suggested
+  let suggestRecovery = false;
+  let recoveryReason: string | null = null;
+
+  if (sleepQuality !== null && sleepQuality <= 2) {
+    suggestRecovery = true;
+    recoveryReason = 'Low sleep quality detected';
+  } else if (painAreas.length >= 3) {
+    suggestRecovery = true;
+    recoveryReason = 'Multiple pain areas reported';
+  } else if (physicalReadiness !== null && physicalReadiness <= 2) {
+    suggestRecovery = true;
+    recoveryReason = 'Low physical readiness';
+  } else if (perceivedRecovery !== null && perceivedRecovery <= POOR_RECOVERY_MAX) {
+    suggestRecovery = true;
+    recoveryReason = 'Incomplete recovery from previous training';
+  }
+
+  // Check average pain intensity
+  if (painScales && Object.keys(painScales).length > 0) {
+    const avgPain = Object.values(painScales).reduce((sum, v) => sum + v, 0) / Object.keys(painScales).length;
+    if (avgPain >= 7 && !suggestRecovery) {
+      suggestRecovery = true;
+      recoveryReason = 'High pain intensity detected';
+    }
+  }
+
+  return {
+    sleepQuality,
+    physicalReadiness,
+    perceivedRecovery,
+    painAreas,
+    painScales,
+    suggestRecovery,
+    recoveryReason,
+  };
+}
+
+/**
  * Fetch the latest check-in data for recovery context
  */
 async function fetchRecoveryContext(userId: string): Promise<RecoveryContext | null> {
   try {
     const { data: latestQuiz, error } = await supabase
       .from('vault_focus_quizzes')
-      .select('sleep_quality, stress_level, pain_location, pain_scales, physical_readiness, perceived_recovery')
+      .select('sleep_quality, pain_location, pain_scales, physical_readiness, perceived_recovery')
       .eq('user_id', userId)
       .order('entry_date', { ascending: false })
       .order('created_at', { ascending: false })
@@ -54,53 +109,7 @@ async function fetchRecoveryContext(userId: string): Promise<RecoveryContext | n
       return null;
     }
 
-    const sleepQuality = latestQuiz.sleep_quality ?? null;
-    const stressLevel = latestQuiz.stress_level ?? null;
-    const physicalReadiness = latestQuiz.physical_readiness ?? null;
-    const perceivedRecovery = latestQuiz.perceived_recovery ?? null;
-    const painAreas = (latestQuiz.pain_location as string[]) || [];
-    const painScales = latestQuiz.pain_scales as Record<string, number> | null;
-
-    // Determine if recovery should be suggested
-    let suggestRecovery = false;
-    let recoveryReason: string | null = null;
-
-    if (sleepQuality !== null && sleepQuality <= 2) {
-      suggestRecovery = true;
-      recoveryReason = 'Low sleep quality detected';
-    } else if (stressLevel !== null && stressLevel >= 4) {
-      suggestRecovery = true;
-      recoveryReason = 'High stress levels detected';
-    } else if (painAreas.length >= 3) {
-      suggestRecovery = true;
-      recoveryReason = 'Multiple pain areas reported';
-    } else if (physicalReadiness !== null && physicalReadiness <= 2) {
-      suggestRecovery = true;
-      recoveryReason = 'Low physical readiness';
-    } else if (perceivedRecovery !== null && perceivedRecovery <= POOR_RECOVERY_MAX) {
-      suggestRecovery = true;
-      recoveryReason = 'Incomplete recovery from previous training';
-    }
-
-    // Check average pain intensity
-    if (painScales && Object.keys(painScales).length > 0) {
-      const avgPain = Object.values(painScales).reduce((sum, v) => sum + v, 0) / Object.keys(painScales).length;
-      if (avgPain >= 7 && !suggestRecovery) {
-        suggestRecovery = true;
-        recoveryReason = 'High pain intensity detected';
-      }
-    }
-
-    return {
-      sleepQuality,
-      stressLevel,
-      physicalReadiness,
-      perceivedRecovery,
-      painAreas,
-      painScales,
-      suggestRecovery,
-      recoveryReason,
-    };
+    return deriveRecoveryContext(latestQuiz);
   } catch (err) {
     console.error('[useWorkoutRecommendations] Error in fetchRecoveryContext:', err);
     return null;

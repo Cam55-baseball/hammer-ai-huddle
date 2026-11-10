@@ -5,7 +5,6 @@ import { Exercise } from './customActivity';
  */
 export interface RecoveryContext {
   sleepQuality: number | null; // 1-5 scale
-  stressLevel: number | null; // 1-5 scale
   physicalReadiness: number | null; // 1-5 scale
   perceivedRecovery: number | null; // 1-10 scale (morning check-in); null = unknown
   painAreas: string[];
