@@ -6,8 +6,10 @@
  * 3 = owner throwing drills can take the built-in catch-play steps' place (Nov 5 round 2).
  * 7 = skill reps (e.g. double-play / quick-release) never sit in the warm-up (Nov 5 round 5).
  * 11 = pitching (incl. windmill) always follows the throwing card (owner Nov 6).
+ * 12 = planner check-ins: soreness = recovery 4 or below, blank sleep/recovery = unknown,
+ *      a day's check-ins never erase each other's sleep/recovery (owner Nov 9 r4 / Nov 10).
  */
-export const PLAN_RULES_VERSION = 11;
+export const PLAN_RULES_VERSION = 12;
 
 export function savedRulesVersion(payload: unknown): number {
   const v = Number((payload as { rules_version?: unknown } | null)?.rules_version);

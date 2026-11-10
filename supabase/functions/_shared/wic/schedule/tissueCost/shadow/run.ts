@@ -107,7 +107,7 @@ export async function fetchShadowData(
     ),
     rows(
       db.from("vault_focus_quizzes").select(
-        "entry_date,hours_slept,sleep_quality,perceived_recovery,pain_location,pain_scale",
+        "entry_date,hours_slept,sleep_quality,perceived_recovery,pain_location,pain_scale,created_at",
       ).eq("user_id", userId).gte("entry_date", windowStart).lte("entry_date", today),
     ),
     rows(

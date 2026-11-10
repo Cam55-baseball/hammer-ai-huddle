@@ -22,7 +22,8 @@ import {
   type TrainingAgeBand,
 } from "../types.ts";
 
-export const SHADOW_ADAPTER_VERSION = "tcs_shadow_adapter_v1";
+// v2 (Nov 10): blank sleep = unknown; a day's check-ins merge sleep/recovery per field.
+export const SHADOW_ADAPTER_VERSION = "tcs_shadow_adapter_v2";
 
 /* ------------------------------------------------------------------ raw rows */
 
@@ -106,6 +107,8 @@ export interface RawQuiz {
   perceived_recovery?: number | null;
   pain_location?: string[] | null;
   pain_scale?: number | null;
+  /** When the row was saved; picks the most recent real answer for a date. */
+  created_at?: string | null;
 }
 
 export interface RawDailyLog {
@@ -182,6 +185,10 @@ const num = (v: unknown): number | null => {
   const n = typeof v === "number" ? v : Number(v);
   return Number.isFinite(n) ? n : null;
 };
+
+/** A check-in answer: blank (null / undefined / "") is unknown, never 0. */
+const answered = (v: unknown): number | null =>
+  v == null || (typeof v === "string" && v.trim() === "") ? null : num(v);
 
 /** Class from the day's prescribed lift intensity (§2, plan-only correctness). */
 export function classFromPrescriptions(rows: RawPrescription[]): SessionClass | null {
@@ -436,15 +443,27 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
     target.maxSprintYards = (target.maxSprintYards ?? 0) + yards;
   }
 
-  /* check-ins — neutral when missing */
-  const checkInByDate = new Map<string, CheckIn>();
-  for (const q of raw.quizzes) {
+  /* check-ins — neutral when missing.
+     Owner Nov 10: a blank answer is unknown, never 0 (Number(null) is 0). Sleep and
+     recovery come from the row(s) that actually answered them — the most recent real
+     answer wins — so a pre_lift / night row (which never asks them) can't erase them.
+     Pain is deliberately unchanged: the last row fetched for the date decides it. */
+  type Answer = { value: number; at: number; idx: number };
+  const latest = (cur: Answer | null, next: Answer | null): Answer | null => {
+    if (!next) return cur;
+    if (!cur) return next;
+    return next.at > cur.at || (next.at === cur.at && next.idx > cur.idx) ? next : cur;
+  };
+  const byDay = new Map<string, { hours: Answer | null; quality: Answer | null; recovery: Answer | null; pain: PainFlag[] | null }>();
+  raw.quizzes.forEach((q, idx) => {
     const d = isoDay(q.entry_date);
-    if (!d) continue;
-    const hours = num(q.hours_slept);
-    const quality = num(q.sleep_quality);
-    // A blank answer is unknown (Number(null) would read it as 0 = "high soreness").
-    const recovery = q.perceived_recovery == null ? null : num(q.perceived_recovery);
+    if (!d) return;
+    const parsedAt = q.created_at ? Date.parse(q.created_at) : NaN;
+    const at = Number.isFinite(parsedAt) ? parsedAt : -Infinity;
+    const answer = (v: unknown): Answer | null => {
+      const n = answered(v);
+      return n === null ? null : { value: n, at, idx };
+    };
     const scale = num(q.pain_scale) ?? 0;
     const pain: PainFlag[] = (q.pain_location ?? [])
       .filter((r) => !!r)
@@ -453,12 +472,28 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
         tank: null,
         blocksLoadedWork: scale >= 6,
       }));
+    const prev = byDay.get(d) ?? { hours: null, quality: null, recovery: null, pain: null };
+    byDay.set(d, {
+      hours: latest(prev.hours, answer(q.hours_slept)),
+      quality: latest(prev.quality, answer(q.sleep_quality)),
+      recovery: latest(prev.recovery, answer(q.perceived_recovery)),
+      // Unchanged on purpose (owner deciding): the last row for the date sets pain.
+      pain: pain.length > 0 ? pain : null,
+    });
+  });
+  const checkInByDate = new Map<string, CheckIn>();
+  for (const [d, a] of byDay) {
+    const hours = a.hours?.value ?? null;
+    const quality = a.quality?.value ?? null;
     checkInByDate.set(d, {
       date: d,
-      poorSleep: (hours !== null && hours < 6) || (quality !== null && quality <= 2),
+      // Poor sleep only from a real answer; no sleep answer at all = unknown (null).
+      poorSleep: hours === null && quality === null
+        ? null
+        : (hours !== null && hours < 6) || (quality !== null && quality <= 2),
       // Owner Nov 9 round 4: the same single cutoff as "poor recovery" (4 or below on 1–10); missing = unknown.
-      highSoreness: isPoorRecovery(recovery) === true,
-      pain: pain.length > 0 ? pain : null,
+      highSoreness: isPoorRecovery(a.recovery?.value ?? null),
+      pain: a.pain,
     });
   }
   for (const l of raw.dailyLogs) {
