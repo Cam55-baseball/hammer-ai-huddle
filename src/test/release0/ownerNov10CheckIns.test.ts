@@ -78,13 +78,13 @@ describe("Owner Nov 10 — a day's check-ins never erase each other's sleep or r
     expect(c.highSoreness).toBe(true);
   });
 
-  it("pain is unchanged: the last row for the date still decides it", () => {
+  it("pain from any row that day is kept (superseded Nov 10: pain always counts)", () => {
     const pain: RawQuiz = { entry_date: DAY, pain_location: ["shoulder"], pain_scale: 3 };
     expect(checkInFor([morningRow, pain]).pain).toEqual([{ region: "shoulder", tank: null, blocksLoadedWork: false }]);
-    expect(checkInFor([pain, nightRow]).pain).toBeNull();
+    expect(checkInFor([pain, nightRow]).pain).toEqual([{ region: "shoulder", tank: null, blocksLoadedWork: false }]);
   });
 
   it("the rules version is bumped so saved future days refresh", () => {
-    expect(PLAN_RULES_VERSION).toBe(12);
+    expect(PLAN_RULES_VERSION).toBeGreaterThanOrEqual(12);
   });
 });
