@@ -22,6 +22,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { noteProtectedEditing } from "@/lib/auth/protectedEditing";
 import { Loader2, CalendarPlus } from "lucide-react";
 import { announceChange } from '@/hooks/useScheduleTimeline';
+import { PracticeLengthField } from "@/components/practice/PracticeLengthField";
+import { parsePracticeLength, practiceLengthProblem } from "@/lib/practice/practiceLength";
 
 const KINDS: Array<{ value: string; label: string; hint: string; intensity: "light" | "standard" | "heavy" }> = [
   { value: "team", label: "Team practice", hint: "Club / school / travel team", intensity: "heavy" },
@@ -59,7 +61,8 @@ export function AddPracticeDialog({
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(defaultDate ?? todayStr());
   const [startTime, setStartTime] = useState("");
-  const [duration, setDuration] = useState("90");
+  const [duration, setDuration] = useState("");
+  const [triedSave, setTriedSave] = useState(false);
   const [intensity, setIntensity] = useState<"light" | "standard" | "heavy">("heavy");
   const [notes, setNotes] = useState("");
   const [recurring, setRecurring] = useState(false);
@@ -78,7 +81,8 @@ export function AddPracticeDialog({
     setTitle("");
     setDate(defaultDate ?? todayStr());
     setStartTime("");
-    setDuration("90");
+    setDuration("");
+    setTriedSave(false);
     setIntensity("heavy");
     setNotes("");
     setRecurring(false);
@@ -94,6 +98,9 @@ export function AddPracticeDialog({
       toast.error("Pick a date first.");
       return;
     }
+    setTriedSave(true);
+    // Owner Nov 10: the length is required and must be possible (10–360 minutes).
+    if (practiceLengthProblem(duration)) return;
     if (recurring && days.length === 0) {
       toast.error("Pick at least one weekday for a repeating practice.");
       return;
@@ -106,7 +113,7 @@ export function AddPracticeDialog({
         .select("sport")
         .eq("id", user.id)
         .maybeSingle();
-      const mins = Math.max(15, Math.min(360, Number(duration) || 90));
+      const mins = parsePracticeLength(duration)!;
 
       const { error } = await (supabase as any).from("scheduled_practice_sessions").insert({
         user_id: user.id,
@@ -211,17 +218,15 @@ export function AddPracticeDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="practice-duration" className="text-xs uppercase text-muted-foreground">Minutes</Label>
-              <Input
-                id="practice-duration"
-                inputMode="numeric"
-                value={duration}
-                onFocus={() => noteProtectedEditing()}
-                onChange={(e) => { noteProtectedEditing(); setDuration(e.target.value.replace(/[^\d]/g, "")); }}
-              />
-            </div>
+          <PracticeLengthField
+            id="practice-duration"
+            value={duration}
+            showErrors={triedSave}
+            onFocus={() => noteProtectedEditing()}
+            onChange={(v) => { noteProtectedEditing(); setDuration(v); }}
+          />
+
+          <div className="grid grid-cols-1 gap-2">
             <div className="space-y-1.5">
               <Label className="text-xs uppercase text-muted-foreground">Intensity</Label>
               <div className="flex gap-1">
