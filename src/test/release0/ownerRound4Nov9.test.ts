@@ -12,12 +12,25 @@ import { deriveDefensivePlayMetrics } from "@/hooks/useDefensivePlays";
 import { METRICS, ALIASES } from "../../../supabase/functions/_shared/ledger/metricDictionary";
 
 function shadowWithRecovery(perceived_recovery: number | null) {
-  // Minimal raw input: one check-in, everything else empty.
+  // Minimal raw input: one check-in, everything else empty (same shape as the tissueCost shadow tests).
   const raw: any = {
+    userId: "00000000-0000-0000-0000-000000000001",
     today: "2026-03-10",
+    timezone: "UTC",
+    windowStart: "2026-01-09",
+    horizonEnd: "2026-03-24",
+    mpi: null,
+    context: null,
+    prescriptions: [],
+    sessionLogs: [],
+    games: [],
+    calendarEvents: [],
+    practices: [],
+    throwingReps: [],
+    speedSessions: [],
     quizzes: [{ entry_date: "2026-03-09", perceived_recovery }],
+    dailyLogs: [],
   };
-  for (const k of ["lifts", "practices", "games", "throws", "sprints", "dailyLogs", "pitcherOutings", "speedSessions", "plays", "templates", "exposures", "sessions"]) raw[k] ??= [];
   return buildShadowInputs(raw);
 }
 
