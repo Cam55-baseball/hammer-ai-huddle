@@ -1,4 +1,5 @@
 import { resolveSeasonPhase } from "../../../../seasonPhase.ts";
+import { isPoorRecovery } from "../../../../recoveryScale.ts";
 import { growthMode } from "../../../growth/growthMode.ts";
 import { resolveOutingFacts, type PitcherSettingsRow, type PitcherOutingRow, type PitcherAvailabilityRow } from "../../../pitching/outingFacts.ts";
 // Tissue Cost Scheduler — stage S3 shadow mode, input adapter.
@@ -454,7 +455,8 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
     checkInByDate.set(d, {
       date: d,
       poorSleep: (hours !== null && hours < 6) || (quality !== null && quality <= 2),
-      highSoreness: recovery !== null && recovery <= 3,
+      // Owner Nov 9 round 4: the same single cutoff as "poor recovery" (4 or below on 1–10); missing = unknown.
+      highSoreness: isPoorRecovery(recovery) === true,
       pain: pain.length > 0 ? pain : null,
     });
   }
