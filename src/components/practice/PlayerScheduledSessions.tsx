@@ -38,6 +38,8 @@ export function PlayerScheduledSessions() {
   const [editDescription, setEditDescription] = useState('');
   const [editRecurring, setEditRecurring] = useState(false);
   const [editRecurringDays, setEditRecurringDays] = useState<number[]>([]);
+  const [editLength, setEditLength] = useState('');
+  const [editTried, setEditTried] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Cancel state
@@ -69,10 +71,15 @@ export function PlayerScheduledSessions() {
     setEditDescription(s.description || '');
     setEditRecurring(s.recurring_active);
     setEditRecurringDays(s.recurring_days || []);
+    setEditLength(s.duration_minutes != null ? String(s.duration_minutes) : '');
+    setEditTried(false);
   };
 
   const handleSaveEdit = async () => {
     if (!editSession) return;
+    setEditTried(true);
+    // Owner Nov 10: practice length is required when editing and must be possible (10–360 minutes).
+    if (practiceLengthProblem(editLength)) return;
     setSaving(true);
     await updateSession(editSession.id, {
       scheduled_date: editDate,
@@ -81,6 +88,7 @@ export function PlayerScheduledSessions() {
       description: editDescription || null,
       recurring_active: editRecurring,
       recurring_days: editRecurringDays,
+      duration_minutes: parsePracticeLength(editLength),
     });
     setEditSession(null);
     setSaving(false);
