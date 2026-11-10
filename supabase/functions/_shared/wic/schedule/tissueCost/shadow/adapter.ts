@@ -444,7 +444,7 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
     const hours = num(q.hours_slept);
     const quality = num(q.sleep_quality);
     // A blank answer is unknown (Number(null) would read it as 0 = "high soreness").
-    const recovery = q.perceived_recovery == null || q.perceived_recovery === "" ? null : num(q.perceived_recovery);
+    const recovery = q.perceived_recovery == null ? null : num(q.perceived_recovery);
     const scale = num(q.pain_scale) ?? 0;
     const pain: PainFlag[] = (q.pain_location ?? [])
       .filter((r) => !!r)
