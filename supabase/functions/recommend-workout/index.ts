@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { analyzeRecoveryStatus, withoutStress, type RecoveryContext } from "./recoveryStatus.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,17 +23,6 @@ interface ActivityLog {
     intensity?: string;
     duration_minutes?: number;
   };
-}
-
-interface RecoveryContext {
-  sleepQuality: number | null;
-  stressLevel: number | null;
-  physicalReadiness: number | null;
-  perceivedRecovery: number | null;
-  painAreas: string[];
-  painScales: Record<string, number> | null;
-  suggestRecovery: boolean;
-  recoveryReason: string | null;
 }
 
 interface Exercise {
@@ -59,13 +49,6 @@ interface WorkoutRecommendation {
   originalRecommendationId?: string;
 }
 
-interface RecoveryWarning {
-  show: boolean;
-  severity: 'moderate' | 'high';
-  reason: string;
-  suggestions: string[];
-}
-
 const HAS_AI_CREDENTIALS = Boolean(
   Deno.env.get("GOOGLE_AI_API_KEY") || Deno.env.get("OPENAI_API_KEY"),
 );
@@ -79,64 +62,6 @@ function extractExercisesFromTemplate(exercisesField: any): any[] {
     );
   }
   return [];
-}
-
-function analyzeRecoveryStatus(context: RecoveryContext | undefined): RecoveryWarning | null {
-  if (!context) return null;
-
-  const { sleepQuality, stressLevel, physicalReadiness, perceivedRecovery, painAreas, painScales } = context;
-  
-  let avgPainLevel = 0;
-  if (painScales && Object.keys(painScales).length > 0) {
-    avgPainLevel = Object.values(painScales).reduce((sum, v) => sum + v, 0) / Object.keys(painScales).length;
-  }
-
-  const issues: string[] = [];
-  const suggestions: string[] = [];
-  let severity: 'moderate' | 'high' = 'moderate';
-
-  if (sleepQuality !== null && sleepQuality <= 2) {
-    issues.push('poor sleep quality');
-    suggestions.push('Consider lighter volume or active recovery');
-    if (sleepQuality === 1) severity = 'high';
-  }
-  if (stressLevel !== null && stressLevel >= 4) {
-    issues.push('elevated stress levels');
-    suggestions.push('Focus on low-intensity movements to avoid overtraining');
-    if (stressLevel === 5) severity = 'high';
-  }
-  if (physicalReadiness !== null && physicalReadiness <= 2) {
-    issues.push('low physical readiness');
-    suggestions.push('Prioritize mobility work and dynamic stretching');
-    if (physicalReadiness === 1) severity = 'high';
-  }
-  // Owner Nov 9: Perceived Recovery is asked 1–10; 4 or below is poor (was ≤2 from an old 1–5 reading).
-  if (perceivedRecovery !== null && perceivedRecovery <= 4) {
-    issues.push('incomplete recovery from previous training');
-    suggestions.push('Allow additional rest between sets');
-  }
-  if (painAreas.length >= 3) {
-    issues.push(`multiple pain areas detected (${painAreas.length} areas)`);
-    suggestions.push('Consider a recovery-focused session or targeted mobility work');
-    severity = 'high';
-  } else if (painAreas.length > 0) {
-    issues.push(`${painAreas.length} pain area(s) reported`);
-    suggestions.push('Avoid exercises that stress painful areas');
-  }
-  if (avgPainLevel >= 7) {
-    issues.push('high pain intensity detected');
-    suggestions.push('Strongly recommend rest or gentle recovery work only');
-    severity = 'high';
-  }
-
-  if (issues.length === 0) return null;
-
-  return {
-    show: true,
-    severity,
-    reason: `Based on your check-in: ${issues.join(', ')}.`,
-    suggestions: [...new Set(suggestions)],
-  };
 }
 
 function formatPainAreasForPrompt(painAreas: string[], painScales: Record<string, number> | null): string {
@@ -242,7 +167,6 @@ serve(async (req) => {
 CRITICAL CONTEXT - RECOVERY STATUS:
 ${recoveryContext ? `
 - Sleep Quality: ${recoveryContext.sleepQuality ?? 'Unknown'}/5 ${(recoveryContext.sleepQuality ?? 5) <= 2 ? '⚠️ LOW' : ''}
-- Stress Level: ${recoveryContext.stressLevel ?? 'Unknown'}/5 ${(recoveryContext.stressLevel ?? 1) >= 4 ? '⚠️ HIGH' : ''}
 - Physical Readiness: ${recoveryContext.physicalReadiness ?? 'Unknown'}/5 ${(recoveryContext.physicalReadiness ?? 5) <= 2 ? '⚠️ LOW' : ''}
 - Perceived Recovery: ${recoveryContext.perceivedRecovery ?? 'Unknown'}/10 ${recoveryContext.perceivedRecovery != null && recoveryContext.perceivedRecovery <= 4 ? '⚠️ LOW' : ''}
 - Pain Areas: ${formatPainAreasForPrompt(recoveryContext.painAreas || [], recoveryContext.painScales)}
