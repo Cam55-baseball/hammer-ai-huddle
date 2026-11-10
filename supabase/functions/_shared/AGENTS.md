@@ -4,3 +4,4 @@
 - Staff plan purchase eligibility lives only in `supabase/functions/_shared/staffEligibility.ts` (used by create-staff-checkout and tests). Why: one rule for age, coach role and org-admin status.
 - Purchase handoff landing validation is shared by the token issuer and website in `_shared/purchaseHandoffLanding.ts`. Why: Staff Plans and existing purchase destinations must survive both checks without divergent allowlists.
 - Owner-only position exception: one literal ID in `_shared/owner/ownerPositionException.ts`, mirrored in `initial_plan_missing`. Why: no other account drifts into it.
+- Perceived-recovery judgments (poor recovery, planner high soreness) use the one cutoff in `_shared/recoveryScale.ts`, re-exported by `src/lib/readiness/recoveryScale.ts`. Why: one owner cutoff everywhere; missing stays unknown.

@@ -63,5 +63,3 @@
 
 - Player-facing questions, prompts and cards take modules from `useProgramModules`/`playerProgramModules` (`_shared/programAccess.ts`), which applies the owner-only 5Tool rule; access/purchase checks keep raw `useSubscription`. Why: one program judge everywhere without changing what the owner can open.
 - Coach game entry is `/coach/log-game` over existing `coach_log_entry` lines and `coach_log_general_game` (per-player gp_games, no stats). Why: saves land on each player's record under server connection/jersey checks.
-- Perceived-recovery judgments (poor recovery, planner high soreness) use the one cutoff in `_shared/recoveryScale.ts`, re-exported by `src/lib/readiness/recoveryScale.ts`. Why: one owner cutoff everywhere; missing stays unknown.
-- Parked-until-CV fields are listed in `src/lib/measure/archivedFields.ts`; inputs hidden, reads nulled/filtered, never in the dictionary. Why: unmeasurable values must not show or feed math while stored rows stay untouched.

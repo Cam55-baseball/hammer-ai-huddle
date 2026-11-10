@@ -1,0 +1,1 @@
+- Parked-until-CV fields are listed in `src/lib/measure/archivedFields.ts`; inputs hidden, reads nulled/filtered, never in the dictionary. Why: unmeasurable values must not show or feed math while stored rows stay untouched.
