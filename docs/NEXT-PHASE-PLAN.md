@@ -84,3 +84,13 @@ athlete's own baseline** (not against a made-up average).
 - **14 — Mechanics tiles and the Report Card back on.** Re-open the Report Card, built from DelayCam
   rep-by-rep results.
 - **15 — Ball and bat tracking.** Measure the ball and the bat from video.
+
+## PARKED — needs a CV measurement plan after the current CV project is complete
+
+Owner decision Nov 9 (round 4). These three can't be measured honestly by hand, so they are parked until camera (CV) measurement can do it. Their inputs are hidden on every entry screen. Any already-stored value stays untouched in the database, read-only, and is left out of every display and calculation (app list: `src/lib/measure/archivedFields.ts`). None of them is in the metric dictionary. Stored values when parked: 0 for all three.
+
+| Field | What it was meant to measure | Where its input lived | Where it is stored |
+|---|---|---|---|
+| Defensive play "distance to cover" | Feet from the fielder's spot at contact to where the ball landed; it fed catch probability and outs-above-expected (those now read as missing) | Defensive Play Entry (`/defense/plays/entry`, `src/pages/DefensivePlayEntry.tsx`, "Ground to cover (ft)") | `defensive_plays.distance_to_cover` |
+| Catcher "framing" | Strikes gained above expected from receiving borderline pitches | Catching Rep Entry (`/catching/reps/entry`, `src/pages/CatchingRepEntry.tsx`, metric picker) | `catching_reps` rows with metric `framing_strikes_above_expected` |
+| Catcher "block success" | Share of blocks that stuck in the mitt or deadened at the plate | Catching Rep Entry metric picker, and the Practice Hub catching rep "Block Success" switch (`src/components/practice/CatchingRepFields.tsx`) | `catching_reps` rows with metric `block_success`; `performance_sessions.micro_layer_data[].block_success` |
