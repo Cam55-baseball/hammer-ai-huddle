@@ -37,6 +37,7 @@ import {
 } from '@/lib/catching/reps';
 import { Loader2, ShieldAlert, Hand } from 'lucide-react';
 import { SoftballBenchmarkNote } from '@/components/softball/SoftballBenchmarkNote';
+import { isArchivedCatchingMetric } from '@/lib/measure/archivedFields';
 
 export default function CatchingRepEntry() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -105,7 +106,7 @@ export default function CatchingRepEntry() {
             <Hand className="h-6 w-6 text-primary" /> Catching Rep Entry
           </h1>
           <p className="text-sm text-muted-foreground">
-            Pop time, exchange, throw velocity, framing and blocking — recorded by hand, marked
+            Pop time, exchange and throw velocity — recorded by hand, marked
             evaluator-entered.
           </p>
           <SoftballBenchmarkNote />
@@ -161,7 +162,7 @@ export default function CatchingRepEntry() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {CATCHING_METRICS.map((m) => (
+                        {CATCHING_METRICS.filter((m) => !isArchivedCatchingMetric(m)).map((m) => (
                           <SelectItem key={m} value={m}>
                             {CATCHING_METRIC_LABELS[m]}
                           </SelectItem>

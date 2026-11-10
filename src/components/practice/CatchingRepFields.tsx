@@ -1,6 +1,5 @@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { FieldingThrowFields } from './FieldingThrowFields';
 import type { ScoredRep } from './RepScorer';
@@ -79,13 +78,7 @@ export function CatchingRepFields({ value, onChange }: CatchingRepFieldsProps) {
         />
       </div>
 
-      <div className="flex items-center justify-between">
-        <Label className="text-xs">Block Success</Label>
-        <Switch
-          checked={value.block_success ?? false}
-          onCheckedChange={v => onChange('block_success', v)}
-        />
-      </div>
+      {/* "Block Success" is parked until CV can measure it (owner Nov 9 round 4). */}
 
       {/* Throw tracking — replaces old slider */}
       <FieldingThrowFields value={value} onChange={onChange} />
