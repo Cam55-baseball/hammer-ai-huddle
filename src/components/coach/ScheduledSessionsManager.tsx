@@ -12,6 +12,9 @@ import { CalendarIcon, Pencil, Trash2, Filter } from 'lucide-react';
 import { useScheduledPracticeSessions, ScheduledPracticeSession } from '@/hooks/useScheduledPracticeSessions';
 import { format } from 'date-fns';
 import { formatTime12h } from '@/lib/formatTime';
+import { PracticeLengthField } from '@/components/practice/PracticeLengthField';
+import { MissingPracticeLengthNote } from '@/components/practice/MissingPracticeLengthNote';
+import { parsePracticeLength, practiceLengthProblem } from '@/lib/practice/practiceLength';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -162,7 +165,10 @@ export function ScheduledSessionsManager({ onSchedule }: ScheduledSessionsManage
               <TableBody>
                 {filtered.map(s => (
                   <TableRow key={s.id}>
-                    <TableCell className="font-medium">{s.title}</TableCell>
+                    <TableCell className="font-medium">
+                      {s.title}
+                      <MissingPracticeLengthNote practice={s} onSaved={() => loadSessions()} />
+                    </TableCell>
                     <TableCell className="capitalize">{s.session_module}</TableCell>
                     <TableCell className="capitalize">{s.session_type.replace(/_/g, ' ')}</TableCell>
                     <TableCell>{s.scheduled_date}</TableCell>
@@ -219,6 +225,7 @@ export function ScheduledSessionsManager({ onSchedule }: ScheduledSessionsManage
               <Label>Description</Label>
               <Input value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="Optional description" />
             </div>
+            <PracticeLengthField id="coach-edit-length" value={editLength} onChange={setEditLength} showErrors={editTried} />
             <div className="flex items-center gap-2">
               <Checkbox checked={editRecurring} onCheckedChange={v => setEditRecurring(!!v)} id="edit-recurring" />
               <Label htmlFor="edit-recurring">Recurring Weekly</Label>
