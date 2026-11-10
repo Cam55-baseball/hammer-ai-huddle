@@ -47,3 +47,15 @@ export function practiceLengthMissing(row: { duration_minutes?: number | null; s
   if (CANCELLED.has(String(row.status ?? "").toLowerCase())) return false;
   return row.duration_minutes == null;
 }
+
+/**
+ * The coach send service (coach-practice-check) still stores coach-sent lengths inside 15–240 minutes.
+ * Until it is updated, a possible entry outside that window is refused on screen so it is never
+ * silently changed on save.
+ */
+export const COACH_SEND_MIN = 15;
+export const COACH_SEND_MAX = 240;
+export function coachPracticeLengthBlocked(value: unknown): boolean {
+  const n = parsePracticeLength(value);
+  return practiceLengthProblem(value) === null && n != null && (n < COACH_SEND_MIN || n > COACH_SEND_MAX);
+}

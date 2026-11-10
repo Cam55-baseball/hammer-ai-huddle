@@ -19,14 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { supabase } from '@/integrations/supabase/client';
 import { PracticeLengthField } from '@/components/practice/PracticeLengthField';
-import { parsePracticeLength, practiceLengthProblem } from '@/lib/practice/practiceLength';
-
-/** coach-practice-check still saves coach practices inside 15–240 minutes; never let it silently change an entry. */
-const COACH_SERVER_MIN = 15, COACH_SERVER_MAX = 240;
-export function coachLengthBlocked(v: string): boolean {
-  const n = parsePracticeLength(v);
-  return practiceLengthProblem(v) === null && n != null && (n < COACH_SERVER_MIN || n > COACH_SERVER_MAX);
-}
+import { coachPracticeLengthBlocked as coachLengthBlocked, parsePracticeLength, practiceLengthProblem } from '@/lib/practice/practiceLength';
 
 
 
