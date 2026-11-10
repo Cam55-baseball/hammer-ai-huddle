@@ -24,7 +24,8 @@ import {
 
 // v2 (Nov 10): blank sleep = unknown; a day's check-ins merge sleep/recovery per field.
 // v3 (Nov 10): pain from every check-in that day counts (higher scale per repeated region).
-export const SHADOW_ADAPTER_VERSION = "tcs_shadow_adapter_v3";
+// v4 (Nov 10): a blank practice length counts as the 60-minute default, never 0.
+export const SHADOW_ADAPTER_VERSION = "tcs_shadow_adapter_v4";
 
 /* ------------------------------------------------------------------ raw rows */
 
@@ -186,6 +187,9 @@ const num = (v: unknown): number | null => {
   const n = typeof v === "number" ? v : Number(v);
   return Number.isFinite(n) ? n : null;
 };
+
+/** §2 documented default length for a practice whose length was never entered. */
+export const PRACTICE_DEFAULT_MINUTES = 60;
 
 /** A check-in answer: blank (null / undefined / "") is unknown, never 0. */
 const answered = (v: unknown): number | null =>
@@ -413,11 +417,15 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
   for (const p of raw.practices) {
     const d = isoDay(p.scheduled_date);
     if (!d) continue;
-    if ((p.status ?? "").toLowerCase() === "cancelled") continue;
-    const minutes = num(p.duration_minutes);
+    // Cancelled practices are ignored (the app saves both spellings).
+    const status = (p.status ?? "").toLowerCase();
+    if (status === "cancelled" || status === "canceled") continue;
+    // Owner Nov 10: a blank length is unknown, never 0 (Number(null) is 0). It counts as the
+    // documented 60-minute default with the "default used" note; the stored record stays blank.
+    const minutes = answered(p.duration_minutes);
     if (minutes === null) diagnostics.push(`practice_minutes_default_${d}`);
     const target = day(d);
-    target.practiceMinutes = (target.practiceMinutes ?? 0) + (minutes ?? 60);
+    target.practiceMinutes = (target.practiceMinutes ?? 0) + (minutes ?? PRACTICE_DEFAULT_MINUTES);
     target.practiceIntensity = practiceIntensityOf(p.intensity ?? p.practice_kind);
   }
 
