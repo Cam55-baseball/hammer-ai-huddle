@@ -50,9 +50,3 @@ export function withoutArchivedDefenseFields<T extends { distance_to_cover: numb
   return { ...row, distance_to_cover: null, catch_probability: null, oae_credit: null };
 }
 
-/** Practice reps: block success is archived; strip it from any rep before display or calculation. */
-export function withoutArchivedRepFields<T extends Record<string, unknown>>(rep: T): Omit<T, "block_success"> {
-  if (!rep || typeof rep !== "object" || !("block_success" in rep)) return rep;
-  const { block_success: _archived, ...rest } = rep;
-  return rest;
-}
