@@ -82,6 +82,12 @@ export interface GamePlanTask {
     id: string;
     startTime?: string;
     endTime?: string;
+    /** Saved length + kind fields, for the missing-length label (owner Nov 10). */
+    durationMinutes?: number | null;
+    status?: string | null;
+    sessionModule?: string | null;
+    sessionType?: string | null;
+    practiceKind?: string | null;
   };
 }
 
@@ -1663,6 +1669,11 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         id: session.id,
         startTime: session.start_time,
         endTime: session.end_time,
+        durationMinutes: session.duration_minutes ?? null,
+        status: session.status ?? null,
+        sessionModule: session.session_module ?? null,
+        sessionType: session.session_type ?? null,
+        practiceKind: session.practice_kind ?? null,
       },
     });
   });

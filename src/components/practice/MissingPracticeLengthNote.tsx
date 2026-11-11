@@ -9,6 +9,7 @@ import {
   parsePracticeLength,
   practiceLengthMissing,
   practiceLengthProblem,
+  type PracticeKindFields,
 } from "@/lib/practice/practiceLength";
 
 /**
@@ -19,7 +20,7 @@ export function MissingPracticeLengthNote({
   practice,
   onSaved,
 }: {
-  practice: { id: string; duration_minutes?: number | null; status?: string | null };
+  practice: { id: string; duration_minutes?: number | null; status?: string | null } & PracticeKindFields;
   onSaved?: (minutes: number) => void;
 }) {
   const qc = useQueryClient();
@@ -43,7 +44,7 @@ export function MissingPracticeLengthNote({
       if (error) throw error;
       setSavedMinutes(minutes);
       toast.success("Practice length saved");
-      for (const k of ["schedule-window-practices", "manage-events", "calendar", "practice-log-prompt", "scheduled-sessions", "hammer-daily-plan"]) {
+      for (const k of ["schedule-window-practices", "manage-events", "calendar", "practice-log-prompt", "scheduled-sessions", "hammer-daily-plan", "game-plan"]) {
         qc.invalidateQueries({ queryKey: [k] });
       }
       onSaved?.(minutes);

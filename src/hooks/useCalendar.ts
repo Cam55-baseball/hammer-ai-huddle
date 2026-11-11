@@ -60,6 +60,15 @@ export interface CalendarEvent {
   deletable: boolean;
   sport?: string;
   orderKey?: string; // Canonical key for ordering (e.g., gp:nutrition, ca:uuid, meal:uuid)
+  /** Scheduled practices only: the saved row's length + kind fields (for the missing-length label). */
+  practice?: {
+    id: string;
+    duration_minutes: number | null;
+    status: string | null;
+    session_module: string | null;
+    session_type: string | null;
+    practice_kind: string | null;
+  };
 }
 
 export interface CreateCalendarEvent {
@@ -734,6 +743,14 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
               editable: true,
               deletable: true,
               sport: session.sport,
+              practice: {
+                id: session.id,
+                duration_minutes: session.duration_minutes ?? null,
+                status: session.status ?? null,
+                session_module: session.session_module ?? null,
+                session_type: session.session_type ?? null,
+                practice_kind: session.practice_kind ?? null,
+              },
             };
             calEvent.orderKey = `ps:${session.id}`;
             aggregatedEvents[dateKey].push(calEvent);

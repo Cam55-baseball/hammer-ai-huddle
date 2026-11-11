@@ -42,6 +42,10 @@ interface Row {
   status: string;
   /** Practices only: minutes as entered (null = never entered). */
   duration_minutes?: number | null;
+  /** Practices only: the fields the shared "counts as a practice" rule reads. */
+  session_type?: string | null;
+  session_module?: string | null;
+  practice_kind?: string | null;
 }
 
 function isoToday(): string {
@@ -97,6 +101,9 @@ export function ManageEventsDialog({ open, onOpenChange }: Props) {
         subtitle: p.session_type,
         status: p.status ?? "scheduled",
         duration_minutes: p.duration_minutes ?? null,
+        session_type: p.session_type ?? null,
+        session_module: p.session_module ?? null,
+        practice_kind: p.practice_kind ?? null,
       }));
       return [...gameRows, ...pracRows].sort((a, b) => a.date.localeCompare(b.date));
     },
