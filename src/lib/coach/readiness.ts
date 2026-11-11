@@ -1,4 +1,5 @@
 /** Pure formatters for the coach "Readiness & pain" tab. Only what the player checked in. */
+import { mergeCheckInDay, orderCheckIns } from "@/lib/checkIns/mergeCheckInDay";
 export interface Checkin {
   entry_date: string;
   quiz_type: string;
@@ -48,4 +49,22 @@ export function checkinFacts(c: Checkin): string[] {
 /** Days in the window where the player reported pain anywhere. */
 export function painDays(rows: Checkin[]): number {
   return new Set(rows.filter((r) => (r.pain_location ?? []).length > 0).map((r) => r.entry_date)).size;
+}
+
+/**
+ * Owner Nov 10: the "Latest answers" line combines every check-in of the most recent day that
+ * has any answer — latest real answer per question, pain/soreness from any check-in that day
+ * (higher rating wins) — using the shared rule. Save times come from the attendance list
+ * (one row per day and check-in type), so rows are read in a fixed order.
+ */
+export function latestDayAnswers(rows: Checkin[], done: CheckinDone[]): { entry_date: string; facts: string[] } | null {
+  const savedAt = new Map(done.map((d) => [`${d.entry_date}|${d.quiz_type}`, d.completed_at] as const));
+  const withTimes = rows.map((r) => ({ ...r, created_at: savedAt.get(`${r.entry_date}|${r.quiz_type}`) ?? null }));
+  const days = [...new Set(orderCheckIns(withTimes).map((r) => r.entry_date))].reverse();
+  for (const day of days) {
+    const merged = mergeCheckInDay(withTimes.filter((r) => r.entry_date === day));
+    const facts = merged ? checkinFacts(merged) : [];
+    if (facts.length > 0) return { entry_date: day, facts };
+  }
+  return null;
 }
