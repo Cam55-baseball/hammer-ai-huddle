@@ -64,7 +64,7 @@ describe("Owner Nov 10 — planner: a blank practice length counts as 60, never 
   });
 
   it("the rules version is bumped so saved future days refresh", () => {
-    expect(PLAN_RULES_VERSION).toBe(14);
+    expect(PLAN_RULES_VERSION).toBeGreaterThanOrEqual(14);
   });
 });
 

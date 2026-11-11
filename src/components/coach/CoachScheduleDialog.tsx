@@ -19,7 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { supabase } from '@/integrations/supabase/client';
 import { PracticeLengthField } from '@/components/practice/PracticeLengthField';
-import { coachPracticeLengthBlocked as coachLengthBlocked, parsePracticeLength, practiceLengthProblem } from '@/lib/practice/practiceLength';
+import { parsePracticeLength, practiceLengthProblem } from '@/lib/practice/practiceLength';
 
 
 
@@ -153,7 +153,7 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
   const call = async (mode: 'check' | 'schedule') => {
     // Owner Nov 10: practice length is required and must be possible (10–360 minutes).
     setTriedLength(true);
-    if (practiceLengthProblem(minutes) || coachLengthBlocked(minutes)) return null;
+    if (practiceLengthProblem(minutes)) return null;
     const playerIds = getTargetPlayerIds();
     if (!user || !selectedDate || playerIds.length === 0) return null;
     setLoading(true);
@@ -369,9 +369,6 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
             </div>
           </div>
           <PracticeLengthField id="coach-practice-length" value={minutes} onChange={(v) => { setMinutes(v); setCheck(null); }} showErrors={triedLength} />
-          {coachLengthBlocked(minutes) && (
-            <p role="alert" className="text-xs text-destructive">For now, practices sent to players can be 15 to 240 minutes.</p>
-          )}
           <label className="flex items-center gap-2 cursor-pointer">
             <Checkbox checked={throwing} onCheckedChange={(c) => { setThrowing(!!c); setCheck(null); }} />
             <span className="text-sm">Includes throwing</span>
