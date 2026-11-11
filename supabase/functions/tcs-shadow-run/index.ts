@@ -30,6 +30,7 @@ import {
 import { fallbackRateAlert } from "../_shared/wic/schedule/tissueCost/v11/guard.ts";
 import { determinismNote, fallbackRateNote } from "../_shared/wic/watch/rules.ts";
 import { writeNotes } from "../_shared/wic/watch/write.ts";
+import { jobCallerAllowed } from "./jobAuth.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -57,6 +58,12 @@ async function activeAthletes(admin: ReturnType<typeof createClient>, since: str
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Owner Nov 10 (evening): refuse anyone but the scheduled job (job credential or
+  // service-role key) BEFORE reading the body, creating a client or doing any work.
+  if (!(await jobCallerAllowed(req.headers, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")))) {
+    return json({ error: "Unauthorized" }, 401);
+  }
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
