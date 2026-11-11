@@ -23,6 +23,8 @@ export interface ScheduledPracticeSession {
   assignment_scope: string;
   coach_id?: string;
   status: string;
+  /** Minutes as entered; null = never entered (planner counts its 60-minute default). */
+  duration_minutes?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +50,8 @@ export interface CreateScheduledSession {
   opponent_name?: string;
   opponent_level?: string;
   team_name?: string;
+  /** Owner Nov 10: practice length in minutes, as entered (omit when not asked). */
+  duration_minutes?: number | null;
 }
 
 export function useScheduledPracticeSessions() {
@@ -182,7 +186,7 @@ export function useScheduledPracticeSessions() {
     return (data || []) as unknown as ScheduledPracticeSession[];
   }, [user]);
 
-  const updateSession = useCallback(async (id: string, updates: Partial<Pick<ScheduledPracticeSession, 'scheduled_date' | 'start_time' | 'end_time' | 'description' | 'recurring_active' | 'recurring_days'>>) => {
+  const updateSession = useCallback(async (id: string, updates: Partial<Pick<ScheduledPracticeSession, 'scheduled_date' | 'start_time' | 'end_time' | 'description' | 'recurring_active' | 'recurring_days' | 'duration_minutes'>>) => {
     if (!user) return;
     const success = await schedulingService.updateSession(id, updates);
     if (!success) {

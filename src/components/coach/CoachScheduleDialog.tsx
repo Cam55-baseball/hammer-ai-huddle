@@ -18,6 +18,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { supabase } from '@/integrations/supabase/client';
+import { PracticeLengthField } from '@/components/practice/PracticeLengthField';
+import { coachPracticeLengthBlocked as coachLengthBlocked, parsePracticeLength, practiceLengthProblem } from '@/lib/practice/practiceLength';
 
 
 
@@ -65,7 +67,8 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
   const [loading, setLoading] = useState(false);
   const [intensity, setIntensity] = useState<'light' | 'standard' | 'high'>('standard');
   const [throwing, setThrowing] = useState(false);
-  const [minutes, setMinutes] = useState('60');
+  const [minutes, setMinutes] = useState('');
+  const [triedLength, setTriedLength] = useState(false);
   const [teamId, setTeamId] = useState<string>('');
   const [check, setCheck] = useState<{ results: CheckRow[]; refused: { player_id: string; reason: string }[] } | null>(null);
 
@@ -140,7 +143,7 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
       description: description || undefined,
       scheduled_date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
       start_time: startTime || undefined, end_time: endTime || undefined, sport,
-      intensity, throwing, duration_minutes: Number(minutes) || undefined,
+      intensity, throwing, duration_minutes: parsePracticeLength(minutes) ?? undefined,
       team_id: scope === 'team' ? teamId : undefined,
       organization_id: scope === 'organization' ? activeOrg?.id : scope === 'team' ? team?.organization_id : undefined,
       team_name: scope === 'team' ? team?.name : sessionType === 'team_session' ? teamName || undefined : undefined,
@@ -148,6 +151,9 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
   };
 
   const call = async (mode: 'check' | 'schedule') => {
+    // Owner Nov 10: practice length is required and must be possible (10–360 minutes).
+    setTriedLength(true);
+    if (practiceLengthProblem(minutes) || coachLengthBlocked(minutes)) return null;
     const playerIds = getTargetPlayerIds();
     if (!user || !selectedDate || playerIds.length === 0) return null;
     setLoading(true);
@@ -361,11 +367,11 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label>Minutes</Label>
-              <Input type="number" min={15} max={240} value={minutes} onChange={(e) => setMinutes(e.target.value)} />
-            </div>
           </div>
+          <PracticeLengthField id="coach-practice-length" value={minutes} onChange={(v) => { setMinutes(v); setCheck(null); }} showErrors={triedLength} />
+          {coachLengthBlocked(minutes) && (
+            <p role="alert" className="text-xs text-destructive">For now, practices sent to players can be 15 to 240 minutes.</p>
+          )}
           <label className="flex items-center gap-2 cursor-pointer">
             <Checkbox checked={throwing} onCheckedChange={(c) => { setThrowing(!!c); setCheck(null); }} />
             <span className="text-sm">Includes throwing</span>

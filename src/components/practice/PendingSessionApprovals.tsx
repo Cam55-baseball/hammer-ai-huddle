@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { Check, X, Clock, CalendarDays } from 'lucide-react';
 import { format } from 'date-fns';
+import { MissingPracticeLengthNote } from '@/components/practice/MissingPracticeLengthNote';
 
 interface PendingSession {
   id: string;
@@ -21,6 +22,8 @@ interface PendingSession {
   sport: string;
   coach_id?: string;
   coach_name?: string;
+  duration_minutes?: number | null;
+  status?: string | null;
 }
 
 interface PendingSessionApprovalsProps {
@@ -73,6 +76,8 @@ export function PendingSessionApprovals({ onCountChange }: PendingSessionApprova
       description: r.description,
       sport: r.sport,
       coach_id: r.coach_id,
+      duration_minutes: r.duration_minutes ?? null,
+      status: r.status ?? null,
       coach_name: r.coach_id ? coachMap[r.coach_id] : undefined,
     }));
 
@@ -124,6 +129,7 @@ export function PendingSessionApprovals({ onCountChange }: PendingSessionApprova
                   {format(new Date(s.scheduled_date + 'T12:00:00'), 'MMM d, yyyy')}
                   {s.start_time && <span>• {formatTime(s.start_time)}{s.end_time ? ` – ${formatTime(s.end_time)}` : ''}</span>}
                 </div>
+                <MissingPracticeLengthNote practice={s} />
                 {s.coach_name && (
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     From: <span className="font-medium text-foreground">{s.coach_name}</span>

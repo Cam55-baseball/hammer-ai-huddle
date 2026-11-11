@@ -257,6 +257,8 @@ export function useSchedulingService() {
         opponent_name: (input as any).opponent_name || null,
         opponent_level: (input as any).opponent_level || null,
         team_name: (input as any).team_name || null,
+        // Owner Nov 10: saved only as entered; never filled with an assumed length.
+        duration_minutes: (input as any).duration_minutes ?? null,
       } as any)
       .select()
       .single();
@@ -300,6 +302,7 @@ export function useSchedulingService() {
       coach_id: baseSession.coach_id || user.id,
       status: (baseSession as any).status || 'scheduled',
       requires_approval: (baseSession as any).requires_approval || false,
+      duration_minutes: (baseSession as any).duration_minutes ?? null,
     }));
 
     const { error } = await supabase

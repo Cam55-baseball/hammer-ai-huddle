@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEventStatusMutation, type EventKind } from "@/hooks/useEventStatusMutation";
 import { cn } from "@/lib/utils";
+import { MissingPracticeLengthNote } from "@/components/practice/MissingPracticeLengthNote";
 
 interface Props {
   open: boolean;
@@ -39,6 +40,8 @@ interface Row {
   title: string;
   subtitle?: string;
   status: string;
+  /** Practices only: minutes as entered (null = never entered). */
+  duration_minutes?: number | null;
 }
 
 function isoToday(): string {
@@ -72,7 +75,7 @@ export function ManageEventsDialog({ open, onOpenChange }: Props) {
           .order("game_date", { ascending: true }),
         (supabase as any)
           .from("scheduled_practice_sessions")
-          .select("id, scheduled_date, title, session_type, status")
+          .select("id, scheduled_date, title, session_type, status, duration_minutes")
           .eq("user_id", user!.id)
           .gte("scheduled_date", start)
           .lte("scheduled_date", end)
@@ -93,6 +96,7 @@ export function ManageEventsDialog({ open, onOpenChange }: Props) {
         title: p.title ?? "Practice",
         subtitle: p.session_type,
         status: p.status ?? "scheduled",
+        duration_minutes: p.duration_minutes ?? null,
       }));
       return [...gameRows, ...pracRows].sort((a, b) => a.date.localeCompare(b.date));
     },
@@ -178,6 +182,7 @@ export function ManageEventsDialog({ open, onOpenChange }: Props) {
                               {row.subtitle}
                             </p>
                           )}
+                          {row.kind === "practice" && <MissingPracticeLengthNote practice={row} />}
                         </div>
                         {canceled && (
                           <Badge variant="outline" className="text-[10px]">
