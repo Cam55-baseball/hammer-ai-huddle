@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { webcrypto } from "node:crypto";
 import { render, screen } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { buildShadowInputs, type RawPractice } from "../../../supabase/functions/_shared/wic/schedule/tissueCost/shadow/adapter";
@@ -129,6 +130,8 @@ describe("Owner Nov 10 evening — coach-practice-check keeps lengths as entered
 });
 
 describe("Owner Nov 10 evening — tcs-shadow-run lock", () => {
+  // The edge runtime has Web Crypto; the browser-like test environment needs Node's.
+  beforeAll(() => { if (!globalThis.crypto?.subtle) vi.stubGlobal("crypto", webcrypto); });
   const h = (o: Record<string, string>) => new Headers(o);
   it("no credential, the public app key, or a wrong token → refused", async () => {
     expect(await jobCallerAllowed(h({}), "svc")).toBe(false);
