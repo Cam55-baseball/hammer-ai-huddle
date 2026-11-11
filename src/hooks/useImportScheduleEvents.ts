@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { announceChange } from '@/hooks/useScheduleTimeline';
 import { toast } from 'sonner';
-import { parsePracticeLength } from "@/lib/practice/practiceLength";
+import { countsAsPractice, parsePracticeLength } from "@/lib/practice/practiceLength";
 
 export type ParsedKind =
   | "game"
@@ -57,7 +57,9 @@ export interface ParsedScheduleEvent {
 
 /** Imported kinds that are practices (so they ask "How long is practice?"). */
 export function isImportedPracticeKind(kind: ParsedKind): boolean {
-  return kind !== "game" && kind !== "tournament_day" && kind !== "travel" && kind !== "other";
+  if (kind === "game" || kind === "tournament_day") return false;
+  // Same shared rule as the planner: Travel/Other notes are not practices.
+  return countsAsPractice({ practice_kind: toPracticeKind(kind), session_type: kind });
 }
 
 export interface ImportSummary {

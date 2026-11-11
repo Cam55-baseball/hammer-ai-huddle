@@ -25,6 +25,7 @@ export interface ScheduledPracticeSession {
   status: string;
   /** Minutes as entered; null = never entered (planner counts its 60-minute default). */
   duration_minutes?: number | null;
+  practice_kind?: string | null;
   created_at: string;
   updated_at: string;
 }

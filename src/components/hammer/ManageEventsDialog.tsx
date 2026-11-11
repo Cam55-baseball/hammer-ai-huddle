@@ -75,7 +75,7 @@ export function ManageEventsDialog({ open, onOpenChange }: Props) {
           .order("game_date", { ascending: true }),
         (supabase as any)
           .from("scheduled_practice_sessions")
-          .select("id, scheduled_date, title, session_type, status, duration_minutes")
+          .select("id, scheduled_date, title, session_type, session_module, practice_kind, status, duration_minutes")
           .eq("user_id", user!.id)
           .gte("scheduled_date", start)
           .lte("scheduled_date", end)
