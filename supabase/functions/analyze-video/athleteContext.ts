@@ -8,6 +8,7 @@
  * read never blocks or delays the report.
  */
 import { resolveSeasonPhase } from "../_shared/seasonPhase.ts";
+import { mergeLatestCheckInDay } from "../_shared/checkIns/mergeCheckInDay.ts";
 
 // deno-lint-ignore no-explicit-any
 type Db = any;
@@ -55,14 +56,17 @@ export async function loadAthleteFacts(db: Db, userId: string, sport: string, sa
   };
   const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
   const threeDaysAgo = new Date(Date.now() - 3 * 86_400_000).toISOString().slice(0, 10);
-  const [profile, settings, test, quiz, logs, context] = await Promise.all([
+  const [profile, settings, test, quizRows, logs, context] = await Promise.all([
     safe(db.from("profiles").select("date_of_birth,experience_level,position,positions,training_age_years").eq("id", userId).maybeSingle()),
     safe(db.from("athlete_mpi_settings").select("season_status,season_status_manual,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date,league_tier").eq("user_id", userId).eq("sport", sport).maybeSingle()),
     safe(db.from("vault_performance_tests").select("test_date,test_type,results,six_week_goals_text").eq("user_id", userId).eq("sport", sport).order("test_date", { ascending: false }).limit(1).maybeSingle()),
-    safe(db.from("vault_focus_quizzes").select("entry_date,physical_readiness,perceived_recovery,hours_slept,pain_scale").eq("user_id", userId).gte("entry_date", threeDaysAgo).order("entry_date", { ascending: false }).limit(1).maybeSingle()),
+    // Owner Nov 10: every check-in of the latest check-in day in the same 3-day window,
+    // combined by the shared rule (fixed order entry_date, created_at).
+    safe(db.from("vault_focus_quizzes").select("entry_date,quiz_type,created_at,physical_readiness,perceived_recovery,hours_slept,pain_scale").eq("user_id", userId).gte("entry_date", threeDaysAgo).order("entry_date", { ascending: false }).order("created_at", { ascending: false }).limit(20)),
     safe(db.from("wk_session_logs").select("plan_date,sets_completed").eq("user_id", userId).gte("plan_date", weekAgo).limit(500)),
     safe(db.from("athlete_context").select("category_goals,goal_summary,competition_level,position_primary,lifting_age_years").eq("user_id", userId).eq('sport_primary', sport).maybeSingle()),
-  ]) as [any, any, any, any, any[] | null, any];
+  ]) as [any, any, any, any[] | null, any[] | null, any];
+  const quiz: any = mergeLatestCheckInDay(Array.isArray(quizRows) ? quizRows : []);
 
   const positions = Array.isArray(profile?.positions) && profile.positions.length
     ? profile.positions.map(String)
