@@ -36,7 +36,7 @@ interface HammerInputs {
 
 function clamp(v: number, lo = 0, hi = 100) { return Math.max(lo, Math.min(hi, v)); }
 
-async function computeForUser(supabase: any, userId: string) {
+export async function computeForUser(supabase: any, userId: string) {
   const since = new Date(Date.now() - DAY_MS).toISOString();
   const since3d = new Date(Date.now() - 3 * DAY_MS).toISOString();
   const inputs: HammerInputs = { arousal: {}, recovery: {}, motor: {}, cognitive: {}, dopamine: {} };
