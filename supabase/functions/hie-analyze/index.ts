@@ -4,6 +4,7 @@ import { deriveHittingDoctrineAttribution } from "../_shared/deriveHittingDoctri
 import { chatCompletion } from "../_shared/googleAi.ts";
 import { logAiUsageForRequest } from "../_shared/aiUsage.ts";
 import { humanLabel } from "../_shared/humanLabel.ts";
+import { computeReadiness, VAULT_READINESS_SELECT } from "./readiness.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
