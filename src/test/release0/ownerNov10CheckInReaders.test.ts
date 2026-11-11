@@ -74,7 +74,9 @@ describe("Hammer readiness score (compute-hammer-state)", () => {
   beforeAll(async () => {
     (globalThis as any).Deno = { env: { get: () => "http://local" } };
     (globalThis as any).fetch = vi.fn(() => Promise.resolve(new Response("{}")));
-    computeForUser = (await import("../../../supabase/functions/compute-hammer-state/index.ts")).computeForUser as any;
+    // Path kept out of the app typecheck: the edge entry file uses Deno-only imports.
+    const entry = "../../../supabase/functions/compute-hammer-state/index.ts";
+    computeForUser = (await import(/* @vite-ignore */ entry)).computeForUser as any;
   });
   const recoveryInputs = async (rows: unknown[]) => {
     const inserts: Record<string, any[]> = {};
