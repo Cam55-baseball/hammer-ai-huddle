@@ -38,8 +38,7 @@ import { PendingCoachActivityCard } from '@/components/game-plan/PendingCoachAct
 
 import { PendingSessionApprovals } from '@/components/practice/PendingSessionApprovals';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
-import { MissingPracticeLengthNote } from '@/components/practice/MissingPracticeLengthNote';
-import { practiceLengthMissing } from '@/lib/practice/practiceLength';
+import { GamePlanPracticeLengthNote, gamePlanPracticeNeedsLength } from '@/components/practice/GamePlanPracticeLengthNote';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { QuickNoteDialog } from '@/components/game-plan/QuickNoteDialog';
 import { FolderItemPerformanceLogger } from '@/components/folders/FolderItemPerformanceLogger';
@@ -1710,21 +1709,11 @@ export function GamePlanCard({ selectedSport, defaultOpen = false }: GamePlanCar
     // Owner Nov 10: a real practice with no length entered shows the assumption line and a
     // way to add it (shared rule; Baserunning IQ and Travel/Other notes never get it).
     const ps = task.taskType === 'practice' ? task.scheduledSessionData : undefined;
-    const practiceRow = ps ? {
-      id: ps.id,
-      duration_minutes: ps.durationMinutes ?? null,
-      status: ps.status ?? null,
-      session_module: ps.sessionModule ?? null,
-      session_type: ps.sessionType ?? null,
-      practice_kind: ps.practiceKind ?? null,
-    } : null;
-    if (!practiceRow || !practiceLengthMissing(practiceRow)) return row;
+    if (!ps || !gamePlanPracticeNeedsLength(ps)) return row;
     return (
       <div className="w-full space-y-1">
         {row}
-        <div className="px-3">
-          <MissingPracticeLengthNote practice={practiceRow} onSaved={() => refetch()} />
-        </div>
+        <GamePlanPracticeLengthNote data={ps} onSaved={() => refetch()} />
       </div>
     );
   };
