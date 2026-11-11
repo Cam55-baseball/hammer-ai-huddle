@@ -4,6 +4,7 @@ import { deriveHittingDoctrineAttribution } from "../_shared/deriveHittingDoctri
 import { chatCompletion } from "../_shared/googleAi.ts";
 import { logAiUsageForRequest } from "../_shared/aiUsage.ts";
 import { humanLabel } from "../_shared/humanLabel.ts";
+import { computeReadiness, VAULT_READINESS_SELECT } from "./readiness.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1038,27 +1039,7 @@ function computeDevelopmentStatus(scores: { score: number; date: string }[]): { 
   return { status, trend7d: Math.round(trend7d * 10) / 10, trend30d: Math.round(trend30d * 10) / 10 };
 }
 
-function computeReadiness(vaultData: any[]): { score: number | null; recommendation: string } {
-  // No silent fallback: if athlete hasn't logged a focus quiz we have no
-  // subjective readiness signal at all and the snapshot must reflect that.
-  if (!vaultData || vaultData.length === 0) {
-    return { score: null, recommendation: "Log a focus quiz (sleep / stress / pain) to calibrate readiness." };
-  }
-  const latest = vaultData[0];
-  const sleep = latest.sleep_quality ?? 3;
-  const stress = latest.stress_level ?? 3;
-  const pain = latest.pain_level ?? 0;
-  const sleepScore = (sleep / 5) * 40;
-  const stressScore = ((5 - stress) / 5) * 30;
-  const painPenalty = Math.min(pain * 5, 30);
-  const score = Math.round(Math.max(0, Math.min(100, sleepScore + stressScore + 30 - painPenalty)));
-  let recommendation: string;
-  if (score >= 80) recommendation = `You are ${score}% ready → Train full intent`;
-  else if (score >= 60) recommendation = `You are ${score}% ready → Standard training volume`;
-  else if (score >= 40) recommendation = `You are ${score}% ready → Reduce volume, focus on timing and mechanics`;
-  else recommendation = `You are ${score}% ready → Active recovery only`;
-  return { score, recommendation };
-}
+// computeReadiness lives in ./readiness.ts (owner Nov 10: real check-in fields, day combined).
 
 /**
  * Training Load Readiness — derived from Hammers behavioral data.
@@ -1389,13 +1370,18 @@ Deno.serve(async (req) => {
       .is("deleted_at", null)
       .order("session_date", { ascending: false });
 
-    // 3. Vault readiness
-    const { data: vaultData } = await supabase
+    // 3. Vault readiness — owner Nov 10: real fields only (the old pain-level column never
+    // existed, so this read failed and every check-in was dropped). Same latest-7-rows window,
+    // fixed order (entry_date, then created_at); the latest check-in day is combined by the
+    // shared rule in computeReadiness.
+    const { data: vaultData, error: vaultErr } = await supabase
       .from("vault_focus_quizzes")
-      .select("sleep_quality, stress_level, pain_level, created_at")
+      .select(VAULT_READINESS_SELECT)
       .eq("user_id", user_id)
+      .order("entry_date", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(7);
+    if (vaultErr) console.error(`[hie-analyze] check-in read failed user=${user_id}:`, vaultErr.message);
 
     // 4. Daily logs
     const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];

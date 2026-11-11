@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from "../_shared/seasonPhase.ts";
 import { systemAccountIds } from "../_shared/systemAccounts.ts";
+import { mergeLatestCheckInDay } from "../_shared/checkIns/mergeCheckInDay.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,7 +36,7 @@ interface HammerInputs {
 
 function clamp(v: number, lo = 0, hi = 100) { return Math.max(lo, Math.min(hi, v)); }
 
-async function computeForUser(supabase: any, userId: string) {
+export async function computeForUser(supabase: any, userId: string) {
   const since = new Date(Date.now() - DAY_MS).toISOString();
   const since3d = new Date(Date.now() - 3 * DAY_MS).toISOString();
   const inputs: HammerInputs = { arousal: {}, recovery: {}, motor: {}, cognitive: {}, dopamine: {} };
@@ -44,8 +45,10 @@ async function computeForUser(supabase: any, userId: string) {
   const [
     focusQ, texQ, mindQ, perfQ, customQ, physioQ, nutritionQ, moodQ, wearQ,
   ] = await Promise.all([
+    // Same 3-day window as before; fixed order (entry_date, then created_at).
     supabase.from("vault_focus_quizzes").select("*").eq("user_id", userId)
-      .gte("created_at", since3d).order("created_at", { ascending: false }).limit(7),
+      .gte("created_at", since3d)
+      .order("entry_date", { ascending: false }).order("created_at", { ascending: false }).limit(7),
     supabase.from("tex_vision_sessions").select("*").eq("user_id", userId)
       .gte("created_at", since).order("created_at", { ascending: false }),
     supabase.from("mindfulness_sessions").select("*").eq("user_id", userId)
@@ -67,7 +70,9 @@ async function computeForUser(supabase: any, userId: string) {
 
   // ── AROUSAL: reaction time, mental readiness, tex_vision accuracy ──
   let arousalScore = 50, arousalConf = 0;
-  const latestFocus = focusQ.data?.[0];
+  // Owner Nov 10: combine every check-in of the latest check-in day (latest real answer
+  // per question; pain from any row, higher number wins) — shared rule.
+  const latestFocus: any = mergeLatestCheckInDay(focusQ.data ?? []);
   if (latestFocus?.reaction_time_ms) {
     // 200ms = elite (100), 500ms = poor (0)
     const rtScore = clamp(100 - ((latestFocus.reaction_time_ms - 200) / 3));
