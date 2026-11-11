@@ -10,15 +10,23 @@ import { isImportedPracticeKind } from "@/hooks/useImportScheduleEvents";
 
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "u1" } }) }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: () => ({}) } }));
-vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (k: string, f?: any) => (typeof f === "string" ? f : k) }) }));
-vi.mock("@/hooks/useCalendarSkips", () => ({ useCalendarSkips: () => ({ isSkippedForDay: () => false, getSkipDays: () => [], updateSkipDays: vi.fn(), unskipForDay: vi.fn() }) }));
-vi.mock("@/hooks/useCalendarDayOrders", () => ({
-  getOrderKey: (e: any) => e.orderKey ?? e.id,
-  useCalendarDayOrders: () => ({ isDateLocked: () => false, saveDayOrder: vi.fn(), unlockDate: vi.fn(), getOrderKeysForDate: () => null, fetchDayOrdersForRange: vi.fn(), refetch: vi.fn(), loading: false }),
-}));
-vi.mock("@/hooks/useGamePlanLock", () => ({ useGamePlanLock: () => ({ getDaySchedule: () => null, unlockDays: vi.fn(), loading: false, refetch: vi.fn() }) }));
-vi.mock("@/hooks/useCalendarActivityDetail", () => ({ useCalendarActivityDetail: () => ({ selectedTask: null, detailDialogOpen: false, loading: false, openActivityDetail: vi.fn(), closeDetailDialog: vi.fn(), handleComplete: vi.fn(), handleSaveTime: vi.fn(), handleToggleCheckbox: vi.fn(), quickComplete: vi.fn(), updateSelectedTaskOptimistically: vi.fn() }) }));
-vi.mock("@/hooks/useCustomActivities", () => ({ useCustomActivities: () => ({ updateTemplate: vi.fn(), deleteTemplate: vi.fn() }) }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: stable.t }) }));
+const stable = vi.hoisted(() => {
+  const fn = () => () => {};
+  return {
+    skips: { isSkippedForDay: () => false, getSkipDays: () => [], updateSkipDays: fn(), unskipForDay: fn() },
+    orders: { isDateLocked: () => false, saveDayOrder: fn(), unlockDate: fn(), getOrderKeysForDate: () => null, fetchDayOrdersForRange: fn(), refetch: fn(), loading: false },
+    lock: { getDaySchedule: () => null, unlockDays: fn(), loading: false, refetch: fn() },
+    detail: { selectedTask: null, detailDialogOpen: false, loading: false, openActivityDetail: fn(), closeDetailDialog: fn(), handleComplete: fn(), handleSaveTime: fn(), handleToggleCheckbox: fn(), quickComplete: fn(), updateSelectedTaskOptimistically: fn() },
+    custom: { updateTemplate: fn(), deleteTemplate: fn() },
+    t: (k: string, f?: any) => (typeof f === "string" ? f : k),
+  };
+});
+vi.mock("@/hooks/useCalendarSkips", () => ({ useCalendarSkips: () => stable.skips }));
+vi.mock("@/hooks/useCalendarDayOrders", () => ({ getOrderKey: (e: any) => e.orderKey ?? e.id, useCalendarDayOrders: () => stable.orders }));
+vi.mock("@/hooks/useGamePlanLock", () => ({ useGamePlanLock: () => stable.lock }));
+vi.mock("@/hooks/useCalendarActivityDetail", () => ({ useCalendarActivityDetail: () => stable.detail }));
+vi.mock("@/hooks/useCustomActivities", () => ({ useCustomActivities: () => stable.custom }));
 vi.mock("@/contexts/SportThemeContext", () => ({ useSportTheme: () => ({ sport: "baseball" }) }));
 vi.mock("@/components/CustomActivityDetailDialog", () => ({ CustomActivityDetailDialog: () => null }));
 vi.mock("@/components/custom-activities/CustomActivityBuilderDialog", () => ({ CustomActivityBuilderDialog: () => null }));
