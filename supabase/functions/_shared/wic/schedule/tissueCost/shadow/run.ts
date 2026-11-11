@@ -94,7 +94,7 @@ export async function fetchShadowData(
     ),
     rows(
       db.from("scheduled_practice_sessions").select(
-        "scheduled_date,practice_kind,intensity,duration_minutes,status",
+        "scheduled_date,practice_kind,session_module,session_type,intensity,duration_minutes,status",
       ).eq("user_id", userId).gte("scheduled_date", windowStart).lte("scheduled_date", horizonEnd),
     ),
     rows(
