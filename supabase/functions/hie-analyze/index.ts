@@ -1370,7 +1370,7 @@ Deno.serve(async (req) => {
       .is("deleted_at", null)
       .order("session_date", { ascending: false });
 
-    // 3. Vault readiness — owner Nov 10: real fields only (the old "pain_level" column never
+    // 3. Vault readiness — owner Nov 10: real fields only (the old pain-level column never
     // existed, so this read failed and every check-in was dropped). Same latest-7-rows window,
     // fixed order (entry_date, then created_at); the latest check-in day is combined by the
     // shared rule in computeReadiness.
