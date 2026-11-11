@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { format, getDay } from 'date-fns';
 import { CalendarEvent } from '@/hooks/useCalendar';
+import { MissingPracticeLengthNote } from '@/components/practice/MissingPracticeLengthNote';
 import { cn } from '@/lib/utils';
 import { SkipDayPickerDialog } from './SkipDayPickerDialog';
 import { useCalendarSkips } from '@/hooks/useCalendarSkips';
@@ -539,6 +540,13 @@ export function CalendarDaySheet({
               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                 {event.description}
               </p>
+            )}
+
+            {/* Owner Nov 10: real practices with no length entered (shared rule; never blocks). */}
+            {event.type === 'scheduled_practice' && event.practice && !isSkipped && (
+              <div onClick={(e) => e.stopPropagation()}>
+                <MissingPracticeLengthNote practice={event.practice} onSaved={() => onRefresh?.()} />
+              </div>
             )}
             
             <div className="flex items-center gap-2 mt-1.5">

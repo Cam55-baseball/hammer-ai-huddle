@@ -5,9 +5,10 @@
  * Pure and hook-free. Practice length is not a measurement: it never goes to the ledger.
  */
 import { IMPOSSIBLE_NUMBER_MESSAGE } from "@/lib/ledger/entryCheck";
+import { countsAsPractice, PRACTICE_LENGTH_MAX, PRACTICE_LENGTH_MIN, type PracticeKindFields } from "../../../supabase/functions/_shared/practiceRules";
 
-export const PRACTICE_LENGTH_MIN = 10;
-export const PRACTICE_LENGTH_MAX = 360;
+// One definition shared with the planner and coach-practice-check (owner Nov 10 evening).
+export { countsAsPractice, PRACTICE_LENGTH_MAX, PRACTICE_LENGTH_MIN, type PracticeKindFields };
 export const PRACTICE_LENGTH_PICKS = [60, 90, 120] as const;
 export const PRACTICE_LENGTH_DEFAULT = 60;
 export const PRACTICE_LENGTH_QUESTION = "How long is practice?";
@@ -41,21 +42,15 @@ export function practiceLengthMessage(p: PracticeLengthProblem): string | null {
 
 const CANCELLED = new Set(["canceled", "cancelled"]);
 
-/** A shown practice whose length was never entered (cancelled ones don't count, so no label). */
-export function practiceLengthMissing(row: { duration_minutes?: number | null; status?: string | null } | null | undefined): boolean {
+/**
+ * A shown practice whose length was never entered. Cancelled ones and rows that aren't
+ * practices (Baserunning IQ, Travel/Other notes) get no label.
+ */
+export function practiceLengthMissing(
+  row: ({ duration_minutes?: number | null; status?: string | null } & PracticeKindFields) | null | undefined,
+): boolean {
   if (!row) return false;
+  if (!countsAsPractice(row)) return false;
   if (CANCELLED.has(String(row.status ?? "").toLowerCase())) return false;
   return row.duration_minutes == null;
-}
-
-/**
- * The coach send service (coach-practice-check) still stores coach-sent lengths inside 15–240 minutes.
- * Until it is updated, a possible entry outside that window is refused on screen so it is never
- * silently changed on save.
- */
-export const COACH_SEND_MIN = 15;
-export const COACH_SEND_MAX = 240;
-export function coachPracticeLengthBlocked(value: unknown): boolean {
-  const n = parsePracticeLength(value);
-  return practiceLengthProblem(value) === null && n != null && (n < COACH_SEND_MIN || n > COACH_SEND_MAX);
 }

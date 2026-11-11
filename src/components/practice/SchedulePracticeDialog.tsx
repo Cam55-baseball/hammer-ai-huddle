@@ -13,7 +13,7 @@ import { CoachSelector, CoachSelection } from '@/components/practice/CoachSelect
 import { cn } from '@/lib/utils';
 import { formatTime12h } from '@/lib/formatTime';
 import { PracticeLengthField } from '@/components/practice/PracticeLengthField';
-import { parsePracticeLength, practiceLengthProblem } from '@/lib/practice/practiceLength';
+import { countsAsPractice, parsePracticeLength, practiceLengthProblem } from '@/lib/practice/practiceLength';
 
 const MODULES = [
   { value: 'hitting', label: 'Hitting' },
@@ -85,7 +85,9 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
   const handleSubmit = async () => {
     setTriedSubmit(true);
     // Owner Nov 10: practice length is required and must be possible (10–360 minutes).
-    if (practiceLengthProblem(lengthMinutes)) return;
+    // Baserunning IQ sessions aren't practices, so they're never asked for a length.
+    const asksLength = countsAsPractice({ session_module: module, session_type: sessionType });
+    if (asksLength && practiceLengthProblem(lengthMinutes)) return;
     // Build description for external coach
     let description: string | undefined;
     if (sessionType === 'lesson' && coachSelection.type === 'external' && coachSelection.external_name) {
@@ -106,7 +108,7 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
       coach_id: sessionType === 'lesson' && coachSelection.type === 'assigned' ? coachSelection.coach_id : undefined,
       organization_id: sessionType === 'team_session' && organizationId ? organizationId : undefined,
       team_name: sessionType === 'team_session' ? teamName || undefined : undefined,
-      duration_minutes: parsePracticeLength(lengthMinutes),
+      duration_minutes: asksLength ? parsePracticeLength(lengthMinutes) : null,
     });
 
     if (result) {
@@ -196,7 +198,9 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
             </div>
           </div>
 
-          <PracticeLengthField id="schedule-practice-length" value={lengthMinutes} onChange={setLengthMinutes} showErrors={triedSubmit} />
+          {countsAsPractice({ session_module: module, session_type: sessionType }) && (
+            <PracticeLengthField id="schedule-practice-length" value={lengthMinutes} onChange={setLengthMinutes} showErrors={triedSubmit} />
+          )}
 
           {/* Recurring */}
           <div className="flex items-center justify-between">

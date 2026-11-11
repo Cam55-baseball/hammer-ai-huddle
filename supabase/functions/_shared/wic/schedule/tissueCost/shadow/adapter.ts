@@ -1,5 +1,6 @@
 import { resolveSeasonPhase } from "../../../../seasonPhase.ts";
 import { isPoorRecovery } from "../../../../recoveryScale.ts";
+import { countsAsPractice } from "../../../../practiceRules.ts";
 import { growthMode } from "../../../growth/growthMode.ts";
 import { resolveOutingFacts, type PitcherSettingsRow, type PitcherOutingRow, type PitcherAvailabilityRow } from "../../../pitching/outingFacts.ts";
 // Tissue Cost Scheduler — stage S3 shadow mode, input adapter.
@@ -25,7 +26,8 @@ import {
 // v2 (Nov 10): blank sleep = unknown; a day's check-ins merge sleep/recovery per field.
 // v3 (Nov 10): pain from every check-in that day counts (higher scale per repeated region).
 // v4 (Nov 10): a blank practice length counts as the 60-minute default, never 0.
-export const SHADOW_ADAPTER_VERSION = "tcs_shadow_adapter_v4";
+// v5 (Nov 10 evening): Baserunning IQ sessions and Travel/Other notes are not practices (0 minutes).
+export const SHADOW_ADAPTER_VERSION = "tcs_shadow_adapter_v5";
 
 /* ------------------------------------------------------------------ raw rows */
 
@@ -85,6 +87,8 @@ export interface RawCalendarEvent {
 export interface RawPractice {
   scheduled_date: string;
   practice_kind?: string | null;
+  session_module?: string | null;
+  session_type?: string | null;
   intensity?: string | null;
   duration_minutes?: number | null;
   status?: string | null;
@@ -420,6 +424,9 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
     // Cancelled practices are ignored (the app saves both spellings).
     const status = (p.status ?? "").toLowerCase();
     if (status === "cancelled" || status === "canceled") continue;
+    // Owner Nov 10 evening: Baserunning IQ sessions and Travel/Other notes live in the same
+    // table but are not practices — no minutes at all (shared rule, _shared/practiceRules.ts).
+    if (!countsAsPractice(p)) continue;
     // Owner Nov 10: a blank length is unknown, never 0 (Number(null) is 0). It counts as the
     // documented 60-minute default with the "default used" note; the stored record stays blank.
     const minutes = answered(p.duration_minutes);

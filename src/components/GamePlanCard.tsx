@@ -38,6 +38,7 @@ import { PendingCoachActivityCard } from '@/components/game-plan/PendingCoachAct
 
 import { PendingSessionApprovals } from '@/components/practice/PendingSessionApprovals';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
+import { GamePlanPracticeLengthNote, gamePlanPracticeNeedsLength } from '@/components/practice/GamePlanPracticeLengthNote';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { QuickNoteDialog } from '@/components/game-plan/QuickNoteDialog';
 import { FolderItemPerformanceLogger } from '@/components/folders/FolderItemPerformanceLogger';
@@ -1370,7 +1371,7 @@ export function GamePlanCard({ selectedSport, defaultOpen = false }: GamePlanCar
     
     const showTimeBadge = sortMode === 'timeline' && taskTime;
     
-    return (
+    const row = (
       <div
         className={cn(
           "group relative w-full flex items-center gap-2 sm:gap-4 px-3 py-3 sm:p-4 rounded-xl transition-all duration-200",
@@ -1703,6 +1704,16 @@ export function GamePlanCard({ selectedSport, defaultOpen = false }: GamePlanCar
             </span>
           </div>
         )}
+      </div>
+    );
+    // Owner Nov 10: a real practice with no length entered shows the assumption line and a
+    // way to add it (shared rule; Baserunning IQ and Travel/Other notes never get it).
+    const ps = task.taskType === 'practice' ? task.scheduledSessionData : undefined;
+    if (!ps || !gamePlanPracticeNeedsLength(ps)) return row;
+    return (
+      <div className="w-full space-y-1">
+        {row}
+        <GamePlanPracticeLengthNote data={ps} onSaved={() => refetch()} />
       </div>
     );
   };

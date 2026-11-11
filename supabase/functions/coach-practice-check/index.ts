@@ -8,6 +8,7 @@ import { recruitingGate } from "../_shared/recruitingGate.ts";
 import { ageFromDob } from "../_shared/age/ageFromDob.ts";
 import { nextThrowDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import { checkPracticeSafety, type PracticeIntensity } from "../_shared/coach/practiceSafety.ts";
+import { readSubmittedPracticeLength } from "../_shared/practiceRules.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,10 @@ Deno.serve(async (req) => {
     const throwing = s.throwing === true;
     const today = new Date().toISOString().slice(0, 10);
     if (!ids.length || !DATE.test(date)) return json({ error: "Pick players and a date" }, 400);
+    // Owner Nov 10 evening: a length is kept exactly as entered (10–360 minutes) or refused;
+    // a missing length is saved blank (older app versions), never a default or a clamp.
+    const length = readSubmittedPracticeLength(s.duration_minutes);
+    if (!length.ok) return json({ error: "That number doesn't look right — double-check it. Practice length must be 10 to 360 minutes." }, 400);
     if (date < today) return json({ error: "Pick today or a future date" }, 400);
 
     // Access: linked to the caller, then the child-safety gate.
@@ -83,7 +88,7 @@ Deno.serve(async (req) => {
     const ok = results.filter((r) => r.ok).map((r) => r.player_id);
     if (ok.length) {
       const kind = KINDS[String(s.session_type)] ?? "team";
-      const minutes = Number.isFinite(Number(s.duration_minutes)) ? Math.max(15, Math.min(240, Math.round(Number(s.duration_minutes)))) : null;
+      const minutes = length.minutes;
       const rows = ok.map((pid) => ({
         user_id: pid, created_by: me, coach_id: me,
         session_module: String(s.session_module ?? "hitting").slice(0, 40),

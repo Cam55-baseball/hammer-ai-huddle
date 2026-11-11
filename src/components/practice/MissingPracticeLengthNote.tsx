@@ -9,6 +9,7 @@ import {
   parsePracticeLength,
   practiceLengthMissing,
   practiceLengthProblem,
+  type PracticeKindFields,
 } from "@/lib/practice/practiceLength";
 
 /**
@@ -19,7 +20,7 @@ export function MissingPracticeLengthNote({
   practice,
   onSaved,
 }: {
-  practice: { id: string; duration_minutes?: number | null; status?: string | null };
+  practice: { id: string; duration_minutes?: number | null; status?: string | null } & PracticeKindFields;
   onSaved?: (minutes: number) => void;
 }) {
   const qc = useQueryClient();

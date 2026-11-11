@@ -1,0 +1,1 @@
+- Every request except OPTIONS must carry `x-job-token` (SHA-256 checked in `jobAuth.ts`, the same Vault `wk_daily_plan_job_token` digest as wk-daily-plan-job) or the service-role key; otherwise 401 before any client, body read or work. Its four cron jobs (60, 61, 62, 84) send that header. Why: an open endpoint let anyone trigger a full shadow run for every player.

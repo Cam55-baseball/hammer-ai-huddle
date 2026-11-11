@@ -22,7 +22,7 @@ export function PracticeLogPromptCard() {
     queryFn: async () => {
       if (!user) throw new Error("Sign in first");
       const { data, error } = await supabase.from("scheduled_practice_sessions")
-        .select("id,scheduled_date,status,recurring_active,recurring_days,sport,session_module,title,requires_approval,duration_minutes")
+        .select("id,scheduled_date,status,recurring_active,recurring_days,sport,session_module,session_type,practice_kind,title,requires_approval,duration_minutes")
         .eq("user_id", user.id).eq("sport", sport)
         .or(`scheduled_date.eq.${today},recurring_active.eq.true`).limit(200);
       if (error) throw error;

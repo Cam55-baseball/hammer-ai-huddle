@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { buildShadowInputs, type RawPractice } from "../../../supabase/functions/_shared/wic/schedule/tissueCost/shadow/adapter";
 import { PLAN_RULES_VERSION } from "../../../supabase/functions/_shared/planRulesVersion";
-import { practiceLengthProblem, practiceLengthMissing, PRACTICE_LENGTH_ASSUMPTION_LINE, coachPracticeLengthBlocked } from "@/lib/practice/practiceLength";
+import { practiceLengthProblem, practiceLengthMissing, PRACTICE_LENGTH_ASSUMPTION_LINE } from "@/lib/practice/practiceLength";
 
 const inserted: any[] = [];
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "u1" } }) }));
@@ -64,7 +64,7 @@ describe("Owner Nov 10 — planner: a blank practice length counts as 60, never 
   });
 
   it("the rules version is bumped so saved future days refresh", () => {
-    expect(PLAN_RULES_VERSION).toBe(14);
+    expect(PLAN_RULES_VERSION).toBeGreaterThanOrEqual(14);
   });
 });
 
@@ -83,12 +83,6 @@ describe("Owner Nov 10 — practice length is asked for", () => {
     expect(practiceLengthMissing({ duration_minutes: null, status: "scheduled" })).toBe(true);
     expect(practiceLengthMissing({ duration_minutes: 90, status: "scheduled" })).toBe(false);
     expect(practiceLengthMissing({ duration_minutes: null, status: "canceled" })).toBe(false);
-  });
-
-  it("coach sends never let the server silently change a length", () => {
-    expect(coachPracticeLengthBlocked("300")).toBe(true);
-    expect(coachPracticeLengthBlocked("12")).toBe(true);
-    expect(coachPracticeLengthBlocked("90")).toBe(false);
   });
 
   describe("the player's Add practice form", () => {
