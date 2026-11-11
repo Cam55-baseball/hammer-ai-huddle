@@ -44,7 +44,7 @@ export function MissingPracticeLengthNote({
       if (error) throw error;
       setSavedMinutes(minutes);
       toast.success("Practice length saved");
-      for (const k of ["schedule-window-practices", "manage-events", "calendar", "practice-log-prompt", "scheduled-sessions", "hammer-daily-plan", "game-plan"]) {
+      for (const k of ["schedule-window-practices", "manage-events", "calendar", "practice-log-prompt", "scheduled-sessions", "hammer-daily-plan"]) {
         qc.invalidateQueries({ queryKey: [k] });
       }
       onSaved?.(minutes);
