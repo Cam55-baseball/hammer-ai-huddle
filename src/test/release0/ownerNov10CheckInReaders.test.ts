@@ -115,6 +115,9 @@ describe("video-analysis athlete context (analyze-video/athleteContext.ts)", () 
 });
 
 describe("background readiness analysis (hie-analyze)", () => {
+  // Owner Nov 12: only check-ins from the last 3 days count, so these cases are judged "today".
+  const now = new Date(`${DAY}T22:00:00Z`);
+  const r = (rows: Record<string, unknown>[]) => computeReadiness(rows, now);
   it("reads pain from the real field, never the missing pain_level column", () => {
     expect(VAULT_READINESS_SELECT).toContain("pain_scale");
     expect(VAULT_READINESS_SELECT).not.toContain("pain_level");
@@ -122,23 +125,23 @@ describe("background readiness analysis (hie-analyze)", () => {
     expect(src).not.toMatch(/pain_level/);
     expect(src).toContain(".select(VAULT_READINESS_SELECT)");
   });
-  it("pain 6 on pre_lift lowers the score versus no pain (pain read from pain_scale)", () => {
-    const noPain = computeReadiness([morning, blankNight]).score!;
-    expect(computeReadiness([morning, preLiftPain, blankNight]).score).toBe(noPain - 30);
+  it("pain 6 on pre_lift is read from pain_scale and lowers the score", () => {
+    expect(r([morning, blankNight]).score).toBe(40); // sleep 2, no pain answer → sleep only
+    expect(r([morning, preLiftPain, blankNight]).score).toBe(23); // (16 + 0) / 70
   });
   it.each(permutations([morning, preLiftPain, blankNight]).map((p, i) => [i, p] as const))("any order gives the same score, order %i", (_i, rows) => {
-    expect(computeReadiness(rows)).toEqual(computeReadiness([morning, preLiftPain, blankNight]));
+    expect(r(rows)).toEqual(r([morning, preLiftPain, blankNight]));
   });
   it("morning answers survive a blank night row (sleep quality 2 still read)", () => {
-    expect(computeReadiness([morning, blankNight])).toEqual(computeReadiness([morning]));
-    expect(computeReadiness([morning]).score).not.toBeNull();
+    expect(r([morning, blankNight])).toEqual(r([morning]));
+    expect(r([morning]).score).not.toBeNull();
   });
   it("same area at 3 and 7 uses 7", () => {
     const base = { ...morning, pain_location: [], pain_scale: null };
-    expect(computeReadiness([base, low, high]).score).toBe(computeReadiness([base, high]).score);
+    expect(r([base, low, high]).score).toBe(r([base, high]).score);
   });
   it("no sleep-quality answer = unknown score, never a default", () => {
-    expect(computeReadiness([preLiftPain])).toEqual({ score: null, recommendation: NO_SLEEP_RECOMMENDATION });
+    expect(r([preLiftPain])).toEqual({ score: null, recommendation: NO_SLEEP_RECOMMENDATION, basis: null });
   });
 });
 
