@@ -63,3 +63,4 @@
 
 - Player-facing questions, prompts and cards take modules from `useProgramModules`/`playerProgramModules` (`_shared/programAccess.ts`), which applies the owner-only 5Tool rule; access/purchase checks keep raw `useSubscription`. Why: one program judge everywhere without changing what the owner can open.
 - Coach game entry is `/coach/log-game` over existing `coach_log_entry` lines and `coach_log_general_game` (per-player gp_games, no stats). Why: saves land on each player's record under server connection/jersey checks.
+- iPhone builds use `npm run iphone` (`scripts/iphone-build.mjs`): deletes `dist`, builds screens, stops on failure, then cap sync/open. Why: a failed screen build let an old `dist` sync into build 12.
