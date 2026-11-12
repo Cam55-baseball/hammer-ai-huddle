@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { readinessAdjustment, readinessOrNull, readinessPrompt } from "./readiness.ts";
 
 
 const corsHeaders = {
@@ -57,7 +58,8 @@ interface PrescriptionInput {
   weakness_scores: WeaknessScore[];
   recent_prescriptions: RecentPrescription[];
   athlete_profile: AthleteProfile;
-  readiness_score: number;
+  /** Owner Nov 12: null = unknown (no recent check-in) → no readiness adjustment. */
+  readiness_score: number | null;
   available_drills: DrillCandidate[];
 }
 
@@ -130,7 +132,7 @@ function scoreDrill(
   drill: DrillCandidate,
   pattern: MicroPattern,
   recentPrescriptions: RecentPrescription[],
-  readinessScore: number,
+  readinessScore: number | null,
 ): number {
   // Base relevance
   const baseRelevance = drill.skill_target === pattern.metric ? 1.0 : 0.6;
@@ -146,7 +148,7 @@ function scoreDrill(
   const fatiguePenalty = currentRx ? Math.min(0.8, currentRx.adherence_count / 5) : 0;
 
   // Readiness adjustment
-  const readinessAdj = readinessScore >= 70 ? 1.0 : readinessScore >= 50 ? 0.85 : 0.7;
+  const readinessAdj = readinessAdjustment(readinessScore);
 
   return baseRelevance * historicalEffectiveness * (1 - fatiguePenalty) * readinessAdj;
 }
@@ -155,7 +157,7 @@ function selectTopDrill(
   pattern: MicroPattern,
   drills: DrillCandidate[],
   recentPrescriptions: RecentPrescription[],
-  readinessScore: number,
+  readinessScore: number | null,
 ): { drill: DrillCandidate; score: number } | null {
   const candidates = getCandidatePool(pattern, drills, recentPrescriptions);
   if (candidates.length === 0) return null;
@@ -182,8 +184,9 @@ async function aiRefine(
   deterministicResults: PrescriptionResult[],
   patterns: MicroPattern[],
   athleteProfile: AthleteProfile,
-  readinessScore: number,
+  readinessScore: number | null,
 ): Promise<PrescriptionResult[]> {
+  const readiness = readinessPrompt(readinessScore);
   if (!Deno.env.get("GOOGLE_AI_API_KEY") && !Deno.env.get("OPENAI_API_KEY")) {
     return deterministicResults;
   }
@@ -197,7 +200,7 @@ async function aiRefine(
 Given the following athlete data and pre-selected drills, adjust the constraints and provide rationale for each drill.
 
 ATHLETE: Age ${athleteProfile.age}, Level: ${athleteProfile.level}, Bats: ${athleteProfile.batting_side}, Throws: ${athleteProfile.throwing_hand}
-READINESS: ${readinessScore}/100
+${readiness.line}
 
 PATTERNS DETECTED:
 ${patterns.slice(0, 5).map(p => `- ${p.metric}: ${p.description} (severity: ${p.severity}, value: ${p.value})`).join('\n')}
@@ -211,7 +214,7 @@ RULES:
 - You MUST only use drill_ids from the provided list
 - Reps must be between 5 and 200
 - intensity_pct must be between 50 and 100
-- If readiness < 60, reduce reps by 30% and cap intensity at 75
+${readiness.rule}
 - Rationale must reference the specific pattern data`;
 
   try {
@@ -360,6 +363,7 @@ serve(async (req) => {
       );
     }
     input.user_id = isPrivileged ? (input.user_id || user.id) : user.id;
+    input.readiness_score = readinessOrNull(input.readiness_score);
 
 
     // Step 1: Rank patterns

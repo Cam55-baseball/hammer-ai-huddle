@@ -3,6 +3,7 @@
 // smallest available non-negotiable activity for today.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { bearerOf, isServiceRoleBearer, streakUserId } from '../_shared/auth/callerScope.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,34 +14,40 @@ const corsHeaders = {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  // Owner Nov 12 (security batch 1): the player's id comes from the signed-in token only.
+  // A user_id in the body counts only when the caller presents the service-role key.
+  // Signed-out callers are refused before any write.
+  const unauthorized = () => new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    status: 401,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const bearer = bearerOf(req.headers);
+  if (!bearer) return unauthorized();
+
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      serviceKey,
       { auth: { persistSession: false } }
     );
 
-    let userId: string | null = null;
+    const serviceRole = await isServiceRoleBearer(req.headers, serviceKey);
+    let signedInUserId: string | null = null;
+    if (!serviceRole) {
+      const { data: u } = await supabase.auth.getUser(bearer);
+      signedInUserId = u?.user?.id ?? null;
+      if (!signedInUserId) return unauthorized();
+    }
+    let bodyUserId: unknown = null;
     try {
       const body = await req.json();
-      if (body?.user_id) userId = body.user_id;
+      bodyUserId = body?.user_id ?? null;
     } catch (_) { /* no body */ }
 
-    if (!userId) {
-      const auth = req.headers.get('Authorization');
-      if (auth) {
-        const token = auth.replace('Bearer ', '');
-        const { data: u } = await supabase.auth.getUser(token);
-        userId = u?.user?.id ?? null;
-      }
-    }
-
-    if (!userId) {
-      return new Response(JSON.stringify({ error: 'No user' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const who = streakUserId({ serviceRole, signedInUserId, bodyUserId });
+    if (!who.ok) return unauthorized();
+    const userId = who.userId!;
 
     const today = new Date().toISOString().split('T')[0];
 

@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from "../_shared/seasonPhase.ts";
 import { systemAccountIds } from "../_shared/systemAccounts.ts";
 import { mergeLatestCheckInDay } from "../_shared/checkIns/mergeCheckInDay.ts";
+import { bearerOf, jobCallerAllowed, ownOrTrusted } from "../_shared/auth/callerScope.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -415,14 +416,32 @@ serve(async (req) => {
   const startMs = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
+  const refuse = (status: 401 | 403, error: string) => new Response(JSON.stringify({ error }), {
+    status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+  // Owner Nov 12 (security batch 1): a signed-in player may run this for their own id only.
+  // All players or another id needs the scheduled-job credential (jobs 14 and 65) or the
+  // service-role key (save-streak, hie-refresh-worker, engine-heartbeat, engine-adversarial,
+  // engine-auto-recovery). Checked before the body is read or anything is computed or logged.
+  const trusted = await jobCallerAllowed(req.headers, serviceKey);
+  let signedInUserId: string | null = null;
+  if (!trusted) {
+    const bearer = bearerOf(req.headers);
+    if (!bearer) return refuse(401, "Unauthorized");
+    const { data: u } = await supabase.auth.getUser(bearer);
+    signedInUserId = u?.user?.id ?? null;
+    if (!signedInUserId) return refuse(401, "Unauthorized");
+  }
 
   try {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-    const targetUser: string | null = body?.user_id ?? null;
+    const requested: string | null = typeof body?.user_id === "string" && body.user_id ? body.user_id : null;
+    const scope = ownOrTrusted({ trusted, signedInUserId, requestedUserId: requested });
+    if (!scope.ok) return refuse(scope.status, scope.error);
+    const targetUser: string | null = scope.userId;
 
     if (targetUser) {
       const result = await computeForUser(supabase, targetUser);
