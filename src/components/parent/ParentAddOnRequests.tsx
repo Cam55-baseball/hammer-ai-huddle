@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { buyAddon } from "@/lib/addons/client";
+import { cancelledLine, failureLine } from "@/lib/addons/messages";
 
 const NAMES: Record<string, string> = { early_recap: "Early 6-Week Recap — $100", online_lessons: "Hammers Online ×4 — Private lessons — $20,000" };
 
@@ -26,10 +27,14 @@ export function ParentAddOnRequests() {
   const pay = async (r: any) => {
     try {
       const res: any = await buyAddon(r.product, user.id, r.athlete_user_id);
-      if (res && !res.canceled) toast({ title: "Paid. Thank you!" });
+      // Owner Nov 12: cancelling is never a red error; failures in plain words.
+      if (res?.canceled) toast({ title: cancelledLine(r.product) });
+      else if (res) toast({ title: "Paid. Thank you!" });
       await load();
     } catch (e) {
-      toast({ title: "That didn't go through", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+      const after = (e as any)?.afterPayment;
+      toast({ title: after ? "Payment received" : "That didn't go through", description: failureLine(e), variant: after ? undefined : "destructive" });
+      if (after) await load();
     }
   };
 

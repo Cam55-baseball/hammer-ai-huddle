@@ -147,7 +147,7 @@ export function AddOnsSection({ hasActivePlan }: { hasActivePlan: boolean }) {
           actionLabel={recapOpens && recapReason === status?.recap.message ? recapOpens : label}
           busy={busy === "early_recap"} onAction={() => run("early_recap")}
           onRetry={loadFailed ? () => void load() : undefined} notice={noticeFor("early_recap")}
-          extra={recapWaiting ? <p className="text-xs text-muted-foreground mt-1">Your early recap is paid and being made. It will show with your recaps.</p> : null}
+          extra={recapWaiting ? <p className="text-sm text-foreground mt-1">Your early recap is paid and being made. It will show with your recaps.</p> : null}
         />
         <AddOnRow
           icon={Video}
