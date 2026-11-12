@@ -27,16 +27,35 @@ async function webCheckout(product: AddonProduct, athleteId?: string) {
   window.location.href = url;
 }
 
+function coded(code: string, message = code): Error {
+  const e = new Error(message);
+  (e as any).code = code;
+  return e;
+}
+
+/** Build 13: a failure after the money moved is marked, so the screen never says "nothing was charged". */
+async function afterPayment<T>(p: Promise<T>): Promise<T> {
+  try { return await p; } catch (e) { (e as any).afterPayment = true; throw e; }
+}
+
 async function appleRecap(payerId: string, athleteId?: string) {
   const { NativePurchases, PURCHASE_TYPE } = await import("@capgo/native-purchases");
-  const tx = await NativePurchases.purchaseProduct({
-    productIdentifier: EARLY_RECAP.appleProductId,
-    productType: PURCHASE_TYPE.INAPP,
-    isConsumable: true,
-    appAccountToken: payerId, // ties the Apple transaction to this account; checked on the server
-    quantity: 1,
-  });
-  return callFn("verify-apple-purchase", { transactionId: tx.transactionId, athleteId });
+  let tx: { transactionId: string };
+  try {
+    tx = await NativePurchases.purchaseProduct({
+      productIdentifier: EARLY_RECAP.appleProductId,
+      productType: PURCHASE_TYPE.INAPP,
+      isConsumable: true,
+      appAccountToken: payerId, // ties the Apple transaction to this account; checked on the server
+      quantity: 1,
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e ?? "");
+    if (/cancel/i.test(msg)) return { canceled: true };
+    if (/pending/i.test(msg)) throw coded("apple_pending");
+    throw e;
+  }
+  return afterPayment(callFn("verify-apple-purchase", { transactionId: tx.transactionId, athleteId }));
 }
 
 async function nativeLessons(athleteId?: string) {
@@ -54,8 +73,10 @@ async function nativeLessons(athleteId?: string) {
     countryCode: "US",
   } as any);
   const { paymentResult } = await Stripe.presentPaymentSheet();
-  if (paymentResult !== PaymentSheetEventsEnum.Completed) return { canceled: true };
-  return callFn("verify-addon-payment", { action: "confirm", paymentIntentId: sheet.paymentIntentId });
+  if (paymentResult === PaymentSheetEventsEnum.Canceled) return { canceled: true };
+  if (paymentResult !== PaymentSheetEventsEnum.Completed) throw coded("payment_failed");
+  // Stripe also tells the server directly (stripe-webhook), so a lost confirm still saves the purchase.
+  return afterPayment(callFn("verify-addon-payment", { action: "confirm", paymentIntentId: sheet.paymentIntentId }));
 }
 
 export async function buyAddon(product: AddonProduct, payerId: string, athleteId?: string) {
