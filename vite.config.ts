@@ -8,6 +8,9 @@ import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
 // Single build ID stamped into both the bundle and /version.json so the
 // runtime can detect mismatches on installed PWA cold launches.
 const BUILD_ID = Date.now().toString(36);
+// Owner Nov 12 (build 13 fix 4): when these screens were built, shown in Account settings and saved
+// with the iPhone "last seen" record, so a stale screen folder inside an iPhone build is visible.
+const BUILD_TIME = new Date().toISOString();
 
 // Vite plugin: emit /version.json into the build output every time.
 function emitVersionPlugin() {
@@ -18,7 +21,7 @@ function emitVersionPlugin() {
       this.emitFile({
         type: "asset",
         fileName: "version.json",
-        source: JSON.stringify({ build: BUILD_ID }),
+        source: JSON.stringify({ build: BUILD_ID, builtAt: BUILD_TIME }),
       });
     },
   };
@@ -28,6 +31,7 @@ function emitVersionPlugin() {
 export default defineConfig(({ mode }) => ({
   define: {
     __BUILD_ID__: JSON.stringify(BUILD_ID),
+    __BUILD_TIME__: JSON.stringify(BUILD_TIME),
   },
   server: {
     host: "::",

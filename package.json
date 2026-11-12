@@ -20,7 +20,8 @@
     "audit:families": "npx -y tsx scripts/check-family-coverage.ts",
     "test:tcs": "vitest run src/test/tissueCost",
     "tcs:fast": "bun scripts/audits/tcs-property-sweep.ts 2000 8 20260920",
-    "tcs:sweep": "bun scripts/audits/tcs-property-sweep.ts"
+    "tcs:sweep": "bun scripts/audits/tcs-property-sweep.ts",
+    "iphone": "node scripts/iphone-build.mjs"
   },
   "dependencies": {
     "@capacitor-community/stripe": "^8.3.0",

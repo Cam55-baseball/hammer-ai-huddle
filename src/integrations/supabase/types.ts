@@ -2581,6 +2581,33 @@ export type Database = {
         }
         Relationships: []
       }
+      app_build_seen: {
+        Row: {
+          app_build: string | null
+          app_version: string | null
+          platform: string
+          seen_at: string
+          user_id: string
+          web_built_at: string | null
+        }
+        Insert: {
+          app_build?: string | null
+          app_version?: string | null
+          platform: string
+          seen_at?: string
+          user_id: string
+          web_built_at?: string | null
+        }
+        Update: {
+          app_build?: string | null
+          app_version?: string | null
+          platform?: string
+          seen_at?: string
+          user_id?: string
+          web_built_at?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           id: string
@@ -26705,6 +26732,15 @@ export type Database = {
       }
       recompute_recurring_issues: {
         Args: { _user: string }
+        Returns: undefined
+      }
+      record_app_build_seen: {
+        Args: {
+          _app_build?: string
+          _app_version?: string
+          _platform: string
+          _web_built_at?: string
+        }
         Returns: undefined
       }
       record_my_test: {

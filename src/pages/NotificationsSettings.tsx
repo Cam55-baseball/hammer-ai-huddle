@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { NotificationsPreferencesPanel } from "@/components/notifications/NotificationsPreferencesPanel";
+import { PhoneNotificationsControl } from "@/components/native/PhoneNotificationsControl";
 
 export default function NotificationsSettings() {
   const { user, loading, isAuthStable } = useAuth();
@@ -22,6 +23,8 @@ export default function NotificationsSettings() {
             links back to the source event so you can audit the lineage.
           </p>
         </header>
+        {/* Owner Nov 12 (build 13): iPhone app only, native_push_v1 on; nothing on the website. */}
+        {user && <PhoneNotificationsControl userId={user.id} />}
         <NotificationsPreferencesPanel />
       </div>
     </DashboardLayout>

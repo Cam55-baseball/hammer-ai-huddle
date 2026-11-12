@@ -13,6 +13,7 @@ export const OWNED_TABLES: Array<[table: string, column: string]> = [
   ["analysis_fault_findings", "user_id"],
   ["app_attest_challenges", "user_id"],
   ["app_attest_keys", "user_id"],
+  ["app_build_seen", "user_id"],
   ["asb_authority_overrides", "athlete_id"],
   ["asb_events", "athlete_id"],
   ["asb_org_propagation_log", "athlete_id"],

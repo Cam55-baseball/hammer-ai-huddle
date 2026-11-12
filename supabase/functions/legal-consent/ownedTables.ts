@@ -1,7 +1,7 @@
 // COPY of delete-account/ownedTables.ts OWNED_TABLES (backend functions cannot import each other).
 // src/test/legal/ownedTablesSync.test.ts fails if the two lists drift apart.
 const LIST = `activity_edit_logs:user_id activity_folders:owner_id advisory_feedback_logs:user_id analysis_fault_findings:user_id
-app_attest_challenges:user_id app_attest_keys:user_id asb_authority_overrides:athlete_id asb_events:athlete_id
+app_attest_challenges:user_id app_attest_keys:user_id app_build_seen:user_id asb_authority_overrides:athlete_id asb_events:athlete_id
 asb_org_propagation_log:athlete_id asb_state_snapshots:athlete_id athlete_baseline_history:user_id athlete_body_goals:user_id
 athlete_context:user_id athlete_daily_log:user_id athlete_development_history_events:user_id athlete_equipment_context:user_id
 athlete_events:user_id athlete_foundation_state:user_id athlete_load_tracking:user_id athlete_metric_baselines:user_id

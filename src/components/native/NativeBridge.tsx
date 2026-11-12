@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { useOptionalAuth } from "@/hooks/useAuth";
+// Loaded only inside the iPhone app, so the website never downloads it.
+const ExistingPlayerPushPrompt = lazy(() => import("./ExistingPlayerPushPrompt").then((m) => ({ default: m.ExistingPlayerPushPrompt })));
 
 /**
  * Release A (owner Nov 8): starts iPhone push registration, push-tap navigation and the
@@ -12,11 +14,12 @@ export function NativeBridge() {
   const navigate = useNavigate();
   const userId: string | null = auth?.user?.id ?? null;
   const ready = !auth?.loading;
+  const [native] = useState(() => { try { return Capacitor.isNativePlatform(); } catch { return false; } });
   useEffect(() => {
-    let native = false;
-    try { native = Capacitor.isNativePlatform(); } catch { native = false; }
     if (!native || !ready) return;
     void import("@/lib/native/bridge").then((m) => m.startNativeFeatures(userId, (path) => navigate(path)));
-  }, [userId, ready, navigate]);
-  return null;
+  }, [native, userId, ready, navigate]);
+  // Owner Nov 12 (build 13): existing players are asked once (iPhone app, native_push_v1 on).
+  if (!native || !ready || !userId) return null;
+  return <Suspense fallback={null}><ExistingPlayerPushPrompt userId={userId} /></Suspense>;
 }
