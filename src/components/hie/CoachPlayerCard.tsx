@@ -53,7 +53,7 @@ export function CoachPlayerCard({ snapshot, playerName }: CoachPlayerCardProps) 
               </Badge>
             )}
             <Badge variant="secondary" className="text-xs">
-              {snapshot.readiness_score}% ready
+              {typeof snapshot.readiness_score === 'number' ? `${snapshot.readiness_score}% ready` : 'Readiness unknown'}
             </Badge>
           </div>
         </div>
