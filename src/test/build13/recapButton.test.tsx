@@ -7,9 +7,9 @@ import { recapOpensAt } from "../../../supabase/functions/_shared/addons/recapOp
 import { earlyRecapEligibility } from "../../../supabase/functions/_shared/addons/rules";
 import { opensLabel, failureLine, RECAP_CANCELLED, LESSONS_CANCELLED, PAID_NOT_SAVED } from "@/lib/addons/messages";
 
-const h = vi.hoisted(() => ({ callFn: vi.fn(), buyAddon: vi.fn(), toast: vi.fn() }));
+const h = vi.hoisted(() => ({ callFn: vi.fn(), buyAddon: vi.fn(), toast: vi.fn(), auth: { user: { id: "u1" } } }));
 vi.mock("@/lib/addons/client", () => ({ callFn: h.callFn, buyAddon: h.buyAddon, askParents: vi.fn() }));
-vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "u1" } }) }));
+vi.mock("@/hooks/useAuth", () => ({ useAuth: () => h.auth }));
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: h.toast }) }));
 import { AddOnsSection } from "@/components/dashboard/AddOnsSection";
 
