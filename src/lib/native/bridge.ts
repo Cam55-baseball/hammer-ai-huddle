@@ -7,6 +7,7 @@ import { installPushListeners, registerIfAllowed } from "./push";
 import { loadNativeFlags } from "./nativeFlags";
 import { maybeSyncAppleHealth } from "./healthSync";
 import { loadHealthWriteSwitch } from "./healthWorkouts";
+import { recordBuildSeen } from "./buildInfo";
 
 let resumeInstalled = false;
 let currentUser: string | null = null;
@@ -15,6 +16,7 @@ export async function startNativeFeatures(userId: string | null, navigate: (path
   installPushListeners(navigate);
   currentUser = userId;
   if (!userId) return;
+  void recordBuildSeen(userId); // owner Nov 12: last seen build, every signed-in open
   await loadNativeFlags(userId);
   await loadHealthWriteSwitch(userId);
   void registerIfAllowed(userId);

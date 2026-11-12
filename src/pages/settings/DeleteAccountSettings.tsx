@@ -10,6 +10,7 @@ import { ParentControls } from "@/components/parent/ParentControls";
 import { useParentLinks } from "@/hooks/useParentLink";
 import { Button } from "@/components/ui/button";
 import { AppleHealthSettings } from "@/components/native/AppleHealthSettings";
+import { BuildInfoLine } from "@/components/settings/BuildInfoLine";
 
 export default function DeleteAccountSettings() {
   const { user } = useAuth();
@@ -43,6 +44,7 @@ export default function DeleteAccountSettings() {
           isStaff={isOwner || isAdmin}
           hasActiveSubscription={(modules?.length ?? 0) > 0}
         />
+        <BuildInfoLine />
       </div>
     </main>
   );
