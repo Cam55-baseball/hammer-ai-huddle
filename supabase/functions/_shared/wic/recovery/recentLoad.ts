@@ -10,10 +10,14 @@
  *  - practices on the athlete's own schedule whose date has passed and that
  *    were not cancelled (there is no separate practice log in the app).
  * A game on the calendar that was never logged does not count.
+ * Baserunning IQ sessions and Travel/Other notes are not practices (one shared rule,
+ * `_shared/practiceRules.ts`, owner Nov 12): they never add practice load.
  *
  * Effect: at most ONE recovery-limit step. It never adds work, never changes
  * slot count, and the governor's floor (1) still holds. No records → no effect.
  */
+import { countsAsPractice } from "../../practiceRules.ts";
+
 export interface RecentGameRow {
   game_date: string | null;
   status: string | null;
@@ -26,6 +30,8 @@ export interface RecentPracticeRow {
   status: string | null;
   intensity?: string | null;
   practice_kind?: string | null;
+  session_module?: string | null;
+  session_type?: string | null;
 }
 export interface RecentLoadInput {
   planDate: string;
@@ -82,6 +88,7 @@ export function recentLoadEffect(input: RecentLoadInput): RecentLoadEffect {
   for (const p of input.practices) {
     const d = String(p.scheduled_date ?? "").slice(0, 10);
     if (!d || d < practiceFrom || d >= input.planDate) continue;
+    if (!countsAsPractice(p)) continue;
     const st = String(p.status ?? "").toLowerCase();
     if (st === "canceled" || st === "cancelled" || st === "rescheduled") continue;
     const intensity = String(p.intensity ?? "moderate").toLowerCase();

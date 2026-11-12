@@ -11,8 +11,10 @@
  * 13 = planner pain: every check-in that day counts, higher scale per repeated area (owner Nov 10).
  * 14 = planner practice length: blank counts as the 60-minute default, never 0 (owner Nov 10).
  * 15 = Baserunning IQ sessions and Travel/Other notes are not practices: no minutes (owner Nov 10 evening).
+ * 16 = practice-day and recent-load checks use the shared practice rule: Baserunning IQ and
+ *      Travel/Other notes never make a practice day or add practice load (owner Nov 12).
  */
-export const PLAN_RULES_VERSION = 15;
+export const PLAN_RULES_VERSION = 16;
 
 export function savedRulesVersion(payload: unknown): number {
   const v = Number((payload as { rules_version?: unknown } | null)?.rules_version);
