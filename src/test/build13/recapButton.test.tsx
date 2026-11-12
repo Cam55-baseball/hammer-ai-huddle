@@ -69,7 +69,7 @@ describe("Early 6-Week Recap button", () => {
     ui();
     await waitFor(() => expect(recapButton().textContent).toBe("Buy"));
     fireEvent.click(recapButton());
-    const line = await waitFor(() => card("Early 6-Week Recap").querySelector("[data-addon-notice]")!);
+    const line = await waitFor(() => { const el = card("Early 6-Week Recap").querySelector("[data-addon-notice]"); expect(el).not.toBeNull(); return el!; });
     expect(line.textContent).toBe(RECAP_CANCELLED);
     expect(line.className).not.toContain("destructive");
     expect(h.toast).not.toHaveBeenCalled();
@@ -89,7 +89,7 @@ describe("Early 6-Week Recap button", () => {
     ui();
     await waitFor(() => expect(recapButton().textContent).toBe("Buy"));
     fireEvent.click(recapButton());
-    const line = await waitFor(() => card("Early 6-Week Recap").querySelector("[data-addon-notice]")!);
+    const line = await waitFor(() => { const el = card("Early 6-Week Recap").querySelector("[data-addon-notice]"); expect(el).not.toBeNull(); return el!; });
     expect(line.textContent).toContain("Nothing was charged.");
     expect(line.textContent).not.toMatch(/price_|resource_missing|\[402\]|com\.hammers/);
   });
