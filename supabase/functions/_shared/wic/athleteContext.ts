@@ -5,6 +5,7 @@ import { ageFromDob } from "../age/ageFromDob.ts";
 import type { TrainingAgeContext } from "./trainingAge.ts";
 import { resolveTrainingAge } from "./trainingAge.ts";
 import { physicallyPossible } from "../ledger/metricDictionary.ts";
+import { countsAsPractice } from "../practiceRules.ts";
 
 export const ATHLETE_CONTEXT_VERSION = "wic_ac_v1";
 
@@ -164,7 +165,8 @@ export function resolveAthleteContext(input: {
   need(equipment.length > 0, "equipment");
 
   const isGameDay = (input.gamesToday ?? []).length > 0;
-  const isPracticeDay = (input.practicesToday ?? []).length > 0;
+  // Owner Nov 12: one shared rule — Baserunning IQ sessions and Travel/Other notes are not practices.
+  const isPracticeDay = (input.practicesToday ?? []).some((r: any) => countsAsPractice(r));
   const schedule: ScheduleBlock = {
     game_today: isGameDay,
     practice_today: isPracticeDay,

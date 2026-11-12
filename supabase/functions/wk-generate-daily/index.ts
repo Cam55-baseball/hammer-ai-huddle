@@ -164,6 +164,7 @@ import { certifyConditioning, certifiedConditioningTemplate } from "../_shared/w
 import { resolveOutingFacts, type OutingFacts } from "../_shared/wic/pitching/outingFacts.ts";
 import { baselineSignal, type BaselineSignal } from "../_shared/wic/recovery/baselineSignal.ts";
 import { recentLoadEffect, type RecentLoadEffect, GAME_WINDOW_DAYS } from "../_shared/wic/recovery/recentLoad.ts";
+import { trainingPracticesOf } from "../_shared/wic/schedule/practiceDay.ts";
 import { selectConditioning, conditioningPhaseFrom, isReturningAfterGap, type ConditioningSelection } from "../_shared/wic/conditioning/selectConditioning.ts";
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
 import { resolveCrossSportTemplate } from "../_shared/wic/crossSport/templates.ts";
@@ -1053,7 +1054,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Practices: exact-date rows plus recurring weekly rows (filtered below).
       admin.from("scheduled_practice_sessions")
-        .select("id, scheduled_date, recurring_active, recurring_days, practice_kind, intensity, duration_minutes, session_module, title, start_time, status")
+        .select("id, scheduled_date, recurring_active, recurring_days, practice_kind, intensity, duration_minutes, session_module, session_type, title, start_time, status")
         .eq("user_id", user.id)
         .not("status", "in", "(canceled,cancelled,rescheduled)")
         .or(`scheduled_date.eq.${planDate},recurring_active.is.true`)
@@ -1365,10 +1366,9 @@ const handler = async (req: Request): Promise<Response> => {
         && r.recurring_days.includes(planDow)
         && (!r.scheduled_date || r.scheduled_date <= planDate);
     });
-    // travel / other markers are not training practices — they drive recovery, not load.
-    const trainingPractices = practiceRows.filter(
-      (r: any) => !["travel", "other"].includes(String(r.practice_kind ?? "team")),
-    );
+    // Not training practices (one shared rule, owner Nov 12): Travel/Other notes and
+    // Baserunning IQ sessions — travel drives recovery, never practice load.
+    const trainingPractices = trainingPracticesOf(practiceRows);
     const isPracticeDay = trainingPractices.length > 0;
     const isTravelDay = practiceRows.some((r: any) => String(r.practice_kind) === "travel");
     // Highest-load practice on the day drives modulation.
@@ -1874,7 +1874,7 @@ const handler = async (req: Request): Promise<Response> => {
       const [rg, rp] = await Promise.all([
         admin.from("gp_games").select("game_date, status, is_doubleheader, ignored_for_training, deleted_at")
           .eq("user_id", user.id).gte("game_date", from).lt("game_date", planDate),
-        admin.from("scheduled_practice_sessions").select("scheduled_date, status, intensity, practice_kind")
+        admin.from("scheduled_practice_sessions").select("scheduled_date, status, intensity, practice_kind, session_module, session_type")
           .eq("user_id", user.id).gte("scheduled_date", from).lt("scheduled_date", planDate),
       ]);
       recentLoad = recentLoadEffect({
