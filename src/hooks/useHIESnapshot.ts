@@ -39,7 +39,8 @@ export interface HIESnapshot {
   primary_limiter: string | null;
   weakness_clusters: WeaknessCluster[];
   prescriptive_actions: PrescriptiveAction[];
-  readiness_score: number;
+  /** Null = unknown (no check-in in the last 3 days, or no sleep answer). Never a stand-in. */
+  readiness_score: number | null;
   readiness_recommendation: string | null;
   risk_alerts: RiskAlert[];
   development_confidence: number;

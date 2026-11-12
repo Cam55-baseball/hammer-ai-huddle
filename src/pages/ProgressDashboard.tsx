@@ -124,7 +124,7 @@ export default function ProgressDashboard({ header, today, performance, gameIq, 
 MPI Score: ${snapshot.mpi_score ?? 'N/A'}
 Development Status: ${snapshot.development_status}
 Primary Limiter: ${snapshot.primary_limiter ?? 'N/A'}
-Readiness: ${snapshot.readiness_score}%
+Readiness: ${typeof snapshot.readiness_score === 'number' ? `${snapshot.readiness_score}%` : 'unknown'}
 Confidence: ${snapshot.development_confidence}%
   `.trim() : '';
 

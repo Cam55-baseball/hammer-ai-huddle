@@ -11,19 +11,19 @@ interface PlayerComparisonToolProps {
   playerNames?: Record<string, string>;
 }
 
+// Owner rule: a missing value is unknown, never 0, and never wins or loses a comparison.
 function CompareMetric({ label, a, b }: { label: string; a: number | null; b: number | null }) {
-  const aVal = a ?? 0;
-  const bVal = b ?? 0;
-  const aWins = aVal > bVal;
-  const bWins = bVal > aVal;
+  const known = a != null && b != null;
+  const aWins = known && a! > b!;
+  const bWins = known && b! > a!;
   return (
     <div className="grid grid-cols-3 gap-2 items-center py-1 border-b last:border-b-0">
       <span className={`text-sm font-medium text-right ${aWins ? 'text-green-600' : bWins ? 'text-red-600' : 'text-muted-foreground'}`}>
-        {aVal.toFixed(1)}
+        {a != null ? a.toFixed(1) : 'Unknown'}
       </span>
       <span className="text-xs text-center text-muted-foreground">{label}</span>
       <span className={`text-sm font-medium ${bWins ? 'text-green-600' : aWins ? 'text-red-600' : 'text-muted-foreground'}`}>
-        {bVal.toFixed(1)}
+        {b != null ? b.toFixed(1) : 'Unknown'}
       </span>
     </div>
   );

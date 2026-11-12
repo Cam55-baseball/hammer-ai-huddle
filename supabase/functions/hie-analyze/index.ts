@@ -4,7 +4,8 @@ import { deriveHittingDoctrineAttribution } from "../_shared/deriveHittingDoctri
 import { chatCompletion } from "../_shared/googleAi.ts";
 import { logAiUsageForRequest } from "../_shared/aiUsage.ts";
 import { humanLabel } from "../_shared/humanLabel.ts";
-import { computeReadiness, VAULT_READINESS_SELECT } from "./readiness.ts";
+import { computeReadiness, VAULT_READINESS_SELECT, weekPlanIntensity, weekPlanReadinessLine } from "./readiness.ts";
+import { jobCallerAllowed } from "../_shared/auth/callerScope.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1177,7 +1178,7 @@ async function computeDrillEffectiveness(supabase: any, userId: string): Promise
 
 async function generateSmartWeekPlan(
   weaknesses: WeaknessCluster[],
-  readinessScore: number,
+  readinessScore: number | null,
   readinessRec: string,
   developmentStatus: string,
   sessionCount: number,
@@ -1193,7 +1194,7 @@ async function generateSmartWeekPlan(
 Context:
 - Player has ${sessionCount} sessions logged
 - Development status: ${developmentStatus}
-- Readiness: ${readinessScore}/100 (${readinessRec})
+${weekPlanReadinessLine(readinessScore, readinessRec)}
 - Top weaknesses: ${weaknesses.map(w => w.issue).join(', ')}
 
 Rules:
@@ -1231,7 +1232,7 @@ Return ONLY the JSON array, no other text.`;
   }
 }
 
-function buildFallbackWeekPlan(weaknesses: WeaknessCluster[], readinessScore: number): any[] {
+function buildFallbackWeekPlan(weaknesses: WeaknessCluster[], readinessScore: number | null): any[] {
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const focusAreas = weaknesses.map(w => w.issue);
   const plan: any[] = [];
@@ -1241,7 +1242,7 @@ function buildFallbackWeekPlan(weaknesses: WeaknessCluster[], readinessScore: nu
       plan.push({ day: days[i], focus: "Recovery", description: "Active recovery, stretching, and mental visualization", intensity: "rest" });
     } else {
       const focus = focusAreas[i % focusAreas.length] || "General Development";
-      const intensity = readinessScore >= 70 ? (i < 3 ? "high" : "medium") : "medium";
+      const intensity = weekPlanIntensity(readinessScore, i);
       plan.push({ day: days[i], focus, description: `Focus on ${focus.toLowerCase()} with structured reps`, intensity });
     }
   }
@@ -1327,6 +1328,15 @@ function analyzeToolPerformanceGaps(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Owner Nov 12 (security batch 1): only server callers (calculate-session, nightly-hie-process,
+  // hie-refresh-worker, nightly-mpi-process, hie-verify — all send the service-role key) or the
+  // scheduled-job credential. The app never calls this. Refused before any client, body or work.
+  if (!(await jobCallerAllowed(req.headers, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")))) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -1646,7 +1656,8 @@ Deno.serve(async (req) => {
           batting_side: settings?.primary_batting_side || 'R',
           throwing_hand: settings?.primary_throwing_hand || 'R',
         },
-        readiness_score: readinessScore ?? trainingReadinessScore ?? 70,
+        // Owner Nov 12: unknown stays unknown (null) — no stand-in number, no readiness adjustment.
+        readiness_score: readinessScore,
         available_drills: (drillCatalogFull ?? []).map((d: any) => ({
           id: d.id, name: d.name, module: d.module, skill_target: d.skill_target || '', default_constraints: d.default_constraints || {},
         })),
