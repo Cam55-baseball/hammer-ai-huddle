@@ -4,6 +4,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { resolveUserId, syncCustomer } from "../_shared/stripeSubscriptionSync.ts";
 import { applyStaffSubscription } from "../_shared/staffPlans.ts";
 import { sponsorshipFromStripe, refreshSponsoredAccess, notifyPlayer } from "../_shared/sponsorship.ts";
+// Owner-approved Nov 12 (build 13 fix 2): add-on payments are recorded from Stripe itself with the SAME
+// save-once step the app's confirming call uses (verify-addon-payment), so whichever arrives first saves it.
+import { recordStripeAddonPayment } from "../_shared/addons/stripeAddonCore.ts";
+import { addonPaymentDeps } from "../_shared/addons/stripeAddonPayment.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -102,6 +106,10 @@ serve(async (req) => {
         outcome = await handleCheckoutCompleted(event, supabaseClient, stripe);
         break;
 
+      case 'payment_intent.succeeded':
+        await handleAddonIntent(event.data.object as Stripe.PaymentIntent, supabaseClient);
+        break;
+
       case 'invoice.payment_succeeded':
         outcome = await handlePaymentSuccess(event, supabaseClient, stripe);
         break;
@@ -189,6 +197,15 @@ async function handleCheckoutCompleted(
   const session = event.data.object as Stripe.Checkout.Session;
   logStep("Checkout completed", { sessionId: session.id, customer: session.customer });
 
+  // Build 13 — add-on Checkout (Early 6-Week Recap / lessons on the web). Saved only when paid.
+  if (session.metadata?.addon_product) {
+    if (session.payment_status !== "paid") { logStep("Add-on checkout not paid; nothing saved", { sessionId: session.id }); return; }
+    const piId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+    if (!piId) { logStep("Add-on checkout without a payment", { sessionId: session.id }); return; }
+    await handleAddonIntent(await stripe.paymentIntents.retrieve(piId), supabaseClient);
+    return;
+  }
+
   // PHASE 12 — One-off build purchase (program / bundle / consultation).
   if (session.metadata?.build_id) {
     await handleBuildPurchase(session, supabaseClient);
@@ -204,6 +221,14 @@ async function handleCheckoutCompleted(
     stripe,
     session
   );
+}
+
+// Build 13 — one add-on payment (lessons payment sheet or web Checkout). Throws on a save error so the
+// idempotency claim is released and Stripe retries; delivery of a self-bought recap waits for the
+// player's next visit (it needs their session), exactly as an app call that never arrived would.
+async function handleAddonIntent(pi: Stripe.PaymentIntent, supabaseClient: any) {
+  const res = await recordStripeAddonPayment(pi as any, addonPaymentDeps(supabaseClient, null));
+  logStep("Add-on payment", { paymentIntent: pi.id, status: res.status, first: res.status === "saved" ? res.first : undefined });
 }
 
 // PHASE 12 — Persist a one-off build purchase. The `purchases` table has
